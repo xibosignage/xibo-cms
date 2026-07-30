@@ -3,9 +3,19 @@
 # if you previously set a RewriteBase in here, the file in docker/tmp replaces that approach
 RewriteEngine On
 
+# discourage search engines from indexing the CMS
+<IfModule mod_headers.c>
+    Header always set X-Robots-Tag "noindex, nofollow"
+</IfModule>
+
 # fix authorization header
 RewriteCond %{HTTP:Authorization} .+
 RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# JSON api
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_URI} ^/json/.*$
+RewriteRule ^ json/index.php [QSA,L]
 
 # requests for api authorize
 RewriteCond %{REQUEST_FILENAME} !-f
@@ -16,11 +26,6 @@ RewriteRule ^ api/authorize/index.php [QSA,L]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_URI} ^/api/.*$
 RewriteRule ^ api/index.php [QSA,L]
-
-# install
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_URI} ^/install/.*$
-RewriteRule ^ install/index.php [QSA,L]
 
 # preview
 RewriteCond %{REQUEST_FILENAME} !-f
@@ -39,9 +44,13 @@ RewriteCond %{REQUEST_URI} ^/pwa.*$
 RewriteRule ^pwa/(.*)$ chromeos/$1 [NC,L]
 
 # all others - i.e. web
+# The React SPA has no dedicated rewrite: unmatched routes fall through to index.php,
+# and the Slim NotFound handler serves the SPA shell (see lib/Middleware/Handlers.php).
+# Real asset files under web/app/ are served directly by the !-f condition below.
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !\.(css|js|png|jpg)$
 RewriteCond %{REQUEST_URI} !^/dist/.*$
 RewriteCond %{REQUEST_URI} !^/theme/.*$
+RewriteCond %{REQUEST_URI} !^/brand/.*$
 RewriteRule ^ index.php [QSA,L]

@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -38,7 +38,7 @@ trait DataTablesDotNetTrait
      * @param SanitizerInterface|null $sanitizedRequestParams
      * @return array
      */
-    protected function gridRenderFilter(array $extraFilter, $sanitizedRequestParams = null)
+    protected function gridRenderFilter(array $extraFilter, ?SanitizerInterface $sanitizedRequestParams = null): array
     {
         if ($sanitizedRequestParams === null) {
             return $extraFilter;
@@ -59,18 +59,23 @@ trait DataTablesDotNetTrait
         }
 
         // Merge with any extra filter items that have been provided
-        $filter = array_merge($extraFilter, $filter);
-
-        return $filter;
+        return array_merge($extraFilter, $filter);
     }
 
     /**
      * Set the sort order
      * @param SanitizerInterface|array $sanitizedRequestParams
-     * @return array
+     * @param bool $isJson
+     * @param string $defaultSortBy
+     * @param string $defaultSortDir
+     * @return ?array
      */
-    protected function gridRenderSort($sanitizedRequestParams)
-    {
+    protected function gridRenderSort(
+        SanitizerInterface|array $sanitizedRequestParams,
+        bool $isJson = false,
+        string $defaultSortBy = 'name',
+        string $defaultSortDir = 'asc'
+    ): ?array {
         if ($sanitizedRequestParams instanceof SanitizerInterface) {
             $columns = $sanitizedRequestParams->getArray('columns');
             $order = $sanitizedRequestParams->getArray('order');
@@ -79,8 +84,30 @@ trait DataTablesDotNetTrait
             $order = $sanitizedRequestParams['order'] ?? null;
         }
 
-        if ($columns === null
-            || !is_array($columns)
+        // For JSON requests, handle multi-col sort (i.e. 'name,created_at')
+        if ($isJson) {
+            $sortByList = array_map(
+                'trim',
+                explode(',', $sanitizedRequestParams->getString('sortBy') ?? $defaultSortBy)
+            );
+
+            $sortDirList = array_map(
+                'trim',
+                explode(',', $sanitizedRequestParams->getString('sortDir') ?? $defaultSortDir)
+            );
+
+            $columns = [];
+            $order = [];
+
+            foreach ($sortByList as $index => $colName) {
+                if ($colName !== '') {
+                    $columns[] = ['name' => $colName, 'data' => $colName];
+                    $order[] = ['column' => $index, 'dir' => strtolower($sortDirList[$index])];
+                }
+            }
+        }
+
+        if (!is_array($columns)
             || count($columns) <= 0
             || $order === null
             || !is_array($order)
@@ -94,6 +121,7 @@ trait DataTablesDotNetTrait
                 ? $columns[$element['column']]['name']
                 : $columns[$element['column']]['data'];
             $val = preg_replace('/[^A-Za-z0-9_]/', '', $val);
+
             return '`' . $val . '`' . (($element['dir'] == 'desc') ? ' DESC' : '');
         }, $order);
     }

@@ -12,17 +12,16 @@ module.exports = {
      * @param {string} cloneName - Screen tag
      */
   showLoadingScreen: function() {
-    let bumpVal = $('.loading-overlay.loading').data('bump') || 0;
-    bumpVal++;
+    const $overlay = $('.loading-overlay');
+    const bumpVal = ($overlay.data('bump') || 0) + 1;
+    $overlay.data('bump', bumpVal);
 
-    if (bumpVal <= 1) {
-      $('.loading-overlay').addClass('loading').fadeIn(400);
+    if (bumpVal === 1) {
+      $overlay.addClass('loading').stop(true).fadeIn(400);
       // TODO: Alert message disabled for now
       // it clashes with the user timeout
       // window.onbeforeunload = () => editorsTrans.onbeforeunload;
     }
-
-    $('.loading-overlay').data('bump', bumpVal++);
   },
 
   /**
@@ -30,19 +29,18 @@ module.exports = {
      * @param {string} cloneName - Screen tag
      */
   hideLoadingScreen: function() {
-    let bumpVal = $('.loading-overlay.loading').data('bump') || 1;
-    bumpVal--;
+    const $overlay = $('.loading-overlay');
+    const bumpVal = Math.max(0, ($overlay.data('bump') || 1) - 1);
+    $overlay.data('bump', bumpVal);
 
-    if (bumpVal <= 0) {
-      $('.loading-overlay.loading').fadeOut(400, function(el) {
-        $(el).removeClass('loading');
+    if (bumpVal === 0) {
+      $overlay.stop(true).fadeOut(400, function() {
+        $('.loading-overlay').removeClass('loading');
         // TODO: Alert message disabled for now
         // it clashes with the user timeout
         // window.onbeforeunload = null;
       });
     }
-
-    $('.loading-overlay').data('bump', bumpVal);
   },
 
   /**

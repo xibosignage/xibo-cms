@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -23,75 +23,76 @@
 namespace Xibo\Entity;
 
 use Carbon\Carbon;
+use OpenApi\Attributes as OA;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Xibo\Factory\FontFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
-use Xibo\Factory\FontFactory;
 use Xibo\Support\Exception\DuplicateEntityException;
 
 /**
  * Class Font
  * @package Xibo\Entity
- * @SWG\Definition()
  */
+#[OA\Schema]
 class Font
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(description="The Font ID")
      * @var int
      */
+    #[OA\Property(description: 'The Font ID')]
     public $id;
 
     /**
-     * @SWG\Property(description="The Font created date")
      * @var string
      */
+    #[OA\Property(description: 'The Font created date')]
     public $createdAt;
 
     /**
-     * @SWG\Property(description="The Font modified date")
      * @var string
      */
+    #[OA\Property(description: 'The Font modified date')]
     public $modifiedAt;
 
     /**
-     * @SWG\Property(description="The name of the user that modified this font last")
      * @var string
      */
+    #[OA\Property(description: 'The name of the user that modified this font last')]
     public $modifiedBy;
 
     /**
-     * @SWG\Property(description="The Font name")
      * @var string
      */
+    #[OA\Property(description: 'The Font name')]
     public $name;
 
     /**
-     * @SWG\Property(description="The Font file name")
      * @var string
      */
+    #[OA\Property(description: 'The Font file name')]
     public $fileName;
 
     /**
-     * @SWG\Property(description="The Font family name")
      * @var string
      */
+    #[OA\Property(description: 'The Font family name')]
     public $familyName;
 
     /**
-     * @SWG\Property(description="The Font file size in bytes")
      * @var int
      */
+    #[OA\Property(description: 'The Font file size in bytes')]
     public $size;
 
     /**
-     * @SWG\Property(description="A MD5 checksum of the stored font file")
      * @var string
      */
+    #[OA\Property(description: 'A MD5 checksum of the stored font file')]
     public $md5;
 
     /** @var ConfigServiceInterface */

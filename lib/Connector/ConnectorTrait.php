@@ -26,6 +26,7 @@ use GuzzleHttp\Client;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Stash\Interfaces\PoolInterface;
+use Xibo\Helper\Guzzle\SafeClient;
 use Xibo\Service\JwtServiceInterface;
 use Xibo\Service\PlayerActionServiceInterface;
 
@@ -104,6 +105,11 @@ trait ConnectorTrait
         return in_array($setting, $this->providerSettings);
     }
 
+    public function getProviderSettings(): array
+    {
+        return $this->providerSettings;
+    }
+
     /**
      * @param $setting
      * @param null $default
@@ -175,7 +181,47 @@ trait ConnectorTrait
         return $this;
     }
 
+    public function getSettingsFormTwig(): string
+    {
+        return '';
+    }
+
     public function getSettingsFormJavaScript(): string
+    {
+        return '';
+    }
+
+    public function getSettingsFields(): array
+    {
+        return [];
+    }
+
+    public function getFormSubtitle(): string
+    {
+        return '';
+    }
+
+    public function getFormDescriptionHtml(): string
+    {
+        return '';
+    }
+
+    public function getFormAlerts(): array
+    {
+        return [];
+    }
+
+    public function getEnabledLabel(): string
+    {
+        return __('Enabled');
+    }
+
+    public function getEnabledDescription(): string
+    {
+        return __('When enabled, this Connector will start providing the services it lists in its description.');
+    }
+
+    public function getEnabledMessage(): string
     {
         return '';
     }
@@ -186,7 +232,7 @@ trait ConnectorTrait
      */
     public function getClient(): Client
     {
-        return new Client($this->httpOptions);
+        return SafeClient::getSafeClient($this->httpOptions);
     }
 
     /**

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -21,6 +21,7 @@
  */
 namespace Xibo\Controller;
 
+use OpenApi\Attributes as OA;
 use Parsedown;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
@@ -70,43 +71,65 @@ class Template extends Base
         $this->resolutionFactory = $resolutionFactory;
     }
 
-    /**
-     * Display page logic
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    function displayPage(Request $request, Response $response)
-    {
-        // Call to render the template
-        $this->getState()->template = 'template-page';
-
-        return $this->render($request, $response);
-    }
-
+    #[OA\Get(
+        path: '/template',
+        operationId: 'templateSearch',
+        description: 'Search templates this user has access to',
+        summary: 'Template Search',
+        tags: ['template']
+    )]
+    #[OA\Parameter(
+        name: 'embed',
+        description: 'Embed related data such as regions, playlists, widgets, tags, campaigns, permissions',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'string',
+            enum: [
+                'layout',
+                'owner',
+                'publishedStatus',
+                'modifiedDt',
+                'orientation',
+                'groupsWithPermissions',
+            ]
+        )
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ],
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/Layout')
+        )
+    )]
     /**
      * Data grid
      *
-     * @SWG\Get(
-     *  path="/template",
-     *  operationId="templateSearch",
-     *  tags={"template"},
-     *  summary="Template Search",
-     *  description="Search templates this user has access to",
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/Layout")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\NotFoundException
@@ -119,259 +142,103 @@ class Template extends Base
             ? explode(',', $sanitizedQueryParams->getString('embed'))
             : [];
 
-        $templates = $this->layoutFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter([
-            'excludeTemplates' => 0,
-            'tags' => $sanitizedQueryParams->getString('tags'),
-            'layoutId' => $sanitizedQueryParams->getInt('templateId'),
-            'layout' => $sanitizedQueryParams->getString('template'),
-            'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
-            'folderId' => $sanitizedQueryParams->getInt('folderId'),
-            'logicalOperator' => $sanitizedQueryParams->getString('logicalOperator'),
-            'logicalOperatorName' => $sanitizedQueryParams->getString('logicalOperatorName'),
-        ], $sanitizedQueryParams));
+        $templateSortQuery = $this->gridRenderSort(
+            $sanitizedQueryParams,
+            $this->isJson($request),
+            'layout'
+        );
+
+        $templateFilterQuery = $this->getTemplateFilterQuery($sanitizedQueryParams);
+
+        $templates = $this->layoutFactory->query($templateSortQuery, $templateFilterQuery);
 
         foreach ($templates as $template) {
-            /* @var \Xibo\Entity\Layout $template */
-
-            if (in_array('regions', $embed)) {
-                $template->load([
-                    'loadPlaylists' => in_array('playlists', $embed),
-                    'loadCampaigns' => in_array('campaigns', $embed),
-                    'loadPermissions' => in_array('permissions', $embed),
-                    'loadTags' => in_array('tags', $embed),
-                    'loadWidgets' => in_array('widgets', $embed)
-                ]);
-            }
-
-            if ($this->isApi($request)) {
-                continue;
-            }
-
-            $template->includeProperty('buttons');
-
-            // Thumbnail
-            $template->setUnmatchedProperty('thumbnail', '');
-            if (file_exists($template->getThumbnailUri())) {
-                $template->setUnmatchedProperty(
-                    'thumbnail',
-                    $this->urlFor($request, 'layout.download.thumbnail', ['id' => $template->layoutId])
-                );
-            }
-
-            // Parse down for description
-            $template->setUnmatchedProperty(
-                'descriptionWithMarkup',
-                Parsedown::instance()->setSafeMode(true)->text($template->description),
-            );
-
-            if ($this->getUser()->featureEnabled('template.modify')
-                && $this->getUser()->checkEditable($template)
-            ) {
-                // Design Button
-                $template->buttons[] = [
-                    'id' => 'layout_button_design',
-                    'linkType' => '_self', 'external' => true,
-                    'url' => $this->urlFor(
-                        $request,
-                        'layout.designer',
-                        ['id' => $template->layoutId]
-                    ) . '?isTemplateEditor=1',
-                    'text' => __('Alter Template')
-                ];
-
-                if ($template->isEditable()) {
-                    $template->buttons[] = ['divider' => true];
-
-                    $template->buttons[] = array(
-                        'id' => 'layout_button_publish',
-                        'url' => $this->urlFor($request, 'layout.publish.form', ['id' => $template->layoutId]),
-                        'text' => __('Publish')
-                    );
-
-                    $template->buttons[] = array(
-                        'id' => 'layout_button_discard',
-                        'url' => $this->urlFor($request, 'layout.discard.form', ['id' => $template->layoutId]),
-                        'text' => __('Discard')
-                    );
-
-                    $template->buttons[] = ['divider' => true];
-                } else {
-                    $template->buttons[] = ['divider' => true];
-
-                    // Checkout Button
-                    $template->buttons[] = array(
-                        'id' => 'layout_button_checkout',
-                        'url' => $this->urlFor($request, 'layout.checkout.form', ['id' => $template->layoutId]),
-                        'text' => __('Checkout'),
-                        'dataAttributes' => [
-                            ['name' => 'auto-submit', 'value' => true],
-                            [
-                                'name' => 'commit-url',
-                                'value' => $this->urlFor(
-                                    $request,
-                                    'layout.checkout',
-                                    ['id' => $template->layoutId]
-                                )
-                            ],
-                            ['name' => 'commit-method', 'value' => 'PUT']
-                        ]
-                    );
-
-                    $template->buttons[] = ['divider' => true];
-                }
-
-                // Edit Button
-                $template->buttons[] = array(
-                    'id' => 'layout_button_edit',
-                    'url' => $this->urlFor($request, 'template.edit.form', ['id' => $template->layoutId]),
-                    'text' => __('Edit')
-                );
-
-                // Select Folder
-                if ($this->getUser()->featureEnabled('folder.view')) {
-                    $template->buttons[] = [
-                        'id' => 'campaign_button_selectfolder',
-                        'url' => $this->urlFor($request, 'campaign.selectfolder.form', ['id' => $template->campaignId]),
-                        'text' => __('Select Folder'),
-                        'multi-select' => true,
-                        'dataAttributes' => [
-                            [
-                                'name' => 'commit-url',
-                                'value' => $this->urlFor(
-                                    $request,
-                                    'campaign.selectfolder',
-                                    ['id' => $template->campaignId]
-                                )
-                            ],
-                            ['name' => 'commit-method', 'value' => 'put'],
-                            ['name' => 'id', 'value' => 'campaign_button_selectfolder'],
-                            ['name' => 'text', 'value' => __('Move to Folder')],
-                            ['name' => 'rowtitle', 'value' => $template->layout],
-                            ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
-                        ]
-                    ];
-                }
-
-                // Copy Button
-                $template->buttons[] = array(
-                    'id' => 'layout_button_copy',
-                    'url' => $this->urlFor($request, 'layout.copy.form', ['id' => $template->layoutId]),
-                    'text' => __('Copy')
-                );
-            }
-
-            // Extra buttons if have delete permissions
-            if ($this->getUser()->featureEnabled('template.modify')
-                && $this->getUser()->checkDeleteable($template)) {
-                // Delete Button
-                $template->buttons[] = [
-                    'id' => 'layout_button_delete',
-                    'url' => $this->urlFor($request, 'layout.delete.form', ['id' => $template->layoutId]),
-                    'text' => __('Delete'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor(
-                                $request,
-                                'layout.delete',
-                                ['id' => $template->layoutId]
-                            )
-                        ],
-                        ['name' => 'commit-method', 'value' => 'delete'],
-                        ['name' => 'id', 'value' => 'layout_button_delete'],
-                        ['name' => 'text', 'value' => __('Delete')],
-                        ['name' => 'sort-group', 'value' => 1],
-                        ['name' => 'rowtitle', 'value' => $template->layout]
-                    ]
-                ];
-            }
-
-            $template->buttons[] = ['divider' => true];
-
-            // Extra buttons if we have modify permissions
-            if ($this->getUser()->featureEnabled('template.modify')
-                && $this->getUser()->checkPermissionsModifyable($template)) {
-                // Permissions button
-                $template->buttons[] = [
-                    'id' => 'layout_button_permissions',
-                    'url' => $this->urlFor(
-                        $request,
-                        'user.permissions.form',
-                        ['entity' => 'Campaign', 'id' => $template->campaignId]
-                    ) . '?nameOverride=' . __('Template'),
-                    'text' => __('Share'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor(
-                                $request,
-                                'user.permissions.multi',
-                                ['entity' => 'Campaign', 'id' => $template->campaignId]
-                            )
-                        ],
-                        ['name' => 'commit-method', 'value' => 'post'],
-                        ['name' => 'id', 'value' => 'layout_button_permissions'],
-                        ['name' => 'text', 'value' => __('Share')],
-                        ['name' => 'rowtitle', 'value' => $template->layout],
-                        ['name' => 'sort-group', 'value' => 2],
-                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                        [
-                            'name' => 'custom-handler-url',
-                            'value' => $this->urlFor(
-                                $request,
-                                'user.permissions.multi.form',
-                                ['entity' => 'Campaign']
-                            )
-                        ],
-                        ['name' => 'content-id-name', 'value' => 'campaignId']
-                    ]
-                ];
-            }
-
-            if ($this->getUser()->featureEnabled('layout.export')) {
-                $template->buttons[] = ['divider' => true];
-
-                // Export Button
-                $template->buttons[] = array(
-                    'id' => 'layout_button_export',
-                    'linkType' => '_self',
-                    'external' => true,
-                    'url' => $this->urlFor($request, 'layout.export', ['id' => $template->layoutId]),
-                    'text' => __('Export')
-                );
-            }
+            $this->loadTemplateRegions($template, $embed);
+            $this->decorateTemplateProperties($request, $template);
         }
 
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->layoutFactory->countLast();
-        $this->getState()->setData($templates);
+        $recordsTotal = $this->layoutFactory->countLast();
 
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $recordsTotal)
+            ->withJson($templates);
     }
 
+    #[OA\Get(
+        path: '/template/{templateId}',
+        operationId: 'templateSearchById',
+        description: 'Get the Template object specified by the provided templateId',
+        summary: 'Template Search by ID',
+        tags: ['template']
+    )]
+    #[OA\Parameter(
+        name: 'templateId',
+        description: 'Numeric ID of the Template to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'embed',
+        description: 'Embed related data such as regions, playlists, widgets, tags, campaigns, permissions',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout')
+    )]
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param int $id
+     * @return Response|ResponseInterface
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
+    {
+        $template = $this->layoutFactory->getById($id, false);
+
+        $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
+
+        // Embed?
+        $embed = ($sanitizedQueryParams->getString('embed') != null)
+            ? explode(',', $sanitizedQueryParams->getString('embed'))
+            : [];
+
+        $this->loadTemplateRegions($template, $embed);
+        $this->decorateTemplateProperties($request, $template);
+
+        return $response
+            ->withStatus(200)
+            ->withJson($template);
+    }
+
+    #[OA\Get(
+        path: '/template/search',
+        operationId: 'templateSearchAll',
+        description: 'Search all templates from local and connectors',
+        summary: 'Template Search All',
+        tags: ['template']
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/SearchResult')
+        )
+    )]
     /**
      * Data grid
      *
-     * @SWG\Get(
-     *  path="/template/search",
-     *  operationId="templateSearchAll",
-     *  tags={"template"},
-     *  summary="Template Search All",
-     *  description="Search all templates from local and connectors",
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/SearchResult")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws \Xibo\Support\Exception\GeneralException
      */
     public function search(Request $request, Response $response)
@@ -453,7 +320,7 @@ class Template extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
@@ -476,57 +343,55 @@ class Template extends Base
 
         return $this->render($request, $response);
     }
+
+    #[OA\Post(
+        path: '/template',
+        operationId: 'templateAdd',
+        description: 'Add a new Template to the CMS',
+        summary: 'Add a Template',
+        tags: ['template']
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['name'],
+                properties: [
+                    new OA\Property(property: 'name', description: 'The layout name', type: 'string'),
+                    new OA\Property(property: 'description', description: 'The layout description', type: 'string'),
+                    new OA\Property(
+                        property: 'resolutionId',
+                        description: 'If a Template is not provided, provide the resolutionId for this Layout.',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'returnDraft',
+                        description: 'Should we return the Draft Layout or the Published Layout on Success?',
+                        type: 'boolean'
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ],
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout')
+    )]
     /**
      * Add a Template
-     * @SWG\Post(
-     *  path="/template",
-     *  operationId="templateAdd",
-     *  tags={"template"},
-     *  summary="Add a Template",
-     *  description="Add a new Template to the CMS",
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="The layout name",
-     *      type="string",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="description",
-     *      in="formData",
-     *      description="The layout description",
-     *      type="string",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="resolutionId",
-     *      in="formData",
-     *      description="If a Template is not provided, provide the resolutionId for this Layout.",
-     *      type="integer",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="returnDraft",
-     *      in="formData",
-     *      description="Should we return the Draft Layout or the Published Layout on Success?",
-     *      type="boolean",
-     *      required=false
-     *  ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Layout"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      *
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
@@ -593,68 +458,65 @@ class Template extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/template/{layoutId}',
+        operationId: 'template.add.from.layout',
+        description: 'Use the provided layout as a base for a new template',
+        summary: 'Add a template from a Layout',
+        tags: ['template']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        description: 'The Layout ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['includeWidgets', 'name'],
+                properties: [
+                    new OA\Property(
+                        property: 'includeWidgets',
+                        description: 'Flag indicating whether to include the widgets in the Template',
+                        type: 'integer'
+                    ),
+                    new OA\Property(property: 'name', description: 'The Template Name', type: 'string'),
+                    new OA\Property(
+                        property: 'tags',
+                        description: 'Comma separated list of Tags for the template',
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'description', description: 'A description of the Template', type: 'string')
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ],
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout')
+    )]
     /**
      * Add template
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\NotFoundException
-     * @SWG\Post(
-     *  path="/template/{layoutId}",
-     *  operationId="template.add.from.layout",
-     *  tags={"template"},
-     *  summary="Add a template from a Layout",
-     *  description="Use the provided layout as a base for a new template",
-     *  @SWG\Parameter(
-     *      name="layoutId",
-     *      in="path",
-     *      description="The Layout ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="includeWidgets",
-     *      in="formData",
-     *      description="Flag indicating whether to include the widgets in the Template",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="The Template Name",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="tags",
-     *      in="formData",
-     *      description="Comma separated list of Tags for the template",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="description",
-     *      in="formData",
-     *      description="A description of the Template",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Layout"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      */
     public function addFromLayout(Request $request, Response $response, $id): Response
     {
@@ -741,60 +603,13 @@ class Template extends Base
     }
 
     /**
-     * Displays an Add/Edit form
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    function addForm(Request $request, Response $response)
-    {
-        $this->getState()->template = 'template-form-add';
-        $this->getState()->setData([
-            'resolutions' => $this->resolutionFactory->query(['resolution']),
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Edit form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function editForm(Request $request, Response $response, $id)
-    {
-        // Get the layout
-        $template = $this->layoutFactory->getById($id);
-
-        // Check Permissions
-        if (!$this->getUser()->checkEditable($template)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'template-form-edit';
-        $this->getState()->setData([
-            'layout' => $template,
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
      * Get list of Template providers with their details.
      *
      * @param Request $request
      * @param Response $response
      * @return Response|ResponseInterface
      */
-    public function providersList(Request $request, Response $response): Response|\Psr\Http\Message\ResponseInterface
+    public function providersList(Request $request, Response $response): Response|ResponseInterface
     {
         $event = new TemplateProviderListEvent();
         $this->getDispatcher()->dispatch($event, $event->getName());
@@ -802,5 +617,73 @@ class Template extends Base
         $providers = $event->getProviders();
 
         return $response->withJson($providers);
+    }
+
+    /**
+     * Get the template filters
+     * @param $sanitizedQueryParams
+     * @return array
+     */
+    private function getTemplateFilterQuery($sanitizedQueryParams): array
+    {
+        return $this->gridRenderFilter([
+            'excludeTemplates' => 0,
+            'tags' => $sanitizedQueryParams->getString('tags'),
+            'layoutId' => $sanitizedQueryParams->getInt('templateId'),
+            'layout' => $sanitizedQueryParams->getString('template'),
+            'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
+            'folderId' => $sanitizedQueryParams->getInt('folderId'),
+            'exactTags' => $sanitizedQueryParams->getCheckbox('exactTags'),
+            'logicalOperator' => $sanitizedQueryParams->getString('logicalOperator'),
+            'logicalOperatorName' => $sanitizedQueryParams->getString('logicalOperatorName'),
+        ], $sanitizedQueryParams);
+    }
+
+    /**
+     * Loads the regions within the layout
+     * @param \Xibo\Entity\Layout $layout
+     * @param $embed
+     * @return void
+     * @throws NotFoundException
+     */
+    private function loadTemplateRegions(\Xibo\Entity\Layout $template, $embed): void
+    {
+        if (in_array('regions', $embed)) {
+            $template->load([
+                'loadPlaylists' => in_array('playlists', $embed),
+                'loadCampaigns' => in_array('campaigns', $embed),
+                'loadPermissions' => in_array('permissions', $embed),
+                'loadTags' => in_array('tags', $embed),
+                'loadWidgets' => in_array('widgets', $embed)
+            ]);
+        }
+    }
+
+    /**
+     * @param Request $request
+     * @param \Xibo\Entity\Layout $template
+     * @return void
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    private function decorateTemplateProperties(Request $request, \Xibo\Entity\Layout $template): void
+    {
+        // Thumbnail
+        $template->setUnmatchedProperty('thumbnail', '');
+
+        if (file_exists($template->getThumbnailUri())) {
+            $template->setUnmatchedProperty(
+                'thumbnail',
+                $this->urlFor($request, 'layout.download.thumbnail', ['id' => $template->layoutId])
+            );
+        }
+
+        // Parse down for description
+        $template->setUnmatchedProperty(
+            'descriptionWithMarkup',
+            Parsedown::instance()->setSafeMode(true)->text($template->description),
+        );
+
+        $template->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($template));
     }
 }

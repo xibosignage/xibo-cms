@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -28,7 +28,6 @@ use Slim\Http\ServerRequest as Request;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\ReportResult;
-use Xibo\Event\ConnectorReportEvent;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Helper\SanitizerService;
 use Xibo\Report\ReportInterface;
@@ -39,6 +38,7 @@ use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class ReportScheduleService
+ *
  * @package Xibo\Service
  */
 class ReportService implements ReportServiceInterface
@@ -117,7 +117,7 @@ class ReportService implements ReportServiceInterface
     {
         $reports = [];
 
-        $files = array_merge(glob(PROJECT_ROOT . '/reports/*.report'), glob(PROJECT_ROOT . '/custom/*.report'));
+        $files = glob(PROJECT_ROOT . '/reports/*.report');
 
         foreach ($files as $file) {
             $config = json_decode(file_get_contents($file));
@@ -144,16 +144,6 @@ class ReportService implements ReportServiceInterface
         }
 
         $this->log->debug('Reports found in total: '.count($reports));
-
-        // Get reports that are allowed by connectors
-        $event = new ConnectorReportEvent();
-        $this->getDispatcher()->dispatch($event, ConnectorReportEvent::$NAME);
-        $connectorReports = $event->getReports();
-
-        // Merge built in reports and connector reports
-        if (count($connectorReports) > 0) {
-            $reports = array_merge($reports, $connectorReports);
-        }
 
         foreach ($reports as $k => $report) {
             usort($report, function ($a, $b) {
@@ -237,21 +227,6 @@ class ReportService implements ReportServiceInterface
     /**
      * @inheritdoc
      */
-    public function getReportScheduleFormData($reportName, Request $request)
-    {
-        $this->log->debug('Populate form title and hidden fields');
-
-        $className = $this->getReportClass($reportName);
-
-        $object = $this->createReportObject($className);
-
-        // Populate form title and hidden fields
-        return $object->getReportScheduleFormData($this->sanitizer->getSanitizer($request->getParams()));
-    }
-
-    /**
-     * @inheritdoc
-     */
     public function setReportScheduleFormData($reportName, Request $request)
     {
         $this->log->debug('Set Report Schedule form data');
@@ -283,7 +258,7 @@ class ReportService implements ReportServiceInterface
     /**
      * @inheritdoc
      */
-    public function getSavedReportResults($savedreportId, $reportName)
+    public function getSavedReportResults($savedreportId, $reportName): ReportResult|array
     {
         $className = $this->getReportClass($reportName);
 
@@ -307,6 +282,13 @@ class ReportService implements ReportServiceInterface
 
         // Get the reportscheduledetails
         $json = json_decode($zip->getFromName('reportschedule.json'), true);
+        $zip->close();
+
+        // Backward-compat: old ZIP files may omit the chart key or store null.
+        // Ensure it is always an array so per-report getSavedReportResults() can safely read it.
+        if (!array_key_exists('chart', $json) || !is_array($json['chart'])) {
+            $json['chart'] = [];
+        }
 
         // Retrieve the saved report result array
         $results = $object->getSavedReportResults($json, $savedReport);
@@ -398,19 +380,6 @@ class ReportService implements ReportServiceInterface
 
         // Set Report Schedule form data
         return $object->getReportEmailTemplate();
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function getSavedReportTemplate($reportName)
-    {
-        $className = $this->getReportClass($reportName);
-
-        $object = $this->createReportObject($className);
-
-        // Set Report Schedule form data
-        return $object->getSavedReportTemplate();
     }
 
     /**

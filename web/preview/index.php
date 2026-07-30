@@ -73,7 +73,7 @@ $app->setBasePath($container->get('basePath'));
 
 // Config
 $container->get('configService');
-$container->set('name', 'PREVIEW');
+$container->set('name', 'preview');
 
 // Middleware
 $app->add(new \Xibo\Middleware\Theme($app));

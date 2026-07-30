@@ -39,7 +39,6 @@ const mainConfig = Object.assign({}, config, {
     xibo: './ui/bundle_xibo.js',
     layoutEditor: './ui/src/layout-editor/main.js',
     playlistEditor: './ui/src/playlist-editor/main.js',
-    campaignBuilder: './ui/src/campaign-builder/main.js',
     editorCommon: './ui/bundle_editor_common.js',
     preview: './ui/bundle_preview.js',
     datatables: './ui/bundle_datatables.js',
@@ -165,118 +164,6 @@ const mainConfig = Object.assign({}, config, {
   ],
 });
 
-const pageConfig = Object.assign({}, config, {
-  entry: {
-    'display-page': './ui/src/pages/display/display-page.js',
-    'schedule-page': './ui/src/pages/schedule/schedule-page.js',
-    'campaign-page': './ui/src/pages/campaign/campaign-page.js',
-    'developer-template-page':
-      './ui/src/pages/developer-template/developer-template-page.js',
-    'welcome-page': './ui/src/pages/welcome/welcome-page.js',
-  },
-  output: {
-    path: path.resolve(__dirname, 'web/dist/pages'),
-    filename: '[name].bundle.min.js',
-    libraryTarget: 'window', // Expose the library to the window object
-  },
-  target: ['web', 'es5'],
-  module: {
-    rules: [
-      {
-        test: /datatables\.net.*/,
-        use: [{
-          loader: 'imports-loader',
-          options: {
-            additionalCode: 'var define = false;',
-          },
-        }],
-      },
-      {
-        test: /\.(css)$/,
-        use: [
-          MiniCssExtractPlugin.loader,
-          'css-loader',
-        ],
-      },
-      {
-        test: /\.less$/,
-        use: [
-          MiniCssExtractPlugin.loader,
-          'css-loader',
-          'less-loader',
-        ],
-      },
-      {
-        test: /\.s[ac]ss$/i,
-        use: [
-          MiniCssExtractPlugin.loader,
-          'css-loader', // translates CSS into CommonJS modules
-          {
-            loader: 'postcss-loader', // Run post css actions
-            options: {
-              postcssOptions: {
-                plugins: [
-                  'autoprefixer',
-                ],
-              },
-            },
-          }, {
-            loader: 'sass-loader', // compiles Sass to CSS
-          }],
-      },
-      {
-        test: /\.(woff(2)?|ttf|eot|svg|jpg|gif|png)$/,
-        type: 'asset/resource',
-        generator: {
-          filename: 'assets/[hash][ext][query]',
-        },
-      },
-      {
-        test: /\.(csv|tsv)$/,
-        use: [
-          'csv-loader',
-        ],
-      },
-      {
-        test: /\.xml$/,
-        use: [
-          'xml-loader',
-        ],
-      },
-      {
-        test: /\.hbs$/,
-        use: [{
-          loader: 'handlebars-loader',
-          options: {
-            helperDirs: path.join(__dirname, 'ui/src/helpers/handlebars'),
-            precompileOptions: {
-              knownHelpersOnly: false,
-            },
-          },
-        }],
-      },
-      {
-        test: /\.js$/,
-        exclude: /(node_modules|bower_components)/,
-        use: {
-          loader: 'babel-loader',
-          options: {
-            presets: [
-              ['@babel/preset-env', {targets: 'defaults'}],
-            ],
-          },
-        },
-      },
-    ],
-  },
-  plugins: [
-    new CleanWebpackPlugin(),
-    new MiniCssExtractPlugin({
-      filename: '[name].bundle.min.css',
-    }),
-  ],
-});
-
 const moduleConfig = function(env) {
   console.log('webpack env: ', env);
   return Object.assign({}, config, {
@@ -369,14 +256,12 @@ module.exports = (env, argv) => {
   if (argv.mode === 'development') {
     mainConfig.devtool = 'source-map';
     _moduleConfigFn.devtool = 'source-map';
-    pageConfig.devtool = 'source-map';
   }
 
   if (argv.mode === 'production') {
     mainConfig.devtool = false;
     _moduleConfigFn.devtool = false;
-    pageConfig.devtool = false;
   }
 
-  return [mainConfig, pageConfig, _moduleConfigFn];
+  return [mainConfig, _moduleConfigFn];
 };

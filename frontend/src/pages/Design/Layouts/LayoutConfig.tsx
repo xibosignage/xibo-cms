@@ -1,0 +1,715 @@
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+import type { ColumnDef } from '@tanstack/react-table';
+import type { TFunction } from 'i18next';
+import {
+  Edit,
+  CopyCheck,
+  FolderInput,
+  UserPlus2,
+  CalendarClock,
+  Trash2,
+  PaletteIcon,
+  CloudUpload,
+  DownloadCloud,
+  Redo2,
+  FileCheck,
+  Download,
+  FileX,
+  ArrowRight,
+  Info,
+  Eye,
+  Tags,
+  BarChart3,
+} from 'lucide-react';
+import type { ComponentProps } from 'react';
+
+import type { FilterConfigItem } from '@/components/ui/FilterInputs';
+import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkActions';
+import {
+  TextCell,
+  StatusCell,
+  CheckMarkCell,
+  ActionsCell,
+  MediaCell,
+  TagsCell,
+  DescriptionCell,
+  getSharingColumn,
+} from '@/components/ui/table/cells';
+import { getCommonFormOptions } from '@/config/commonForms';
+import type { Layout } from '@/types/layout';
+import type { ActionItem, BaseModalType } from '@/types/table';
+import type { Tag } from '@/types/tag';
+import type { DateLike } from '@/utils/date';
+import { formatDuration } from '@/utils/formatters';
+
+export interface LayoutFilterInput {
+  campaignId?: number | null;
+  name?: string;
+  tags?: Tag[];
+  code?: string;
+  ownerId?: string;
+  ownerUserGroupId?: string;
+  orientation?: string;
+  retired?: string;
+  layoutStatusId?: number | null;
+  showDescriptionId?: number | null;
+  mediaLike?: string;
+  layoutId?: number | null;
+  lastModified?: string;
+  activeDisplayGroupId?: number;
+  logicalOperatorName?: 'OR' | 'AND';
+  useRegexForName?: boolean;
+  logicalOperator?: 'OR' | 'AND';
+  exactTags?: boolean;
+}
+
+export const LAYOUT_INITIAL_FILTER_STATE: LayoutFilterInput = {
+  campaignId: null,
+  name: '',
+  tags: [],
+  code: '',
+  ownerId: '',
+  ownerUserGroupId: '',
+  orientation: '',
+  retired: '',
+  layoutStatusId: null,
+  showDescriptionId: null,
+  mediaLike: '',
+  layoutId: null,
+  lastModified: '',
+  activeDisplayGroupId: undefined,
+  logicalOperatorName: 'OR',
+  useRegexForName: false,
+  logicalOperator: 'OR',
+  exactTags: false,
+};
+
+export type ModalType =
+  | BaseModalType
+  | 'replace'
+  | 'publish'
+  | 'discard'
+  | 'checkout'
+  | 'campaign'
+  | 'export'
+  | 'import'
+  | 'template'
+  | 'retire'
+  | 'enableStats'
+  | 'enableStatsMultiple'
+  | 'editTagsMultiple'
+  | 'schedule'
+  | null;
+
+export const getBaseFilterKeys = (
+  t: TFunction,
+  canTag = false,
+): FilterConfigItem<LayoutFilterInput>[] => [
+  {
+    label: t('ID'),
+    placeholder: ' ',
+    name: 'campaignId',
+    type: 'number',
+  },
+  {
+    label: t('Name'),
+    name: 'name',
+    type: 'text',
+    className: '',
+    placeholder: ' ',
+    showAndOr: true,
+    andOrKey: 'logicalOperatorName',
+    showRegex: true,
+    regexKey: 'useRegexForName',
+  },
+  ...(canTag
+    ? ([
+        {
+          label: t('Tags'),
+          name: 'tags',
+          type: 'tags',
+          placeholder: ' ',
+          className: '',
+          showAndOr: true,
+          andOrKey: 'logicalOperator',
+          showExactTags: true,
+          exactTagsKey: 'exactTags',
+        },
+      ] as FilterConfigItem<LayoutFilterInput>[])
+    : []),
+  {
+    label: t('Code'),
+    placeholder: ' ',
+    name: 'code',
+    type: 'text',
+  },
+  {
+    label: t('Display Group'),
+    name: 'activeDisplayGroupId',
+    className: '',
+    options: [],
+  },
+  {
+    label: t('Owner'),
+    name: 'ownerId',
+    className: '',
+    options: [{ label: t('Select Owner'), value: null }],
+  },
+  {
+    label: t('Owner User Group'),
+    name: 'ownerUserGroupId',
+    className: '',
+    options: [{ label: t('Select Group'), value: null }],
+  },
+  {
+    label: t('Orientation'),
+    name: 'orientation',
+    className: '',
+    options: [
+      { label: t('Portrait'), value: 'portrait' },
+      { label: t('Landscape'), value: 'landscape' },
+    ],
+  },
+  {
+    label: t('Retired'),
+    name: 'retired',
+    className: '',
+    options: getCommonFormOptions(t).retired,
+  },
+  {
+    label: t('Show'),
+    name: 'layoutStatusId',
+    className: '',
+    options: [
+      { label: t('Only Used'), value: 2 },
+      { label: t('Only Unused'), value: 3 },
+    ],
+  },
+  {
+    label: t('Description'),
+    name: 'showDescriptionId',
+    className: '',
+    options: [
+      { label: t('1st line'), value: 2 },
+      { label: t('Widget List'), value: 3 },
+    ],
+  },
+  {
+    label: t('Media'),
+    name: 'mediaLike',
+    type: 'text',
+    className: '',
+    placeholder: ' ',
+  },
+  {
+    label: t('Layout ID'),
+    name: 'layoutId',
+    type: 'number',
+    className: '',
+    placeholder: ' ',
+  },
+  {
+    label: t('Last Modified'),
+    name: 'lastModified',
+    className: '',
+    type: 'date-range',
+    options: getCommonFormOptions(t).lastModifiedFilter,
+  },
+];
+
+export interface LayoutActionsProps {
+  t: TFunction;
+  canModify?: boolean;
+  canMoveToCampaignFolder?: boolean;
+  canUserShare?: boolean;
+  canExport?: boolean;
+  canViewPlaylist?: boolean;
+  canViewCampaign?: boolean;
+  canViewMedia?: boolean;
+  canAssignCampaign?: boolean;
+  canSaveTemplate?: boolean;
+  canTag?: boolean;
+  formatDateTime: (value: DateLike) => string;
+  onPreview?: (row: Layout) => void;
+  onMiniPreview?: (row: Layout, kind: 'published' | 'draft') => void;
+  onDelete: (id: number) => void;
+  openEditModal: (row: Layout) => void;
+  openShareModal?: (id: number) => void;
+  openMoveModal?: (row: Layout | Layout[]) => void;
+  copyLayout?: (row: number) => void;
+  openDetails?: (id: number) => void;
+  openLayout?: (id: number) => void;
+  openPublish?: (id: number) => void;
+  checkoutLayout?: (id: number) => void;
+  discardLayout?: (id: number) => void;
+  assignModal?: (layout: Layout) => void;
+  jumpToPlaylists?: (layoutId: number) => void;
+  exportLayout?: (row: Layout) => void;
+  openTemplateModal?: (layoutId: number) => void;
+  jumpToCampaigns?: (layoutId: number) => void;
+  jumpToMedia?: (layoutId: number) => void;
+  openRetireModal?: (layout: Layout) => void;
+  openEnableStatsModal?: (layout: Layout) => void;
+  openScheduleModal?: (layout: Layout) => void;
+  showDescriptionId?: number | null;
+}
+
+export const getLayoutItemActions = ({
+  t,
+  canModify = false,
+  canMoveToCampaignFolder = false,
+  canUserShare = false,
+  canExport = false,
+  canViewPlaylist = false,
+  canViewCampaign = false,
+  canViewMedia = false,
+  canAssignCampaign = false,
+  canSaveTemplate = false,
+  onDelete,
+  onMiniPreview,
+  openEditModal,
+  openShareModal,
+  openMoveModal,
+  copyLayout,
+  openDetails,
+  openLayout,
+  openPublish,
+  checkoutLayout,
+  discardLayout,
+  assignModal,
+  jumpToPlaylists,
+  jumpToCampaigns,
+  jumpToMedia,
+  exportLayout,
+  openTemplateModal,
+  openRetireModal,
+  openEnableStatsModal,
+  openScheduleModal,
+}: LayoutActionsProps): ((layout: Layout) => ActionItem[]) => {
+  return (layout: Layout) => {
+    const actions: ActionItem[] = [];
+
+    const canEdit = !!layout.userPermissions?.edit;
+    const canDelete = !!layout.userPermissions?.delete;
+    const canShare = !!layout.userPermissions?.modifyPermissions;
+
+    const addSeparator = () => {
+      if (actions.length > 0 && !actions[actions.length - 1]?.isSeparator) {
+        actions.push({ isSeparator: true });
+      }
+    };
+
+    if (canModify && canEdit) {
+      actions.push({
+        label: t('Design'),
+        icon: PaletteIcon,
+        isQuickAction: true,
+        variant: 'primary',
+        onClick: () => openLayout && openLayout(layout.layoutId),
+      });
+      actions.push({
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => openEditModal(layout),
+        isQuickAction: true,
+      });
+
+      actions.push({
+        label: t('Design'),
+        icon: PaletteIcon,
+        onClick: () => openLayout && openLayout(layout.layoutId),
+      });
+
+      if (layout.publishedStatus !== 'Published') {
+        actions.push({
+          label: t('Publish'),
+          icon: CloudUpload,
+          onClick: () => openPublish && openPublish(layout.layoutId),
+        });
+        actions.push({
+          label: t('Discard'),
+          icon: Redo2,
+          onClick: () => discardLayout && discardLayout(layout.layoutId),
+        });
+      } else {
+        actions.push({
+          label: t('Checkout'),
+          icon: DownloadCloud,
+          onClick: () => checkoutLayout && checkoutLayout(layout.layoutId),
+        });
+        if (canSaveTemplate) {
+          actions.push({
+            label: t('Save as Template'),
+            icon: FileCheck,
+            onClick: () => openTemplateModal && openTemplateModal(layout.layoutId),
+          });
+        }
+      }
+    }
+
+    addSeparator();
+
+    actions.push({
+      label: t('Preview Layout'),
+      icon: Eye,
+      onClick: () => onMiniPreview && onMiniPreview(layout, 'published'),
+    });
+
+    if (layout.publishedStatus !== 'Published') {
+      actions.push({
+        label: t('Preview Draft Layout'),
+        icon: Eye,
+        onClick: () => onMiniPreview && onMiniPreview(layout, 'draft'),
+      });
+    }
+
+    if (canModify && canEdit) {
+      actions.push({
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => openEditModal(layout),
+      });
+
+      if (copyLayout) {
+        actions.push({
+          label: t('Make a Copy'),
+          icon: CopyCheck,
+          onClick: () => copyLayout(layout.layoutId),
+        });
+      }
+    }
+
+    if (canMoveToCampaignFolder && canEdit && openMoveModal) {
+      actions.push({
+        label: t('Move'),
+        icon: FolderInput,
+        onClick: () => openMoveModal(layout),
+      });
+    }
+
+    if (canModify && canShare && canUserShare && openShareModal && layout.campaignId) {
+      actions.push({
+        label: t('Share'),
+        icon: UserPlus2,
+        onClick: () => openShareModal(layout.campaignId),
+      });
+    }
+
+    if (canModify && canEdit && canExport) {
+      actions.push({
+        label: t('Export'),
+        icon: Download,
+        onClick: () => exportLayout && exportLayout(layout),
+      });
+    }
+
+    if (openScheduleModal) {
+      actions.push({
+        label: t('Schedule'),
+        icon: CalendarClock,
+        onClick: () => openScheduleModal(layout),
+      });
+    }
+
+    if (canModify && canEdit) {
+      actions.push({
+        label: t('Retire'),
+        icon: FileX,
+        onClick: () => openRetireModal && openRetireModal(layout),
+      });
+    }
+
+    actions.push({
+      label: t('Details'),
+      icon: Info,
+      onClick: () => openDetails && openDetails(layout.layoutId),
+    });
+
+    addSeparator();
+
+    if (canViewPlaylist) {
+      actions.push({
+        label: t('Jump to Playlists'),
+        onClick: () => jumpToPlaylists && jumpToPlaylists(layout.layoutId),
+        rightIcon: ArrowRight,
+      });
+    }
+    if (canViewCampaign) {
+      actions.push({
+        label: t('Jump to Campaigns'),
+        onClick: () => jumpToCampaigns && jumpToCampaigns(layout.layoutId),
+        rightIcon: ArrowRight,
+      });
+    }
+    if (canViewMedia) {
+      actions.push({
+        label: t('Jump to Media'),
+        onClick: () => jumpToMedia && jumpToMedia(layout.layoutId),
+        rightIcon: ArrowRight,
+      });
+    }
+
+    if (canAssignCampaign) {
+      actions.push({
+        label: t('Assign to Campaign'),
+        onClick: () => assignModal && assignModal(layout),
+      });
+    }
+
+    if (canModify && canEdit) {
+      actions.push({
+        label: t('Enable Stats Collection'),
+        onClick: () => openEnableStatsModal && openEnableStatsModal(layout),
+      });
+    }
+
+    if (canModify && canDelete) {
+      addSeparator();
+      actions.push({
+        label: t('Delete'),
+        icon: Trash2,
+        onClick: () => onDelete(layout.layoutId),
+        variant: 'danger',
+      });
+    }
+
+    // Drop a trailing separator if the last group was gated out.
+    if (actions.length > 0 && actions[actions.length - 1]?.isSeparator) {
+      actions.pop();
+    }
+
+    return actions;
+  };
+};
+
+export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[] => {
+  const { t, showDescriptionId, formatDateTime, canTag = false } = props;
+  const getActions = getLayoutItemActions(props);
+
+  return [
+    {
+      accessorKey: 'campaignId',
+      header: t('ID'),
+      size: 80,
+      cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
+    },
+    {
+      accessorKey: 'thumbnail',
+      header: t('Thumbnail'),
+      size: 140,
+      enableSorting: false,
+      cell: (info) => {
+        const row = info.row.original;
+
+        return (
+          <MediaCell
+            thumb={row?.thumbnail || undefined}
+            alt={row?.layout}
+            mediaType="image"
+            onPreview={() => props.onPreview && props.onPreview(row)}
+          />
+        );
+      },
+    },
+    {
+      accessorKey: 'layout',
+      header: t('Name'),
+      size: 200,
+      enableHiding: false,
+      cell: (info) => (
+        <TextCell weight="bold" truncate>
+          {info.getValue<string>()}
+        </TextCell>
+      ),
+    },
+
+    ...(canTag
+      ? ([
+          {
+            accessorKey: 'tags',
+            header: t('Tags'),
+            enableSorting: false,
+            size: 150,
+            cell: (info) => {
+              const tags = info.getValue<Tag[]>() || [];
+              const formattedTags = tags.map((tag) => ({
+                id: tag.tagId,
+                label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
+              }));
+              return <TagsCell tags={formattedTags} />;
+            },
+          },
+        ] as ColumnDef<Layout>[])
+      : []),
+    {
+      accessorKey: 'description',
+      header: t('Description'),
+      size: 200,
+      cell: (info) => {
+        const row = info.row.original;
+        const value = row.descriptionFormatted ?? info.getValue<string>();
+        return <DescriptionCell value={value} isHtml={showDescriptionId === 3} />;
+      },
+      enableSorting: false,
+    },
+    {
+      accessorKey: 'publishedStatus',
+      header: t('Status'),
+      size: 120,
+      cell: (info) => {
+        const status = info.getValue<string>();
+        return <StatusCell label={status} type={status === 'Published' ? 'success' : 'neutral'} />;
+      },
+    },
+    {
+      accessorKey: 'duration',
+      header: t('Duration'),
+      size: 140,
+      cell: (info) => {
+        const value = info.getValue<number>();
+        return <TextCell>{formatDuration(value)}</TextCell>;
+      },
+    },
+
+    {
+      accessorKey: 'owner',
+      header: t('Owner'),
+      size: 150,
+      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
+    },
+
+    getSharingColumn<Layout>(t),
+
+    {
+      id: 'valid',
+      header: t('Valid?'),
+      size: 100,
+      accessorFn: (row) => (row as Layout).status,
+      cell: (info) => <CheckMarkCell active={info.getValue<number>() <= 2} />,
+    },
+
+    {
+      accessorKey: 'enableStat',
+      header: t('Stats?'),
+      size: 100,
+      cell: (info) => <CheckMarkCell active={info.getValue<boolean>()} />,
+    },
+
+    {
+      accessorKey: 'modifiedDt',
+      header: t('Modified'),
+      size: 160,
+      cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
+    },
+    {
+      accessorKey: 'layoutId',
+      header: t('Layout ID'),
+      size: 100,
+      cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
+    },
+    {
+      accessorKey: 'code',
+      header: t('Code'),
+      size: 100,
+      cell: (info) => <TextCell>{info.getValue<number>() || '-'}</TextCell>,
+    },
+    {
+      id: 'tableActions',
+      header: '',
+      size: 110,
+      minSize: 110,
+      maxSize: 110,
+      enableHiding: false,
+      enableResizing: false,
+      cell: (info) => {
+        const row = info.row.original;
+        if (!row) return null;
+
+        return (
+          <ActionsCell
+            row={info.row}
+            actions={getActions(row) as ComponentProps<typeof ActionsCell>['actions']}
+          />
+        );
+      },
+    },
+  ];
+};
+
+interface GetBulkActionsProps {
+  t: TFunction;
+  onDelete: () => void;
+  onMove?: () => void;
+  onShare: () => void;
+  onEditTags?: () => void;
+  onEnableStats?: () => void;
+}
+
+export const getBulkActions = ({
+  t,
+  onDelete,
+  onMove,
+  onShare,
+  onEditTags,
+  onEnableStats,
+}: GetBulkActionsProps): DataTableBulkAction<Layout>[] => {
+  return [
+    ...(onMove
+      ? [
+          {
+            label: t('Move'),
+            icon: FolderInput,
+            onClick: onMove,
+          },
+        ]
+      : []),
+    ...(onEditTags
+      ? [
+          {
+            label: t('Edit Tags'),
+            icon: Tags,
+            onClick: onEditTags,
+          },
+        ]
+      : []),
+    ...(onEnableStats
+      ? [
+          {
+            label: t('Enable Stats Collection'),
+            icon: BarChart3,
+            onClick: onEnableStats,
+          },
+        ]
+      : []),
+    {
+      label: t('Share'),
+      icon: UserPlus2,
+      onClick: onShare,
+    },
+    {
+      label: t('Delete Selected'),
+      icon: Trash2,
+      onClick: onDelete,
+    },
+  ];
+};

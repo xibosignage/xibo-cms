@@ -75,6 +75,12 @@ interface ConfigServiceInterface
     public function changeSetting($setting, $value, $userChange = 0);
 
     /**
+     * Get all settings with metadata (value, userSee, userChange)
+     * @return array
+     */
+    public function getAllSettingsWithMeta();
+
+    /**
      * Is the provided setting visible
      * @param string $setting
      * @return bool
@@ -94,6 +100,13 @@ interface ConfigServiceInterface
      * @return bool
      */
     public function isProxyException($host);
+
+    /**
+     * Is SAML Single Logout usable - i.e. explicitly enabled in workflow settings
+     * and the IdP has a singleLogoutService endpoint configured.
+     * @return bool
+     */
+    public function isSamlSloSupported();
 
     /**
      * Get Proxy Configuration
@@ -128,6 +141,21 @@ interface ConfigServiceInterface
      * @return null
      */
     public function getThemeConfig($settingName = null, $default = null);
+
+    /**
+     * Resolve which file backs a brand asset, preferring the SVG variant and falling
+     * back to PNG for WL packages that ship a raster logo.
+     * @param string $base Asset base name, e.g. "logo" or "logo-icon"
+     * @return string
+     */
+    public function getBrandAssetFile(string $base): string;
+
+    /**
+     * Resolve which file backs the dark-logo variant (for light backgrounds, e.g. the login
+     * card): dark SVG, else dark PNG, else fall back to the standard logo asset.
+     * @return string
+     */
+    public function getBrandLogoDarkFile(): string;
 
     /**
      * Get theme URI
@@ -182,4 +210,11 @@ interface ConfigServiceInterface
      * @return array
      */
     public function getConnectorSettings(string $connector): array;
+
+    /**
+     * Get the operator-supplied Host-header allow-list (comma-separated). Empty when unset.
+     * Deployment-time only — sourced from web/settings.php, not the DB.
+     * @return string
+     */
+    public function getWhitelistHosts(): string;
 }

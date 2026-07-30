@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -54,6 +54,7 @@ if (!defined('PROJECT_ROOT')) {
 
 /**
  * Class ContainerFactory
+ *
  * @package Xibo\Factory
  */
 class ContainerFactory
@@ -68,7 +69,8 @@ class ContainerFactory
     {
         $containerBuilder = new ContainerBuilder();
 
-        $containerBuilder->addDefinitions([
+        $containerBuilder->addDefinitions(
+            [
             'basePath' => function (ContainerInterface $c) {
                 // Server params
                 $scriptName = $_SERVER['SCRIPT_NAME'] ?? ''; // <-- "/foo/index.php"
@@ -77,7 +79,7 @@ class ContainerFactory
                 // Physical path
                 if (empty($scriptName) || empty($requestUri)) {
                     return '';
-                } else if (strpos($requestUri, $scriptName) !== false) {
+                } else if (str_contains($requestUri, $scriptName)) {
                     $physicalPath = $scriptName; // <-- Without rewriting
                 } else {
                     $physicalPath = str_replace('\\', '', dirname($scriptName)); // <-- With rewriting
@@ -93,8 +95,8 @@ class ContainerFactory
                 // Replace out all of the entrypoints to get back to the root
                 $basePath = str_replace('/api/authorize', '', $basePath);
                 $basePath = str_replace('/api', '', $basePath);
+                $basePath = str_replace('/json', '', $basePath);
                 $basePath = str_replace('/maintenance', '', $basePath);
-                $basePath = str_replace('/install', '', $basePath);
                 $basePath = str_replace('/preview', '', $basePath);
 
                 // Handle an empty (we always have our root with reference to `/`
@@ -108,14 +110,16 @@ class ContainerFactory
                 return new \Xibo\Service\LogService($c->get('logger'));
             },
             'view' => function (ContainerInterface $c) {
-                $view =  Twig::create([
-                    PROJECT_ROOT . '/views',
-                    PROJECT_ROOT . '/modules',
-                    PROJECT_ROOT . '/reports',
-                    PROJECT_ROOT . '/custom'
-                ], [
-                    'cache' => Environment::isDevMode() ? false : PROJECT_ROOT . '/cache'
-                ]);
+                $view =  Twig::create(
+                    [
+                        PROJECT_ROOT . '/views',
+                        PROJECT_ROOT . '/modules',
+                        PROJECT_ROOT . '/reports',
+                    ],
+                    [
+                        'cache' => Environment::isDevMode() ? false : PROJECT_ROOT . '/cache'
+                    ]
+                );
                 $view->addExtension(new TransExtension());
                 $view->addExtension(new ByteFormatterTwigExtension());
                 $view->addExtension(new DateFormatTwigExtension());
@@ -178,7 +182,9 @@ class ContainerFactory
             'pool' => function (ContainerInterface $c) {
                 $drivers = [];
 
-                if ($c->get('configService')->getCacheDrivers() != null && is_array($c->get('configService')->getCacheDrivers())) {
+                if ($c->get('configService')->getCacheDrivers() != null &&
+                    is_array($c->get('configService')->getCacheDrivers())
+                ) {
                     $drivers = $c->get('configService')->getCacheDrivers();
                 } else {
                     // File System Driver
@@ -250,7 +256,8 @@ class ContainerFactory
                     ->useLogger($c->get('logService')->getLoggerInterface())
                     ->useKeys($c->get('configService')->getApiKeyDetails());
             }
-        ]);
+            ]
+        );
 
         $containerBuilder->addDefinitions(Controllers::registerControllersWithDi());
         $containerBuilder->addDefinitions(Factories::registerFactoriesWithDi());

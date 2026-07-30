@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,6 +22,7 @@
 
 namespace Xibo\Controller;
 
+use OpenApi\Attributes as OA;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\ModuleFactory;
@@ -42,33 +43,28 @@ class WidgetData extends Base
     ) {
     }
 
-    // phpcs:disable
+    #[OA\Get(
+        path: '/playlist/widget/data/{id}',
+        operationId: 'getWidgetData',
+        description: 'Return all of the fallback data currently assigned to this Widget',
+        summary: 'Get data for Widget',
+        tags: ['widget']
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'The Widget ID that this data should be added to',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/WidgetData'))
+    )]
     /**
-     * @SWG\Get(
-     *  path="/playlist/widget/data/{id}",
-     *  operationId="getWidgetData",
-     *  tags={"widget"},
-     *  summary="Get data for Widget",
-     *  description="Return all of the fallback data currently assigned to this Widget",
-     *  @SWG\Parameter(
-     *      name="id",
-     *      in="path",
-     *      description="The Widget ID that this data should be added to",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/WidgetData")
-     *      )
-     *  )
-     * )
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    // phpcs:enable
     public function get(Request $request, Response $response, int $id): Response
     {
         $widget = $this->widgetFactory->getById($id);
@@ -79,48 +75,53 @@ class WidgetData extends Base
         return $response->withJson($this->widgetDataFactory->getByWidgetId($widget->widgetId));
     }
 
-    // phpcs:disable
+    #[OA\Post(
+        path: '/playlist/widget/data/{id}',
+        operationId: 'addWidgetData',
+        description: 'Add fallback data to a data Widget',
+        summary: 'Add a data to a Widget',
+        tags: ['widget'],
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'The Widget ID that this data should be added to',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer'),
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['data'],
+                properties: [
+                    new OA\Property(
+                        property: 'data',
+                        description: 'A JSON formatted string containing a single data item for this widget\'s data type', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'displayOrder',
+                        description: 'Optional integer to say which position this data should appear if there is more than one data item', // phpcs:ignore
+                        type: 'integer'
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        headers: [new OA\Header(
+            header: 'Location',
+            description: 'Location of the new record',
+            schema: new OA\Schema(type: 'string')
+        )]
+    )]
     /**
-     * @SWG\Post(
-     *  path="/playlist/widget/data/{id}",
-     *  operationId="addWidgetData",
-     *  tags={"widget"},
-     *  summary="Add a data to a Widget",
-     *  description="Add fallback data to a data Widget",
-     *  @SWG\Parameter(
-     *      name="id",
-     *      in="path",
-     *      description="The Widget ID that this data should be added to",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="data",
-     *      in="path",
-     *      description="A JSON formatted string containing a single data item for this widget's data type",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="displayOrder",
-     *      in="formData",
-     *      description="Optional integer to say which position this data should appear if there is more than one data item",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    // phpcs:enable
     public function add(Request $request, Response $response, int $id): Response
     {
         // Check that we have permission to edit this widget
@@ -153,50 +154,52 @@ class WidgetData extends Base
         return $this->render($request, $response);
     }
 
-    // phpcs:disable
+    #[OA\Put(
+        path: '/playlist/widget/data/{id}/{dataId}',
+        operationId: 'editWidgetData',
+        description: 'Edit fallback data on a data Widget',
+        summary: 'Edit data on a Widget',
+        tags: ['widget'],
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'The Widget ID that this data is attached to',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer'),
+    )]
+    #[OA\Parameter(
+        name: 'dataId',
+        description: 'The ID of the data to be edited',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer'),
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['data'],
+                properties: [
+                    new OA\Property(
+                        property: 'data',
+                        description: 'A JSON formatted string containing a single data item for this widget\'s data type', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'displayOrder',
+                        description: 'Optional integer to say which position this data should appear if there is more than one data item', // phpcs:ignore
+                        type: 'integer'
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
-     * @SWG\Put(
-     *  path="/playlist/widget/data/{id}/{dataId}",
-     *  operationId="editWidgetData",
-     *  tags={"widget"},
-     *  summary="Edit data on a Widget",
-     *  description="Edit fallback data on a data Widget",
-     *  @SWG\Parameter(
-     *      name="id",
-     *      in="path",
-     *      description="The Widget ID that this data is attached to",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="dataId",
-     *      in="path",
-     *      description="The ID of the data to be edited",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="data",
-     *      in="path",
-     *      description="A JSON formatted string containing a single data item for this widget's data type",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="displayOrder",
-     *      in="formData",
-     *      description="Optional integer to say which position this data should appear if there is more than one data item",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    // phpcs:enable
     public function edit(Request $request, Response $response, int $id, int $dataId): Response
     {
         // Check that we have permission to edit this widget
@@ -229,36 +232,31 @@ class WidgetData extends Base
         return $this->render($request, $response);
     }
 
-    // phpcs:disable
+    #[OA\Delete(
+        path: '/playlist/widget/data/{id}/{dataId}',
+        operationId: 'deleteWidgetData',
+        description: 'Delete fallback data on a data Widget',
+        summary: 'Delete data on a Widget',
+        tags: ['widget']
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'The Widget ID that this data is attached to',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'dataId',
+        description: 'The ID of the data to be deleted',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
-     * @SWG\Delete(
-     *  path="/playlist/widget/data/{id}/{dataId}",
-     *  operationId="deleteWidgetData",
-     *  tags={"widget"},
-     *  summary="Delete data on a Widget",
-     *  description="Delete fallback data on a data Widget",
-     *  @SWG\Parameter(
-     *      name="id",
-     *      in="path",
-     *      description="The Widget ID that this data is attached to",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="dataId",
-     *      in="path",
-     *      description="The ID of the data to be deleted",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    // phpcs:enable
     public function delete(Request $request, Response $response, int $id, int $dataId): Response
     {
         // Check that we have permission to edit this widget
@@ -283,60 +281,37 @@ class WidgetData extends Base
         return $this->render($request, $response);
     }
 
-    // phpcs:disable
+    #[OA\Post(
+        path: '/playlist/widget/data/{id}/order',
+        operationId: 'orderWidgetData',
+        description: 'Provide all data to be ordered on a widget',
+        summary: 'Update the order of data on a Widget',
+        tags: ['widget']
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'The Widget ID that this data is attached to',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(
+                properties: [
+                    new OA\Property(property: 'dataId', description: 'Data ID', type: 'integer'),
+                    new OA\Property(property: 'displayOrder', description: 'Desired display order', type: 'integer')
+                ],
+                type: 'object'
+            )
+        )
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
-     * @SWG\Definition(
-     *  definition="WidgetDataOrder",
-     *  @SWG\Property(
-     *      property="dataId",
-     *      type="integer",
-     *      description="Data ID"
-     *  ),
-     *  @SWG\Property(
-     *      property="displayOrder",
-     *      type="integer",
-     *      description="Desired display order"
-     *  )
-     * )
-     *
-     * @SWG\Post(
-     *  path="/playlist/widget/data/{id}/order",
-     *  operationId="orderWidgetData",
-     *  tags={"widget"},
-     *  summary="Update the order of data on a Widget",
-     *  description="Provide all data to be ordered on a widget",
-     *  @SWG\Parameter(
-     *      name="id",
-     *      in="path",
-     *      description="The Widget ID that this data is attached to",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="dataId",
-     *      in="path",
-     *      description="The ID of the data to be deleted",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="order",
-     *      in="body",
-     *      description="An array of any widget data records that should be re-ordered",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="WidgetDataOrder")
-     *      ),
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    // phpcs:enable
     public function setOrder(Request $request, Response $response, int $id): Response
     {
         // Check that we have permission to edit this widget

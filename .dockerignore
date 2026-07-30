@@ -15,6 +15,7 @@ node_modules/
 
 # Dist will be built by Dockerfile
 web/dist/
+web/app/
 
 # Cache should be empty so that it gets built internally
 cache/

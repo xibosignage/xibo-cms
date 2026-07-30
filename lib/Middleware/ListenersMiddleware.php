@@ -31,6 +31,7 @@ use Xibo\Event\CommandDeleteEvent;
 use Xibo\Event\DependencyFileSizeEvent;
 use Xibo\Event\DisplayGroupLoadEvent;
 use Xibo\Event\FolderMovingEvent;
+use Xibo\Event\FolderTouchEvent;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Event\MediaFullLoadEvent;
 use Xibo\Event\ParsePermissionEntityEvent;
@@ -164,7 +165,8 @@ class ListenersMiddleware implements MiddlewareInterface
 
         // Media Delete Events
         $dispatcher->addListener(MediaDeleteEvent::$NAME, (new \Xibo\Listener\OnMediaDelete\MenuBoardListener(
-            $c->get('menuBoardCategoryFactory')
+            $c->get('menuBoardCategoryFactory'),
+            $c->get('menuBoardFactory')
         )));
 
         $dispatcher->addListener(MediaDeleteEvent::$NAME, (new \Xibo\Listener\OnMediaDelete\WidgetListener(
@@ -308,6 +310,11 @@ class ListenersMiddleware implements MiddlewareInterface
         $dispatcher->addListener(PlaylistMaxNumberChangedEvent::$NAME, (new \Xibo\Listener\OnPlaylistMaxNumberChange(
             $c->get('store')
         )));
+
+        // On Folder touch listener
+        $dispatcher->addListener(FolderTouchEvent::$NAME, (new \Xibo\Listener\FolderTouchListener(
+            $c->get('folderFactory')
+        ))->onFolderTouch(...));
 
         // On Folder moving listeners
         $dispatcher->addListener(FolderMovingEvent::$NAME, (new \Xibo\Listener\OnFolderMoving\DataSetListener(

@@ -1,0 +1,671 @@
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+import { useQueryClient } from '@tanstack/react-query';
+import type { RowSelectionState } from '@tanstack/react-table';
+import { Plus, Search, Upload } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
+
+import type { LayoutFilterInput, ModalType } from './LayoutConfig';
+import { getBulkActions, getLayoutColumns, LAYOUT_INITIAL_FILTER_STATE } from './LayoutConfig';
+import LayoutPreviewer from './components/LayoutPreviewer';
+import { LayoutModals } from './components/LayoutsModal';
+import MiniLayoutPreview from './components/MiniLayoutPreview';
+import { useLayoutActions } from './hooks/useLayoutActions';
+import { useLayoutData } from './hooks/useLayoutData';
+import { useLayoutFilterOptions } from './hooks/useLayoutFilterOptions';
+
+import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
+import FilterInputs from '@/components/ui/FilterInputs';
+import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
+import FolderSidebar from '@/components/ui/FolderSidebar';
+import TabNav from '@/components/ui/TabNav';
+import { DataTable } from '@/components/ui/table/DataTable';
+import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
+import { useUserContext } from '@/context/UserContext';
+import { useAutoSubmit } from '@/hooks/useAutoSubmit';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
+import { useFilteredTabs } from '@/hooks/useFilteredTabs';
+import { useFolderActions } from '@/hooks/useFolderActions';
+import { useOwner } from '@/hooks/useOwner';
+import { usePermissions } from '@/hooks/usePermissions';
+import { useTableState } from '@/hooks/useTableState';
+import type { Layout } from '@/types/layout';
+import { countActiveFilters } from '@/utils/filters';
+import { canSaveInFolder, hasFeature } from '@/utils/permissions';
+
+export default function Layouts() {
+  const { t } = useTranslation();
+  const { formatDateTime } = useDateFormatter();
+  const queryClient = useQueryClient();
+  const { user } = useUserContext();
+  const canViewFolders = usePermissions()?.canViewFolders;
+  const canSchedule = hasFeature(user, 'schedule.add');
+  const canViewPlaylist = hasFeature(user, 'playlist.view');
+  const canViewCampaign = hasFeature(user, 'campaign.view');
+  const canViewMedia = hasFeature(user, 'library.view');
+  const canAssignCampaign = hasFeature(user, 'campaign.modify');
+  const canMoveToCampaignFolder = hasFeature(user, 'campaign.modify');
+  const canSaveTemplate = hasFeature(user, 'template.modify');
+  const canTag = hasFeature(user, 'tag.tagging');
+  const importEnabled = hasFeature(user, 'layout.add');
+  const homeFolderId = user?.homeFolderId ?? 1;
+
+  const {
+    pagination,
+    setPagination,
+    sorting,
+    setSorting,
+    columnVisibility,
+    setColumnVisibility,
+    globalFilter,
+    debouncedFilter,
+    setGlobalFilter,
+    filterInputs,
+    setFilterInputs,
+    folderId: selectedFolderId,
+    setFolderId: setSelectedFolderId,
+    isHydrated,
+  } = useTableState<LayoutFilterInput>('layout_page', {
+    pagination: { pageIndex: 0, pageSize: 10 },
+    sorting: [],
+    columnVisibility: {
+      campaignId: true,
+      layout: true,
+      publishedStatus: true,
+      duration: true,
+      description: true,
+      thumbnail: true,
+      owner: true,
+      groupsWithPermissions: false,
+      valid: true,
+      status: true,
+      modifiedDt: false,
+      layoutId: false,
+      code: false,
+    },
+    viewMode: 'table',
+    globalFilter: '',
+    filterInputs: LAYOUT_INITIAL_FILTER_STATE,
+    folderId: canViewFolders ? homeFolderId : null,
+  });
+
+  const location = useLocation();
+  const activeDisplayGroupId = location.state?.activeDisplayGroupId as number | undefined;
+
+  useEffect(() => {
+    if (!isHydrated || !activeDisplayGroupId) {
+      return;
+    }
+
+    setFilterInputs((prev) => ({ ...prev, activeDisplayGroupId }));
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  }, [activeDisplayGroupId, isHydrated, setFilterInputs, setPagination]);
+
+  const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [selectionCache, setSelectionCache] = useState<Record<string, Layout>>({});
+  const [openFilter, setOpenFilter] = useState(false);
+  const [showInfoPanel, setShowInfoPanel] = useState(false);
+
+  const [selectedFolderName, setSelectedFolderName] = useState(t('Root Folder'));
+  const [showFolderSidebar, setShowFolderSidebar] = useState(false);
+  const [activeModal, setActiveModal] = useState<ModalType | null>(null);
+
+  const [itemsToDelete, setItemsToDelete] = useState<Layout[]>([]);
+  const [itemsToMove, setItemsToMove] = useState<Layout[]>([]);
+  const [bulkItems, setBulkItems] = useState<Layout[]>([]);
+  const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
+  const [selectedLayoutId, setSelectedLayoutId] = useState<number | null>(null);
+  const [previewItem, setPreviewItem] = useState<Layout | null>(null);
+  const [previewOverrideUrl, setPreviewOverrideUrl] = useState<string | null>(null);
+  const [miniPreview, setMiniPreview] = useState<{ layout: Layout; url: string } | null>(null);
+
+  const openModal = (name: ModalType) => setActiveModal(name);
+  const closeModal = () => setActiveModal(null);
+
+  const {
+    data: queryData,
+    isFetching,
+    isError,
+    error: queryError,
+  } = useLayoutData({
+    pagination,
+    sorting,
+    filter: debouncedFilter,
+    advancedFilters: filterInputs,
+    folderId: selectedFolderId,
+    enabled: isHydrated,
+  });
+
+  const effectiveFolderId = selectedFolderId ?? homeFolderId;
+
+  const data = queryData?.rows;
+  const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
+  const error = isError && queryError instanceof Error ? queryError.message : '';
+  const layoutList = data ?? [];
+  const canAddToFolder =
+    hasFeature(user, 'layout.add') &&
+    canSaveInFolder(user, !!canViewFolders, effectiveFolderId, homeFolderId);
+
+  const folderActions = useFolderActions({
+    onSuccess: (targetFolder) => {
+      setFolderRefreshTrigger((prev) => prev + 1);
+      if (targetFolder) {
+        handleFolderChange({ id: targetFolder.id, text: targetFolder.text });
+      } else {
+        handleRefresh();
+      }
+    },
+  });
+
+  const getRowId = (row: Layout) => {
+    return row.layoutId.toString();
+  };
+
+  const handleRowSelectionChange = (
+    updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
+  ) => {
+    const newSelection =
+      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
+
+    setRowSelection(newSelection);
+
+    setSelectionCache((prev) => {
+      const next = { ...prev };
+      layoutList.forEach((item) => {
+        const id = getRowId(item);
+        if (newSelection[id]) {
+          next[id] = item;
+        }
+      });
+      return next;
+    });
+  };
+
+  const selectedLayout = layoutList.find((m) => m.layoutId === selectedLayoutId) ?? null;
+  const existingNames = layoutList.map((m) => m.layout).filter(Boolean);
+  const ownerId = selectedLayout?.ownerId ? Number(selectedLayout.ownerId) : null;
+  const { owner, loading } = useOwner({ ownerId });
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['layout'] });
+  };
+
+  const handleFolderChange = (folder: { id: number | null; text: string | '' }) => {
+    setSelectedFolderId(folder.id);
+    setSelectedFolderName(folder.text);
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    setRowSelection({});
+  };
+
+  const {
+    isDeleting,
+    deleteError,
+    setDeleteError,
+    isCloning,
+    isPublishing,
+    isAssigning,
+    confirmDelete,
+    handleConfirmClone,
+    handleConfirmMove,
+    handleCreateLayout,
+    handleOpenLayout,
+    confirmPublish,
+    handleCheckoutLayout,
+    isCheckingOut,
+    checkoutError,
+    setCheckoutError,
+    isDiscarding,
+    handleConfirmDiscard,
+    handleConfirmAssign,
+    handleJumpToPlaylists,
+    handleJumpToCampaigns,
+    handleJumpToMedia,
+    isExporting,
+    handleExportLayout,
+  } = useLayoutActions({
+    t,
+    handleRefresh,
+    closeModal,
+    setRowSelection,
+    setItemsToMove,
+    timezone: user?.settings?.defaultTimezone ?? 'UTC',
+  });
+
+  const { guard } = useAutoSubmit();
+
+  const handleResetFilters = () => {
+    setFilterInputs(LAYOUT_INITIAL_FILTER_STATE);
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
+
+  const openEditModal = (layout: Layout) => {
+    setSelectedLayoutId(layout.layoutId);
+    openModal('edit');
+  };
+
+  const openShareModal = (campaignId: number) => {
+    setShareEntityIds(campaignId);
+    openModal('share');
+  };
+
+  const handleDelete = (id: number) => {
+    const playlist = layoutList.find((m) => m.layoutId === id);
+    if (!playlist) return;
+
+    setItemsToDelete([playlist]);
+    setDeleteError(null);
+    openModal('delete');
+  };
+
+  const handlePreviewClick = (row: Layout) => {
+    setPreviewOverrideUrl(null);
+    setPreviewItem(row);
+  };
+
+  const handleMiniPreview = (row: Layout, kind: 'published' | 'draft') => {
+    const url =
+      kind === 'draft' ? (row.previewDraftUrl ?? row.previewUrl ?? null) : (row.previewUrl ?? null);
+    if (!url) {
+      return;
+    }
+    setMiniPreview({ layout: row, url });
+  };
+
+  const openCopyModal = (layoutId: number) => {
+    setSelectedLayoutId(layoutId);
+    openModal('copy');
+  };
+
+  const openPublish = (layoutId: number) => {
+    setSelectedLayoutId(layoutId);
+    openModal('publish');
+  };
+
+  const handleDiscardModal = (layoutId: number) => {
+    setSelectedLayoutId(layoutId);
+    openModal('discard');
+  };
+
+  const openCheckoutModal = (layoutId: number) => {
+    setSelectedLayoutId(layoutId);
+    setCheckoutError(null);
+    openModal('checkout');
+  };
+
+  const handleExportModal = (layoutId: number) => {
+    setSelectedLayoutId(layoutId);
+    openModal('export');
+  };
+
+  const openTemplateModal = (layoutId: number) => {
+    setSelectedLayoutId(layoutId);
+    openModal('template');
+  };
+
+  const openRetireModal = (row: Layout) => {
+    setSelectedLayoutId(row.layoutId);
+    openModal('retire');
+  };
+
+  const openEnableStatsModal = (row: Layout) => {
+    setSelectedLayoutId(row.layoutId);
+    openModal('enableStats');
+  };
+
+  const openScheduleModal = (layout: Layout) => {
+    setSelectedLayoutId(layout.layoutId);
+    openModal('schedule');
+  };
+
+  const columns = getLayoutColumns({
+    t,
+    canModify: hasFeature(user, 'layout.modify'),
+    canMoveToCampaignFolder,
+    canUserShare: hasFeature(user, 'user.sharing'),
+    canExport: hasFeature(user, 'layout.export'),
+    canViewPlaylist,
+    canViewCampaign,
+    canViewMedia,
+    canAssignCampaign,
+    canSaveTemplate,
+    canTag,
+    formatDateTime,
+    onDelete: handleDelete,
+    openEditModal,
+    openMoveModal: canViewFolders
+      ? (layout) => {
+          setItemsToMove([layout] as Layout[]);
+          openModal('move');
+        }
+      : undefined,
+    openShareModal,
+    copyLayout: openCopyModal,
+    openDetails: (layoutId) => {
+      setSelectedLayoutId(layoutId);
+      setShowInfoPanel(true);
+    },
+    onPreview: handlePreviewClick,
+    onMiniPreview: handleMiniPreview,
+    openLayout: (layoutId) => {
+      handleOpenLayout(layoutId);
+    },
+    openPublish,
+    checkoutLayout: (layoutId) => {
+      guard(
+        AUTO_SUBMIT_FORMS.layoutCheckout,
+        () => handleCheckoutLayout(layoutId, { notifyOnError: true }),
+        () => openCheckoutModal(layoutId),
+      );
+    },
+    discardLayout: handleDiscardModal,
+    assignModal: (layout) => {
+      setSelectedLayoutId(layout.layoutId);
+      openModal('campaign');
+    },
+    jumpToPlaylists: handleJumpToPlaylists,
+    jumpToCampaigns: handleJumpToCampaigns,
+    jumpToMedia: handleJumpToMedia,
+    exportLayout: (layout) => {
+      handleExportModal(layout.layoutId);
+    },
+    openTemplateModal,
+    openRetireModal,
+    openEnableStatsModal,
+    openScheduleModal: canSchedule ? openScheduleModal : undefined,
+    showDescriptionId: filterInputs.showDescriptionId,
+  });
+
+  const getAllSelectedItems = (): Layout[] => {
+    return Object.keys(rowSelection)
+      .map((id) => selectionCache[id])
+      .filter((item): item is Layout => !!item);
+  };
+
+  const bulkActions = getBulkActions({
+    t,
+    onDelete: () => {
+      const allItems = getAllSelectedItems();
+      setItemsToDelete(allItems);
+      setDeleteError(null);
+      openModal('delete');
+    },
+    onMove: canViewFolders
+      ? () => {
+          const allItems = getAllSelectedItems();
+          setItemsToMove(allItems);
+          openModal('move');
+        }
+      : undefined,
+    onShare: () => {
+      const allItems = getAllSelectedItems();
+      const ids = allItems.map((i) => i.layoutId);
+      setShareEntityIds(ids);
+      openModal('share');
+    },
+    onEditTags: canTag
+      ? () => {
+          setBulkItems(getAllSelectedItems());
+          openModal('editTagsMultiple');
+        }
+      : undefined,
+    onEnableStats: hasFeature(user, 'layout.modify')
+      ? () => {
+          setBulkItems(getAllSelectedItems());
+          openModal('enableStatsMultiple');
+        }
+      : undefined,
+  });
+
+  const { filterOptions } = useLayoutFilterOptions(t, canTag);
+
+  const libraryTabs = useFilteredTabs('design');
+
+  const activeFilterCount = countActiveFilters(
+    filterInputs,
+    LAYOUT_INITIAL_FILTER_STATE,
+    filterOptions,
+  );
+
+  return (
+    <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
+      <FolderSidebar
+        isOpen={showFolderSidebar}
+        selectedFolderId={selectedFolderId}
+        onSelect={handleFolderChange}
+        onClose={() => setShowFolderSidebar(false)}
+        onAction={folderActions.openAction}
+        refreshTrigger={folderRefreshTrigger}
+      />
+      <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
+        <div className="flex flex-row justify-between py-4 items-center gap-4">
+          <TabNav activeTab="Layouts" navigation={libraryTabs} />
+          <div className="flex items-center gap-2 md:mb-0">
+            {importEnabled && (
+              <Button
+                variant="secondary"
+                onClick={() => openModal('import')}
+                disabled={!canAddToFolder || !isHydrated}
+                leftIcon={Upload}
+              >
+                {t('Import')}
+              </Button>
+            )}
+            <Button
+              variant="primary"
+              className="font-semibold"
+              onClick={handleCreateLayout}
+              disabled={!canAddToFolder || !isHydrated}
+              leftIcon={Plus}
+            >
+              {t('Add Layout')}
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
+          <div className="w-full lg:flex-1 md:min-w-0">
+            <FolderBreadcrumb
+              currentFolderId={selectedFolderId}
+              onNavigate={handleFolderChange}
+              isSidebarOpen={showFolderSidebar}
+              onToggleSidebar={() => setShowFolderSidebar(!showFolderSidebar)}
+              onAction={folderActions.openAction}
+              refreshTrigger={folderRefreshTrigger}
+            />
+          </div>
+
+          <div className="flex items-center gap-2 w-full xl:w-115 lg:w-75 shrink-0">
+            <div className="relative flex-1 flex">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <Search className="w-4 h-4 text-gray-400" />
+              </div>
+              <input
+                name="search"
+                value={globalFilter}
+                onChange={(e) => {
+                  setGlobalFilter(e.target.value);
+                  setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+                }}
+                placeholder={t('Search layouts...')}
+                className="py-2 px-3 pl-10 block h-11.25 bg-gray-100 rounded-lg w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none"
+              />
+            </div>
+            <FilterButton
+              isOpen={openFilter}
+              onToggle={() => setOpenFilter((prev) => !prev)}
+              activeCount={activeFilterCount}
+            />
+          </div>
+        </div>
+
+        <FilterInputs
+          onChange={(name, value) => {
+            setFilterInputs((prev) => ({ ...prev, [name]: value }));
+            setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+          }}
+          isOpen={openFilter}
+          values={filterInputs}
+          options={filterOptions}
+          onReset={handleResetFilters}
+        />
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
+            {error}
+          </div>
+        )}
+
+        <div className="min-h-0 flex flex-col">
+          {!isHydrated ? (
+            <div className="flex-1 flex items-center justify-center bg-gray-50 animate-pulse rounded-lg border border-gray-200">
+              <span className="text-gray-400 font-medium">
+                {t('Loading your layout preferences...')}
+              </span>
+            </div>
+          ) : (
+            <DataTable
+              columns={columns}
+              data={layoutList}
+              pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
+              pagination={pagination}
+              onPaginationChange={setPagination}
+              sorting={sorting}
+              onSortingChange={setSorting}
+              globalFilter={globalFilter}
+              onGlobalFilterChange={setGlobalFilter}
+              loading={isFetching}
+              rowSelection={rowSelection}
+              onRowSelectionChange={handleRowSelectionChange}
+              onRefresh={handleRefresh}
+              columnPinning={{
+                left: ['tableSelection'],
+                right: ['tableActions'],
+              }}
+              columnVisibility={columnVisibility}
+              onColumnVisibilityChange={setColumnVisibility}
+              bulkActions={bulkActions}
+              viewMode={'table'}
+              getRowId={getRowId}
+            />
+          )}
+        </div>
+      </div>
+      <LayoutModals
+        actions={{
+          activeModal,
+          closeModal,
+          handleRefresh,
+          deleteError,
+          isDeleting,
+          isCloning,
+          isPublishing,
+          isDiscarding,
+          isAssigning,
+          isExporting,
+          isCheckingOut,
+          checkoutError,
+        }}
+        selection={{
+          selectedLayout,
+          itemsToMove,
+          shareEntityIds,
+          setShareEntityIds,
+          itemsToDelete,
+          existingNames,
+          bulkItems,
+        }}
+        handlers={{
+          confirmDelete,
+          handleConfirmClone: (name, description, copyMedia) =>
+            handleConfirmClone(selectedLayout, name, description, copyMedia),
+          handleConfirmMove: (folderId) => handleConfirmMove(itemsToMove, folderId),
+          confirmPublish,
+          confirmCheckout: handleCheckoutLayout,
+          confirmDiscard: handleConfirmDiscard,
+          handleConfirmAssign,
+          handleExportLayout,
+        }}
+        infoPanel={{
+          isOpen: showInfoPanel,
+          setOpen: setShowInfoPanel,
+          owner,
+          loading,
+          folderName: selectedFolderName,
+          setSelectedLayoutId,
+        }}
+        folderActions={folderActions}
+      />
+      <LayoutPreviewer
+        layoutId={previewItem && previewItem?.layoutId}
+        name={previewItem?.layout}
+        previewUrlOverride={previewOverrideUrl}
+        onClose={() => {
+          setPreviewItem(null);
+          setPreviewOverrideUrl(null);
+        }}
+        onShare={
+          previewItem?.userPermissions?.modifyPermissions
+            ? (mediaId) => {
+                setShareEntityIds(mediaId);
+                openModal('share');
+              }
+            : undefined
+        }
+        onMove={
+          canViewFolders
+            ? () => {
+                if (!previewItem) {
+                  return;
+                }
+
+                setItemsToMove([previewItem]);
+                openModal('move');
+              }
+            : undefined
+        }
+        layoutData={previewItem}
+        folderName={selectedFolderName}
+      />
+      <MiniLayoutPreview
+        previewUrl={miniPreview?.url ?? null}
+        title={miniPreview?.layout.layout}
+        onClose={() => {
+          setMiniPreview(null);
+        }}
+        onFullscreen={() => {
+          if (!miniPreview) {
+            return;
+          }
+
+          setPreviewOverrideUrl(miniPreview.url);
+          setPreviewItem(miniPreview.layout);
+          setMiniPreview(null);
+        }}
+      />
+    </section>
+  );
+}

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -21,6 +21,8 @@
  */
 namespace Xibo\Controller;
 
+use OpenApi\Attributes as OA;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Permission;
@@ -29,7 +31,11 @@ use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ControllerNotImplemented;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Class UserGroup
@@ -37,360 +43,245 @@ use Xibo\Support\Exception\InvalidArgumentException;
  */
 class UserGroup extends Base
 {
-    /**
-     * @var UserGroupFactory
-     */
-    private $userGroupFactory;
-
-    /**
-     * @var PermissionFactory
-     */
-    private $permissionFactory;
-
-    /**
-     * @var UserFactory
-     */
-    private $userFactory;
-
-    /**
-     * Set common dependencies.
-     * @param UserGroupFactory $userGroupFactory
-     * @param PermissionFactory $permissionFactory
-     * @param UserFactory $userFactory
-     */
-    public function __construct($userGroupFactory, $permissionFactory, $userFactory)
-    {
-        $this->userGroupFactory = $userGroupFactory;
-        $this->permissionFactory = $permissionFactory;
-        $this->userFactory = $userFactory;
+    public function __construct(
+        private readonly UserGroupFactory $userGroupFactory,
+        private readonly PermissionFactory $permissionFactory,
+        private readonly UserFactory $userFactory
+    ) {
     }
 
-    /**
-     * Display page logic
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    function displayPage(Request $request, Response $response)
-    {
-        $this->getState()->template = 'usergroup-page';
-
-        return $this->render($request, $response);
-    }
-
+    #[OA\Get(
+        path: '/group',
+        operationId: 'userGroupSearch',
+        description: 'Search User Groups',
+        summary: 'UserGroup Search',
+        tags: ['usergroup']
+    )]
+    #[OA\Parameter(
+        name: 'userGroupId',
+        description: 'Filter by UserGroup Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'userGroup',
+        description: 'Filter by UserGroup Name',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'string',
+            enum: [
+                'groupId',
+                'group',
+                'description',
+                'libraryQuota',
+                'isSystemNotification',
+                'isDisplayNotification',
+                'isDataSetNotification',
+                'isLayoutNotification',
+                'isLibraryNotification',
+                'isReportNotification',
+                'isScheduleNotification',
+                'isCustomNotification',
+                'isShownForAddUser',
+            ]
+        )
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ],
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/UserGroup')
+        )
+    )]
     /**
      * Group Grid
-     * @SWG\Get(
-     *  path="/group",
-     *  operationId="userGroupSearch",
-     *  tags={"usergroup"},
-     *  summary="UserGroup Search",
-     *  description="Search User Groups",
-     *  @SWG\Parameter(
-     *      name="userGroupId",
-     *      in="query",
-     *      description="Filter by UserGroup Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="userGroup",
-     *      in="query",
-     *      description="Filter by UserGroup Name",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/UserGroup")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
+     * @return ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
      */
-    function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
-        $filterBy = [
-            'groupId' => $sanitizedQueryParams->getInt('userGroupId'),
-            'group' => $sanitizedQueryParams->getString('userGroup'),
-            'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
-            'logicalOperatorName' => $sanitizedQueryParams->getString('logicalOperatorName'),
-            'isUserSpecific' => 0,
-            'userIdMember' => $sanitizedQueryParams->getInt('userIdMember'),
-        ];
 
         $groups = $this->userGroupFactory->query(
-            $this->gridRenderSort($sanitizedQueryParams),
-            $this->gridRenderFilter($filterBy, $sanitizedQueryParams)
+            $this->gridRenderSort($sanitizedQueryParams, $this->isJson($request)),
+            $this->getUserGroupFilters($sanitizedQueryParams)
         );
 
         foreach ($groups as $group) {
-            /* @var \Xibo\Entity\UserGroup $group */
-
-            $group->setUnmatchedProperty(
-                'libraryQuotaFormatted',
-                ByteFormatter::format($group->libraryQuota * 1024)
-            );
-
-            if ($this->isApi($request)) {
-                continue;
-            }
-
-            // we only want to show certain buttons, depending on the user logged in
-            if ($this->getUser()->featureEnabled('usergroup.modify')
-                && $this->getUser()->checkEditable($group)
-            ) {
-                // Edit
-                $group->buttons[] = array(
-                    'id' => 'usergroup_button_edit',
-                    'url' => $this->urlFor($request, 'group.edit.form', ['id' => $group->groupId]),
-                    'text' => __('Edit')
-                );
-
-                if ($this->getUser()->isSuperAdmin()) {
-                    // Delete
-                    $group->buttons[] = array(
-                        'id' => 'usergroup_button_delete',
-                        'url' => $this->urlFor($request, 'group.delete.form', ['id' => $group->groupId]),
-                        'text' => __('Delete')
-                    );
-
-                    $group->buttons[] = ['divider' => true];
-
-                    // Copy
-                    $group->buttons[] = array(
-                        'id' => 'usergroup_button_copy',
-                        'url' => $this->urlFor($request, 'group.copy.form', ['id' => $group->groupId]),
-                        'text' => __('Copy')
-                    );
-
-                    $group->buttons[] = ['divider' => true];
-                }
-
-                // Members
-                $group->buttons[] = array(
-                    'id' => 'usergroup_button_members',
-                    'url' => $this->urlFor($request, 'group.members.form', ['id' => $group->groupId]),
-                    'text' => __('Members')
-                );
-
-                if ($this->getUser()->isSuperAdmin()) {
-                    // Features
-                    $group->buttons[] = ['divider' => true];
-                    $group->buttons[] = array(
-                        'id' => 'usergroup_button_page_security',
-                        'url' => $this->urlFor($request, 'group.acl.form', ['id' => $group->groupId]),
-                        'text' => __('Features'),
-                        'title' => __('Turn Features on/off for this User')
-                    );
-                }
-            }
+            $this->decorateUserGroupProperties($group);
         }
 
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->userGroupFactory->countLast();
-        $this->getState()->setData($groups);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $this->userGroupFactory->countLast())
+            ->withJson($groups);
     }
 
+    #[OA\Get(
+        path: '/group/{userGroupId}',
+        operationId: 'userGroupSearchById',
+        description: 'Get the User group object specified by the provided groupId',
+        summary: 'User Group search by ID',
+        tags: ['usergroup']
+    )]
+    #[OA\Parameter(
+        name: 'userGroupId',
+        description: 'Numeric ID of the User Group to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/UserGroup')
+    )]
     /**
-     * Form to Add a Group
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
+     * @param int $id
+     * @return Response|ResponseInterface
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
-    function addForm(Request $request, Response $response)
+    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
     {
-        $this->getState()->template = 'usergroup-form-add';
-        return $this->render($request, $response);
+        $group = $this->userGroupFactory->getById($id, false);
+        $this->decorateUserGroupProperties($group);
+
+        return $response
+            ->withStatus(200)
+            ->withJson($group);
     }
 
-    /**
-     * Form to Edit a Group
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    function editForm(Request $request, Response $response, $id)
-    {
-        $group = $this->userGroupFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($group)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'usergroup-form-edit';
-        $this->getState()->setData([
-            'group' => $group,
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Shows the Delete Group Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    function deleteForm(Request $request, Response $response, $id)
-    {
-        $group = $this->userGroupFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($group)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'usergroup-form-delete';
-        $this->getState()->setData([
-            'group' => $group,
-        ]);
-
-        return $this->render($request, $response);
-    }
-
+    #[OA\Post(
+        path: '/group',
+        operationId: 'userGroupAdd',
+        description: 'Add User Group',
+        summary: 'UserGroup Add',
+        tags: ['usergroup']
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['group'],
+                properties: [
+                    new OA\Property(property: 'group', description: 'Name of the User Group', type: 'string'),
+                    new OA\Property(property: 'decription', description: 'A description of the User Group', type: 'string'), // phpcs:ignore
+                    new OA\Property(
+                        property: 'libraryQuota',
+                        description: 'The quota that should be applied (KiB). Provide 0 for no quota',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'isSystemNotification',
+                        description: 'Flag (0, 1), should members of this Group receive system notifications?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isDisplayNotification',
+                        description: 'Flag (0, 1), should members of this Group receive Display notifications
+     * for Displays they have permissions to see', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isDataSetNotification',
+                        description: 'Flag (0, 1), should members of this Group receive DataSet notification emails?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isLayoutNotification',
+                        description: 'Flag (0, 1), should members of this Group receive Layout notification emails?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isLibraryNotification',
+                        description: 'Flag (0, 1), should members of this Group receive Library notification emails?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isReportNotification',
+                        description: 'Flag (0, 1), should members of this Group receive Report notification emails?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isScheduleNotification',
+                        description: 'Flag (0, 1), should members of this Group receive Schedule notification emails?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isCustomNotification',
+                        description: 'Flag (0, 1), should members of this Group receive Custom notification emails?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isShownForAddUser',
+                        description: 'Flag (0, 1), should this Group be shown in the Add User onboarding form.',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'defaultHomePageId',
+                        description: 'If this user has been created via the onboarding form, this should be the default home page', // phpcs:ignore
+                        type: 'integer'
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ],
+        content: new OA\JsonContent(ref: '#/components/schemas/UserGroup')
+    )]
     /**
      * Add User Group
-     * @SWG\Post(
-     *  path="/group",
-     *  operationId="userGroupAdd",
-     *  tags={"usergroup"},
-     *  summary="UserGroup Add",
-     *  description="Add User Group",
-     *  @SWG\Parameter(
-     *      name="group",
-     *      in="formData",
-     *      description="Name of the User Group",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="decription",
-     *      in="formData",
-     *      description="A description of the User Group",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="libraryQuota",
-     *      in="formData",
-     *      description="The quota that should be applied (KiB). Provide 0 for no quota",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isSystemNotification",
-     *      in="formData",
-     *      description="Flag (0, 1), should members of this Group receive system notifications?",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isDisplayNotification",
-     *      in="formData",
-     *      description="Flag (0, 1), should members of this Group receive Display notifications
-     * for Displays they have permissions to see",
-     *      type="integer",
-     *      required=false
-     *   ),
-     * @SWG\Parameter(
-     *        name="isDataSetNotification",
-     *        in="formData",
-     *        description="Flag (0, 1), should members of this Group receive DataSet notification emails?",
-     *        type="integer",
-     *        required=false
-     *     ),
-     * @SWG\Parameter(
-     *        name="isLayoutNotification",
-     *        in="formData",
-     *        description="Flag (0, 1), should members of this Group receive Layout notification emails?",
-     *        type="integer",
-     *        required=false
-     *     ),
-     * @SWG\Parameter(
-     *        name="isLibraryNotification",
-     *        in="formData",
-     *        description="Flag (0, 1), should members of this Group receive Library notification emails?",
-     *        type="integer",
-     *        required=false
-     *     ),
-     * @SWG\Parameter(
-     *        name="isReportNotification",
-     *        in="formData",
-     *        description="Flag (0, 1), should members of this Group receive Report notification emails?",
-     *        type="integer",
-     *        required=false
-     *     ),
-     * @SWG\Parameter(
-     *         name="isScheduleNotification",
-     *         in="formData",
-     *         description="Flag (0, 1), should members of this Group receive Schedule notification emails?",
-     *         type="integer",
-     *         required=false
-     *      ),
-     * @SWG\Parameter(
-     *         name="isCustomNotification",
-     *         in="formData",
-     *         description="Flag (0, 1), should members of this Group receive Custom notification emails?",
-     *         type="integer",
-     *         required=false
-     *      ),
-     *  @SWG\Parameter(
-     *      name="isShownForAddUser",
-     *      in="formData",
-     *      description="Flag (0, 1), should this Group be shown in the Add User onboarding form.",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="defaultHomePageId",
-     *      in="formData",
-     *      description="If this user has been created via the onboarding form, this should be the default home page",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/UserGroup")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
-    public function add(Request $request, Response $response)
+    public function add(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -428,135 +319,105 @@ class UserGroup extends Base
         }
 
         // Return
-        $this->getState()->hydrate([
-            'message' => sprintf(__('Added %s'), $group->group),
-            'id' => $group->groupId,
-            'data' => $group
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(201)
+            ->withJson($group);
     }
 
+    #[OA\Put(
+        path: '/group/{userGroupId}',
+        operationId: 'userGroupEdit',
+        description: 'Edit User Group',
+        summary: 'UserGroup Edit',
+        tags: ['usergroup']
+    )]
+    #[OA\Parameter(
+        name: 'userGroupId',
+        description: 'ID of the User Group',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['group'],
+                properties: [
+                    new OA\Property(property: 'group', description: 'Name of the User Group', type: 'string'),
+                    new OA\Property(property: 'decription', description: 'A description of the User Group', type: 'string'), // phpcs:ignore
+                    new OA\Property(
+                        property: 'libraryQuota',
+                        description: 'The quota that should be applied (KiB). Provide 0 for no quota',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'isSystemNotification',
+                        description: 'Flag (0, 1), should members of this Group receive system notifications?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isDisplayNotification',
+                        description: 'Flag (0, 1), should members of this Group receive Display notifications
+     * for Displays they have permissions to see', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isDataSetNotification',
+                        description: 'Flag (0, 1), should members of this Group receive DataSet notification emails?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isLayoutNotification',
+                        description: 'Flag (0, 1), should members of this Group receive Layout notification emails?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isLibraryNotification',
+                        description: 'Flag (0, 1), should members of this Group receive Library notification emails?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isReportNotification',
+                        description: 'Flag (0, 1), should members of this Group receive Report notification emails?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isScheduleNotification',
+                        description: 'Flag (0, 1), should members of this Group receive Schedule notification emails?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isCustomNotification',
+                        description: 'Flag (0, 1), should members of this Group receive Custom notification emails?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isShownForAddUser',
+                        description: 'Flag (0, 1), should this Group be shown in the Add User onboarding form.',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'defaultHomePageId',
+                        description: 'If this user has been created via the onboarding form, this should be the default home page', // phpcs:ignore
+                        type: 'integer'
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/UserGroup')
+    )]
     /**
      * Edit User Group
-     * @SWG\Put(
-     *  path="/group/{userGroupId}",
-     *  operationId="userGroupEdit",
-     *  tags={"usergroup"},
-     *  summary="UserGroup Edit",
-     *  description="Edit User Group",
-     *  @SWG\Parameter(
-     *      name="userGroupId",
-     *      in="path",
-     *      description="ID of the User Group",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="group",
-     *      in="formData",
-     *      description="Name of the User Group",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="decription",
-     *      in="formData",
-     *      description="A description of the User Group",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="libraryQuota",
-     *      in="formData",
-     *      description="The quota that should be applied (KiB). Provide 0 for no quota",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isSystemNotification",
-     *      in="formData",
-     *      description="Flag (0, 1), should members of this Group receive system notifications?",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isDisplayNotification",
-     *      in="formData",
-     *      description="Flag (0, 1), should members of this Group receive Display notifications
-     * for Displays they have permissions to see",
-     *      type="integer",
-     *      required=false
-     *   ),
-     * @SWG\Parameter(
-     *       name="isDataSetNotification",
-     *       in="formData",
-     *       description="Flag (0, 1), should members of this Group receive DataSet notification emails?",
-     *       type="integer",
-     *       required=false
-     *    ),
-     * @SWG\Parameter(
-     *       name="isLayoutNotification",
-     *       in="formData",
-     *       description="Flag (0, 1), should members of this Group receive Layout notification emails?",
-     *       type="integer",
-     *       required=false
-     *    ),
-     * @SWG\Parameter(
-     *       name="isLibraryNotification",
-     *       in="formData",
-     *       description="Flag (0, 1), should members of this Group receive Library notification emails?",
-     *       type="integer",
-     *       required=false
-     *    ),
-     * @SWG\Parameter(
-     *       name="isReportNotification",
-     *       in="formData",
-     *       description="Flag (0, 1), should members of this Group receive Report notification emails?",
-     *       type="integer",
-     *       required=false
-     *    ),
-     * @SWG\Parameter(
-     *        name="isScheduleNotification",
-     *        in="formData",
-     *        description="Flag (0, 1), should members of this Group receive Schedule notification emails?",
-     *        type="integer",
-     *        required=false
-     *     ),
-     * @SWG\Parameter(
-     *        name="isCustomNotification",
-     *        in="formData",
-     *        description="Flag (0, 1), should members of this Group receive Custom notification emails?",
-     *        type="integer",
-     *        required=false
-     *     ),
-     *  @SWG\Parameter(
-     *      name="isShownForAddUser",
-     *      in="formData",
-     *      description="Flag (0, 1), should this Group be shown in the Add User onboarding form.",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="defaultHomePageId",
-     *      in="formData",
-     *      description="If this user has been created via the onboarding form, this should be the default home page",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/UserGroup")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
@@ -564,7 +425,7 @@ class UserGroup extends Base
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response, $id): Response|ResponseInterface
     {
         // Check permissions
         if (!$this->getUser()->isSuperAdmin() && !$this->getUser()->isGroupAdmin()) {
@@ -614,45 +475,38 @@ class UserGroup extends Base
         $group->save();
 
         // Return
-        $this->getState()->hydrate([
-            'message' => sprintf(__('Edited %s'), $group->group),
-            'id' => $group->groupId,
-            'data' => $group
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson($group);
     }
 
+    #[OA\Delete(
+        path: '/group/{userGroupId}',
+        operationId: 'userGroupDelete',
+        description: 'Delete User Group',
+        summary: 'Delete User Group',
+        tags: ['usergroup']
+    )]
+    #[OA\Parameter(
+        name: 'userGroupId',
+        description: 'The user Group ID to Delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete User Group
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
-     * @SWG\Delete(
-     *  path="/group/{userGroupId}",
-     *  operationId="userGroupDelete",
-     *  tags={"usergroup"},
-     *  summary="Delete User Group",
-     *  description="Delete User Group",
-     *  @SWG\Parameter(
-     *      name="userGroupId",
-     *      in="path",
-     *      description="The user Group ID to Delete",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
-    public function delete(Request $request, Response $response, $id)
+    public function delete(Request $request, Response $response, $id): Response|ResponseInterface
     {
         // Check permissions
         if (!$this->getUser()->isSuperAdmin()) {
@@ -668,52 +522,7 @@ class UserGroup extends Base
         $group->delete();
 
         // Return
-        $this->getState()->hydrate([
-            'message' => sprintf(__('Deleted %s'), $group->group),
-            'id' => $group->groupId
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * ACL Form for the provided GroupId
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @param int|null $userId
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    public function aclForm(Request $request, Response $response, $id, $userId = null)
-    {
-        // Check permissions to this function
-        if (!$this->getUser()->isSuperAdmin()) {
-            throw new AccessDeniedException();
-        }
-
-        // Get permissions for the group provided
-        $group = $this->userGroupFactory->getById($id);
-        $inheritedFeatures = ($userId !== null)
-            ? $this->userGroupFactory->getGroupFeaturesForUser($this->userFactory->getById($userId), false)
-            : [];
-
-        $data = [
-            'groupId' => $id,
-            'group' => $group->group,
-            'isUserSpecific' => $group->isUserSpecific,
-            'features' => $group->features,
-            'inheritedFeatures' => $inheritedFeatures,
-            'userGroupFactory' => $this->userGroupFactory,
-        ];
-
-        $this->getState()->template = 'usergroup-form-acl';
-        $this->getState()->setData($data);
-
-        return $this->render($request, $response);
+        return $response->withStatus(204);
     }
 
     /**
@@ -721,13 +530,13 @@ class UserGroup extends Base
      * @param Request $request
      * @param Response $response
      * @param int $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function acl(Request $request, Response $response, $id)
+    public function acl(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         // Check permissions to this function
         if (!$this->getUser()->isSuperAdmin()) {
@@ -759,75 +568,57 @@ class UserGroup extends Base
         return $this->render($request, $response);
     }
 
-    /**
-     * Shows the Members of a Group
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    public function membersForm(Request $request, Response $response, $id)
-    {
-        $group = $this->userGroupFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($group)) {
-            throw new AccessDeniedException();
-        }
-
-        // Users in group
-        $usersAssigned = $this->userFactory->query(null, ['groupIds' => [$id]]);
-
-        $this->getState()->template = 'usergroup-form-members';
-        $this->getState()->setData([
-            'group' => $group,
-            'extra' => [
-                'usersAssigned' => $usersAssigned
-            ],
-        ]);
-
-        return $this->render($request, $response);
-    }
-
+    #[OA\Post(
+        path: '/group/members/assign/{userGroupId}',
+        operationId: 'userGroupAssign',
+        description: 'Assign User to User Group',
+        summary: 'Assign User to User Group',
+        tags: ['usergroup']
+    )]
+    #[OA\Parameter(
+        name: 'userGroupId',
+        description: 'ID of the user group to which assign the user',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['userId'],
+                properties: [
+                    new OA\Property(
+                        property: 'userId',
+                        description: 'Array of userIDs to assign',
+                        type: 'array',
+                        items: new OA\Items(type: 'integer')
+                    ),
+                    new OA\Property(
+                        property: 'unassignUserId',
+                        description: 'An optional array of User IDs to unassign',
+                        type: 'array',
+                        items: new OA\Items(type: 'integer')
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/UserGroup')
+        )
+    )]
     /**
      * Assign User to the User Group
-     * @SWG\Post(
-     *  path="/group/members/assign/{userGroupId}",
-     *  operationId="userGroupAssign",
-     *  tags={"usergroup"},
-     *  summary="Assign User to User Group",
-     *  description="Assign User to User Group",
-     *  @SWG\Parameter(
-     *      name="userGroupId",
-     *      in="path",
-     *      description="ID of the user group to which assign the user",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="userId",
-     *      in="formData",
-     *      description="Array of userIDs to assign",
-     *      type="array",
-     *      required=true,
-     *      @SWG\Items(type="integer")
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/UserGroup")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @param int $id
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
@@ -835,7 +626,7 @@ class UserGroup extends Base
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function assignUser(Request $request, Response $response, $id)
+    public function assignUser(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $this->getLog()->debug(sprintf('Assign User for groupId %d', $id));
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -898,42 +689,51 @@ class UserGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/group/members/unassign/{userGroupId}',
+        operationId: 'userGroupUnassign',
+        description: 'Unassign User from User Group',
+        summary: 'Unassign User from User Group',
+        tags: ['usergroup']
+    )]
+    #[OA\Parameter(
+        name: 'userGroupId',
+        description: 'ID of the user group from which to unassign the user',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['userId'],
+                properties: [
+                    new OA\Property(
+                        property: 'userId',
+                        description: 'Array of userIDs to unassign',
+                        type: 'array',
+                        items: new OA\Items(type: 'integer')
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/UserGroup')
+        )
+    )]
     /**
      * Unassign User to the User Group
-     * @SWG\Post(
-     *  path="/group/members/unassign/{userGroupId}",
-     *  operationId="userGroupUnassign",
-     *  tags={"usergroup"},
-     *  summary="Unassign User from User Group",
-     *  description="Unassign User from User Group",
-     *  @SWG\Parameter(
-     *      name="userGroupId",
-     *      in="path",
-     *      description="ID of the user group from which to unassign the user",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="userId",
-     *      in="formData",
-     *      description="Array of userIDs to unassign",
-     *      type="array",
-     *      required=true,
-     *      @SWG\Items(type="integer")
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/UserGroup")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @param int $id
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
@@ -941,7 +741,7 @@ class UserGroup extends Base
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function unassignUser(Request $request, Response $response, $id)
+    public function unassignUser(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $group = $this->userGroupFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -967,84 +767,59 @@ class UserGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/group/{userGroupId}/copy',
+        operationId: 'userGroupCopy',
+        description: 'Copy an user group, optionally copying the group members',
+        summary: 'Copy User Group',
+        tags: ['usergroup']
+    )]
+    #[OA\Parameter(
+        name: 'userGroupId',
+        description: 'The User Group ID to Copy',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['group'],
+                properties: [
+                    new OA\Property(property: 'group', description: 'The Group Name', type: 'string'),
+                    new OA\Property(
+                        property: 'copyMembers',
+                        description: 'Flag indicating whether to copy group members',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'copyFeatures',
+                        description: 'Flag indicating whether to copy group features',
+                        type: 'integer'
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ],
+        content: new OA\JsonContent(ref: '#/components/schemas/UserGroup')
+    )]
     /**
-     * Form to Copy Group
      * @param Request $request
      * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    function copyForm(Request $request, Response $response, $id)
-    {
-        $group = $this->userGroupFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($group)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'usergroup-form-copy';
-        $this->getState()->setData([
-            'group' => $group
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * @SWG\Post(
-     *  path="/group/{userGroupId}/copy",
-     *  operationId="userGroupCopy",
-     *  tags={"usergroup"},
-     *  summary="Copy User Group",
-     *  description="Copy an user group, optionally copying the group members",
-     *  @SWG\Parameter(
-     *      name="userGroupId",
-     *      in="path",
-     *      description="The User Group ID to Copy",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="group",
-     *      in="formData",
-     *      description="The Group Name",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="copyMembers",
-     *      in="formData",
-     *      description="Flag indicating whether to copy group members",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="copyFeatures",
-     *      in="formData",
-     *      description="Flag indicating whether to copy group features",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/UserGroup"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
-     *
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @param int $id
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
@@ -1052,7 +827,7 @@ class UserGroup extends Base
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function copy(Request $request, Response $response, $id)
+    public function copy(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $group = $this->userGroupFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -1085,13 +860,43 @@ class UserGroup extends Base
             $permission->save();
         }
 
-        $this->getState()->hydrate([
-            'httpStatus' => 201,
-            'message' => sprintf(__('Copied %s'), $group->group),
-            'id' => $newGroup->groupId,
-            'data' => $newGroup
-        ]);
+        return $response
+            ->withStatus(201)
+            ->withJson($newGroup);
+    }
 
-        return $this->render($request, $response);
+    /**
+     * Get the user group filters
+     * @param SanitizerInterface $sanitizedQueryParams
+     * @return array
+     */
+    private function getUserGroupFilters(SanitizerInterface $sanitizedQueryParams): array
+    {
+        return $this->gridRenderFilter([
+            'groupId' => $sanitizedQueryParams->getInt('userGroupId'),
+            'group' => $sanitizedQueryParams->getString('userGroup'),
+            'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
+            'logicalOperatorName' => $sanitizedQueryParams->getString('logicalOperatorName'),
+            'isUserSpecific' => 0,
+            'userIdMember' => $sanitizedQueryParams->getInt('userIdMember'),
+            'isShownForAddUser' => $sanitizedQueryParams->getInt('isShownForAddUser'),
+        ], $sanitizedQueryParams);
+    }
+
+    /**
+     * Decorate user group properties
+     * @param \Xibo\Entity\UserGroup $group
+     * @throws InvalidArgumentException
+     */
+    private function decorateUserGroupProperties(\Xibo\Entity\UserGroup $group): void
+    {
+        $group->setUnmatchedProperty(
+            'libraryQuotaFormatted',
+            ByteFormatter::format($group->libraryQuota * 1024)
+        );
+
+        $group->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($group));
+
+        $group->setUnmatchedProperty('isSuperAdmin', $this->getUser()->isSuperAdmin());
     }
 }

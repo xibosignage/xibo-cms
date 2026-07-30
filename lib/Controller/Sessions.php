@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,6 +22,7 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
+use OpenApi\Attributes as OA;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\SessionFactory;
@@ -33,6 +34,20 @@ use Xibo\Support\Exception\AccessDeniedException;
  * Class Sessions
  * @package Xibo\Controller
  */
+#[OA\Schema(
+    schema: 'Session',
+    properties: [
+        new OA\Property(property: 'userId', type: 'integer'),
+        new OA\Property(property: 'userName', type: 'string'),
+        new OA\Property(property: 'isExpired', type: 'integer'),
+        new OA\Property(property: 'lastAccessed', type: 'string', format: 'date-time'),
+        new OA\Property(property: 'remoteAddress', type: 'string'),
+        new OA\Property(property: 'userAgent', type: 'string'),
+        new OA\Property(property: 'expiresAt', type: 'string', format: 'date-time'),
+        new OA\Property(property: 'userPermissions', type: 'object'),
+    ],
+    type: 'object',
+)]
 class Sessions extends Base
 {
     /**
@@ -56,20 +71,76 @@ class Sessions extends Base
         $this->sessionFactory = $sessionFactory;
     }
 
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    function displayPage(Request $request, Response $response)
-    {
-        $this->getState()->template = 'sessions-page';
-
-        return $this->render($request, $response);
-    }
-
+    #[OA\Get(
+        path: '/sessions',
+        operationId: 'sessionSearch',
+        description: 'Search Sessions this user has access to',
+        summary: 'Session Search',
+        tags: ['session']
+    )]
+    #[OA\Parameter(
+        name: 'type',
+        description: 'Filter by type',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'string',
+            enum: ['all', 'active', 'guest', 'expired']
+        )
+    )]
+    #[OA\Parameter(
+        name: 'lastAccessedDateFrom',
+        description: 'Start date for filtering sessions by last accessed date',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'date', format: 'date')
+    )]
+    #[OA\Parameter(
+        name: 'lastAccessedDateTo',
+        description: 'End date for filtering sessions by last accessed date',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', format: 'date')
+    )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'string',
+            enum: [
+                'lastAccessed',
+                'isExpired',
+                'userName',
+                'remoteAddress',
+                'userAgent',
+                'expiresAt',
+            ]
+        )
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ],
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/Session')
+        )
+    )]
     /**
      * @param Request $request
      * @param Response $response
@@ -81,77 +152,58 @@ class Sessions extends Base
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
 
-        $sessions = $this->sessionFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter([
-            'type' => $sanitizedQueryParams->getString('type'),
-            'fromDt' => $sanitizedQueryParams->getString('fromDt')
-        ], $sanitizedQueryParams));
+        // Construct the SQL
+        $sessionsSortQuery = $this->gridRenderSort(
+            $sanitizedQueryParams,
+            $this->isJson($request),
+            'lastAccessed'
+        );
+        $sessionsFilterQuery = $this->getSessionsFilter($sanitizedQueryParams);
 
-        foreach ($sessions as $row) {
-            /* @var \Xibo\Entity\Session $row */
+        $sessions = $this->sessionFactory->query($sessionsSortQuery, $sessionsFilterQuery);
 
+        foreach ($sessions as $session) {
             // Normalise the date
-            $row->lastAccessed =
-                Carbon::createFromTimeString($row->lastAccessed)?->format(DateFormatHelper::getSystemFormat());
-
-            if (!$this->isApi($request) && $this->getUser()->isSuperAdmin()) {
-                $row->includeProperty('buttons');
-
-                // No buttons on expired sessions
-                if ($row->isExpired == 1) {
-                    continue;
-                }
-
-                // logout, current user/session
-                if ($row->userId === $this->getUser()->userId && session_id() === $row->sessionId) {
-                    $url = $this->urlFor($request, 'logout');
-                } else {
-                    // logout, different user/session
-                    $url = $this->urlFor(
-                        $request,
-                        'sessions.confirm.logout.form',
-                        ['id' => $row->userId]
-                    );
-                }
-
-                $row->buttons[] = [
-                    'id' => 'sessions_button_logout',
-                    'url' => $url,
-                    'text' => __('Logout')
-                ];
-            }
+            $session->lastAccessed =
+                Carbon::createFromTimeString($session->lastAccessed)?->format(DateFormatHelper::getSystemFormat());
+            $session->expiresAt =
+                Carbon::createFromTimestamp($session->expiresAt)?->format(DateFormatHelper::getSystemFormat());
+            $session->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($session));
         }
 
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->sessionFactory->countLast();
-        $this->getState()->setData($sessions);
+        $recordsTotal = $this->sessionFactory->countLast();
 
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $recordsTotal)
+            ->withJson($sessions);
     }
 
-    /**
-     * Confirm Logout Form
-     * @param Request $request
-     * @param Response $response
-     * @param int $id The UserID
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    public function confirmLogoutForm(Request $request, Response $response, $id)
-    {
-        if ($this->getUser()->userTypeId != 1) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'sessions-form-confirm-logout';
-        $this->getState()->setData([
-            'userId' => $id,
-        ]);
-
-        return $this->render($request, $response);
-    }
-
+    #[OA\Delete(
+        path: '/sessions/logout/{id}',
+        operationId: 'sessionLogout',
+        description: 'Logs out all sessions for the given user',
+        summary: 'Session Logout',
+        tags: ['session']
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'The User ID to log out',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: 'success', type: 'boolean'),
+                new OA\Property(property: 'message', type: 'string'),
+            ],
+            type: 'object'
+        )
+    )]
     /**
      * Logout
      * @param Request $request
@@ -172,11 +224,24 @@ class Sessions extends Base
         // We log out all of this user's sessions.
         $this->sessionFactory->expireByUserId($id);
 
-        // Return
-        $this->getState()->hydrate([
-            'message' => __('User Logged Out.')
-        ]);
+        return $response->withJson([
+            'success' => true,
+            'message' => __('User Logged Out.'),
+        ], 200);
+    }
 
-        return $this->render($request, $response);
+    /**
+     * Get the sessions filters
+     * @param $sanitizedQueryParams
+     * @return array
+     */
+    private function getSessionsFilter($sanitizedQueryParams): array
+    {
+        return $this->gridRenderFilter([
+            'type' => $sanitizedQueryParams->getString('type'),
+            'fromDt' => $sanitizedQueryParams->getString('fromDt'),
+            'lastAccessedDateFrom' => $sanitizedQueryParams->getString('lastAccessedDateFrom'),
+            'lastAccessedDateTo' => $sanitizedQueryParams->getString('lastAccessedDateTo'),
+        ], $sanitizedQueryParams);
     }
 }

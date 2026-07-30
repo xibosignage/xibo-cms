@@ -104,12 +104,16 @@ class JwtService implements JwtServiceInterface
     {
         $this->getLogger()->debug('validateJwt: ' . $jwt);
 
+        // RSA-SHA256 is an asymmetric signer: private key signs, public key verifies.
+        // Use forAsymmetricSigner so the Configuration self-documents the key roles —
+        // verification is performed by the explicit SignedWith constraint below.
+        $verificationKey = InMemory::plainText(file_get_contents($this->getPublicKeyPath()));
         $signingKey = Key\InMemory::file($this->getPrivateKeyPath());
-        $configuration = Configuration::forSymmetricSigner(new Sha256(), $signingKey);
+        $configuration = Configuration::forAsymmetricSigner(new Sha256(), $signingKey, $verificationKey);
 
         $configuration->setValidationConstraints(
             new LooseValidAt(new SystemClock(new \DateTimeZone(\date_default_timezone_get()))),
-            new SignedWith(new Sha256(), InMemory::plainText(file_get_contents($this->getPublicKeyPath())))
+            new SignedWith(new Sha256(), $verificationKey)
         );
 
         // Parse the token

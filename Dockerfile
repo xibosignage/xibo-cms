@@ -46,7 +46,30 @@ COPY ./modules/vendor ./modules/vendor
 # Build webpack
 RUN npm run publish
 
+
 # Stage 3
+# Build the React app
+FROM node:22 AS vite
+WORKDIR /app/frontend
+
+# Copy package.json and the webpack config file
+COPY frontend/package.json .
+COPY frontend/package-lock.json .
+
+# Install npm packages
+RUN npm install
+
+# Copy ui folder
+COPY ./frontend .
+
+# Copy the gettext .mo files — convertMoToJson.ts (run via the build script) reads
+# them from ../../locale to generate the React language packs.
+COPY locale /app/locale
+
+# Build
+RUN npm run build
+
+# Stage 4
 # Build the CMS container
 FROM debian:bullseye-slim
 MAINTAINER Xibo Signage <support@xibosignage.com>
@@ -193,6 +216,9 @@ COPY --from=webpack /app/web/dist /var/www/cms/web/dist
 # Copy modules built webpack app folder to cms modules
 COPY --from=webpack /app/modules /var/www/cms/modules
 
+# Copy the built React app to the cms web asset folder (served under /app)
+COPY --from=vite /app/frontend/dist /var/www/cms/web/app
+
 # All other files (.dockerignore excludes many things, but we tidy up the rest below)
 COPY --chown=www-data:www-data . /var/www/cms
 
@@ -214,11 +240,8 @@ RUN rm /var/www/cms/composer.* && \
     rm /var/www/cms/phpunit.xml && \
     rm /var/www/cms/package.json && \
     rm /var/www/cms/package-lock.json && \
-    rm /var/www/cms/cypress.config.js && \
-    rm -r /var/www/cms/cypress && \
     rm -r /var/www/cms/ui && \
-    rm /var/www/cms/webpack.config.js && \
-    rm /var/www/cms/lib/routes-cypress.php
+    rm /var/www/cms/webpack.config.js
 
 # Map a volumes to this folder.
 # Our CMS files, library, cache and backups will be in here.
@@ -237,7 +260,6 @@ RUN mkdir -p /var/www/cms/library/temp &&  \
 # Expose volume mount points
 VOLUME /var/www/cms/library
 VOLUME /var/www/cms/custom
-VOLUME /var/www/cms/web/theme/custom
 VOLUME /var/www/backup
 VOLUME /var/www/cms/web/userscripts
 VOLUME /var/www/cms/ca-certs

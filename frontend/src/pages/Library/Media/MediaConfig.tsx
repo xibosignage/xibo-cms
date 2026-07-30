@@ -1,0 +1,708 @@
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+import type { ColumnDef } from '@tanstack/react-table';
+import type { TFunction } from 'i18next';
+import {
+  Image as ImageIcon,
+  Film,
+  Music,
+  FileText,
+  Archive,
+  File as FileIcon,
+  Edit,
+  Download,
+  CopyCheck,
+  FolderInput,
+  UserPlus2,
+  CalendarClock,
+  Info,
+  Trash2,
+  FileSymlink,
+  Tags,
+  BarChart3,
+} from 'lucide-react';
+import { type ComponentProps } from 'react';
+
+import type { FilterConfigItem } from '@/components/ui/FilterInputs';
+import { notify } from '@/components/ui/Notification';
+import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkActions';
+import {
+  MediaCell,
+  CheckMarkCell,
+  TextCell,
+  StatusCell,
+  ActionsCell,
+  TagsCell,
+  getSharingColumn,
+} from '@/components/ui/table/cells';
+import { getCommonFormOptions } from '@/config/commonForms';
+import type { Media } from '@/types/media';
+import type { ActionItem, BaseModalType } from '@/types/table';
+import type { Tag } from '@/types/tag';
+import type { DateLike } from '@/utils/date';
+import { formatDuration } from '@/utils/formatters';
+
+export interface MediaFilterInput {
+  type?: string;
+  mediaId?: number | null;
+  media?: string;
+  tags?: Tag[];
+  ownerId?: string;
+  ownerUserGroupId?: string;
+  orientation?: string;
+  retired?: number;
+  lastModified?: string;
+  exactTags?: boolean;
+  folderId?: number;
+  layoutId?: number | null;
+  logicalOperator?: 'OR' | 'AND';
+  logicalOperatorName?: 'OR' | 'AND';
+  useRegexForName?: boolean;
+}
+
+export const getMediaIcon = (mediaType: string) => {
+  const type = mediaType?.toLowerCase();
+
+  switch (type) {
+    case 'image':
+      return ImageIcon;
+    case 'video':
+      return Film;
+    case 'audio':
+      return Music;
+    case 'pdf':
+      return FileText;
+    case 'archive':
+      return Archive;
+    default:
+      return FileIcon;
+  }
+};
+
+type MediaType = 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';
+
+export type ModalType =
+  | BaseModalType
+  | 'replace'
+  | 'schedule'
+  | 'enableStats'
+  | 'enableStatsMultiple'
+  | 'editTagsMultiple'
+  | 'usageReport'
+  | 'tidy'
+  | null;
+
+export const INITIAL_FILTER_STATE: MediaFilterInput = {
+  mediaId: null,
+  media: '',
+  tags: [],
+  type: '',
+  ownerId: '',
+  ownerUserGroupId: '',
+  orientation: '',
+  layoutId: null,
+  lastModified: '',
+  logicalOperatorName: 'OR',
+  useRegexForName: false,
+  logicalOperator: 'OR',
+  exactTags: false,
+};
+
+export const getBaseFilterKeys = (
+  t: TFunction,
+  canTag = false,
+): FilterConfigItem<MediaFilterInput>[] => [
+  {
+    label: t('ID'),
+    placeholder: ' ',
+    name: 'mediaId',
+    type: 'number',
+  },
+  {
+    label: t('Name'),
+    name: 'media',
+    type: 'text',
+    className: '',
+    placeholder: ' ',
+    showAndOr: true,
+    andOrKey: 'logicalOperatorName',
+    showRegex: true,
+    regexKey: 'useRegexForName',
+  },
+  ...(canTag
+    ? ([
+        {
+          label: t('Tags'),
+          name: 'tags',
+          type: 'tags',
+          placeholder: ' ',
+          className: '',
+          showAndOr: true,
+          andOrKey: 'logicalOperator',
+          showExactTags: true,
+          exactTagsKey: 'exactTags',
+        },
+      ] as FilterConfigItem<MediaFilterInput>[])
+    : []),
+  {
+    label: t('Owner'),
+    name: 'ownerId',
+    options: [{ label: t('Select Owner'), value: null }],
+  },
+  {
+    label: t('User Group'),
+    name: 'ownerUserGroupId',
+    options: [{ label: t('Select Group'), value: null }],
+  },
+  {
+    label: t('Type'),
+    name: 'type',
+    options: [
+      { label: t('Image'), value: 'image' },
+      { label: t('Video'), value: 'video' },
+      { label: t('Audio'), value: 'audio' },
+      { label: t('PDF'), value: 'pdf' },
+      { label: t('Archive'), value: 'archive' },
+      { label: t('Other'), value: 'other' },
+    ],
+  },
+  {
+    label: t('Orientation'),
+    name: 'orientation',
+    options: getCommonFormOptions(t).orientation,
+  },
+  {
+    label: t('Retired'),
+    name: 'retired',
+    options: getCommonFormOptions(t).retired,
+  },
+  {
+    label: t('Layout ID'),
+    name: 'layoutId',
+    type: 'number',
+    className: '',
+    placeholder: ' ',
+  },
+  {
+    label: t('Last Modified'),
+    name: 'lastModified',
+    type: 'date-range',
+    options: getCommonFormOptions(t).lastModifiedFilter,
+  },
+];
+
+// TODO: Needs translation
+export const MEDIA_FORM_OPTIONS = {
+  expiryDates: ['Never Expire', 'End of Today', 'In 7 Days', 'In 14 Days', 'In 30 Days'],
+};
+
+export const ACCEPTED_MIME_TYPES = {
+  // Audio
+  'audio/mpeg': ['.mp3'],
+  'audio/wav': ['.wav'],
+  // Flash
+  'application/x-shockwave-flash': ['.swf'],
+  // Generic
+  'application/vnd.android.package-archive': ['.apk'],
+  'application/x-webos-ipk': ['.ipk'],
+  'text/html': ['.html', '.htm'],
+  'text/javascript': ['.js'],
+  // HTML package
+  'application/octet-stream': ['.htz'],
+  // Images
+  'image/jpeg': ['.jpg', '.jpeg'],
+  'image/png': ['.png'],
+  'image/gif': ['.gif'],
+  'image/bmp': ['.bmp'],
+  // PDF
+  'application/pdf': ['.pdf'],
+  // Powerpoint
+  'application/vnd.ms-powerpoint': ['.ppt', '.pps'],
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['.pptx'],
+  // Video
+  'video/mp4': ['.mp4'],
+  'video/webm': ['.webm'],
+  'video/mpeg': ['.mpg', '.mpeg'],
+  'video/x-msvideo': ['.avi'],
+  'video/x-ms-wmv': ['.wmv'],
+};
+
+export const getStatusTypeFromMediaType = (mediaType: string) => {
+  const type = mediaType?.toLowerCase();
+  switch (type) {
+    case 'image':
+    case 'video':
+    case 'audio':
+      return 'info';
+    case 'pdf':
+    case 'powerpoint':
+      return 'danger';
+    case 'flash':
+    case 'htmlpackage':
+      return 'success';
+    default:
+      return 'neutral';
+  }
+};
+
+export interface MediaActionsProps {
+  t: TFunction;
+  canTag?: boolean;
+  canUserShare?: boolean;
+  formatDateTime: (value: DateLike) => string;
+  onPreview?: (row: Media) => void;
+  onDelete: (id: number) => void;
+  onDownload: (row: Media) => void;
+  openEditModal: (row: Media) => void;
+  openShareModal?: (id: number) => void;
+  openMoveModal?: (row: Media | Media[]) => void;
+  openDetails?: (id: number) => void;
+  copyMedia?: (row: number) => void;
+  openReplaceModal: (id: number) => void;
+  openScheduleModal?: (row: Media) => void;
+  openEnableStatsModal?: (id: number) => void;
+  openUsageReportModal?: (id: number) => void;
+  scheduleWithView?: boolean;
+  canModify?: boolean;
+}
+
+export const getMediaItemActions = ({
+  t,
+  canUserShare = false,
+  onDelete,
+  onDownload,
+  openEditModal,
+  openShareModal,
+  openMoveModal,
+  openDetails,
+  copyMedia,
+  openReplaceModal,
+  openScheduleModal,
+  openEnableStatsModal,
+  openUsageReportModal,
+  scheduleWithView,
+  canModify = false,
+}: MediaActionsProps): ((media: Media) => ActionItem[]) => {
+  return (media: Media) => {
+    const actions: ActionItem[] = [];
+
+    const canEdit = !!media.userPermissions?.edit;
+    const canDelete = !!media.userPermissions?.delete;
+    const canShare = !!media.userPermissions?.modifyPermissions;
+
+    if (canEdit && canModify) {
+      actions.push({
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => openEditModal(media),
+        isQuickAction: true,
+        variant: 'primary',
+      });
+    }
+
+    actions.push({
+      label: t('Download'),
+      icon: Download,
+      onClick: () => onDownload(media),
+      isQuickAction: true,
+    });
+
+    if (canEdit && canModify) {
+      actions.push({
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => openEditModal(media),
+      });
+    }
+
+    if (canEdit && canModify) {
+      actions.push({
+        label: t('Replace File'),
+        icon: FileSymlink,
+        onClick: () => openReplaceModal(media.mediaId),
+      });
+    }
+
+    if (canEdit && canModify && copyMedia) {
+      actions.push({
+        label: t('Make a Copy'),
+        icon: CopyCheck,
+        onClick: () => copyMedia(media.mediaId),
+      });
+    }
+
+    if (canEdit && canModify && openMoveModal) {
+      actions.push({
+        label: t('Move'),
+        icon: FolderInput,
+        onClick: () => openMoveModal(media),
+      });
+    }
+
+    if (canShare && canUserShare && canModify && openShareModal) {
+      actions.push({
+        label: t('Share'),
+        icon: UserPlus2,
+        onClick: () => openShareModal(media.mediaId),
+      });
+    }
+
+    actions.push({
+      label: t('Download'),
+      icon: Download,
+      onClick: () => onDownload(media),
+    });
+
+    const canScheduleMedia =
+      (media.mediaType === 'image' || media.mediaType === 'video') &&
+      (canEdit || (!!scheduleWithView && !!media.userPermissions?.view));
+
+    if (canScheduleMedia && openScheduleModal) {
+      actions.push({
+        label: t('Schedule'),
+        icon: CalendarClock,
+        onClick: () => openScheduleModal(media),
+      });
+    }
+
+    if (openDetails) {
+      actions.push({
+        label: t('Details'),
+        icon: Info,
+        onClick: () => openDetails(media.mediaId),
+      });
+    }
+
+    if ((canEdit && canModify) || openUsageReportModal) {
+      actions.push({ isSeparator: true });
+    }
+
+    if (canEdit && canModify) {
+      actions.push({
+        label: t('Enable Stats Collection'),
+        onClick: () => openEnableStatsModal && openEnableStatsModal(media.mediaId),
+      });
+    }
+
+    if (openUsageReportModal) {
+      actions.push({
+        label: t('Usage Report'),
+        onClick: () => openUsageReportModal(media.mediaId),
+      });
+    }
+
+    if (canDelete && canModify) {
+      actions.push({ isSeparator: true });
+      actions.push({
+        label: t('Delete'),
+        icon: Trash2,
+        onClick: () => onDelete(media.mediaId),
+        variant: 'danger',
+      });
+    }
+
+    return actions;
+  };
+};
+
+export const filterMediaByPermission = <T,>(
+  items: T[],
+  checkFn: (item: T) => boolean | number | undefined | null,
+  t: TFunction,
+  actionLabel: string,
+): T[] => {
+  const permittedItems = items.filter((item) => !!checkFn(item));
+  const skippedCount = items.length - permittedItems.length;
+
+  if (permittedItems.length === 0) {
+    notify.warning(
+      t('You do not have permission to {{action}} any of the selected items.', {
+        action: actionLabel,
+      }),
+    );
+    return [];
+  }
+
+  if (skippedCount > 0) {
+    notify.info(
+      t('{{count}} items were skipped due to lack of permissions.', {
+        count: skippedCount,
+      }),
+    );
+  }
+
+  return permittedItems;
+};
+
+export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] => {
+  const { t, onPreview, formatDateTime, canTag = false } = props;
+  const getActions = getMediaItemActions(props);
+  return [
+    {
+      accessorKey: 'mediaId',
+      header: t('ID'),
+      size: 80,
+      cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
+    },
+    {
+      accessorKey: 'thumbnail',
+      header: t('Thumbnail'),
+      size: 150,
+      enableSorting: false,
+      cell: (info) => (
+        <MediaCell
+          thumb={info.row.original.thumbnail}
+          alt={info.row.original.name}
+          mediaType={(info.row.original.mediaType as MediaType) || 'other'}
+          onPreview={() => onPreview?.(info.row.original)}
+        />
+      ),
+    },
+    {
+      accessorKey: 'name',
+      header: t('Name'),
+      size: 200,
+      enableHiding: false,
+      cell: (info) => <TextCell weight="bold">{info.getValue<string>()}</TextCell>,
+    },
+    {
+      accessorKey: 'mediaType',
+      header: t('Type'),
+      size: 100,
+      cell: (info) => {
+        const value = info.getValue() as string;
+        return <StatusCell label={value} type={getStatusTypeFromMediaType(value)} />;
+      },
+    },
+    ...(canTag
+      ? ([
+          {
+            accessorKey: 'tags',
+            header: t('Tags'),
+            enableSorting: false,
+            size: 150,
+            cell: (info) => {
+              const tags = info.getValue<Tag[]>() || [];
+              const formattedTags = tags.map((tag) => ({
+                id: tag.tagId,
+                label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
+              }));
+              return <TagsCell tags={formattedTags} />;
+            },
+          },
+        ] as ColumnDef<Media>[])
+      : []),
+    {
+      id: 'formattedDuration',
+      accessorKey: 'duration',
+      header: t('Duration'),
+      size: 140,
+      cell: (info) => <TextCell>{formatDuration(info.getValue<number>())}</TextCell>,
+    },
+    {
+      id: 'durationSeconds',
+      accessorKey: 'duration',
+      header: t('Duration (s)'),
+      size: 140,
+      cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
+    },
+    {
+      accessorKey: 'fileSizeFormatted',
+      header: t('Size'),
+      size: 100,
+      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
+    },
+    {
+      accessorKey: 'fileSize',
+      header: t('Size (bytes)'),
+      size: 150,
+      cell: (info) => (
+        <TextCell className="font-mono text-sm">
+          {info.getValue<number>().toLocaleString()}
+        </TextCell>
+      ),
+    },
+    {
+      id: 'resolution',
+      header: t('Resolution'),
+      size: 150,
+      accessorFn: (row) => {
+        if (row.width && row.height) return `${row.width}x${row.height}`;
+        return '';
+      },
+      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
+    },
+    {
+      accessorKey: 'owner',
+      header: t('Owner'),
+      size: 150,
+      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
+    },
+    getSharingColumn<Media>(t),
+    {
+      accessorKey: 'revised',
+      header: t('Revised'),
+      size: 120,
+      cell: (info) => <CheckMarkCell active={(info.getValue<number>() === 1) as boolean} />,
+    },
+    {
+      accessorKey: 'released',
+      header: t('Released'),
+      size: 120,
+      cell: (info) => <CheckMarkCell active={(info.getValue<number>() === 1) as boolean} />,
+    },
+    {
+      accessorKey: 'fileName',
+      header: t('File Name'),
+      size: 200,
+      cell: (info) => (
+        <TextCell className="truncate" title={info.getValue() as string}>
+          {info.getValue<string>()}
+        </TextCell>
+      ),
+    },
+    {
+      accessorKey: 'enableStat',
+      header: t('Stats'),
+      size: 100,
+      cell: (info) => {
+        const value = info.getValue();
+        if (!value || value === 'Inherit') {
+          return <StatusCell label={value ? (value as string) : 'Inherit'} type="neutral" />;
+        }
+
+        return <CheckMarkCell active={String(value).toLowerCase() === 'on'} />;
+      },
+    },
+    {
+      accessorKey: 'createdDt',
+      header: t('Created'),
+      size: 180,
+      cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
+    },
+    {
+      accessorKey: 'modifiedDt',
+      header: t('Modified'),
+      size: 180,
+      cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
+    },
+    {
+      accessorKey: 'expires',
+      header: t('Expires'),
+      size: 180,
+      cell: (info) => {
+        const val = info.getValue() as number;
+        if (val === 0) return <span className="text-gray-400">-</span>;
+        return <TextCell>{val}</TextCell>;
+      },
+    },
+    {
+      id: 'tableActions',
+      header: '',
+      size: 110,
+      minSize: 110,
+      maxSize: 110,
+      enableHiding: false,
+      enableResizing: false,
+      cell: ({ row }) => (
+        <ActionsCell
+          row={row}
+          actions={getActions(row.original) as ComponentProps<typeof ActionsCell>['actions']}
+        />
+      ),
+    },
+  ];
+};
+
+interface GetBulkActionsProps {
+  t: TFunction;
+  onDelete: () => void;
+  onMove?: () => void;
+  onShare?: () => void;
+  onDownload?: () => void;
+  onEditTags?: () => void;
+  onEnableStats?: () => void;
+  canModify?: boolean;
+}
+
+export const getBulkActions = ({
+  t,
+  onDelete,
+  onMove,
+  onShare,
+  onDownload,
+  onEditTags,
+  onEnableStats,
+  canModify = false,
+}: GetBulkActionsProps): DataTableBulkAction<Media>[] => {
+  const actions: DataTableBulkAction<Media>[] = [];
+
+  if (onShare && canModify) {
+    actions.push({
+      label: t('Share'),
+      icon: UserPlus2,
+      onClick: onShare,
+    });
+  }
+
+  if (onEditTags && canModify) {
+    actions.push({
+      label: t('Edit Tags'),
+      icon: Tags,
+      onClick: onEditTags,
+    });
+  }
+
+  if (onEnableStats && canModify) {
+    actions.push({
+      label: t('Enable Stats Collection'),
+      icon: BarChart3,
+      onClick: onEnableStats,
+    });
+  }
+
+  if (onDownload) {
+    actions.push({
+      label: t('Download'),
+      icon: Download,
+      onClick: onDownload,
+    });
+  }
+
+  if (onMove && canModify) {
+    actions.push({
+      label: t('Move'),
+      icon: FolderInput,
+      onClick: onMove,
+    });
+  }
+
+  if (onDelete && canModify) {
+    actions.push({
+      label: t('Delete Selected'),
+      icon: Trash2,
+      onClick: onDelete,
+    });
+  }
+
+  return actions;
+};

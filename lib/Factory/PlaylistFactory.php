@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -26,6 +26,7 @@ namespace Xibo\Factory;
 use Carbon\Carbon;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\User;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -37,20 +38,11 @@ class PlaylistFactory extends BaseFactory
 {
     use TagTrait;
 
-    /**
-     * @var PermissionFactory
-     */
-    private $permissionFactory;
+    private PermissionFactory $permissionFactory;
 
-    /**
-     * @var WidgetFactory
-     */
-    private $widgetFactory;
+    private WidgetFactory $widgetFactory;
 
-    /**
-     * @var ConfigServiceInterface
-     */
-    private $config;
+    private ConfigServiceInterface $config;
 
     /**
      * Construct a factory
@@ -60,8 +52,13 @@ class PlaylistFactory extends BaseFactory
      * @param PermissionFactory $permissionFactory
      * @param WidgetFactory $widgetFactory
      */
-    public function __construct($config, $user, $userFactory, $permissionFactory, $widgetFactory)
-    {
+    public function __construct(
+        ConfigServiceInterface $config,
+        User $user,
+        UserFactory $userFactory,
+        PermissionFactory $permissionFactory,
+        WidgetFactory $widgetFactory
+    ) {
         $this->setAclDependencies($user, $userFactory);
 
         $this->config = $config;
@@ -72,7 +69,7 @@ class PlaylistFactory extends BaseFactory
     /**
      * @return Playlist
      */
-    public function createEmpty()
+    public function createEmpty(): Playlist
     {
         return new Playlist(
             $this->getStore(),
@@ -91,13 +88,17 @@ class PlaylistFactory extends BaseFactory
      * @return Playlist
      * @throws NotFoundException
      */
-    public function getByRegionId($regionId)
+    public function getByRegionId($regionId): Playlist
     {
         $playlists = $this->query(null, array('disableUserCheck' => 1, 'regionId' => $regionId));
 
         if (count($playlists) <= 0) {
-            $this->getLog()->error('Region ' . $regionId . ' does not have a Playlist associated, please try to set a new owner in Permissions.');
-            throw new NotFoundException(__('One of the Regions on this Layout does not have a Playlist, please contact your administrator.'));
+            $this->getLog()->error(
+                'Region ' . $regionId . ' does not have a Playlist associated, please try to set a new owner in Permissions.'//phpcs:ignore
+            );
+            throw new NotFoundException(
+                __('One of the Regions on this Layout does not have a Playlist, please contact your administrator.')//phpcs:ignore
+            );
         }
 
         return $playlists[0];
@@ -116,15 +117,20 @@ class PlaylistFactory extends BaseFactory
     /**
      * Get by Id
      * @param int $playlistId
+     * @param bool $disableUserCheck
      * @return Playlist
      * @throws NotFoundException
      */
-    public function getById($playlistId)
+    public function getById(int $playlistId, bool $disableUserCheck = true): Playlist
     {
-        $playlists = $this->query(null, array('disableUserCheck' => 1, 'playlistId' => $playlistId));
+        $playlists = $this->query(null, [
+            'disableUserCheck' => $disableUserCheck ? 1 : 0,
+            'playlistId' => $playlistId
+        ]);
 
-        if (count($playlists) <= 0)
+        if (count($playlists) <= 0) {
             throw new NotFoundException(__('Cannot find playlist'));
+        }
 
         return $playlists[0];
     }
@@ -135,7 +141,7 @@ class PlaylistFactory extends BaseFactory
      * @return Playlist[]
      * @throws NotFoundException
      */
-    public function getByOwnerId($ownerId)
+    public function getByOwnerId($ownerId): array
     {
         return $this->query(null, ['userId' => $ownerId, 'regionSpecific' => 0]);
     }
@@ -145,7 +151,7 @@ class PlaylistFactory extends BaseFactory
      * @return Playlist[]
      * @throws NotFoundException
      */
-    public function getByFolderId($folderId)
+    public function getByFolderId($folderId): array
     {
         return $this->query(null, ['disableUserCheck' => 1, 'folderId' => $folderId]);
     }
@@ -157,7 +163,7 @@ class PlaylistFactory extends BaseFactory
      * @param int|null $regionId
      * @return Playlist
      */
-    public function create($name, $ownerId, $regionId = null)
+    public function create(string $name, int $ownerId, ?int $regionId = null): Playlist
     {
         $playlist = $this->createEmpty();
         $playlist->name = $name;
@@ -170,14 +176,25 @@ class PlaylistFactory extends BaseFactory
     }
 
     /**
-     * @param null $sortOrder
+     * @param ?array $sortOrder
      * @param array $filterBy
      * @return Playlist[]
      * @throws NotFoundException
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query(?array $sortOrder = null, array $filterBy = []): array
     {
         $parsedFilter = $this->getSanitizer($filterBy);
+        $allowedColumns = [
+            'playlistId', 'name', 'duration', 'owner', 'isDynamic', 'enableStat', 'createdDt', 'modifiedDt',
+            'groupsWithPermissions'
+        ];
+
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            defaultSort: ['name ASC']
+        );
+
         $entries = [];
 
         $params = [];
@@ -202,6 +219,7 @@ class PlaylistFactory extends BaseFactory
                 `playlist`.enableStat,
                 `playlist`.folderId,
                 `playlist`.permissionsFolderId,
+                `folder`.folderName,
                 (
                 SELECT GROUP_CONCAT(DISTINCT `group`.group)
                   FROM `permission`
@@ -221,6 +239,8 @@ class PlaylistFactory extends BaseFactory
               FROM `playlist` 
                 LEFT OUTER JOIN `user` 
                 ON `user`.userId = `playlist`.ownerId
+                LEFT OUTER JOIN `folder`
+                ON `playlist`.folderId = `folder`.folderId
              WHERE 1 = 1 
         ';
 
@@ -240,9 +260,11 @@ class PlaylistFactory extends BaseFactory
         }
 
         // User Group filter
-        if ($parsedFilter->getInt('ownerUserGroupId',['default' => 0]) != 0) {
-            $body .= ' AND `playlist`.ownerId IN (SELECT DISTINCT userId FROM `lkusergroup` WHERE groupId =  :ownerUserGroupId) ';
-            $params['ownerUserGroupId'] = $parsedFilter->getInt('ownerUserGroupId',['default' => 0]);
+        if ($parsedFilter->getInt('ownerUserGroupId', ['default' => 0]) != 0) {
+            $body .= ' AND `playlist`.ownerId IN (
+                        SELECT DISTINCT userId FROM `lkusergroup` WHERE groupId =  :ownerUserGroupId
+                    ) ';
+            $params['ownerUserGroupId'] = $parsedFilter->getInt('ownerUserGroupId', ['default' => 0]);
         }
 
         if ($parsedFilter->getInt('regionId') !== null) {
@@ -259,7 +281,8 @@ class PlaylistFactory extends BaseFactory
                 $params['requiresDurationUpdate'] = Carbon::now()->format('U');
             } else {
                 // Ahead of now means we don't need to update yet, or we are set to 0 and we never update
-                $body .= ' AND (`playlist`.requiresDurationUpdate > :requiresDurationUpdate OR `playlist`.requiresDurationUpdate = 0)';
+                $body .= ' AND (`playlist`.requiresDurationUpdate > :requiresDurationUpdate
+                 OR `playlist`.requiresDurationUpdate = 0)';
                 $params['requiresDurationUpdate'] = Carbon::now()->format('U');
             }
         }
@@ -289,10 +312,11 @@ class PlaylistFactory extends BaseFactory
         }
 
         if ($parsedFilter->getInt('regionSpecific') !== null) {
-            if ($parsedFilter->getInt('regionSpecific') === 1)
+            if ($parsedFilter->getInt('regionSpecific') === 1) {
                 $body .= ' AND `playlist`.regionId IS NOT NULL ';
-            else
+            } else {
                 $body .= ' AND `playlist`.regionId IS NULL ';
+            }
         }
 
         if ($parsedFilter->getInt('layoutId', $filterBy) !== null) {
@@ -346,14 +370,14 @@ class PlaylistFactory extends BaseFactory
 
         // Playlist exact name
         if ($parsedFilter->getString('playlistExact') != '') {
-            $body.= " AND playlist.name = :exact ";
+            $body.= ' AND playlist.name = :exact ';
             $params['exact'] = $parsedFilter->getString('playlistExact');
         }
 
         // Not PlaylistId
         if ($parsedFilter->getInt('notPlaylistId', ['default' => 0]) != 0) {
-            $body .= " AND playlist.playlistId <> :notPlaylistId ";
-            $params['notPlaylistId'] = $parsedFilter->getInt('notPlaylistId',['default' => 0]);
+            $body .= ' AND playlist.playlistId <> :notPlaylistId ';
+            $params['notPlaylistId'] = $parsedFilter->getInt('notPlaylistId', ['default' => 0]);
         }
 
         // Tags
@@ -439,7 +463,7 @@ class PlaylistFactory extends BaseFactory
                 )
             ';
 
-            $params['mediaId'] = $parsedFilter->getInt('mediaId',['default' => 0]);
+            $params['mediaId'] = $parsedFilter->getInt('mediaId', ['default' => 0]);
         }
 
         // Media Like
@@ -460,37 +484,61 @@ class PlaylistFactory extends BaseFactory
         }
 
         if ($parsedFilter->getInt('filterFolderId') !== null) {
-            $body .= " AND `playlist`.filterFolderId = :filterFolderId ";
+            $body .= ' AND `playlist`.filterFolderId = :filterFolderId ';
             $params['filterFolderId'] = $parsedFilter->getInt('filterFolderId');
         }
 
         if ($parsedFilter->getInt('folderId') !== null) {
-            $body .= " AND `playlist`.folderId = :folderId ";
+            $body .= ' AND `playlist`.folderId = :folderId ';
             $params['folderId'] = $parsedFilter->getInt('folderId');
         }
 
+        // Modified Date range
+        if ($parsedFilter->getDate('modifiedDateFrom') != null) {
+            $body .= ' AND `playlist`.modifiedDt >= :modifiedDateFrom ';
+            $params['modifiedDateFrom'] = $parsedFilter->getDate('modifiedDateFrom')
+                ->format(DateFormatHelper::getSystemFormat());
+        }
+
+        if ($parsedFilter->getDate('modifiedDateTo') != null) {
+            $body .= ' AND `playlist`.modifiedDt <= :modifiedDateTo ';
+            $params['modifiedDateTo'] = $parsedFilter->getDate('modifiedDateTo')
+                ->format(DateFormatHelper::getSystemFormat());
+        }
+
         // Logged in user view permissions
-        $this->viewPermissionSql('Xibo\Entity\Playlist', $body, $params, 'playlist.playlistId', 'playlist.ownerId', $filterBy, '`playlist`.permissionsFolderId');
+        $this->viewPermissionSql(
+            'Xibo\Entity\Playlist',
+            $body,
+            $params,
+            'playlist.playlistId',
+            'playlist.ownerId',
+            $filterBy,
+            '`playlist`.permissionsFolderId'
+        );
 
         // Sorting?
-        $order = '';
-        if (is_array($sortOrder)) {
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
-        } else {
-            $order .= 'ORDER BY `playlist`.name ';
-        }
+        $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
 
         $limit = '';
         // Paging
         if ($filterBy !== null && $parsedFilter->getInt('start') !== null && $parsedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . $parsedFilter->getInt('start', ['default' => 0]) . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
+            $limit = ' LIMIT ' . $parsedFilter->getInt('start', ['default' => 0]) .
+                ', ' . $parsedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
         $playlistIds = [];
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $playlist = $this->createEmpty()->hydrate($row, ['intProperties' => ['requiresDurationUpdate', 'isDynamic', 'maxNumberOfItems', 'duration']]);
+            $playlist = $this->createEmpty()->hydrate($row, [
+                'intProperties' => [
+                    'requiresDurationUpdate',
+                    'isDynamic',
+                    'maxNumberOfItems',
+                    'duration'
+                ]
+            ]);
             $playlistIds[] = $playlist->playlistId;
             $entries[] = $playlist;
         }

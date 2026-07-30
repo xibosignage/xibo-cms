@@ -23,6 +23,7 @@
 
 namespace Xibo\Controller;
 
+use OpenApi\Attributes as OA;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\DataSetFactory;
@@ -56,36 +57,52 @@ class DataSetData extends Base
         $this->mediaFactory = $mediaFactory;
     }
 
-    /**
-     * Display Page
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function displayPage(Request $request, Response $response, $id)
-    {
-        $dataSet = $this->dataSetFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($dataSet)) {
-            throw new AccessDeniedException();
-        }
-        
-        // Load data set
-        $dataSet->load();
-
-        $this->getState()->template = 'dataset-dataentry-page';
-        $this->getState()->setData([
-            'dataSet' => $dataSet
-        ]);
-        
-        return $this->render($request, $response);
-    }
-
+    #[OA\Get(
+        path: '/dataset/data/{dataSetId}',
+        operationId: 'dataSetData',
+        description: 'Get Data for DataSet',
+        summary: 'DataSet Data',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        description: 'The DataSet ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'keyword',
+        description: 'Filter by dataset data column',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ]
+    )]
     /**
      * Grid
      * @param Request $request
@@ -96,24 +113,6 @@ class DataSetData extends Base
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Get(
-     *  path="/dataset/data/{dataSetId}",
-     *  operationId="dataSetData",
-     *  tags={"dataset"},
-     *  summary="DataSet Data",
-     *  description="Get Data for DataSet",
-     *  @SWG\Parameter(
-     *      name="dataSetId",
-     *      in="path",
-     *      description="The DataSet ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function grid(Request $request, Response $response, $id)
     {
@@ -123,31 +122,25 @@ class DataSetData extends Base
         if (!$this->getUser()->checkEditable($dataSet)) {
             throw new AccessDeniedException();
         }
-        
-        $sorting = $this->gridRenderSort($sanitizedParams);
+
+        $sorting = $this->gridRenderSort(
+            $sanitizedParams,
+            $this->isJson($request)
+        );
 
         if ($sorting != null) {
             $sorting = implode(',', $sorting);
         }
-        
-        // Filter criteria
-        $filter = '';
-        $params = [];
-        $i = 0;
-        foreach ($dataSet->getColumn() as $column) {
-            /* @var \Xibo\Entity\DataSetColumn $column */
-            if ($column->dataSetColumnTypeId == 1) {
-                $i++;
-                if ($sanitizedParams->getString($column->heading) != null) {
-                    $filter .= 'AND `' . $column->heading . '` LIKE :heading_' . $i . ' ';
-                    $params['heading_' . $i] = '%' . $sanitizedParams->getString($column->heading) . '%';
-                }
-            }
-        }
-        $filter = trim($filter, 'AND');
 
-        // Datatables filtering, sorting and paging.
-        $filter = $this->gridRenderFilter(['filter' => $filter], $sanitizedParams);
+        $columnFilter = $this->buildColumnFilter($dataSet, $sanitizedParams);
+        $keywordFilter = $this->buildKeywordFilter($dataSet, $sanitizedParams);
+
+        $params = array_merge($columnFilter['params'], $keywordFilter['params']);
+
+        $filter = $this->gridRenderFilter([
+            'filter' => $columnFilter['filter'],
+            'keyword' => $keywordFilter['keyword']
+        ], $sanitizedParams);
 
         try {
             $data = $dataSet->getData(
@@ -155,7 +148,8 @@ class DataSetData extends Base
                     'order' => $sorting,
                     'start' => $filter['start'],
                     'size' => $filter['length'],
-                    'filter' => $filter['filter']
+                    'filter' => $filter['filter'],
+                    'keyword' => $filter['keyword']
                 ],
                 [],
                 $params,
@@ -169,49 +163,57 @@ class DataSetData extends Base
             );
         }
 
-        $this->getState()->template = 'grid';
-        $this->getState()->setData($data);
-
-        // Output the count of records for paging purposes
-        if ($dataSet->countLast() != 0) {
-            $this->getState()->recordsTotal = $dataSet->countLast();
-        }
-
-        // Set this dataSet as being active
         $dataSet->setActive();
-        
-        return $this->render($request, $response);
+
+        $recordsTotal = $dataSet->countLast();
+
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $recordsTotal)
+            ->withJson($data);
     }
 
-    /**
-     * Add Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function addForm(Request $request, Response $response, $id)
-    {
-        $dataSet = $this->dataSetFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($dataSet)) {
-            throw new AccessDeniedException();
-        }
-        
-        $dataSet->load();
-
-        $this->getState()->template = 'dataset-data-form-add';
-        $this->getState()->setData([
-            'dataSet' => $dataSet
-        ]);
-        
-        return $this->render($request, $response);
-    }
-
+    #[OA\Post(
+        path: '/dataset/data/{dataSetId}',
+        operationId: 'dataSetDataAdd',
+        description: 'Add a row of Data to a DataSet',
+        summary: 'Add Row',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        description: 'The DataSet ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'dataSetColumnId_ID',
+                        description: 'Parameter for each dataSetColumnId in the DataSet',
+                        type: 'string'
+                    )
+                ],
+                required: ['dataSetColumnId_ID']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Add
      * @param Request $request
@@ -224,36 +226,6 @@ class DataSetData extends Base
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
-     * @SWG\Post(
-     *  path="/dataset/data/{dataSetId}",
-     *  operationId="dataSetDataAdd",
-     *  tags={"dataset"},
-     *  summary="Add Row",
-     *  description="Add a row of Data to a DataSet",
-     *  @SWG\Parameter(
-     *      name="dataSetId",
-     *      in="path",
-     *      description="The DataSet ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="dataSetColumnId_ID",
-     *      in="formData",
-     *      description="Parameter for each dataSetColumnId in the DataSet",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      */
     public function add(Request $request, Response $response, $id)
     {
@@ -316,53 +288,44 @@ class DataSetData extends Base
         return $this->render($request, $response);
     }
 
-    /**
-     * Edit Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @param $rowId
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function editForm(Request $request, Response $response, $id, $rowId)
-    {
-        $dataSet = $this->dataSetFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($dataSet)) {
-            throw new AccessDeniedException();
-        }
-
-        $dataSet->load();
-
-        $row = $dataSet->getData(['id' => $rowId])[0];
-
-        // Augment my row with any already selected library image
-        foreach ($dataSet->getColumn() as $dataSetColumn) {
-            if ($dataSetColumn->dataTypeId === 5) {
-                // Add this image object to my row
-                try {
-                    if (isset($row[$dataSetColumn->heading])) {
-                        $row['__images'][$dataSetColumn->dataSetColumnId] = $this->mediaFactory->getById($row[$dataSetColumn->heading]);
-                    }
-                } catch (NotFoundException $notFoundException) {
-                    $this->getLog()->debug('DataSet ' . $id . ' references an image that no longer exists. ID is ' . $row[$dataSetColumn->heading]);
-                }
-            }
-        }
-
-        $this->getState()->template = 'dataset-data-form-edit';
-        $this->getState()->setData([
-            'dataSet' => $dataSet,
-            'row' => $row
-        ]);
-
-        return $this->render($request, $response);
-    }
-
+    #[OA\Put(
+        path: '/dataset/data/{dataSetId}/{rowId}',
+        operationId: 'dataSetDataEdit',
+        description: 'Edit a row of Data to a DataSet',
+        summary: 'Edit Row',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        description: 'The DataSet ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'rowId',
+        description: 'The Row ID of the Data to Edit',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'dataSetColumnId_ID',
+                        description: 'Parameter for each dataSetColumnId in the DataSet',
+                        type: 'string'
+                    )
+                ],
+                required: ['dataSetColumnId_ID']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(response: 200, description: 'successful operation')]
     /**
      * Edit Row
      * @param Request $request
@@ -377,38 +340,6 @@ class DataSetData extends Base
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
-     * @SWG\Put(
-     *  path="/dataset/data/{dataSetId}/{rowId}",
-     *  operationId="dataSetDataEdit",
-     *  tags={"dataset"},
-     *  summary="Edit Row",
-     *  description="Edit a row of Data to a DataSet",
-     *  @SWG\Parameter(
-     *      name="dataSetId",
-     *      in="path",
-     *      description="The DataSet ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="rowId",
-     *      in="path",
-     *      description="The Row ID of the Data to Edit",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="dataSetColumnId_ID",
-     *      in="formData",
-     *      description="Parameter for each dataSetColumnId in the DataSet",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function edit(Request $request, Response $response, $id, $rowId)
     {
@@ -496,37 +427,28 @@ class DataSetData extends Base
         return $this->render($request, $response);
     }
 
-    /**
-     * Delete Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @param int $rowId
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function deleteForm(Request $request, Response $response, $id, $rowId)
-    {
-        $dataSet = $this->dataSetFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($dataSet)) {
-            throw new AccessDeniedException();
-        }
-
-        $dataSet->load();
-
-        $this->getState()->template = 'dataset-data-form-delete';
-        $this->getState()->setData([
-            'dataSet' => $dataSet,
-            'row' => $dataSet->getData(['id' => $rowId])[0]
-        ]);
-
-        return $this->render($request, $response);
-    }
-
+    #[OA\Delete(
+        path: '/dataset/data/{dataSetId}/{rowId}',
+        operationId: 'dataSetDataDelete',
+        description: 'Delete a row of Data to a DataSet',
+        summary: 'Delete Row',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        description: 'The DataSet ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'rowId',
+        description: 'The Row ID of the Data to Delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete Row
      * @param Request $request
@@ -541,31 +463,6 @@ class DataSetData extends Base
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
-     * @SWG\Delete(
-     *  path="/dataset/data/{dataSetId}/{rowId}",
-     *  operationId="dataSetDataDelete",
-     *  tags={"dataset"},
-     *  summary="Delete Row",
-     *  description="Delete a row of Data to a DataSet",
-     *  @SWG\Parameter(
-     *      name="dataSetId",
-     *      in="path",
-     *      description="The DataSet ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="rowId",
-     *      in="path",
-     *      description="The Row ID of the Data to Delete",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function delete(Request $request, Response $response, $id, $rowId)
     {
@@ -593,5 +490,76 @@ class DataSetData extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Build the query for filter
+     * @param $dataSet
+     * @param $sanitizedParams
+     * @return array
+     */
+    private function buildColumnFilter($dataSet, $sanitizedParams): array
+    {
+        $filter = '';
+        $params = [];
+        $i = 0;
+
+        foreach ($dataSet->getColumn() as $column) {
+            if ($column->dataSetColumnTypeId == 1) {
+                $i++;
+                if ($sanitizedParams->getString($column->heading) != null) {
+                    $filter .= 'AND `' . $column->heading . '` LIKE :heading_' . $i . ' ';
+                    $params['heading_' . $i] = '%' . $sanitizedParams->getString($column->heading) . '%';
+                }
+            }
+        }
+
+        return [
+            'filter' => trim($filter, 'AND'),
+            'params' => $params
+        ];
+    }
+
+    /**
+     * Build the query for keyword
+     * @param $dataSet
+     * @param $sanitizedParams
+     * @return array
+     */
+    private function buildKeywordFilter($dataSet, $sanitizedParams): array
+    {
+        $keyword = $sanitizedParams->getString('keyword');
+
+        if ($keyword === null) {
+            return ['keyword' => '', 'params' => []];
+        }
+
+        // Get the keywords separated by comma
+        $keywords = array_filter(array_map('trim', explode(',', $keyword)));
+        $keywordClauses = [];
+        $params = [];
+        $i = 0;
+
+        // Create a separate SQL query for each keyword
+        foreach ($keywords as $word) {
+            $wordClauses = [];
+
+            foreach ($dataSet->getColumn() as $column) {
+                if ($column->dataSetColumnTypeId == 1) {
+                    $i++;
+                    $wordClauses[] = '`' . $column->heading . '` LIKE :keyword_' . $i;
+                    $params['keyword_' . $i] = '%' . $word . '%';
+                }
+            }
+
+            if (!empty($wordClauses)) {
+                $keywordClauses[] = '(' . implode(' OR ', $wordClauses) . ')';
+            }
+        }
+
+        return [
+            'keyword' => !empty($keywordClauses) ? implode(' OR ', $keywordClauses) : '',
+            'params' => $params
+        ];
     }
 }

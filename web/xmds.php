@@ -24,6 +24,7 @@ use Monolog\Logger;
 use Nyholm\Psr7\ServerRequest;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\ContainerFactory;
+use Xibo\Helper\LibraryFile;
 use Xibo\Helper\LinkSigner;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -207,6 +208,14 @@ if (isset($_GET['file'])) {
         $libraryLocation = $container->get('configService')->getSetting('LIBRARY_LOCATION');
         $cdnUrl = $container->get('configService')->getSetting('CDN_URL');
 
+        // Resolve the library-relative path to an absolute filesystem path and verify
+        // it stays under the library root. Defended today by upstream sanitizers
+        // (BlueImpUploadHandler basename, FontFactory regex strip, #1491 asset-path
+        // prefix validation, integer IDs), but the boundary check here means a
+        // regression in any upstream defense fails loudly at the sink rather than
+        // silently traversing.
+        $resolvedFilePath = LibraryFile::resolve($libraryLocation, $file->path);
+
         // Issue content type header
         $isCss = false;
         if ($file->type === 'L') {
@@ -218,7 +227,7 @@ if (isset($_GET['file'])) {
             $isCss = true;
             header('Content-Type: text/css');
         } else {
-            $contentType = mime_content_type($libraryLocation . $file->path);
+            $contentType = mime_content_type($resolvedFilePath);
             if ($contentType !== false) {
                 header('Content-Type: ' . $contentType);
             }
@@ -230,7 +239,7 @@ if (isset($_GET['file'])) {
             $logger->debug('Rewriting CSS for PWA: ' . $file->path);
 
             // Rewrite CSS for PWAs
-            $cssFile = file_get_contents($libraryLocation . $file->path);
+            $cssFile = file_get_contents($resolvedFilePath);
 
             // Use callback to modify each match individually (to avoid substituting duplicates more than once)
             $cssFile = preg_replace_callback('/url\(\'?(.*?)\'?\)/', function ($matches) use (
@@ -271,14 +280,17 @@ if (isset($_GET['file'])) {
 
             echo $cssFile;
         } else {
-            $logger->info('HTTP GetFile request redirecting to ' . $libraryLocation . $file->path);
+            $logger->info('HTTP GetFile request redirecting to ' . $resolvedFilePath);
 
             // Normal send
             if ($sendFileMode == 'Apache') {
                 // Send via Apache X-Sendfile header
-                header('X-Sendfile: ' . $libraryLocation . $file->path);
+                header('X-Sendfile: ' . $resolvedFilePath);
             } else if ($sendFileMode == 'Nginx') {
-                // Send via Nginx X-Accel-Redirect
+                // Send via Nginx X-Accel-Redirect. $file->path has already been
+                // validated above (LibraryFile::resolve() raised on traversal/
+                // absolute components) so using it as the Nginx internal-redirect
+                // suffix is safe.
                 header('X-Accel-Redirect: /download/' . $file->path);
             } else {
                 header('HTTP/1.0 404 Not Found');
@@ -476,7 +488,22 @@ try {
     $container->get('logService')->info('PDO stats: %s.', json_encode($stats, JSON_PRETTY_PRINT));
 
     if ($container->get('store')->getConnection()->inTransaction()) {
-        $container->get('store')->getConnection()->commit();
+        // SoapServer::handle() traps any exception thrown inside a SOAP method, turns it into a
+        // SOAP fault (setting the HTTP status to 500) and returns normally - so a faulted request
+        // never reaches the catch below. Without this check we would commit the partial work of a
+        // faulted request (e.g. a display row inserted without its display-specific display group).
+        // Gate the commit on the response status so faults roll back as intended.
+        if (http_response_code() >= 500) {
+            try {
+                $container->get('store')->getConnection()->rollBack();
+            } catch (\Throwable $t) {
+                // The transaction may already be gone (e.g. after a deadlock the server rolls back
+                // for us), in which case there is nothing to do here.
+                $container->get('logService')->debug('XMDS rollback no-op: ' . $t->getMessage());
+            }
+        } else {
+            $container->get('store')->getConnection()->commit();
+        }
     }
 
     // Finish any XMR work that has been logged during the request

@@ -23,8 +23,11 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
+use OpenApi\Attributes as OA;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Event\FolderTouchEvent;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
@@ -44,12 +47,20 @@ use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 use Xibo\Widget\SubPlaylistItem;
 
 /**
  * Class Playlist
  * @package Xibo\Controller
  */
+#[OA\Schema(
+    schema: 'PlaylistWidgetList',
+    properties: [
+        new OA\Property(property: 'widgetId', description: 'Widget ID', type: 'integer'),
+        new OA\Property(property: 'position', description: 'The position in the Playlist', type: 'integer')
+    ]
+)]
 class Playlist extends Base
 {
     /** @var PlaylistFactory */
@@ -104,18 +115,18 @@ class Playlist extends Base
      * @param RegionFactory $regionFactory
      */
     public function __construct(
-        $playlistFactory,
-        $mediaFactory,
-        $widgetFactory,
-        $moduleFactory,
-        $userGroupFactory,
-        $userFactory,
-        $tagFactory,
-        $layoutFactory,
-        $displayFactory,
-        $scheduleFactory,
-        $folderFactory,
-        $regionFactory,
+        PlaylistFactory $playlistFactory,
+        MediaFactory $mediaFactory,
+        WidgetFactory $widgetFactory,
+        ModuleFactory $moduleFactory,
+        UserGroupFactory $userGroupFactory,
+        UserFactory $userFactory,
+        TagFactory $tagFactory,
+        LayoutFactory $layoutFactory,
+        DisplayFactory $displayFactory,
+        ScheduleFactory $scheduleFactory,
+        FolderFactory $folderFactory,
+        RegionFactory $regionFactory,
         private readonly JwtServiceInterface $jwtService,
     ) {
         $this->playlistFactory = $playlistFactory;
@@ -132,544 +143,291 @@ class Playlist extends Base
         $this->regionFactory = $regionFactory;
     }
 
-    /**
-     * Display Page
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function displayPage(Request $request, Response $response)
-    {
-        $moduleFactory = $this->moduleFactory;
-
-        // Call to render the template
-        $this->getState()->template = 'playlist-page';
-        $this->getState()->setData([
-            'modules' => $moduleFactory->getAssignableModules()
-        ]);
-
-        return $this->render($request, $response);
-    }
-
+    #[OA\Get(
+        path: '/playlist',
+        operationId: 'playlistSearch',
+        description: 'Search for Playlists viewable by this user',
+        summary: 'Search Playlists',
+        tags: ['playlist']
+    )]
+    #[OA\Parameter(
+        name: 'playlistId',
+        description: 'Filter by Playlist Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'name',
+        description: 'Filter by partial Playlist name',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'userId',
+        description: 'Filter by user Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'tags',
+        description: 'Filter by tags',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'exactTags',
+        description: 'A flag indicating whether to treat the tags filter as an exact match',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'logicalOperator',
+        description: 'When filtering by multiple Tags, which logical operator should be used? AND|OR',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'ownerUserGroupId',
+        description: 'Filter by users in this UserGroupId',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'embed',
+        description: 'Embed related data such as regions, widgets, permissions, tags',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'folderId',
+        description: 'Filter by Folder ID',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'modifiedDateFrom',
+        description: 'Filter by modified date, greater than or equal',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'modifiedDateTo',
+        description: 'Filter by modified date, less than or equal',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'string',
+            enum: [
+                'playlistId',
+                'name',
+                'duration',
+                'owner',
+                'isDynamic',
+                'enableStat',
+                'createdDt',
+                'modifiedDt',
+                'groupsWithPermissions',
+            ]
+        )
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ],
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/Playlist')
+        )
+    )]
     /**
      * Playlist Search
      *
-     * @SWG\Get(
-     *  path="/playlist",
-     *  operationId="playlistSearch",
-     *  tags={"playlist"},
-     *  summary="Search Playlists",
-     *  description="Search for Playlists viewable by this user",
-     *  @SWG\Parameter(
-     *      name="playlistId",
-     *      in="query",
-     *      description="Filter by Playlist Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="query",
-     *      description="Filter by partial Playlist name",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="userId",
-     *      in="query",
-     *      description="Filter by user Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="tags",
-     *      in="query",
-     *      description="Filter by tags",
-     *      type="string",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="exactTags",
-     *      in="query",
-     *      description="A flag indicating whether to treat the tags filter as an exact match",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="logicalOperator",
-     *      in="query",
-     *      description="When filtering by multiple Tags, which logical operator should be used? AND|OR",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ownerUserGroupId",
-     *      in="query",
-     *      description="Filter by users in this UserGroupId",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="embed",
-     *      in="query",
-     *      description="Embed related data such as regions, widgets, permissions, tags",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="query",
-     *      description="Filter by Folder ID",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/Playlist")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response): Response|ResponseInterface
     {
-        $this->getState()->template = 'grid';
         $sanitizedParams = $this->getSanitizer($request->getParams());
-
-        // Embed?
-        $embed = ($sanitizedParams->getString('embed') != null)
-            ? explode(',', $sanitizedParams->getString('embed'))
-            : [];
+        $playlistSortQuery = $this->gridRenderSort($sanitizedParams, $this->isJson($request));
 
         // Playlists
-        $playlists = $this->playlistFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter([
-            'name' => $sanitizedParams->getString('name'),
-            'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
-            'userId' => $sanitizedParams->getInt('userId'),
-            'tags' => $sanitizedParams->getString('tags'),
-            'exactTags' => $sanitizedParams->getCheckbox('exactTags'),
-            'playlistId' => $sanitizedParams->getInt('playlistId'),
-            'notPlaylistId' => $sanitizedParams->getInt('notPlaylistId'),
-            'ownerUserGroupId' => $sanitizedParams->getInt('ownerUserGroupId'),
-            'mediaLike' => $sanitizedParams->getString('mediaLike'),
-            'regionSpecific' => $sanitizedParams->getInt('regionSpecific', ['default' => 0]),
-            'folderId' => $sanitizedParams->getInt('folderId'),
-            'layoutId' => $sanitizedParams->getInt('layoutId'),
-            'logicalOperator' => $sanitizedParams->getString('logicalOperator'),
-            'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
-        ], $sanitizedParams));
+        $playlists = $this->playlistFactory->query($playlistSortQuery, $this->getPlaylistFilters($sanitizedParams));
 
         foreach ($playlists as $playlist) {
-            // Handle embeds
-            if (in_array('widgets', $embed)) {
-                $loadPermissions = in_array('permissions', $embed);
-                $loadTags = in_array('tags', $embed);
-                $loadActions = in_array('actions', $embed);
-
-                $playlist->load([
-                    'loadPermissions' => $loadPermissions,
-                    'loadWidgets' => true,
-                    'loadTags' => $loadTags,
-                    'loadActions' => $loadActions
-                ]);
-
-                foreach ($playlist->widgets as $widget) {
-                    $widget->setUnmatchedProperty('tags', []);
-
-                    try {
-                        $module = $this->moduleFactory->getByType($widget->type);
-                    } catch (NotFoundException $notFoundException) {
-                        $this->getLog()->error('Module not found for widget: ' . $widget->type);
-                        continue;
-                    }
-
-                    // Embed the name of this widget
-                    $widget->setUnmatchedProperty('moduleName', $module->name);
-                    $widgetName = $widget->getOptionValue('name', null);
-
-                    if ($module->regionSpecific == 0) {
-                        // Use the media assigned to this widget
-                        $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
-                        $media->load();
-                        $widget->setUnmatchedProperty('name', $widget->getOptionValue('name', null) ?: $media->name);
-
-                        // Augment with tags
-                        $widget->setUnmatchedProperty('tags', $media->tags);
-                    } else {
-                        $widget->setUnmatchedProperty('name', $widget->getOptionValue('name', null) ?: $module->name);
-                        $widget->setUnmatchedProperty('tags', []);
-                    }
-
-                    // Sub-playlists should calculate a fresh duration
-                    if ($widget->type === 'subplaylist') {
-                        $widget->calculateDuration($module);
-                    }
-
-                    // Get transitions
-                    $widget->transitionIn = $widget->getOptionValue('transIn', null);
-                    $widget->transitionOut = $widget->getOptionValue('transOut', null);
-                    $widget->transitionDurationIn = $widget->getOptionValue('transInDuration', null);
-                    $widget->transitionDurationOut = $widget->getOptionValue('transOutDuration', null);
-
-                    // Permissions?
-                    if ($loadPermissions) {
-                        // Augment with editable flag
-                        $widget->setUnmatchedProperty('isEditable', $this->getUser()->checkEditable($widget));
-
-                        // Augment with deletable flag
-                        $widget->setUnmatchedProperty('isDeletable', $this->getUser()->checkDeleteable($widget));
-
-                        // Augment with viewable flag
-                        $widget->setUnmatchedProperty('isViewable', $this->getUser()->checkViewable($widget));
-
-                        // Augment with permissions flag
-                        $widget->setUnmatchedProperty(
-                            'isPermissionsModifiable',
-                            $this->getUser()->checkPermissionsModifyable($widget)
-                        );
-                    }
-                }
-            }
-
-
-            if ($sanitizedParams->getCheckbox('fullScreenScheduleCheck')) {
-                $fullScreenCampaignId = $this->hasFullScreenLayout($playlist);
-                $playlist->setUnmatchedProperty('hasFullScreenLayout', (!empty($fullScreenCampaignId)));
-                $playlist->setUnmatchedProperty('fullScreenCampaignId', $fullScreenCampaignId);
-            }
-
-            if ($this->isApi($request)) {
-                continue;
-            }
-
-            $playlist->includeProperty('buttons');
-
-            switch ($playlist->enableStat) {
-                case 'On':
-                    $playlist->setUnmatchedProperty(
-                        'enableStatDescription',
-                        __('This Playlist has enable stat collection set to ON')
-                    );
-                    break;
-
-                case 'Off':
-                    $playlist->setUnmatchedProperty(
-                        'enableStatDescription',
-                        __('This Playlist has enable stat collection set to OFF')
-                    );
-                    break;
-
-                default:
-                    $playlist->setUnmatchedProperty(
-                        'enableStatDescription',
-                        __('This Playlist has enable stat collection set to INHERIT')
-                    );
-            }
-
-            // Only proceed if we have edit permissions
-            if ($this->getUser()->featureEnabled('playlist.modify')
-                && $this->getUser()->checkEditable($playlist)
-            ) {
-                if ($playlist->isDynamic === 0) {
-                    // Timeline edit
-                    $playlist->buttons[] = [
-                        'id' => 'playlist_timeline_button_edit',
-                        'class' => 'XiboCustomFormButton',
-                        'url' => $this->urlFor($request, 'playlist.timeline.form', ['id' => $playlist->playlistId]),
-                        'text' => __('Timeline')
-                    ];
-
-                    $playlist->buttons[] = ['divider' => true];
-                }
-
-                // Edit Button
-                $playlist->buttons[] = [
-                    'id' => 'playlist_button_edit',
-                    'url' => $this->urlFor($request, 'playlist.edit.form', ['id' => $playlist->playlistId]),
-                    'text' => __('Edit')
-                ];
-
-                // Copy Button
-                $playlist->buttons[] = [
-                    'id' => 'playlist_button_copy',
-                    'url' => $this->urlFor($request, 'playlist.copy.form', ['id' => $playlist->playlistId]),
-                    'text' => __('Copy')
-                ];
-
-                if ($this->getUser()->featureEnabled('folder.view')) {
-                    // Select Folder
-                    $playlist->buttons[] = [
-                        'id' => 'playlist_button_selectfolder',
-                        'url' => $this->urlFor($request, 'playlist.selectfolder.form', ['id' => $playlist->playlistId]),
-                        'text' => __('Select Folder'),
-                        'multi-select' => true,
-                        'dataAttributes' => [
-                            [
-                                'name' => 'commit-url',
-                                'value' => $this->urlFor($request, 'playlist.selectfolder', [
-                                    'id' => $playlist->playlistId
-                                ])
-                            ],
-                            ['name' => 'commit-method', 'value' => 'put'],
-                            ['name' => 'id', 'value' => 'playlist_button_selectfolder'],
-                            ['name' => 'text', 'value' => __('Move to Folder')],
-                            ['name' => 'rowtitle', 'value' => $playlist->name],
-                            ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
-                        ]
-                    ];
-                }
-
-                // Set Enable Stat
-                $playlist->buttons[] = [
-                    'id' => 'playlist_button_setenablestat',
-                    'url' => $this->urlFor($request, 'playlist.setenablestat.form', ['id' => $playlist->playlistId]),
-                    'text' => __('Enable stats collection?'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor($request, 'playlist.setenablestat', [
-                                'id' => $playlist->playlistId
-                            ])
-                        ],
-                        ['name' => 'commit-method', 'value' => 'put'],
-                        ['name' => 'id', 'value' => 'playlist_button_setenablestat'],
-                        ['name' => 'text', 'value' => __('Enable stats collection?')],
-                        ['name' => 'rowtitle', 'value' => $playlist->name],
-                        ['name' => 'form-callback', 'value' => 'setEnableStatMultiSelectFormOpen']
-                    ]
-                ];
-
-                $playlist->buttons[] = ['divider' => true];
-            }
-
-            // Extra buttons if have delete permissions
-            if ($this->getUser()->featureEnabled('playlist.modify')
-                && $this->getUser()->checkDeleteable($playlist)
-            ) {
-                // Delete Button
-                $playlist->buttons[] = [
-                    'id' => 'playlist_button_delete',
-                    'url' => $this->urlFor($request, 'playlist.delete.form', ['id' => $playlist->playlistId]),
-                    'text' => __('Delete'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor($request, 'playlist.delete', [
-                                'id' => $playlist->playlistId
-                            ])
-                        ],
-                        ['name' => 'commit-method', 'value' => 'delete'],
-                        ['name' => 'id', 'value' => 'playlist_button_delete'],
-                        ['name' => 'text', 'value' => __('Delete')],
-                        ['name' => 'sort-group', 'value' => 1],
-                        ['name' => 'rowtitle', 'value' => $playlist->name]
-                    ]
-                ];
-
-                $playlist->buttons[] = ['divider' => true];
-            }
-
-            // Extra buttons if we have modify permissions
-            if ($this->getUser()->featureEnabled('playlist.modify')
-                && $this->getUser()->checkPermissionsModifyable($playlist)
-            ) {
-                // Permissions button
-                $playlist->buttons[] = [
-                    'id' => 'playlist_button_permissions',
-                    'url' => $this->urlFor($request, 'user.permissions.form', [
-                        'entity' => 'Playlist',
-                        'id' => $playlist->playlistId
-                    ]),
-                    'text' => __('Share'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor($request, 'user.permissions.multi', [
-                                'entity' => 'Playlist',
-                                'id' => $playlist->playlistId
-                            ])
-                        ],
-                        ['name' => 'commit-method', 'value' => 'post'],
-                        ['name' => 'id', 'value' => 'playlist_button_permissions'],
-                        ['name' => 'text', 'value' => __('Share')],
-                        ['name' => 'rowtitle', 'value' => $playlist->name],
-                        ['name' => 'sort-group', 'value' => 2],
-                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                        [
-                            'name' => 'custom-handler-url',
-                            'value' => $this->urlFor($request, 'user.permissions.multi.form', [
-                                'entity' => 'Playlist'
-                            ])
-                        ],
-                        ['name' => 'content-id-name', 'value' => 'playlistId']
-                    ]
-                ];
-            }
-
-            if ($this->getUser()->featureEnabled(['schedule.view', 'layout.view'])) {
-                $playlist->buttons[] = ['divider' => true];
-
-                $playlist->buttons[] = array(
-                    'id' => 'usage_report_button',
-                    'url' => $this->urlFor($request, 'playlist.usage.form', ['id' => $playlist->playlistId]),
-                    'text' => __('Usage Report')
-                );
-            }
-
-            // Schedule
-            if ($this->getUser()->featureEnabled('schedule.add')
-                && ($this->getUser()->checkEditable($playlist)
-                    || $this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1)
-            ) {
-                $playlist->buttons[] = [
-                    'id' => 'playlist_button_schedule',
-                    'url' => $this->urlFor(
-                        $request,
-                        'schedule.add.form',
-                        ['id' => $playlist->playlistId, 'from' => 'Playlist']
-                    ),
-                    'text' => __('Schedule')
-                ];
-            }
+            $this->decoratePlaylistProperties($sanitizedParams, $playlist);
         }
 
+        if ($this->isJson($request) || $this->isApi($request)) {
+            return $response
+                ->withStatus(200)
+                ->withHeader('X-Total-Count', $this->playlistFactory->countLast())
+                ->withJson($playlists);
+        }
+
+        // TODO remove when relevant pages/forms are updated
+        $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->playlistFactory->countLast();
         $this->getState()->setData($playlists);
 
         return $this->render($request, $response);
     }
 
-    //<editor-fold desc="CRUD">
-
+    #[OA\Get(
+        path: '/playlist/{playlistId}',
+        operationId: 'PlaylistSearchById',
+        description: 'Get the Playlist object specified by the provided playlistId',
+        summary: 'Playlist search by ID',
+        tags: ['playlist']
+    )]
+    #[OA\Parameter(
+        name: 'playlistId',
+        description: 'Numeric ID of the Playlist to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Playlist')
+    )]
     /**
-     * Add Form
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @param int $id
+     * @return Response|ResponseInterface
      * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
-    public function addForm(Request $request, Response $response)
+    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
     {
-        $this->getState()->template = 'playlist-form-add';
+        $sanitizedParams = $this->getSanitizer($request->getQueryParams());
+        $playlist = $this->playlistFactory->getById($id, false);
+        $this->decoratePlaylistProperties($sanitizedParams, $playlist);
 
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson($playlist);
     }
 
+    //<editor-fold desc="CRUD">
+
+    #[OA\Post(
+        path: '/playlist',
+        operationId: 'playlistAdd',
+        description: 'Add a new Playlist',
+        summary: 'Add a Playlist',
+        tags: ['playlist']
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['name', 'isDynamic'],
+                properties: [
+                    new OA\Property(property: 'name', description: 'The Name for this Playlist', type: 'string'),
+                    new OA\Property(property: 'tags', description: 'Tags', type: 'string'),
+                    new OA\Property(property: 'isDynamic', description: 'Is this Playlist Dynamic?', type: 'integer'),
+                    new OA\Property(
+                        property: 'filterMediaName',
+                        description: 'Add Library Media matching the name filter provided',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'logicalOperatorName',
+                        description: 'When filtering by multiple names in name filter, which logical operator should be used? AND|OR', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'filterMediaTag',
+                        description: 'Add Library Media matching the tag filter provided',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'exactTags',
+                        description: 'When filtering by Tags, should we use exact match?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'logicalOperator',
+                        description: 'When filtering by Tags, which logical operator should be used? AND|OR',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'maxNumberOfItems',
+                        description: 'Maximum number of items that can be assigned to this Playlist (dynamic Playlist only)', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'folderId',
+                        description: 'Folder ID to which this object should be assigned to',
+                        type: 'integer'
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ],
+        content: new OA\JsonContent(ref: '#/components/schemas/Playlist')
+    )]
     /**
      * Add
      *
-     * @SWG\Post(
-     *  path="/playlist",
-     *  operationId="playlistAdd",
-     *  tags={"playlist"},
-     *  summary="Add a Playlist",
-     *  description="Add a new Playlist",
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="The Name for this Playlist",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="tags",
-     *      in="formData",
-     *      description="Tags",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isDynamic",
-     *      in="formData",
-     *      description="Is this Playlist Dynamic?",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="filterMediaName",
-     *      in="formData",
-     *      description="Add Library Media matching the name filter provided",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="logicalOperatorName",
-     *      in="formData",
-     *      description="When filtering by multiple names in name filter, which logical operator should be used? AND|OR",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="filterMediaTag",
-     *      in="formData",
-     *      description="Add Library Media matching the tag filter provided",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="exactTags",
-     *      in="formData",
-     *      description="When filtering by Tags, should we use exact match?",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="logicalOperator",
-     *      in="formData",
-     *      description="When filtering by Tags, which logical operator should be used? AND|OR",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="maxNumberOfItems",
-     *      in="formData",
-     *      description="Maximum number of items that can be assigned to this Playlist (dynamic Playlist only)",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="formData",
-     *      description="Folder ID to which this object should be assigned to",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Playlist"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
-     *
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
-    public function add(Request $request, Response $response)
+    public function add(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -709,15 +467,23 @@ class Playlist extends Base
         // Do we have a tag, name or folder filter?
         $nameFilter = $sanitizedParams->getString('filterMediaName');
         $nameFilterLogicalOperator = $sanitizedParams->getString('logicalOperatorName');
-        $tagFilter = $this->getUser()->featureEnabled('tag.tagging') ? $sanitizedParams->getString('filterMediaTag') : null;
-        $logicalOperator = $this->getUser()->featureEnabled('tag.tagging') ? $sanitizedParams->getString('logicalOperator') : 'OR';
-        $exactTags = $this->getUser()->featureEnabled('tag.tagging') ? $sanitizedParams->getCheckbox('exactTags') : 0;
-        $folderIdFilter = $this->getUser()->featureEnabled('folder.view') ? $sanitizedParams->getInt('filterFolderId') : null;
+        $tagFilter = $this->getUser()->featureEnabled('tag.tagging')
+            ? $sanitizedParams->getString('filterMediaTag')
+            : null;
+        $logicalOperator = $this->getUser()->featureEnabled('tag.tagging')
+            ? $sanitizedParams->getString('logicalOperator')
+            : 'OR';
+        $exactTags = $this->getUser()->featureEnabled('tag.tagging')
+            ? $sanitizedParams->getCheckbox('exactTags')
+            : 0;
+        $folderIdFilter = $this->getUser()->featureEnabled('folder.view')
+            ? $sanitizedParams->getInt('filterFolderId')
+            : null;
 
         // Capture these as dynamic filter criteria
         if ($playlist->isDynamic === 1) {
             if (empty($nameFilter) && empty($tagFilter) && empty($folderIdFilter)) {
-                throw new InvalidArgumentException(__('No filters have been set for this dynamic Playlist, please click the Filters tab to define'));
+                throw new InvalidArgumentException(__('No filters have been set for this dynamic Playlist!'));
             }
             $playlist->filterMediaName = $nameFilter;
             $playlist->filterMediaNameLogicalOperator = $nameFilterLogicalOperator;
@@ -731,10 +497,15 @@ class Playlist extends Base
                 $playlist->filterFolderId = $folderIdFilter;
             }
 
-            $playlist->maxNumberOfItems = $sanitizedParams->getInt('maxNumberOfItems', ['default' => $this->getConfig()->getSetting('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER')]);
+            $playlist->maxNumberOfItems = $sanitizedParams->getInt(
+                'maxNumberOfItems',
+                ['default' => $this->getConfig()->getSetting('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER')]
+            );
         }
 
         $playlist->save();
+
+        $this->touchFolder($playlist->folderId);
 
         // Should we assign any existing media
         if (!empty($nameFilter) || !empty($tagFilter) || !empty($folderIdFilter)) {
@@ -795,15 +566,9 @@ class Playlist extends Base
             }
         }
 
-        // Success
-        $this->getState()->hydrate([
-            'httpStatus' => 201,
-            'message' => sprintf(__('Added %s'), $playlist->name),
-            'id' => $playlist->playlistId,
-            'data' => $playlist
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(201)
+            ->withJson($playlist);
     }
 
     /**
@@ -816,7 +581,7 @@ class Playlist extends Base
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function editForm(Request $request, Response $response, $id)
+    public function editForm(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $playlist = $this->playlistFactory->getById($id);
 
@@ -832,102 +597,77 @@ class Playlist extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/playlist/{playlistId}',
+        operationId: 'playlistEdit',
+        description: 'Edit a Playlist',
+        summary: 'Edit a Playlist',
+        tags: ['playlist']
+    )]
+    #[OA\Parameter(
+        name: 'playlistId',
+        description: 'The PlaylistId to Edit',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['name', 'isDynamic'],
+                properties: [
+                    new OA\Property(property: 'name', description: 'The Name for this Playlist', type: 'string'),
+                    new OA\Property(property: 'tags', description: 'Tags', type: 'string'),
+                    new OA\Property(property: 'isDynamic', description: 'Is this Playlist Dynamic?', type: 'integer'),
+                    new OA\Property(
+                        property: 'filterMediaName',
+                        description: 'Add Library Media matching the name filter provided',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'logicalOperatorName',
+                        description: 'When filtering by multiple names in name filter, which logical operator should be used? AND|OR', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'filterMediaTag',
+                        description: 'Add Library Media matching the tag filter provided',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'exactTags',
+                        description: 'When filtering by Tags, should we use exact match?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'logicalOperator',
+                        description: 'When filtering by Tags, which logical operator should be used? AND|OR',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'maxNumberOfItems',
+                        description: 'Maximum number of items that can be assigned to this Playlist (dynamic Playlist only)', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'folderId',
+                        description: 'Folder ID to which this object should be assigned to',
+                        type: 'integer'
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Edit
-     *
-     * @SWG\Put(
-     *  path="/playlist/{playlistId}",
-     *  operationId="playlistEdit",
-     *  tags={"playlist"},
-     *  summary="Edit a Playlist",
-     *  description="Edit a Playlist",
-     *  @SWG\Parameter(
-     *      name="playlistId",
-     *      in="path",
-     *      description="The PlaylistId to Edit",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="The Name for this Playlist",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="tags",
-     *      in="formData",
-     *      description="Tags",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isDynamic",
-     *      in="formData",
-     *      description="Is this Playlist Dynamic?",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="filterMediaName",
-     *      in="formData",
-     *      description="Add Library Media matching the name filter provided",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="logicalOperatorName",
-     *      in="formData",
-     *      description="When filtering by multiple names in name filter, which logical operator should be used? AND|OR",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="filterMediaTag",
-     *      in="formData",
-     *      description="Add Library Media matching the tag filter provided",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="exactTags",
-     *      in="formData",
-     *      description="When filtering by Tags, should we use exact match?",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="logicalOperator",
-     *      in="formData",
-     *      description="When filtering by Tags, which logical operator should be used? AND|OR",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="maxNumberOfItems",
-     *      in="formData",
-     *      description="Maximum number of items that can be assigned to this Playlist (dynamic Playlist only)",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="formData",
-     *      description="Folder ID to which this object should be assigned to",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      *
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
@@ -935,7 +675,7 @@ class Playlist extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $playlist = $this->playlistFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -949,7 +689,9 @@ class Playlist extends Base
         $playlist->enableStat = $sanitizedParams->getString('enableStat');
         $playlist->folderId = $sanitizedParams->getInt('folderId', ['default' => $playlist->folderId]);
 
-        if ($playlist->hasPropertyChanged('folderId')) {
+        $folderChanged = $playlist->hasPropertyChanged('folderId');
+        $oldFolderId = $folderChanged ? $playlist->getOriginalValue('folderId') : null;
+        if ($folderChanged) {
             if ($playlist->folderId === 1) {
                 $this->checkRootFolderAllowSave();
             }
@@ -972,10 +714,10 @@ class Playlist extends Base
         if ($playlist->isDynamic === 1) {
             $filterMediaName = $sanitizedParams->getString('filterMediaName');
             $filterMediaTag = $sanitizedParams->getString('filterMediaTag');
-            $filterFolderId = $sanitizedParams->getString('filterFolderId');
+            $filterFolderId = $sanitizedParams->getInt('filterFolderId');
 
             if (empty($filterMediaName) && empty($filterMediaTag) && empty($filterFolderId)) {
-                throw new InvalidArgumentException(__('No filters have been set for this dynamic Playlist, please click the Filters tab to define'));
+                throw new InvalidArgumentException(__('No filters have been set for this dynamic Playlist!'));
             }
             $playlist->filterMediaName = $filterMediaName;
             $playlist->filterMediaNameLogicalOperator = $sanitizedParams->getString('logicalOperatorName');
@@ -995,68 +737,36 @@ class Playlist extends Base
 
         $playlist->save();
 
-        // Success
-        $this->getState()->hydrate([
-            'httpStatus' => 200,
-            'message' => sprintf(__('Edited %s'), $playlist->name),
-            'id' => $playlist->playlistId,
-            'data' => $playlist
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function deleteForm(Request $request, Response $response, $id)
-    {
-        $playlist = $this->playlistFactory->getById($id);
-
-        if (!$this->getUser()->checkDeleteable($playlist)) {
-            throw new AccessDeniedException();
+        if ($folderChanged) {
+            $this->touchFolder($playlist->folderId, $oldFolderId);
         }
 
-        $this->getState()->template = 'playlist-form-delete';
-        $this->getState()->setData([
-            'playlist' => $playlist
-        ]);
-
-        return $this->render($request, $response);
+        // Success
+        return $response->withStatus(204);
     }
 
+    #[OA\Delete(
+        path: '/playlist/{playlistId}',
+        operationId: 'playlistDelete',
+        description: 'Delete a Playlist',
+        summary: 'Delete a Playlist',
+        tags: ['playlist']
+    )]
+    #[OA\Parameter(
+        name: 'playlistId',
+        description: 'The PlaylistId to delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete
      *
-     * @SWG\Delete(
-     *  path="/playlist/{playlistId}",
-     *  operationId="playlistDelete",
-     *  tags={"playlist"},
-     *  summary="Delete a Playlist",
-     *  description="Delete a Playlist",
-     *  @SWG\Parameter(
-     *      name="playlistId",
-     *      in="path",
-     *      description="The PlaylistId to delete",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
@@ -1064,7 +774,7 @@ class Playlist extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
-    public function delete(Request $request, Response $response, $id)
+    public function delete(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $playlist = $this->playlistFactory->getById($id);
 
@@ -1075,51 +785,61 @@ class Playlist extends Base
         // Issue the delete
         $playlist->setModuleFactory($this->moduleFactory);
         $playlist->delete();
+        $this->touchFolder($playlist->folderId);
 
         // Success
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('Deleted %s'), $playlist->name)
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(204);
     }
 
-    /**
-     * Copy playlist form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function copyForm(Request $request, Response $response, $id)
-    {
-        // Get the playlist
-        $playlist = $this->playlistFactory->getById($id);
-
-        // Check Permissions
-        if (!$this->getUser()->checkViewable($playlist)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'playlist-form-copy';
-        $this->getState()->setData([
-            'playlist' => $playlist
-        ]);
-
-        return $this->render($request, $response);
-    }
-
+    #[OA\Post(
+        path: '/playlist/copy/{playlistId}',
+        operationId: 'playlistCopy',
+        description: 'Copy a Playlist, providing a new name if applicable',
+        summary: 'Copy Playlist',
+        tags: ['playlist']
+    )]
+    #[OA\Parameter(
+        name: 'playlistId',
+        description: 'The Playlist ID to Copy',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['name', 'copyMediaFiles'],
+                properties: [
+                    new OA\Property(property: 'name', description: 'The name for the new Playlist', type: 'string'),
+                    new OA\Property(
+                        property: 'copyMediaFiles',
+                        description: 'Flag indicating whether to make new Copies of all Media Files assigned to the Playlist being Copied', // phpcs:ignore
+                        type: 'integer'
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ],
+        content: new OA\JsonContent(ref: '#/components/schemas/Playlist')
+    )]
     /**
      * Copies a playlist
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
@@ -1127,46 +847,8 @@ class Playlist extends Base
      * @throws \Xibo\Support\Exception\ConfigurationException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
-     * @SWG\Post(
-     *  path="/playlist/copy/{playlistId}",
-     *  operationId="playlistCopy",
-     *  tags={"playlist"},
-     *  summary="Copy Playlist",
-     *  description="Copy a Playlist, providing a new name if applicable",
-     *  @SWG\Parameter(
-     *      name="playlistId",
-     *      in="path",
-     *      description="The Playlist ID to Copy",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="The name for the new Playlist",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="copyMediaFiles",
-     *      in="formData",
-     *      description="Flag indicating whether to make new Copies of all Media Files assigned to the Playlist being Copied",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Playlist"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      */
-    public function copy(Request $request, Response $response, $id)
+    public function copy(Request $request, Response $response, $id): Response|ResponseInterface
     {
         // Get the playlist
         $originalPlaylist = $this->playlistFactory->getById($id);
@@ -1218,14 +900,9 @@ class Playlist extends Base
         $originalPlaylist->cloneClosureTable($playlist->getId());
 
         // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 201,
-            'message' => sprintf(__('Copied as %s'), $playlist->name),
-            'id' => $playlist->playlistId,
-            'data' => $playlist
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(201)
+            ->withJson($playlist);
     }
 
     //</editor-fold>
@@ -1235,13 +912,13 @@ class Playlist extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function timelineForm(Request $request, Response $response, $id)
+    public function timelineForm(Request $request, Response $response, $id): Response|ResponseInterface
     {
         // Get a complex object of playlists and widgets
         $playlist = $this->playlistFactory->getById($id);
@@ -1266,81 +943,113 @@ class Playlist extends Base
         return $this->render($request, $response);
     }
 
+    public function displayDesigner(Request $request, Response $response, $id): Response|ResponseInterface
+    {
+        $playlist = $this->playlistFactory->getById($id);
+
+        if (!$this->getUser()->checkEditable($playlist)) {
+            throw new AccessDeniedException();
+        }
+
+        $timeZones = [];
+        foreach (DateFormatHelper::timezoneList() as $key => $value) {
+            $timeZones[] = ['id' => $key, 'value' => $value];
+        }
+
+        $this->getState()->template = 'playlist-designer-page';
+        $this->getState()->setData([
+            'playlist'  => $playlist,
+            'timeZones' => $timeZones,
+            'modules'   => $this->moduleFactory->getAssignableModules(),
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    #[OA\Post(
+        path: '/playlist/library/assign/{playlistId}',
+        operationId: 'playlistLibraryAssign',
+        description: 'Assign Media from the Library to this Playlist',
+        summary: 'Assign Library Items',
+        tags: ['playlist']
+    )]
+    #[OA\Parameter(
+        name: 'playlistId',
+        description: 'The Playlist ID to assign to',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['media'],
+                properties: [
+                    new OA\Property(
+                        property: 'media',
+                        description: 'Array of Media IDs to assign',
+                        type: 'array',
+                        items: new OA\Items(type: 'integer')
+                    ),
+                    new OA\Property(
+                        property: 'duration',
+                        description: 'Optional duration for all Media in this assignment to use on the Widget',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'useDuration',
+                        description: 'Optional flag indicating whether to enable the useDuration field',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'displayOrder',
+                        description: 'Optional integer to say which position this assignment should occupy in the list. If more than one media item is being added, this will be the position of the first one.', // phpcs:ignore
+                        type: 'integer'
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Playlist')
+    )]
     /**
      * Add Library items to a Playlist
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
-     * @SWG\Post(
-     *  path="/playlist/library/assign/{playlistId}",
-     *  operationId="playlistLibraryAssign",
-     *  tags={"playlist"},
-     *  summary="Assign Library Items",
-     *  description="Assign Media from the Library to this Playlist",
-     *  @SWG\Parameter(
-     *      name="playlistId",
-     *      in="path",
-     *      description="The Playlist ID to assign to",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="media",
-     *      in="formData",
-     *      description="Array of Media IDs to assign",
-     *      type="array",
-     *      required=true,
-     *      @SWG\Items(type="integer")
-     *   ),
-     *  @SWG\Parameter(
-     *      name="duration",
-     *      in="formData",
-     *      description="Optional duration for all Media in this assignment to use on the Widget",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="useDuration",
-     *      in="formData",
-     *      description="Optional flag indicating whether to enable the useDuration field",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="displayOrder",
-     *      in="formData",
-     *      description="Optional integer to say which position this assignment should occupy in the list. If more than one media item is being added, this will be the position of the first one.",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Playlist")
-     *  )
-     * )
      */
-    public function libraryAssign(Request $request, Response $response, $id)
+    public function libraryAssign(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $playlist = $this->playlistFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($playlist))
+        if (!$this->getUser()->checkEditable($playlist)) {
             throw new AccessDeniedException();
+        }
 
         // If we are a region Playlist, we need to check whether the owning Layout is a draft or editable
-        if (!$playlist->isEditable())
+        if (!$playlist->isEditable()) {
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+        }
 
-        if ($playlist->isDynamic === 1)
-            throw new InvalidArgumentException(__('This Playlist is dynamically managed so cannot accept manual assignments.'), 'isDynamic');
+        if ($playlist->isDynamic === 1) {
+            throw new InvalidArgumentException(
+                __('This Playlist is dynamically managed so cannot accept manual assignments.'),
+                'isDynamic'
+            );
+        }
 
         // Expect a list of mediaIds
         $media = $sanitizedParams->getIntArray('media');
@@ -1385,7 +1094,13 @@ class Playlist extends Base
             $itemDuration = ($itemDuration == 0) ? $module->defaultDuration : $itemDuration;
 
             // Create a widget
-            $widget = $this->widgetFactory->create($this->getUser()->userId, $id, $item->mediaType, $itemDuration, $module->schemaVersion);
+            $widget = $this->widgetFactory->create(
+                $this->getUser()->userId,
+                $id,
+                $item->mediaType,
+                $itemDuration,
+                $module->schemaVersion
+            );
             $widget->assignMedia($item->mediaId);
 
             // If a duration has been provided, then we want to use it, so set useDuration to 1.
@@ -1434,65 +1149,56 @@ class Playlist extends Base
         return $this->render($request, $response);
     }
 
-    /**
-     * @SWG\Definition(
-     *  definition="PlaylistWidgetList",
-     *  @SWG\Property(
-     *      property="widgetId",
-     *      type="integer",
-     *      description="Widget ID"
-     *  ),
-     *  @SWG\Property(
-     *      property="position",
-     *      type="integer",
-     *      description="The position in the Playlist"
-     *  )
-     * )
-     */
-
+    #[OA\Post(
+        path: '/playlist/order/{playlistId}',
+        operationId: 'playlistOrder',
+        description: 'Set the order of widgets in the Playlist',
+        summary: 'Order Widgets',
+        tags: ['playlist']
+    )]
+    #[OA\Parameter(
+        name: 'playlistId',
+        description: 'The Playlist ID to Order',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['widgets'],
+                properties: [
+                    new OA\Property(
+                        property: 'widgets',
+                        description: 'Array of widgetIds and positions - all widgetIds present in the playlist need to be passed in the call with their positions', // phpcs:ignore
+                        type: 'array',
+                        items: new OA\Items(ref: '#/components/schemas/PlaylistWidgetList')
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Playlist')
+    )]
     /**
      * Order a playlist and its widgets
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
-     * @SWG\Post(
-     *  path="/playlist/order/{playlistId}",
-     *  operationId="playlistOrder",
-     *  tags={"playlist"},
-     *  summary="Order Widgets",
-     *  description="Set the order of widgets in the Playlist",
-     *  @SWG\Parameter(
-     *      name="playlistId",
-     *      in="path",
-     *      description="The Playlist ID to Order",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="widgets",
-     *      in="formData",
-     *      description="Array of widgetIds and positions - all widgetIds present in the playlist need to be passed in the call with their positions",
-     *      type="array",
-     *      required=true,
-     *      @SWG\Items(
-     *          ref="#/definitions/PlaylistWidgetList"
-     *      )
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Playlist")
-     *  )
-     * )
      */
-    public function order(Request $request, Response $response, $id)
+    public function order(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $playlist = $this->playlistFactory->getById($id);
 
@@ -1538,63 +1244,46 @@ class Playlist extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(
+        path: '/playlist/usage/{playlistId}',
+        operationId: 'playlistUsageReport',
+        description: 'Get the records for the playlist item usage report',
+        summary: 'Get Playlist Item Usage Report',
+        tags: ['playlist']
+    )]
+    #[OA\Parameter(
+        name: 'playlistId',
+        description: 'The Playlist Id',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ],
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/Display')
+        )
+    )]
     /**
-     * Playlist Usage Report Form
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function usageForm(Request $request, Response $response, $id)
-    {
-        $playlist = $this->playlistFactory->getById($id);
-
-        if (!$this->getUser()->checkViewable($playlist)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'playlist-form-usage';
-        $this->getState()->setData([
-            'playlist' => $playlist
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * @SWG\Get(
-     *  path="/playlist/usage/{playlistId}",
-     *  operationId="playlistUsageReport",
-     *  tags={"playlist"},
-     *  summary="Get Playlist Item Usage Report",
-     *  description="Get the records for the playlist item usage report",
-     * @SWG\Parameter(
-     *      name="playlistId",
-     *      in="path",
-     *      description="The Playlist Id",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *     response=200,
-     *     description="successful operation"
-     *  )
-     * )
-     *
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function usage(Request $request, Response $response, $id)
+    public function usage(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $playlist = $this->playlistFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -1644,8 +1333,9 @@ class Playlist extends Base
                 }
 
                 // Skip events that do not fall within the specified days
-                if (count($scheduleEvents) <= 0)
+                if (count($scheduleEvents) <= 0) {
                     continue;
+                }
 
                 $this->getLog()->debug('EventId ' . $row->eventId . ' as events: ' . json_encode($scheduleEvents));
             }
@@ -1655,14 +1345,12 @@ class Playlist extends Base
 
             foreach ($row->displayGroups as $displayGroup) {
                 foreach ($this->displayFactory->getByDisplayGroupId($displayGroup->displayGroupId) as $display) {
-
                     if (in_array($display->displayId, $displayIds)) {
                         continue;
                     }
 
                     $displays[] = $display;
                     $displayIds[] = $display->displayId;
-
                 }
             }
         }
@@ -1672,43 +1360,52 @@ class Playlist extends Base
                 'data' =>__('Specified Playlist item is not in use.')];
         }
 
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $totalRecords;
-        $this->getState()->setData($displays);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $totalRecords)
+            ->withJson($displays);
     }
 
+    #[OA\Get(
+        path: '/playlist/usage/layouts/{playlistId}',
+        operationId: 'playlistUsageLayoutsReport',
+        description: 'Get the records for the playlist item usage report for Layouts',
+        summary: 'Get Playlist Item Usage Report for Layouts',
+        tags: ['playlist']
+    )]
+    #[OA\Parameter(
+        name: 'playlistId',
+        description: 'The Playlist Id',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ],
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/Layout')
+        )
+    )]
     /**
-     * @SWG\Get(
-     *  path="/playlist/usage/layouts/{playlistId}",
-     *  operationId="playlistUsageLayoutsReport",
-     *  tags={"playlist"},
-     *  summary="Get Playlist Item Usage Report for Layouts",
-     *  description="Get the records for the playlist item usage report for Layouts",
-     * @SWG\Parameter(
-     *      name="playlistId",
-     *      in="path",
-     *      description="The Playlist Id",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *     response=200,
-     *     description="successful operation"
-     *  )
-     * )
-     *
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function usageLayouts(Request $request, Response $response, $id)
+    public function usageLayouts(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $playlist = $this->playlistFactory->getById($id);
 
@@ -1718,43 +1415,24 @@ class Playlist extends Base
 
         $layouts = $this->layoutFactory->query(null, ['playlistId' => $id]);
 
-        if (!$this->isApi($request)) {
-            // We need to generate preview URLs, base URL doesn't chagen between layouts
-            $baseUrl = (new HttpsDetect())->getBaseUrl($request);
+        // We need to generate preview URLs, base URL doesn't chagen between layouts
+        $baseUrl = (new HttpsDetect())->getBaseUrl($request);
 
-            foreach ($layouts as $layout) {
-                $layout->includeProperty('buttons');
+        foreach ($layouts as $layout) {
+            // Preview
+            // generate a JWT
+            $jwt = $this->jwtService->generateJwt(
+                'Preview',
+                'layout',
+                $layout->layoutId,
+                '/preview/layout/preview/' . $layout->layoutId,
+                3600,
+            )->toString();
 
-                // Add some buttons for this row
-                if ($this->getUser()->checkEditable($layout)) {
-                    // Design Button
-                    $layout->buttons[] = array(
-                        'id' => 'layout_button_design',
-                        'linkType' => '_self', 'external' => true,
-                        'url' => $this->urlFor($request, 'layout.designer', array('id' => $layout->layoutId)),
-                        'text' => __('Design')
-                    );
-                }
-
-                // Preview
-                // generate a JWT
-                $jwt = $this->jwtService->generateJwt(
-                    'Preview',
-                    'layout',
-                    $layout->layoutId,
-                    '/preview/layout/preview/' . $layout->layoutId,
-                    3600,
-                )->toString();
-
-                $layout->buttons[] = array(
-                    'id' => 'layout_button_preview',
-                    'external' => true,
-                    'url' => '#',
-                    'onclick' => 'createMiniLayoutPreview',
-                    'onclickParam' => $baseUrl . '/preview/layout/preview/' . $layout->layoutId . '?jwt=' . $jwt,
-                    'text' => __('Preview Layout'),
-                );
-            }
+            $layout->setUnmatchedProperty(
+                'previewUrl',
+                $baseUrl . '/preview/layout/preview/' . $layout->layoutId . '?jwt=' . $jwt,
+            );
         }
 
         if ($this->isApi($request) && $layouts == []) {
@@ -1763,53 +1441,58 @@ class Playlist extends Base
             ];
         }
 
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->layoutFactory->countLast();
-        $this->getState()->setData($layouts);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $this->layoutFactory->countLast())
+            ->withJson($layouts);
     }
 
+    #[OA\Put(
+        path: '/playlist/setenablestat/{playlistId}',
+        operationId: 'playlistSetEnableStat',
+        description: 'Set Enable Stats Collection? to use for the collection of Proof of Play statistics for a Playlist.', // phpcs:ignore
+        summary: 'Enable Stats Collection',
+        tags: ['playlist']
+    )]
+    #[OA\Parameter(
+        name: 'playlistId',
+        description: 'The Playlist ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['enableStat'],
+                properties: [
+                    new OA\Property(
+                        property: 'enableStat',
+                        description: 'The option to enable the collection of Media Proof of Play statistics',
+                        type: 'string'
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Set Enable Stats Collection of a Playlist
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
-     * @SWG\Put(
-     *  path="/playlist/setenablestat/{playlistId}",
-     *  operationId="playlistSetEnableStat",
-     *  tags={"playlist"},
-     *  summary="Enable Stats Collection",
-     *  description="Set Enable Stats Collection? to use for the collection of Proof of Play statistics for a Playlist.",
-     *  @SWG\Parameter(
-     *      name="playlistId",
-     *      in="path",
-     *      description="The Playlist ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="enableStat",
-     *      in="formData",
-     *      description="The option to enable the collection of Media Proof of Play statistics, On, Off or Inherit.",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
 
-    function setEnableStat(Request $request, Response $response, $id)
+    public function setEnableStat(Request $request, Response $response, $id): Response|ResponseInterface
     {
         // Get the Playlist
         $playlist = $this->playlistFactory->getById($id);
@@ -1825,109 +1508,45 @@ class Playlist extends Base
         $playlist->save(['saveTags' => false]);
 
         // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('For Playlist %s Enable Stats Collection is set to %s'), $playlist->name, __($playlist->enableStat))
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(204);
     }
 
+    #[OA\Put(
+        path: '/playlist/{id}/selectfolder',
+        operationId: 'playlistSelectFolder',
+        description: 'Select Folder for Playlist',
+        summary: 'Playlist Select folder',
+        tags: ['playlist']
+    )]
+    #[OA\Parameter(
+        name: 'playlistId',
+        description: 'The Playlist ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['folderId'],
+                properties: [
+                    new OA\Property(
+                        property: 'folderId',
+                        description: 'Folder ID to which this object should be assigned to',
+                        type: 'integer'
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
-     * Set Enable Stat Form
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function setEnableStatForm(Request $request, Response $response, $id)
-    {
-        // Get the Playlist
-        $playlist = $this->playlistFactory->getById($id);
-
-        // Check Permissions
-        if (!$this->getUser()->checkViewable($playlist)) {
-            throw new AccessDeniedException();
-        }
-
-        $data = [
-            'playlist' => $playlist,
-        ];
-
-        $this->getState()->template = 'playlist-form-setenablestat';
-        $this->getState()->setData($data);
-
-        return $this->render($request, $response);
-    }
-
-
-
-    /**
-     * Select Folder Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function selectFolderForm(Request $request, Response $response, $id)
-    {
-        // Get the Playlist
-        $playlist = $this->playlistFactory->getById($id);
-
-        // Check Permissions
-        if (!$this->getUser()->checkEditable($playlist)) {
-            throw new AccessDeniedException();
-        }
-
-        $data = [
-            'playlist' => $playlist
-        ];
-
-        $this->getState()->template = 'playlist-form-selectfolder';
-        $this->getState()->setData($data);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * @SWG\Put(
-     *  path="/playlist/{id}/selectfolder",
-     *  operationId="playlistSelectFolder",
-     *  tags={"playlist"},
-     *  summary="Playlist Select folder",
-     *  description="Select Folder for Playlist",
-     *  @SWG\Parameter(
-     *      name="playlistId",
-     *      in="path",
-     *      description="The Playlist ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="formData",
-     *      description="Folder ID to which this object should be assigned to",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
-     *
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
@@ -1935,7 +1554,7 @@ class Playlist extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
-    public function selectFolder(Request $request, Response $response, $id)
+    public function selectFolder(Request $request, Response $response, $id): Response|ResponseInterface
     {
         // Get the Layout
         $playlist = $this->playlistFactory->getById($id);
@@ -1950,6 +1569,7 @@ class Playlist extends Base
             $this->checkRootFolderAllowSave();
         }
 
+        $oldFolderId = $playlist->folderId;
         $playlist->folderId = $folderId;
         $folder = $this->folderFactory->getById($playlist->folderId);
         $playlist->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
@@ -1957,54 +1577,57 @@ class Playlist extends Base
         // Save
         $playlist->save();
 
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('Playlist %s moved to Folder %s'), $playlist->name, $folder->text)
-        ]);
+        $this->touchFolder($playlist->folderId, $oldFolderId);
 
-        return $this->render($request, $response);
+        // Return
+        return $response->withStatus(204);
     }
 
     /**
      * Check if we already have a full screen Layout for this Playlist
      * @param \Xibo\Entity\Playlist $playlist
      * @return ?int
+     * @throws NotFoundException
      */
     private function hasFullScreenLayout(\Xibo\Entity\Playlist $playlist): ?int
     {
         return $this->layoutFactory->getLinkedFullScreenLayout('playlist', $playlist->playlistId)?->campaignId;
     }
 
+    #[OA\Post(
+        path: '/playlist/{id}/convert',
+        operationId: 'convert',
+        description: 'Create a global playlist from inline editor Playlist.
+     * Assign created Playlist via sub-playlist Widget to region Playlist.', // phpcs:ignore
+        summary: 'Playlist Convert',
+        tags: ['playlist']
+    )]
+    #[OA\Parameter(
+        name: 'playlistId',
+        description: 'The Playlist ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'name',
+                        description: 'Optional name for the global Playlist.',
+                        type: 'string'
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(response: 201, description: 'successful operation')]
     /**
      * Convert Layout editor playlist to global playlist.
      * Assign this Playlist to the original regionPlaylist via sub-playlist Widget.
-     * @SWG\Post(
-     *   path="/playlist/{id}/convert",
-     *   operationId="convert",
-     *   tags={"playlist"},
-     *   summary="Playlist Convert",
-     *   description="Create a global playlist from inline editor Playlist.
-     * Assign created Playlist via sub-playlist Widget to region Playlist.",
-     *   @SWG\Parameter(
-     *       name="playlistId",
-     *       in="path",
-     *       description="The Playlist ID",
-     *       type="integer",
-     *       required=true
-     *    ),
-     *   @SWG\Parameter(
-     *       name="name",
-     *       in="formData",
-     *       description="Optional name for the global Playlist.",
-     *       type="string",
-     *       required=false
-     *    ),
-     *   @SWG\Response(
-     *       response=201,
-     *       description="successful operation"
-     *   )
-     *  )
      * @param Request $request
      * @param Response $response
      * @param $id
@@ -2124,5 +1747,137 @@ class Playlist extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * @param SanitizerInterface $sanitizedParams
+     * @return array
+     */
+    private function getPlaylistFilters(SanitizerInterface $sanitizedParams): array
+    {
+        return $this->gridRenderFilter([
+            'name' => $sanitizedParams->getString('name'),
+            'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
+            'userId' => $sanitizedParams->getInt('userId'),
+            'tags' => $sanitizedParams->getString('tags'),
+            'exactTags' => $sanitizedParams->getCheckbox('exactTags'),
+            'playlistId' => $sanitizedParams->getInt('playlistId'),
+            'notPlaylistId' => $sanitizedParams->getInt('notPlaylistId'),
+            'ownerUserGroupId' => $sanitizedParams->getInt('ownerUserGroupId'),
+            'mediaLike' => $sanitizedParams->getString('mediaLike'),
+            'regionSpecific' => $sanitizedParams->getInt('regionSpecific', ['default' => 0]),
+            'folderId' => $sanitizedParams->getInt('folderId'),
+            'layoutId' => $sanitizedParams->getInt('layoutId'),
+            'logicalOperator' => $sanitizedParams->getString('logicalOperator'),
+            'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
+            'modifiedDateFrom' => $sanitizedParams->getDate('modifiedDateFrom'),
+            'modifiedDateTo' => $sanitizedParams->getDate('modifiedDateTo'),
+        ], $sanitizedParams);
+    }
+
+    /**
+     * @param SanitizerInterface $sanitizedParams
+     * @param \Xibo\Entity\Playlist $playlist
+     * @return void
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    private function decoratePlaylistProperties(
+        SanitizerInterface $sanitizedParams,
+        \Xibo\Entity\Playlist $playlist
+    ): void {
+        // Embed?
+        $embed = ($sanitizedParams->getString('embed') != null)
+            ? explode(',', $sanitizedParams->getString('embed'))
+            : [];
+
+        // Handle embeds
+        if (in_array('widgets', $embed)) {
+            $loadPermissions = in_array('permissions', $embed);
+            $loadTags = in_array('tags', $embed);
+            $loadActions = in_array('actions', $embed);
+
+            $playlist->load([
+                'loadPermissions' => $loadPermissions,
+                'loadWidgets' => true,
+                'loadTags' => $loadTags,
+                'loadActions' => $loadActions
+            ]);
+
+            foreach ($playlist->widgets as $widget) {
+                $widget->setUnmatchedProperty('tags', []);
+
+                try {
+                    $module = $this->moduleFactory->getByType($widget->type);
+                } catch (NotFoundException $notFoundException) {
+                    $this->getLog()->error('Module not found for widget: ' . $widget->type);
+                    continue;
+                }
+
+                // Embed the name of this widget
+                $widget->setUnmatchedProperty('moduleName', $module->name);
+                $widgetName = $widget->getOptionValue('name', null);
+
+                if ($module->regionSpecific == 0) {
+                    // Use the media assigned to this widget
+                    $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
+                    $media->load();
+                    $widget->setUnmatchedProperty('name', $widget->getOptionValue('name', null) ?: $media->name);
+
+                    // Augment with tags
+                    $widget->setUnmatchedProperty('tags', $media->tags);
+                } else {
+                    $widget->setUnmatchedProperty('name', $widget->getOptionValue('name', null) ?: $module->name);
+                    $widget->setUnmatchedProperty('tags', []);
+                }
+
+                // Sub-playlists should calculate a fresh duration
+                if ($widget->type === 'subplaylist') {
+                    $widget->calculateDuration($module);
+                }
+
+                // Get transitions
+                $widget->transitionIn = $widget->getOptionValue('transIn', null);
+                $widget->transitionOut = $widget->getOptionValue('transOut', null);
+                $widget->transitionDurationIn = $widget->getOptionValue('transInDuration', null);
+                $widget->transitionDurationOut = $widget->getOptionValue('transOutDuration', null);
+
+                // Permissions?
+                if ($loadPermissions) {
+                    // Augment with editable flag
+                    $widget->setUnmatchedProperty('isEditable', $this->getUser()->checkEditable($widget));
+
+                    // Augment with deletable flag
+                    $widget->setUnmatchedProperty('isDeletable', $this->getUser()->checkDeleteable($widget));
+
+                    // Augment with viewable flag
+                    $widget->setUnmatchedProperty('isViewable', $this->getUser()->checkViewable($widget));
+
+                    // Augment with permissions flag
+                    $widget->setUnmatchedProperty(
+                        'isPermissionsModifiable',
+                        $this->getUser()->checkPermissionsModifyable($widget)
+                    );
+                }
+            }
+        }
+
+        if ($sanitizedParams->getCheckbox('fullScreenScheduleCheck')) {
+            $fullScreenCampaignId = $this->hasFullScreenLayout($playlist);
+            $playlist->setUnmatchedProperty('hasFullScreenLayout', (!empty($fullScreenCampaignId)));
+            $playlist->setUnmatchedProperty('fullScreenCampaignId', $fullScreenCampaignId);
+        }
+
+        // User permissions
+        $playlist->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($playlist));
+    }
+
+    private function touchFolder(int $folderId, ?int $oldFolderId = null): void
+    {
+        $this->getDispatcher()->dispatch(
+            new FolderTouchEvent($folderId, $oldFolderId),
+            FolderTouchEvent::$NAME
+        );
     }
 }

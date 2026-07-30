@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,16 +22,21 @@
 
 namespace Xibo\Widget\Definition;
 
+use OpenApi\Attributes as OA;
+
 /**
  * A rule to apply to a property
- * @SWG\Definition()
  */
+#[OA\Schema(schema: 'Rule')]
 class Rule implements \JsonSerializable
 {
+    #[OA\Property()]
     public $onSave = true;
 
+    #[OA\Property()]
     public $onStatus = true;
 
+    #[OA\Property(type: 'array', items: new OA\Items(ref: '#/components/schemas/Test'))]
     /** @var Test[] */
     public $tests;
 

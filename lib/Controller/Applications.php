@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -26,14 +26,14 @@ use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\Exception\OAuthServerException;
 use League\OAuth2\Server\Grant\AuthCodeGrant;
 use League\OAuth2\Server\RequestTypes\AuthorizationRequest;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Interfaces\PoolInterface;
-use Xibo\Entity\ApplicationScope;
+use Xibo\Entity\Application;
 use Xibo\Factory\ApplicationFactory;
 use Xibo\Factory\ApplicationRedirectUriFactory;
 use Xibo\Factory\ApplicationScopeFactory;
-use Xibo\Factory\ConnectorFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Session;
@@ -43,6 +43,8 @@ use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Class Applications
@@ -50,174 +52,164 @@ use Xibo\Support\Exception\InvalidArgumentException;
  */
 class Applications extends Base
 {
-    /**
-     * @var Session
-     */
-    private $session;
-
-    /**
-     * @var ApplicationFactory
-     */
-    private $applicationFactory;
-
-    /**
-     * @var ApplicationRedirectUriFactory
-     */
-    private $applicationRedirectUriFactory;
-
-    /** @var  ApplicationScopeFactory */
-    private $applicationScopeFactory;
-
-    /** @var  UserFactory */
-    private $userFactory;
-
-    /** @var PoolInterface */
-    private $pool;
-
-    /** @var \Xibo\Factory\ConnectorFactory */
-    private $connectorFactory;
-
-    /**
-     * Set common dependencies.
-     * @param Session $session
-     * @param ApplicationFactory $applicationFactory
-     * @param ApplicationRedirectUriFactory $applicationRedirectUriFactory
-     * @param $applicationScopeFactory
-     * @param UserFactory $userFactory
-     * @param $pool
-     * @param \Xibo\Factory\ConnectorFactory $connectorFactory
-     */
     public function __construct(
-        $session,
-        $applicationFactory,
-        $applicationRedirectUriFactory,
-        $applicationScopeFactory,
-        $userFactory,
-        $pool,
-        ConnectorFactory $connectorFactory
+        private readonly Session $session,
+        private readonly ApplicationFactory $applicationFactory,
+        private readonly ApplicationRedirectUriFactory $applicationRedirectUriFactory,
+        private readonly ApplicationScopeFactory $applicationScopeFactory,
+        private readonly UserFactory $userFactory,
+        private readonly PoolInterface $pool,
     ) {
-        $this->session = $session;
-        $this->applicationFactory = $applicationFactory;
-        $this->applicationRedirectUriFactory = $applicationRedirectUriFactory;
-        $this->applicationScopeFactory = $applicationScopeFactory;
-        $this->userFactory = $userFactory;
-        $this->pool = $pool;
-        $this->connectorFactory = $connectorFactory;
     }
 
     /**
-     * Display Page
+     * Search all available OAuth scopes
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function displayPage(Request $request, Response $response)
+    public function scopeSearch(Request $request, Response $response)
     {
-        // Load all connectors and output any javascript.
-        $connectorJavaScript = [];
-        foreach ($this->connectorFactory->query(['isVisible' => 1]) as $connector) {
-            try {
-                // Create a connector, add in platform settings and register it with the dispatcher.
-                $connectorObject = $this->connectorFactory->create($connector);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $filterBy = [];
 
-                $settingsFormJavaScript = $connectorObject->getSettingsFormJavaScript();
-                if (!empty($settingsFormJavaScript)) {
-                    $connectorJavaScript[] = $settingsFormJavaScript;
-                }
-            } catch (\Exception $exception) {
-                // Log and ignore.
-                $this->getLog()->error('Incorrectly configured connector. e=' . $exception->getMessage());
-            }
+        if ($sanitizedParams->getString('clientId') !== null) {
+            $filterBy['clientId'] = $sanitizedParams->getString('clientId');
         }
 
-        $this->getState()->template = 'applications-page';
-        $this->getState()->setData([
-            'connectorJavaScript' => $connectorJavaScript,
-        ]);
+        $scopes = $this->applicationScopeFactory->query(null, $filterBy);
 
-        return $this->render($request, $response);
+        return $response->withStatus(200)->withJson($scopes);
+    }
+
+    /**
+     * Get a single application by id, with redirect URIs and scopes loaded
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\NotFoundException
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function getById(Request $request, Response $response, $id)
+    {
+        $client = $this->applicationFactory->getById($id);
+
+        if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1) {
+            throw new AccessDeniedException();
+        }
+
+        $client->load();
+
+        return $response->withStatus(200)->withJson($client);
     }
 
     /**
      * Display page grid
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response): Response|ResponseInterface
     {
-        $this->getState()->template = 'grid';
+        if ($this->isApi($request)) {
+            throw new AccessDeniedException();
+        }
+
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         $applications = $this->applicationFactory->query(
-            $this->gridRenderSort($sanitizedParams),
-            $this->gridRenderFilter(
-                ['name' => $sanitizedParams->getString('name')],
-                $sanitizedParams
-            )
+            $this->gridRenderSort($sanitizedParams, $this->isJson($request)),
+            $this->getApplicationFilters($sanitizedParams)
         );
 
-        foreach ($applications as $application) {
-            if ($this->isApi($request)) {
-                throw new AccessDeniedException();
-            }
+        if ($sanitizedParams->getCheckbox('getScopesState')) {
+            if (!empty($applications)) {
+                $allScopes = $this->applicationScopeFactory->query();
+                $clientIds = array_map(fn(Application $a) => $a->key, $applications);
+                $clientScopesMap = $this->applicationScopeFactory->getByClientIds($clientIds);
 
-            // Include the buttons property
-            $application->includeProperty('buttons');
-
-            // Add an Edit button (edit form also exposes the secret - not possible to get through the API)
-            $application->buttons = [];
-
-            if ($application->userId == $this->getUser()->userId || $this->getUser()->getUserTypeId() == 1) {
-                // Edit
-                $application->buttons[] = [
-                    'id' => 'application_edit_button',
-                    'url' => $this->urlFor($request, 'application.edit.form', ['id' => $application->key]),
-                    'text' => __('Edit')
-                ];
-
-                // Delete
-                $application->buttons[] = [
-                    'id' => 'application_delete_button',
-                    'url' => $this->urlFor($request, 'application.delete.form', ['id' => $application->key]),
-                    'text' => __('Delete')
-                ];
+                foreach ($applications as $application) {
+                    $this->getScopesAndState($application, $allScopes, $clientScopesMap);
+                }
             }
         }
 
-        $this->getState()->setData($applications);
-        $this->getState()->recordsTotal = $this->applicationFactory->countLast();
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $this->applicationFactory->countLast())
+            ->withJson($applications);
+    }
 
-        return $this->render($request, $response);
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param string $id
+     * @return Response|ResponseInterface
+     * @throws AccessDeniedException
+     * @throws NotFoundException
+     */
+    public function searchById(Request $request, Response $response, string $id): Response|ResponseInterface
+    {
+        if ($this->isApi($request)) {
+            throw new AccessDeniedException();
+        }
+
+        $client = $this->applicationFactory->getById($id);
+
+        if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1) {
+            throw new AccessDeniedException();
+        }
+
+        $this->getScopesAndState($client);
+        
+        return $response
+            ->withStatus(200)
+            ->withJson($client);
     }
 
     /**
      * Display the Authorize form.
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws InvalidArgumentException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function authorizeRequest(Request $request, Response $response)
+    public function authorizeRequest(Request $request, Response $response): Response|ResponseInterface
     {
         // Pull authorize params from our session
         /** @var AuthorizationRequest $authParams */
         $authParams = $this->session->get('authParams');
         if (!$authParams) {
-            throw new InvalidArgumentException(__('Authorisation Parameters missing from session.'), 'authParams');
+            throw new InvalidArgumentException(
+                __('Authorisation Parameters missing from session.'),
+                'authParams'
+            );
         }
 
-        if ($this->applicationFactory->checkAuthorised($authParams->getClient()->getIdentifier(), $this->getUser()->userId)) {
-            return $this->authorize($request->withParsedBody(['authorization' => 'Approve']), $response);
+        if ($this->applicationFactory
+            ->checkAuthorised($authParams->getClient()->getIdentifier(), $this->getUser()->userId)
+        ) {
+            // Already authorised - complete the request and hand the frontend a redirect URL to
+            // navigate to itself, rather than returning the redirect response directly. This is
+            // fetched via AJAX, and a cross-origin 3xx here can't be safely auto-followed by fetch/axios.
+            $redirectResponse = $this->completeAuthorization($authParams, true, $request, $response);
+
+            return $response
+                ->withStatus(200)
+                ->withJson([
+                    'alreadyAuthorized' => true,
+                    'redirectUrl' => $redirectResponse->getHeaderLine('Location'),
+                ]);
         }
 
         $client = $this->applicationFactory->getClientEntity($authParams->getClient()->getIdentifier())->load();
+        $client->excludeProperty('secret');
 
         // Process any scopes.
         $scopes = [];
@@ -252,45 +244,54 @@ class Applications extends Base
         $this->session->set('authParams', $authParams);
 
         // Get, show page
-        $this->getState()->template = 'applications-authorize-page';
-        $this->getState()->setData([
-            'forceHide' => true,
-            'authParams' => $authParams,
-            'scopes' => $scopes,
-            'application' => $client
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson([
+                'alreadyAuthorized' => false,
+                'application' => $client,
+                'scopes' => $scopes,
+            ]);
     }
 
     /**
      * Authorize an oAuth request
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws \Exception
      */
-    public function authorize(Request $request, Response $response)
+    public function authorize(Request $request, Response $response): Response|ResponseInterface
     {
         // Pull authorize params from our session
         /** @var AuthorizationRequest $authRequest */
         $authRequest = $this->session->get('authParams');
         if (!$authRequest) {
-            throw new InvalidArgumentException(__('Authorisation Parameters missing from session.'), 'authParams');
+            throw new InvalidArgumentException(
+                __('Authorisation Parameters missing from session.'),
+                'authParams'
+            );
         }
 
         $sanitizedQueryParams = $this->getSanitizer($request->getParams());
+        $approved = $sanitizedQueryParams->getString('authorization') === 'Approve';
 
+        return $this->completeAuthorization($authRequest, $approved, $request, $response);
+    }
+
+    /**
+     * Build the AuthorizationServer used to complete an authorization-code grant request.
+     * @return AuthorizationServer
+     */
+    private function buildAuthorizationServer(): AuthorizationServer
+    {
         $apiKeyPaths = $this->getConfig()->getApiKeyDetails();
-        $privateKey = $apiKeyPaths['privateKeyPath'];
-        $encryptionKey = $apiKeyPaths['encryptionKey'];
 
         $server = new AuthorizationServer(
             $this->applicationFactory,
             new \Xibo\OAuth\AccessTokenRepository($this->getLog(), $this->pool, $this->applicationFactory),
             $this->applicationScopeFactory,
-            $privateKey,
-            $encryptionKey
+            $apiKeyPaths['privateKeyPath'],
+            $apiKeyPaths['encryptionKey']
         );
 
         $server->enableGrantType(
@@ -302,13 +303,38 @@ class Applications extends Base
             new \DateInterval('PT1H')
         );
 
+        return $server;
+    }
+
+    /**
+     * Set the approval decision on an AuthorizationRequest and complete it, producing the
+     * redirect response back to the client's redirect_uri (success code or error).
+     * @param AuthorizationRequest $authRequest
+     * @param bool $approved
+     * @param Request $request
+     * @param Response $response
+     * @return ResponseInterface|Response
+     * @throws \Exception
+     */
+    private function completeAuthorization(
+        AuthorizationRequest $authRequest,
+        bool $approved,
+        Request $request,
+        Response $response
+    ): Response|ResponseInterface {
+        // Session::get() returns $_SESSION['authParams'] directly rather than a copy, so $authRequest
+        // is often the exact object still referenced by the session. Clone before mutating it below -
+        // setUser() attaches the full User entity (with its injected factories), and if that ends up
+        // left on the session-resident object, session_write_close() fatals trying to serialize it.
+        $authRequest = clone $authRequest;
+
+        $server = $this->buildAuthorizationServer();
+
         // get oauth User Entity and set the UserId to the current web userId
         $authRequest->setUser($this->getUser());
+        $authRequest->setAuthorizationApproved($approved);
 
-        // We are authorized
-        if ($sanitizedQueryParams->getString('authorization') === 'Approve') {
-            $authRequest->setAuthorizationApproved(true);
-
+        if ($approved) {
             $this->applicationFactory->setApplicationApproved(
                 $authRequest->getClient()->getIdentifier(),
                 $authRequest->getUser()->getIdentifier(),
@@ -325,8 +351,6 @@ class Applications extends Base
                     'Application Name' => $authRequest->getClient()->getName()
                 ]
             );
-        } else {
-            $authRequest->setAuthorizationApproved(false);
         }
 
         // Redirect back to the specified redirect url
@@ -334,7 +358,9 @@ class Applications extends Base
             return $server->completeAuthorizationRequest($authRequest, $response);
         } catch (OAuthServerException $exception) {
             if ($exception->hasRedirect()) {
-                return $response->withRedirect($exception->getRedirectUri());
+                // generateHttpResponse() appends the error/error_description payload to the
+                // redirect query string - getRedirectUri() alone only has state, e.g. on Deny.
+                return $exception->generateHttpResponse($response);
             } else {
                 throw $exception;
             }
@@ -342,106 +368,15 @@ class Applications extends Base
     }
 
     /**
-     * Form to register a new application.
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    public function addForm(Request $request, Response $response)
-    {
-        $this->getState()->template = 'applications-form-add';
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Edit Application
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    public function editForm(Request $request, Response $response, $id)
-    {
-        // Get the client
-        $client = $this->applicationFactory->getById($id);
-
-        if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1) {
-            throw new AccessDeniedException();
-        }
-
-        // Load this clients details.
-        $client->load();
-
-        $scopes = $this->applicationScopeFactory->query();
-
-        foreach ($scopes as $scope) {
-            /** @var ApplicationScope $scope */
-            $found = false;
-            foreach ($client->scopes as $checked) {
-                if ($checked->id == $scope->id) {
-                    $found = true;
-                    break;
-                }
-            }
-
-            $scope->setUnmatchedProperty('selected', $found ? 1 : 0);
-        }
-
-        // Render the view
-        $this->getState()->template = 'applications-form-edit';
-        $this->getState()->setData([
-            'client' => $client,
-            'scopes' => $scopes,
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Delete Application Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    public function deleteForm(Request $request, Response $response, $id)
-    {
-        // Get the client
-        $client = $this->applicationFactory->getById($id);
-
-        if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'applications-form-delete';
-        $this->getState()->setData([
-            'client' => $client,
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
      * Register a new application with OAuth
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws InvalidArgumentException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function add(Request $request, Response $response)
+    public function add(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $application = $this->applicationFactory->create();
@@ -455,13 +390,9 @@ class Applications extends Base
         $application->save();
 
         // Return
-        $this->getState()->hydrate([
-            'message' => sprintf(__('Added %s'), $application->name),
-            'data' => $application,
-            'id' => $application->key
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(201)
+            ->withJson($application);
     }
 
     /**
@@ -469,14 +400,14 @@ class Applications extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws InvalidArgumentException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $this->getLog()->debug('Editing ' . $id);
 
@@ -503,8 +434,14 @@ class Applications extends Base
             $client->logo = $sanitizedParams->getString('logo');
             $client->coverImage = $sanitizedParams->getString('coverImage');
             $client->companyName = $sanitizedParams->getString('companyName');
-            $client->termsUrl = $sanitizedParams->getString('termsUrl');
-            $client->privacyUrl = $sanitizedParams->getString('privacyUrl');
+            $client->termsUrl = $this->validateHttpUrl(
+                $sanitizedParams->getString('termsUrl'),
+                'termsUrl'
+            );
+            $client->privacyUrl = $this->validateHttpUrl(
+                $sanitizedParams->getString('privacyUrl'),
+                'privacyUrl'
+            );
         }
 
         // Delete all the redirect urls and add them again
@@ -534,7 +471,6 @@ class Applications extends Base
 
         // API Scopes
         foreach ($this->applicationScopeFactory->query() as $scope) {
-            /** @var ApplicationScope $scope */
             // See if this has been checked this time
             $checked = $sanitizedParams->getCheckbox('scope_' . $scope->id);
 
@@ -549,10 +485,15 @@ class Applications extends Base
             // Check we have permissions to view this user
             $user = $this->userFactory->getById($sanitizedParams->getInt('userId'));
 
-            $this->getLog()->debug('Attempting to change ownership to ' . $user->userId . ' - ' . $user->userName);
+            $this->getLog()->debug(
+                'Attempting to change ownership to ' . $user->userId . ' - ' . $user->userName
+            );
 
             if (!$this->getUser()->checkViewable($user)) {
-                throw new InvalidArgumentException(__('You do not have permission to assign this user'), 'userId');
+                throw new InvalidArgumentException(
+                    __('You do not have permission to assign this user'),
+                    'userId'
+                );
             }
 
             $client->userId = $user->userId;
@@ -561,13 +502,33 @@ class Applications extends Base
         $client->save();
 
         // Return
-        $this->getState()->hydrate([
-            'message' => sprintf(__('Edited %s'), $client->name),
-            'data' => $client,
-            'id' => $client->key
-        ]);
+        return $response
+            ->withStatus(200)
+            ->withJson($client);
+    }
 
-        return $this->render($request, $response);
+    /**
+     * These fields are rendered as clickable links on the OAuth consent screen shown to a
+     * different, already-authenticated user, so only http/https destinations are permitted —
+     * anything else (javascript:, data:, etc.) is rejected rather than sanitised.
+     * @param string|null $url
+     * @param string $property
+     * @return string
+     * @throws InvalidArgumentException
+     */
+    private function validateHttpUrl(?string $url, string $property): string
+    {
+        if ($url === null || $url === '') {
+            return '';
+        }
+
+        $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
+
+        if (!in_array($scheme, ['http', 'https'], true)) {
+            throw new InvalidArgumentException(__('Please enter a valid http or https URL'), $property);
+        }
+
+        return $url;
     }
 
     /**
@@ -575,13 +536,13 @@ class Applications extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function delete(Request $request, Response $response, $id)
+    public function delete(Request $request, Response $response, $id): Response|ResponseInterface
     {
         // Get the client
         $client = $this->applicationFactory->getById($id);
@@ -593,12 +554,7 @@ class Applications extends Base
         $client->delete();
         $this->pool->getItem('C_' . $client->key)->clear();
 
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('Deleted %s'), $client->name)
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(204);
     }
 
     /**
@@ -606,12 +562,12 @@ class Applications extends Base
      * @param Response $response
      * @param $id
      * @param $userId
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws InvalidArgumentException
      */
-    public function revokeAccess(Request $request, Response $response, $id, $userId)
+    public function revokeAccess(Request $request, Response $response, $id, $userId): Response|ResponseInterface
     {
         if ($userId === null) {
             throw new InvalidArgumentException(__('No User ID provided'));
@@ -642,11 +598,57 @@ class Applications extends Base
             ]
         );
 
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('Access to %s revoked'), $client->name)
-        ]);
+        return $response->withStatus(204);
+    }
 
-        return $this->render($request, $response);
+    /**
+     * @param SanitizerInterface $params
+     * @return array
+     */
+    private function getApplicationFilters(SanitizerInterface $params): array
+    {
+        $filter = [
+            'name'    => $params->getString('name'),
+        ];
+
+        if (!$this->getUser()->isSuperAdmin()) {
+            $filter['userId'] = $this->getUser()->userId;
+        }
+
+        return $this->gridRenderFilter($filter, $params);
+    }
+
+    /**
+     * @param Application $client
+     * @param array|null $allScopes
+     * @param array|null $clientScopesMap
+     * @return void
+     */
+    private function getScopesAndState(
+        Application $client,
+        ?array $allScopes = null,
+        ?array $clientScopesMap = null
+    ): void {
+        if ($allScopes === null || $clientScopesMap === null) {
+            $client->load();
+            $clientScopes = $client->scopes;
+            $allScopes = $this->applicationScopeFactory->query();
+        } else {
+            $clientScopes = $clientScopesMap[$client->key] ?? [];
+        }
+
+        $assignedIds = [];
+        foreach ($clientScopes as $cs) {
+            $assignedIds[$cs->id] = true;
+        }
+
+        $scopesState = [];
+        foreach ($allScopes as $scope) {
+            $copy = clone $scope;
+            $copy->setUnmatchedProperty('selected', isset($assignedIds[$scope->id]) ? 1 : 0);
+            $scopesState[] = $copy;
+        }
+
+        $client->setUnmatchedProperty('scopesState', $scopesState);
     }
 }

@@ -1,0 +1,823 @@
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+import { useQueryClient } from '@tanstack/react-query';
+import type { RowSelectionState } from '@tanstack/react-table';
+import { Search, Folder, Plus, Upload, Sparkles } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
+
+import type { MediaActionsProps, ModalType } from './MediaConfig';
+import {
+  filterMediaByPermission,
+  getMediaItemActions,
+  getMediaColumns,
+  getBulkActions,
+  INITIAL_FILTER_STATE,
+  type MediaFilterInput,
+} from './MediaConfig';
+import MediaCard from './components/MediaCard';
+import { MediaModals } from './components/MediaModals';
+import MediaPreviewer from './components/MediaPreviewer';
+import { useMediaActions } from './hooks/useMediaActions';
+import { useMediaData } from './hooks/useMediaData';
+import { useMediaUpload } from './hooks/useMediaUpload';
+
+import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
+import FilterInputs from '@/components/ui/FilterInputs';
+import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
+import FolderSidebar from '@/components/ui/FolderSidebar';
+import { notify } from '@/components/ui/Notification';
+import TabNav from '@/components/ui/TabNav';
+import { DataGrid } from '@/components/ui/table/DataGrid';
+import { DataTable } from '@/components/ui/table/DataTable';
+import { useUserContext } from '@/context/UserContext';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
+import { useFilteredTabs } from '@/hooks/useFilteredTabs';
+import { useFolderActions } from '@/hooks/useFolderActions';
+import { useOwner } from '@/hooks/useOwner';
+import { usePermissions } from '@/hooks/usePermissions';
+import { useTableState } from '@/hooks/useTableState';
+import { useMediaFilterOptions } from '@/pages/Library/Media/hooks/useMediaFilterOptions';
+import { downloadMedia, downloadMediaAsZip } from '@/services/mediaApi';
+import type { Media } from '@/types/media';
+import { countActiveFilters } from '@/utils/filters';
+import { canSaveInFolder, hasFeature } from '@/utils/permissions';
+
+export default function Media() {
+  const { t } = useTranslation();
+  const { formatDateTime } = useDateFormatter();
+  const { user } = useUserContext();
+  const queryClient = useQueryClient();
+  const canViewFolders = usePermissions()?.canViewFolders;
+  const canSchedule = hasFeature(user, 'schedule.add');
+  const scheduleWithView = Number(user?.settings?.SCHEDULE_WITH_VIEW_PERMISSION) === 1;
+  const canViewUsageReport = hasFeature(user, 'schedule.view') || hasFeature(user, 'layout.view');
+  const canModifyLibrary = hasFeature(user, 'library.modify');
+  const canTag = hasFeature(user, 'tag.tagging');
+  const tidyEnabled = user?.settings?.SETTING_LIBRARY_TIDY_ENABLED === '1';
+  const homeFolderId = user?.homeFolderId ?? 1;
+  const location = useLocation();
+  const layoutId = location.state?.layoutId;
+
+  const {
+    pagination,
+    setPagination,
+    sorting,
+    setSorting,
+    columnVisibility,
+    setColumnVisibility,
+    viewMode,
+    setViewMode,
+    globalFilter,
+    debouncedFilter,
+    setGlobalFilter,
+    filterInputs,
+    setFilterInputs,
+    folderId: selectedFolderId,
+    setFolderId: setSelectedFolderId,
+    isHydrated,
+  } = useTableState<MediaFilterInput>('media_page', {
+    pagination: { pageIndex: 0, pageSize: 10 },
+    sorting: [],
+    columnVisibility: {
+      mediaId: false,
+      durationSeconds: false,
+      fileSize: false,
+      createdDt: false,
+      modifiedDt: false,
+      groupsWithPermissions: false,
+      revised: false,
+      released: false,
+      fileName: false,
+      expires: false,
+      enableStat: false,
+      ownerId: false,
+    },
+    viewMode: 'table',
+    globalFilter: '',
+    filterInputs: INITIAL_FILTER_STATE,
+    folderId: canViewFolders ? homeFolderId : null,
+  });
+
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    if (layoutId) {
+      setFilterInputs((prev) => ({
+        ...prev,
+        layoutId,
+      }));
+
+      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    }
+  }, [layoutId, isHydrated, setFilterInputs, setPagination]);
+
+  const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [selectionCache, setSelectionCache] = useState<Record<string, Media>>({});
+  const [openFilter, setOpenFilter] = useState(false);
+  const [previewItem, setPreviewItem] = useState<Media | null>(null);
+  const [showInfoPanel, setShowInfoPanel] = useState(false);
+
+  const [selectedFolderName, setSelectedFolderName] = useState(t('Root Folder'));
+  const [showFolderSidebar, setShowFolderSidebar] = useState(false);
+  const [activeModal, setActiveModal] = useState<ModalType | null>(null);
+
+  const [itemsToDelete, setItemsToDelete] = useState<Media[]>([]);
+  const [itemsToMove, setItemsToMove] = useState<Media[]>([]);
+  const [bulkItems, setBulkItems] = useState<Media[]>([]);
+  const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
+  const [selectedMediaId, setSelectedMediaId] = useState<number | null>(null);
+
+  const openModal = (name: ModalType) => setActiveModal(name);
+  const closeModal = () => setActiveModal(null);
+
+  const targetUploadFolderId = canViewFolders ? (selectedFolderId ?? homeFolderId) : homeFolderId;
+  const canAddMedia = hasFeature(user, 'library.add');
+  const canAddToFolder =
+    canAddMedia && canSaveInFolder(user, !!canViewFolders, targetUploadFolderId, homeFolderId);
+  const targetUploadFolderName = selectedFolderId === null ? t('Root Folder') : selectedFolderName;
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['media'] });
+  };
+
+  const {
+    isAddModalOpen,
+    setAddModalOpen,
+    queue,
+    removeFile,
+    clearQueue,
+    updateFileData,
+    addUrlToQueue,
+    dropzone,
+    handleManualAddFiles,
+    handleStartUpload,
+    handleCancelUpload,
+  } = useMediaUpload({
+    targetUploadFolderId,
+    canAddToFolder,
+    handleRefresh,
+  });
+
+  const {
+    getRootProps: getGlobalRootProps,
+    getInputProps: getGlobalInputProps,
+    isDragActive: isGlobalDragActive,
+  } = dropzone;
+
+  const {
+    data: queryData,
+    isFetching,
+    isError,
+    error: queryError,
+  } = useMediaData({
+    pagination,
+    sorting,
+    filter: debouncedFilter,
+    advancedFilters: filterInputs,
+    folderId: canViewFolders ? selectedFolderId : null,
+    enabled: isHydrated,
+  });
+
+  const data = queryData?.rows;
+  const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
+  const error = isError && queryError instanceof Error ? queryError.message : '';
+  const mediaList = data ?? [];
+
+  const getRowId = (row: Media) => row.mediaId.toString();
+
+  const handleRowSelectionChange = (
+    updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
+  ) => {
+    const newSelection =
+      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
+
+    setRowSelection(newSelection);
+
+    setSelectionCache((prev) => {
+      const next = { ...prev };
+      mediaList.forEach((item) => {
+        const id = getRowId(item);
+        if (newSelection[id]) {
+          next[id] = item;
+        }
+      });
+      return next;
+    });
+  };
+
+  const folderActions = useFolderActions({
+    onSuccess: (targetFolder) => {
+      setFolderRefreshTrigger((prev) => prev + 1);
+
+      if (targetFolder?.id === -1) {
+        targetFolder.id = homeFolderId;
+      }
+
+      if (targetFolder) {
+        handleFolderChange({ id: targetFolder.id, text: targetFolder.text });
+      } else {
+        handleRefresh();
+      }
+    },
+  });
+
+  const selectedMedia = mediaList.find((m) => m.mediaId === selectedMediaId) ?? null;
+  const existingNames = mediaList.map((m) => m.name);
+  const ownerId = selectedMedia?.ownerId ? Number(selectedMedia.ownerId) : null;
+  const { owner, loading } = useOwner({ ownerId });
+
+  const handleFolderChange = (folder: { id: number | null; text: string | '' }) => {
+    setSelectedFolderId(folder.id);
+    setSelectedFolderName(folder.text);
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    setRowSelection({});
+  };
+
+  const {
+    isDeleting,
+    deleteError,
+    setDeleteError,
+    isCloning,
+    isUpdatingStats,
+    isTidying,
+    tidyError,
+    setTidyError,
+    confirmDelete,
+    handleConfirmClone,
+    handleConfirmMove,
+    handleConfirmEnableStats,
+    handleConfirmTidy,
+  } = useMediaActions({
+    t,
+    handleRefresh,
+    closeModal,
+    setRowSelection,
+    setItemsToMove,
+  });
+
+  const handleDelete = (id: number) => {
+    const media = mediaList.find((m) => m.mediaId === id);
+    if (!media) {
+      return;
+    }
+
+    setDeleteError(null);
+    setItemsToDelete([media]);
+    openModal('delete');
+  };
+
+  const handleDownload = async (row: Media) => {
+    try {
+      await downloadMedia(row.mediaId, row.storedAs);
+      notify.success(t('Download started!'));
+    } catch (error) {
+      console.error('Download failed', error);
+    }
+  };
+
+  const handlePreviewClick = (row: Media) => {
+    setPreviewItem(row);
+  };
+
+  const openEditModal = (media: Media) => {
+    setSelectedMediaId(media.mediaId);
+    openModal('edit');
+  };
+
+  const openReplaceFileModal = (mediaId: number) => {
+    setSelectedMediaId(mediaId);
+    openModal('replace');
+  };
+
+  const openScheduleModal = (media: Media) => {
+    setSelectedMediaId(media.mediaId);
+    openModal('schedule');
+  };
+
+  const handleResetFilters = () => {
+    setFilterInputs(INITIAL_FILTER_STATE);
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
+
+  const openCopyModal = (mediaId: number) => {
+    setSelectedMediaId(mediaId);
+    openModal('copy');
+  };
+
+  const openEnableStatsModal = (mediaId: number) => {
+    setSelectedMediaId(mediaId);
+    openModal('enableStats');
+  };
+
+  const openUsageReportModal = (mediaId: number) => {
+    setSelectedMediaId(mediaId);
+    openModal('usageReport');
+  };
+
+  const columns = getMediaColumns({
+    t,
+    canTag,
+    canUserShare: hasFeature(user, 'user.sharing'),
+    formatDateTime,
+    onPreview: handlePreviewClick,
+    onDelete: handleDelete,
+    onDownload: handleDownload,
+    openEditModal,
+    openMoveModal: canViewFolders
+      ? (media) => {
+          setItemsToMove([media] as Media[]);
+          openModal('move');
+        }
+      : undefined,
+    openShareModal: (mediaId) => {
+      setShareEntityIds(mediaId);
+      openModal('share');
+    },
+    openDetails: (mediaId) => {
+      setSelectedMediaId(mediaId);
+      setShowInfoPanel(true);
+    },
+    copyMedia: openCopyModal,
+    openReplaceModal: openReplaceFileModal,
+    openScheduleModal: canSchedule ? openScheduleModal : undefined,
+    openEnableStatsModal,
+    openUsageReportModal: canViewUsageReport ? openUsageReportModal : undefined,
+    scheduleWithView,
+    canModify: canModifyLibrary,
+  });
+
+  const getAllSelectedItems = (): Media[] => {
+    return Object.keys(rowSelection)
+      .map((id) => selectionCache[id])
+      .filter((item): item is Media => !!item);
+  };
+
+  const bulkActions = getBulkActions({
+    t,
+    canModify: canModifyLibrary,
+    onDelete: () => {
+      const permittedItems = filterMediaByPermission(
+        getAllSelectedItems(),
+        (item: Media) => item.userPermissions.delete,
+        t,
+        t('delete'),
+      );
+
+      if (permittedItems.length === 0) {
+        return;
+      }
+
+      setDeleteError(null);
+      setItemsToDelete(permittedItems);
+      openModal('delete');
+    },
+    onMove: canViewFolders
+      ? () => {
+          const allItems = getAllSelectedItems();
+          const permittedItems = allItems.filter((item) => item.userPermissions.edit);
+
+          if (permittedItems.length === 0) {
+            notify.warning(t('You do not have permission to move any of the selected items.'));
+            return;
+          }
+
+          if (permittedItems.length < allItems.length) {
+            notify.info(
+              t('{{count}} items were skipped due to lack of permissions.', {
+                count: allItems.length - permittedItems.length,
+              }),
+            );
+          }
+
+          setItemsToMove(permittedItems);
+          openModal('move');
+        }
+      : undefined,
+    onShare: () => {
+      const allItems = getAllSelectedItems();
+      const permittedItems = allItems.filter((item) => item.userPermissions.modifyPermissions);
+
+      if (permittedItems.length === 0) {
+        notify.warning(t('You do not have permission to share any of the selected items.'));
+        return;
+      }
+
+      if (permittedItems.length < allItems.length) {
+        notify.info(
+          t('{{count}} items were skipped due to lack of permissions.', {
+            count: allItems.length - permittedItems.length,
+          }),
+        );
+      }
+
+      const ids = permittedItems.map((i) => i.mediaId);
+
+      setShareEntityIds(ids);
+      openModal('share');
+    },
+    onDownload: async () => {
+      const allItems = getAllSelectedItems();
+
+      if (allItems.length === 0) {
+        return;
+      }
+
+      try {
+        if (allItems.length === 1) {
+          const item = allItems[0];
+          if (item) {
+            await downloadMedia(item.mediaId, item.fileName);
+            notify.success(t('Download started!'));
+          }
+        } else {
+          notify.info(
+            t('Zipping {{count}} files. You can continue using the app.', {
+              count: allItems.length,
+            }),
+          );
+
+          const itemsToZip = allItems.map((item) => {
+            return {
+              mediaId: item.mediaId,
+              fileName: item.fileName || item.name,
+            };
+          });
+
+          setRowSelection({});
+
+          await downloadMediaAsZip(itemsToZip, 'media_page_export.zip');
+
+          notify.success(t('ZIP file generated and download started!'));
+        }
+      } catch (error) {
+        console.error('Failed to package media files:', error);
+        notify.error(t('An error occurred while zipping the files.'));
+      }
+    },
+    onEditTags: canTag
+      ? () => {
+          const permittedItems = getAllSelectedItems().filter((item) => item.userPermissions.edit);
+          if (permittedItems.length === 0) {
+            notify.warning(t('You do not have permission to edit any of the selected items.'));
+            return;
+          }
+          setBulkItems(permittedItems);
+          openModal('editTagsMultiple');
+        }
+      : undefined,
+    onEnableStats: () => {
+      const permittedItems = getAllSelectedItems().filter((item) => item.userPermissions.edit);
+      if (permittedItems.length === 0) {
+        notify.warning(t('You do not have permission to edit any of the selected items.'));
+        return;
+      }
+      setBulkItems(permittedItems);
+      openModal('enableStatsMultiple');
+    },
+  });
+
+  const getMediaActions = getMediaItemActions({
+    t,
+    canUserShare: hasFeature(user, 'user.sharing'),
+    formatDateTime,
+    onDelete: handleDelete,
+    onDownload: handleDownload,
+    openEditModal,
+    onPreview: handlePreviewClick,
+    openMoveModal: canViewFolders
+      ? (media) => {
+          setItemsToMove([media] as Media[]);
+          openModal('move');
+        }
+      : undefined,
+    openShareModal: (mediaId) => {
+      setShareEntityIds(mediaId);
+      openModal('share');
+    },
+    openDetails: (mediaId) => {
+      setSelectedMediaId(mediaId);
+      setShowInfoPanel(true);
+    },
+    copyMedia: openCopyModal,
+    openReplaceModal: openReplaceFileModal,
+    openScheduleModal: canSchedule ? openScheduleModal : undefined,
+    openEnableStatsModal,
+    openUsageReportModal: canViewUsageReport ? openUsageReportModal : undefined,
+    scheduleWithView,
+    canModify: canModifyLibrary,
+  } as MediaActionsProps);
+
+  const { filterOptions } = useMediaFilterOptions(t, canTag);
+
+  const activeFilterCount = countActiveFilters(filterInputs, INITIAL_FILTER_STATE, filterOptions);
+
+  const libraryTabs = useFilteredTabs('library');
+
+  return (
+    <section
+      {...getGlobalRootProps()}
+      className="flex h-full w-full min-h-0 relative outline-none overflow-hidden"
+    >
+      <input {...getGlobalInputProps()} />
+
+      {canViewFolders && (
+        <FolderSidebar
+          isOpen={showFolderSidebar}
+          selectedFolderId={selectedFolderId}
+          onSelect={handleFolderChange}
+          onClose={() => setShowFolderSidebar(false)}
+          onAction={folderActions.openAction}
+          refreshTrigger={folderRefreshTrigger}
+        />
+      )}
+
+      <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
+        {isGlobalDragActive && !isAddModalOpen && (
+          <div className="absolute bottom-14 left-1/2 -translate-x-1/2 z-50 justify-center flex flex-col items-center gap-3 mb-0">
+            {canAddToFolder ? (
+              <>
+                <span className="inline-flex justify-center items-center size-15.5 shadow-lg rounded-full border-7 animate-bounce border-blue-50 bg-xibo-blue-100 text-blue-800">
+                  <Upload className="shrink-0 size-6.5" />
+                </span>
+                <div className="bg-slate-50 border border-gray-200 px-4 py-2 shadow-lg rounded-full flex justify-center items-center gap-2">
+                  <span className="text-sm text-gray-800">{t('Upload files to ')}</span>
+                  <span className="text-xibo-blue-600 font-semibold flex">
+                    <div className="size-6.5 flex justify-center items-center">
+                      <Folder className="size-4" />
+                    </div>
+                    {canViewFolders ? `"${targetUploadFolderName}"` : t('Home Folder')}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div className="bg-slate-50 border border-gray-200 px-4 py-2 shadow-lg rounded-full flex justify-center items-center">
+                <span className="text-sm font-bold text-red-800">
+                  {t('You cannot upload files here')}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="flex flex-row justify-between py-4 items-center gap-4">
+          <TabNav activeTab="Media" navigation={libraryTabs} />
+          <div className="flex items-center gap-2 md:mb-0">
+            {tidyEnabled && canModifyLibrary && (
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setTidyError(null);
+                  openModal('tidy');
+                }}
+                leftIcon={Sparkles}
+              >
+                {t('Tidy Library')}
+              </Button>
+            )}
+            <Button
+              variant="primary"
+              onClick={() => setAddModalOpen(true)}
+              leftIcon={Plus}
+              disabled={!canAddToFolder || !isHydrated}
+            >
+              {t('Add Media')}
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
+          <div className="w-full lg:flex-1 md:min-w-0">
+            {canViewFolders && (
+              <FolderBreadcrumb
+                currentFolderId={selectedFolderId}
+                onNavigate={handleFolderChange}
+                isSidebarOpen={showFolderSidebar}
+                onToggleSidebar={() => setShowFolderSidebar(!showFolderSidebar)}
+                onAction={folderActions.openAction}
+                refreshTrigger={folderRefreshTrigger}
+              />
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 w-full xl:w-115 lg:w-75 shrink-0">
+            <div className="relative flex-1 flex">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <Search className="w-4 h-4 text-gray-400" />
+              </div>
+              <input
+                name="search"
+                value={globalFilter}
+                onChange={(e) => {
+                  setGlobalFilter(e.target.value);
+                  setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+                }}
+                placeholder={t('Search media...')}
+                className="py-2 px-3 pl-10 block h-11.25 bg-gray-100 rounded-lg w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none"
+              />
+            </div>
+            <FilterButton
+              isOpen={openFilter}
+              onToggle={() => setOpenFilter((prev) => !prev)}
+              activeCount={activeFilterCount}
+            />
+          </div>
+        </div>
+
+        <FilterInputs
+          onChange={(name, value) => {
+            setFilterInputs((prev) => ({ ...prev, [name]: value }));
+            setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+          }}
+          isOpen={openFilter}
+          values={filterInputs}
+          options={filterOptions}
+          onReset={handleResetFilters}
+        />
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
+            {error}
+          </div>
+        )}
+
+        <div className="min-h-0 flex flex-col">
+          {!isHydrated ? (
+            <div className="flex-1 flex items-center justify-center bg-gray-50 animate-pulse rounded-lg border border-gray-200">
+              <span className="text-gray-400 font-medium">
+                {t('Loading your layout preferences...')}
+              </span>
+            </div>
+          ) : viewMode === 'table' ? (
+            <DataTable
+              columns={columns}
+              data={mediaList}
+              pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
+              pagination={pagination}
+              onPaginationChange={setPagination}
+              sorting={sorting}
+              onSortingChange={setSorting}
+              globalFilter={globalFilter}
+              onGlobalFilterChange={setGlobalFilter}
+              loading={isFetching}
+              rowSelection={rowSelection}
+              onRowSelectionChange={handleRowSelectionChange}
+              onRefresh={handleRefresh}
+              columnPinning={{ left: ['tableSelection'], right: ['tableActions'] }}
+              columnVisibility={columnVisibility}
+              onColumnVisibilityChange={setColumnVisibility}
+              bulkActions={bulkActions}
+              viewMode="table"
+              onViewModeChange={setViewMode}
+              availableViewModes={['table', 'grid']}
+              getRowId={getRowId}
+            />
+          ) : (
+            <DataGrid
+              data={mediaList}
+              pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
+              pagination={pagination}
+              onPaginationChange={setPagination}
+              rowSelection={rowSelection}
+              onRowSelectionChange={handleRowSelectionChange}
+              loading={isFetching}
+              onRefresh={handleRefresh}
+              bulkActions={bulkActions}
+              viewMode="grid"
+              onViewModeChange={setViewMode}
+              getRowId={getRowId}
+              renderCard={(media, isSelected, toggleSelect) => (
+                <MediaCard
+                  key={media.mediaId}
+                  media={media}
+                  isSelected={isSelected}
+                  onToggleSelect={toggleSelect}
+                  onPreview={handlePreviewClick}
+                  actions={getMediaActions(media)}
+                />
+              )}
+            />
+          )}
+        </div>
+      </div>
+
+      <MediaPreviewer
+        mediaId={previewItem?.mediaId ?? null}
+        mediaType={previewItem?.mediaType}
+        fileName={previewItem?.name}
+        mediaData={previewItem}
+        onDownload={() => previewItem && handleDownload(previewItem)}
+        onClose={() => {
+          setPreviewItem(null);
+        }}
+        onShare={
+          previewItem?.userPermissions?.modifyPermissions
+            ? (mediaId) => {
+                setShareEntityIds(mediaId);
+                openModal('share');
+              }
+            : undefined
+        }
+        onMove={
+          canViewFolders
+            ? () => {
+                if (!previewItem) {
+                  return;
+                }
+
+                setItemsToMove([previewItem]);
+                openModal('move');
+              }
+            : undefined
+        }
+        folderName={selectedFolderName}
+      />
+
+      <MediaModals
+        actions={{
+          activeModal,
+          closeModal,
+          handleRefresh,
+          deleteError,
+          isDeleting,
+          isCloning,
+          isUpdatingStats,
+          isTidying,
+          tidyError,
+        }}
+        selection={{
+          selectedMedia,
+          itemsToDelete,
+          itemsToMove,
+          bulkItems,
+          existingNames,
+          shareEntityIds,
+          setShareEntityIds,
+        }}
+        handlers={{
+          confirmDelete: (opts) => confirmDelete(itemsToDelete, opts),
+          handleConfirmClone: (name, tags) => handleConfirmClone(selectedMedia, name, tags),
+          handleConfirmMove: (folderId) => handleConfirmMove(itemsToMove, folderId),
+          handleConfirmEnableStats: (value) =>
+            selectedMedia && handleConfirmEnableStats(selectedMedia, value),
+          handleConfirmTidy,
+        }}
+        upload={{
+          isOpen: isAddModalOpen,
+          setOpen: setAddModalOpen,
+          queue,
+          onStart: handleStartUpload,
+          onCancel: handleCancelUpload,
+          onManualAdd: handleManualAddFiles,
+          onUrlAdd: addUrlToQueue,
+          removeFile,
+          updateFileData,
+          clearQueue,
+          canAdd: canAddToFolder,
+          targetFolderId: targetUploadFolderId,
+          selectedFolderId,
+          setSelectedFolderId,
+          canViewFolders,
+          canTag,
+          maxSize:
+            Number(user?.settings?.LIBRARY_SIZE_LIMIT_KB) > 0
+              ? Number(user?.settings?.LIBRARY_SIZE_LIMIT_KB) * 1024
+              : 2 * 1024 * 1024 * 1024,
+        }}
+        infoPanel={{
+          isOpen: showInfoPanel,
+          setOpen: setShowInfoPanel,
+          setSelectedMediaId,
+          owner,
+          loading,
+          folderName: selectedFolderName,
+        }}
+        folderActions={folderActions}
+      />
+    </section>
+  );
+}

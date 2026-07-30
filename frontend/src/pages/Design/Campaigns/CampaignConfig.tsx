@@ -1,0 +1,569 @@
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+import type { ColumnDef } from '@tanstack/react-table';
+import type { TFunction } from 'i18next';
+import {
+  Edit,
+  CopyCheck,
+  FolderInput,
+  UserPlus2,
+  CalendarClock,
+  Trash2,
+  Eye,
+  Tags,
+} from 'lucide-react';
+import type { ComponentProps } from 'react';
+
+import type { FilterConfigItem } from '@/components/ui/FilterInputs';
+import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkActions';
+import { TextCell, TagsCell, StatusCell, ActionsCell } from '@/components/ui/table/cells';
+import { getCommonFormOptions } from '@/config/commonForms';
+import type { Campaign } from '@/types/campaign';
+import type { ActionItem, BaseModalType } from '@/types/table';
+import type { Tag } from '@/types/tag';
+import type { DateLike } from '@/utils/date';
+
+export interface CampaignFilterInput {
+  name?: string;
+  tags?: Tag[];
+  hasLayouts?: string;
+  layoutId?: string;
+  type?: string;
+  cyclePlaybackEnabled?: string;
+  retired?: number | null;
+  logicalOperatorName?: 'OR' | 'AND';
+  useRegexForName?: boolean;
+  logicalOperator?: 'OR' | 'AND';
+  exactTags?: boolean;
+}
+
+export const CAMPAIGN_INITIAL_FILTER_STATE: CampaignFilterInput = {
+  name: '',
+  tags: [],
+  hasLayouts: '',
+  layoutId: '',
+  type: '',
+  cyclePlaybackEnabled: '',
+  logicalOperatorName: 'OR',
+  useRegexForName: false,
+  logicalOperator: 'OR',
+  exactTags: false,
+};
+
+export const getCampaignFilterKeys = (
+  t: TFunction,
+  options?: { canAccessAdCampaign?: boolean; canTag?: boolean },
+): FilterConfigItem<CampaignFilterInput>[] => [
+  {
+    label: t('Name'),
+    name: 'name',
+    type: 'text',
+    className: '',
+    placeholder: ' ',
+    showAndOr: true,
+    andOrKey: 'logicalOperatorName',
+    showRegex: true,
+    regexKey: 'useRegexForName',
+  },
+
+  ...(options?.canTag
+    ? ([
+        {
+          label: t('Tags'),
+          name: 'tags',
+          type: 'tags',
+          placeholder: ' ',
+          className: 'md:w-auto md:flex-1 min-w-0',
+          showAndOr: true,
+          andOrKey: 'logicalOperator',
+          showExactTags: true,
+          exactTagsKey: 'exactTags',
+        },
+      ] as FilterConfigItem<CampaignFilterInput>[])
+    : []),
+
+  {
+    label: t('Layout'),
+    name: 'hasLayouts',
+    className: '',
+    options: [
+      { label: t('All'), value: '' },
+      { label: t('Yes'), value: '1' },
+      { label: t('No'), value: '0' },
+    ],
+  },
+
+  {
+    label: t('Layout ID'),
+    name: 'layoutId',
+    type: 'number',
+    placeholder: t('Enter layout ID'),
+    className: '',
+  },
+
+  ...(options?.canAccessAdCampaign
+    ? [
+        {
+          label: t('Type'),
+          name: 'type' as const,
+          className: '',
+          options: [
+            { label: t('All'), value: '' },
+            { label: t('Layout List'), value: 'list' },
+            { label: t('Ad Campaign'), value: 'ad' },
+          ],
+        },
+      ]
+    : []),
+
+  {
+    label: t('Cycle Based'),
+    name: 'cyclePlaybackEnabled',
+    className: '',
+    options: [
+      { label: t('All'), value: '' },
+      { label: t('Enabled'), value: '1' },
+      { label: t('Disabled'), value: '0' },
+    ],
+  },
+
+  {
+    label: t('Retired'),
+    name: 'retired',
+    options: getCommonFormOptions(t).retired,
+  },
+];
+
+export type ModalType = BaseModalType | 'schedule' | 'editTagsMultiple' | null;
+
+interface CampaignActionsProps {
+  t: TFunction;
+  formatDateTime: (value: DateLike) => string;
+  canAccessAdCampaign?: boolean;
+  canModify?: boolean;
+  canUserShare?: boolean;
+  canPreview?: boolean;
+  canViewFolders?: boolean;
+  canTag?: boolean;
+  onDelete?: (id: number) => void;
+  openEditModal?: (campaign: Campaign) => void;
+  openAdEditor?: (campaign: Campaign) => void;
+  openShareModal?: (id: number) => void;
+  openMoveModal?: (row: Campaign | Campaign[]) => void;
+  openCopyModal?: (campaign: Campaign) => void;
+  onSchedule?: (campaign: Campaign) => void;
+  onPreview?: (campaign: Campaign) => void;
+}
+
+export const getCampaignColumn = (props: CampaignActionsProps): ColumnDef<Campaign>[] => {
+  const { t, formatDateTime, canAccessAdCampaign, canTag = false } = props;
+  const getActions = getCampaignItemActions(props);
+
+  return [
+    {
+      accessorKey: 'campaign',
+      header: t('Name'),
+      size: 220,
+      enableHiding: false,
+      cell: (info) => (
+        <TextCell weight="bold" truncate>
+          {info.getValue<string>()}
+        </TextCell>
+      ),
+      enableSorting: true,
+    },
+
+    ...(canAccessAdCampaign
+      ? ([
+          {
+            accessorKey: 'type',
+            header: t('Type'),
+            size: 120,
+            enableSorting: true,
+            cell: (info) => {
+              const value = info.getValue<string>();
+              return <TextCell>{value === 'ad' ? t('Ad Campaign') : t('Layout List')}</TextCell>;
+            },
+          },
+          {
+            accessorKey: 'startDt',
+            header: t('Start Date'),
+            size: 160,
+            enableSorting: true,
+            cell: (info) => {
+              const value = info.getValue<number>();
+              return <TextCell>{value ? formatDateTime(new Date(value * 1000)) : '-'}</TextCell>;
+            },
+          },
+          {
+            accessorKey: 'endDt',
+            header: t('End Date'),
+            size: 160,
+            enableSorting: true,
+            cell: (info) => {
+              const value = info.getValue<number>();
+              return <TextCell>{value ? formatDateTime(new Date(value * 1000)) : '-'}</TextCell>;
+            },
+          },
+        ] as ColumnDef<Campaign>[])
+      : []),
+
+    {
+      accessorKey: 'numberLayouts',
+      header: t('# Layouts'),
+      size: 100,
+      enableSorting: true,
+      cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
+    },
+
+    ...(canTag
+      ? ([
+          {
+            accessorKey: 'tags',
+            header: t('Tags'),
+            size: 150,
+            enableSorting: false,
+            cell: (info) => {
+              const tags = info.getValue<Tag[]>() || [];
+              const formattedTags = tags.map((tag) => ({
+                id: tag.tagId,
+                label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
+              }));
+              return <TagsCell tags={formattedTags} />;
+            },
+          },
+        ] as ColumnDef<Campaign>[])
+      : []),
+
+    {
+      accessorKey: 'totalDuration',
+      header: t('Duration'),
+      size: 120,
+      enableSorting: true,
+      cell: (info) => <TextCell>{info.getValue<number>()}s</TextCell>,
+    },
+
+    {
+      accessorKey: 'cyclePlaybackEnabled',
+      header: t('Cycle based Playback'),
+      size: 180,
+      enableSorting: true,
+      cell: (info) => {
+        const value = info.getValue<number>();
+        return (
+          <StatusCell
+            label={value ? t('Enabled') : t('Disabled')}
+            type={value ? 'success' : 'neutral'}
+          />
+        );
+      },
+    },
+
+    {
+      accessorKey: 'playCount',
+      header: t('Play Count'),
+      size: 120,
+      enableSorting: true,
+      cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
+    },
+
+    ...(canAccessAdCampaign
+      ? ([
+          {
+            accessorKey: 'targetType',
+            header: t('Target Type'),
+            size: 140,
+            enableSorting: true,
+            cell: (info) => <TextCell>{info.getValue<string>() || '-'}</TextCell>,
+          },
+          {
+            accessorKey: 'target',
+            header: t('Target'),
+            size: 120,
+            enableSorting: true,
+            cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
+          },
+          {
+            accessorKey: 'plays',
+            header: t('Plays'),
+            size: 100,
+            enableSorting: true,
+            cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
+          },
+          {
+            accessorKey: 'spend',
+            header: t('Spend'),
+            size: 120,
+            enableSorting: true,
+            cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
+          },
+          {
+            accessorKey: 'impressions',
+            header: t('Impressions'),
+            size: 140,
+            enableSorting: true,
+            cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
+          },
+        ] as ColumnDef<Campaign>[])
+      : []),
+
+    {
+      accessorKey: 'ref1',
+      header: t('Reference 1'),
+      size: 140,
+      enableSorting: false,
+      cell: (info) => <TextCell>{info.getValue<string | null>() || '-'}</TextCell>,
+    },
+
+    {
+      accessorKey: 'ref2',
+      header: t('Reference 2'),
+      size: 140,
+      enableSorting: false,
+      cell: (info) => <TextCell>{info.getValue<string | null>() || '-'}</TextCell>,
+    },
+
+    {
+      accessorKey: 'ref3',
+      header: t('Reference 3'),
+      size: 140,
+      enableSorting: false,
+      cell: (info) => <TextCell>{info.getValue<string | null>() || '-'}</TextCell>,
+    },
+
+    {
+      accessorKey: 'ref4',
+      header: t('Reference 4'),
+      size: 140,
+      enableSorting: false,
+      cell: (info) => <TextCell>{info.getValue<string | null>() || '-'}</TextCell>,
+    },
+
+    {
+      accessorKey: 'ref5',
+      header: t('Reference 5'),
+      size: 140,
+      enableSorting: false,
+      cell: (info) => <TextCell>{info.getValue<string | null>() || '-'}</TextCell>,
+    },
+
+    {
+      accessorKey: 'createdAt',
+      header: t('Created At'),
+      size: 160,
+      enableSorting: true,
+      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
+    },
+
+    {
+      accessorKey: 'modifiedAt',
+      header: t('Modified At'),
+      size: 160,
+      enableSorting: true,
+      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
+    },
+
+    {
+      accessorKey: 'modifiedByName',
+      header: t('Modified By'),
+      size: 160,
+      enableSorting: true,
+      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
+    },
+
+    {
+      id: 'tableActions',
+      header: '',
+      size: 80,
+      minSize: 80,
+      maxSize: 80,
+      enableHiding: false,
+      enableResizing: false,
+      cell: (info) => {
+        const row = info.row.original;
+        if (!row) return null;
+
+        return (
+          <ActionsCell
+            row={info.row}
+            actions={getActions(row) as ComponentProps<typeof ActionsCell>['actions']}
+          />
+        );
+      },
+    },
+  ];
+};
+
+export const getCampaignItemActions = ({
+  t,
+  canAccessAdCampaign = false,
+  canModify = false,
+  canUserShare = false,
+  canPreview = false,
+  canViewFolders = false,
+  onDelete,
+  openEditModal,
+  openAdEditor,
+  openShareModal,
+  openMoveModal,
+  openCopyModal,
+  onSchedule,
+  onPreview,
+}: CampaignActionsProps): ((campaign: Campaign) => ActionItem[]) => {
+  const editCampaign = (campaign: Campaign) => {
+    if (campaign.type === 'ad') {
+      openAdEditor?.(campaign);
+    } else {
+      openEditModal?.(campaign);
+    }
+  };
+
+  return (campaign: Campaign) => {
+    const isAd = campaign.type === 'ad';
+
+    const canEdit = !!campaign.userPermissions?.edit;
+    const canDelete = !!campaign.userPermissions?.delete;
+    const canShare = !!campaign.userPermissions?.modifyPermissions;
+
+    const canEditAction = canModify && canEdit && (!isAd || canAccessAdCampaign);
+
+    const actions: ActionItem[] = [];
+
+    if (canEditAction) {
+      actions.push({
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => editCampaign(campaign),
+        isQuickAction: true,
+        variant: 'primary' as const,
+      });
+    }
+
+    if (onSchedule && !isAd) {
+      actions.push({
+        label: t('Schedule'),
+        icon: CalendarClock,
+        onClick: () => onSchedule(campaign),
+      });
+    }
+
+    if (canPreview && !isAd) {
+      actions.push({
+        label: t('Preview Campaign'),
+        icon: Eye,
+        onClick: () => onPreview && onPreview(campaign),
+      });
+    }
+
+    if (canEditAction) {
+      if (actions.length > 0) {
+        actions.push({ isSeparator: true });
+      }
+      actions.push({
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => editCampaign(campaign),
+      });
+    }
+
+    if (canModify && canEdit) {
+      actions.push({
+        label: t('Make a Copy'),
+        icon: CopyCheck,
+        onClick: () => openCopyModal && openCopyModal(campaign),
+      });
+    }
+
+    if (canModify && canEdit && canViewFolders) {
+      actions.push({
+        label: t('Move'),
+        icon: FolderInput,
+        onClick: () => openMoveModal && openMoveModal(campaign),
+      });
+    }
+
+    if (canModify && canShare && canUserShare) {
+      actions.push({
+        label: t('Share'),
+        icon: UserPlus2,
+        onClick: () => openShareModal && openShareModal(campaign.campaignId),
+      });
+    }
+
+    if (canModify && canDelete) {
+      if (actions.length > 0) {
+        actions.push({ isSeparator: true });
+      }
+      actions.push({
+        label: t('Delete'),
+        icon: Trash2,
+        onClick: () => onDelete && onDelete(campaign.campaignId),
+        variant: 'danger' as const,
+      });
+    }
+
+    return actions;
+  };
+};
+
+interface GetBulkActionsProps {
+  t: TFunction;
+  onDelete: () => void;
+  onMove: () => void;
+  onShare: () => void;
+  onEditTags?: () => void;
+}
+
+export const getBulkActions = ({
+  t,
+  onDelete,
+  onMove,
+  onShare,
+  onEditTags,
+}: GetBulkActionsProps): DataTableBulkAction<Campaign>[] => {
+  return [
+    {
+      label: t('Move'),
+      icon: FolderInput,
+      onClick: onMove,
+    },
+    {
+      label: t('Share'),
+      icon: UserPlus2,
+      onClick: onShare,
+    },
+    ...(onEditTags
+      ? [
+          {
+            label: t('Edit Tags'),
+            icon: Tags,
+            onClick: onEditTags,
+          },
+        ]
+      : []),
+    {
+      label: t('Delete Selected'),
+      icon: Trash2,
+      onClick: onDelete,
+    },
+  ];
+};

@@ -106,13 +106,17 @@ class DataSetFactory extends BaseFactory
 
     /**
      * Get DataSets by ID
-     * @param $dataSetId
+     * @param int $dataSetId
+     * @param bool $disableUserCheck
      * @return DataSet
      * @throws NotFoundException
      */
-    public function getById($dataSetId)
+    public function getById(int $dataSetId, bool $disableUserCheck = true): DataSet
     {
-        $dataSets = $this->query(null, ['disableUserCheck' => 1, 'dataSetId' => $dataSetId]);
+        $dataSets = $this->query(null, [
+            'disableUserCheck' => $disableUserCheck ? 1 : 0,
+            'dataSetId' => $dataSetId
+        ]);
 
         if (count($dataSets) <= 0) {
             throw new NotFoundException();
@@ -190,10 +194,6 @@ class DataSetFactory extends BaseFactory
         $params = [];
         $parsedFilter = $this->getSanitizer($filterBy);
 
-        if ($sortOrder === null) {
-            $sortOrder = ['dataSet'];
-        }
-
         $select  = '
           SELECT dataset.dataSetId,
             dataset.dataSet,
@@ -230,6 +230,7 @@ class DataSetFactory extends BaseFactory
             dataset.`folderId`,
             dataset.`permissionsFolderId`,
             user.userName AS owner,
+            folder.folderName,
             (
               SELECT GROUP_CONCAT(DISTINCT `group`.group)
                   FROM `permission`
@@ -247,6 +248,7 @@ class DataSetFactory extends BaseFactory
         $body = '
               FROM dataset
                INNER JOIN `user` ON user.userId = dataset.userId
+               INNER JOIN `folder` ON folder.folderId = dataset.folderId
              WHERE 1 = 1
         ';
 
@@ -299,18 +301,59 @@ class DataSetFactory extends BaseFactory
             $params['folderId'] = $parsedFilter->getInt('folderId');
         }
 
+        // Modified Date filter
+        if ($parsedFilter->getDate('modifiedDateFrom') !== null) {
+            $body .= ' AND (dataset.lastDataEdit = 0 OR dataset.lastDataEdit >= :modifiedDateFrom) ';
+            $params['modifiedDateFrom'] = strtotime($parsedFilter->getDate('modifiedDateFrom'));
+        }
+
+        if ($parsedFilter->getDate('modifiedDateTo') !== null) {
+            $body .= ' AND (dataset.lastDataEdit = 0 OR dataset.lastDataEdit <= :modifiedDateTo) ';
+            $params['modifiedDateTo'] = strtotime($parsedFilter->getDate('modifiedDateTo'));
+        }
+
         // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`dataset`.dataSetId', '`dataset`.userId', $filterBy, '`dataset`.permissionsFolderId');
+        $this->viewPermissionSql(
+            'Xibo\Entity\DataSet',
+            $body,
+            $params,
+            '`dataset`.dataSetId',
+            '`dataset`.userId',
+            $filterBy,
+            '`dataset`.permissionsFolderId'
+        );
 
         // Sorting?
-        $order = '';
-        if (is_array($sortOrder))
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        $allowedColumns = [
+            'dataSetId',
+            'dataSet',
+            'description',
+            'code',
+            'isRemote',
+            'isRealTime',
+            'owner',
+            'lastSync',
+            'groupsWithPermissions'
+        ];
+
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            ['dataLastModified' => '`lastDataEdit`'],
+            ['dataSetId ASC']
+        );
+
+        $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
 
         $limit = '';
+
         // Paging
-        if ($filterBy !== null && $parsedFilter->getInt('start') !== null && $parsedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . $parsedFilter->getInt('start', ['default' => 0]) . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
+        if ($filterBy !== null
+            && $parsedFilter->getInt('start') !== null
+            && $parsedFilter->getInt('length') !== null
+        ) {
+            $limit = ' LIMIT ' . $parsedFilter->getInt('start', ['default' => 0]) . ', ' .
+                $parsedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
@@ -534,7 +577,7 @@ class DataSetFactory extends BaseFactory
                     $csv = $request->getBody()->getContents();
                     $array = array_map(
                         function ($v) use ($dataSet) {
-                            return str_getcsv($v, $dataSet->csvSeparator ?? ',');
+                            return str_getcsv($v, $dataSet->csvSeparator ?? ',', '"', '');
                         },
                         explode("\n", $csv)
                     );

@@ -653,7 +653,7 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
     const duration = moment.duration((sourceEv.toDt - sourceEv.fromDt) * 1000);
     const rangeEnd = sourceEv.recurrenceRange ?
       momentTz(sourceEv.recurrenceRange * 1000) :
-      momentTz('9999-12-31'); // Infinity
+      moment('9999-12-31'); // Infinity
 
     const unitMap =
       {Minute: 'm', Hour: 'h', Day: 'd', Week: 'w', Month: 'M', Year: 'y'};
@@ -704,7 +704,7 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
 
       // Loop day by day
       while (
-        currentDayIter.isBefore(momentTz(viewEndMs)) &&
+        currentDayIter.isBefore(moment(viewEndMs)) &&
         currentDayIter.isBefore(rangeEnd)
       ) {
         // Find the time of the first event on this day
@@ -725,7 +725,7 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
           let exclude = true;
           let fromDate = eventMoment.unix();
           let toDate = eventMoment.unix() + duration.asSeconds();
-          const endOfDayUnix = currentDayIter.clone().endOf('day').unix();
+          const endOfDayUnix = moment(currentDayIter).endOf('day').unix();
           const recurUnit = sourceEv.recurrenceType.toLowerCase();
           const recurAmount = sourceEv.recurrenceDetail;
 
@@ -747,7 +747,7 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
 
               if (isExcluded) {
                 const nextSlot =
-                  momentTz(fromDate * 1000).add(recurAmount, recurUnit);
+                  moment.unix(fromDate).add(recurAmount, recurUnit);
                 fromDate = nextSlot.unix();
                 toDate = fromDate + duration.asSeconds();
               } else {
@@ -779,21 +779,25 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
       const isComplexWeekly = sourceEv.recurrenceType === 'Week' &&
         hasRepeatsOn;
 
-      // If it's not a complex week recurrence, add first day
-      if (!isComplexWeekly) {
-        const sTime = currentMoment.unix();
-        const eTime = currentMoment.clone().add(duration).unix();
+      // Always add the original (first) occurrence, regardless of recurrence
+      // type. The server emits the original event unconditionally, so the
+      // calendar must too. For complex weekly recurrences the loop below only
+      // adds occurrences strictly after originalStart (occStart.isAfter), which
+      // skips the original when it falls on a selected repeat-on day - so it
+      // must be added here. Adding it here does not duplicate, because the loop
+      // excludes the equal occurrence.
+      const firstStart = currentMoment.unix();
+      const firstEnd = currentMoment.clone().add(duration).unix();
 
-        if (
-          currentMoment.isBefore(rangeEnd) &&
-          (sTime * 1000) < viewEndMs && (eTime * 1000) > viewStartMs
-        ) {
-          addIfValid(sTime, eTime);
-        }
+      if (
+        currentMoment.isBefore(rangeEnd) &&
+        (firstStart * 1000) < viewEndMs && (firstEnd * 1000) > viewStartMs
+      ) {
+        addIfValid(firstStart, firstEnd);
       }
 
       while (
-        currentMoment.isBefore(momentTz(viewEndMs)) &&
+        currentMoment.isBefore(moment(viewEndMs)) &&
         currentMoment.isBefore(rangeEnd)
       ) {
         // Weekly complex calculation
@@ -1591,10 +1595,16 @@ window.setupScheduleForm = function(dialog) {
     $(dialog).find('.modal-footer .modal-footer-right').prepend($button);
 
     // Update the date/times for this event in the correct format.
+    // Render in the CMS timezone (matching the calendar and the rest of the
+    // app); without this the labels show the viewer's browser-local time.
+    const toCmsDisplay = function(unix) {
+      const m = moment(unix, 'X');
+      return ((m.tz && timezone) ? m.tz(timezone) : m).format(jsDateFormat);
+    };
     $scheduleEditForm.find('#instanceStartDate').html(
-      moment($scheduleEditForm.data().eventStart, 'X').format(jsDateFormat));
+      toCmsDisplay($scheduleEditForm.data().eventStart));
     $scheduleEditForm.find('#instanceEndDate').html(
-      moment($scheduleEditForm.data().eventEnd, 'X').format(jsDateFormat));
+      toCmsDisplay($scheduleEditForm.data().eventEnd));
 
     // Add a button for deleting single recurring event
     $button = $('<button>').addClass('btn btn-primary')

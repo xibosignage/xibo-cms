@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -23,6 +23,7 @@
 namespace Xibo\Entity;
 
 use Carbon\Carbon;
+use OpenApi\Attributes as OA;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -31,83 +32,82 @@ use Xibo\Support\Exception\InvalidArgumentException;
 /**
  * Class Action
  * @package Xibo\Entity
- *
- * @SWG\Definition()
  */
+#[OA\Schema]
 class Action implements \JsonSerializable
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(description="The Action Id")
      * @var int
      */
+    #[OA\Property(description: "The Action Id")]
     public $actionId;
 
     /**
-     * @SWG\Property(description="The Owner Id")
      * @var int
      */
+    #[OA\Property(description: "The Owner Id")]
     public $ownerId;
 
     /**
-     * @SWG\Property(description="The Action trigger type")
      * @var string
      */
+    #[OA\Property(description: "The Action trigger type")]
     public $triggerType;
 
     /**
-     * @SWG\Property(description="The Action trigger code")
      * @var string
      */
+    #[OA\Property(description: "The Action trigger code")]
     public $triggerCode;
 
     /**
-     * @SWG\Property(description="The Action type")
      * @var string
      */
+    #[OA\Property(description: "The Action type")]
     public $actionType;
 
     /**
-     * @SWG\Property(description="The Action source (layout, region or widget)")
      * @var string
      */
+    #[OA\Property(description: "The Action source (layout, region or widget)")]
     public $source;
 
     /**
-     * @SWG\Property(description="The Action source Id (layoutId, regionId or widgetId)")
      * @var int
      */
+    #[OA\Property(description: "The Action source Id (layoutId, regionId or widgetId)")]
     public $sourceId;
 
     /**
-     * @SWG\Property(description="The Action target (region)")
      * @var string
      */
+    #[OA\Property(description: "The Action target (region)")]
     public $target;
 
     /**
-     * @SWG\Property(description="The Action target Id (regionId)")
      * @var int
      */
+    #[OA\Property(description: "The Action target Id (regionId)")]
     public $targetId;
 
     /**
-     * @SWG\Property(description="Widget ID that will be loaded as a result of navigate to Widget Action type")
      * @var int
      */
+    #[OA\Property(description: "Widget ID that will be loaded as a result of navigate to Widget Action type")]
     public $widgetId;
 
     /**
-     * @SWG\Property(description="Layout Code identifier")
      * @var string
      */
+    #[OA\Property(description: "Layout Code identifier")]
     public $layoutCode;
 
     /**
-     * @SWG\Property(description="Layout Id associated with this Action")
      * @var int
      */
+    #[OA\Property(description: "Layout Id associated with this Action")]
     public $layoutId;
 
     /** @var \Xibo\Factory\PermissionFactory  */

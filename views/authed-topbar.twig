@@ -34,10 +34,10 @@
             <li class="nav-item">
         {% endif %}
                 {% if currentUser.featureEnabled("schedule.view") %}
-                    <a class="{{ groupElementClass }}" href="{{ url_for("schedule.view") }}">{% trans "Schedule" %}</a>
+                    <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}schedule/events">{% trans "Schedule" %}</a>
                 {% endif %}
                 {% if currentUser.featureEnabled("daypart.view") %}
-                    <a class="{{ groupElementClass }}" href="{{ url_for("daypart.view") }}">{% trans "Dayparting" %}</a>
+                    <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}schedule/dayparting">{% trans "Dayparting" %}</a>
                 {% endif %}
         {% if countViewable > 1 %}
             </div>
@@ -56,19 +56,19 @@
             <li class="nav-item">
         {% endif %}
             {% if currentUser.featureEnabled("campaign.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("campaign.view") }}">{% trans "Campaigns" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}design/campaign">{% trans "Campaigns" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("layout.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("layout.view") }}">{% trans "Layouts" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}design/layout">{% trans "Layouts" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("template.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("template.view") }}">{% trans "Templates" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}design/templates">{% trans "Templates" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("resolution.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("resolution.view") }}">{% trans "Resolutions" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}design/resolutions">{% trans "Resolutions" %}</a>
             {% endif %}
         {% if countViewable > 1 %}
             </div>
@@ -87,19 +87,19 @@
             <li class="nav-item">
         {% endif %}
             {% if currentUser.featureEnabled("playlist.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("playlist.view") }}">{% trans "Playlists" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}library/playlists">{% trans "Playlists" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("library.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("library.view") }}">{% trans "Media" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}library/media">{% trans "Media" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("dataset.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("dataset.view") }}">{% trans "DataSets" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}library/datasets">{% trans "DataSets" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("menuBoard.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("menuBoard.view") }}">{% trans "Menu Boards" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}library/menu-boards">{% trans "Menu Boards" %}</a>
             {% endif %}
         {% if countViewable > 1 %}
             </div>
@@ -118,27 +118,27 @@
             <li class="nav-item">
         {% endif %}
             {% if currentUser.featureEnabled("displays.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("display.view") }}">{% trans "Displays" %}</a>
+                 <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}displays/displays">{% trans "Displays" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("displaygroup.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("displaygroup.view") }}">{% trans "Display Groups" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}displays/display-groups">{% trans "Display Groups" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("display.syncView") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("syncgroup.view") }}">{% trans "Sync Groups" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}displays/sync-groups">{% trans "Sync Groups" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("displayprofile.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("displayprofile.view") }}">{% trans "Display Settings" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}displays/settings">{% trans "Display Settings" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("playersoftware.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("playersoftware.view") }}">{% trans "Player Versions" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}displays/player-versions">{% trans "Player Versions" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("command.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("command.view") }}">{% trans "Commands" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}displays/commands">{% trans "Commands" %}</a>
             {% endif %}
         {% if countViewable > 1 %}
             </div>
@@ -164,7 +164,7 @@
                 {% if countViewable == 0 %}
                 <li class="nav-item">
                 {% endif %}
-                    <a class="{{ groupElementClass }}" href="{{ url_for("user.view") }}">{% trans "Users" %}</a>
+                    <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}administration/users">{% trans "Users" %}</a>
                 {% if countViewable == 0 %}
                 </li>
                 {% endif %}
@@ -174,7 +174,7 @@
                 {% if countViewable == 0 %}
                 <li class="nav-item">
                 {% endif %}
-                    <a class="{{ groupElementClass }}" href="{{ url_for("group.view") }}">{% trans "User Groups" %}</a>
+                    <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}administration/user-groups">{% trans "User Groups" %}</a>
                 {% if countViewable == 0 %}
                 </li>
                 {% endif %}
@@ -184,7 +184,7 @@
                 {% if countViewable == 0 %}
                 <li class="nav-item">
                 {% endif %}
-                    <a class="{{ groupElementClass }}" href="{{ url_for("admin.view") }}">{% trans "Settings" %}</a>
+                    <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}administration/settings">{% trans "Settings" %}</a>
                 {% if countViewable == 0 %}
                 </li>
                 {% endif %}
@@ -194,7 +194,7 @@
                 {% if countViewable == 0 %}
                 <li class="nav-item">
                 {% endif %}
-                    <a class="{{ groupElementClass }}" href="{{ url_for("application.view") }}">{% trans "Applications" %}</a>
+                    <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}administration/applications">{% trans "Applications" %}</a>
                 {% if countViewable == 0 %}
                 </li>
                 {% endif %}
@@ -204,7 +204,7 @@
                 {% if countViewable == 0 %}
                 <li class="nav-item">
                 {% endif %}
-                    <a class="{{ groupElementClass }}" href="{{ url_for("module.view") }}">{% trans "Modules" %}</a>
+                    <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}administration/modules">{% trans "Modules" %}</a>
                 {% if countViewable == 0 %}
                 </li>
                 {% endif %}
@@ -214,7 +214,7 @@
                 {% if countViewable == 0 %}
                 <li class="nav-item">
                 {% endif %}
-                    <a class="{{ groupElementClass }}" href="{{ url_for("transition.view") }}">{% trans "Transitions" %}</a>
+                    <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}administration/transitions">{% trans "Transitions" %}</a>
                 {% if countViewable == 0 %}
                 </li>
                 {% endif %}
@@ -224,7 +224,7 @@
                 {% if countViewable == 0 %}
                 <li class="nav-item">
                 {% endif %}
-                    <a class="{{ groupElementClass }}" href="{{ url_for("task.view") }}">{% trans "Tasks" %}</a>
+                    <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}administration/tasks">{% trans "Tasks" %}</a>
                 {% if countViewable == 0 %}
                 </li>
                 {% endif %}
@@ -234,7 +234,7 @@
                 {% if countViewable == 0 %}
                 <li class="nav-item">
                 {% endif %}
-                    <a class="{{ groupElementClass }}" href="{{ url_for("tag.view") }}">{% trans "Tags" %}</a>
+                    <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}administration/tags">{% trans "Tags" %}</a>
                 {% if countViewable == 0 %}
                 </li>
                 {% endif %}
@@ -244,7 +244,7 @@
                 {% if countViewable == 0 %}
                 <li class="nav-item">
                 {% endif %}
-                    <a class="{{ groupElementClass }}" href="{{ url_for("folders.view") }}">{% trans "Folders" %}</a>
+                    <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}administration/folders">{% trans "Folders" %}</a>
                 {% if countViewable == 0 %}
                 </li>
                 {% endif %}
@@ -254,7 +254,7 @@
                 {% if countViewable == 0 %}
                 <li class="nav-item">
                 {% endif %}
-                    <a class="{{ groupElementClass }}" href="{{ url_for("font.view") }}">{% trans "Fonts" %}</a>
+                    <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}administration/fonts">{% trans "Fonts" %}</a>
                 {% if countViewable == 0 %}
                 </li>
                 {% endif %}
@@ -279,15 +279,15 @@
         {% endif %}
 
             {% if currentUser.featureEnabled("report.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("report.view") }}">{% trans "All Reports" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}reporting/all-reports">{% trans "All Reports" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("report.scheduling") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("reportschedule.view") }}">{% trans "Report Schedules" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}reporting/report-schedules">{% trans "Report Schedules" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("report.saving") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("savedreport.view") }}">{% trans "Saved Reports" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}reporting/saved-reports">{% trans "Saved Reports" %}</a>
             {% endif %}
 
         {% if countViewable > 1 %}
@@ -296,7 +296,7 @@
         </li>
     {% endif %}
 
-    {% set countViewable = currentUser.featureEnabledCount(["log.view", "sessions.view", "auditlog.view", "fault.view"]) %}
+    {% set countViewable = currentUser.featureEnabledCount(["log.view", "sessions.view", "auditlog.view"]) %}
     {% set groupElementClass = (countViewable > 1) ? 'dropdown-item' : 'nav-link' %}
     {% if countViewable > 0 %}
         {% if countViewable > 1 %}
@@ -307,19 +307,15 @@
             <li class="nav-item">
         {% endif %}
             {% if currentUser.featureEnabled("log.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("log.view") }}">{% trans "Log" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}advanced/log">{% trans "Log" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("sessions.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("sessions.view") }}">{% trans "Sessions" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}advanced/sessions">{% trans "Sessions" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("auditlog.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("auditlog.view") }}">{% trans "Audit Trail" %}</a>
-            {% endif %}
-
-            {% if currentUser.featureEnabled("fault.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("fault.view") }}">{% trans "Report Fault" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}advanced/audit-trail">{% trans "Audit Trail" %}</a>
             {% endif %}
         {% if countViewable > 1 %}
             </div>
@@ -333,7 +329,7 @@
             <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% trans "Developer" %} <span class="caret"></span></a>
             <div class="dropdown-menu">
             {% if currentUser.featureEnabled("developer.edit") %}
-                <a class="dropdown-item" href="{{ url_for("developer.templates.view") }}">{% trans "Module Templates" %}</a>
+                <a class="dropdown-item" href="{{ theme.rootUri() }}developer/template">{% trans "Module Templates" %}</a>
             {% endif %}
             </div>
         </li>

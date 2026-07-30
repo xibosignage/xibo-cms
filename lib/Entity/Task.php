@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -24,6 +24,7 @@
 namespace Xibo\Entity;
 use Carbon\Carbon;
 use Cron\CronExpression;
+use OpenApi\Attributes as OA;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -33,6 +34,7 @@ use Xibo\Support\Exception\NotFoundException;
  * Class Task
  * @package Xibo\XTR
  */
+#[OA\Schema]
 class Task implements \JsonSerializable
 {
     use EntityTrait;
@@ -43,21 +45,52 @@ class Task implements \JsonSerializable
     public static $STATUS_SUCCESS = 4;
     public static $STATUS_TIMEOUT = 5;
 
+    #[OA\Property(description: 'The Task ID')]
     public $taskId;
+
+    #[OA\Property(description: 'The Task Name')]
     public $name;
+
+    #[OA\Property(description: 'The Task Config File')]
     public $configFile;
+
+    #[OA\Property(description: 'The Task Class')]
     public $class;
+
+    #[OA\Property(description: 'The Task Status')]
     public $status;
+
+    #[OA\Property(description: 'The Task PID')]
     public $pid = 0;
+
+    #[OA\Property(description: 'The Task Options')]
     public $options = [];
+
+    #[OA\Property(description: 'The Task Schedule')]
     public $schedule;
+
+    #[OA\Property(description: 'The Task Last Run Date')]
     public $lastRunDt = 0;
+
+    #[OA\Property(description: 'The Task Last Run Start Date')]
     public $lastRunStartDt;
+
+    #[OA\Property(description: 'The Task Last Run Message')]
     public $lastRunMessage;
+
+    #[OA\Property(description: 'The Task Last Run Status')]
     public $lastRunStatus;
+
+    #[OA\Property(description: 'The Task Last Run Duration')]
     public $lastRunDuration = 0;
+
+    #[OA\Property(description: 'The Task Last Run Exit Code')]
     public $lastRunExitCode = 0;
+
+    #[OA\Property(description: 'The Task Is Active')]
     public $isActive;
+
+    #[OA\Property(description: 'The Task Run Now')]
     public $runNow;
 
     /**

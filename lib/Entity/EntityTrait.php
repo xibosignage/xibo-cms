@@ -29,6 +29,7 @@ use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\ObjectVars;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Widget\Definition\Sql;
 
 /**
  * Class EntityTrait
@@ -428,6 +429,8 @@ trait EntityTrait
 
     public function updateFolders($table)
     {
+        $table = Sql::validateIdentifier($table, 'table');
+
         $this->getStore()->update('UPDATE `'. $table .'` SET permissionsFolderId = :permissionsFolderId, folderId = :folderId WHERE folderId = :oldFolderId', [
             'permissionsFolderId' => $this->permissionsFolderId,
             'folderId' => $this->folderId,

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -33,32 +33,25 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class CommandFactory extends BaseFactory
 {
-    /**
-     * Construct a factory
-     * @param User $user
-     * @param UserFactory $userFactory
-     */
-    public function __construct($user, $userFactory)
+    public function __construct(User $user, UserFactory $userFactory)
     {
         $this->setAclDependencies($user, $userFactory);
     }
 
     /**
-     * Create Command
      * @return Command
      */
-    public function create()
+    public function createEmpty(): Command
     {
         return new Command($this->getStore(), $this->getLog(), $this->getDispatcher());
     }
 
     /**
-     * Get by Id
-     * @param $commandId
+     * @param int $commandId
      * @return Command
      * @throws NotFoundException
      */
-    public function getById($commandId)
+    public function getById(int $commandId): Command
     {
         $commands = $this->query(null, ['commandId' => $commandId]);
 
@@ -70,13 +63,12 @@ class CommandFactory extends BaseFactory
     }
 
     /**
-     * Get by Display Profile Id
      * @param int $displayProfileId
      * @param string $type
      * @return Command[]
-     * @throws \Xibo\Support\Exception\NotFoundException
+     * @throws NotFoundException
      */
-    public function getByDisplayProfileId($displayProfileId, $type)
+    public function getByDisplayProfileId(int $displayProfileId, string $type): array
     {
         return $this->query(null, [
             'displayProfileId' => $displayProfileId,
@@ -85,46 +77,42 @@ class CommandFactory extends BaseFactory
     }
 
     /**
-     * @param $ownerId
+     * @param int $ownerId
      * @return Command[]
      * @throws NotFoundException
      */
-    public function getByOwnerId($ownerId): array
+    public function getByOwnerId(int $ownerId): array
     {
         return $this->query(null, ['disableUserCheck' => 1, 'userId' => $ownerId]);
     }
 
     /**
-     * @param array $sortOrder
+     * @param array|null $sortOrder
      * @param array $filterBy
      * @return Command[]
      * @throws NotFoundException
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query(?array $sortOrder = null, array $filterBy = []): array
     {
         $sanitizedFilter = $this->getSanitizer($filterBy);
         $entries = [];
 
-        if ($sortOrder == null) {
-            $sortOrder = ['command'];
-        }
-
         $params = [];
-        $select = 'SELECT `command`.commandId, 
-            `command`.command, 
-            `command`.code, 
-            `command`.description, 
-            `command`.userId, 
-            `command`.availableOn, 
-            `command`.commandString, 
+        $select = 'SELECT `command`.commandId,
+            `command`.command,
+            `command`.code,
+            `command`.description,
+            `command`.userId,
+            `command`.availableOn,
+            `command`.commandString,
             `command`.validationString,
-            `command`.createAlertOn 
+            `command`.createAlertOn
         ';
 
         if ($sanitizedFilter->getInt('displayProfileId') !== null) {
-            $select .= ', 
-                :displayProfileId AS displayProfileId, 
-                `lkcommanddisplayprofile`.commandString AS commandStringDisplayProfile, 
+            $select .= ',
+                :displayProfileId AS displayProfileId,
+                `lkcommanddisplayprofile`.commandString AS commandStringDisplayProfile,
                 `lkcommanddisplayprofile`.validationString AS validationStringDisplayProfile,
                 `lkcommanddisplayprofile`.createAlertOn AS createAlertOnDisplayProfile ';
         }
@@ -207,25 +195,22 @@ class CommandFactory extends BaseFactory
             $filterBy
         );
 
-        // Sorting?
-        $order = '';
-        if (is_array($sortOrder)) {
-            $order .= ' ORDER BY ' . implode(',', $sortOrder);
-        }
+        $allowedColumns = ['commandId', 'command', 'code', 'description', 'groupsWithPermissions'];
+        $sortOrder = $this->buildSortQuery($sortOrder, $allowedColumns, [], ['command ASC']);
+        $order = empty($sortOrder) ? '' : ' ORDER BY ' . implode(', ', $sortOrder);
 
         $limit = '';
-        // Paging
-        if ($filterBy !== null && $sanitizedFilter->getInt('start', $filterBy) !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+        if ($sanitizedFilter->hasParam('start') && $sanitizedFilter->hasParam('length')) {
+            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0])
+                . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new Command($this->getStore(), $this->getLog(), $this->getDispatcher()))->hydrate($row);
+            $entries[] = $this->createEmpty()->hydrate($row);
         }
 
-        // Paging
         if ($limit != '' && count($entries) > 0) {
             unset($params['permissionEntityForGroup']);
             $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);

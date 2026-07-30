@@ -1,0 +1,543 @@
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+import type { ColumnDef, PaginationState, SortingState } from '@tanstack/react-table';
+import { isAxiosError } from 'axios';
+import { useEffect, useState, useTransition } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import Modal from '../../../../components/ui/modals/Modal';
+
+import Checkbox from '@/components/ui/forms/Checkbox';
+import NumberInput from '@/components/ui/forms/NumberInput';
+import SelectDropdown from '@/components/ui/forms/SelectDropdown';
+import SelectFolder from '@/components/ui/forms/SelectFolder';
+import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagInput';
+import TextInput from '@/components/ui/forms/TextInput';
+import { DataTable } from '@/components/ui/table/DataTable';
+import { StatusCell, TagsCell, TextCell } from '@/components/ui/table/cells';
+import { getCommonFormOptions } from '@/config/commonForms';
+import { useUserContext } from '@/context/UserContext';
+import { useDebounce } from '@/hooks/useDebounce';
+import type { MediaFilterInput } from '@/pages/Library/Media/MediaConfig';
+import {
+  getStatusTypeFromMediaType,
+  INITIAL_FILTER_STATE,
+} from '@/pages/Library/Media/MediaConfig';
+import { useMediaData } from '@/pages/Library/Media/hooks/useMediaData';
+import { getPlaylistSchema } from '@/schema/playlists';
+import { updatePlaylist, createPlaylist } from '@/services/playlistApi';
+import type { Media } from '@/types/media';
+import type { Playlist } from '@/types/playlist';
+import type { Tag } from '@/types/tag';
+import { formatDuration } from '@/utils/formatters';
+import { hasFeature } from '@/utils/permissions';
+
+interface AddAndEditPlaylistModalProps {
+  type: 'add' | 'edit';
+  isOpen?: boolean;
+  data?: Playlist | null;
+  defaultFolderId?: number;
+  onClose: () => void;
+  onSave: (updated: Playlist) => void;
+}
+
+interface PlaylistDraft {
+  name: string;
+  folderId: number | null;
+  tags: Tag[];
+  enableStat: string;
+  isDynamic: boolean;
+  filterMediaName: string;
+  logicalOperatorName: 'OR' | 'AND';
+  filterMediaTag: Tag[];
+  exactTags: boolean;
+  logicalOperator: 'OR' | 'AND';
+  filterFolderId: number | null;
+  maxNumberOfItems: number;
+}
+
+const FALLBACK_MAX_NUMBER_OF_ITEMS = 30;
+
+const DEFAULT_DRAFT: PlaylistDraft = {
+  name: '',
+  folderId: null,
+  tags: [],
+  enableStat: 'Inherit',
+  isDynamic: false,
+  filterMediaName: '',
+  logicalOperatorName: 'OR',
+  filterMediaTag: [],
+  exactTags: false,
+  logicalOperator: 'OR',
+  filterFolderId: null,
+  maxNumberOfItems: FALLBACK_MAX_NUMBER_OF_ITEMS,
+};
+
+type PlaylistFormErrors = Partial<Record<keyof PlaylistDraft, string>>;
+
+const ENABLE_STAT_VALUES = ['On', 'Off', 'Inherit'] as const;
+
+const normalizeEnableStat = (value?: string): (typeof ENABLE_STAT_VALUES)[number] =>
+  ENABLE_STAT_VALUES.find((option) => option.toLowerCase() === (value ?? '').toLowerCase()) ??
+  'Inherit';
+
+const parseFilterTags = (value?: string): Tag[] =>
+  (value ?? '')
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .map((entry) => {
+      const [tag, rawValue] = entry.split('|');
+      return { tag: (tag ?? '').trim(), value: rawValue?.trim() ?? '', tagId: 0 };
+    });
+
+const buildDraftFromPlaylist = (data: Playlist): PlaylistDraft => ({
+  ...DEFAULT_DRAFT,
+  name: data.name,
+  folderId: data.folderId != null ? Number(data.folderId) : null,
+  tags: (data.tags ?? []).map((tag) => ({ ...tag })),
+  enableStat: normalizeEnableStat(data.enableStat),
+  isDynamic: Boolean(data.isDynamic),
+  filterMediaName: data.filterMediaName || '',
+  logicalOperatorName: data.filterMediaNameLogicalOperator || 'OR',
+  filterMediaTag: parseFilterTags(data.filterMediaTags),
+  exactTags: Boolean(data.filterExactTags),
+  logicalOperator: data.filterMediaTagsLogicalOperator || 'OR',
+  filterFolderId: data.filterFolderId ? Number(data.filterFolderId) : null,
+  maxNumberOfItems: Number(data.maxNumberOfItems) || 0,
+});
+
+export default function AddAndEditPlaylistModal({
+  type,
+  isOpen = true,
+  onClose,
+  data,
+  defaultFolderId,
+  onSave,
+}: AddAndEditPlaylistModalProps) {
+  const { t } = useTranslation();
+  const { user } = useUserContext();
+  const [isPending, startTransition] = useTransition();
+  const [formErrors, setFormErrors] = useState<PlaylistFormErrors>({});
+  const [apiError, setApiError] = useState<string | undefined>();
+  const [pendingTagInput, setPendingTagInput] = useState('');
+  const [hasTagPendingValue, setHasTagPendingValue] = useState(false);
+
+  const dynamicMaxItemsLimitSetting = Number(
+    user?.settings?.DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT,
+  );
+  const maxNumberOfItemsLimit =
+    dynamicMaxItemsLimitSetting > 0 ? dynamicMaxItemsLimitSetting : undefined;
+
+  const buildAddDraft = (): PlaylistDraft => {
+    const addDraft: PlaylistDraft = { ...DEFAULT_DRAFT, folderId: defaultFolderId ?? null };
+
+    const maxNumberDefault = Number(user?.settings?.DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER);
+    if (maxNumberDefault > 0) {
+      addDraft.maxNumberOfItems = maxNumberDefault;
+    }
+
+    const statsDefault = user?.settings?.PLAYLIST_STATS_ENABLED_DEFAULT;
+    if (statsDefault != null && String(statsDefault) !== '') {
+      addDraft.enableStat = normalizeEnableStat(String(statsDefault));
+    }
+
+    return addDraft;
+  };
+
+  const [draft, setDraft] = useState<PlaylistDraft>(() => {
+    if (type === 'edit' && data) {
+      return buildDraftFromPlaylist(data);
+    }
+    return buildAddDraft();
+  });
+
+  const [previewPagination, setPreviewPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 5,
+  });
+  const [previewSorting, setPreviewSorting] = useState<SortingState>([]);
+
+  const debouncedFilterMediaName = useDebounce(draft.filterMediaName, 500);
+
+  const { data: previewQueryData, isFetching: isFetchingPreview } = useMediaData({
+    pagination: previewPagination,
+    sorting: previewSorting,
+    filter: '',
+    folderId: draft.filterFolderId,
+    advancedFilters: {
+      ...INITIAL_FILTER_STATE,
+      media: debouncedFilterMediaName,
+      tags: draft.filterMediaTag,
+      exactTags: draft.exactTags,
+      assignable: 1,
+      logicalOperator: draft.logicalOperator,
+      logicalOperatorName: draft.logicalOperatorName,
+    } as MediaFilterInput,
+  });
+
+  const previewData = previewQueryData?.rows ?? [];
+  const previewPageCount = Math.ceil(
+    (previewQueryData?.totalCount || 0) / previewPagination.pageSize,
+  );
+
+  useEffect(() => {
+    if (type === 'edit' && data) {
+      setDraft(buildDraftFromPlaylist(data));
+    } else {
+      setDraft(buildAddDraft());
+    }
+
+    setApiError(undefined);
+    setFormErrors({});
+    setPendingTagInput('');
+  }, [data, type, defaultFolderId]);
+
+  const handleSave = () => {
+    startTransition(async () => {
+      const schema = getPlaylistSchema(t, maxNumberOfItemsLimit);
+      const result = schema.safeParse(draft);
+
+      if (!result.success) {
+        setApiError(t('Please fix the highlighted errors before saving.'));
+        const fieldErrors = result.error.flatten().fieldErrors;
+        const mappedErrors: PlaylistFormErrors = {};
+
+        Object.entries(fieldErrors).forEach(([key, value]) => {
+          if (value?.[0]) {
+            mappedErrors[key as keyof PlaylistFormErrors] = value[0];
+          }
+        });
+
+        setFormErrors(mappedErrors);
+        return;
+      }
+
+      setFormErrors({});
+      try {
+        const finalTags = collectTags(draft.tags, pendingTagInput);
+        setPendingTagInput('');
+
+        const payload = {
+          name: draft.name,
+          isDynamic: draft.isDynamic,
+          tags: serializeTags(finalTags),
+          enableStat: draft.enableStat,
+          folderId: draft.folderId,
+
+          ...(draft.isDynamic && {
+            filterMediaName: draft.filterMediaName,
+            logicalOperatorName: draft.logicalOperatorName,
+            filterMediaTag: serializeTags(draft.filterMediaTag),
+            exactTags: draft.exactTags,
+            logicalOperator: draft.logicalOperator,
+            filterFolderId: draft.filterFolderId,
+            maxNumberOfItems: draft.maxNumberOfItems,
+          }),
+        };
+
+        if (type === 'edit') {
+          if (!data) {
+            console.error('Playlist data is missing.');
+            return;
+          }
+
+          const updatedPlaylist = await updatePlaylist(data.playlistId, payload);
+          onSave({ ...data, ...updatedPlaylist });
+        } else {
+          const newPlaylist = await createPlaylist(payload);
+          onSave(newPlaylist);
+        }
+
+        onClose();
+      } catch (err: unknown) {
+        console.error('Failed to save playlist:', err);
+
+        if (isAxiosError(err) && err.response?.data?.message) {
+          setApiError(err.response.data.message);
+        } else if (err instanceof Error) {
+          setApiError(err.message);
+        } else {
+          setApiError(t('An unexpected error occurred while saving the playlist.'));
+        }
+      }
+    });
+  };
+
+  const hasActiveDynamicFilters = Boolean(
+    draft.filterFolderId !== null ||
+    draft.filterMediaName.trim() !== '' ||
+    draft.filterMediaTag.length > 0,
+  );
+
+  const previewColumns = [
+    {
+      accessorKey: 'mediaId',
+      header: t('ID'),
+      size: 70,
+      cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
+    },
+    {
+      accessorKey: 'name',
+      header: t('Name'),
+      size: 140,
+      enableHiding: false,
+      cell: (info) => <TextCell weight="bold">{info.getValue<string>()}</TextCell>,
+    },
+    {
+      accessorKey: 'mediaType',
+      header: t('Type'),
+      size: 100,
+      cell: (info) => {
+        const value = info.getValue() as string;
+        return <StatusCell label={value} type={getStatusTypeFromMediaType(value)} />;
+      },
+    },
+    {
+      accessorKey: 'tags',
+      header: t('Tags'),
+      enableSorting: false,
+      size: 120,
+      cell: (info) => {
+        const tags = info.getValue<Tag[]>() || [];
+        const formattedTags = tags.map((tag) => ({
+          id: tag.tagId,
+          label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
+        }));
+        return <TagsCell tags={formattedTags} noTagsPlaceholder="-" />;
+      },
+    },
+    {
+      id: 'formattedDuration',
+      accessorKey: 'duration',
+      header: t('Duration'),
+      size: 120,
+      cell: (info) => <TextCell>{formatDuration(info.getValue<number>())}</TextCell>,
+    },
+  ] as ColumnDef<Media>[];
+
+  const modalTitle = type === 'add' ? t('Add Playlist') : t('Edit Playlist');
+
+  return (
+    <Modal
+      variant="tabbed"
+      title={modalTitle}
+      onClose={onClose}
+      isOpen={isOpen}
+      isPending={isPending}
+      scrollable={false}
+      error={apiError}
+      actions={[
+        {
+          label: t('Cancel'),
+          onClick: onClose,
+          variant: 'secondary',
+          disabled: isPending,
+        },
+        {
+          label: isPending ? t('Saving…') : t('Save'),
+          onClick: handleSave,
+          disabled: isPending || hasTagPendingValue,
+        },
+      ]}
+    >
+      <div className="flex flex-col h-full overflow-y-hidden overflow-x-visible gap-3 px-4">
+        <div className="flex flex-col gap-3 flex-1 min-h-0 p-4 overflow-y-auto">
+          {/* Select Folder */}
+          <div className="relative z-20">
+            <SelectFolder
+              selectedId={draft.folderId}
+              onSelect={(folder) => {
+                setDraft((prev) => ({
+                  ...prev,
+                  folderId: folder ? folder.id : null,
+                }));
+              }}
+            />
+          </div>
+
+          {/* Name */}
+          <TextInput
+            name="name"
+            label={t('Name')}
+            placeholder={t('Enter Name')}
+            value={draft.name}
+            onChange={(name) => setDraft((prev) => ({ ...prev, name: name }))}
+            error={formErrors.name}
+          />
+
+          {/* Tags */}
+          {(hasFeature(user, 'tag.tagging') || (draft.tags?.length ?? 0) > 0) && (
+            <TagInput
+              value={draft.tags}
+              helpText={t('Tags (Comma-separated: Tag or Tag|Value)')}
+              onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
+              inputValue={pendingTagInput}
+              onInputChange={setPendingTagInput}
+              onPendingValueChange={setHasTagPendingValue}
+              disabled={!hasFeature(user, 'tag.tagging')}
+            />
+          )}
+
+          {/* Enable Stats */}
+          <SelectDropdown
+            label={t('Enable Playlist Stats Collection?')}
+            value={draft.enableStat}
+            placeholder={t('Inherit')}
+            options={getCommonFormOptions(t).inherit}
+            onSelect={(value) => {
+              setDraft((prev) => ({ ...prev, enableStat: value }));
+            }}
+            helpText={t(
+              `Enable the collection of Proof of Play statistics for this Playlist Item. Ensure that 'Enable Stats Collection' is set to 'On' in the Display Settings.`,
+            )}
+          />
+
+          {/* Dynamic */}
+          <div className="p-3 flex flex-col gap-3 bg-slate-50">
+            <Checkbox
+              id="isDynamic"
+              className="px-3 py-2.5 gap-1 items-start"
+              title={t('Dynamic Playlist')}
+              label={t(`Use filters to automatically manage media assignments for this playlist.`)}
+              checked={draft.isDynamic}
+              classNameLabel="text-xs"
+              onChange={() => setDraft((prev) => ({ ...prev, isDynamic: !prev.isDynamic }))}
+            />
+
+            {!!draft.isDynamic && (
+              <>
+                <div className="relative z-20">
+                  <SelectFolder
+                    selectedId={draft.filterFolderId}
+                    onSelect={(folder) => {
+                      setDraft((prev) => ({ ...prev, filterFolderId: folder ? folder.id : null }));
+                    }}
+                  />
+                </div>
+
+                <TextInput
+                  name="filterMediaName"
+                  label={t('Name Filter')}
+                  placeholder={t('Enter Name Filter')}
+                  value={draft.filterMediaName}
+                  onChange={(val) => setDraft((prev) => ({ ...prev, filterMediaName: val }))}
+                  suffix={
+                    <select
+                      className="bg-transparent text-sm font-semibold items-center justify-center text-gray-500 border-none focus:ring-0 cursor-pointer p-3 pr-8"
+                      value={draft.logicalOperatorName}
+                      onChange={(e) =>
+                        setDraft((prev) => ({
+                          ...prev,
+                          logicalOperatorName: e.target.value as 'OR' | 'AND',
+                        }))
+                      }
+                    >
+                      <option value="AND">AND</option>
+                      <option value="OR">OR</option>
+                    </select>
+                  }
+                  error={formErrors.filterMediaName}
+                />
+
+                {(hasFeature(user, 'tag.tagging') || (draft.filterMediaTag?.length ?? 0) > 0) && (
+                  <TagInput
+                    label={t('Tag Filter')}
+                    placeholder={t('Enter Tag Filter')}
+                    value={draft.filterMediaTag}
+                    onChange={(val) => setDraft((prev) => ({ ...prev, filterMediaTag: val }))}
+                    allowValues={false}
+                    disabled={!hasFeature(user, 'tag.tagging')}
+                    suffix={
+                      <div className="flex items-stretch">
+                        <label className="flex items-center gap-1.5 px-3 text-sm text-gray-500 border-gray-200 cursor-pointer border-e">
+                          <input
+                            type="checkbox"
+                            title={t('Exact')}
+                            className="shrink-0 mt-0.5 border-gray-200 rounded text-blue-600 focus:ring-blue-500"
+                            checked={draft.exactTags}
+                            onChange={(e) =>
+                              setDraft((prev) => ({ ...prev, exactTags: e.target.checked }))
+                            }
+                          />
+                        </label>
+                        <select
+                          className="bg-transparent text-sm font-semibold items-center justify-center text-gray-500 border-none focus:ring-0 cursor-pointer p-3 pr-8"
+                          value={draft.logicalOperator}
+                          onChange={(e) =>
+                            setDraft((prev) => ({
+                              ...prev,
+                              logicalOperator: e.target.value as 'OR' | 'AND',
+                            }))
+                          }
+                        >
+                          <option value="AND">AND</option>
+                          <option value="OR">OR</option>
+                        </select>
+                      </div>
+                    }
+                  />
+                )}
+
+                <NumberInput
+                  name="maxNumberOfItems"
+                  label={t('Max number of Items')}
+                  helpText={t(
+                    'The max number of Media items that can be dynamically assigned to this Playlist.',
+                  )}
+                  value={draft.maxNumberOfItems}
+                  onChange={(num) => setDraft((prev) => ({ ...prev, maxNumberOfItems: num }))}
+                  max={maxNumberOfItemsLimit}
+                  error={formErrors.maxNumberOfItems}
+                />
+
+                {hasActiveDynamicFilters && (
+                  <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="flex flex-col overflow-hidden">
+                      <DataTable
+                        columns={previewColumns}
+                        data={previewData}
+                        pageCount={previewPageCount}
+                        rowCount={previewQueryData?.totalCount || 0}
+                        pagination={previewPagination}
+                        onPaginationChange={setPreviewPagination}
+                        sorting={previewSorting}
+                        onSortingChange={setPreviewSorting}
+                        globalFilter=""
+                        onGlobalFilterChange={() => {}}
+                        rowSelection={{}}
+                        onRowSelectionChange={() => {}}
+                        loading={isFetchingPreview}
+                        enableSelection={false}
+                        hideToolbar={true}
+                      />
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </Modal>
+  );
+}

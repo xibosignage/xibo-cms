@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,112 +22,90 @@
 namespace Xibo\Entity;
 
 use Carbon\Carbon;
+use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
-
 /**
  * Class DisplayProfile
- * @package Xibo\Entity
  *
- * @SWG\Definition()
+ * @package Xibo\Entity
  */
+#[OA\Schema]
 class DisplayProfile implements \JsonSerializable
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(description="The ID of this Display Profile")
      * @var int
      */
+    #[OA\Property(description: 'The ID of this Display Profile')]
     public $displayProfileId;
 
     /**
-     * @SWG\Property(description="The name of this Display Profile")
      * @var string
      */
+    #[OA\Property(description: 'The name of this Display Profile')]
     public $name;
 
     /**
-     * @SWG\Property(description="The player type that this Display Profile is for")
      * @var string
      */
+    #[OA\Property(description: 'The player type that this Display Profile is for')]
     public $type;
 
     /**
-     * @SWG\Property(description="The configuration options for this Profile")
      * @var string[]
      */
+    #[OA\Property(description: 'The configuration options for this Profile')]
     public $config;
 
     /**
-     * @SWG\Property(description="A flag indicating if this profile should be used as the Default for the client type")
      * @var int
      */
+    #[OA\Property(description: 'A flag indicating if this profile should be used as the Default for the client type')]
     public $isDefault;
 
     /**
-     * @SWG\Property(description="The userId of the User that owns this profile")
      * @var int
      */
+    #[OA\Property(description: 'The userId of the User that owns this profile')]
     public $userId;
 
     /**
-     * @SWG\Property(description="The default configuration options for this Profile")
      * @var string[]
      */
+    #[OA\Property(description: 'The default configuration options for this Profile')]
     public $configDefault;
 
     /**
      * Commands associated with this profile.
+     *
      * @var Command[]
      */
     public $commands = [];
 
     public $isCustom;
 
-    /** @var  string the client type */
-    private $clientType;
+    /** @var string the client type */
+    private string $clientType = '';
 
     /** @var array Combined configuration */
-    private $configCombined = [];
+    private array $configCombined = [];
 
-    /**
-     * @var ConfigServiceInterface
-     */
-    private $configService;
-
-    /**
-     * @var CommandFactory
-     */
-    private $commandFactory;
-    /**
-     * @var DisplayProfileFactory
-     */
-    private $displayProfileFactory;
-
-    /**
-     * Entity constructor.
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
-     * @param ConfigServiceInterface $config
-     * @param CommandFactory $commandFactory
-     * @param DisplayProfileFactory $displayProfileFactory
-     */
-    public function __construct($store, $log, $dispatcher, $config, $commandFactory, $displayProfileFactory)
-    {
+    public function __construct(
+        $store,
+        $log,
+        $dispatcher,
+        private readonly ConfigServiceInterface $configService,
+        private readonly CommandFactory $commandFactory,
+        private readonly DisplayProfileFactory $displayProfileFactory,
+    ) {
         $this->setCommonDependencies($store, $log, $dispatcher);
-
-        $this->configService = $config;
-        $this->commandFactory = $commandFactory;
-        $this->displayProfileFactory = $displayProfileFactory;
     }
 
     public function __clone()
@@ -139,6 +117,7 @@ class DisplayProfile implements \JsonSerializable
 
     /**
      * Get Id
+     *
      * @return int
      */
     public function getId()
@@ -156,9 +135,10 @@ class DisplayProfile implements \JsonSerializable
 
     /**
      * Get Setting
-     * @param $setting
-     * @param null $default
-     * @param bool $fromDefault
+     *
+     * @param  $setting
+     * @param  null $default
+     * @param  bool $fromDefault
      * @return mixed
      * @throws \Xibo\Support\Exception\NotFoundException
      */
@@ -180,10 +160,11 @@ class DisplayProfile implements \JsonSerializable
 
     /**
      * Set setting
-     * @param $setting
-     * @param $value
-     * @param boolean $ownConfig if provided will set the values on this object and not on the member config object
-     * @param array|null $config
+     *
+     * @param  $setting
+     * @param  $value
+     * @param  boolean    $ownConfig if provided will set the values on this object and not on the member config object
+     * @param  array|null $config
      * @return $this
      * @throws \Xibo\Support\Exception\NotFoundException
      */
@@ -222,7 +203,12 @@ class DisplayProfile implements \JsonSerializable
         }
 
         if (!$found && $value !== $default) {
-            $this->getLog()->debug('Setting [' . $setting . '] not yet in the profile config, and different to the default. ' . var_export($value, true) . ' --- ' . var_export($default, true));
+            $this->getLog()->debug(
+                'Setting [%s] not yet in the profile config, and different to the default. %s --- %s',
+                $setting,
+                var_export($value, true),
+                var_export($default, true),
+            );
             // The config option isn't in our array yet, so add it
             $config[] = [
                 'name' => lcfirst($setting),
@@ -243,8 +229,9 @@ class DisplayProfile implements \JsonSerializable
 
     /**
      * Merge two configs
-     * @param $default
-     * @param $override
+     *
+     * @param  $default
+     * @param  $override
      * @return array
      */
     private function mergeConfigs($default, $override): array
@@ -281,6 +268,7 @@ class DisplayProfile implements \JsonSerializable
 
     /**
      * Get the client type
+     *
      * @return string
      */
     public function getClientType()
@@ -290,7 +278,8 @@ class DisplayProfile implements \JsonSerializable
 
     /**
      * Assign Command
-     * @param Command $command
+     *
+     * @param  Command $command
      * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function assignCommand($command)
@@ -317,7 +306,8 @@ class DisplayProfile implements \JsonSerializable
 
     /**
      * Unassign Command
-     * @param Command $command
+     *
+     * @param  Command $command
      * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function unassignCommand($command)
@@ -335,6 +325,7 @@ class DisplayProfile implements \JsonSerializable
 
     /**
      * Sets the Owner
+     *
      * @param int $ownerId
      */
     public function setOwner($ownerId)
@@ -344,13 +335,16 @@ class DisplayProfile implements \JsonSerializable
 
     /**
      * Load
-     * @param array $options
+     *
+     * @param  array $options
      * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function load($options = []): void
     {
-        $this->getLog()->debug('load: Loading display profile, type: ' . $this->clientType
-            . ' id: ' . $this->displayProfileId);
+        $this->getLog()->debug(
+            'load: Loading display profile, type: ' . $this->clientType
+            . ' id: ' . $this->displayProfileId
+        );
 
         $options = array_merge([
             'loadConfig' => true,
@@ -396,23 +390,51 @@ class DisplayProfile implements \JsonSerializable
 
     /**
      * Validate
+     *
      * @throws InvalidArgumentException
      */
     public function validate()
     {
-        if (!v::stringType()->notEmpty()->validate($this->name))
+        if (!v::stringType()->notEmpty()->validate($this->name)) {
             throw new InvalidArgumentException(__('Missing name'), 'name');
+        }
 
-        if (!v::stringType()->notEmpty()->validate($this->type))
+        if (!v::stringType()->notEmpty()->validate($this->type)) {
             throw new InvalidArgumentException(__('Missing type'), 'type');
+        }
 
         for ($j = 0; $j < count($this->config); $j++) {
-            if ($this->config[$j]['name'] == 'MaxConcurrentDownloads' && $this->config[$j]['value'] <= 0 && $this->type = 'windows') {
-                throw new InvalidArgumentException(__('Concurrent downloads must be a positive number'), 'MaxConcurrentDownloads');
+            $configName = $this->config[$j]['name'];
+            $configValue = $this->config[$j]['value'];
+
+            if ($configName == 'MaxConcurrentDownloads' && $configValue <= 0 && $this->type === 'windows') {
+                throw new InvalidArgumentException(
+                    __('Concurrent downloads must be a positive number'),
+                    'MaxConcurrentDownloads',
+                );
             }
 
-            if ($this->config[$j]['name'] == 'maxRegionCount' && !v::intType()->min(0)->validate($this->config[$j]['value'])) {
-                throw new InvalidArgumentException(__('Maximum Region Count must be a positive number'), 'maxRegionCount');
+            if ($configName == 'maxRegionCount' && !v::intType()->min(0)->validate($configValue)) {
+                throw new InvalidArgumentException(
+                    __('Maximum Region Count must be a positive number'),
+                    'maxRegionCount',
+                );
+            }
+
+            if ($configName == 'startOnBootDelay' && $configValue < 10) {
+                throw new InvalidArgumentException(
+                    __('Start delay for device start up must be at least 10'),
+                    'startOnBootDelay',
+                );
+            }
+
+            if (in_array($configName, ['actionBarDisplayDuration', 'screenShotRequestInterval', 'screenShotSize'])
+                && $configValue < 0
+            ) {
+                throw new InvalidArgumentException(
+                    __('This field must be a non-negative number'),
+                    $configName,
+                );
             }
         }
         // Check there is only 1 default (including this one)
@@ -439,48 +461,63 @@ class DisplayProfile implements \JsonSerializable
 
     /**
      * Save
-     * @param bool $validate
+     *
+     * @param  bool $validate
      * @throws InvalidArgumentException
      */
-    public function save($validate = true)
+    public function save(bool $validate = true): void
     {
-        if ($validate)
+        if ($validate) {
             $this->validate();
+        }
 
-        if ($this->displayProfileId == null || $this->displayProfileId == 0)
+        if ($this->displayProfileId == null || $this->displayProfileId == 0) {
             $this->add();
-        else
+        } else {
             $this->edit();
+        }
 
         $this->manageAssignments();
     }
 
     /**
      * Delete
+     *
      * @throws InvalidArgumentException
      */
-    public function delete()
+    public function delete(): void
     {
         $this->commands = [];
         $this->manageAssignments();
 
-        if ($this->getStore()->exists('SELECT displayId FROM display WHERE displayProfileId = :displayProfileId', ['displayProfileId' => $this->displayProfileId]) ) {
-            throw new InvalidArgumentException(__('This Display Profile is currently assigned to one or more Displays'), 'displayProfileId');
+        $sql = 'SELECT displayId FROM display WHERE displayProfileId = :displayProfileId';
+        if ($this->getStore()->exists($sql, ['displayProfileId' => $this->displayProfileId])) {
+            throw new InvalidArgumentException(
+                __('This Display Profile is currently assigned to one or more Displays'),
+                'displayProfileId',
+            );
         }
 
         if ($this->isDefault === 1) {
             throw new InvalidArgumentException(__('Cannot delete default Display Profile.'), 'isDefault');
         }
 
-        $this->getStore()->update('DELETE FROM `displayprofile` WHERE displayprofileid = :displayProfileId', ['displayProfileId' => $this->displayProfileId]);
+        $this->getStore()->update(
+            'DELETE FROM `displayprofile` WHERE displayprofileid = :displayProfileId',
+            ['displayProfileId' => $this->displayProfileId],
+        );
     }
 
     /**
      * Manage Assignments
      */
-    private function manageAssignments()
+    private function manageAssignments(): void
     {
-        $this->getLog()->debug('Managing Assignment for Display Profile: %d. %d commands.', $this->displayProfileId, count($this->commands));
+        $this->getLog()->debug(
+            'Managing Assignment for Display Profile: %d. %d commands.',
+            $this->displayProfileId,
+            count($this->commands),
+        );
 
         // Link
         foreach ($this->commands as $command) {
@@ -535,7 +572,7 @@ class DisplayProfile implements \JsonSerializable
         $this->getStore()->update($sql, $params);
     }
 
-    private function add()
+    private function add(): void
     {
         $this->displayProfileId = $this->getStore()->insert('
             INSERT INTO `displayprofile` (`name`, type, config, isdefault, userid, isCustom)
@@ -550,7 +587,7 @@ class DisplayProfile implements \JsonSerializable
         ]);
     }
 
-    private function edit()
+    private function edit(): void
     {
         $this->getStore()->update('
           UPDATE `displayprofile`
@@ -573,26 +610,9 @@ class DisplayProfile implements \JsonSerializable
         return $this->configCombined;
     }
 
-    public function getCustomEditTemplate()
-    {
-        if ($this->isCustom()) {
-            return $this->displayProfileFactory->getCustomEditTemplate($this->getClientType());
-        } else {
-            $this->getLog()->error(
-                'Attempting to get Custom Edit template for Display Profile ' .
-                $this->getClientType() . ' that is not custom'
-            );
-            return null;
-        }
-    }
-
-    public function handleCustomFields($sanitizedParams, $config = null, $display = null)
-    {
-        return $this->displayProfileFactory->handleCustomFields($this, $sanitizedParams, $config, $display);
-    }
-
     /**
      * Does this display profile has elevated log level?
+     *
      * @return bool
      * @throws NotFoundException
      */
@@ -600,11 +620,13 @@ class DisplayProfile implements \JsonSerializable
     {
         $elevatedUntil = $this->getSetting('elevateLogsUntil', 0);
 
-        $this->getLog()->debug(sprintf(
-            'Testing whether this display profile has elevated log level. %d vs %d.',
-            $elevatedUntil,
-            Carbon::now()->format('U')
-        ));
+        $this->getLog()->debug(
+            sprintf(
+                'Testing whether this display profile has elevated log level. %d vs %d.',
+                $elevatedUntil,
+                Carbon::now()->format('U')
+            )
+        );
 
         return (!empty($elevatedUntil) && $elevatedUntil >= Carbon::now()->format('U'));
     }

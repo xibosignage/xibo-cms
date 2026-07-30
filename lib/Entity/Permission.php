@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,89 +22,89 @@
 
 
 namespace Xibo\Entity;
+use OpenApi\Attributes as OA;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class Permission
  * @package Xibo\Entity
- *
- * @SWG\Definition()
  */
+#[OA\Schema]
 class Permission implements \JsonSerializable
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(description="The ID of this Permission Record")
      * @var int
      */
+    #[OA\Property(description: 'The ID of this Permission Record')]
     public $permissionId;
 
     /**
-     * @SWG\Property(description="The Entity ID that this Permission refers to")
      * @var int
      */
+    #[OA\Property(description: 'The Entity ID that this Permission refers to')]
     public $entityId;
 
     /**
-     * @SWG\Property(description="The User Group ID that this permission refers to")
      * @var int
      */
+    #[OA\Property(description: 'The User Group ID that this permission refers to')]
     public $groupId;
 
     /**
-     * @SWG\Property(description="The object ID that this permission refers to")
      * @var int
      */
+    #[OA\Property(description: 'The object ID that this permission refers to')]
     public $objectId;
 
     /**
-     * @SWG\Property(description="A flag indicating whether the groupId refers to a user specific group")
      * @var int
      */
+    #[OA\Property(description: 'A flag indicating whether the groupId refers to a user specific group')]
     public $isUser;
 
     /**
-     * @SWG\Property(description="The entity name that this refers to")
      * @var string
      */
+    #[OA\Property(description: 'The entity name that this refers to')]
     public $entity;
 
     /**
-     * @SWG\Property(description="Legacy for when the Object ID is a string")
      * @var string
      */
+    #[OA\Property(description: 'Legacy for when the Object ID is a string')]
     public $objectIdString;
 
     /**
-     * @SWG\Property(description="The group name that this refers to")
      * @var string
      */
+    #[OA\Property(description: 'The group name that this refers to')]
     public $group;
 
     /**
-     * @SWG\Property(description="A flag indicating whether view permission is granted")
      * @var int
      */
+    #[OA\Property(description: 'A flag indicating whether view permission is granted')]
     public $view;
 
     /**
-     * @SWG\Property(description="A flag indicating whether edit permission is granted")
      * @var int
      */
+    #[OA\Property(description: 'A flag indicating whether edit permission is granted')]
     public $edit;
 
     /**
-     * @SWG\Property(description="A flag indicating whether delete permission is granted")
      * @var int
      */
+    #[OA\Property(description: 'A flag indicating whether delete permission is granted')]
     public $delete;
 
     /**
-     * @SWG\Property(description="A flag indicating whether modify permission permission is granted.")
      * @var int
      */
+    #[OA\Property(description: 'A flag indicating whether modify permission permission is granted.')]
     public $modifyPermissions;
 
     /**

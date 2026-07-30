@@ -541,28 +541,27 @@ class MediaFactory extends BaseFactory
     public function query($sortOrder = null, $filterBy = [])
     {
         $sanitizedFilter = $this->getSanitizer($filterBy);
+        $allowedColumns = [
+            'mediaId', 'name', 'type', 'duration', 'fileSize', 'owner', 'sharing', 'released', 'fileName',
+            'enableStat', 'createdDt', 'modifiedDt', 'expires', 'groupsWithPermissions'
+        ];
+        $customColumns = [
+            'revised'           => '`parentId`',
+            'formattedDuration' => '`duration`',
+            'durationSeconds'   => '`duration`',
+            'fileSizeFormatted' => '`fileSize`',
+            'mediaType'         => 'media.`type`',
+            'resolution'        => '(media.`width` * media.`height`)'
+        ];
 
-        if ($sortOrder === null) {
-            $sortOrder = ['name'];
-        }
-
-        $newSortOrder = [];
-        foreach ($sortOrder as $sort) {
-            if ($sort == '`revised`') {
-                $newSortOrder[] = '`parentId`';
-                continue;
-            }
-
-            if ($sort == '`revised` DESC') {
-                $newSortOrder[] = '`parentId` DESC';
-                continue;
-            }
-            $newSortOrder[] = $sort;
-        }
-        $sortOrder = $newSortOrder;
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            $customColumns,
+            ['name ASC']
+        );
 
         $entries = [];
-
         $params = [];
         $select = '
             SELECT `media`.mediaId,
@@ -590,6 +589,8 @@ class MediaFactory extends BaseFactory
                `media`.width,
                `media`.height,
                `user`.UserName AS owner,
+               `user`.email AS userEmail,
+               `folder`.folderName,
             ';
         $select .= '     (SELECT GROUP_CONCAT(DISTINCT `group`.group)
                               FROM `permission`
@@ -611,6 +612,8 @@ class MediaFactory extends BaseFactory
 
         // Media might be linked to the system user (userId 0)
         $body .= '   LEFT OUTER JOIN `user` ON `user`.userId = `media`.userId ';
+
+        $body .= '   LEFT OUTER JOIN `folder` ON `folder`.folderId = `media`.folderId ';
 
         if ($sanitizedFilter->getInt('displayGroupId') !== null) {
             $body .= '
@@ -952,6 +955,17 @@ class MediaFactory extends BaseFactory
             $params['duration'] = $duration['variable'];
         }
 
+        // Modified Date filter
+        if ($sanitizedFilter->getDate('modifiedDateFrom') !== null) {
+            $body .= ' AND media.modifiedDt >= :modifiedDateFrom ';
+            $params['modifiedDateFrom'] = $sanitizedFilter->getDate('modifiedDateFrom');
+        }
+
+        if ($sanitizedFilter->getDate('modifiedDateTo') !== null) {
+            $body .= ' AND media.modifiedDt <= :modifiedDateTo ';
+            $params['modifiedDateTo'] = $sanitizedFilter->getDate('modifiedDateTo');
+        }
+
         if ($sanitizedFilter->getInt('folderId') !== null) {
             $body .= ' AND media.folderId = :folderId ';
             $params['folderId'] = $sanitizedFilter->getInt('folderId');
@@ -982,11 +996,8 @@ class MediaFactory extends BaseFactory
         );
 
         // Sorting?
-        $order = '';
-        if (is_array($sortOrder)) {
-            $order .= ' ORDER BY ' . implode(',', $sortOrder);
-        }
-
+        $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
+        
         $limit = '';
         // Paging
         if ($sanitizedFilter->hasParam('start') && $sanitizedFilter->hasParam('length')) {

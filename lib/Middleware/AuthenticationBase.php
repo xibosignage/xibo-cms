@@ -26,6 +26,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use Xibo\Support\Exception\AuthenticationRequiredException;
 
 /**
  * Class AuthenticationBase
@@ -42,15 +43,10 @@ abstract class AuthenticationBase implements Middleware, AuthenticationInterface
      * @param Request $request
      * @param RequestHandler $handler
      * @return Response
-     * @throws \Xibo\Support\Exception\AccessDeniedException
-     * @throws \Xibo\Support\Exception\ConfigurationException
-     * @throws \Xibo\Support\Exception\NotFoundException
+     * @throws \Xibo\Support\Exception\AuthenticationRequiredException
      */
     public function process(Request $request, RequestHandler $handler): Response
     {
-        // This Middleware protects the Web Route, so we update the request with that name
-        $request = $request->withAttribute('_entryPoint', 'web');
-
         // Add any authentication specific request modifications
         $request = $this->addToRequest($request);
 
@@ -79,10 +75,6 @@ abstract class AuthenticationBase implements Middleware, AuthenticationInterface
                 // Handle the rest of the Middleware stack and return
                 return $handler->handle($request);
             } else {
-                // Session has expired or the user is already logged out.
-                // in either case, capture the route
-                $this->rememberRoute($request->getUri()->getPath());
-
                 $this->getLog()->debug('not in public routes, expired, should redirect to login');
 
                 // We update the last accessed date on the user here, if there was one logged in at this point
@@ -90,8 +82,16 @@ abstract class AuthenticationBase implements Middleware, AuthenticationInterface
                     $user->touch();
                 }
 
-                // Issue appropriate logout depending on the type of web request
-                return $this->redirectToLogin($request);
+                // Session has expired or the user is already logged out.
+                // in either case, capture the route
+                if ($request->getAttribute('_entryPoint') === 'web') {
+                    $this->rememberRoute($request->getUri()->getPath());
+
+                    // Issue appropriate logout depending on the type of web request
+                    return $this->redirectToLogin($request);
+                } else {
+                    throw new AuthenticationRequiredException('Unauthorized', 401);
+                }
             }
         } else {
             // This is a public route.
@@ -106,7 +106,11 @@ abstract class AuthenticationBase implements Middleware, AuthenticationInterface
                 }
 
                 // Issue appropriate logout depending on the type of web request
-                return $this->redirectToLogin($request);
+                if ($request->getAttribute('_entryPoint') === 'web') {
+                    return $this->redirectToLogin($request);
+                } else {
+                    throw new AuthenticationRequiredException('Unauthorized', 401);
+                }
             } else {
                 // We handle the rest of the request, unauthenticated.
                 return $handler->handle($request);

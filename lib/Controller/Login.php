@@ -22,7 +22,6 @@
 namespace Xibo\Controller;
 
 use RobThree\Auth\TwoFactorAuth;
-use Slim\Flash\Messages;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Routing\RouteContext;
@@ -32,6 +31,7 @@ use Xibo\Helper\Environment;
 use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\LogoutTrait;
 use Xibo\Helper\Random;
+use Xibo\Helper\SafeRedirect;
 use Xibo\Helper\Session;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
@@ -48,45 +48,11 @@ class Login extends Base
 {
     use LogoutTrait;
 
-    /** @var Session */
-    private $session;
-
-    /** @var UserFactory */
-    private $userFactory;
-
-    /** @var \Stash\Interfaces\PoolInterface */
-    private $pool;
-    /**
-     * @var Messages
-     */
-    private $flash;
-
-    /**
-     * Set common dependencies.
-     * @param Session $session
-     * @param UserFactory $userFactory
-     * @param \Stash\Interfaces\PoolInterface $pool
-     */
-    public function __construct($session, $userFactory, $pool)
-    {
-        $this->session = $session;
-        $this->userFactory = $userFactory;
-        $this->pool = $pool;
-    }
-
-    /**
-     * Get Flash Message
-     *
-     * @return Messages
-     */
-    protected function getFlash()
-    {
-        return $this->flash;
-    }
-
-    public function setFlash(Messages $messages)
-    {
-        $this->flash = $messages;
+    public function __construct(
+        private readonly Session $session,
+        private readonly UserFactory $userFactory,
+        private readonly \Stash\Interfaces\PoolInterface $pool,
+    ) {
     }
 
     /**
@@ -97,13 +63,14 @@ class Login extends Base
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function loginForm(Request $request, Response $response)
+    public function loginForm(Request $request, Response $response): \Psr\Http\Message\ResponseInterface
     {
         // Sanitize the body
         $sanitizedRequestBody = $this->getSanitizer($request->getParams());
 
         // Check to see if the user has provided a special token
         $nonce = $sanitizedRequestBody->getString('nonce');
+        $loginError = '';
 
         if ($nonce != '') {
             // We have a nonce provided, so validate that in preference to showing the form.
@@ -116,10 +83,10 @@ class Login extends Base
 
             if ($cache->isMiss()) {
                 $this->getLog()->error('Expired nonce used.');
-                $this->getFlash()->addMessageNow('login_message', __('This link has expired.'));
+                $loginError = __('This link has expired.');
             } else if (!password_verify($nonce[1], $validated['hash'])) {
                 $this->getLog()->error('Invalid nonce used.');
-                $this->getFlash()->addMessageNow('login_message', __('This link has expired.'));
+                $loginError = __('This link has expired.');
             } else {
                 // We're valid.
                 $this->pool->deleteItem('/nonce/' . $nonce[0]);
@@ -154,47 +121,123 @@ class Login extends Base
                         'UserAgent' => $request->getHeader('User-Agent')
                     ]);
 
+                    // Commit the new session to the DB before the redirect, so
+                    // the immediate /user/me the React app fires on load can't
+                    // race the session write. See Session::persist().
+                    $this->session->persist();
+
                     return $response->withRedirect($this->urlFor($request, 'home'));
                 } catch (NotFoundException $notFoundException) {
                     $this->getLog()->error('Valid nonce for non-existing user');
-                    $this->getFlash()->addMessageNow('login_message', __('This link has expired.'));
+                    $loginError = __('This link has expired.');
                 }
             }
         }
 
-        // Check to see if the password reminder functionality is enabled.
-        $passwordReminderEnabled = $this->getConfig()->getSetting('PASSWORD_REMINDER_ENABLED');
-        $mailFrom = $this->getConfig()->getSetting('mail_from');
+        $passwordReminderEnabled = $this->isPasswordReminderEnabled();
         $authCASEnabled = isset($this->getConfig()->casSettings);
+        $logoUrl = $this->getBrandLogoUrl();
 
-        // Template
-        $this->getState()->template = 'login';
+        // Build config blob for the React SPA shell
+        $loginConfig = [
+            'priorRoute' => SafeRedirect::sanitizeRoute(
+                $sanitizedRequestBody->getString('priorRoute')
+            ),
+            'loginError'              => $loginError,
+            'logoUrl'                 => $logoUrl,
+            'logoDarkUrl'             => $this->getBrandLogoDarkUrl(),
+            'passwordReminderEnabled' => $passwordReminderEnabled,
+            'authCASEnabled'          => $authCASEnabled,
+            'version'                 => Environment::$WEBSITE_VERSION_NAME,
+            'appName'                 => $this->getConfig()->getThemeConfig('app_name', 'Xibo'),
+            'supportUrl'              => $this->getConfig()->getThemeConfig(
+                'theme_url',
+                'https://xibosignage.com'
+            ),
+            'sourceUrl'               => $this->getConfig()->getThemeConfig(
+                'cms_source_url',
+                'https://github.com/xibosignage/xibo-cms'
+            ),
+            'removeLicenceFromLogin'  => (bool)$this->getConfig()->getThemeConfig(
+                'remove_licence_from_login',
+                false
+            ),
+            'i18n' => [
+                // Common
+                'username'             => __('Username'),
+                'password'             => __('Password'),
+                'usernamePlaceholder'  => __('Enter username'),
+                'passwordPlaceholder'  => __('Enter password'),
+                'showPassword'         => __('Show password'),
+                'hidePassword'         => __('Hide password'),
+                'loginButton'          => __('Login'),
+                'backToLogin'          => __('Back to login'),
+                'loginInstead'         => __('Login instead?'),
+                'unexpectedError'      => __('An unexpected error occurred. Please try again.'),
+                'rateLimitError'       => __('Too many attempts. Please wait before trying again.'),
+                // Login form
+                'loginPrompt'          => __('Please provide your credentials'),
+                'forgotPasswordLink'   => __('Forgot Password?'),
+                'invalidCredentials'   => __('Username or password incorrect.'),
+                'casPrompt'            => __('Connect with the Central Authentication Server'),
+                'casLoginButton'       => __('CAS Login'),
+                // Two-factor
+                'tfaPrompt'            => __('Please provide your Two Factor Authorisation Code'),
+                'tfaRecoveryPrompt'    => __('Please provide your Two Factor Recovery Code'),
+                'tfaCode'              => __('Code'),
+                'tfaRecoveryCode'      => __('Recovery Code'),
+                'tfaCodePlaceholder'         => __('Enter code'),
+                'tfaRecoveryCodePlaceholder' => __('Enter recovery code'),
+                'tfaVerifyButton'      => __('Verify'),
+                'tfaSwitchToRecovery'  => __('Use Recovery Code instead?'),
+                'tfaSwitchToCode'      => __('Use Two Factor Code instead?'),
+                'tfaInvalidCode'       => __('Authentication code incorrect.'),
+                // Forgot password
+                'forgotPrompt'         => __('Please provide your username and we will send a password reset link.'),
+                'forgotSendButton'     => __('Send Reset'),
+                'forgotSentMessage'    =>
+                    __('A reminder email will be sent to the associated email address if this user exists.'),
+                'forgotSentReturnLink' => __('Return to login'),
+                // Footer
+                'versionLabel'         => __('Version'),
+                'sourceLabel'          => __('Source'),
+                'aboutLabel'           => __('About'),
+                'closeLabel'           => __('Close'),
+            ],
+        ];
+
+        $this->getState()->template = 'login-spa';
         $this->getState()->setData([
-            'passwordReminderEnabled' => (($passwordReminderEnabled === 'On' || $passwordReminderEnabled === 'On except Admin') && $mailFrom != ''),
-            'authCASEnabled' => $authCASEnabled,
-            'version' => Environment::$WEBSITE_VERSION_NAME
+            'loginConfigJson' => json_encode(
+                $loginConfig,
+                JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE
+            ),
+            'loginJsUrl'      => \Xibo\Helper\ViteManifest::getJsUrl('login.html', $this->getConfig()->rootUri()),
+            'loginCssUrls'    => \Xibo\Helper\ViteManifest::getCssUrls('login.html', $this->getConfig()->rootUri()),
+            'assetBase'       => \Xibo\Helper\ViteManifest::getAssetBase($this->getConfig()->rootUri()),
+            'viteClientUrl'   => \Xibo\Helper\ViteManifest::getClientUrl(),
+            'viteRefreshUrl'  => \Xibo\Helper\ViteManifest::getRefreshUrl(),
         ]);
-       return $this->render($request, $response);
+        return $this->render($request, $response);
     }
 
     /**
      * Login
      * @param Request $request
      * @param Response $response
-     * @return \Slim\Http\Response
+     * @return \Psr\Http\Message\ResponseInterface
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
-    public function login(Request $request, Response $response): Response
+    public function login(Request $request, Response $response): \Psr\Http\Message\ResponseInterface
     {
-        $parsedRequest = $this->getSanitizer($request->getParsedBody());
-        $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-
-        // Capture the prior route (if there is one)
-        $redirect = $this->urlFor($request, 'login');
+        $parsedRequest = $this->getSanitizer($request->getParams());
         $priorRoute = $parsedRequest->getString('priorRoute');
-
         try {
+            // Per-IP rate limit: 5 failed login attempts per 15 minutes.
+            // Checked before the user lookup so attackers cannot enumerate usernames freely.
+            $this->enforceRateLimit($request, 'login', 5, 900);
+
             // Get our username and password
             $username = $parsedRequest->getString('username');
             $password = $parsedRequest->getString('password');
@@ -215,55 +258,91 @@ class Login extends Base
                 // Check password
                 $user->checkPassword($password);
 
+                // Successful auth — drop the failure counter for this IP.
+                $this->resetRateLimit($request, 'login');
+
                 // check if 2FA is enabled
                 if ($user->twoFactorTypeId != 0) {
                     $_SESSION['tfaUsername'] = $user->userName;
-                    $this->getFlash()->addMessage('priorRoute', $priorRoute);
-                    return $response->withRedirect($routeParser->urlFor('tfa'));
+
+                    if ($user->twoFactorTypeId === 1) {
+                        $this->sendTwoFactorEmail($user, $request);
+                    }
+                    return $response->withJson([
+                        'status'     => '2fa_required',
+                        'priorRoute' => SafeRedirect::sanitizeRoute($priorRoute),
+                    ]);
                 }
 
                 // We are logged in, so complete the login flow
                 $this->completeLoginFlow($user, $request);
+
+                // Commit the new session to the DB before responding, so the
+                // immediate /user/me the React app fires after redirect can't
+                // race the session write. See Session::persist().
+                $this->session->persist();
+
+                return $response->withJson([
+                    'status' => 'ok',
+                    'isPasswordChangeRequired' => $user->isPasswordChangeRequired === 1,
+                ]);
             } catch (NotFoundException) {
                 throw new AccessDeniedException(__('User not found'));
             }
-
-            $redirect = $this->getRedirect($request, $priorRoute);
         } catch (AccessDeniedException $e) {
+            $isRateLimited = str_contains($e->getMessage(), 'Too many attempts');
+            if (!$isRateLimited) {
+                $this->recordRateLimitHit($request, 'login', 900);
+            }
             $this->getLog()->warning($e->getMessage());
-            $this->getFlash()->addMessage('login_message', __('Username or Password incorrect'));
-            $this->getFlash()->addMessage('priorRoute', $priorRoute);
-        } catch (ExpiredException $e) {
-            $this->getFlash()->addMessage('priorRoute', $priorRoute);
+
+            return $response->withJson(
+                [
+                    'status' => $isRateLimited ? 'rate_limited' : 'error',
+                    'message' => __('Username or Password incorrect'),
+                ],
+                $isRateLimited ? 429 : 401
+            );
+        } catch (ExpiredException) {
+            return $response->withJson(['status' => 'error', 'message' => __('Session expired')], 401);
         }
-        $this->setNoOutput(true);
-        $this->getLog()->debug('Redirect to ' . $redirect);
-        return $response->withRedirect($redirect);
     }
 
     /**
      * Forgotten password link requested
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return \Psr\Http\Message\ResponseInterface
      * @throws ConfigurationException
      * @throws \PHPMailer\PHPMailer\Exception
      * @throws \Twig\Error\LoaderError
      * @throws \Twig\Error\RuntimeError
      * @throws \Twig\Error\SyntaxError
      */
-    public function forgottenPassword(Request $request, Response $response)
+    public function forgottenPassword(Request $request, Response $response): \Psr\Http\Message\ResponseInterface
     {
-        // Is this functionality enabled?
-        $passwordReminderEnabled = $this->getConfig()->getSetting('PASSWORD_REMINDER_ENABLED');
         $mailFrom = $this->getConfig()->getSetting('mail_from');
+        $parsedRequest = $this->getSanitizer($request->getParams());
 
-        $parsedRequest = $this->getSanitizer($request->getParsedBody());
-        $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-
-        if (!(($passwordReminderEnabled === 'On' || $passwordReminderEnabled === 'On except Admin') && $mailFrom != '')) {
+        if (!$this->isPasswordReminderEnabled()) {
             throw new ConfigurationException(__('This feature has been disabled by your administrator'));
         }
+
+        // Per-IP rate limit: 3 password-reset requests per hour. Independent of whether the
+        // requested username exists, so an attacker cannot use this endpoint for unbounded
+        // enumeration even with timing-based username inference.
+        try {
+            $this->enforceRateLimit($request, 'pwreset', 3, 3600);
+        } catch (AccessDeniedException) {
+            // Constant-time pad on the throttle path so attackers can't distinguish
+            // "rate-limited" from "user not found" via response timing.
+            usleep(random_int(200000, 400000));
+            return $response->withJson([
+                'status' => 'ok',
+                'message' => __('A reminder email will been sent to this user if they exist'),
+            ]);
+        }
+        $this->recordRateLimitHit($request, 'pwreset', 3600);
 
         // Get our username
         $username = $parsedRequest->getString('username');
@@ -274,7 +353,6 @@ class Login extends Base
         // Check to see if the provided username is valid, and if so, record a nonce and send them a link
         try {
             // Get our user
-            /* @var User $user */
             $user = $this->userFactory->getByName($username);
 
             // Does this user have an email address associated to their user record?
@@ -283,7 +361,9 @@ class Login extends Base
             }
 
             // Nonce parts (nonce isn't ever stored, only the hash of it is stored, it only exists in the email)
-            $action = 'user-reset-password-' . Random::generateString(10);
+            // Both halves are 20 hex chars (80 bits each) — the action half is the cache lookup
+            // key, the nonce half is the secret that's bcrypt-hashed and compared.
+            $action = 'user-reset-password-' . Random::generateString(20);
             $nonce = Random::generateString(20);
 
             // Create a nonce for this user and store it somewhere
@@ -299,8 +379,11 @@ class Login extends Base
             // Save cache
             $this->pool->save($cache);
 
-            // Make a link
-            $link = ((new HttpsDetect())->getRootUrl()) . $routeParser->urlFor('login') . '?nonce=' . $action . '::' . $nonce;
+            // Make a link. Pass config so WHITELIST_HOSTS (if set) defeats Host-header
+            // injection into the reset link sent off-system to the user's email.
+            $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+            $link = ((new HttpsDetect($this->getConfig()))->getRootUrl())
+                . $routeParser->urlFor('login') . '?nonce=' . $action . '::' . $nonce;
 
             // Uncomment this to get a debug message showing the link.
             //$this->getLog()->debug('Link is:' . $link);
@@ -347,11 +430,6 @@ class Login extends Base
 
             if (!$mail->send()) {
                 throw new ConfigurationException('Unable to send password reminder to ' . $user->email);
-            } else {
-                $this->getFlash()->addMessage(
-                    'login_message',
-                    __('A reminder email will been sent to this user if they exist'),
-                );
             }
 
             // Audit Log
@@ -359,23 +437,26 @@ class Login extends Base
                 'UserAgent' => $request->getHeader('User-Agent')
             ]);
         } catch (GeneralException) {
-            $this->getFlash()->addMessage(
-                'login_message',
-                __('A reminder email will been sent to this user if they exist'),
-            );
+            // Constant-time pad: the success path sends mail (PHPMailer SMTP round trip,
+            // typically a few hundred ms). The failure path returns immediately. Without
+            // padding here, the response-time delta lets an attacker enumerate which
+            // usernames exist despite the identical flash message. Pad to 200-400ms.
+            usleep(random_int(200000, 400000));
         }
 
-        $this->setNoOutput(true);
-        return $response->withRedirect($routeParser->urlFor('login'));
+        return $response->withJson([
+            'status' => 'ok',
+            'message' => __('A reminder email will been sent to this user if they exist'),
+        ]);
     }
 
     /**
      * Log out
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return \Psr\Http\Message\ResponseInterface
      */
-    public function logout(Request $request, Response $response)
+    public function logout(Request $request, Response $response): \Psr\Http\Message\ResponseInterface
     {
         $redirect = true;
 
@@ -396,11 +477,11 @@ class Login extends Base
      * Ping Pong
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return \Psr\Http\Message\ResponseInterface
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function PingPong(Request $request, Response $response)
+    public function pingPong(Request $request, Response $response): \Psr\Http\Message\ResponseInterface
     {
         $parseRequest = $this->getSanitizer($request->getQueryParams());
         $this->session->refreshExpiry = ($parseRequest->getCheckbox('refreshSession') == 1);
@@ -410,187 +491,143 @@ class Login extends Base
     }
 
     /**
-     * Shows information about Xibo
-     *
-     * @SWG\Get(
-     *  path="/about",
-     *  operationId="about",
-     *  tags={"misc"},
-     *  summary="About",
-     *  description="Information about this API, such as Version code, etc",
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful response",
-     *      @SWG\Schema(
-     *          type="object",
-     *          additionalProperties={
-     *              "title"="version",
-     *              "type"="string"
-     *          }
-     *      )
-     *  )
-     * )
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * Public JSON endpoint returning branding + version info for the About modal.
+     * No authentication required.
      */
-    public function about(Request $request, Response $response)
+    public function aboutConfig(Request $request, Response $response): \Psr\Http\Message\ResponseInterface
     {
-        $state = $this->getState();
+        $rootUri = $this->getConfig()->rootUri();
+        $logoFile = $this->getConfig()->getBrandAssetFile('logo');
+        $iconFile = $this->getConfig()->getBrandAssetFile('logo-icon');
 
-        if ($request->isXhr()) {
-            $state->template = 'about-text';
-        } else {
-            $state->template = 'about-page';
-        }
+        $payload = [
+            'version'     => Environment::$WEBSITE_VERSION_NAME,
+            'revision'    => Environment::getGitCommit(),
+            'appName'     => $this->getConfig()->getThemeConfig('app_name', 'Xibo'),
+            'productName' => $this->getConfig()->getThemeConfig('theme_title', 'Xibo Digital Signage'),
+            'logoUrl'     => $rootUri . 'brand/' . $logoFile,
+            'logoIconUrl' => $rootUri . 'brand/' . $iconFile,
+            'supportUrl'  => $this->getConfig()->getThemeConfig('theme_url', 'https://xibosignage.com'),
+            'sourceUrl'   => $this->getConfig()->getThemeConfig(
+                'cms_source_url',
+                'https://github.com/xibosignage/xibo-cms'
+            ),
+            'aboutText'   => $this->getConfig()->getThemeConfig('about_text') ?? '',
+        ];
 
-        $state->setData(['version' => Environment::$WEBSITE_VERSION_NAME, 'sourceUrl' => $this->getConfig()->getThemeConfig('cms_source_url')]);
-
-        return $this->render($request, $response);
+        return $response->withJson($payload);
     }
 
     /**
      * Generate an email body
-     * @param $subject
-     * @param $body
+     * @param string $subject
+     * @param string $body
      * @return string
      * @throws \Twig\Error\LoaderError
      * @throws \Twig\Error\RuntimeError
      * @throws \Twig\Error\SyntaxError
      */
-    private function generateEmailBody($subject, $body)
+    private function generateEmailBody(string $subject, string $body): string
     {
         return $this->renderTemplateToString('email-template', [
             'config' => $this->getConfig(),
-            'subject' => $subject, 'body' => $body
+            'subject' => $subject,
+            'body' => $body,
         ]);
     }
 
     /**
-     * 2FA Auth required
+     * Enforce a per-IP rate limit using the Stash cache.
+     * Throws AccessDeniedException when the configured threshold is exceeded inside the window.
+     *
      * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     * @throws \PHPMailer\PHPMailer\Exception
-     * @throws \RobThree\Auth\TwoFactorAuthException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @param string $bucket cache-key namespace, e.g. 'login' or 'pwreset'
+     * @param int $maxAttempts threshold
+     * @param int $windowSeconds sliding window length
+     * @throws AccessDeniedException
      */
-    public function twoFactorAuthForm(Request $request, Response $response)
+    private function enforceRateLimit(Request $request, string $bucket, int $maxAttempts, int $windowSeconds): void
     {
-        if (!isset($_SESSION['tfaUsername'])) {
-            $this->getFlash()->addMessage('login_message', __('Session has expired, please log in again'));
-            return $response->withRedirect($this->urlFor($request, 'login'));
+        $ip = $request->getAttribute('ip_address') ?? 'unknown';
+        $item = $this->pool->getItem('throttle/' . $bucket . '/' . $ip);
+        $count = (int)($item->get() ?? 0);
+        if ($count >= $maxAttempts) {
+            $this->getLog()->warning(sprintf(
+                'Rate limit hit: bucket=%s ip=%s count=%d',
+                $bucket,
+                $ip,
+                $count
+            ));
+            throw new AccessDeniedException(__('Too many attempts. Please wait and try again.'));
         }
+    }
 
-        $user = $this->userFactory->getByName($_SESSION['tfaUsername']);
-        $message = '';
+    /**
+     * Increment the per-IP rate-limit counter for the given bucket.
+     * Called after the protected action to count one attempt against the window.
+     *
+     * @param Request $request
+     * @param string $bucket cache-key namespace
+     * @param int $windowSeconds sliding window length
+     */
+    private function recordRateLimitHit(Request $request, string $bucket, int $windowSeconds): void
+    {
+        $ip = $request->getAttribute('ip_address') ?? 'unknown';
+        $item = $this->pool->getItem('throttle/' . $bucket . '/' . $ip);
+        $count = (int)($item->get() ?? 0);
+        $item->set($count + 1);
+        $item->expiresAfter($windowSeconds);
+        $this->pool->save($item);
+    }
 
-        // if our user has email two factor enabled, we need to send the email with code now
-        if ($user->twoFactorTypeId === 1) {
-
-            if ($user->email == '') {
-                throw new NotFoundException(__('No email'));
-            }
-
-            $mailFrom = $this->getConfig()->getSetting('mail_from');
-            $issuerSettings = $this->getConfig()->getSetting('TWOFACTOR_ISSUER');
-            $appName = $this->getConfig()->getThemeConfig('app_name');
-
-            if ($issuerSettings !== '') {
-                $issuer = $issuerSettings;
-            } else {
-                $issuer = $appName;
-            }
-
-            if ($mailFrom == '') {
-                throw new InvalidArgumentException(__('Sending email address in CMS Settings is not configured'), 'mail_from');
-            }
-
-            $tfa = new TwoFactorAuth($issuer);
-
-            // Nonce parts (nonce isn't ever stored, only the hash of it is stored, it only exists in the email)
-            $action = 'user-tfa-email-auth' . Random::generateString(10);
-            $nonce = Random::generateString(20);
-
-            // Create a nonce for this user and store it somewhere
-            $cache = $this->pool->getItem('/nonce/' . $action);
-
-            $cache->set([
-                'action' => $action,
-                'hash' => password_hash($nonce, PASSWORD_DEFAULT),
-                'userId' => $user->userId
-            ]);
-            $cache->expiresAfter(1800); // 30 minutes?
-
-            // Save cache
-            $this->pool->save($cache);
-
-            // Make a link
-            $code = $tfa->getCode($user->twoFactorSecret);
-
-            // Send the mail
-            $mail = new \PHPMailer\PHPMailer\PHPMailer();
-            $mail->CharSet = 'UTF-8';
-            $mail->Encoding = 'base64';
-            $mail->From = $mailFrom;
-            $msgFromName = $this->getConfig()->getSetting('mail_from_name');
-
-            if ($msgFromName != null) {
-                $mail->FromName = $msgFromName;
-            }
-
-            $mail->Subject = __('Two Factor Authentication');
-            $mail->addAddress($user->email);
-
-            // Body
-            $mail->isHTML(true);
-            $mail->Body = $this->generateEmailBody($mail->Subject,
-                '<p>' . __('You are receiving this email because two factor email authorisation is enabled in your CMS user account. If you did not make this request, please report this email to your administrator immediately.') . '</p>' . '<p>' . $code . '</p>');
-
-            if (!$mail->send()) {
-                $message = __('Unable to send two factor code to email address associated with this user');
-            } else {
-                $message =  __('Two factor code email has been sent to your email address');
-
-                // Audit Log
-                $this->getLog()->audit('User', $user->userId, 'Two Factor Code email sent', [
-                    'UserAgent' => $request->getHeader('User-Agent')
-                ]);
-            }
-        }
-
-        // Template
-        $this->getState()->template = 'tfa';
-
-        // the flash message do not work well here - need to reload the page to see the message, hence the below
-        $this->getState()->setData(['message' => $message]);
-
-        return $this->render($request, $response);
+    /**
+     * Reset the per-IP counter for a bucket — used after a successful login so
+     * the user isn't penalised for prior failures on the same IP.
+     *
+     * @param Request $request
+     * @param string $bucket cache-key namespace
+     */
+    private function resetRateLimit(Request $request, string $bucket): void
+    {
+        $ip = $request->getAttribute('ip_address') ?? 'unknown';
+        $this->pool->deleteItem('throttle/' . $bucket . '/' . $ip);
     }
 
     /**
      * @param Request $request
      * @param Response $response
-     * @return \Slim\Http\Response
+     * @return \Psr\Http\Message\ResponseInterface
      * @throws \RobThree\Auth\TwoFactorAuthException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function twoFactorAuthValidate(Request $request, Response $response): Response
+    public function twoFactorAuthValidate(Request $request, Response $response): \Psr\Http\Message\ResponseInterface
     {
+        // Guard: ensure the 2FA session bridge is present before proceeding
+        if (!isset($_SESSION['tfaUsername'])) {
+            return $response->withJson(
+                ['status' => 'error', 'message' => __('Session has expired, please log in again')],
+                401
+            );
+        }
+
+        // Brute-force protection on the TOTP / recovery-code submission. Matches the
+        // bare-login bucket (5 / 15 min). Separate bucket so a failed 2FA attempt
+        // doesn't bleed over into the password path and vice versa.
+        try {
+            $this->enforceRateLimit($request, 'twofactor', 5, 900);
+        } catch (AccessDeniedException $e) {
+            return $response->withJson(['status' => 'rate_limited', 'message' => $e->getMessage()], 429);
+        }
+
         $user = $this->userFactory->getByName($_SESSION['tfaUsername']);
         $result = false;
         $updatedCodes = [];
-        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (isset($_POST['code'])) {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $hasCode     = $sanitizedParams->hasParam('code');
+        $hasRecovery = $sanitizedParams->hasParam('recoveryCode');
+
+        if ($hasCode) {
             $issuerSettings = $this->getConfig()->getSetting('TWOFACTOR_ISSUER');
             $appName = $this->getConfig()->getThemeConfig('app_name');
 
@@ -607,7 +644,7 @@ class Login extends Base
             } else {
                 $result = $tfa->verifyCode($user->twoFactorSecret, $sanitizedParams->getString('code'), 3);
             }
-        } elseif (isset($_POST['recoveryCode'])) {
+        } elseif ($hasRecovery) {
             // get the array of recovery codes, go through them and try to match provided code
             $codes = $user->twoFactorRecoveryCodes;
 
@@ -628,19 +665,35 @@ class Login extends Base
         }
 
         if ($result) {
+            // Successful 2FA — drop the failure counter for this IP.
+            $this->resetRateLimit($request, 'twofactor');
+
             // We are logged in at this point
             $this->completeLoginFlow($user, $request);
-
-            $this->setNoOutput(true);
 
             //unset the session tfaUsername
             unset($_SESSION['tfaUsername']);
 
-            return $response->withRedirect($this->getRedirect($request, $sanitizedParams->getString('priorRoute')));
+            // Commit the new session to the DB before responding, so the
+            // immediate /user/me the React app fires after redirect can't race
+            // the session write. Must run after the tfaUsername unset above so
+            // that removal is persisted. See Session::persist().
+            $this->session->persist();
+
+            return $response->withJson([
+                'status' => 'ok',
+                'isPasswordChangeRequired' => $user->isPasswordChangeRequired === 1,
+            ]);
         } else {
+            // Record one failure against the bucket so brute-forcers progress toward the wall.
+            $this->recordRateLimitHit($request, 'twofactor', 900);
+
             $this->getLog()->error('Authentication code incorrect, redirecting to login page');
-            $this->getFlash()->addMessage('login_message', __('Authentication code incorrect'));
-            return $response->withRedirect($this->urlFor($request, 'login'));
+
+            return $response->withJson(
+                ['status' => 'error', 'message' => __('Authentication code incorrect')],
+                401
+            );
         }
     }
 
@@ -672,35 +725,95 @@ class Login extends Base
         ]);
     }
 
-    /**
-     * Get a redirect link from the given request and prior route
-     *  validate the prior route by only taking its path
-     * @param \Slim\Http\ServerRequest $request
-     * @param string|null $priorRoute
-     * @return string
-     */
-    private function getRedirect(Request $request, ?string $priorRoute): string
+    private function getBrandLogoUrl(): string
     {
-        $home = $this->urlFor($request, 'home');
+        // Brand assets are served by Apache at the domain-root /brand alias (preserved even on
+        // alias installs), so this is NOT rootUri-prefixed — matches the React BrandingContext.
+        return '/brand/' . $this->getConfig()->getBrandAssetFile('logo');
+    }
 
-        // Parse the prior route
-        $parsedPriorRoute = parse_url($priorRoute);
-        if (!$parsedPriorRoute) {
-            $priorRoute = $home;
-        } else {
-            $priorRoute = $parsedPriorRoute['path'];
+    /**
+     * The dark-coloured logo, for display on light backgrounds (e.g. the login card).
+     * Falls back to the standard logo if a white-label package ships no dark variant.
+     */
+    private function getBrandLogoDarkUrl(): string
+    {
+        // Same /brand alias reasoning as getBrandLogoUrl() above — not rootUri-prefixed.
+        return '/brand/' . $this->getConfig()->getBrandLogoDarkFile();
+    }
+
+    private function isPasswordReminderEnabled(): bool
+    {
+        $setting = $this->getConfig()->getSetting('PASSWORD_REMINDER_ENABLED');
+        $mailFrom = $this->getConfig()->getSetting('mail_from');
+        return ($setting === 'On' || $setting === 'On except Admin') && $mailFrom !== '';
+    }
+
+    /**
+     * Send the email 2FA code to the user's email address.
+     * Called when email 2FA (typeId=1) is required during login.
+     *
+     * @throws NotFoundException if the user has no email address configured
+     * @throws InvalidArgumentException if mail_from is not configured
+     * @throws GeneralException if the email fails to send
+     */
+    private function sendTwoFactorEmail(User $user, Request $request): void
+    {
+        if ($user->email == '') {
+            throw new NotFoundException(__('No email'));
         }
 
-        // Certain routes always lead home
-        if ($priorRoute == ''
-            || $priorRoute == '/'
-            || str_contains($priorRoute, $this->urlFor($request, 'login'))
-        ) {
-            $redirectTo = $home;
-        } else {
-            $redirectTo = $priorRoute;
+        $issuerSettings = $this->getConfig()->getSetting('TWOFACTOR_ISSUER');
+        $appName = $this->getConfig()->getThemeConfig('app_name');
+        $issuer = ($issuerSettings !== '') ? $issuerSettings : $appName;
+
+        $tfa = new TwoFactorAuth($issuer);
+        $code = $tfa->getCode($user->twoFactorSecret);
+
+        // Dev mode: log the code instead of emailing it
+        if (Environment::isDevMode()) {
+            $this->getLog()->info('DEV MODE — 2FA email code for ' . $user->userName . ': ' . $code);
+            return;
         }
 
-        return $redirectTo;
+        $mailFrom = $this->getConfig()->getSetting('mail_from');
+        if ($mailFrom == '') {
+            throw new InvalidArgumentException(
+                __('Sending email address in CMS Settings is not configured'),
+                'mail_from'
+            );
+        }
+
+        $mail = new \PHPMailer\PHPMailer\PHPMailer();
+        $mail->CharSet = 'UTF-8';
+        $mail->Encoding = 'base64';
+        $mail->From = $mailFrom;
+        $msgFromName = $this->getConfig()->getSetting('mail_from_name');
+        if ($msgFromName != null) {
+            $mail->FromName = $msgFromName;
+        }
+
+        $mail->Subject = __('Two Factor Authentication');
+        $mail->addAddress($user->email);
+        $mail->isHTML(true);
+        $mail->Body = $this->generateEmailBody(
+            $mail->Subject,
+            '<p>'
+            . __('You are receiving this email because two factor email authorisation is enabled'
+                . ' in your CMS user account. If you did not make this request, please report'
+                . ' this email to your administrator immediately.')
+            . '</p>'
+            . '<p>' . $code . '</p>'
+        );
+
+        if (!$mail->send()) {
+            throw new GeneralException(
+                __('Unable to send two factor code to email address associated with this user')
+            );
+        }
+
+        $this->getLog()->audit('User', $user->userId, 'Two Factor Code email sent', [
+            'UserAgent' => $request->getHeader('User-Agent')
+        ]);
     }
 }

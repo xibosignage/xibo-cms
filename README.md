@@ -1,4 +1,4 @@
-[![Xibo - Digital Signage](web/theme/default/img/xibologo.png)](https://xibosignage.com)
+[![Xibo - Digital Signage](docker/brand/xibologo.png)](https://xibosignage.com)
 
 [![Github All Releases](https://img.shields.io/github/downloads/xibosignage/xibo-cms/total.svg)]()
 
@@ -30,18 +30,22 @@ If not, see <http://www.gnu.org/licenses/>.
 
 # Installation
 
-We recommend installing an official release via Docker. Instructions for doing so can be found in our 
-[documentation](https://xibosignage.com/docs/setup/cms-installation-guides).
+Xibo can be deployed on our Cloud or self-hosted. Instructions for doing so can be found in our
+[documentation](https://docs.xibosignage.com/cms-installation).
+
+We do not recommend installing directly on the operating system. Installations without Docker are community-supported
+only and are not covered by the official administration manual, for some basic pointers
+see [MANUAL_INSTALL.md](MANUAL_INSTALL.md).
 
 
 # Developing
 
-**Please only install a Development environment if you intend make code changes to Xibo. Installing from the 
+**Please only install a Development environment if you intend to fork Xibo and make code changes. Installing from the
 repository is not suitable for a production installation.**
 
-Xibo uses Docker to ensure all contributors have a repeatable development environment which is easy to get up and
-running. The very same Docker containers are used in our recommended end user installation to promote consistency 
-from development to deployment.
+Xibo uses Docker to ensure a repeatable development environment which is easy to get up and running. The very same
+Docker containers are used in our recommended end user installation to promote consistency from development to
+deployment.
 
 To these ends this repository includes a `docker-compose.yml` file to spin up a model development environment.
 
@@ -58,7 +62,9 @@ responsibility. Therefore you will need the following tools:
  - Docker
 
 
-## Clone the repository
+## Fork and clone the repository
+
+Fork the repository on GitHub.
 
 Create a folder in your development workspace and clone the repository. If you intend to make changes and submit
 pull requests please Fork us first and create a new branch.
@@ -71,11 +77,16 @@ git clone git@github.com:<your_id>/xibo-cms.git xibo-cms
 
 We maintain the following branches. To contribute to Xibo please use the `develop` branch as your base.
 
-- develop: Bug fixes for 4.4.x
-- master: Currently 4.4
-- release43: Bug fixes for 4.3
-- release42: Bug fixes for 4.2
-- release33: Bug fixes for 3.3
+#### Current
+
+- develop: Bug fixes for 4.5.x
+- master: Currently 4.5
+
+#### Archive
+- release44: Archive of 4.4
+- release43: Archive of 4.3
+- release42: Archive of 4.2
+- release33: Archive of 3.3
 - release23: Archive of 2.3
 - release18: Archive of 1.8
 - release17: Archive of 1.7
@@ -171,6 +182,13 @@ P: `password`
 ## Translations
 To parse the translations:
 
+React:
+```shell
+cd frontend
+npx i18next-cli extract
+```
+
+Then:
 ```shell
 docker-compose exec web sh -c "cd /var/www/cms; rm -R ./cache"
 docker-compose exec web sh -c "cd /var/www/cms; php bin/locale.php"
@@ -183,7 +201,7 @@ find ./locale ./cache ./lib ./web  -iname "*.php" -print0 | xargs -0 xgettext --
 To import translations:
 
 ```shell
-bzr pull lp:~dangarner/xibo/holmes-translations
+bzr pull lp:~dangarner/xibo/neujmin-translations
 ```
 
 Convert to `mo` format:
@@ -194,11 +212,23 @@ for i in *.po; do msgfmt "$i" -o $(echo $i | sed s/po/mo/); done
 
 Move the resulting `mo` files into your `locale` folder.
 
+The React language packs (`frontend/public/locale/langs/*.json`) are generated from the
+`locale/*.mo` files and are **not** committed, they are build artifacts. `npm run dev` and
+`npm run build` regenerate them automatically, so you normally don't need to do anything. To
+regenerate them manually (e.g. after adding new `mo` files):
+
+```shell
+cd frontend
+npm run i18n:convert
+```
+
+Note: this is also run during the build process.
+
 ## Swagger API Docs
 To generate a `swagger.json` file, with the dev containers running:
 
 ```shell
-docker-compose exec web sh -c "cd /var/www/cms; vendor/bin/swagger lib -o web/swagger.json"
+docker-compose exec web sh -c "cd /var/www/cms; vendor/bin/openapi lib -o web/swagger.json"
 ```
 
 ## Application Structure

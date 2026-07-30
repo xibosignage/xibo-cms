@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,72 +22,159 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\AuditLogFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
 use Xibo\Helper\SendFile;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Class AuditLog
+ *
  * @package Xibo\Controller
  */
 class AuditLog extends Base
 {
     /**
-     * @var AuditLogFactory
+     * AuditLog constructor.
+     *
+     * @param AuditLogFactory $auditLogFactory Audit log factory
      */
-    private $auditLogFactory;
-
-    /**
-     * Set common dependencies.
-     * @param AuditLogFactory $auditLogFactory
-     */
-    public function __construct($auditLogFactory)
+    public function __construct(private readonly AuditLogFactory $auditLogFactory)
     {
-        $this->auditLogFactory = $auditLogFactory;
     }
 
     /**
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
+     * Get the list of audit logs
+     *
+     * @param  Request  $request
+     * @param  Response $response
+     * @return ResponseInterface|Response
+     * @throws GeneralException
      */
-    public function displayPage(Request $request, Response $response)
-    {
-        $this->getState()->template = 'auditlog-page';
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getQueryParams());
 
+        $auditLogSortQuery = $this->gridRenderSort(
+            $sanitizedParams,
+            $this->isJson($request),
+            'logId'
+        );
+
+        $auditLogFilterQuery = $this->getAuditLogFilterQuery($sanitizedParams);
+
+        $auditLogs = $this->auditLogFactory->query($auditLogSortQuery, $auditLogFilterQuery);
+
+        foreach ($auditLogs as $auditLog) {
+            $auditLog->objectAfter = json_decode($auditLog->objectAfter);
+        }
+
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $this->auditLogFactory->countLast())
+            ->withJson($auditLogs);
+    }
+
+    /**
+     * Audit log search by ID
+     *
+     * @param  Request  $request
+     * @param  Response $response
+     * @param  int      $id
+     * @return Response|ResponseInterface
+     * @throws NotFoundException
+     */
+    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
+    {
+        $auditLog = $this->auditLogFactory->getById($id);
+
+        $auditLog->objectAfter = json_decode($auditLog->objectAfter);
+
+        return $response
+            ->withStatus(200)
+            ->withJson($auditLog);
+    }
+
+    /**
+     * Outputs a CSV of audit trail messages
+     *
+     * @param  Request  $request
+     * @param  Response $response
+     * @return Response
+     * @throws InvalidArgumentException
+     */
+    public function export(Request $request, Response $response): Response
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $filterFromDt = $sanitizedParams->getDate('filterFromDt');
+        $filterToDt = $sanitizedParams->getDate('filterToDt');
+
+        if ($filterFromDt === null || $filterToDt === null) {
+            throw new InvalidArgumentException(__('Please provide a from/to date.'), 'filterFromDt');
+        }
+
+        $fromTimeStamp = $filterFromDt->setTime(0, 0, 0)->format('U');
+        $toTimeStamp = $filterToDt->setTime(0, 0, 0)->format('U');
+
+        $rows = $this->auditLogFactory->query(
+            ['logId'],
+            ['fromTimeStamp' => $fromTimeStamp, 'toTimeStamp' => $toTimeStamp]
+        );
+
+        $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/audittrail_' . Random::generateString();
+        $out = fopen($tempFileName, 'w');
+        fputcsv($out, ['ID', 'Date', 'User', 'Entity', 'EntityId', 'Message', 'Object'], ',', '"', '\\');
+
+        foreach ($rows as $row) {
+            /* @var \Xibo\Entity\AuditLog $row */
+            fputcsv(
+                $out,
+                [
+                    $row->logId,
+                    Carbon::createFromTimestamp($row->logDate)->format(DateFormatHelper::getSystemFormat()),
+                    $row->userName,
+                    $row->entity,
+                    $row->entityId,
+                    $row->message,
+                    $row->objectAfter,
+                ],
+                ',', '"', '\\'
+            );
+        }
+
+        fclose($out);
+
+        return SendFile::decorateResponse(
+            $response,
+            $this->getConfig()->getSetting('SENDFILE_MODE'),
+            $tempFileName,
+            'audittrail.csv'
+        )->withHeader('Content-Type', 'text/csv;charset=utf-8');
+    }
+
+    /**
+     * Build the audit log filter query array from sanitized request params.
+     *
+     * @param SanitizerInterface $sanitizedParams The sanitized request parameters
+     *
+     * @return array
+     */
+    private function getAuditLogFilterQuery(SanitizerInterface $sanitizedParams): array
+    {
         $filterFromDt = $sanitizedParams->getDate('fromDt');
         $filterToDt = $sanitizedParams->getDate('toDt');
-        $filterUser = $sanitizedParams->getString('user');
-        $filterEntity = $sanitizedParams->getString('entity');
-        $filterEntityId = $sanitizedParams->getString('entityId');
-        $filterMessage = $sanitizedParams->getString('message');
-        $filterIpAddress = $sanitizedParams->getString('ipAddress');
 
         if ($filterFromDt != null && $filterFromDt == $filterToDt) {
             $filterToDt->addDay();
         }
 
-        // Get the dates and times
         if ($filterFromDt == null) {
             $filterFromDt = Carbon::now()->sub('1 day');
         }
@@ -96,94 +183,17 @@ class AuditLog extends Base
             $filterToDt = Carbon::now();
         }
 
-        $search = [
-            'fromTimeStamp' => $filterFromDt->format('U'),
-            'toTimeStamp' => $filterToDt->format('U'),
-            'userName' => $filterUser,
-            'entity' => $filterEntity,
-            'entityId' => $filterEntityId,
-            'message' => $filterMessage,
-            'ipAddress' => $filterIpAddress,
-            'sessionHistoryId' => $sanitizedParams->getInt('sessionHistoryId')
-        ];
-
-        $rows = $this->auditLogFactory->query(
-            $this->gridRenderSort($sanitizedParams),
-            $this->gridRenderFilter($search, $sanitizedParams)
+        return $this->gridRenderFilter(
+            [
+                'fromTimeStamp' => $filterFromDt->format('U'),
+                'toTimeStamp' => $filterToDt->format('U'),
+                'userName' => $sanitizedParams->getString('user'),
+                'entity' => $sanitizedParams->getString('entity'),
+                'entityId' => $sanitizedParams->getString('entityId'),
+                'message' => $sanitizedParams->getString('message'),
+                'ipAddress' => $sanitizedParams->getString('ipAddress'),
+                'sessionHistoryId' => $sanitizedParams->getInt('sessionHistoryId'),
+            ], $sanitizedParams
         );
-
-        // Do some post processing
-        foreach ($rows as $row) {
-            /* @var \Xibo\Entity\AuditLog $row */
-            $row->objectAfter = json_decode($row->objectAfter);
-        }
-
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->auditLogFactory->countLast();
-        $this->getState()->setData($rows);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Output CSV Form
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    public function exportForm(Request $request, Response $response)
-    {
-        $this->getState()->template = 'auditlog-form-export';
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Outputs a CSV of audit trail messages
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws InvalidArgumentException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    public function export(Request $request, Response $response) : Response
-    {
-        $sanitizedParams = $this->getSanitizer($request->getParams());
-        // We are expecting some parameters
-        $filterFromDt = $sanitizedParams->getDate('filterFromDt');
-        $filterToDt = $sanitizedParams->getDate('filterToDt');
-        $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/audittrail_' . Random::generateString();
-
-        if ($filterFromDt == null || $filterToDt == null) {
-            throw new InvalidArgumentException(__('Please provide a from/to date.'), 'filterFromDt');
-        }
-
-        $fromTimeStamp = $filterFromDt->setTime(0, 0, 0)->format('U');
-        $toTimeStamp = $filterToDt->setTime(0, 0, 0)->format('U');
-
-        $rows = $this->auditLogFactory->query('logId', ['fromTimeStamp' => $fromTimeStamp, 'toTimeStamp' => $toTimeStamp]);
-
-        $out = fopen($tempFileName, 'w');
-        fputcsv($out, ['ID', 'Date', 'User', 'Entity', 'EntityId', 'Message', 'Object']);
-
-        // Do some post processing
-        foreach ($rows as $row) {
-            /* @var \Xibo\Entity\AuditLog $row */
-            fputcsv($out, [$row->logId, Carbon::createFromTimestamp($row->logDate)->format(DateFormatHelper::getSystemFormat()), $row->userName, $row->entity, $row->entityId, $row->message, $row->objectAfter]);
-        }
-
-        fclose($out);
-
-        $this->setNoOutput(true);
-
-        return $this->render($request, SendFile::decorateResponse(
-            $response,
-            $this->getConfig()->getSetting('SENDFILE_MODE'),
-            $tempFileName,
-            'audittrail.csv'
-        )->withHeader('Content-Type', 'text/csv;charset=utf-8'));
     }
 }

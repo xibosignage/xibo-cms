@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -36,7 +36,7 @@ class SessionFactory extends BaseFactory
     /**
      * @return Session
      */
-    public function createEmpty()
+    public function createEmpty(): Session
     {
         return new Session($this->getStore(), $this->getLog(), $this->getDispatcher());
     }
@@ -56,7 +56,7 @@ class SessionFactory extends BaseFactory
      * @param int $userId
      * @return int loggedIn
      */
-    public function getActiveSessionsForUser($userId)
+    public function getActiveSessionsForUser(int $userId): int
     {
         $userSession = $this->query(null, ['userId' => $userId, 'type' => 'active']);
 
@@ -64,15 +64,19 @@ class SessionFactory extends BaseFactory
     }
 
     /**
-     * @param array $sortOrder
+     * @param array|null $sortOrder
      * @param array $filterBy
      * @return Session[]
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query(?array $sortOrder = null, array $filterBy = []): array
     {
         $entries = [];
         $params = [];
         $sanitizedFilter = $this->getSanitizer($filterBy);
+
+        // Sorting
+        $allowedColumns = ['lastAccessed', 'isExpired', 'userName', 'remoteAddress', 'userAgent', 'expiresAt'];
+        $sortOrder = $this->buildSortQuery($sortOrder, $allowedColumns, defaultSort: ['lastAccessed ASC']);
 
         $select = '
             SELECT `session`.session_id AS sessionId, 
@@ -99,22 +103,30 @@ class SessionFactory extends BaseFactory
 
         if ($sanitizedFilter->getString('fromDt') != null) {
             $body .= ' AND session.LastAccessed >= :lastAccessed ';
-            $params['lastAccessed'] = $sanitizedFilter->getDate('fromDt')->setTime(0, 0, 0)->format(DateFormatHelper::getSystemFormat());
+            $params['lastAccessed'] =
+                $sanitizedFilter->getDate('fromDt')
+                ->setTime(0, 0, 0)
+                ->format(DateFormatHelper::getSystemFormat());
+        }
+
+        // Accessed Date filter
+        if ($sanitizedFilter->getDate('lastAccessedDateFrom') !== null) {
+            $body .= ' AND session.LastAccessed >= :lastAccessedDateFrom ';
+            $params['lastAccessedDateFrom'] = $sanitizedFilter->getDate('lastAccessedDateFrom');
+        }
+
+        if ($sanitizedFilter->getDate('lastAccessedDateTo') !== null) {
+            $body .= ' AND session.LastAccessed <= :lastAccessedDateTo ';
+            $params['lastAccessedDateTo'] = $sanitizedFilter->getDate('lastAccessedDateTo');
         }
 
         if ($sanitizedFilter->getString('type') != null) {
-
-            if ($sanitizedFilter->getString('type') == 'active') {
-                $body .= ' AND IsExpired = 0 ';
-            }
-
-            if ($sanitizedFilter->getString('type') == 'expired') {
-                $body .= ' AND IsExpired = 1 ';
-            }
-
-            if ($sanitizedFilter->getString('type') == 'guest') {
-                $body .= ' AND IFNULL(session.userID, 0) = 0 ';
-            }
+            $body .= match ($sanitizedFilter->getString('type')) {
+                'active' => ' AND IsExpired = 0 ',
+                'expired' => ' AND IsExpired = 1 ',
+                'guest' => ' AND IFNULL(session.userID, 0) = 0 ',
+                default => '',
+            };
         }
 
         if ($sanitizedFilter->getInt('userId') != null) {
@@ -123,19 +135,19 @@ class SessionFactory extends BaseFactory
         }
 
         // Sorting?
-        $order = '';
-        if (is_array($sortOrder))
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+        if ($filterBy !== null
+            && $sanitizedFilter->getInt('start') !== null
+            && $sanitizedFilter->getInt('length') !== null
+        ) {
+            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' .
+                $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
-
-
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $session = $this->createEmpty()->hydrate($row, [

@@ -35,6 +35,7 @@ use Xibo\Support\Exception\InstanceSuspendedException;
  *  Middleware for XTR.
  *   - sets the theme
  *   - sets the module theme files
+ *
  * @package Xibo\Middleware
  */
 class Xtr implements Middleware
@@ -48,8 +49,8 @@ class Xtr implements Middleware
     }
 
     /**
-     * @param Request $request
-     * @param RequestHandler $handler
+     * @param  Request        $request
+     * @param  RequestHandler $handler
      * @return Response
      * @throws \Twig\Error\LoaderError
      * @throws \Xibo\Support\Exception\InstanceSuspendedException
@@ -71,15 +72,17 @@ class Xtr implements Middleware
         // Provide the view path to Twig
         /* @var \Twig\Loader\FilesystemLoader $twig */
         $twig = $view->getLoader();
-        $twig->setPaths([PROJECT_ROOT . '/views', PROJECT_ROOT . '/custom', PROJECT_ROOT . '/reports']);
+        $twig->setPaths([PROJECT_ROOT . '/views', PROJECT_ROOT . '/reports']);
 
         // Does this theme provide an alternative view path?
         if ($container->get('configService')->getThemeConfig('view_path') != '') {
-            $twig->prependPath(Str::replaceFirst(
-                '..',
-                PROJECT_ROOT,
-                $container->get('configService')->getThemeConfig('view_path'),
-            ));
+            $twig->prependPath(
+                Str::replaceFirst(
+                    '..',
+                    PROJECT_ROOT,
+                    $container->get('configService')->getThemeConfig('view_path'),
+                )
+            );
         }
 
         // Call Next

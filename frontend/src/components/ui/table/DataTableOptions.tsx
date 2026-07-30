@@ -1,0 +1,231 @@
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+import type { Column, Table, VisibilityState } from '@tanstack/react-table';
+import {
+  ChevronDown,
+  Printer,
+  FileDown,
+  RefreshCw,
+  List,
+  LayoutGrid,
+  Map,
+  CalendarRange,
+} from 'lucide-react';
+import { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import Button from '../Button';
+import Checkbox from '../forms/Checkbox';
+
+import type { ViewMode } from './types';
+
+import { useClickOutside } from '@/hooks/useClickOutside';
+
+interface DataTableOptionsProps<TData> {
+  table?: Table<TData>;
+  onPrint?: () => void;
+  onRefresh?: () => void;
+  onCSVExport?: () => void;
+  columnVisibility?: VisibilityState;
+  viewMode?: ViewMode | null;
+  onViewModeChange?: (mode: ViewMode) => void;
+  availableViewModes?: ViewMode[];
+}
+
+export const getToggleButtonStyle = (active: boolean) => {
+  return active ? 'text-xibo-blue-800 bg-gray-100' : 'text-xibo-blue-600 bg-transparent';
+};
+
+export function DataTableOptions<TData>({
+  table,
+  onPrint,
+  onRefresh,
+  onCSVExport,
+  columnVisibility,
+  viewMode = 'table',
+  onViewModeChange,
+  availableViewModes,
+}: DataTableOptionsProps<TData>) {
+  const { t } = useTranslation();
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useClickOutside(dropdownRef, () => setIsOpen(false));
+
+  const currentVisibility = columnVisibility ?? table?.getState().columnVisibility ?? {};
+
+  const getColumnLabel = (column: Column<TData, unknown>) => {
+    const header = column.columnDef.header;
+    return typeof header === 'string' ? header : column.id;
+  };
+
+  const columns = (table?.getAllLeafColumns() ?? [])
+    .filter((column) => column.getCanHide())
+    .sort((a, b) =>
+      getColumnLabel(a).localeCompare(getColumnLabel(b), undefined, { sensitivity: 'base' }),
+    );
+
+  const isTableMode = viewMode == null || viewMode === 'table';
+  const isGridMode = viewMode === 'grid';
+  const isMapMode = viewMode === 'map';
+  const isCalendarMode = viewMode === 'calendar';
+
+  return (
+    <div className="flex gap-3">
+      {columns.length > 0 && !isGridMode && !isMapMode && (
+        <div className="relative" ref={dropdownRef}>
+          <Button
+            type="button"
+            variant="tertiary"
+            onClick={() => setIsOpen(!isOpen)}
+            rightIcon={ChevronDown}
+            aria-haspopup="menu"
+            aria-expanded={isOpen}
+            aria-label={t('Toggle columns')}
+          >
+            {t('Columns')}
+          </Button>
+
+          {isOpen && (
+            <div className="absolute right-0 top-11 w-52 z-50 max-h-88.5 flex flex-col rounded-lg overflow-hidden bg-white shadow-lg border border-gray-200">
+              <div className="relative flex bg-gray-100 px-3 py-2 justify-between items-center">
+                <span className="text-gray-500 text-sm font-semibold uppercase leading-normal">
+                  {t('Visible Columns')}
+                </span>
+                <div
+                  className="flex items-center justify-center size-6 absolute right-1.25 cursor-pointer"
+                  onClick={() => setIsOpen(false)}
+                ></div>
+              </div>
+
+              <div className="overflow-y-auto space-y-1 px-2">
+                {(() => {
+                  const visibleCount = columns.filter(
+                    (col) => currentVisibility[col.id] ?? true,
+                  ).length;
+                  const allChecked = visibleCount === columns.length;
+                  const someChecked = visibleCount > 0 && visibleCount < columns.length;
+
+                  return (
+                    <>
+                      <Checkbox
+                        id="col-toggle-all"
+                        label={t('All Columns')}
+                        checked={allChecked}
+                        indeterminate={someChecked}
+                        className="px-3 py-2.5 gap-4"
+                        classNameLabel="m-0 font-semibold text-gray-800"
+                        onChange={(e) => {
+                          table?.toggleAllColumnsVisible(!!e.target.checked);
+                        }}
+                      />
+                      {columns.map((column) => {
+                        const label = getColumnLabel(column);
+
+                        const uniqueCheckboxId = `col-toggle-${column.id}`;
+                        const isVisible = currentVisibility[column.id] ?? true;
+
+                        return (
+                          <Checkbox
+                            key={column.id}
+                            id={uniqueCheckboxId}
+                            label={label}
+                            checked={isVisible}
+                            className="px-3 py-2.5 gap-4"
+                            classNameLabel="m-0 font-semibold text-gray-800"
+                            onChange={(e) => {
+                              column.toggleVisibility(!!e.target.checked);
+                            }}
+                          />
+                        );
+                      })}
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {isTableMode && (
+        <>
+          <Button type="button" onClick={onPrint} variant="tertiary" leftIcon={Printer}>
+            {t('Print')}
+          </Button>
+          <Button type="button" onClick={onCSVExport} variant="tertiary" leftIcon={FileDown}>
+            {t('CSV')}
+          </Button>
+        </>
+      )}
+
+      <Button type="button" onClick={onRefresh} variant="tertiary" leftIcon={RefreshCw}>
+        {t('Refresh')}
+      </Button>
+
+      {onViewModeChange && (
+        <div className="flex items-center rounded-lg bg-gray-50">
+          {(!availableViewModes || availableViewModes.includes('table')) && (
+            <Button
+              variant="tertiary"
+              onClick={() => onViewModeChange('table')}
+              className={getToggleButtonStyle(isTableMode)}
+              title={t('Table View')}
+            >
+              <List className="size-4" />
+            </Button>
+          )}
+          {(!availableViewModes || availableViewModes.includes('grid')) && (
+            <Button
+              variant="tertiary"
+              onClick={() => onViewModeChange('grid')}
+              className={getToggleButtonStyle(isGridMode)}
+              title={t('Grid View')}
+            >
+              <LayoutGrid className="size-4" />
+            </Button>
+          )}
+          {(!availableViewModes || availableViewModes.includes('map')) && (
+            <Button
+              variant="tertiary"
+              onClick={() => onViewModeChange('map')}
+              className={getToggleButtonStyle(isMapMode)}
+              title={t('Map View')}
+            >
+              <Map className="size-4" />
+            </Button>
+          )}
+          {(!availableViewModes || availableViewModes.includes('calendar')) && (
+            <Button
+              variant="tertiary"
+              onClick={() => onViewModeChange('calendar')}
+              className={getToggleButtonStyle(isCalendarMode)}
+              title={t('Calendar View')}
+            >
+              <CalendarRange className="size-4" />
+            </Button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

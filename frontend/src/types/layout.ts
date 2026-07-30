@@ -1,0 +1,66 @@
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+import type { Tag } from './tag';
+
+export interface Layout {
+  layoutId: number;
+  layout: string;
+  parentId?: number;
+  showDrafts?: number;
+  userId?: number;
+  retired: boolean;
+  tags: Tag[];
+  exactTags?: number;
+  logicalOperator?: string;
+  ownerUserGroupId?: number;
+  publishedStatusId?: number;
+  embed?: string;
+  campaignId: number;
+  folderId: number;
+  status: number;
+  duration: number;
+  thumbnail?: string;
+  previewUrl?: string;
+  previewDraftUrl?: string;
+  campaignType?: string;
+  owner: string;
+  groupsWithPermissions?: string;
+  enableStat: boolean;
+  modifiedDt: string;
+  code?: string | number;
+  description?: string;
+  descriptionFormatted?: string;
+  ownerId: number;
+  userPermissions?: LayoutPermissions;
+  permissionsFolderId: number;
+  orientation: string;
+  width: number;
+  height: number;
+  publishedStatus: string;
+}
+
+export interface LayoutPermissions {
+  view?: number;
+  edit?: number;
+  delete?: number;
+  modifyPermissions?: number;
+}

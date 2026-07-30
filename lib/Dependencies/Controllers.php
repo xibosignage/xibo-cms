@@ -54,7 +54,6 @@ class Controllers
                     $c->get('applicationScopeFactory'),
                     $c->get('userFactory'),
                     $c->get('pool'),
-                    $c->get('connectorFactory')
                 );
 
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
@@ -74,7 +73,6 @@ class Controllers
                     $c->get('tagFactory'),
                     $c->get('folderFactory'),
                     $c->get('displayGroupFactory'),
-                    $c->get('jwtService'),
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
@@ -207,18 +205,10 @@ class Controllers
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
-            '\Xibo\Controller\Fault' => function (ContainerInterface $c) {
-                $controller = new \Xibo\Controller\Fault(
-                    $c->get('store'),
-                    $c->get('logFactory'),
-                    $c->get('displayFactory')
-                );
-                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
-                return $controller;
-            },
             '\Xibo\Controller\Folder' => function (ContainerInterface $c) {
                 $controller = new \Xibo\Controller\Folder(
-                    $c->get('folderFactory')
+                    $c->get('folderFactory'),
+                    $c->get('permissionFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
@@ -231,8 +221,10 @@ class Controllers
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
-            '\Xibo\Controller\IconDashboard' => function (ContainerInterface $c) {
-                $controller =  new \Xibo\Controller\IconDashboard();
+            '\Xibo\Controller\Help' => function (ContainerInterface $c) {
+                $controller = new \Xibo\Controller\Help(
+                    $c->get('helpService')
+                );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
@@ -295,9 +287,6 @@ class Controllers
                     $c->get('pool')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
-                if ($c->has('flash')) {
-                    $controller->setFlash($c->get('flash'));
-                }
                 return $controller;
             },
             '\Xibo\Controller\Maintenance' => function (ContainerInterface $c) {
@@ -349,9 +338,7 @@ class Controllers
                 $controller = new \Xibo\Controller\PlaylistDashboard(
                     $c->get('playlistFactory'),
                     $c->get('moduleFactory'),
-                    $c->get('widgetFactory'),
                     $c->get('mediaFactory'),
-                    $c
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
@@ -370,7 +357,8 @@ class Controllers
                     $c->get('userNotificationFactory'),
                     $c->get('displayGroupFactory'),
                     $c->get('userGroupFactory'),
-                    $c->get('displayNotifyService')
+                    $c->get('displayNotifyService'),
+                    $c->get('session')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
@@ -387,9 +375,9 @@ class Controllers
                     $c->get('pool'),
                     $c->get('playerVersionFactory'),
                     $c->get('displayProfileFactory'),
-                    $c->get('displayFactory')
+                    $c->get('displayFactory'),
+                    $c->get('mediaService')
                 );
-                $controller->useMediaService($c->get('mediaService'));
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
@@ -463,8 +451,6 @@ class Controllers
                     $c->get('reportService'),
                     $c->get('reportScheduleFactory'),
                     $c->get('savedReportFactory'),
-                    $c->get('mediaFactory'),
-                    $c->get('userFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
@@ -487,11 +473,9 @@ class Controllers
             },
             '\Xibo\Controller\Schedule' => function (ContainerInterface $c) {
                 $controller = new \Xibo\Controller\Schedule(
-                    $c->get('session'),
                     $c->get('scheduleFactory'),
                     $c->get('displayGroupFactory'),
                     $c->get('campaignFactory'),
-                    $c->get('commandFactory'),
                     $c->get('displayFactory'),
                     $c->get('layoutFactory'),
                     $c->get('dayPartFactory'),
@@ -504,27 +488,16 @@ class Controllers
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
-            '\Xibo\Controller\CypressTest' => function (ContainerInterface $c) {
-                $controller = new \Xibo\Controller\CypressTest(
-                    $c->get('store'),
-                    $c->get('session'),
-                    $c->get('scheduleFactory'),
-                    $c->get('displayGroupFactory'),
-                    $c->get('campaignFactory'),
-                    $c->get('displayFactory'),
-                    $c->get('layoutFactory'),
-                    $c->get('dayPartFactory'),
-                    $c->get('folderFactory'),
-                    $c->get('commandFactory')
-                );
-                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
-                return $controller;
-            },
             '\Xibo\Controller\Sessions' => function (ContainerInterface $c) {
                 $controller = new \Xibo\Controller\Sessions(
                     $c->get('store'),
                     $c->get('sessionFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
+            },
+            '\Xibo\Controller\Spa' => function (ContainerInterface $c) {
+                $controller = new \Xibo\Controller\Spa();
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
@@ -554,7 +527,6 @@ class Controllers
                     $c->get('pool'),
                     $c->get('userFactory'),
                     $c->get('displayFactory'),
-                    $c->get('displayGroupFactory'),
                     $c->get('mediaFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
@@ -576,10 +548,7 @@ class Controllers
                     $c->get('displayGroupFactory'),
                     $c->get('layoutFactory'),
                     $c->get('tagFactory'),
-                    $c->get('userFactory'),
-                    $c->get('displayFactory'),
                     $c->get('mediaFactory'),
-                    $c->get('scheduleFactory'),
                     $c->get('campaignFactory'),
                     $c->get('playlistFactory')
                 );

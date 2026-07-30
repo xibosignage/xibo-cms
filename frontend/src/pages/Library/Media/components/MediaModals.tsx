@@ -1,0 +1,321 @@
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+import { useTranslation } from 'react-i18next';
+
+import { ACCEPTED_MIME_TYPES } from '../MediaConfig';
+
+import CopyMediaModal from './CopyMediaModal';
+import DeleteMediaModal from './DeleteMediaModal';
+import EditMediaModal from './EditMediaModal';
+import EnableStatsMediaModal from './EnableStatsMediaModal';
+import { MediaInfoPanel } from './MediaInfoPanel';
+import ReplaceFileModal from './ReplaceFileModal';
+import TidyLibraryModal from './TidyLibraryModal';
+
+import { FileUploader } from '@/components/ui/FileUploader';
+import FolderActionModals from '@/components/ui/FolderActionModals';
+import SelectFolder from '@/components/ui/forms/SelectFolder';
+import EditTagsMultipleModal from '@/components/ui/modals/EditTagsMultipleModal';
+import EnableStatsMultipleModal from '@/components/ui/modals/EnableStatsMultipleModal';
+import Modal from '@/components/ui/modals/Modal';
+import MoveModal from '@/components/ui/modals/MoveModal';
+import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
+import ShareModal from '@/components/ui/modals/ShareModal';
+import UsageReportModal from '@/components/ui/modals/UsageReportModal';
+import type { useFolderActions } from '@/hooks/useFolderActions';
+import type { UploadItem } from '@/hooks/useUploadQueue';
+import { setMediaEnableStat } from '@/services/mediaApi';
+import { EventTypeId } from '@/types/event';
+import type { Media } from '@/types/media';
+import type { Tag } from '@/types/tag';
+import type { User } from '@/types/user';
+import { mergeEntityTags } from '@/utils/tags';
+
+interface MediaModalsProps {
+  actions: {
+    activeModal: string | null;
+    closeModal: () => void;
+    handleRefresh: () => void;
+    deleteError: string | null;
+    isDeleting: boolean;
+    isCloning: boolean;
+    isUpdatingStats: boolean;
+    isTidying: boolean;
+    tidyError: string | null;
+  };
+  selection: {
+    selectedMedia: Media | null;
+    itemsToDelete: Media[];
+    itemsToMove: Media[];
+    bulkItems: Media[];
+    existingNames: string[];
+    shareEntityIds: number | number[] | null;
+    setShareEntityIds: React.Dispatch<React.SetStateAction<number | number[] | null>>;
+  };
+  handlers: {
+    confirmDelete: (options: { allLayouts: boolean; purgeList: boolean }) => void;
+    handleConfirmClone: (newName: string, tags: Tag[]) => void;
+    handleConfirmMove: (newFolderId: number) => void;
+    handleConfirmEnableStats: (value: string) => void;
+    handleConfirmTidy: (options: { tidyGenericFiles: boolean }) => void;
+  };
+  upload: {
+    isOpen: boolean;
+    setOpen: (open: boolean) => void;
+    queue: UploadItem[];
+    onStart: () => void;
+    onCancel: () => void;
+    onManualAdd: (files: File[]) => void;
+    onUrlAdd: (url: string, folderId: number) => void;
+    removeFile: (id: string) => void;
+    updateFileData: (id: string, data: Partial<UploadItem>) => void;
+    clearQueue: () => void;
+    canAdd: boolean;
+    targetFolderId: number;
+    selectedFolderId: number | null;
+    setSelectedFolderId: (id: number | null) => void;
+    canViewFolders: boolean;
+    canTag: boolean;
+    maxSize: number;
+  };
+  infoPanel: {
+    isOpen: boolean;
+    setOpen: (open: boolean) => void;
+    setSelectedMediaId: (id: number | null) => void;
+    owner: User | null;
+    loading: boolean;
+    folderName: string;
+  };
+  folderActions: ReturnType<typeof useFolderActions>;
+}
+
+export function MediaModals({
+  actions,
+  selection,
+  handlers,
+  upload,
+  infoPanel,
+  folderActions,
+}: MediaModalsProps) {
+  const { t } = useTranslation();
+
+  const isModalOpen = (name: string) => actions.activeModal === name;
+
+  const addModalActions = [
+    {
+      label: t('Cancel'),
+      onClick: upload.onCancel,
+      variant: 'secondary' as const,
+      className: 'bg-transparent',
+    },
+    {
+      label: t('Done'),
+      onClick: upload.onStart,
+      variant: 'primary' as const,
+      disabled: upload.queue.length === 0,
+    },
+  ];
+
+  return (
+    <>
+      {isModalOpen('delete') && (
+        <DeleteMediaModal
+          onClose={actions.closeModal}
+          onDelete={handlers.confirmDelete}
+          itemCount={selection.itemsToDelete.length}
+          fileName={
+            selection.itemsToDelete.length === 1 ? selection.itemsToDelete[0]?.name : undefined
+          }
+          isLoading={actions.isDeleting}
+          error={actions.deleteError}
+        />
+      )}
+
+      {isModalOpen('tidy') && (
+        <TidyLibraryModal
+          onClose={actions.closeModal}
+          onConfirm={handlers.handleConfirmTidy}
+          isLoading={actions.isTidying}
+          error={actions.tidyError}
+        />
+      )}
+
+      {isModalOpen('copy') && (
+        <CopyMediaModal
+          onClose={actions.closeModal}
+          onConfirm={handlers.handleConfirmClone}
+          media={selection.selectedMedia}
+          isLoading={actions.isCloning}
+          existingNames={selection.existingNames}
+        />
+      )}
+
+      {isModalOpen('move') && (
+        <MoveModal
+          onClose={actions.closeModal}
+          onConfirm={handlers.handleConfirmMove}
+          items={selection.itemsToMove}
+          entityLabel="Media"
+        />
+      )}
+
+      {isModalOpen('share') && (
+        <ShareModal
+          title={t('Share Media')}
+          onClose={() => {
+            actions.closeModal();
+            selection.setShareEntityIds(null);
+            actions.handleRefresh();
+          }}
+          entityType="media"
+          entityId={selection.shareEntityIds ?? (selection.selectedMedia?.mediaId || null)}
+        />
+      )}
+
+      {isModalOpen('editTagsMultiple') && (
+        <EditTagsMultipleModal
+          targetType="media"
+          ids={selection.bulkItems.map((item) => item.mediaId)}
+          existingTags={mergeEntityTags(selection.bulkItems)}
+          onClose={actions.closeModal}
+          onSuccess={() => {
+            actions.closeModal();
+            actions.handleRefresh();
+          }}
+        />
+      )}
+
+      {isModalOpen('enableStatsMultiple') && (
+        <EnableStatsMultipleModal
+          ids={selection.bulkItems.map((item) => item.mediaId)}
+          entityLabel={t('media items')}
+          mode="inherit"
+          setEnableStat={(id, enableStat) => setMediaEnableStat(id, String(enableStat))}
+          onClose={actions.closeModal}
+          onSuccess={() => actions.handleRefresh()}
+        />
+      )}
+
+      {selection.selectedMedia && (
+        <>
+          {isModalOpen('edit') && (
+            <EditMediaModal
+              onClose={actions.closeModal}
+              onSave={() => {
+                actions.handleRefresh();
+              }}
+              data={selection.selectedMedia}
+            />
+          )}
+
+          {isModalOpen('replace') && (
+            <ReplaceFileModal
+              onClose={actions.closeModal}
+              data={selection.selectedMedia}
+              onSave={() => {
+                actions.handleRefresh();
+              }}
+            />
+          )}
+
+          {isModalOpen('enableStats') && (
+            <EnableStatsMediaModal
+              media={selection.selectedMedia}
+              isLoading={actions.isUpdatingStats}
+              onClose={actions.closeModal}
+              onConfirm={handlers.handleConfirmEnableStats}
+            />
+          )}
+        </>
+      )}
+
+      {isModalOpen('schedule') && (
+        <ScheduleEventModal
+          isOpen
+          onClose={actions.closeModal}
+          mode="schedule"
+          eventTypeId={EventTypeId.Media}
+          contentId={selection.selectedMedia?.mediaId}
+          contentName={selection.selectedMedia?.name}
+        />
+      )}
+
+      {isModalOpen('usageReport') && selection.selectedMedia && (
+        <UsageReportModal
+          entityType="media"
+          entityId={selection.selectedMedia.mediaId}
+          entityName={selection.selectedMedia.name}
+          onClose={actions.closeModal}
+        />
+      )}
+
+      {upload.isOpen && (
+        <Modal onClose={upload.onCancel} title={t('Add Media')} actions={addModalActions} size="lg">
+          <div className="flex flex-col gap-3 p-8 pt-0">
+            {upload.canViewFolders && (
+              <SelectFolder
+                selectedId={upload.selectedFolderId ?? upload.targetFolderId}
+                onSelect={(folder) => {
+                  if (folder) {
+                    upload.setSelectedFolderId(folder.id);
+                  }
+                }}
+              />
+            )}
+
+            <FileUploader
+              queue={upload.queue}
+              acceptedFileTypes={ACCEPTED_MIME_TYPES}
+              addFiles={upload.onManualAdd}
+              removeFile={upload.removeFile}
+              clearQueue={upload.clearQueue}
+              updateFileData={upload.updateFileData}
+              isUploading={false}
+              maxSize={upload.maxSize}
+              disabled={!upload.canAdd}
+              canTag={upload.canTag}
+              onUrlUpload={(url) => {
+                upload.onUrlAdd(url, upload.targetFolderId);
+              }}
+            />
+          </div>
+        </Modal>
+      )}
+
+      {infoPanel.isOpen && (
+        <MediaInfoPanel
+          onClose={() => {
+            infoPanel.setSelectedMediaId(null);
+            infoPanel.setOpen(false);
+          }}
+          mediaData={selection.selectedMedia}
+          owner={infoPanel.owner}
+          applyVersionTwo
+          folderName={infoPanel.folderName}
+          loading={infoPanel.loading}
+        />
+      )}
+
+      <FolderActionModals folderActions={folderActions} />
+    </>
+  );
+}

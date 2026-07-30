@@ -1,0 +1,51 @@
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+import axios from 'axios';
+
+import { triggerSessionExpired } from './auth-events';
+
+import { withPublicPath } from '@/config/publicPath';
+
+// The JSON API is served by the CMS under its install root, so prefix with publicPath
+// (rootUri) — '/json' at a root install, '/cms/json' under an alias.
+const BASE_URL = withPublicPath(import.meta.env.VITE_API_BASE_URL || 'json');
+
+const http = axios.create({
+  baseURL: BASE_URL,
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+http.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    if (err.response?.status === 401) {
+      console.warn('Unauthorized access. Redirecting to login...');
+      triggerSessionExpired();
+    }
+    return Promise.reject(err);
+  },
+);
+
+export default http;

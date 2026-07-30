@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -25,6 +25,7 @@ namespace Xibo\Widget\Render;
 use GuzzleHttp\Psr7\LimitStream;
 use GuzzleHttp\Psr7\Stream;
 use Intervention\Image\ImageManagerStatic as Img;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -71,7 +72,7 @@ class WidgetDownloader
      * @param \Slim\Http\Response $response
      * @param string|null $contentType An optional content type, if provided the attachment is ignored
      * @param string|null $attachment An optional attachment, defaults to the stored file name (storedAs)
-     * @return \Slim\Http\Response
+     * @return Response|ResponseInterface
      */
     public function download(
         Media $media,
@@ -79,7 +80,7 @@ class WidgetDownloader
         Response $response,
         ?string $contentType = null,
         ?string $attachment = null
-    ): Response {
+    ): Response|ResponseInterface {
         $this->logger->debug('widgetDownloader::download: Download for mediaId ' . $media->mediaId);
 
         // The file path
@@ -92,6 +93,11 @@ class WidgetDownloader
         $fileSize = filesize($libraryPath);
         $headers['Content-Length'] = $fileSize;
 
+        // Issue some caching headers - these apply whether we're serving a real content type
+        // (e.g. streaming playback) or forcing an attachment download.
+        $response = HttpCacheProvider::withEtag($response, $media->md5);
+        $response = HttpCacheProvider::withExpires($response, '+1 week');
+
         // If we have been given a content type, then serve that to the browser.
         if ($contentType !== null) {
             $headers['Content-Type'] = $contentType;
@@ -99,10 +105,6 @@ class WidgetDownloader
             // This widget is expected to output a file - usually this is for file based media
             // Get the name with library
             $attachmentName = empty($attachment) ? $media->storedAs : $attachment;
-
-            // Issue some headers
-            $response = HttpCacheProvider::withEtag($response, $media->md5);
-            $response = HttpCacheProvider::withExpires($response, '+1 week');
 
             $headers['Content-Type'] = 'application/octet-stream';
             $headers['Content-Transfer-Encoding'] = 'Binary';
@@ -126,6 +128,8 @@ class WidgetDownloader
             $stream = new Stream(fopen($libraryPath, 'r'));
             $start = 0;
             $end = $fileSize - 1;
+
+            $headers['Accept-Ranges'] = 'bytes';
 
             $rangeHeader = $request->getHeaderLine('Range');
             if ($rangeHeader !== '') {
@@ -176,9 +180,11 @@ class WidgetDownloader
         // and then thumbnails in tn_{mediaId}_{mediaType}cover.png
         // unless we are an image module, which is its own image, and would then have a thumbnail in
         // tn_{mediaId}_{mediaType}cover.png
+        // This single cached thumbnail is shared by the library table view (shown small) and the
+        // gallery view (shown larger) - sized for the gallery, downscaled by the browser for the table.
         try {
-            $width = 120;
-            $height = 120;
+            $width = 320;
+            $height = 320;
 
             if ($media->mediaType === 'image') {
                 $filePath = $this->libraryLocation . $media->storedAs;

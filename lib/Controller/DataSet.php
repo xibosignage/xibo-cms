@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -21,9 +21,12 @@
  */
 namespace Xibo\Controller;
 
+use OpenApi\Attributes as OA;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Event\DataConnectorScriptRequestEvent;
+use Xibo\Event\FolderTouchEvent;
 use Xibo\Event\DataConnectorSourceRequestEvent;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
@@ -34,6 +37,9 @@ use Xibo\Helper\Random;
 use Xibo\Helper\SendFile;
 use Xibo\Service\MediaService;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\ControllerNotImplemented;
+use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -42,6 +48,33 @@ use Xibo\Support\Exception\NotFoundException;
  * Class DataSet
  * @package Xibo\Controller
  */
+#[OA\Schema(
+    schema: 'importJsonSchema',
+    description: 'Schema for importing JSON data into a DataSet',
+    properties: [
+        new OA\Property(
+            property: 'uniqueKeys',
+            description: 'A name of the unique column',
+            type: 'array',
+            items: new OA\Items(type: 'string')
+        ),
+        new OA\Property(
+            property: 'truncate',
+            description: 'Flag True or False, whether to truncate existing data on import',
+            type: 'boolean'
+        ),
+        new OA\Property(
+            property: 'rows',
+            description: 'An array of objects with pairs: ColumnName:Value',
+            type: 'array',
+            items: new OA\Items(
+                type: 'object',
+                additionalProperties: new OA\AdditionalProperties(type: 'string')
+            )
+        )
+    ],
+    type: 'object'
+)]
 class DataSet extends Base
 {
     /** @var  DataSetFactory */
@@ -79,289 +112,135 @@ class DataSet extends Base
         return $this->dataSetFactory;
     }
 
-    /**
-     * View Route
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function displayPage(Request $request, Response $response)
-    {
-        $this->getState()->template = 'dataset-page';
-
-        return $this->render($request, $response);
-    }
-
+    #[OA\Get(
+        path: '/dataset',
+        operationId: 'dataSetSearch',
+        description: 'Search this users DataSets',
+        summary: 'DataSet Search',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        description: 'Filter by DataSet Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'dataSet',
+        description: 'Filter by DataSet Name',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'code',
+        description: 'Filter by DataSet Code',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'isRealTime',
+        description: 'Filter by real time',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'userId',
+        description: 'Filter by user Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'embed',
+        description: 'Embed related data such as columns',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'folderId',
+        description: 'Filter by Folder ID',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'string',
+            enum: [
+                'dataSetId',
+                'dataSet',
+                'code',
+                'isRemote',
+                'isRealTime',
+                'owner',
+                'lastSync',
+                'dataLastModified',
+                'groupsWithPermissions'
+            ]
+        )
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ],
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/DataSet')
+        )
+    )]
     /**
      * Search Data
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Get(
-     *  path="/dataset",
-     *  operationId="dataSetSearch",
-     *  tags={"dataset"},
-     *  summary="DataSet Search",
-     *  description="Search this users DataSets",
-     *  @SWG\Parameter(
-     *      name="dataSetId",
-     *      in="query",
-     *      description="Filter by DataSet Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="dataSet",
-     *      in="query",
-     *      description="Filter by DataSet Name",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="code",
-     *      in="query",
-     *      description="Filter by DataSet Code",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isRealTime",
-     *      in="query",
-     *      description="Filter by real time",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="userId",
-     *      in="query",
-     *      description="Filter by user Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="embed",
-     *      in="query",
-     *      description="Embed related data such as columns",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="query",
-     *      description="Filter by Folder ID",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/DataSet")
-     *      )
-     *  )
-     * )
+     * @throws ControllerNotImplemented
      */
-    public function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response): Response|ResponseInterface
     {
-        $user = $this->getUser();
         $sanitizedParams = $this->getSanitizer($request->getQueryParams());
+        $datasetsSortQuery = $this->gridRenderSort(
+            $sanitizedParams,
+            $this->isJson($request),
+            'dataSet'
+        );
+        $datasetsFilterQuery = $this->getDatasetsFilterQuery($sanitizedParams);
 
-        // Embed?
-        $embed = ($sanitizedParams->getString('embed') != null) ? explode(',', $sanitizedParams->getString('embed')) : [];
-
-        $filter = [
-            'dataSetId' => $sanitizedParams->getInt('dataSetId'),
-            'dataSet' => $sanitizedParams->getString('dataSet'),
-            'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
-            'code' => $sanitizedParams->getString('code'),
-            'isRealTime' => $sanitizedParams->getInt('isRealTime'),
-            'userId' => $sanitizedParams->getInt('userId'),
-            'folderId' => $sanitizedParams->getInt('folderId'),
-            'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
-        ];
-
-        $dataSets = $this->dataSetFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter($filter, $sanitizedParams));
+        $dataSets = $this->dataSetFactory->query($datasetsSortQuery, $datasetsFilterQuery);
 
         foreach ($dataSets as $dataSet) {
-            /* @var \Xibo\Entity\DataSet $dataSet */
-            if (in_array('columns', $embed)) {
-                $dataSet->load();
-            }
-            if ($this->isApi($request)) {
-                break;
-            }
-
-            $dataSet->includeProperty('buttons');
-            $dataSet->buttons = [];
-
-            // Load the dataSet to get the columns
             $dataSet->load();
 
-            if ($this->getUser()->featureEnabled('dataset.data') && $user->checkEditable($dataSet)) {
-                // View Data
-                $dataSet->buttons[] = array(
-                    'id' => 'dataset_button_viewdata',
-                    'class' => 'XiboRedirectButton',
-                    'url' => $this->urlFor($request, 'dataSet.view.data', ['id' => $dataSet->dataSetId]),
-                    'text' => __('View Data')
-                );
-            }
-
-            if ($this->getUser()->featureEnabled('dataset.modify')) {
-                if ($user->checkEditable($dataSet)) {
-                    // View Columns
-                    $dataSet->buttons[] = array(
-                        'id' => 'dataset_button_viewcolumns',
-                        'url' => $this->urlFor($request, 'dataSet.column.view', ['id' => $dataSet->dataSetId]),
-                        'class' => 'XiboRedirectButton',
-                        'text' => __('View Columns')
-                    );
-
-                    // View RSS
-                    $dataSet->buttons[] = array(
-                        'id' => 'dataset_button_viewrss',
-                        'url' => $this->urlFor($request, 'dataSet.rss.view', ['id' => $dataSet->dataSetId]),
-                        'class' => 'XiboRedirectButton',
-                        'text' => __('View RSS')
-                    );
-
-                    if ($this->getUser()->featureEnabled('dataset.realtime') && $dataSet->isRealTime === 1) {
-                        $dataSet->buttons[] = [
-                            'id' => 'dataset_button_view_data_connector',
-                            'url' => $this->urlFor($request, 'dataSet.dataConnector.view', [
-                                'id' => $dataSet->dataSetId
-                            ]),
-                            'class' => 'XiboRedirectButton',
-                            'text' => __('View Data Connector'),
-                        ];
-                    }
-
-                    // Divider
-                    $dataSet->buttons[] = ['divider' => true];
-
-                    // Import DataSet
-                    if ($dataSet->isRemote !== 1) {
-                        $dataSet->buttons[] = array(
-                            'id' => 'dataset_button_import',
-                            'class' => 'dataSetImportForm',
-                            'text' => __('Import CSV')
-                        );
-                    }
-
-                    // Copy
-                    $dataSet->buttons[] = array(
-                        'id' => 'dataset_button_copy',
-                        'url' => $this->urlFor($request, 'dataSet.copy.form', ['id' => $dataSet->dataSetId]),
-                        'text' => __('Copy')
-                    );
-
-                    // Divider
-                    $dataSet->buttons[] = ['divider' => true];
-
-                    // Edit DataSet
-                    $dataSet->buttons[] = array(
-                        'id' => 'dataset_button_edit',
-                        'url' => $this->urlFor($request, 'dataSet.edit.form', ['id' => $dataSet->dataSetId]),
-                        'text' => __('Edit')
-                    );
-
-                    if ($this->getUser()->featureEnabled('folder.view')) {
-                        // Select Folder
-                        $dataSet->buttons[] = [
-                            'id' => 'dataSet_button_selectfolder',
-                            'url' => $this->urlFor($request, 'dataSet.selectfolder.form', ['id' => $dataSet->dataSetId]),
-                            'text' => __('Select Folder'),
-                            'multi-select' => true,
-                            'dataAttributes' => [
-                                [
-                                    'name' => 'commit-url',
-                                    'value' => $this->urlFor($request, 'dataSet.selectfolder', ['id' => $dataSet->dataSetId])
-                                ],
-                                ['name' => 'commit-method', 'value' => 'put'],
-                                ['name' => 'id', 'value' => 'dataSet_button_selectfolder'],
-                                ['name' => 'text', 'value' => __('Move to Folder')],
-                                ['name' => 'rowtitle', 'value' => $dataSet->dataSet],
-                                ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
-                            ]
-                        ];
-                    }
-
-                    $dataSet->buttons[] = [
-                        'id' => 'dataset_button_csv_export',
-                        'linkType' => '_self', 'external' => true,
-                        'url' => $this->urlFor($request, 'dataSet.export.csv', ['id' => $dataSet->dataSetId]),
-                        'text' => __('Export (CSV)')
-                    ];
-
-                    if ($dataSet->isRemote === 1) {
-                        $dataSet->buttons[] = [
-                            'id' => 'dataset_button_clear_cache',
-                            'url' => $this->urlFor($request, 'dataSet.clear.cache.form', ['id' => $dataSet->dataSetId]),
-                            'text' => __('Clear Cache'),
-                            'dataAttributes' => [
-                                ['name' => 'auto-submit', 'value' => true],
-                                ['name' => 'commit-url', 'value' => $this->urlFor($request, 'dataSet.clear.cache', ['id' => $dataSet->dataSetId])],
-                                ['name' => 'commit-method', 'value' => 'POST']
-                            ]
-                        ];
-                    }
-                }
-
-                if ($user->checkDeleteable($dataSet)
-                    && $dataSet->isLookup == 0
-                    && ($dataSet->isRealTime === 0 || $this->getUser()->featureEnabled('dataset.realtime'))
-                ) {
-                    $dataSet->buttons[] = ['divider' => true];
-                    // Delete DataSet
-                    $dataSet->buttons[] = [
-                        'id' => 'dataset_button_delete',
-                        'url' => $this->urlFor($request, 'dataSet.delete.form', ['id' => $dataSet->dataSetId]),
-                        'text' => __('Delete'),
-                        'multi-select' => true,
-                        'dataAttributes' => [
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request, 'dataSet.delete', ['id' => $dataSet->dataSetId])],
-                            ['name' => 'commit-method', 'value' => 'delete'],
-                            ['name' => 'id', 'value' => 'dataset_button_delete'],
-                            ['name' => 'text', 'value' => __('Delete')],
-                            ['name' => 'rowtitle', 'value' => $dataSet->dataSet],
-                            ['name' => 'sort-group', 'value' => 1],
-                            ['name' => 'form-callback', 'value' => 'deleteMultiSelectFormOpen']
-                        ]
-                    ];
-                }
-
-                // Divider
-                $dataSet->buttons[] = ['divider' => true];
-
-                if ($user->checkPermissionsModifyable($dataSet)) {
-                    // Edit Permissions
-                    $dataSet->buttons[] = [
-                        'id' => 'dataset_button_permissions',
-                        'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DataSet', 'id' => $dataSet->dataSetId]),
-                        'text' => __('Share'),
-                        'multi-select' => true,
-                        'dataAttributes' => [
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'DataSet', 'id' => $dataSet->dataSetId])],
-                            ['name' => 'commit-method', 'value' => 'post'],
-                            ['name' => 'id', 'value' => 'dataset_button_permissions'],
-                            ['name' => 'text', 'value' => __('Share')],
-                            ['name' => 'rowtitle', 'value' => $dataSet->dataSet],
-                            ['name' => 'sort-group', 'value' => 2],
-                            ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                            ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'DataSet'])],
-                            ['name' => 'content-id-name', 'value' => 'dataSetId']
-                        ]
-                    ];
-                }
-            }
+            $dataSet->setUnmatchedProperty(
+                'userPermissions',
+                $this->getUser()->getPermission($dataSet)
+            );
         }
 
+        // TODO: Convert this to a JSON response once the dataset module inside the layout editor is ready
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->dataSetFactory->countLast();
         $this->getState()->setData($dataSets);
@@ -369,260 +248,186 @@ class DataSet extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(
+        path: '/dataset/{id}',
+        operationId: 'datasetSearchById',
+        description: 'Get the DataSet object specified by the provided datasetId',
+        summary: 'DataSet Search by ID',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'datasetId',
+        description: 'Numeric ID of the DataSet to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DataSet')
+    )]
     /**
-     * Add DataSet Form
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
+     * @param int $id
+     * @return Response|ResponseInterface
+     * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function addForm(Request $request, Response $response)
+    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
     {
+        $dataset = $this->dataSetFactory->getById($id, false);
 
-        // Dispatch an event to initialize list of data sources for data connectors
-        $event = new DataConnectorSourceRequestEvent();
-        $this->getDispatcher()->dispatch($event, DataConnectorSourceRequestEvent::$NAME);
+        $dataset->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($dataset));
 
-        // Retrieve data connector sources from the event
-        $dataConnectorSources = $event->getDataConnectorSources();
-
-        $this->getState()->template = 'dataset-form-add';
-        $this->getState()->setData([
-            'dataSets' => $this->dataSetFactory->query(),
-            'dataConnectorSources' => $dataConnectorSources,
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson($dataset);
     }
 
+    #[OA\Post(
+        path: '/dataset',
+        operationId: 'dataSetAdd',
+        description: 'Add a DataSet',
+        summary: 'Add DataSet',
+        tags: ['dataset']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'dataSet', description: 'The DataSet Name', type: 'string'),
+                    new OA\Property(property: 'description', description: 'A description of this DataSet', type: 'string'),
+                    new OA\Property(property: 'code', description: 'A code for this DataSet', type: 'string'),
+                    new OA\Property(property: 'isRemote', description: 'Is this a remote DataSet?', type: 'integer'),
+                    new OA\Property(property: 'isRealTime', description: 'Is this a real time DataSet?', type: 'integer'),
+                    new OA\Property(
+                        property: 'dataConnectorSource',
+                        description: 'Source of the data connector',
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'method', description: 'The Request Method GET or POST', type: 'string'),
+                    new OA\Property(property: 'uri', description: 'The URI, without query parameters', type: 'string'),
+                    new OA\Property(
+                        property: 'postData',
+                        description: 'query parameter encoded data to add to the request',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'authentication',
+                        description: 'HTTP Authentication method None|Basic|Digest',
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'username', description: 'HTTP Authentication User Name', type: 'string'),
+                    new OA\Property(property: 'password', description: 'HTTP Authentication Password', type: 'string'),
+                    new OA\Property(
+                        property: 'customHeaders',
+                        description: 'Comma separated string of custom HTTP headers',
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'userAgent', description: 'Custom user Agent value', type: 'string'),
+                    new OA\Property(
+                        property: 'refreshRate',
+                        description: 'How often in seconds should this remote DataSet be refreshed',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'clearRate',
+                        description: 'How often in seconds should this remote DataSet be truncated',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'truncateOnEmpty',
+                        description: 'Should the DataSet data be truncated even if no new data is pulled from the source?', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'runsAfter',
+                        description: 'An optional dataSetId which should be run before this Remote DataSet',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'dataRoot',
+                        description: 'The root of the data in the Remote source which is used as the base for all remote columns', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'summarize',
+                        description: 'Should the data be aggregated? None|Summarize|Count',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'summarizeField',
+                        description: 'Which field should be used to summarize',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'sourceId',
+                        description: 'For remote DataSet, what type data is it? 1 - json, 2 - csv',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'ignoreFirstRow',
+                        description: 'For remote DataSet with sourceId 2 (CSV), should we ignore first row?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'rowLimit',
+                        description: 'For remote DataSet, maximum number of rows this DataSet can hold, if left empty the CMS Setting for DataSet row limit will be used.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'limitPolicy',
+                        description: 'For remote DataSet, what should happen when the DataSet row limit is reached? stop, fifo or truncate', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'csvSeparator',
+                        description: 'Separator that should be used when using Remote DataSets with CSV source, comma will be used by default.', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'dataConnectorScript',
+                        description: 'If isRealTime then provide a script to connect to the data source',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'folderId',
+                        description: 'Folder ID to which this object should be assigned to',
+                        type: 'integer'
+                    )
+                ],
+                required: ['dataSet', 'isRemote', 'isRealTime', 'dataConnectorSource']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ],
+        content: new OA\JsonContent(ref: '#/components/schemas/DataSet')
+    )]
     /**
      * Add dataSet
      *
-     * @SWG\Post(
-     *  path="/dataset",
-     *  operationId="dataSetAdd",
-     *  tags={"dataset"},
-     *  summary="Add DataSet",
-     *  description="Add a DataSet",
-     *  @SWG\Parameter(
-     *      name="dataSet",
-     *      in="formData",
-     *      description="The DataSet Name",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="description",
-     *      in="formData",
-     *      description="A description of this DataSet",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="code",
-     *      in="formData",
-     *      description="A code for this DataSet",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isRemote",
-     *      in="formData",
-     *      description="Is this a remote DataSet?",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isRealTime",
-     *      in="formData",
-     *      description="Is this a real time DataSet?",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *   @SWG\Parameter(
-     *       name="dataConnectorSource",
-     *       in="formData",
-     *       description="Source of the data connector",
-     *       type="string",
-     *       required=true
-     *    ),
-     *  @SWG\Parameter(
-     *      name="method",
-     *      in="formData",
-     *      description="The Request Method GET or POST",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="uri",
-     *      in="formData",
-     *      description="The URI, without query parameters",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="postData",
-     *      in="formData",
-     *      description="query parameter encoded data to add to the request",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="authentication",
-     *      in="formData",
-     *      description="HTTP Authentication method None|Basic|Digest",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="username",
-     *      in="formData",
-     *      description="HTTP Authentication User Name",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="password",
-     *      in="formData",
-     *      description="HTTP Authentication Password",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="customHeaders",
-     *      in="formData",
-     *      description="Comma separated string of custom HTTP headers",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="userAgent",
-     *      in="formData",
-     *      description="Custom user Agent value",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="refreshRate",
-     *      in="formData",
-     *      description="How often in seconds should this remote DataSet be refreshed",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="clearRate",
-     *      in="formData",
-     *      description="How often in seconds should this remote DataSet be truncated",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="truncateOnEmpty",
-     *      in="formData",
-     *      description="Should the DataSet data be truncated even if no new data is pulled from the source?",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="runsAfter",
-     *      in="formData",
-     *      description="An optional dataSetId which should be run before this Remote DataSet",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="dataRoot",
-     *      in="formData",
-     *      description="The root of the data in the Remote source which is used as the base for all remote columns",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="summarize",
-     *      in="formData",
-     *      description="Should the data be aggregated? None|Summarize|Count",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="summarizeField",
-     *      in="formData",
-     *      description="Which field should be used to summarize",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="sourceId",
-     *      in="formData",
-     *      description="For remote DataSet, what type data is it? 1 - json, 2 - csv",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ignoreFirstRow",
-     *      in="formData",
-     *      description="For remote DataSet with sourceId 2 (CSV), should we ignore first row?",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="rowLimit",
-     *      in="formData",
-     *      description="For remote DataSet, maximum number of rows this DataSet can hold, if left empty the CMS Setting for DataSet row limit will be used.",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="limitPolicy",
-     *      in="formData",
-     *      description="For remote DataSet, what should happen when the DataSet row limit is reached? stop, fifo or truncate",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="csvSeparator",
-     *      in="formData",
-     *      description="Separator that should be used when using Remote DataSets with CSV source, comma will be used by default.",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="dataConnectorScript",
-     *      in="formData",
-     *      description="If isRealTime then provide a script to connect to the data source",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="formData",
-     *      description="Folder ID to which this object should be assigned to",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/DataSet"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
-     *
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws InvalidArgumentException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @throws ControllerNotImplemented
+     * @throws DuplicateEntityException
      */
-    public function add(Request $request, Response $response)
+    public function add(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -668,7 +473,9 @@ class DataSet extends Base
             $dataSet->ignoreFirstRow = $sanitizedParams->getCheckbox('ignoreFirstRow');
             $dataSet->rowLimit = $sanitizedParams->getInt('rowLimit');
             $dataSet->limitPolicy = $sanitizedParams->getString('limitPolicy') ?? 'stop';
-            $dataSet->csvSeparator = ($dataSet->sourceId === 2) ? $sanitizedParams->getString('csvSeparator') ?? ',' : null;
+            $dataSet->csvSeparator = ($dataSet->sourceId === 2)
+                ? $sanitizedParams->getString('csvSeparator') ?? ','
+                : null;
         }
 
         // Also add one column
@@ -692,6 +499,8 @@ class DataSet extends Base
         // Save
         $dataSet->save();
 
+        $this->touchFolder($dataSet->folderId);
+
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 201,
@@ -703,276 +512,150 @@ class DataSet extends Base
         return $this->render($request, $response);
     }
 
-    /**
-     * Edit DataSet Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function editForm(Request $request, Response $response, $id)
-    {
-        $dataSet = $this->dataSetFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($dataSet)) {
-            throw new AccessDeniedException();
-        }
-
-        // Dispatch an event to initialize list of data sources for data connectors
-        $event = new DataConnectorSourceRequestEvent();
-        $this->getDispatcher()->dispatch($event, DataConnectorSourceRequestEvent::$NAME);
-
-        // Retrieve data sources from the event
-        $dataConnectorSources = $event->getDataConnectorSources();
-
-        // retrieve the columns of the selected dataset
-        $dataSet->getColumn();
-
-        // Set the form
-        $this->getState()->template = 'dataset-form-edit';
-        $this->getState()->setData([
-            'dataSet' => $dataSet,
-            'dataSets' => $this->dataSetFactory->query(),
-            'script' => $dataSet->getScript(),
-            'dataConnectorSources' => $dataConnectorSources
-        ]);
-
-        return $this->render($request, $response);
-    }
-
+    #[OA\Put(
+        path: '/dataset/{dataSetId}',
+        operationId: 'dataSetEdit',
+        description: 'Edit a DataSet',
+        summary: 'Edit DataSet',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        in: 'path',
+        description: 'The DataSet ID',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'dataSet', description: 'The DataSet Name', type: 'string'),
+                    new OA\Property(property: 'description', description: 'A description of this DataSet', type: 'string'),
+                    new OA\Property(property: 'code', description: 'A code for this DataSet', type: 'string'),
+                    new OA\Property(property: 'isRemote', description: 'Is this a remote DataSet?', type: 'integer'),
+                    new OA\Property(property: 'isRealTime', description: 'Is this a real time DataSet?', type: 'integer'),
+                    new OA\Property(
+                        property: 'dataConnectorSource',
+                        description: 'Source of the data connector',
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'method', description: 'The Request Method GET or POST', type: 'string'),
+                    new OA\Property(property: 'uri', description: 'The URI, without query parameters', type: 'string'),
+                    new OA\Property(
+                        property: 'postData',
+                        description: 'query parameter encoded data to add to the request',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'authentication',
+                        description: 'HTTP Authentication method None|Basic|Digest',
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'username', description: 'HTTP Authentication User Name', type: 'string'),
+                    new OA\Property(property: 'password', description: 'HTTP Authentication Password', type: 'string'),
+                    new OA\Property(
+                        property: 'customHeaders',
+                        description: 'Comma separated string of custom HTTP headers',
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'userAgent', description: 'Custom user Agent value', type: 'string'),
+                    new OA\Property(
+                        property: 'refreshRate',
+                        description: 'How often in seconds should this remote DataSet be refreshed',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'clearRate',
+                        description: 'How often in seconds should this remote DataSet be truncated',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'truncateOnEmpty',
+                        description: 'Should the DataSet data be truncated even if no new data is pulled from the source?', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'runsAfter',
+                        description: 'An optional dataSetId which should be run before this Remote DataSet',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'dataRoot',
+                        description: 'The root of the data in the Remote source which is used as the base for all remote columns', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'summarize',
+                        description: 'Should the data be aggregated? None|Summarize|Count',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'summarizeField',
+                        description: 'Which field should be used to summarize',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'sourceId',
+                        description: 'For remote DataSet, what type data is it? 1 - json, 2 - csv',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'ignoreFirstRow',
+                        description: 'For remote DataSet with sourceId 2 (CSV), should we ignore first row?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'rowLimit',
+                        description: 'For remote DataSet, maximum number of rows this DataSet can hold, if left empty the CMS Setting for DataSet row limit will be used.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'limitPolicy',
+                        description: 'For remote DataSet, what should happen when the DataSet row limit is reached? stop, fifo or truncate', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'csvSeparator',
+                        description: 'Separator that should be used when using Remote DataSets with CSV source, comma will be used by default.', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'dataConnectorScript',
+                        description: 'If isRealTime then provide a script to connect to the data source',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'folderId',
+                        description: 'Folder ID to which this object should be assigned to',
+                        type: 'integer'
+                    )
+                ],
+                required: ['dataSet', 'isRemote', 'isRealTime', 'dataConnectorSource']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DataSet')
+    )]
     /**
      * Edit DataSet
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\DuplicateEntityException
-     * @SWG\Put(
-     *  path="/dataset/{dataSetId}",
-     *  operationId="dataSetEdit",
-     *  tags={"dataset"},
-     *  summary="Edit DataSet",
-     *  description="Edit a DataSet",
-     *  @SWG\Parameter(
-     *      name="dataSetId",
-     *      in="path",
-     *      description="The DataSet ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="dataSet",
-     *      in="formData",
-     *      description="The DataSet Name",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="description",
-     *      in="formData",
-     *      description="A description of this DataSet",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="code",
-     *      in="formData",
-     *      description="A code for this DataSet",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isRemote",
-     *      in="formData",
-     *      description="Is this a remote DataSet?",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isRealTime",
-     *      in="formData",
-     *      description="Is this a real time DataSet?",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *   @SWG\Parameter(
-     *       name="dataConnectorSource",
-     *       in="formData",
-     *       description="Source of the data connector",
-     *       type="string",
-     *       required=true
-     *    ),
-     *  @SWG\Parameter(
-     *      name="method",
-     *      in="formData",
-     *      description="The Request Method GET or POST",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="uri",
-     *      in="formData",
-     *      description="The URI, without query parameters",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="postData",
-     *      in="formData",
-     *      description="query parameter encoded data to add to the request",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="authentication",
-     *      in="formData",
-     *      description="HTTP Authentication method None|Basic|Digest",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="username",
-     *      in="formData",
-     *      description="HTTP Authentication User Name",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="password",
-     *      in="formData",
-     *      description="HTTP Authentication Password",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="customHeaders",
-     *      in="formData",
-     *      description="Comma separated string of custom HTTP headers",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="userAgent",
-     *      in="formData",
-     *      description="Custom user Agent value",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="refreshRate",
-     *      in="formData",
-     *      description="How often in seconds should this remote DataSet be refreshed",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="clearRate",
-     *      in="formData",
-     *      description="How often in seconds should this remote DataSet be truncated",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="truncateOnEmpty",
-     *      in="formData",
-     *      description="Should the DataSet data be truncated even if no new data is pulled from the source?",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="runsAfter",
-     *      in="formData",
-     *      description="An optional dataSetId which should be run before this Remote DataSet",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="dataRoot",
-     *      in="formData",
-     *      description="The root of the data in the Remote source which is used as the base for all remote columns",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="summarize",
-     *      in="formData",
-     *      description="Should the data be aggregated? None|Summarize|Count",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="summarizeField",
-     *      in="formData",
-     *      description="Which field should be used to summarize",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="sourceId",
-     *      in="formData",
-     *      description="For remote DataSet, what type data is it? 1 - json, 2 - csv",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ignoreFirstRow",
-     *      in="formData",
-     *      description="For remote DataSet with sourceId 2 (CSV), should we ignore first row?",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="rowLimit",
-     *      in="formData",
-     *      description="For remote DataSet, maximum number of rows this DataSet can hold, if left empty the CMS Setting for DataSet row limit will be used.",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="limitPolicy",
-     *      in="formData",
-     *      description="For remote DataSet, what should happen when the DataSet row limit is reached? stop, fifo or truncate",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="csvSeparator",
-     *      in="formData",
-     *      description="Separator that should be used when using Remote DataSets with CSV source, comma will be used by default.",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="dataConnectorScript",
-     *      in="formData",
-     *      description="If isRealTime then provide a script to connect to the data source",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="formData",
-     *      description="Folder ID to which this object should be assigned to",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/DataSet")
-     *  )
-     * )
+     * @throws ControllerNotImplemented
+     * @throws DuplicateEntityException
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -987,12 +670,16 @@ class DataSet extends Base
         $dataSet->isRemote = $sanitizedParams->getCheckbox('isRemote');
         $dataSet->folderId = $sanitizedParams->getInt('folderId', ['default' => $dataSet->folderId]);
 
-        if ($dataSet->hasPropertyChanged('folderId')) {
+        $folderChanged = $dataSet->hasPropertyChanged('folderId');
+        $oldFolderId = $folderChanged ? $dataSet->getOriginalValue('folderId') : null;
+        if ($folderChanged) {
             if ($dataSet->folderId === 1) {
                 $this->checkRootFolderAllowSave();
             }
             $folder = $this->folderFactory->getById($dataSet->folderId);
-            $dataSet->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+            $dataSet->permissionsFolderId = ($folder->getPermissionFolderId() == null)
+                ? $folder->id
+                : $folder->getPermissionFolderId();
         }
 
         if ($this->getUser()->featureEnabled('dataset.realtime')) {
@@ -1027,6 +714,10 @@ class DataSet extends Base
 
         $dataSet->save();
 
+        if ($folderChanged) {
+            $this->touchFolder($dataSet->folderId, $oldFolderId);
+        }
+
         // Return
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $dataSet->dataSet),
@@ -1037,42 +728,49 @@ class DataSet extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/dataset/dataConnector/{dataSetId}',
+        operationId: 'dataSetDataConnectorEdit',
+        description: 'Edit a DataSet Data Connector',
+        summary: 'Edit DataSet Data Connector',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        in: 'path',
+        description: 'The DataSet ID',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'dataConnectorScript',
+                        description: 'If isRealTime then provide a script to connect to the data source',
+                        type: 'string'
+                    )
+                ]
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DataSet')
+    )]
     /**
      * Edit DataSet Data Connector
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
-     *
-     * @SWG\Put(
-     *  path="/dataset/dataConnector/{dataSetId}",
-     *  operationId="dataSetDataConnectorEdit",
-     *  tags={"dataset"},
-     *  summary="Edit DataSet Data Connector",
-     *  description="Edit a DataSet Data Connector",
-     *  @SWG\Parameter(
-     *      name="dataSetId",
-     *      in="path",
-     *      description="The DataSet ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="dataConnectorScript",
-     *      in="formData",
-     *      description="If isRealTime then provide a script to connect to the data source",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/DataSet")
-     *  )
-     * )
      */
-    public function updateDataConnector(Request $request, Response $response, $id)
+    public function updateDataConnector(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -1103,70 +801,35 @@ class DataSet extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Delete(
+        path: '/dataset/{dataSetId}',
+        operationId: 'dataSetDelete',
+        description: 'Delete a DataSet',
+        summary: 'Delete DataSet',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        in: 'path',
+        description: 'The DataSet ID',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * DataSet Delete
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function deleteForm(Request $request, Response $response, $id)
-    {
-        $dataSet = $this->dataSetFactory->getById($id);
-
-        if (!$this->getUser()->checkDeleteable($dataSet)) {
-            throw new AccessDeniedException();
-        }
-
-        if ($dataSet->isLookup) {
-            throw new InvalidArgumentException(__('Lookup Tables cannot be deleted'));
-        }
-
-        // Set the form
-        $this->getState()->template = 'dataset-form-delete';
-        $this->getState()->setData([
-            'dataSet' => $dataSet,
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * DataSet Delete
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ConfigurationException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Delete(
-     *  path="/dataset/{dataSetId}",
-     *  operationId="dataSetDelete",
-     *  tags={"dataset"},
-     *  summary="Delete DataSet",
-     *  description="Delete a DataSet",
-     *  @SWG\Parameter(
-     *      name="dataSetId",
-     *      in="path",
-     *      description="The DataSet ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
+     * @throws ConfigurationException
+     * @throws ControllerNotImplemented
      */
-    public function delete(Request $request, Response $response, $id)
+    public function delete(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -1177,10 +840,14 @@ class DataSet extends Base
 
         // Is there existing data?
         if ($sanitizedParams->getCheckbox('deleteData') == 0 && $dataSet->hasData())
-            throw new InvalidArgumentException(__('There is data assigned to this data set, cannot delete.'), 'dataSetId');
+            throw new InvalidArgumentException(
+                __('There is data assigned to this data set, cannot delete.'),
+                'dataSetId'
+            );
 
         // Otherwise delete
         $dataSet->delete();
+        $this->touchFolder($dataSet->folderId);
 
         // Return
         $this->getState()->hydrate([
@@ -1191,76 +858,53 @@ class DataSet extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/dataset/{id}/selectfolder',
+        operationId: 'dataSetSelectFolder',
+        description: 'Select Folder for DataSet',
+        summary: 'DataSet Select folder',
+        tags: ['dataSet']
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        in: 'path',
+        description: 'The DataSet ID',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'folderId',
+                        description: 'Folder ID to which this object should be assigned to',
+                        type: 'integer'
+                    )
+                ],
+                required: ['folderId']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DataSet')
+    )]
     /**
-     * Select Folder Form
      * @param Request $request
      * @param Response $response
      * @param int $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function selectFolderForm(Request $request, Response $response, $id)
-    {
-        // Get the data set
-        $dataSet = $this->dataSetFactory->getById($id);
-
-        // Check Permissions
-        if (!$this->getUser()->checkEditable($dataSet)) {
-            throw new AccessDeniedException();
-        }
-
-        $data = [
-            'dataSet' => $dataSet
-        ];
-
-        $this->getState()->template = 'dataset-form-selectfolder';
-        $this->getState()->setData($data);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * @SWG\Put(
-     *  path="/dataset/{id}/selectfolder",
-     *  operationId="dataSetSelectFolder",
-     *  tags={"dataSet"},
-     *  summary="DataSet Select folder",
-     *  description="Select Folder for DataSet",
-     *  @SWG\Parameter(
-     *      name="menuId",
-     *      in="path",
-     *      description="The DataSet ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="formData",
-     *      description="Folder ID to which this object should be assigned to",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/DataSet")
-     *  )
-     * )
-     *
-     * @param Request $request
-     * @param Response $response
-     * @param int $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function selectFolder(Request $request, Response $response, $id)
+    public function selectFolder(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         // Get the DataSet
         $dataSet = $this->dataSetFactory->getById($id);
@@ -1276,12 +920,17 @@ class DataSet extends Base
             $this->checkRootFolderAllowSave();
         }
 
+        $oldFolderId = $dataSet->folderId;
         $dataSet->folderId = $folderId;
         $folder = $this->folderFactory->getById($dataSet->folderId);
-        $dataSet->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        $dataSet->permissionsFolderId = ($folder->getPermissionFolderId() == null)
+            ? $folder->id
+            : $folder->getPermissionFolderId();
 
         // Save
         $dataSet->save();
+
+        $this->touchFolder($dataSet->folderId, $oldFolderId);
 
         // Return
         $this->getState()->hydrate([
@@ -1292,95 +941,58 @@ class DataSet extends Base
         return $this->render($request, $response);
     }
 
-    /**
-     * Copy DataSet Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function copyForm(Request $request, Response $response, $id)
-    {
-        $dataSet = $this->dataSetFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($dataSet)) {
-            throw new AccessDeniedException();
-        }
-
-        // Set the form
-        $this->getState()->template = 'dataset-form-copy';
-        $this->getState()->setData([
-            'dataSet' => $dataSet,
-        ]);
-
-        return $this->render($request, $response);
-    }
-
+    #[OA\Post(
+        path: '/dataset/copy/{dataSetId}',
+        operationId: 'dataSetCopy',
+        description: 'Copy a DataSet',
+        summary: 'Copy DataSet',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        in: 'path',
+        description: 'The DataSet ID',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'dataSet', description: 'The DataSet Name', type: 'string'),
+                    new OA\Property(property: 'description', description: 'A description of this DataSet', type: 'string'),
+                    new OA\Property(property: 'code', description: 'A code for this DataSet', type: 'string'),
+                    new OA\Property(
+                        property: 'copyRows',
+                        description: 'Flag whether to copy all the row data from the original dataSet',
+                        type: 'integer'
+                    )
+                ],
+                required: ['dataSet']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DataSet')
+    )]
     /**
      * Copy DataSet
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\DuplicateEntityException
-     * @SWG\Post(
-     *  path="/dataset/copy/{dataSetId}",
-     *  operationId="dataSetCopy",
-     *  tags={"dataset"},
-     *  summary="Copy DataSet",
-     *  description="Copy a DataSet",
-     *  @SWG\Parameter(
-     *      name="dataSetId",
-     *      in="path",
-     *      description="The DataSet ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="dataSet",
-     *      in="formData",
-     *      description="The DataSet Name",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="description",
-     *      in="formData",
-     *      description="A description of this DataSet",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="code",
-     *      in="formData",
-     *      description="A code for this DataSet",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="copyRows",
-     *      in="formData",
-     *      description="Flag whether to copy all the row data from the original dataSet",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/DataSet")
-     *  )
-     * )
+     * @throws ControllerNotImplemented
+     * @throws DuplicateEntityException
      */
-    public function copy(Request $request, Response $response, $id)
+    public function copy(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -1418,63 +1030,64 @@ class DataSet extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/dataset/import/{dataSetId}',
+        operationId: 'dataSetImport',
+        description: 'Import a CSV into a DataSet',
+        summary: 'Import CSV',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        in: 'path',
+        description: 'The DataSet ID to import into.',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'multipart/form-data',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'files',
+                        description: 'The file',
+                        format: 'binary',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'csvImport_{dataSetColumnId}',
+                        description: 'You need to provide dataSetColumnId after csvImport_, to know your dataSet columns Ids, you will need to use the GET /dataset/{dataSetId}/column call first. The value of this parameter is the index of the column in your csv file, where the first column is 1', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'overwrite',
+                        description: 'flag (0,1) Set to 1 to erase all content in the dataSet and overwrite it with new content in this import', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'ignorefirstrow',
+                        description: 'flag (0,1), Set to 1 to Ignore first row, useful if the CSV file has headings',
+                        type: 'integer'
+                    )
+                ],
+                required: ['files', 'csvImport_{dataSetColumnId}']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(response: 200, description: 'successful operation')]
     /**
      * Import CSV
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ConfigurationException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Post(
-     *  path="/dataset/import/{dataSetId}",
-     *  operationId="dataSetImport",
-     *  tags={"dataset"},
-     *  summary="Import CSV",
-     *  description="Import a CSV into a DataSet",
-     *  @SWG\Parameter(
-     *      name="dataSetId",
-     *      in="path",
-     *      description="The DataSet ID to import into.",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="files",
-     *      in="formData",
-     *      description="The file",
-     *      type="file",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="csvImport_{dataSetColumnId}",
-     *      in="formData",
-     *      description="You need to provide dataSetColumnId after csvImport_, to know your dataSet columns Ids, you will need to use the GET /dataset/{dataSetId}/column call first. The value of this parameter is the index of the column in your csv file, where the first column is 1",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="overwrite",
-     *      in="formData",
-     *      description="flag (0,1) Set to 1 to erase all content in the dataSet and overwrite it with new content in this import",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ignorefirstrow",
-     *      in="formData",
-     *      description="flag (0,1), Set to 1 to Ignore first row, useful if the CSV file has headings",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation"
-     *  )
-     * )
+     * @throws ConfigurationException
+     * @throws ControllerNotImplemented
      */
-    public function import(Request $request, Response $response, $id)
+    public function import(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $this->getLog()->debug('Import DataSet');
 
@@ -1510,54 +1123,38 @@ class DataSet extends Base
     }
 
 
-    /**
-     * Import Json schema
-     *
-     *  @SWG\Definition(definition="importJsonSchema", type="object",
-     *            @SWG\Property(property="uniqueKeys", type="array", description="A name of the unique column", @SWG\Items(type="string", @SWG\Property(property="colName", type="string"))),
-     *            @SWG\Property(property="truncate", type="array", description="Flag True or False, whether to truncate existing data on import", @SWG\Items(type="string", @SWG\Property(property="truncate", type="string"))),
-     *            @SWG\Property(property="rows", type="array", description="An array of objects with pairs: ColumnName:Value", @SWG\Items(type="object", @SWG\Property(property="colName", type="string"))),
-     *  )
-     */
-
-
+    #[OA\Post(
+        path: '/dataset/importjson/{dataSetId}',
+        operationId: 'dataSetImportJson',
+        description: 'Import JSON into a DataSet',
+        summary: 'Import JSON',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        in: 'path',
+        description: 'The DataSet ID to import into.',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        description: 'The row data, field name vs field data format. e.g. { uniqueKeys: [col1], rows: [{col1: value1}]}', // phpcs:ignore
+        required: true,
+        content: new OA\JsonContent(ref: '#/components/schemas/importJsonSchema')
+    )]
+    #[OA\Response(response: 200, description: 'successful operation')]
     /**
      * Import JSON
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Post(
-     *  path="/dataset/importjson/{dataSetId}",
-     *  operationId="dataSetImportJson",
-     *  tags={"dataset"},
-     *  summary="Import JSON",
-     *  description="Import JSON into a DataSet",
-     *  @SWG\Parameter(
-     *      name="dataSetId",
-     *      in="path",
-     *      description="The DataSet ID to import into.",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="data",
-     *      in="body",
-     *      description="The row data, field name vs field data format. e.g. { uniqueKeys: [col1], rows: [{col1: value1}]}",
-     *      required=true,
-     *      @SWG\Schema(ref="#/definitions/importJsonSchema")
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation"
-     *  )
-     * )
+     * @throws ControllerNotImplemented
      */
-    public function importJson(Request $request, Response $response, $id)
+    public function importJson(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
 
@@ -1578,7 +1175,8 @@ class DataSet extends Base
             throw new InvalidArgumentException(__('Malformed JSON body, rows and uniqueKeys are required'));
         }
 
-        $this->getLog()->debug('Import JSON into DataSet with ' . count($data['rows']) . ' and unique keys ' . json_encode($data['uniqueKeys']));
+        $this->getLog()->debug('Import JSON into DataSet with ' . count($data['rows']) . ' and unique keys '
+            . json_encode($data['uniqueKeys']));
 
         // Should we truncate?
         if (isset($data['truncate']) && $data['truncate']) {
@@ -1614,8 +1212,13 @@ class DataSet extends Base
                             $date = $sanitizedRow->getDate($key);
                             $value = $date->format(DateFormatHelper::getSystemFormat());
                         } catch (\Exception $e) {
-                            $this->getLog()->error(sprintf('Incorrect date provided %s, expected date format Y-m-d H:i:s ', $value));
-                            throw new InvalidArgumentException(sprintf(__('Incorrect date provided %s, expected date format Y-m-d H:i:s '), $value), 'date');
+                            $this->getLog()->error(
+                                sprintf('Incorrect date provided %s, expected date format Y-m-d H:i:s ', $value)
+                            );
+                            throw new InvalidArgumentException(
+                                sprintf(__('Incorrect date provided %s, expected date format Y-m-d H:i:s '), $value),
+                                'date'
+                            );
                         }
                     } elseif ($columns[$key] == 5) {
                         // Media Id
@@ -1683,19 +1286,19 @@ class DataSet extends Base
      * Sends out a Test Request and returns the Data as JSON to the Client so it can be shown in the Dialog
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function testRemoteRequest(Request $request, Response $response)
+    public function testRemoteRequest(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         $testDataSetId = $sanitizedParams->getInt('testDataSetId');
 
-        if ($testDataSetId !== null) {
+        if ($testDataSetId !== null && $testDataSetId > 0) {
             $dataSet = $this->dataSetFactory->getById($testDataSetId);
         } else {
             $dataSet = $this->dataSetFactory->createEmpty();
@@ -1740,45 +1343,40 @@ class DataSet extends Base
 
         $this->getLog()->debug('Results: ' . var_export($data, true));
 
-        // Return
-        $this->getState()->hydrate([
+        return $response->withJson([
+            'success' => true,
             'message' => __('Run Test-Request for %s', $dataSet->dataSet),
             'id' => $dataSet->dataSetId,
             'data' => $data
         ]);
-
-        return $this->render($request, $response);
     }
 
+    #[OA\Get(
+        path: '/dataset/export/csv/{dataSetId}',
+        operationId: 'dataSetExportCsv',
+        description: 'Export DataSet data to a csv file',
+        summary: 'Export to CSV',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        in: 'path',
+        description: 'The DataSet ID to export.',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 200, description: 'successful operation')]
     /**
      * Export DataSet to csv
      *
-     * @SWG\GET(
-     *  path="/dataset/export/csv/{dataSetId}",
-     *  operationId="dataSetExportCsv",
-     *  tags={"dataset"},
-     *  summary="Export to CSV",
-     *  description="Export DataSet data to a csv file",
-     *  @SWG\Parameter(
-     *      name="dataSetId",
-     *      in="path",
-     *      description="The DataSet ID to export.",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation"
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws NotFoundException
      */
-    public function exportToCsv(Request $request, Response $response, $id)
+    public function exportToCsv(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $this->setNoOutput();
         $i = 0;
@@ -1825,32 +1423,19 @@ class DataSet extends Base
         )->withHeader('Content-Type', 'text/csv;charset=utf-8'));
     }
 
-    public function clearCacheForm(Request $request, Response $response, $id)
-    {
-        $dataSet = $this->dataSetFactory->getById($id);
-
-        $this->getState()->template = 'dataset-form-clear-cache';
-        $this->getState()->autoSubmit = $this->getAutoSubmit('dataSetClearCacheForm');
-        $this->getState()->setData([
-            'dataSet' => $dataSet
-        ]);
-
-        return $this->render($request, $response);
-    }
-
     /**
-     * Clear cache for remote dataSet, only available via web interface
+     * Clear cache for remote dataSet
      *
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function clearCache(Request $request, Response $response, $id)
+    public function clearCache(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
 
@@ -1862,7 +1447,7 @@ class DataSet extends Base
 
         // Return
         $this->getState()->hydrate([
-            'message' => __('Cache cleared for %s', $dataSet->dataSet),
+            'message' => sprintf(__('Cache cleared for %s'), $dataSet->dataSet),
             'id' => $dataSet->dataSetId
         ]);
 
@@ -1870,14 +1455,14 @@ class DataSet extends Base
     }
 
     /**
-     * Real-time data script editor
+     * Get data connector script as JSON
      * @param Request $request
      * @param Response $response
      * @param $id
      * @return Response
      * @throws GeneralException
      */
-    public function dataConnectorView(Request $request, Response $response, $id): Response
+    public function getDataConnectorScript(Request $request, Response $response, $id): Response
     {
         $dataSet = $this->dataSetFactory->getById($id);
 
@@ -1891,23 +1476,15 @@ class DataSet extends Base
 
         $dataSet->load();
 
-        if ($dataSet->dataConnectorSource == 'user_defined') {
-            // retrieve the user defined javascript
-            $script = $dataSet->getScript();
-        } else {
-            // Dispatch the event to get the script from the connector
+        if ($dataSet->dataConnectorSource !== 'user_defined') {
             $event = new DataConnectorScriptRequestEvent($dataSet);
             $this->getDispatcher()->dispatch($event, DataConnectorScriptRequestEvent::$NAME);
-            $script = $dataSet->getScript();
         }
 
-        $this->getState()->template = 'dataset-data-connector-page';
-        $this->getState()->setData([
-            'dataSet' => $dataSet,
-            'script' => $script,
-            ]);
-
-            return $this->render($request, $response);
+        return $response->withJson([
+            'script' => $dataSet->getScript(),
+            'dataConnectorSource' => $dataSet->dataConnectorSource,
+        ]);
     }
 
     /**
@@ -1935,5 +1512,59 @@ class DataSet extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * List of data connector sources
+     * @param Response $response
+     * @return Response
+     */
+    public function dataConnectorSource(Response $response): Response
+    {
+        try {
+            // Dispatch an event to initialize list of data sources for data connectors
+            $event = new DataConnectorSourceRequestEvent();
+
+            $this->getDispatcher()->dispatch($event, DataConnectorSourceRequestEvent::$NAME);
+
+            // Retrieve data connector sources from the event
+            return $response->withJson($event->getDataConnectorSources());
+        } catch (\Exception $e) {
+            $this->getLog()->error('dataConnectorRequest: Failed to retrieve data connector sources: '
+                . $e->getMessage());
+
+            return $response->withJson([
+                'error' => 'Failed to retrieve data connector sources'
+            ], 500);
+        }
+    }
+
+    /**
+     * Get the datasets filters
+     * @param $sanitizedParams
+     * @return array
+     */
+    private function getDatasetsFilterQuery($sanitizedParams): array
+    {
+        return $this->gridRenderFilter([
+            'dataSetId' => $sanitizedParams->getInt('dataSetId'),
+            'dataSet' => $sanitizedParams->getString('dataSet'),
+            'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
+            'code' => $sanitizedParams->getString('code'),
+            'isRealTime' => $sanitizedParams->getInt('isRealTime'),
+            'userId' => $sanitizedParams->getInt('userId'),
+            'folderId' => $sanitizedParams->getInt('folderId'),
+            'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
+            'modifiedDateFrom' => $sanitizedParams->getDate('modifiedDateFrom'),
+            'modifiedDateTo' => $sanitizedParams->getDate('modifiedDateTo'),
+        ], $sanitizedParams);
+    }
+
+    private function touchFolder(int $folderId, ?int $oldFolderId = null): void
+    {
+        $this->getDispatcher()->dispatch(
+            new FolderTouchEvent($folderId, $oldFolderId),
+            FolderTouchEvent::$NAME
+        );
     }
 }

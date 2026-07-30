@@ -43,13 +43,10 @@ class DisplayAlerts implements ReportInterface
 {
     use ReportDefaultTrait, DataTablesDotNetTrait;
 
-    /** @var DisplayFactory */
-    private $displayFactory;
-    /** @var DisplayGroupFactory */
-    private $displayGroupFactory;
-    /** @var DisplayEventFactory */
-    private $displayEventFactory;
-    
+    private readonly DisplayFactory $displayFactory;
+    private readonly DisplayGroupFactory $displayGroupFactory;
+    private readonly DisplayEventFactory $displayEventFactory;
+
     public function setFactories(ContainerInterface $container)
     {
         $this->displayFactory = $container->get('displayFactory');
@@ -59,20 +56,15 @@ class DisplayAlerts implements ReportInterface
         return $this;
     }
 
-    public function getReportEmailTemplate()
+    public function getReportEmailTemplate(): string
     {
         return 'displayalerts-email-template.twig';
     }
 
-    public function getSavedReportTemplate()
-    {
-        return 'displayalerts-report-preview';
-    }
-
-    public function getReportForm()
+    /** @inheritdoc */
+    public function getReportForm(): ReportForm
     {
         return new ReportForm(
-            'displayalerts-report-form',
             'displayalerts',
             'Display',
             [
@@ -80,17 +72,6 @@ class DisplayAlerts implements ReportInterface
                 'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             ]
         );
-    }
-
-    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams)
-    {
-        $data = [];
-        $data['reportName'] = 'displayalerts';
-
-        return [
-            'template' => 'displayalerts-schedule-form-add',
-            'data' => $data
-        ];
     }
 
     public function setReportScheduleFormData(SanitizerInterface $sanitizedParams)
@@ -131,17 +112,17 @@ class DisplayAlerts implements ReportInterface
         ];
     }
 
-    public function generateSavedReportName(SanitizerInterface $sanitizedParams)
+    public function generateSavedReportName(SanitizerInterface $sanitizedParams): string
     {
         return sprintf(__('%s report for Display'), ucfirst($sanitizedParams->getString('filter')));
     }
 
-    public function restructureSavedReportOldJson($json)
+    public function restructureSavedReportOldJson($json): array
     {
         return $json;
     }
 
-    public function getSavedReportResults($json, $savedReport)
+    public function getSavedReportResults($json, $savedReport): ReportResult
     {
         $metadata = [
             'periodStart' => $json['metadata']['periodStart'],
@@ -151,15 +132,33 @@ class DisplayAlerts implements ReportInterface
             'title' => $savedReport->saveAs,
         ];
 
+        // Backward-compat: reports saved before startFormatted/endFormatted were introduced
+        // only have raw start/end Unix timestamps in their stored JSON. Compute the formatted
+        // fields here so older saved reports still render correctly, without needing to
+        // rewrite the stored ZIP file.
+        $table = $json['table'];
+        foreach ($table as &$row) {
+            if (!array_key_exists('startFormatted', $row) && array_key_exists('start', $row)) {
+                $row['startFormatted'] = Carbon::createFromTimestamp($row['start'])
+                    ->format(DateFormatHelper::getSystemFormat());
+            }
+            if (!array_key_exists('endFormatted', $row) && array_key_exists('end', $row)) {
+                $row['endFormatted'] = $row['end'] !== null
+                    ? Carbon::createFromTimestamp($row['end'])->format(DateFormatHelper::getSystemFormat())
+                    : '';
+            }
+        }
+        unset($row);
+
         // Report result object
         return new ReportResult(
             $metadata,
-            $json['table'],
+            $table,
             $json['recordsTotal'],
         );
     }
 
-    public function getResults(SanitizerInterface $sanitizedParams)
+    public function getResults(SanitizerInterface $sanitizedParams, bool $isJson = false): ReportResult
     {
         $displayIds = $this->getDisplayIdFilter($sanitizedParams);
         $onlyLoggedIn = $sanitizedParams->getCheckbox('onlyLoggedIn') == 1;
@@ -174,9 +173,29 @@ class DisplayAlerts implements ReportInterface
         $now = Carbon::now();
 
         switch ($reportFilter) {
+            case 'today':
+                $fromDt = $now->copy()->startOfDay();
+                $toDt = $now->copy();
+                break;
+
             case 'yesterday':
                 $fromDt = $now->copy()->startOfDay()->subDay();
                 $toDt = $now->copy()->startOfDay();
+                break;
+
+            case 'thisweek':
+                $fromDt = $now->copy()->locale(Translate::GetLocale())->startOfWeek();
+                $toDt = $now->copy();
+                break;
+
+            case 'thismonth':
+                $fromDt = $now->copy()->startOfMonth();
+                $toDt = $now->copy();
+                break;
+
+            case 'thisyear':
+                $fromDt = $now->copy()->startOfYear();
+                $toDt = $now->copy();
                 break;
 
             case 'lastweek':
@@ -208,10 +227,8 @@ class DisplayAlerts implements ReportInterface
         }
 
         $metadata = [
-            'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))
-                ->format(DateFormatHelper::getSystemFormat()),
-            'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))
-                ->format(DateFormatHelper::getSystemFormat()),
+            'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
+            'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat()),
         ];
 
         $params = [
@@ -232,7 +249,8 @@ class DisplayAlerts implements ReportInterface
                 INNER JOIN `lkdisplaydg` ON `display`.displayId = `lkdisplaydg`.displayId    
                 INNER JOIN `displaygroup` ON `displaygroup`.displayGroupId = `lkdisplaydg`.displayGroupId
                                           AND `displaygroup`.isDisplaySpecific = 1
-            WHERE `displayevent`.eventDate BETWEEN :start AND :end   ';
+            WHERE `displayevent`.start <= :end
+              AND IFNULL(`displayevent`.end, :end) >= :start ';
 
         $eventTypeIdFilter = $sanitizedParams->getString('eventType');
 
@@ -338,6 +356,20 @@ class DisplayAlerts implements ReportInterface
             $displayEvent->setUnmatchedProperty(
                 'display',
                 $row['display']
+            );
+            // start/end are kept raw (Unix timestamps) for the live report view, which formats
+            // them client-side in the viewer's own timezone. Saved reports and the email/PDF
+            // template read these pre-formatted fields instead, matching this report's own
+            // periodStart/periodEnd and generatedOn metadata pattern above.
+            $displayEvent->setUnmatchedProperty(
+                'startFormatted',
+                Carbon::createFromTimestamp($row['start'])->format(DateFormatHelper::getSystemFormat())
+            );
+            $displayEvent->setUnmatchedProperty(
+                'endFormatted',
+                $row['end'] !== null
+                    ? Carbon::createFromTimestamp($row['end'])->format(DateFormatHelper::getSystemFormat())
+                    : ''
             );
 
             $rows[] = $displayEvent;

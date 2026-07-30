@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,6 +22,7 @@
 
 namespace Xibo\Entity;
 
+use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Factory\ModuleFactory;
@@ -37,117 +38,117 @@ use Xibo\Widget\Provider\WidgetValidatorInterface;
 /**
  * Class Module
  * @package Xibo\Entity
- * @SWG\Definition()
  */
+#[OA\Schema(schema: 'Module')]
 class Module implements \JsonSerializable
 {
     use EntityTrait;
     use ModulePropertyTrait;
 
+    #[OA\Property(description: 'The ID of this Module')]
     /**
-     * @SWG\Property(description="The ID of this Module")
      * @var int
      */
     public $moduleId;
 
+    #[OA\Property(description: 'Module Name')]
     /**
-     * @SWG\Property(description="Module Name")
      * @var string
      */
     public $name;
 
+    #[OA\Property(description: 'Module Author')]
     /**
-     * @SWG\Property(description="Module Author")
      * @var string
      */
     public $author;
 
+    #[OA\Property(description: 'Description of the Module')]
     /**
-     * @SWG\Property(description="Description of the Module")
      * @var string
      */
     public $description;
 
+    #[OA\Property(description: 'An icon to use in the toolbar')]
     /**
-     * @SWG\Property(description="An icon to use in the toolbar")
      * @var string
      */
     public $icon;
 
+    #[OA\Property(description: 'The type code for this module')]
     /**
-     * @SWG\Property(description="The type code for this module")
      * @var string
      */
     public $type;
 
+    #[OA\Property(description: 'Legacy type codes for this module', type: 'array', items: new OA\Items(ref: '#/components/schemas/LegacyType'))]
     /**
-     * @SWG\Property(description="Legacy type codes for this module")
      * @var LegacyType[]
      */
     public $legacyTypes;
 
+    #[OA\Property(description: 'The data type of the data expected to be returned by this modules data provider')]
     /**
-     * @SWG\Property(description="The data type of the data expected to be returned by this modules data provider")
      * @var string
      */
     public $dataType;
 
+    #[OA\Property(description: 'The group details for this module', type: 'array', items: new OA\Items(type: 'string'))]
     /**
-     * @SWG\Property(description="The group details for this module")
      * @var string[]
      */
     public $group;
 
+    #[OA\Property(description: 'The cache key used when requesting data')]
     /**
-     * @SWG\Property(description="The cache key used when requesting data")
      * @var string
      */
     public $dataCacheKey;
 
+    #[OA\Property(description: 'Is fallback data allowed for this module? Only applicable for a Data Widget')]
     /**
-     * @SWG\Property(description="Is fallback data allowed for this module? Only applicable for a Data Widget")
      * @var int
      */
     public $fallbackData;
 
+    #[OA\Property(description: 'Is specific to a Layout or can be uploaded to the Library?')]
     /**
-     * @SWG\Property(description="Is specific to a Layout or can be uploaded to the Library?")
      * @var int
      */
     public $regionSpecific;
 
+    #[OA\Property(description: 'The schema version of the module')]
     /**
-     * @SWG\Property(description="The schema version of the module")
      * @var int
      */
     public $schemaVersion;
 
+    #[OA\Property(description: 'The compatibility class of the module')]
     /**
-     * @SWG\Property(description="The compatibility class of the module")
      * @var string
      */
     public $compatibilityClass = null;
 
+    #[OA\Property(description: 'A flag indicating whether the module should be excluded from the Layout Editor')]
     /**
-     * @SWG\Property(description="A flag indicating whether the module should be excluded from the Layout Editor")
      * @var string
      */
     public $showIn = 'both';
 
+    #[OA\Property(description: 'A flag indicating whether the module is assignable to a Layout')]
     /**
-     * @SWG\Property(description="A flag indicating whether the module is assignable to a Layout")
      * @var int
      */
     public $assignable;
 
+    #[OA\Property(description: 'Does this module have a thumbnail to render?')]
     /**
-     * @SWG\Property(description="Does this module have a thumbnail to render?")
      * @var int
      */
     public $hasThumbnail;
 
+    #[OA\Property(description: 'This is the location to a module\'s thumbnail')]
     /**
-     * @SWG\Property(description="This is the location to a module's thumbnail")
      * @var string
      */
     public $thumbnail;
@@ -158,20 +159,20 @@ class Module implements \JsonSerializable
     /** @var int The height of the zone */
     public $startHeight;
 
+    #[OA\Property(description: 'Should be rendered natively by the Player or via the CMS (native|html)')]
     /**
-     * @SWG\Property(description="Should be rendered natively by the Player or via the CMS (native|html)")
      * @var string
      */
     public $renderAs;
 
+    #[OA\Property(description: 'Class Name including namespace')]
     /**
-     * @SWG\Property(description="Class Name including namespace")
      * @var string
      */
     public $class;
 
+    #[OA\Property(description: 'Validator class name including namespace', type: 'array', items: new OA\Items(type: 'string'))]
     /**
-     * @SWG\Property(description="Validator class name including namespace")
      * @var string[]
      */
     public $validatorClass = [];
@@ -182,8 +183,8 @@ class Module implements \JsonSerializable
     /** @var \Xibo\Widget\Definition\Stencil|null Stencil for this modules HTML cache */
     public $stencil;
 
+    #[OA\Property(description: 'Properties to display in the property panel and supply to stencils', type: 'array', items: new OA\Items(ref: '#/components/schemas/Property'))]
     /**
-     * @SWG\Property(description="Properties to display in the property panel and supply to stencils")
      * @var \Xibo\Widget\Definition\Property[]|null
      */
     public $properties;
@@ -191,100 +192,94 @@ class Module implements \JsonSerializable
     /** @var \Xibo\Widget\Definition\Asset[]|null */
     public $assets;
 
+    #[OA\Property(description: 'JavaScript function run when a module is initialised, before data is returned')]
     /**
-     * @SWG\Property(description="JavaScript function run when a module is initialised, before data is returned")
      * @var string
      */
     public $onInitialize;
 
+    #[OA\Property(description: 'Data Parser run against each data item applicable when a dataType is present')]
     /**
-     * @SWG\Property(description="Data Parser run against each data item applicable when a dataType is present")
      * @var string
      */
     public $onParseData;
 
+    #[OA\Property(description: 'A load function to run when the widget first fetches data')]
     /**
-     * @SWG\Property(description="A load function to run when the widget first fetches data")
      * @var string
      */
     public $onDataLoad;
 
+    #[OA\Property(description: 'JavaScript function run when a module is rendered, after data has been returned')]
     /**
-     * @SWG\Property(description="JavaScript function run when a module is rendered, after data has been returned")
      * @var string
      */
     public $onRender;
 
+    #[OA\Property(description: 'JavaScript function run when a module becomes visible')]
     /**
-     * @SWG\Property(description="JavaScript function run when a module becomes visible")
      * @var string
      */
     public $onVisible;
 
+    #[OA\Property(description: 'Optional sample data item, only applicable when a dataType is present')]
     /**
-     * @SWG\Property(description="Optional sample data item, only applicable when a dataType is present")
      * @var string
      */
     public $sampleData;
 
     // <editor-fold desc="Properties recorded in the database">
 
+    #[OA\Property(description: 'A flag indicating whether this module is enabled')]
     /**
-     * @SWG\Property(description="A flag indicating whether this module is enabled")
      * @var int
      */
     public $enabled;
 
+    #[OA\Property(description: 'A flag indicating whether the Layout designer should render a preview of this module')]
     /**
-     * @SWG\Property(description="A flag indicating whether the Layout designer should render a preview of this module")
      * @var int
      */
     public $previewEnabled;
 
+    #[OA\Property(description: 'The default duration for Widgets of this Module when the user has not set a duration.')]
     /**
-     * @SWG\Property(
-     *     description="The default duration for Widgets of this Module when the user has not set a duration."
-     * )
      * @var int
      */
     public $defaultDuration;
 
+    #[OA\Property(description: 'An array of additional module specific settings', type: 'array', items: new OA\Items(ref: '#/components/schemas/Property'))]
     /**
-     * @SWG\Property(description="An array of additional module specific settings")
      * @var \Xibo\Widget\Definition\Property[]
      */
     public $settings = [];
 
+    #[OA\Property(description: 'An array of additional module specific group properties', type: 'array', items: new OA\Items(ref: '#/components/schemas/PropertyGroup'))]
     /**
-     * @SWG\Property(description="An array of additional module specific group properties")
      * @var \Xibo\Widget\Definition\PropertyGroup[]
      */
     public $propertyGroups = [];
 
+    #[OA\Property(description: 'An array of required elements', type: 'array', items: new OA\Items(type: 'string'))]
     /**
-     * @SWG\Property(
-     *     description="An array of required elements",
-     *     type="array",
-     *     @SWG\Items(type="string")
-     * )
      * @var string[]
      */
     public $requiredElements = [];
 
+    #[OA\Property()]
     /**
-     * @SWG\Property()
      * @var bool $isInstalled Is this module installed?
      */
     public $isInstalled;
 
+    #[OA\Property()]
     /**
-     * @SWG\Property()
      * @var bool $isError Does this module have any errors?
      */
     public $isError;
 
+    #[OA\Property(type: 'array', items: new OA\Items(type: 'string'))]
     /**
-     * @SWG\Property()
      * @var string[] $errors An array of errors this module has.
      */
     public $errors;

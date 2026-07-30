@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -24,20 +24,29 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
+use OpenApi\Attributes as OA;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Entity\UserGroup;
+use Xibo\Entity\Notification as NotificationEntity;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserNotificationFactory;
 use Xibo\Helper\AttachmentUploadHandler;
-use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\Environment;
+use Xibo\Helper\NullSession;
 use Xibo\Helper\SendFile;
+use Xibo\Helper\Session;
 use Xibo\Service\DisplayNotifyService;
 use Xibo\Service\MediaService;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\ControllerNotImplemented;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Class Notification
@@ -45,69 +54,27 @@ use Xibo\Support\Exception\ConfigurationException;
  */
 class Notification extends Base
 {
-    /** @var  NotificationFactory */
-    private $notificationFactory;
-
-    /** @var  UserNotificationFactory */
-    private $userNotificationFactory;
-
-    /** @var  DisplayGroupFactory */
-    private $displayGroupFactory;
-
-    /** @var  UserGroupFactory */
-    private $userGroupFactory;
-
-    /** @var DisplayNotifyService */
-    private $displayNotifyService;
-
-    /**
-     * Notification constructor.
-     * @param NotificationFactory $notificationFactory
-     * @param UserNotificationFactory $userNotificationFactory
-     * @param DisplayGroupFactory $displayGroupFactory
-     * @param UserGroupFactory $userGroupFactory
-     * @param DisplayNotifyService $displayNotifyService
-     */
     public function __construct(
-        $notificationFactory,
-        $userNotificationFactory,
-        $displayGroupFactory,
-        $userGroupFactory,
-        $displayNotifyService
+        private readonly NotificationFactory $notificationFactory,
+        private readonly UserNotificationFactory $userNotificationFactory,
+        private readonly DisplayGroupFactory $displayGroupFactory,
+        private readonly UserGroupFactory $userGroupFactory,
+        private readonly DisplayNotifyService $displayNotifyService,
+        private readonly Session|NullSession $session,
     ) {
-        $this->notificationFactory = $notificationFactory;
-        $this->userNotificationFactory = $userNotificationFactory;
-        $this->displayGroupFactory = $displayGroupFactory;
-        $this->userGroupFactory = $userGroupFactory;
-        $this->displayNotifyService = $displayNotifyService;
     }
 
     /**
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    public function displayPage(Request $request, Response $response)
-    {
-        // Call to render the template
-        $this->getState()->template = 'notification-page';
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Show a notification
+     * Show a notification (interrupt page)
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
      */
-    public function interrupt(Request $request, Response $response, $id)
+    public function interrupt(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $notification = $this->userNotificationFactory->getByNotificationId($id);
 
@@ -115,103 +82,121 @@ class Notification extends Base
         $notification->setRead(Carbon::now()->format('U'));
         $notification->save();
 
-        $this->getState()->template = 'notification-interrupt';
-        $this->getState()->setData(['notification' => $notification]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson($notification);
     }
 
     /**
-     * Show a notification
+     * Show a notification (drawer)
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
      */
-    public function show(Request $request, Response $response, $id)
+    public function show(Request $request, Response $response, $id): Response|ResponseInterface
     {
-        $params = $this->getSanitizer($request->getParams());
         $notification = $this->userNotificationFactory->getByNotificationId($id);
 
         // Mark it as read
         $notification->setRead(Carbon::now()->format('U'));
         $notification->save();
 
-        if ($params->getCheckbox('multiSelect')) {
-            return $response->withStatus(201);
-        } else {
-            $this->getState()->template = 'notification-form-show';
-            $this->getState()->setData(['notification' => $notification]);
-
-            return $this->render($request, $response);
-        }
+        return $response
+            ->withStatus(200)
+            ->withJson($notification);
     }
 
+    #[OA\Get(
+        path: '/notification',
+        operationId: 'notificationSearch',
+        description: 'Search this users Notifications',
+        summary: 'Notification Search',
+        tags: ['notification']
+    )]
+    #[OA\Parameter(
+        name: 'notificationId',
+        description: 'Filter by Notification Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'subject',
+        description: 'Filter by Subject',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'embed',
+        description: 'Embed related data such as userGroups,displayGroups',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Column to sort by. Used together with sortDir.',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'string',
+            enum: ['subject', 'type', 'releaseDt', 'isInterrupt']
+        )
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ],
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/Notification')
+        )
+    )]
     /**
-     * @SWG\Get(
-     *  path="/notification",
-     *  operationId="notificationSearch",
-     *  tags={"notification"},
-     *  summary="Notification Search",
-     *  description="Search this users Notifications",
-     *  @SWG\Parameter(
-     *      name="notificationId",
-     *      in="query",
-     *      description="Filter by Notification Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="subject",
-     *      in="query",
-     *      description="Filter by Subject",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="embed",
-     *      in="query",
-     *      description="Embed related data such as userGroups,displayGroups",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/Notification")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
+     * @return ResponseInterface|Response
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws NotFoundException
      */
-    public function grid(Request $request, Response $response): Response|\Psr\Http\Message\ResponseInterface
+    public function grid(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
 
-        $filter = [
-            'notificationId' => $sanitizedQueryParams->getInt('notificationId'),
-            'subject' => $sanitizedQueryParams->getString('subject'),
-            'read' => $sanitizedQueryParams->getInt('read'),
-            'releaseDt' => $sanitizedQueryParams->getDate('releaseDt')?->format('U'),
-            'type' => $sanitizedQueryParams->getString('type'),
-        ];
+        $notificationSortQuery = $this->gridRenderSort(
+            $sanitizedQueryParams,
+            $this->isJson($request),
+            'subject'
+        );
+
+        $notificationFilterQuery = $this->getNotificationFilterQuery($sanitizedQueryParams);
+
         $embed = ($sanitizedQueryParams->getString('embed') != null)
             ? explode(',', $sanitizedQueryParams->getString('embed'))
             : [];
 
         $notifications = $this->notificationFactory->query(
-            $this->gridRenderSort($sanitizedQueryParams),
-            $this->gridRenderFilter($filter, $sanitizedQueryParams)
+            $notificationSortQuery,
+            $notificationFilterQuery
         );
 
         foreach ($notifications as $notification) {
@@ -222,249 +207,153 @@ class Notification extends Base
                 ]);
             }
 
-            if ($this->isApi($request)) {
-                continue;
-            }
-
-            $notification->includeProperty('buttons');
-
-            // View Notification
-            $notification->buttons[] = [
-                'id' => 'notification_button_view',
-                'url' => $this->urlFor(
-                    $request,
-                    'notification.show',
-                    ['id' => $notification->notificationId]
-                ),
-                'text' => __('View'),
-                'multi-select' => true,
-                'dataAttributes' => [
-                    [
-                        'name' => 'commit-url',
-                        'value' => $this->urlFor(
-                            $request,
-                            'notification.show',
-                            ['id' => $notification->notificationId, 'multiSelect' => true]
-                        ),
-                    ],
-                    ['name' => 'commit-method', 'value' => 'get'],
-                    ['name' => 'id', 'value' => 'notification_button_view'],
-                    ['name' => 'text', 'value' => __('Mark as read?')],
-                    ['name' => 'sort-group', 'value' => 1],
-                    ['name' => 'rowtitle', 'value' => $notification->subject]
-                ]
-            ];
-
-
-            // Edit Notification
-            if ($this->getUser()->checkEditable($notification) &&
-                $this->getUser()->featureEnabled('notification.modify')
-            ) {
-                $notification->buttons[] = [
-                    'id' => 'notification_button_edit',
-                    'url' => $this->urlFor(
-                        $request,
-                        'notification.edit.form',
-                        ['id' => $notification->notificationId]
-                    ),
-                    'text' => __('Edit')
-                ];
-            }
-
-            // Delete Notifications
-            if ($this->getUser()->checkDeleteable($notification) &&
-                $this->getUser()->featureEnabled('notification.modify')
-            ) {
-                $notification->buttons[] = ['divider' => true];
-
-                $notification->buttons[] = [
-                    'id' => 'notification_button_delete',
-                    'url' => $this->urlFor(
-                        $request,
-                        'notification.delete.form',
-                        ['id' => $notification->notificationId]
-                    ),
-                    'text' => __('Delete'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor(
-                                $request,
-                                'notification.delete',
-                                ['id' => $notification->notificationId]
-                            )
-                        ],
-                        ['name' => 'commit-method', 'value' => 'delete'],
-                        ['name' => 'id', 'value' => 'notification_button_delete'],
-                        ['name' => 'text', 'value' => __('Delete?')],
-                        ['name' => 'sort-group', 'value' => 2],
-                        ['name' => 'rowtitle', 'value' => $notification->subject]
-                    ]
-                ];
-            }
+            $notification->canEdit = $this->getUser()->checkEditable($notification)
+                && $this->getUser()->featureEnabled('notification.modify');
+            $notification->canDelete = $this->getUser()->checkDeleteable($notification)
+                && $this->getUser()->featureEnabled('notification.modify');
         }
 
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->notificationFactory->countLast();
-        $this->getState()->setData($notifications);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $this->notificationFactory->countLast())
+            ->withJson($notifications);
     }
 
+    #[OA\Get(
+        path: '/notification/{notificationId}',
+        operationId: 'notificationGetById',
+        description: 'Get a single Notification by ID',
+        summary: 'Notification Get By ID',
+        tags: ['notification']
+    )]
+    #[OA\Parameter(
+        name: 'notificationId',
+        description: 'The Notification ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Notification')
+    )]
     /**
-     * Add Notification Form
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
+     * @param int $id
+     * @return Response|ResponseInterface
+     * @throws NotFoundException|InvalidArgumentException
      */
-    public function addForm(Request $request, Response $response)
+    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
     {
-        $groups = [];
-        $displays = [];
-        $userGroups = [];
-        $users = [];
-
-        foreach ($this->displayGroupFactory->query(['displayGroup'], ['isDisplaySpecific' => -1]) as $displayGroup) {
-            /* @var \Xibo\Entity\DisplayGroup $displayGroup */
-
-            if ($displayGroup->isDisplaySpecific == 1) {
-                $displays[] = $displayGroup;
-            } else {
-                $groups[] = $displayGroup;
-            }
-        }
-
-        foreach ($this->userGroupFactory->query(['`group`'], ['isUserSpecific' => -1]) as $userGroup) {
-            /* @var UserGroup $userGroup */
-
-            if ($userGroup->isUserSpecific == 0) {
-                $userGroups[] = $userGroup;
-            } else {
-                $users[] = $userGroup;
-            }
-        }
-
-        $this->getState()->template = 'notification-form-add';
-        $this->getState()->setData([
-            'displays' => $displays,
-            'displayGroups' => $groups,
-            'users' => $users,
-            'userGroups' => $userGroups,
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Edit Notification Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    public function editForm(Request $request, Response $response, $id)
-    {
-        $notification = $this->notificationFactory->getById($id);
+        $notification = $this->notificationFactory->getById($id, false);
         $notification->load();
 
-        // Adjust the dates
-        $notification->createDt = Carbon::createFromTimestamp($notification->createDt)
-            ->format(DateFormatHelper::getSystemFormat());
-        $notification->releaseDt = Carbon::createFromTimestamp($notification->releaseDt)
-            ->format(DateFormatHelper::getSystemFormat());
+        $notification->canEdit = $this->getUser()->checkEditable($notification)
+            && $this->getUser()->featureEnabled('notification.modify');
+        $notification->canDelete = $this->getUser()->checkDeleteable($notification)
+            && $this->getUser()->featureEnabled('notification.modify');
 
-        if (!$this->getUser()->checkEditable($notification)) {
-            throw new AccessDeniedException();
-        }
-
-        $groups = [];
-        $displays = [];
-        $userGroups = [];
-        $users = [];
-
-        foreach ($this->displayGroupFactory->query(['displayGroup'], ['isDisplaySpecific' => -1]) as $displayGroup) {
-            /* @var \Xibo\Entity\DisplayGroup $displayGroup */
-
-            if ($displayGroup->isDisplaySpecific == 1) {
-                $displays[] = $displayGroup;
-            } else {
-                $groups[] = $displayGroup;
-            }
-        }
-
-        foreach ($this->userGroupFactory->query(['`group`'], ['isUserSpecific' => -1]) as $userGroup) {
-            /* @var UserGroup $userGroup */
-
-            if ($userGroup->isUserSpecific == 0) {
-                $userGroups[] = $userGroup;
-            } else {
-                $users[] = $userGroup;
-            }
-        }
-
-        $this->getState()->template = 'notification-form-edit';
-        $this->getState()->setData([
-            'notification' => $notification,
-            'displays' => $displays,
-            'displayGroups' => $groups,
-            'users' => $users,
-            'userGroups' => $userGroups,
-            'displayGroupIds' => array_map(function ($element) {
-                return $element->displayGroupId;
-            }, $notification->displayGroups),
-            'userGroupIds' => array_map(function ($element) {
-                return $element->groupId;
-            }, $notification->userGroups)
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(200)->withJson($notification);
     }
 
     /**
-     * Delete Notification Form
+     * Mark notifications as read for the current user.
      * @param Request $request
      * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return Response|ResponseInterface
      * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function deleteForm(Request $request, Response $response, $id)
+    public function markAsRead(Request $request, Response $response): Response|ResponseInterface
     {
-        $notification = $this->notificationFactory->getById($id);
+        $params = $this->getSanitizer($request->getParams());
+        $notificationId = $params->getInt('notificationId');
+        $readDt = Carbon::now()->format('U');
 
-        if (!$this->getUser()->checkDeleteable($notification)) {
-            throw new AccessDeniedException();
+        if ($notificationId !== null) {
+            $notification = $this->userNotificationFactory->getByNotificationId($notificationId);
+            $notification->setRead($readDt);
+            $notification->save();
+        } else {
+            $this->userNotificationFactory->markAllAsRead($readDt);
         }
 
-        $this->getState()->template = 'notification-form-delete';
-        $this->getState()->setData([
-            'notification' => $notification
-        ]);
+        return $response->withStatus(204);
+    }
 
-        return $this->render($request, $response);
+    /**
+     * Return unread interrupt notifications for the current user (SPA client-side interrupt mechanism).
+     * Only returns notifications the user is an audience member of.
+     * @param Request $request
+     * @param Response $response
+     * @return Response|ResponseInterface
+     */
+    public function getInterrupt(Request $request, Response $response): Response|ResponseInterface
+    {
+        $notifications = $this->userNotificationFactory->query(
+            ['releaseDt ASC'],
+            ['audienceId' => $this->getUser()->userId, 'isInterrupt' => 1, 'read' => 0]
+        );
+
+        return $response->withStatus(200)->withJson($notifications);
+    }
+
+    /**
+     * Return released notifications visible to the current user (audience), sorted by releaseDt DESC.
+     * Used by the notification badge and dropdown in the SPA.
+     * @param Request $request
+     * @param Response $response
+     * @return Response|ResponseInterface
+     * @throws NotFoundException
+     */
+    public function myNotifications(Request $request, Response $response): Response|ResponseInterface
+    {
+        $params = $this->getSanitizer($request->getQueryParams());
+
+        $filterBy = [
+            'audienceId'   => $this->getUser()->userId,
+            'start'        => $params->getInt('start'),
+            'length'       => $params->getInt('length'),
+        ];
+
+        $notifications = $this->userNotificationFactory->query(
+            ['releaseDt DESC'],
+            $filterBy
+        );
+
+        $environmentNotifications = [];
+
+        if ($this->getUser()->userId != null
+            && $this->session->isExpired() == 0
+            && $this->getUser()->featureEnabled('drawer')
+        ) {
+            $environmentNotifications = $this->buildEnvironmentNotifications($request);
+        }
+
+        return $response
+            ->withStatus(200)
+            ->withHeader(
+                'X-Total-Count',
+                $this->userNotificationFactory->countLast() + count($environmentNotifications)
+            )
+            ->withHeader(
+                'X-Unread-Count',
+                $this->userNotificationFactory->countMyUnread() + count($environmentNotifications)
+            )
+            ->withJson(array_merge($environmentNotifications, $notifications));
     }
 
     /**
      * Add attachment
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|\Slim\Http\Response
-     * @throws \Xibo\Support\Exception\ConfigurationException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
+     * @return ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
      */
-    public function addAttachment(Request $request, Response $response)
+    public function addAttachment(Request $request, Response $response): Response|ResponseInterface
     {
         $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
@@ -491,79 +380,72 @@ class Notification extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/notification',
+        operationId: 'notificationAdd',
+        description: 'Add a Notification',
+        summary: 'Notification Add',
+        tags: ['notification']
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['subject', 'isInterrupt', 'displayGroupIds', 'userGroupIds'],
+                properties: [
+                    new OA\Property(property: 'subject', description: 'The Subject', type: 'string'),
+                    new OA\Property(property: 'body', description: 'The Body', type: 'string'),
+                    new OA\Property(
+                        property: 'releaseDt',
+                        description: 'ISO date representing the release date for this notification',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'isInterrupt',
+                        description: 'Flag indication whether this notification should interrupt the web portal nativation/login', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'displayGroupIds',
+                        description: 'The display group ids to assign this notification to',
+                        type: 'array',
+                        items: new OA\Items(type: 'integer')
+                    ),
+                    new OA\Property(
+                        property: 'userGroupIds',
+                        description: 'The user group ids to assign to this notification',
+                        type: 'array',
+                        items: new OA\Items(type: 'integer')
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ],
+        content: new OA\JsonContent(ref: '#/components/schemas/Notification')
+    )]
     /**
      * Add Notification
      *
-     * @SWG\Post(
-     *  path="/notification",
-     *  operationId="notificationAdd",
-     *  tags={"notification"},
-     *  summary="Notification Add",
-     *  description="Add a Notification",
-     *  @SWG\Parameter(
-     *      name="subject",
-     *      in="formData",
-     *      description="The Subject",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="body",
-     *      in="formData",
-     *      description="The Body",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="releaseDt",
-     *      in="formData",
-     *      description="ISO date representing the release date for this notification",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isInterrupt",
-     *      in="formData",
-     *      description="Flag indication whether this notification should interrupt the web portal nativation/login",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="displayGroupIds",
-     *      in="formData",
-     *      description="The display group ids to assign this notification to",
-     *      type="array",
-     *      required=true,
-     *      @SWG\Items(type="integer")
-     *   ),
-     *  @SWG\Parameter(
-     *      name="userGroupIds",
-     *      in="formData",
-     *      description="The user group ids to assign to this notification",
-     *      type="array",
-     *      required=true,
-     *      @SWG\Items(type="integer")
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Notification"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws ConfigurationException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws NotFoundException
      */
-    public function add(Request $request, Response $response)
+    public function add(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -584,185 +466,105 @@ class Notification extends Base
         $notification->nonusers = $sanitizedParams->getString('nonusers');
         $notification->type = 'custom';
 
-        // Displays and Users to link
-        foreach ($sanitizedParams->getIntArray('displayGroupIds', ['default' => [] ]) as $displayGroupId) {
-            $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
-
-            // Verify the caller can view the display group they're assigning the notification to.
-            if (!$this->getUser()->checkViewable($displayGroup)) {
-                throw new AccessDeniedException(__('Access to one or more display groups denied'));
-            }
-
-            $notification->assignDisplayGroup($displayGroup);
-
-            // Notify (don't collect)
-            $this->displayNotifyService->collectLater()->notifyByDisplayGroupId($displayGroupId);
-        }
-
-        foreach ($sanitizedParams->getIntArray('userGroupIds', ['default' => [] ]) as $userGroupId) {
-            $userGroup = $this->userGroupFactory->getById($userGroupId);
-
-            // Verify the caller can view the user group they're assigning the notification to.
-            if (!$this->getUser()->checkViewable($userGroup)) {
-                throw new AccessDeniedException(__('Access to one or more user groups denied'));
-            }
-
-            $notification->assignUserGroup($userGroup);
-        }
+        $this->assignAudienceFromParams($notification, $sanitizedParams);
 
         $notification->save();
 
-        // basename() strips any path components — defence-in-depth against a caller submitting
-        // attachedFilename values with traversal sequences (`../`, absolute paths) that could
-        // be interpreted by the filesystem when concatenated below.
-        $attachedFilename = basename(
-            $sanitizedParams->getString('attachedFilename', ['defaultOnEmptyString' => true]) ?? ''
-        );
-        $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+        $this->handleAttachmentUpload($notification, $sanitizedParams);
 
-        if (!empty($attachedFilename)) {
-            $saveName = $notification->notificationId .'_' .$attachedFilename;
-            $notification->filename = $saveName;
-            $notification->originalFileName = $attachedFilename;
-            // Move the file into the library
-            // Try to move the file first
-            $from = $libraryFolder . 'temp/' . $attachedFilename;
-            $to = $libraryFolder . 'attachment/' .  $saveName;
-
-            $moved = rename($from, $to);
-
-            if (!$moved) {
-                $this->getLog()->info(
-                    'Cannot move file: ' . $from . ' to ' . $to . ', will try and copy/delete instead.'
-                );
-
-                // Copy
-                $moved = copy($from, $to);
-
-                // Delete
-                if (!@unlink($from)) {
-                    $this->getLog()->error('Cannot delete file: ' . $from . ' after copying to ' . $to);
-                }
-            }
-
-            if (!$moved) {
-                throw new ConfigurationException(__('Problem moving uploaded file into the Attachment Folder'));
-            }
-
-            $notification->save();
-        }
-
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 201,
-            'message' => sprintf(__('Added %s'), $notification->subject),
-            'id' => $notification->notificationId,
-            'data' => $notification
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(201)->withJson($notification);
     }
 
+    #[OA\Put(
+        path: '/notification/{notificationId}',
+        operationId: 'notificationEdit',
+        description: 'Edit a Notification',
+        summary: 'Notification Edit',
+        tags: ['notification']
+    )]
+    #[OA\Parameter(
+        name: 'notificationId',
+        description: 'The NotificationId',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['subject', 'releaseDt', 'isInterrupt', 'displayGroupIds', 'userGroupIds'],
+                properties: [
+                    new OA\Property(property: 'subject', description: 'The Subject', type: 'string'),
+                    new OA\Property(property: 'body', description: 'The Body', type: 'string'),
+                    new OA\Property(
+                        property: 'releaseDt',
+                        description: 'ISO date representing the release date for this notification',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'isInterrupt',
+                        description: 'Flag indication whether this notification should interrupt the web portal nativation/login', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'displayGroupIds',
+                        description: 'The display group ids to assign this notification to',
+                        type: 'array',
+                        items: new OA\Items(type: 'integer')
+                    ),
+                    new OA\Property(
+                        property: 'userGroupIds',
+                        description: 'The user group ids to assign to this notification',
+                        type: 'array',
+                        items: new OA\Items(type: 'integer')
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Notification')
+    )]
     /**
      * Edit Notification
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
-     * @SWG\Put(
-     *  path="/notification/{notificationId}",
-     *  operationId="notificationEdit",
-     *  tags={"notification"},
-     *  summary="Notification Edit",
-     *  description="Edit a Notification",
-     *  @SWG\Parameter(
-     *      name="notificationId",
-     *      in="path",
-     *      description="The NotificationId",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="subject",
-     *      in="formData",
-     *      description="The Subject",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="body",
-     *      in="formData",
-     *      description="The Body",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="releaseDt",
-     *      in="formData",
-     *      description="ISO date representing the release date for this notification",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isInterrupt",
-     *      in="formData",
-     *      description="Flag indication whether this notification should interrupt the web portal nativation/login",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="displayGroupIds",
-     *      in="formData",
-     *      description="The display group ids to assign this notification to",
-     *      type="array",
-     *      required=true,
-     *      @SWG\Items(type="integer")
-     *   ),
-     *  @SWG\Parameter(
-     *      name="userGroupIds",
-     *      in="formData",
-     *      description="The user group ids to assign to this notification",
-     *      type="array",
-     *      required=true,
-     *      @SWG\Items(type="integer")
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Notification")
-     *  )
-     * )
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws NotFoundException
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $notification = $this->notificationFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $notification->load();
 
-        // Check Permissions
         if (!$this->getUser()->checkEditable($notification)) {
             throw new AccessDeniedException();
         }
 
         $notification->subject = $sanitizedParams->getString('subject');
-        $notification->body = $request->getParam('body', '');
+        $notification->body = $sanitizedParams->getHtml('body');
         $notification->createDt = Carbon::now()->format('U');
-        $notification->releaseDt = $sanitizedParams->getDate('releaseDt')->format('U');
+        $notification->releaseDt = $sanitizedParams->getDate('releaseDt')?->format('U') ?? $notification->releaseDt;
         $notification->isInterrupt = $sanitizedParams->getCheckbox('isInterrupt');
         $notification->userId = $this->getUser()->userId;
         $notification->nonusers = $sanitizedParams->getString('nonusers');
 
-        // Capture the assignment IDs the notification already had before we clear them.
-        // The per-iteration checkViewable below only needs to gate NEW assignments — a user
-        // with edit access to the notification should be able to re-save the existing groups
-        // even if they were originally added by someone who shared the notification but not
-        // the groups. Mirrors the pattern used by Campaign::edit() (lines ~766-788) which
-        // captures $originalLayoutAssignments before unassignAllLayouts() and bypasses the
-        // checkViewable() for IDs already in that list.
+        if ($sanitizedParams->getCheckbox('clearAttachment')) {
+            $notification->filename = '';
+            $notification->originalFileName = '';
+        }
+
+        // Capture existing assignments so the caller can re-save them without needing
+        // view permission on groups originally added by another user. Mirrors Campaign::edit().
         $originalDisplayGroupIds = array_map(
             fn ($dg) => $dg->displayGroupId,
             $notification->displayGroups ?? []
@@ -772,85 +574,47 @@ class Notification extends Base
             $notification->userGroups ?? []
         );
 
-        // Clear existing assignments
-        $notification->displayGroups = [];
-        $notification->userGroups = [];
-
-        // Displays and Users to link
-        foreach ($sanitizedParams->getIntArray('displayGroupIds', ['default' => []]) as $displayGroupId) {
-            $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
-
-            // Verify the caller can view the display group they're assigning the notification to.
-            // Bypass the check when re-saving an already-assigned group (see comment above).
-            if (!$this->getUser()->checkViewable($displayGroup)
-                && !in_array($displayGroupId, $originalDisplayGroupIds)
-            ) {
-                throw new AccessDeniedException(__('Access to one or more display groups denied'));
-            }
-
-            $notification->assignDisplayGroup($displayGroup);
-
-            // Notify (don't collect)
-            $this->displayNotifyService->collectLater()->notifyByDisplayGroupId($displayGroupId);
-        }
-
-        foreach ($sanitizedParams->getIntArray('userGroupIds', ['default' => []]) as $userGroupId) {
-            $userGroup = $this->userGroupFactory->getById($userGroupId);
-
-            // Verify the caller can view the user group they're assigning the notification to.
-            // Bypass the check when re-saving an already-assigned group (see comment above).
-            if (!$this->getUser()->checkViewable($userGroup)
-                && !in_array($userGroupId, $originalUserGroupIds)
-            ) {
-                throw new AccessDeniedException(__('Access to one or more user groups denied'));
-            }
-
-            $notification->assignUserGroup($userGroup);
-        }
+        $this->assignAudienceFromParams(
+            $notification,
+            $sanitizedParams,
+            $originalDisplayGroupIds,
+            $originalUserGroupIds
+        );
 
         $notification->save();
 
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 201,
-            'message' => sprintf(__('Edited %s'), $notification->subject),
-            'id' => $notification->notificationId,
-            'data' => $notification
-        ]);
+        $this->handleAttachmentUpload($notification, $sanitizedParams);
 
-        return $this->render($request, $response);
+        return $response->withStatus(200)->withJson($notification);
     }
 
+    #[OA\Delete(
+        path: '/notification/{notificationId}',
+        operationId: 'notificationDelete',
+        description: 'Delete the provided notification',
+        summary: 'Delete Notification',
+        tags: ['notification']
+    )]
+    #[OA\Parameter(
+        name: 'notificationId',
+        description: 'The Notification Id to Delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete Notification
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
-     * @SWG\Delete(
-     *  path="/notification/{notificationId}",
-     *  operationId="notificationDelete",
-     *  tags={"notification"},
-     *  summary="Delete Notification",
-     *  description="Delete the provided notification",
-     *  @SWG\Parameter(
-     *      name="notificationId",
-     *      in="path",
-     *      description="The Notification Id to Delete",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws NotFoundException
      */
-    public function delete(Request $request, Response $response, $id)
+    public function delete(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $notification = $this->notificationFactory->getById($id);
 
@@ -860,34 +624,28 @@ class Notification extends Base
 
         $notification->delete();
 
-        /*Delete the attachment*/
+        // Remove the attachment
         if (!empty($notification->filename)) {
-            // Library location
-            $attachmentLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION'). 'attachment/';
+            $attachmentLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'attachment/';
+
             if (file_exists($attachmentLocation . $notification->filename)) {
                 unlink($attachmentLocation . $notification->filename);
             }
         }
 
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('Deleted %s'), $notification->subject)
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(204);
     }
 
     /**
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
+     * @return ResponseInterface|Response
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws NotFoundException
      */
-    public function exportAttachment(Request $request, Response $response, $id)
+    public function exportAttachment(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $notification = $this->userNotificationFactory->getByNotificationId($id);
 
@@ -901,5 +659,153 @@ class Notification extends Base
             $this->getConfig()->getSetting('SENDFILE_MODE'),
             $fileName
         ));
+    }
+
+    /**
+     * Build environment notifications for the current request context.
+     * These are never stored in the database; they reflect live environment state.
+     * @param Request $request
+     * @return array
+     */
+    private function buildEnvironmentNotifications(Request $request): array
+    {
+        $notifications = [];
+
+        if (Environment::isDevMode()) {
+            $notifications[] = $this->buildEnvironmentNotification(__('CMS is running in DEV mode'));
+        } elseif ($this->getUser()->userTypeId === 1) {
+            if (!Environment::checkUrl($request->getUri())) {
+                $notifications[] = $this->buildEnvironmentNotification(
+                    __('CMS URL configuration warning — /web/ should not appear in the URL')
+                );
+            }
+        }
+
+        return $notifications;
+    }
+
+    /**
+     * Build environment notification object
+     */
+    private function buildEnvironmentNotification(string $subject): object
+    {
+        return (object) [
+            'notificationId' => null,
+            'subject'        => $subject,
+            'body'           => '',
+            'type'           => 'system',
+            'isSystem'       => 1,
+            'isInterrupt'    => 0,
+            'read'           => 0,
+            'readDt'         => null,
+            'releaseDt'      => Carbon::now()->format('U'),
+            'userId'         => $this->getUser()->userId,
+        ];
+    }
+
+    /**
+     * Get the notification filter query
+     */
+    private function getNotificationFilterQuery($sanitizedQueryParams): array
+    {
+        $filter = [
+            'notificationId' => $sanitizedQueryParams->getInt('notificationId'),
+            'subject' => $sanitizedQueryParams->getString('subject'),
+            'read' => $sanitizedQueryParams->getInt('read'),
+            'releaseDt' => $sanitizedQueryParams->getDate('releaseDt')?->format('U'),
+            'type' => $sanitizedQueryParams->getString('type'),
+        ];
+
+        return $this->gridRenderFilter($filter, $sanitizedQueryParams);
+    }
+
+    /**
+     * Assign display groups and user groups from request params onto a notification.
+     * For edit operations, pass the pre-clear assignment arrays to allow re-saving
+     * groups the caller no longer has view permission on (permission bypass pattern
+     * from Campaign::edit()).
+     *
+     * @throws AccessDeniedException
+     * @throws NotFoundException|InvalidArgumentException
+     */
+    private function assignAudienceFromParams(
+        NotificationEntity $notification,
+        SanitizerInterface $params,
+        array $originalDisplayGroupIds = [],
+        array $originalUserGroupIds = [],
+    ): void {
+        $notification->displayGroups = [];
+        $notification->userGroups = [];
+
+        foreach ($params->getIntArray('displayGroupIds', ['default' => []]) as $displayGroupId) {
+            $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+            if (!$this->getUser()->checkViewable($displayGroup)
+                && !in_array($displayGroupId, $originalDisplayGroupIds, true)
+            ) {
+                throw new AccessDeniedException(__('Access to one or more display groups denied'));
+            }
+
+            $notification->assignDisplayGroup($displayGroup);
+            $this->displayNotifyService->collectLater()->notifyByDisplayGroupId($displayGroupId);
+        }
+
+        foreach ($params->getIntArray('userGroupIds', ['default' => []]) as $userGroupId) {
+            $userGroup = $this->userGroupFactory->getById($userGroupId);
+
+            if (!$this->getUser()->checkViewable($userGroup)
+                && !in_array($userGroupId, $originalUserGroupIds, true)
+            ) {
+                throw new AccessDeniedException(__('Access to one or more user groups denied'));
+            }
+
+            $notification->assignUserGroup($userGroup);
+        }
+    }
+
+    /**
+     * Move an uploaded attachment from temp into the attachment folder and persist the filename.
+     * No-ops when no attachedFilename was submitted.
+     *
+     * @throws ConfigurationException|InvalidArgumentException
+     */
+    private function handleAttachmentUpload(NotificationEntity $notification, SanitizerInterface $params): void
+    {
+        // basename() strips path components — defence against traversal sequences in the submitted name.
+        $attachedFilename = basename(
+            $params->getString('attachedFilename', ['defaultOnEmptyString' => true]) ?? ''
+        );
+
+        if (empty($attachedFilename)) {
+            return;
+        }
+
+        $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+        $saveName = $notification->notificationId . '_' . $attachedFilename;
+        $notification->filename = $saveName;
+        $notification->originalFileName = $attachedFilename;
+
+        $from = $libraryFolder . 'temp/' . $attachedFilename;
+        $to = $libraryFolder . 'attachment/' . $saveName;
+
+        $moved = rename($from, $to);
+
+        if (!$moved) {
+            $this->getLog()->info(
+                'Cannot move file: ' . $from . ' to ' . $to . ', will try and copy/delete instead.'
+            );
+
+            $moved = copy($from, $to);
+
+            if (!@unlink($from)) {
+                $this->getLog()->error('Cannot delete file: ' . $from . ' after copying to ' . $to);
+            }
+        }
+
+        if (!$moved) {
+            throw new ConfigurationException(__('Problem moving uploaded file into the Attachment Folder'));
+        }
+
+        $notification->save();
     }
 }

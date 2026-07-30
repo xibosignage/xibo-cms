@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -22,6 +22,7 @@
 
 
 namespace Xibo\Entity;
+use OpenApi\Attributes as OA;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -30,53 +31,52 @@ use Xibo\Support\Exception\InvalidArgumentException;
 /**
  * Class Transition
  * @package Xibo\Entity
- *
- * @SWG\Definition()
  */
+#[OA\Schema]
 class Transition
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(description="The transition ID")
      * @var int
      */
+    #[OA\Property(description: 'The transition ID')]
     public $transitionId;
 
     /**
-     * @SWG\Property(description="The transition name")
      * @var string
      */
+    #[OA\Property(description: 'The transition name')]
     public $transition;
 
     /**
-     * @SWG\Property(description="Code for transition")
      * @var string
      */
+    #[OA\Property(description: 'Code for transition')]
     public $code;
 
     /**
-     * @SWG\Property(description="Flag indicating whether this is a directional transition")
      * @var int
      */
+    #[OA\Property(description: 'Flag indicating whether this is a directional transition')]
     public $hasDirection;
 
     /**
-     * @SWG\Property(description="Flag indicating whether this transition has a duration option")
      * @var int
      */
+    #[OA\Property(description: 'Flag indicating whether this transition has a duration option')]
     public $hasDuration;
 
     /**
-     * @SWG\Property(description="Flag indicating whether this transition should be available for IN assignments")
      * @var int
      */
+    #[OA\Property(description: 'Flag indicating whether this transition should be available for IN assignments')]
     public $availableAsIn;
 
     /**
-     * @SWG\Property(description="Flag indicating whether this transition should be available for OUT assignments")
      * @var int
      */
+    #[OA\Property(description: 'Flag indicating whether this transition should be available for OUT assignments')]
     public $availableAsOut;
 
     /**

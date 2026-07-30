@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -502,5 +502,54 @@ class BaseFactory
         }
 
         $body .= ' ) ';
+    }
+
+    /**
+     * @param array|null $sortOrder - the sort value from gridRenderSort
+     * @param array $allowedColumns - sortable columns in datatable
+     * @param array $customColumns - computed or formatted columns in datatable
+     * @param array $defaultSort - default sorting
+     * @return array
+     */
+    public function buildSortQuery(
+        ?array $sortOrder,
+        array $allowedColumns,
+        array $customColumns = [],
+        array $defaultSort = []
+    ): array {
+        $columnMapping = [];
+
+        foreach ($allowedColumns as $col) {
+            $columnMapping[$col] = '`' . $col . '`';
+        }
+
+        // Handle custom columns
+        foreach ($customColumns as $col => $name) {
+            $columnMapping[$col] = $name;
+        }
+
+        $order = [];
+
+        foreach ($sortOrder ?? $defaultSort as $sort) {
+            // Separate sort by and sort order
+            $sortArr = explode(' ', trim($sort), 2);
+
+            // Trim and sanitize sort by and normalize (remove table name if existing)
+            $columnParts = explode('.', str_replace('`', '', trim($sortArr[0])));
+            $column = end($columnParts);
+
+            // Check against the allowed columns
+            if (!isset($columnMapping[$column])) {
+                continue;
+            }
+
+            $dir = (isset($sortArr[1]) && strtoupper(trim($sortArr[1])) === 'DESC')
+                ? ' DESC'
+                : ' ASC';
+
+            $order[] = $columnMapping[$column] . $dir;
+        }
+
+        return $order;
     }
 }

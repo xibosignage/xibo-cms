@@ -119,8 +119,9 @@ class DisplayEvent implements \JsonSerializable
     /**
      * Record end date for specified display and event type.
      * @param int $displayId
-     * @param int|null $date
      * @param int $eventTypeId
+     * @param string|null $detail
+     * @param int|null $date
      * @return void
      */
     public function eventEnd(int $displayId, int $eventTypeId = 1, ?string $detail = null, ?int $date = null): void
@@ -152,6 +153,7 @@ class DisplayEvent implements \JsonSerializable
      * @param int $displayId
      * @param int $eventTypeId
      * @param int $refId
+     * @param string|null $detail
      * @param int|null $date
      * @return void
      */

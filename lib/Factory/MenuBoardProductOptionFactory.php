@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -26,23 +26,12 @@ use Xibo\Entity\MenuBoardProductOption;
 
 class MenuBoardProductOptionFactory extends BaseFactory
 {
-    /**
-     * Create Empty
-     * @return MenuBoardProductOption
-     */
-    public function createEmpty()
+    public function createEmpty(): MenuBoardProductOption
     {
         return new MenuBoardProductOption($this->getStore(), $this->getLog(), $this->getDispatcher());
     }
 
-    /**
-     * Create a Widget Option
-     * @param int $menuProductId
-     * @param string $option
-     * @param mixed $value
-     * @return MenuBoardProductOption
-     */
-    public function create($menuProductId, $option, $value)
+    public function create(int $menuProductId, string $option, mixed $value): MenuBoardProductOption
     {
         $productOption = $this->createEmpty();
         $productOption->menuProductId = $menuProductId;
@@ -53,22 +42,17 @@ class MenuBoardProductOptionFactory extends BaseFactory
     }
 
     /**
-     * Load by Menu Board Product Id
-     * @param int $menuProductId
      * @return MenuBoardProductOption[]
      */
-    public function getByMenuProductId($menuProductId)
+    public function getByMenuProductId(int $menuProductId): array
     {
         return $this->query(null, ['menuProductId' => $menuProductId]);
     }
 
     /**
-     * Query Menu Board Product options
-     * @param array $sortOrder
-     * @param array $filterBy
      * @return MenuBoardProductOption[]
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query(?array $sortOrder = null, array $filterBy = []): array
     {
         $sanitizedFilter = $this->getSanitizer($filterBy);
         $entries = [];

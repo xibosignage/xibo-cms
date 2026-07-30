@@ -237,7 +237,7 @@ HistoryManager.prototype.uploadChange = function(
       type: linkToAPI.type,
       data: change.newState,
     }).done(function(data) {
-      if (data.success) {
+      if (!data || data.success) {
         change.uploaded = true;
         change.uploading = false;
 

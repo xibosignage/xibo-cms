@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -23,14 +23,16 @@
 
 namespace Xibo\Controller;
 
+use OpenApi\Attributes as OA;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Event\CommandDeleteEvent;
 use Xibo\Factory\CommandFactory;
 use Xibo\Support\Exception\AccessDeniedException;
-use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Class Command
@@ -39,367 +41,245 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class Command extends Base
 {
-    /**
-     * @var CommandFactory
-     */
-    private $commandFactory;
-
-    /**
-     * Set common dependencies.
-     * @param CommandFactory $commandFactory
-     */
-    public function __construct($commandFactory)
-    {
-        $this->commandFactory = $commandFactory;
+    public function __construct(
+        private readonly CommandFactory $commandFactory,
+    ) {
     }
 
+    #[OA\Get(
+        path: '/command',
+        operationId: 'commandSearch',
+        description: 'Search this users Commands',
+        summary: 'Command Search',
+        tags: ['command']
+    )]
+    #[OA\Parameter(
+        name: 'commandId',
+        description: 'Filter by Command Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'command',
+        description: 'Filter by Command Name',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'code',
+        description: 'Filter by Command Code',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'useRegexForName',
+        description: 'Flag (0,1). When filtering by multiple commands in command filter, should we use regex?', // phpcs:ignore
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'useRegexForCode',
+        description: 'Flag (0,1). When filtering by multiple codes in code filter, should we use regex?', // phpcs:ignore
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'logicalOperatorName',
+        description: 'When filtering by multiple commands in command filter, which logical operator should be used? AND|OR', // phpcs:ignore
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'logicalOperatorCode',
+        description: 'When filtering by multiple codes in code filter, which logical operator should be used? AND|OR', // phpcs:ignore
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'type',
+        description: 'Filter by player type (e.g. android, windows, linux, chromeOS, lg). Returns commands available on that type plus commands with no type restriction.', // phpcs:ignore
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'string',
+            enum: ['commandId', 'command', 'code', 'description', 'groupsWithPermissions']
+        )
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ],
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/Command')
+        )
+    )]
     /**
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ControllerNotImplemented
-     * @throws GeneralException
-     */
-    public function displayPage(Request $request, Response $response)
-    {
-        $this->getState()->template = 'command-page';
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * @SWG\Get(
-     *  path="/command",
-     *  operationId="commandSearch",
-     *  tags={"command"},
-     *  summary="Command Search",
-     *  description="Search this users Commands",
-     *  @SWG\Parameter(
-     *      name="commandId",
-     *      in="query",
-     *      description="Filter by Command Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="command",
-     *      in="query",
-     *      description="Filter by Command Name",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="code",
-     *      in="query",
-     *      description="Filter by Command Code",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="useRegexForName",
-     *      in="query",
-     *      description="Flag (0,1). When filtering by multiple commands in command filter, should we use regex?",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *    name="useRegexForCode",
-     *     in="query",
-     *     description="Flag (0,1). When filtering by multiple codes in code filter, should we use regex?",
-     *     type="integer",
-     *     required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="logicalOperatorName",
-     *      in="query",
-     *      description="When filtering by multiple commands in command filter,
-     * which logical operator should be used? AND|OR",
-     *      type="string",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="logicalOperatorCode",
-     *      in="query",
-     *      description="When filtering by multiple codes in code filter,
-     * which logical operator should be used? AND|OR",
-     *      type="string",
-     *      required=false
-     *  ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/Command")
-     *      )
-     *  )
-     * )
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ControllerNotImplemented
+     * @return Response|ResponseInterface
      * @throws GeneralException
      * @throws NotFoundException
      */
-    public function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response): Response|ResponseInterface
     {
-        $sanitizedParams = $this->getSanitizer($request->getParams());
-
-        $filter = [
-            'commandId' => $sanitizedParams->getInt('commandId'),
-            'command' => $sanitizedParams->getString('command'),
-            'code' => $sanitizedParams->getString('code'),
-            'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
-            'useRegexForCode' => $sanitizedParams->getCheckbox('useRegexForCode'),
-            'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
-            'logicalOperatorCode' => $sanitizedParams->getString('logicalOperatorCode'),
-        ];
+        $sanitizedParams = $this->getSanitizer($request->getQueryParams());
 
         $commands = $this->commandFactory->query(
-            $this->gridRenderSort($sanitizedParams),
-            $this->gridRenderFilter($filter, $sanitizedParams)
+            $this->gridRenderSort($sanitizedParams, $this->isJson($request)),
+            $this->getCommandFilters($sanitizedParams)
         );
 
         foreach ($commands as $command) {
-            /* @var \Xibo\Entity\Command $command */
-
-            if ($this->isApi($request)) {
-                continue;
-            }
-
-            $command->includeProperty('buttons');
-
-            if ($this->getUser()->featureEnabled('command.modify')) {
-                // Command edit
-                if ($this->getUser()->checkEditable($command)) {
-                    $command->buttons[] = array(
-                        'id' => 'command_button_edit',
-                        'url' => $this->urlFor($request, 'command.edit.form', ['id' => $command->commandId]),
-                        'text' => __('Edit')
-                    );
-                }
-
-                // Command delete
-                if ($this->getUser()->checkDeleteable($command)) {
-                    $command->buttons[] = [
-                        'id' => 'command_button_delete',
-                        'url' => $this->urlFor($request, 'command.delete.form', ['id' => $command->commandId]),
-                        'text' => __('Delete'),
-                        'multi-select' => true,
-                        'dataAttributes' => [
-                            [
-                                'name' => 'commit-url',
-                                'value' => $this->urlFor($request, 'command.delete', ['id' => $command->commandId])
-                            ],
-                            ['name' => 'commit-method', 'value' => 'delete'],
-                            ['name' => 'id', 'value' => 'command_button_delete'],
-                            ['name' => 'text', 'value' => __('Delete')],
-                            ['name' => 'sort-group', 'value' => 1],
-                            ['name' => 'rowtitle', 'value' => $command->command]
-                        ]
-                    ];
-                }
-
-                // Command Permissions
-                if ($this->getUser()->checkPermissionsModifyable($command)) {
-                    // Permissions button
-                    $command->buttons[] = [
-                        'id' => 'command_button_permissions',
-                        'url' => $this->urlFor(
-                            $request,
-                            'user.permissions.form',
-                            ['entity' => 'Command', 'id' => $command->commandId]
-                        ),
-                        'text' => __('Share'),
-                        'multi-select' => true,
-                        'dataAttributes' => [
-                            [
-                                'name' => 'commit-url',
-                                'value' => $this->urlFor(
-                                    $request,
-                                    'user.permissions.multi',
-                                    ['entity' => 'Command', 'id' => $command->commandId]
-                                )
-                            ],
-                            ['name' => 'commit-method', 'value' => 'post'],
-                            ['name' => 'id', 'value' => 'command_button_permissions'],
-                            ['name' => 'text', 'value' => __('Share')],
-                            ['name' => 'rowtitle', 'value' => $command->command],
-                            ['name' => 'sort-group', 'value' => 2],
-                            ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                            [
-                                'name' => 'custom-handler-url',
-                                'value' => $this->urlFor(
-                                    $request,
-                                    'user.permissions.multi.form',
-                                    ['entity' => 'Command']
-                                )
-                            ],
-                            ['name' => 'content-id-name', 'value' => 'commandId']
-                        ]
-                    ];
-                }
-            }
+            $command->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($command));
         }
 
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->commandFactory->countLast();
-        $this->getState()->setData($commands);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $this->commandFactory->countLast())
+            ->withJson($commands);
     }
 
+    #[OA\Get(
+        path: '/command/{commandId}',
+        operationId: 'commandSearchById',
+        description: 'Get the Command object specified by the provided commandId',
+        summary: 'Search Commands by ID',
+        tags: ['command']
+    )]
+    #[OA\Parameter(
+        name: 'commandId',
+        description: 'Numeric ID of the Command to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Command')
+    )]
     /**
-     * Add Command Form
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ControllerNotImplemented
-     * @throws GeneralException
-     */
-    public function addForm(Request $request, Response $response)
-    {
-        $this->getState()->template = 'command-form-add';
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Edit Command
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
+     * @param int $id
+     * @return Response|ResponseInterface
      * @throws GeneralException
      * @throws NotFoundException
      */
-    public function editForm(Request $request, Response $response, $id)
+    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $command = $this->commandFactory->getById($id);
+        $command->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($command));
 
-        if (!$this->getUser()->checkEditable($command)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'command-form-edit';
-        $this->getState()->setData([
-            'command' => $command
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson($command);
     }
 
+    #[OA\Post(
+        path: '/command',
+        operationId: 'commandAdd',
+        description: 'Add a Command',
+        summary: 'Command Add',
+        tags: ['command']
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['command', 'code'],
+                properties: [
+                    new OA\Property(
+                        property: 'command',
+                        description: 'The Command Name',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'description',
+                        description: 'A description for the command',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'code',
+                        description: 'A unique code for this command',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'commandString',
+                        description: 'The Command String for this Command. Can be overridden on Display Settings.', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'validationString',
+                        description: 'The Validation String for this Command. Can be overridden on Display Settings.', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'availableOn',
+                        description: 'An array of Player types this Command is available on, empty for all.', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'createAlertOn',
+                        description: 'On command execution, when should a Display alert be created? success, failure, always or never', // phpcs:ignore
+                        type: 'string'
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ],
+        content: new OA\JsonContent(ref: '#/components/schemas/Command')
+    )]
     /**
-     * Delete Command
      * @param Request $request
      * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
-     * @throws GeneralException
-     * @throws NotFoundException
-     */
-    public function deleteForm(Request $request, Response $response, $id)
-    {
-        $command = $this->commandFactory->getById($id);
-
-        if (!$this->getUser()->checkDeleteable($command)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'command-form-delete';
-        $this->getState()->setData([
-            'command' => $command
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Add Command
-     *
-     * @SWG\Post(
-     *  path="/command",
-     *  operationId="commandAdd",
-     *  tags={"command"},
-     *  summary="Command Add",
-     *  description="Add a Command",
-     *  @SWG\Parameter(
-     *      name="command",
-     *      in="formData",
-     *      description="The Command Name",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="description",
-     *      in="formData",
-     *      description="A description for the command",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="code",
-     *      in="formData",
-     *      description="A unique code for this command",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="commandString",
-     *      in="formData",
-     *      description="The Command String for this Command. Can be overridden on Display Settings.",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="validationString",
-     *      in="formData",
-     *      description="The Validation String for this Command. Can be overridden on Display Settings.",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="availableOn",
-     *      in="formData",
-     *      description="An array of Player types this Command is available on, empty for all.",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="createAlertOn",
-     *      in="formData",
-     *      description="On command execution, when should a Display alert be created?
-     * success, failure, always or never",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Command"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
-     *
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ControllerNotImplemented
+     * @return Response|ResponseInterface
      * @throws GeneralException
      */
-    public function add(Request $request, Response $response)
+    public function add(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        $command = $this->commandFactory->create();
+        $command = $this->commandFactory->createEmpty();
         $command->command = $sanitizedParams->getString('command');
         $command->description = $sanitizedParams->getString('description');
         $command->code = $sanitizedParams->getString('code');
@@ -415,92 +295,79 @@ class Command extends Base
         }
         $command->save();
 
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 201,
-            'message' => sprintf(__('Added %s'), $command->command),
-            'id' => $command->commandId,
-            'data' => $command
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(201)->withJson($command);
     }
 
+    #[OA\Put(
+        path: '/command/{commandId}',
+        operationId: 'commandEdit',
+        description: 'Edit the provided command',
+        summary: 'Edit Command',
+        tags: ['command']
+    )]
+    #[OA\Parameter(
+        name: 'commandId',
+        description: 'The Command Id to Edit',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['command'],
+                properties: [
+                    new OA\Property(
+                        property: 'command',
+                        description: 'The Command Name',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'description',
+                        description: 'A description for the command',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'commandString',
+                        description: 'The Command String for this Command. Can be overridden on Display Settings.', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'validationString',
+                        description: 'The Validation String for this Command. Can be overridden on Display Settings.', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'availableOn',
+                        description: 'An array of Player types this Command is available on, empty for all.', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'createAlertOn',
+                        description: 'On command execution, when should a Display alert be created? success, failure, always or never', // phpcs:ignore
+                        type: 'string'
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Command')
+    )]
     /**
-     * Edit Command
      * @param Request $request
      * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @param int $id
+     * @return Response|ResponseInterface
      * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws NotFoundException
-     *
-     * @SWG\Put(
-     *  path="/command/{commandId}",
-     *  operationId="commandEdit",
-     *  tags={"command"},
-     *  summary="Edit Command",
-     *  description="Edit the provided command",
-     *  @SWG\Parameter(
-     *      name="commandId",
-     *      in="path",
-     *      description="The Command Id to Edit",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="command",
-     *      in="formData",
-     *      description="The Command Name",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="description",
-     *      in="formData",
-     *      description="A description for the command",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="commandString",
-     *      in="formData",
-     *      description="The Command String for this Command. Can be overridden on Display Settings.",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="validationString",
-     *      in="formData",
-     *      description="The Validation String for this Command. Can be overridden on Display Settings.",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="availableOn",
-     *      in="formData",
-     *      description="An array of Player types this Command is available on, empty for all.",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="createAlertOn",
-     *      in="formData",
-     *      description="On command execution, when should a Display alert be created?
-     * success, failure, always or never",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Command")
-     *  )
-     * )
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $command = $this->commandFactory->getById($id);
@@ -522,47 +389,37 @@ class Command extends Base
         }
         $command->save();
 
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 200,
-            'message' => sprintf(__('Edited %s'), $command->command),
-            'id' => $command->commandId,
-            'data' => $command
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(200)->withJson($command);
     }
 
+    #[OA\Delete(
+        path: '/command/{commandId}',
+        operationId: 'commandDelete',
+        description: 'Delete the provided command',
+        summary: 'Delete Command',
+        tags: ['command']
+    )]
+    #[OA\Parameter(
+        name: 'commandId',
+        description: 'The Command Id to Delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 204,
+        description: 'successful operation'
+    )]
     /**
-     * Delete Command
      * @param Request $request
      * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @param int $id
+     * @return Response|ResponseInterface
      * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws NotFoundException
-     * @SWG\Delete(
-     *  path="/command/{commandId}",
-     *  operationId="commandDelete",
-     *  tags={"command"},
-     *  summary="Delete Command",
-     *  description="Delete the provided command",
-     *  @SWG\Parameter(
-     *      name="commandId",
-     *      in="path",
-     *      description="The Command Id to Delete",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
-    public function delete(Request $request, Response $response, $id)
+    public function delete(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $command = $this->commandFactory->getById($id);
 
@@ -574,12 +431,20 @@ class Command extends Base
 
         $command->delete();
 
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('Deleted %s'), $command->command)
-        ]);
+        return $response->withStatus(204);
+    }
 
-        return $this->render($request, $response);
+    private function getCommandFilters(SanitizerInterface $sanitizedParams): array
+    {
+        return $this->gridRenderFilter([
+            'commandId'           => $sanitizedParams->getInt('commandId'),
+            'command'             => $sanitizedParams->getString('command'),
+            'code'                => $sanitizedParams->getString('code'),
+            'useRegexForName'     => $sanitizedParams->getCheckbox('useRegexForName'),
+            'useRegexForCode'     => $sanitizedParams->getCheckbox('useRegexForCode'),
+            'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
+            'logicalOperatorCode' => $sanitizedParams->getString('logicalOperatorCode'),
+            'type'                => $sanitizedParams->getString('type'),
+        ], $sanitizedParams);
     }
 }

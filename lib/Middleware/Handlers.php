@@ -167,7 +167,8 @@ class Handlers
                 'homeUrl' => $configService->rootUri(),
                 'aboutUrl' => $configService->rootUri() . 'about',
                 'loginUrl' => $configService->rootUri() . 'login',
-                'version' => Environment::$WEBSITE_VERSION_NAME
+                'version' => Environment::$WEBSITE_VERSION_NAME,
+                'brandLogoFile' => $configService->getBrandAssetFile('logo'),
             ];
 
             // Handle 404's
@@ -179,6 +180,9 @@ class Handlers
                         'message' => __('Sorry we could not find that page.')
                     ], 404);
                 } else {
+                    // No server route matched - a genuine 404. React SPA pages are served by
+                    // explicit routes registered in lib/routes-spa.php (Xibo\Controller\Spa),
+                    // which run through the normal middleware stack, so they never reach here.
                     try {
                         return $twig->render($response, 'not-found.twig', $viewParams)->withStatus(404);
                     } catch (\Exception) {
@@ -222,8 +226,56 @@ class Handlers
                     // Decide which error page we should load
                     $exceptionClass = 'error-' . strtolower(str_replace('\\', '-', get_class($exception)));
 
-                    // Override the page for an Upgrade Pending Exception
+                    // Upgrade pending: serve through the React login shell for visual consistency.
+                    // Fall back to the legacy Twig page if Vite assets are not built yet.
                     if ($exception instanceof UpgradePendingException) {
+                        $rootUri = $configService->rootUri();
+                        $loginJsUrl = \Xibo\Helper\ViteManifest::getJsUrl('login.html', $rootUri);
+                        if ($loginJsUrl !== null) {
+                            $logoFile = $configService->getBrandAssetFile('logo');
+                            $logoDarkFile = $configService->getBrandLogoDarkFile();
+                            $upgradeConfig = [
+                                'upgradeInProgress' => true,
+                                'logoUrl'     => '/brand/' . $logoFile,
+                                'logoDarkUrl' => '/brand/' . $logoDarkFile,
+                                'supportUrl' => $configService->getThemeConfig('theme_url', 'https://xibosignage.com'),
+                                'version'    => Environment::$WEBSITE_VERSION_NAME,
+                                'appName'    => $configService->getThemeConfig('app_name', 'Xibo'),
+                                'i18n'       => [
+                                    'upgradeMessage' => __(
+                                        'The CMS is temporarily off-line as an upgrade is in progress.'
+                                        . ' Please check with your system administrator for updates'
+                                        . ' or refresh your page in a few minutes.'
+                                    ),
+                                    'upgradeTitle' => __('Upgrade In Progress'),
+                                ],
+                            ];
+                            $upgradeParams = array_merge($viewParams, [
+                                // This render runs outside the normal middleware stack (routing
+                                // failed before CsrfGuard could run), so unlike a normal request we
+                                // have to issue the token ourselves. State::setState() has already
+                                // started the session by the time UpgradePendingException is thrown
+                                // (State.php throws it after calling setState()), so a real token is
+                                // available here. Issuing it properly (rather than hardcoding blank)
+                                // matters because login/api.ts reads this meta tag for the login/tfa
+                                // requests fired from this exact page.
+                                'csrfToken'       => CsrfGuard::issueToken(),
+                                'loginConfigJson' => json_encode(
+                                    $upgradeConfig,
+                                    JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+                                ),
+                                'loginJsUrl'      => $loginJsUrl,
+                                'loginCssUrls'    => \Xibo\Helper\ViteManifest::getCssUrls('login.html', $rootUri),
+                                'assetBase'       => \Xibo\Helper\ViteManifest::getAssetBase($rootUri),
+                                'viteClientUrl'   => \Xibo\Helper\ViteManifest::getClientUrl(),
+                                'viteRefreshUrl'  => \Xibo\Helper\ViteManifest::getRefreshUrl(),
+                            ]);
+                            try {
+                                return $twig->render($response, 'login-spa.twig', $upgradeParams)->withStatus(503);
+                            } catch (\Exception) {
+                                // Fall through to the legacy Twig fallback below
+                            }
+                        }
                         $exceptionClass = 'upgrade-in-progress-page';
                     }
 
@@ -308,7 +360,7 @@ class Handlers
         $logger = $container->get('logger');
 
         // Add a processor to our log handler
-        Log::addLogProcessorToLogger($logger, $request);
+        Log::addLogProcessorToLogger($logger, $request, $container->get('basePath'));
 
         // Handle logging the error.
         if ($logErrors && !self::handledError($exception)) {

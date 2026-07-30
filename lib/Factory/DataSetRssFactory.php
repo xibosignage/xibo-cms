@@ -136,9 +136,20 @@ class DataSetRssFactory extends BaseFactory
         $this->viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`datasetrss`.dataSetId', '`dataset`.userId', $filterBy);
 
         // Sorting?
-        $order = '';
-        if (is_array($sortOrder))
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        $allowedColumns = [
+            'id',
+            'title',
+            'author',
+            'psk',
+        ];
+
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            defaultSort: ['id ASC']
+        );
+
+        $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
 
         $limit = '';
         // Paging

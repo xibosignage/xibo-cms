@@ -23,7 +23,7 @@
 {% extends "base.twig" %}
 
 {% block content %}
-    {% set horizontalNav = currentUser.getOptionValue("navigationMenuPosition", theme.getSetting("NAVIGATION_MENU_POSITION", "vertical")) == "horizontal" %}
+    {% set horizontalNav = currentUser.getOptionValue("navigationMenuPosition", "vertical") == "horizontal" %}
 
     {% if not hideNavigation %}
         {% set hideNavigation = currentUser.getOptionValue("hideNavigation", "0") %}
@@ -35,7 +35,7 @@
             {% if horizontalNav %}
                 <nav class="navbar navbar-default navbar-expand-lg">
                     <a class="navbar-brand xibo-logo-container" href="#">
-                        <img class="xibo-logo" src="{{ theme.uri("img/xibologo.png") }}">
+                        <img class="xibo-logo" src="/brand/xibologo.png">
                     </a>
 
                     <!-- Brand and toggle get grouped for better mobile display -->
@@ -69,7 +69,7 @@
                 <div class="row header header-side">
                     <div class="col-sm-12">
                         <div class="meta pull-left xibo-logo-container">
-                            <div class="page"><img class="xibo-logo" src="{{ theme.uri("img/xibologo.png") }}"></div>
+                            <div class="page"><img class="xibo-logo" src="/brand/xibologo.png"></div>
                         </div>
                         {% if not forceHide %}
                             {% if not hideNavigation == "1" %}
@@ -107,23 +107,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-
-    {% set helpLinks = helpService.getLinksForPage(route) %}
-    {% set faultViewEnabled = currentUser.featureEnabled("fault.view") %}
-
-    {# Hide in mobile view (sm/<768px)  #}
-    <div id="help-pane" class="d-none d-md-flex help-pane"
-        data-help-links="{{ helpLinks|json_encode }}"
-        data-url-help-landing-page={{ helpService.getLandingPage() }}
-        data-fault-view-enabled={{faultViewEnabled}}
-        data-fault-view-url={{ url_for("fault.view") }}
-    >
-        <div class="help-pane-container" style="display: none;">
-        </div>
-        <div class="help-pane-btn">
-            <i class="fas fa-question"></i>
         </div>
     </div>
 {% endblock %}

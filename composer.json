@@ -62,7 +62,7 @@
     "flynsarmy/slim-monolog": "~1.0",
     "gettext/gettext": "~4.0",
     "guzzlehttp/guzzle": "7.9.*",
-    "guzzlehttp/psr7": "2.7.*",
+    "guzzlehttp/psr7": "2.12.*",
     "illuminate/support": "v10.48.*",
     "infostars/picofeed": "dev-westphal/php8",
     "intervention/image": "2.7.2",
@@ -102,7 +102,7 @@
     "symfony/html-sanitizer": "v6.4.*",
     "symfony/yaml": "5.4.*",
     "tedivm/stash": "v1.2.*",
-    "twig/twig": "3.26.*",
+    "twig/twig": "3.27.*",
     "xibosignage/support": "dev-php8"
   },
   "require-dev": {
@@ -115,7 +115,7 @@
     "shipmonk/composer-dependency-analyser": "^1.8",
     "squizlabs/php_codesniffer": "3.*",
     "xibosignage/oauth2-xibo-cms": "dev-feature/3.0",
-    "zircote/swagger-php": "^2"
+    "zircote/swagger-php": "^5.8"
   },
   "autoload": {
     "psr-4": { "Xibo\\" : "lib/", "Xibo\\Custom\\": "custom/" }

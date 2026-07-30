@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -24,6 +24,7 @@
 namespace Xibo\Helper;
 
 use Psr\Http\Message\ServerRequestInterface;
+use Xibo\Service\ConfigServiceInterface;
 
 /**
  * Class HttpsDetect
@@ -31,6 +32,21 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class HttpsDetect
 {
+    private ?ConfigServiceInterface $config;
+
+    /**
+     * Pass a config service when the caller needs Host-header allow-list
+     * validation (the operator-set $whitelistHosts in web/settings.php).
+     * Sites that build URLs ending up off-system (emailed links, registration
+     * messages, manifests) MUST pass it; purely internal sites (CORS, STS,
+     * request-bound redirects) may construct without it.
+     */
+    public function __construct(?ConfigServiceInterface $config = null)
+    {
+        $this->config = $config;
+    }
+
+
     /**
      * Get the root of the web server
      *  this should only be used if you're planning to append the path
@@ -78,29 +94,21 @@ class HttpsDetect
         }
         // End Code Snippet
 
-        // The request URL should be everything after the host, i.e:
-        // /xmds.php?file=
-        // /xibo/xmds.php?file=
-        // /playersoftware
-        // /xibo/playersoftware
-        $requestUri = explode('?', htmlentities($_SERVER['REQUEST_URI'], ENT_QUOTES, 'UTF-8'));
-        $baseUrl = $this->getRootUrl() . '/' . ltrim($requestUri[0], '/');
+        // dirname(SCRIPT_NAME) gives the full web-accessible path to the entry file,
+        // which includes any CMS subfolder (e.g. /xibo/api/index.php → /xibo/api).
+        $scriptDir = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/');
 
-        // We use the path, if provided, to remove any known path information
-        // i.e. if we're running in a sub-folder we might be on /xibo/playersoftware
-        // in which case we want to remove /playersoftware to get to /xibo which is the base path.
-        $path = $request?->getUri()?->getPath() ?? '';
-
-        if (!empty($path)) {
-            $baseUrl = str_replace($path, '', $baseUrl);
-            $scriptDir = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
-
-            if (!empty($scriptDir) && $scriptDir !== '/') {
-                $baseUrl .= $scriptDir;
+        // Non-web entry points (/api, /json, /preview, /pwa) sit in a subdirectory of the
+        // CMS web root. Strip that segment so we return the true CMS root URL.
+        $entryPoint = $request?->getAttribute('_entryPoint') ?? '';
+        if (in_array(strtolower($entryPoint), ['api', 'json', 'preview', 'pwa'], true)) {
+            $suffix = '/' . strtolower($entryPoint);
+            if (str_ends_with($scriptDir, $suffix)) {
+                $scriptDir = rtrim(substr($scriptDir, 0, -strlen($suffix)), '/');
             }
         }
 
-        return $baseUrl;
+        return $this->getRootUrl() . $scriptDir;
     }
 
     /**
@@ -113,22 +121,42 @@ class HttpsDetect
 
     /**
      * Get Host
+     *
+     * When the caller supplies a config service AND the operator has set
+     * $whitelistHosts, the request's Host header is validated against the
+     * allow-list and rejected hosts fall back to the first listed host.
+     * Without $whitelistHosts (or without a config) the legacy behaviour is
+     * preserved for backward compatibility.
+     *
      * @return string
      */
     public function getHost(): string
     {
-        if (isset($_SERVER['HTTP_HOST'])) {
-            $httpHost = htmlentities($_SERVER['HTTP_HOST'], ENT_QUOTES, 'UTF-8');
-            if (str_contains($httpHost, ':')) {
-                $hostParts = explode(':', $httpHost);
+        $rawHost = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
 
-                return $hostParts[0];
+        // Strip the optional port for the comparison/return value.
+        $hostNoPort = str_contains($rawHost, ':')
+            ? explode(':', $rawHost, 2)[0]
+            : $rawHost;
+
+        // Optional allow-list. The list is operator-set as $whitelistHosts in
+        // web/settings.php (or web/settings-custom.php) — deployment-time only,
+        // not DB-backed, not admin-UI-exposed. Format: comma-separated hostnames.
+        if ($this->config !== null) {
+            $whitelist = $this->config->getWhitelistHosts();
+            if ($whitelist !== '') {
+                $allowed = array_values(array_filter(array_map(
+                    fn ($h) => strtolower(trim($h)),
+                    explode(',', $whitelist)
+                )));
+                if (!empty($allowed) && !in_array(strtolower($hostNoPort), $allowed, true)) {
+                    // Canonical operator-trusted host; safe without htmlentities.
+                    return $allowed[0];
+                }
             }
-
-            return $httpHost;
         }
 
-        return $_SERVER['SERVER_NAME'];
+        return htmlentities($hostNoPort, ENT_QUOTES, 'UTF-8');
     }
 
     /**

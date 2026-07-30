@@ -105,6 +105,102 @@ chmod 600 /var/www/cms/library/certs/private.key
 chmod 660 /var/www/cms/library/certs/public.key
 chown -R www-data.www-data /var/www/cms/library/certs
 
+# Populate default brand assets (runs in both dev and prod mode).
+# Source is /brand/ — ADD docker/ / in the Dockerfile maps docker/ to the container root.
+#
+# Image assets (svg/png/ico) are safe to refresh automatically when a later CMS release
+# ships improved defaults: on each boot we compare the installed file's hash against a
+# sidecar recorded the last time *we* seeded/refreshed it. A match means nobody has
+# touched it since — the new default is copied over and the sidecar updated. A mismatching
+# sidecar means the file was hand-edited since, so it is left untouched forever. Sidecars
+# live outside the publicly-served /brand alias.
+mkdir -p /var/www/cms/library/brand/layouts
+STOCK_HASH_DIR=/var/www/cms/library/.brand-stock
+mkdir -p "$STOCK_HASH_DIR"
+
+# config.json is our existing WL signal (also used below to gate default layout seeding).
+# A missing sidecar normally means "never seeded by us" — ambiguous between "predates this
+# feature on a plain Xibo install" and "a WL file dropped in directly". config.json lets us
+# tell those apart: on a non-WL install we treat a missing sidecar as the former and bootstrap
+# it into stock-tracking; on a WL install we keep treating it as customised and leave it alone.
+brand_is_wl=false
+if [ -f /var/www/cms/library/brand/config.json ]; then
+  brand_is_wl=true
+fi
+
+# True if $target is absent, still matches its recorded stock hash, or has no sidecar at
+# all on a non-WL install (pre-dates this feature, safe to bootstrap into tracking).
+is_stock_or_absent() {
+  local target="$1" hash_file="$2"
+  [ ! -f "$target" ] && return 0
+  if [ -f "$hash_file" ]; then
+    [ "$(sha256sum "$target" | awk '{print $1}')" == "$(cat "$hash_file")" ]
+    return $?
+  fi
+  [ "$brand_is_wl" = false ]
+}
+
+# Refreshes $target from $source unless is_stock_or_absent says it's been customised,
+# in which case it's left alone and its sidecar is not touched.
+refresh_stock_file() {
+  local target="$1" source="$2" hash_file="$3"
+  is_stock_or_absent "$target" "$hash_file" || return 0
+  cp "$source" "$target"
+  sha256sum "$source" | awk '{print $1}' > "$hash_file"
+}
+
+# Same idea, but for the logo/logo-icon/logo-dark assets which have a WL-providable .png
+# alternative to our stock .svg — every downstream probe prefers .svg over .png when both
+# exist, so we must never seed/refresh our default .svg while a WL .png is present.
+refresh_stock_logo_asset() {
+  local base="$1" hash_file="$2"
+  local png="/var/www/cms/library/brand/$base.png"
+  if [ -f "$png" ]; then
+    return 0
+  fi
+  refresh_stock_file "/var/www/cms/library/brand/$base.svg" "/brand/$base.svg" "$hash_file"
+}
+
+# Snapshot customisation state before we write any stock defaults below, so the
+# logo-dark decision further down isn't affected by the logo refresh we're about to do.
+main_logo_customised=true
+if [ ! -f /var/www/cms/library/brand/logo.png ] \
+    && is_stock_or_absent /var/www/cms/library/brand/logo.svg "$STOCK_HASH_DIR/logo.sha256"; then
+  main_logo_customised=false
+fi
+
+refresh_stock_logo_asset logo "$STOCK_HASH_DIR/logo.sha256"
+refresh_stock_logo_asset logo-icon "$STOCK_HASH_DIR/logo-icon.sha256"
+
+# logo-dark has no WL-providable mechanism yet: only seed/refresh the stock dark variant
+# when the main logo itself is still stock, so a WL/manually-branded logo isn't silently
+# overridden by Xibo's stock dark logo on the login/upgrade/force-change-password screens.
+if [ "$main_logo_customised" = false ]; then
+  refresh_stock_logo_asset logo-dark "$STOCK_HASH_DIR/logo-dark.sha256"
+fi
+
+# Single-file brand images: safe to auto-refresh via the same stock-hash check.
+for f in favicon.ico xibologo.png 192x192.png 512x512.png; do
+  refresh_stock_file "/var/www/cms/library/brand/$f" "/brand/$f" "$STOCK_HASH_DIR/$f.sha256"
+done
+
+# theme.css is expected to stay untouched by default — it's empty out of the box and
+# primarily supplied by WL builds — so keep the simple seed-once-if-absent behaviour
+# rather than the stock-refresh treatment above.
+if [ ! -f /var/www/cms/library/brand/theme.css ]; then
+  cp /brand/theme.css /var/www/cms/library/brand/theme.css
+fi
+
+if [ ! -f "/var/www/cms/library/brand/config.json" ]; then
+  for f in default-layout.zip full-screen.zip l-shape-left.zip l-shape-right.zip; do
+    if [ ! -f "/var/www/cms/library/brand/layouts/$f" ]; then
+      cp "/brand/layouts/$f" "/var/www/cms/library/brand/layouts/$f"
+    fi
+  done
+fi
+chown -R www-data.www-data /var/www/cms/library/brand
+chown -R www-data.www-data "$STOCK_HASH_DIR"
+
 # Check if there's a database file to import
 if [ -f "/var/www/backup/import.sql" ] && [ "$CMS_DEV_MODE" == "false" ]
 then
@@ -310,7 +406,6 @@ then
     mkdir -p /var/www/cms/library/temp
     chown www-data:www-data -R /var/www/cms/library
     chown www-data:www-data -R /var/www/cms/custom
-    chown www-data:www-data -R /var/www/cms/web/theme/custom
     chown www-data:www-data -R /var/www/cms/web/userscripts
     chown www-data:www-data -R /var/www/cms/ca-certs
 
@@ -318,10 +413,10 @@ then
     # this must not be done in DEV mode, as it modifies the .htaccess file, which might then be committed by accident
     if [ ! "$CMS_ALIAS" == "none" ]
     then
-        # Replace the web alias without changing the chromeos alias
+        # Replace the web alias only — preserve the /chromeos and /brand aliases
         echo "Setting up CMS alias"
         /bin/sed -i \
-          "/Alias.*\/chromeos/! s|.*Alias.*$|Alias $CMS_ALIAS /var/www/cms/web|" \
+          "/Alias.*\/\(chromeos\|brand\)/! s|.*Alias.*$|Alias $CMS_ALIAS /var/www/cms/web|" \
           /etc/apache2/sites-enabled/000-default.conf
 
         echo "Settings up htaccess"

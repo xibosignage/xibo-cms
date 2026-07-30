@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -20,6 +20,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Entity;
+use OpenApi\Attributes as OA;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -27,39 +28,34 @@ use Xibo\Storage\StorageServiceInterface;
 /**
  * Class ScheduleExclusion
  * @package Xibo\Entity
- *
- * @SWG\Definition()
  */
+#[OA\Schema]
 class ScheduleExclusion implements \JsonSerializable
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(description="Excluded Schedule ID")
      * @var int
      */
+    #[OA\Property(description: 'Excluded Schedule ID')]
     public $scheduleExclusionId;
 
     /**
-     * @SWG\Property(description="The eventId that this Excluded Schedule applies to")
      * @var int
      */
+    #[OA\Property(description: 'The eventId that this Excluded Schedule applies to')]
     public $eventId;
 
     /**
-     * @SWG\Property(
-     *  description="A Unix timestamp representing the from date of an excluded recurring event in CMS time."
-     * )
      * @var int
      */
+    #[OA\Property(description: 'A Unix timestamp representing the from date of an excluded recurring event in CMS time.')]
     public $fromDt;
 
     /**
-     * @SWG\Property(
-     *  description="A Unix timestamp representing the to date of an excluded recurring event in CMS time."
-     * )
      * @var int
      */
+    #[OA\Property(description: 'A Unix timestamp representing the to date of an excluded recurring event in CMS time.')]
     public $toDt;
 
     /**

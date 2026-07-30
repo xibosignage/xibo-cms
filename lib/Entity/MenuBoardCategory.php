@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,7 +22,9 @@
 
 namespace Xibo\Entity;
 
+use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Factory\MenuBoardCategoryFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -31,75 +33,49 @@ use Xibo\Support\Exception\NotFoundException;
 use Xibo\Widget\DataType\ProductCategory;
 
 /**
- * @SWG\Definition()
+ * Class MenuBoardCategory
+ * @package Xibo\Entity
  */
+#[OA\Schema]
 class MenuBoardCategory implements \JsonSerializable
 {
     use EntityTrait;
 
-    /**
-     * @SWG\Property(description="The Menu Board Category Id")
-     * @var int
-     */
+    #[OA\Property(description: 'The Menu Board Category Id')]
     public $menuCategoryId;
 
-    /**
-     * @SWG\Property(description="The Menu Board Id")
-     * @var int
-     */
+    #[OA\Property(description: 'The Menu Board Id')]
     public $menuId;
 
-    /**
-     * @SWG\Property(description="The Menu Board Category name")
-     * @var string
-     */
+    #[OA\Property(description: 'The Menu Board Category name')]
     public $name;
 
-    /**
-     * @SWG\Property(description="The Menu Board Category description")
-     * @var string
-     */
+    #[OA\Property(description: 'The Menu Board Category description')]
     public $description;
 
-    /**
-     * @SWG\Property(description="The Menu Board Category code identifier")
-     * @var string
-     */
+    #[OA\Property(description: 'The Menu Board Category code identifier')]
     public $code;
 
-    /**
-     * @SWG\Property(description="The Menu Board Category associated mediaId")
-     * @var int
-     */
+    #[OA\Property(description: 'The Menu Board Category associated mediaId')]
     public $mediaId;
 
     private $products;
 
-    /** @var MenuBoardCategoryFactory */
-    private $menuCategoryFactory;
-
-    /**
-     * Entity constructor.
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
-     * @param MenuBoardCategoryFactory $menuCategoryFactory
-     */
-    public function __construct($store, $log, $dispatcher, $menuCategoryFactory)
-    {
+    public function __construct(
+        StorageServiceInterface $store,
+        LogServiceInterface $log,
+        EventDispatcherInterface $dispatcher,
+        private readonly MenuBoardCategoryFactory $menuCategoryFactory,
+    ) {
         $this->setCommonDependencies($store, $log, $dispatcher);
-        $this->menuCategoryFactory = $menuCategoryFactory;
     }
 
-    public function __clone()
+    public function __clone(): void
     {
         $this->menuCategoryId = null;
     }
 
-    /**
-     * @return string
-     */
-    public function __toString()
+    public function __toString(): string
     {
         return sprintf(
             'MenuCategoryId %d MenuId %d, Name %s, Media %d, Code %s',
@@ -111,10 +87,6 @@ class MenuBoardCategory implements \JsonSerializable
         );
     }
 
-    /**
-     * Convert this to a product category
-     * @return ProductCategory
-     */
     public function toProductCategory(): ProductCategory
     {
         $productCategory = new ProductCategory();
@@ -124,27 +96,20 @@ class MenuBoardCategory implements \JsonSerializable
         return $productCategory;
     }
 
-    /**
-     * Get the Id
-     * @return int
-     */
-    public function getId()
+    public function getId(): int
     {
         return $this->menuCategoryId;
     }
 
     /**
-     * @param array $options
-     * @return MenuBoardCategory
      * @throws NotFoundException
      */
-    public function load($options = [])
+    public function load(array $options = []): self
     {
         $options = array_merge([
             'loadProducts' => false
         ], $options);
 
-        // If we are already loaded, then don't do it again
         if ($this->menuId == null || $this->loaded) {
             return $this;
         }
@@ -161,7 +126,7 @@ class MenuBoardCategory implements \JsonSerializable
     /**
      * @throws InvalidArgumentException
      */
-    public function validate()
+    public function validate(): void
     {
         if (!v::stringType()->notEmpty()->validate($this->name)) {
             throw new InvalidArgumentException(__('Name cannot be empty'), 'name');
@@ -169,10 +134,9 @@ class MenuBoardCategory implements \JsonSerializable
     }
 
     /**
-     * @param array|null $sort The sort order to be applied
      * @return MenuBoardProduct[]
      */
-    public function getProducts($sort = null): array
+    public function getProducts(?array $sort = null): array
     {
         return $this->menuCategoryFactory->getProductData($sort, [
             'menuCategoryId' => $this->menuCategoryId
@@ -180,10 +144,9 @@ class MenuBoardCategory implements \JsonSerializable
     }
 
     /**
-     * @param array|null $sort The sort order to be applied
      * @return MenuBoardProduct[]
      */
-    public function getAvailableProducts($sort = null): array
+    public function getAvailableProducts(?array $sort = null): array
     {
         return $this->menuCategoryFactory->getProductData($sort, [
             'menuCategoryId' => $this->menuCategoryId,
@@ -192,17 +155,13 @@ class MenuBoardCategory implements \JsonSerializable
     }
 
     /**
-     * Save this Menu Board Category
-     * @param array $options
      * @throws InvalidArgumentException
      */
-    public function save($options = [])
+    public function save(array $options = []): void
     {
         $options = array_merge([
             'validate' => true,
         ], $options);
-
-        $this->getLog()->debug('Saving ' . $this);
 
         if ($options['validate']) {
             $this->validate();
@@ -211,9 +170,51 @@ class MenuBoardCategory implements \JsonSerializable
         if ($this->menuCategoryId == null || $this->menuCategoryId == 0) {
             $this->add();
             $this->loaded = true;
+            $this->audit($this->menuCategoryId, 'Added');
         } else {
+            $changedProperties = $this->getChangedProperties();
             $this->update();
+
+            if (count($changedProperties) > 0) {
+                $changedProperties['menuId'] = $this->menuId;
+                $this->audit($this->menuCategoryId, 'Saved', $changedProperties);
+            }
         }
+    }
+
+    public function copyWithCascade(
+        int $newMenuId,
+        ?string $name = null,
+        ?string $description = null,
+        ?string $code = null
+    ): self {
+        $newCategory = clone $this;
+        $newCategory->menuId = $newMenuId;
+        if ($name !== null) {
+            $newCategory->name = $name;
+        }
+        if ($description !== null) {
+            $newCategory->description = $description;
+        }
+        if ($code !== null) {
+            $newCategory->code = $code;
+        }
+        $newCategory->save();
+
+        foreach ($this->getProducts() as $product) {
+            $newProduct = clone $product;
+            $newProduct->menuId = $newMenuId;
+            $newProduct->menuCategoryId = $newCategory->menuCategoryId;
+            $newProduct->save();
+
+            foreach ($product->getOptions() as $option) {
+                $newOption = clone $option;
+                $newOption->menuProductId = $newProduct->menuProductId;
+                $newOption->save();
+            }
+        }
+
+        return $newCategory;
     }
 
     private function add(): void
@@ -223,7 +224,7 @@ class MenuBoardCategory implements \JsonSerializable
                 VALUES (:name, :menuId, :mediaId, :code, :description)
         ', [
             'name' => $this->name,
-            'mediaId' => $this->mediaId,
+            'mediaId' => $this->mediaId ?: null,
             'menuId' => $this->menuId,
             'code' => $this->code,
             'description' => $this->description,
@@ -233,31 +234,38 @@ class MenuBoardCategory implements \JsonSerializable
     private function update(): void
     {
         $this->getStore()->update('
-            UPDATE `menu_category` 
+            UPDATE `menu_category`
                 SET `name` = :name, `mediaId` = :mediaId, `code` = :code, `description` = :description
              WHERE `menuCategoryId` = :menuCategoryId
         ', [
             'menuCategoryId' => $this->menuCategoryId,
             'name' => $this->name,
-            'mediaId' => $this->mediaId,
+            'mediaId' => $this->mediaId ?: null,
             'code' => $this->code,
             'description' => $this->description,
         ]);
     }
 
     /**
-     * Delete Menu Board
      * @throws NotFoundException
      */
-    public function delete()
+    public function delete(): void
     {
         $this->load(['loadProducts' => true]);
 
-        /** @var MenuBoardProduct $product */
         foreach ($this->products as $product) {
+            /** @var MenuBoardProduct $product */
             $product->delete();
         }
 
-        $this->getStore()->update('DELETE FROM `menu_category` WHERE menuCategoryId = :menuCategoryId', ['menuCategoryId' => $this->menuCategoryId]);
+        $this->getStore()->update(
+            'DELETE FROM `menu_category` WHERE menuCategoryId = :menuCategoryId',
+            ['menuCategoryId' => $this->menuCategoryId]
+        );
+
+        $this->audit($this->menuCategoryId, 'Deleted', [
+            'menuId' => $this->menuId,
+            'name' => $this->name,
+        ]);
     }
 }

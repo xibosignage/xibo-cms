@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -23,41 +23,41 @@
 
 namespace Xibo\Entity;
 
+use OpenApi\Attributes as OA;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class WidgetAudio
  * @package Xibo\Entity
- *
- * @SWG\Definition()
  */
+#[OA\Schema]
 class WidgetAudio implements \JsonSerializable
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(description="The Widget Id")
      * @var int
      */
+    #[OA\Property(description: 'The Widget Id')]
     public $widgetId;
 
     /**
-     * @SWG\Property(description="The Media Id")
      * @var int
      */
+    #[OA\Property(description: 'The Media Id')]
     public $mediaId;
 
     /**
-     * @SWG\Property(description="The percentage volume")
      * @var int
      */
+    #[OA\Property(description: 'The percentage volume')]
     public $volume;
 
     /**
-     * @SWG\Property(description="Flag indicating whether to loop")
      * @var int
      */
+    #[OA\Property(description: 'Flag indicating whether to loop')]
     public $loop;
 
     /**

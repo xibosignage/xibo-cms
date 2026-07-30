@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,18 +22,23 @@
 
 namespace Xibo\Widget\Definition;
 
+use OpenApi\Attributes as OA;
+
 /**
  * Represents a test/group of conditions
- * @SWG\Definition()
  */
+#[OA\Schema(schema: 'Test')]
 class Test implements \JsonSerializable
 {
+    #[OA\Property()]
     /** @var string */
     public $type;
 
+    #[OA\Property(type: 'array', items: new OA\Items(ref: '#/components/schemas/Condition'))]
     /** @var Condition[]  */
     public $conditions;
 
+    #[OA\Property()]
     /** @var string|null */
     public $message;
 

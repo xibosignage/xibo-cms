@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -23,29 +23,29 @@
 
 namespace Xibo\Entity;
 
+use OpenApi\Attributes as OA;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class DisplayType
  * @package Xibo\Entity
- *
- * @SWG\Definition()
  */
+#[OA\Schema]
 class DisplayType implements \JsonSerializable
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(description="The ID for this DisplayType")
      * @var int
      */
+    #[OA\Property(description: 'The ID for this DisplayType')]
     public $displayTypeId;
 
     /**
-     * @SWG\Property(description="The Name for this DisplayType")
      * @var string
      */
+    #[OA\Property(description: 'The Name for this DisplayType')]
     public $displayType;
 
     /**

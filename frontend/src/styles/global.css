@@ -1,0 +1,247 @@
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+@import 'tailwindcss';
+
+/* Preline UI (v4 way) */
+@import 'preline/variants.css';
+@source "./node_modules/preline/dist/*.js";
+@plugin "@tailwindcss/forms";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* App-wide tweaks */
+html,
+body,
+#root {
+  height: 100%;
+}
+
+/* Typography */
+@theme {
+  --font-sans:
+    'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+/* Brand tokens — the two override points for white-label themes.
+   Overriding --brand-primary and --brand-accent in a custom theme.css
+   automatically recolours every palette shade via oklch. */
+:root {
+  --brand-primary: #0e70f6;
+  --brand-accent: #eb7857;
+}
+
+/* Colour palette — all shades are derived from the brand tokens so that
+   changing --brand-primary or --brand-accent cascades through every
+   Tailwind utility automatically. Lightness and chroma are fixed per shade;
+   only the hue follows the brand token. */
+@theme inline {
+  /* Primary colour scale */
+  --color-xibo-blue-50: oklch(from var(--brand-primary) 0.948 0.026 h);
+  --color-xibo-blue-100: oklch(from var(--brand-primary) 0.869 0.064 h);
+  --color-xibo-blue-200: oklch(from var(--brand-primary) 0.804 0.098 h);
+  --color-xibo-blue-300: oklch(from var(--brand-primary) 0.741 0.133 h);
+  --color-xibo-blue-400: oklch(from var(--brand-primary) 0.681 0.167 h);
+  --color-xibo-blue-500: oklch(from var(--brand-primary) 0.625 0.202 h);
+  --color-xibo-blue-600: oklch(from var(--brand-primary) 0.577 0.217 h);
+  --color-xibo-blue-700: oklch(from var(--brand-primary) 0.500 0.202 h);
+  --color-xibo-blue-800: oklch(from var(--brand-primary) 0.366 0.155 h);
+  --color-xibo-blue-900: oklch(from var(--brand-primary) 0.299 0.128 h);
+  --color-xibo-blue-950: oklch(from var(--brand-primary) 0.199 0.078 h);
+
+  /* Accent colour scale */
+  --color-xibo-burnt-sienna-50: oklch(from var(--brand-accent) 0.941 0.040 calc(h + 29.2));
+  --color-xibo-burnt-sienna-100: oklch(from var(--brand-accent) 0.878 0.074 calc(h + 15.7));
+  --color-xibo-burnt-sienna-200: oklch(from var(--brand-accent) 0.823 0.096 calc(h + 6.1));
+  --color-xibo-burnt-sienna-300: oklch(from var(--brand-accent) 0.775 0.127 calc(h + 1.3));
+  --color-xibo-burnt-sienna-400: oklch(from var(--brand-accent) 0.737 0.138 h);
+  --color-xibo-burnt-sienna-500: oklch(from var(--brand-accent) 0.698 0.150 h);
+  --color-xibo-burnt-sienna-600: oklch(from var(--brand-accent) 0.637 0.146 h);
+  --color-xibo-burnt-sienna-700: oklch(from var(--brand-accent) 0.568 0.143 h);
+  --color-xibo-burnt-sienna-800: oklch(from var(--brand-accent) 0.481 0.135 calc(h - 1.5));
+  --color-xibo-burnt-sienna-900: oklch(from var(--brand-accent) 0.394 0.122 calc(h - 2.1));
+  --color-xibo-burnt-sienna-950: oklch(from var(--brand-accent) 0.307 0.103 h);
+
+  /* Neutral colours — not tied to brand tokens */
+  --color-xibo-black: #000;
+  --color-xibo-grey: #484848;
+  --color-xibo-seasalt: #f7f7f7;
+  --color-xibo-white: #ffffff;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@layer components {
+  .center {
+    @apply items-center justify-center flex;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 200ms ease-in;
+  }
+
+  .custom-scrollbar {
+    --scrollbar-size: 12px;
+    scrollbar-gutter: stable both-edges;
+  }
+
+  .custom-scrollbar-inset {
+    padding-inline: calc(1.25rem - var(--scrollbar-size, 0px));
+  }
+
+  @supports not selector(::-webkit-scrollbar) {
+    .custom-scrollbar {
+      scrollbar-width: auto;
+      scrollbar-color: var(--color-xibo-blue-300) var(--color-xibo-blue-900);
+    }
+    .dark .custom-scrollbar {
+      scrollbar-color: var(--color-xibo-burnt-sienna-800)
+        var(--color-xibo-burnt-sienna-200);
+    }
+    .custom-scrollbar-inset {
+      padding-inline: 1.25rem;
+    }
+  }
+  .custom-scrollbar::-webkit-scrollbar {
+    width: var(--scrollbar-size);
+    height: var(--scrollbar-size);
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: color-mix(in srgb, var(--color-xibo-blue-500) 70%, transparent);
+    border: 4px solid transparent;
+    background-clip: padding-box;
+    border-radius: 9999px;
+    transition:
+      border-width 150ms ease,
+      background-color 150ms ease;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    border-width: 1px;
+    background-color: var(--color-xibo-blue-400);
+  }
+
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: color-mix(
+      in srgb,
+      var(--color-xibo-burnt-sienna-700) 70%,
+      transparent
+    );
+  }
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-xibo-burnt-sienna-600);
+  }
+}
+
+/* ── Tiptap rich-text editor content ─────────────────────────────────────
+   Tailwind v4 preflight resets browser defaults (headings inherit font-size,
+   lists lose bullets, etc.). These rules restore them inside the editor only.
+   Scoped to [class~="tiptap"] so nothing bleeds outside the editor div.    */
+[class~="tiptap"] {
+  strong, b { font-weight: 700; }
+  em, i     { font-style: italic; }
+  u         { text-decoration: underline; }
+  s, del    { text-decoration: line-through; }
+
+  h1 { font-size: 2em;    font-weight: 700; margin-block: 0.67em; }
+  h2 { font-size: 1.5em;  font-weight: 700; margin-block: 0.75em; }
+  h3 { font-size: 1.25em; font-weight: 700; margin-block: 0.83em; }
+
+  ul { list-style-type: disc;    padding-inline-start: 1.5em; margin-block: 0.5em; }
+  ol { list-style-type: decimal; padding-inline-start: 1.5em; margin-block: 0.5em; }
+  li { margin-block: 0.25em; }
+  li > p { margin: 0; }
+
+  blockquote {
+    border-left: 3px solid var(--color-xibo-blue-300, #93b4fe);
+    padding-left: 1em;
+    color: #6b7280;
+    margin-block: 0.75em;
+    font-style: italic;
+  }
+
+  a {
+    color: var(--color-xibo-blue-600);
+    text-decoration: underline;
+  }
+
+  sub { vertical-align: sub;   font-size: 0.75em; }
+  sup { vertical-align: super; font-size: 0.75em; }
+
+  p { margin-block: 0.25em; }
+  p:first-child { margin-block-start: 0; }
+  p:last-child  { margin-block-end: 0; }
+
+  /* Placeholder */
+  p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    color: #9ca3af;
+    pointer-events: none;
+    height: 0;
+  }
+
+  /* Table */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    table-layout: fixed;
+    margin-block: 0.75em;
+    overflow: hidden;
+  }
+
+  td, th {
+    border: 1px solid #d1d5db;
+    padding: 0.4em 0.6em;
+    vertical-align: top;
+    position: relative;
+    min-width: 2em;
+    box-sizing: border-box;
+  }
+
+  th {
+    background-color: #f3f4f6;
+    font-weight: 600;
+    text-align: left;
+  }
+
+  .selectedCell::after {
+    background: rgba(59, 130, 246, 0.15);
+    content: '';
+    inset: 0;
+    pointer-events: none;
+    position: absolute;
+    z-index: 2;
+  }
+}
+
+@layer base {
+  body {
+    @apply font-sans;
+    @apply bg-white text-gray-800 dark:bg-neutral-900 dark:text-neutral-200;
+  }
+}

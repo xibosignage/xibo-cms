@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -20,12 +20,11 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\Factory;
-
 
 use Xibo\Entity\Tag;
 use Xibo\Entity\TagLink;
+use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -39,7 +38,7 @@ class TagFactory extends BaseFactory
     /**
      * @return Tag
      */
-    public function createEmpty()
+    public function createEmpty(): Tag
     {
         return new Tag($this->getStore(), $this->getLog(), $this->getDispatcher(), $this);
     }
@@ -47,7 +46,7 @@ class TagFactory extends BaseFactory
     /**
      * @return TagLink
      */
-    public function createEmptyLink()
+    public function createEmptyLink(): TagLink
     {
         return new TagLink($this->getStore(), $this->getLog(), $this->getDispatcher());
     }
@@ -56,7 +55,7 @@ class TagFactory extends BaseFactory
      * @param $name
      * @return Tag
      */
-    public function create($name)
+    public function create($name): Tag
     {
         $tag = $this->createEmpty();
         $tag->tag = trim($name);
@@ -64,7 +63,7 @@ class TagFactory extends BaseFactory
         return $tag;
     }
 
-    public function createTagLink($tagId, $tag, $value)
+    public function createTagLink($tagId, $tag, $value): TagLink
     {
         $tagLink = $this->createEmptyLink();
         $tagLink->tag = trim($tag);
@@ -76,15 +75,15 @@ class TagFactory extends BaseFactory
 
     /**
      * Get tags from a string
-     * @param string $tagString
+     * @param string|null $tagString
      * @return array[Tag]
      * @throws InvalidArgumentException
      */
-    public function tagsFromString($tagString)
+    public function tagsFromString(?string $tagString): array
     {
         $tags = [];
 
-        if ($tagString == '') {
+        if ($tagString === null || $tagString === '') {
             return $tags;
         }
 
@@ -104,7 +103,7 @@ class TagFactory extends BaseFactory
      * @return TagLink
      * @throws InvalidArgumentException
      */
-    public function tagFromString($tagString)
+    public function tagFromString(string $tagString): TagLink
     {
         // Trim the tag
         $tagString = trim($tagString);
@@ -115,8 +114,7 @@ class TagFactory extends BaseFactory
             $tag = $this->getByTag($explode[0]);
             $tagLink = $this->createTagLink($tag->tagId, $tag->tag, $explode[1] ?? null);
             $tagLink->validateOptions($tag);
-        }
-        catch (NotFoundException $e) {
+        } catch (NotFoundException $e) {
             // New tag
             $tag = $this->createEmpty();
             $tag->tag = $explode[0];
@@ -127,7 +125,13 @@ class TagFactory extends BaseFactory
         return $tagLink;
     }
 
-    public function tagsFromJson($tagArray)
+    /**
+     * @param $tagArray
+     * @return array
+     * @throws InvalidArgumentException
+     * @throws DuplicateEntityException
+     */
+    public function tagsFromJson($tagArray): array
     {
         $tagLinks = [];
         foreach ($tagArray as $tag) {
@@ -156,7 +160,7 @@ class TagFactory extends BaseFactory
      * @return Tag
      * @throws NotFoundException
      */
-    public function getByTag($tagName)
+    public function getByTag(string $tagName): Tag
     {
         $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options FROM `tag` WHERE tag.tag = :tag';
 
@@ -182,14 +186,15 @@ class TagFactory extends BaseFactory
     /**
      * Get Tag by ID
      * @param int $tagId
+     * @param int|null $allTags
      * @return Tag
      * @throws NotFoundException
      */
-    public function getById($tagId)
+    public function getById(int $tagId, ?int $allTags = 0)
     {
         $this->getLog()->debug('TagFactory getById(%d)', $tagId);
 
-        $tags = $this->query(null, ['tagId' => $tagId]);
+        $tags = $this->query(null, ['tagId' => $tagId, 'allTags' => $allTags]);
 
         if (count($tags) <= 0) {
             $this->getLog()->debug('Tag not found with ID %d', $tagId);
@@ -201,52 +206,46 @@ class TagFactory extends BaseFactory
 
     /**
      * Get the system tags
-     * @return array|Tag
+     * @return array
      * @throws NotFoundException
      */
-    public function getSystemTags()
+    public function getSystemTags(): array
     {
         $tags = $this->query(null, ['isSystem' => 1]);
 
-        if (count($tags) <= 0)
+        if (count($tags) <= 0) {
             throw new NotFoundException();
+        }
 
         return $tags;
     }
 
     /**
      * Query
-     * @param array $sortOrder
+     * @param ?array $sortOrder
      * @param array $filterBy
      * @return array[\Xibo\Entity\Log]
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query(?array $sortOrder = [], array $filterBy = []): array
     {
-        if ($sortOrder == null) {
-            $sortOrder = ['tagId DESC'];
-        }
-
         $sanitizedFilter = $this->getSanitizer($filterBy);
         $entries = [];
         $params = [];
-        $order = '';
         $limit = '';
 
         $select = 'SELECT tagId, tag, isSystem, isRequired, options ';
 
-        $body = '
-              FROM `tag`
-                  ';
+        $body = ' FROM `tag` ';
 
         $body .= ' WHERE 1 = 1 ';
 
         if ($sanitizedFilter->getInt('tagId') != null) {
-            $body .= " AND `tag`.tagId = :tagId ";
+            $body .= ' AND `tag`.tagId = :tagId ';
             $params['tagId'] = $sanitizedFilter->getInt('tagId');
         }
 
         if ($sanitizedFilter->getInt('notTagId', ['default' => 0]) != 0) {
-            $body .= " AND tag.tagId <> :notTagId ";
+            $body .= ' AND tag.tagId <> :notTagId ';
             $params['notTagId'] = $sanitizedFilter->getInt('notTagId');
         }
 
@@ -265,7 +264,7 @@ class TagFactory extends BaseFactory
         }
 
         if ($sanitizedFilter->getString('tagExact') != null) {
-            $body.= " AND tag.tag = :exact ";
+            $body .= ' AND tag.tag = :exact ';
             $params['exact'] = $sanitizedFilter->getString('tagExact');
         }
 
@@ -277,22 +276,41 @@ class TagFactory extends BaseFactory
 
         // isRequired filter, by default hide tags with isSystem flag
         if ($sanitizedFilter->getCheckbox('isRequired') != 0) {
-            $body .= " AND `tag`.isRequired = :isRequired ";
+            $body .= ' AND `tag`.isRequired = :isRequired ';
             $params['isRequired'] = $sanitizedFilter->getCheckbox('isRequired');
         }
 
-        if ($sanitizedFilter->getCheckbox('haveOptions') === 1) {
-            $body .= " AND `tag`.options IS NOT NULL";
+        $haveOptions = $sanitizedFilter->getInt('haveOptions');
+
+        if ($haveOptions === 1) {
+            $body .= ' AND `tag`.options IS NOT NULL';
+        } elseif ($haveOptions === 0) {
+            $body .= ' AND `tag`.options IS NULL';
         }
 
-        // Sorting?
-        if (is_array($sortOrder)) {
-            $order = ' ORDER BY ' . implode(',', $sortOrder);
-        }
+        // table sorting
+        $allowedColumns = [
+            'tagId',
+            'tag',
+            'isSystem',
+            'options',
+            'isRequired',
+        ];
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            defaultSort: ['tagId ASC']
+        );
+
+        $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
 
         // Paging
-        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+        if ($filterBy !== null &&
+            $sanitizedFilter->getInt('start') !== null &&
+            $sanitizedFilter->getInt('length') !== null
+        ) {
+            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) .
+                ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
@@ -313,7 +331,12 @@ class TagFactory extends BaseFactory
     }
 
 
-    public function getAllLinks($sortOrder, $filterBy)
+    /**
+     * @param $sortOrder
+     * @param $filterBy
+     * @return array
+     */
+    public function getAllLinks($sortOrder, $filterBy): array
     {
         $entries = [];
         $sanitizedFilter = $this->getSanitizer($filterBy);
@@ -375,19 +398,33 @@ class TagFactory extends BaseFactory
          WHERE `lktagplaylist`.tagId = :tagId
          ';
 
-        // Sorting?
-        $sort = '';
-        if (is_array($sortOrder)) {
-            $sort .= ' ORDER BY ' . implode(',', $sortOrder);
-        }
+        // table sorting
+        $allowedColumns = [
+            'entityId',
+            'name',
+            'type',
+            'value',
+        ];
+
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            defaultSort: ['entityId ASC']
+        );
+
+        $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
 
         // Paging
         $limit = '';
-        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+        if ($filterBy !== null &&
+            $sanitizedFilter->getInt('start') !== null &&
+            $sanitizedFilter->getInt('length') !== null
+        ) {
+            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) .
+                ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
-        $sql = $body . $sort . $limit;
+        $sql = $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $row;

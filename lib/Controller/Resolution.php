@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -21,10 +21,16 @@
  */
 namespace Xibo\Controller;
 
+use OpenApi\Attributes as OA;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\ResolutionFactory;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ControllerNotImplemented;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Resolution
@@ -46,267 +52,231 @@ class Resolution extends Base
         $this->resolutionFactory = $resolutionFactory;
     }
 
-    /**
-     * Display the Resolution Page
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    function displayPage(Request $request, Response $response)
-    {
-        $this->getState()->template = 'resolution-page';
-
-        return $this->render($request, $response);
-    }
-
+    #[OA\Get(
+        path: '/resolution',
+        operationId: 'resolutionSearch',
+        description: 'Search Resolutions this user has access to',
+        summary: 'Resolution Search',
+        tags: ['resolution']
+    )]
+    #[OA\Parameter(
+        name: 'resolutionId',
+        description: 'Filter by Resolution Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'resolution',
+        description: 'Filter by Resolution Name',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'useRegexForName',
+        description: 'Flag (0,1). When filtering by multiple resolutions in resolution filter, should we use regex?', // phpcs:ignore
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'logicalOperatorName',
+        description: 'When filtering by multiple resolutions in resolution filter, which logical operator should be used? AND|OR', // phpcs:ignore
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'enabled',
+        description: 'Filter by Enabled',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'width',
+        description: 'Filter by Resolution width',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'height',
+        description: 'Filter by Resolution height',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'string',
+            enum: [
+                'resolutionId',
+                'resolution',
+                'width',
+                'height',
+                'enabled',
+            ]
+        )
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ],
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/Resolution')
+        )
+    )]
     /**
      * Resolution Grid
      *
-     * @SWG\Get(
-     *  path="/resolution",
-     *  operationId="resolutionSearch",
-     *  tags={"resolution"},
-     *  summary="Resolution Search",
-     *  description="Search Resolutions this user has access to",
-     *  @SWG\Parameter(
-     *      name="resolutionId",
-     *      in="query",
-     *      description="Filter by Resolution Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="resolution",
-     *      in="query",
-     *      description="Filter by Resolution Name",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="partialResolution",
-     *      in="query",
-     *      description="Filter by Partial Resolution Name",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="enabled",
-     *      in="query",
-     *      description="Filter by Enabled",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="width",
-     *      in="query",
-     *      description="Filter by Resolution width",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="height",
-     *      in="query",
-     *      description="Filter by Resolution height",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/Resolution")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
+     * @return ResponseInterface|Response
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
      */
-    function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
-        // Show enabled
-        $filter = [
-            'enabled' => $sanitizedQueryParams->getInt('enabled', ['default' => -1]),
-            'resolutionId' => $sanitizedQueryParams->getInt('resolutionId'),
-            'resolution' => $sanitizedQueryParams->getString('resolution'),
-            'partialResolution' => $sanitizedQueryParams->getString('partialResolution'),
-            'width' => $sanitizedQueryParams->getInt('width'),
-            'height' => $sanitizedQueryParams->getInt('height'),
-            'orientation' => $sanitizedQueryParams->getString('orientation')
-        ];
 
-        $resolutions = $this->resolutionFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter($filter, $sanitizedQueryParams));
+        // Construct the SQL
+        $resolutionSortQuery = $this->gridRenderSort(
+            $sanitizedQueryParams,
+            $this->isJson($request),
+            'resolution'
+        );
+        $resolutionFilterQuery = $this->getResolutionFilter($sanitizedQueryParams);
 
+        $resolutions = $this->resolutionFactory->query($resolutionSortQuery, $resolutionFilterQuery);
+
+        // Add user permissions
         foreach ($resolutions as $resolution) {
-            /* @var \Xibo\Entity\Resolution $resolution */
-
-            if ($this->isApi($request))
-                break;
-
-            $resolution->includeProperty('buttons');
-
-            if ($this->getUser()->featureEnabled('resolution.modify')
-                && $this->getUser()->checkEditable($resolution)
-            ) {
-                // Edit Button
-                $resolution->buttons[] = array(
-                    'id' => 'resolution_button_edit',
-                    'url' => $this->urlFor($request,'resolution.edit.form', ['id' => $resolution->resolutionId]),
-                    'text' => __('Edit')
-                );
-            }
-
-            if ($this->getUser()->featureEnabled('resolution.modify')
-                && $this->getUser()->checkDeleteable($resolution)
-            ) {
-                // Delete Button
-                $resolution->buttons[] = array(
-                    'id' => 'resolution_button_delete',
-                    'url' => $this->urlFor($request,'resolution.delete.form', ['id' => $resolution->resolutionId]),
-                    'text' => __('Delete')
-                );
-            }
+            $resolution->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($resolution));
         }
 
-        $this->getState()->template = 'grid';
-        $this->getState()->setData($resolutions);
-        $this->getState()->recordsTotal = $this->resolutionFactory->countLast();
+        $recordsTotal = $this->resolutionFactory->countLast();
 
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $recordsTotal)
+            ->withJson($resolutions);
     }
 
-    /**
-     * Resolution Add
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    function addForm(Request $request, Response $response)
+    #[OA\Get(
+        path: '/resolution/{resolutionId}',
+        operationId: 'resolutionSearchById',
+        description: 'Get the Resolution object specified by the provided resolutionId',
+        summary: 'Resolution Search by ID',
+        tags: ['resolution']
+    )]
+    #[OA\Parameter(
+        name: 'resolutionId',
+        description: 'Numeric ID of the Resolution to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Resolution')
+    )]
+    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
     {
-        $this->getState()->template = 'resolution-form-add';
-        return $this->render($request, $response);
+        $resolution = $this->resolutionFactory->getById($id, false);
+        $resolution->setUnmatchedProperty(
+            'userPermissions',
+            $this->getUser()->getPermission($resolution)
+        );
+
+        return $response
+            ->withStatus(200)
+            ->withJson($resolution);
     }
 
-    /**
-     * Resolution Edit Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    function editForm(Request $request, Response $response, $id)
-    {
-        $resolution = $this->resolutionFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($resolution)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'resolution-form-edit';
-        $this->getState()->setData([
-            'resolution' => $resolution,
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Resolution Delete Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    function deleteForm(Request $request, Response $response, $id)
-    {
-        $resolution = $this->resolutionFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($resolution)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'resolution-form-delete';
-        $this->getState()->setData([
-            'resolution' => $resolution,
-        ]);
-
-        return $this->render($request, $response);
-    }
-
+    #[OA\Post(
+        path: '/resolution',
+        operationId: 'resolutionAdd',
+        description: 'Add new Resolution',
+        summary: 'Add Resolution',
+        tags: ['resolution']
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['resolution', 'width', 'height'],
+                properties: [
+                    new OA\Property(property: 'resolution', description: 'A name for the Resolution', type: 'string'),
+                    new OA\Property(
+                        property: 'width',
+                        description: 'The Display Width of the Resolution',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'height',
+                        description: 'The Display Height of the Resolution',
+                        type: 'integer'
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ],
+        content: new OA\JsonContent(ref: '#/components/schemas/Resolution')
+    )]
     /**
      * Add Resolution
      *
-     * @SWG\Post(
-     *  path="/resolution",
-     *  operationId="resolutionAdd",
-     *  tags={"resolution"},
-     *  summary="Add Resolution",
-     *  description="Add new Resolution",
-     *  @SWG\Parameter(
-     *      name="resolution",
-     *      in="formData",
-     *      description="A name for the Resolution",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="width",
-     *      in="formData",
-     *      description="The Display Width of the Resolution",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="height",
-     *      in="formData",
-     *      description="The Display Height of the Resolution",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Resolution"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @return ResponseInterface|Response
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws InvalidArgumentException
      */
-    function add(Request $request, Response $response)
+    public function add(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        /* @var \Xibo\Entity\Resolution $resolution */
-        $resolution = $this->resolutionFactory->create($sanitizedParams->getString('resolution'),
+        $resolution = $this->resolutionFactory->create(
+            $sanitizedParams->getString('resolution'),
             $sanitizedParams->getInt('width'),
-            $sanitizedParams->getInt('height'));
+            $sanitizedParams->getInt('height')
+        );
 
         $resolution->userId = $this->getUser()->userId;
+
         $resolution->save();
 
         // Return
@@ -320,59 +290,60 @@ class Resolution extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/resolution/{resolutionId}',
+        operationId: 'resolutionEdit',
+        description: 'Edit new Resolution',
+        summary: 'Edit Resolution',
+        tags: ['resolution']
+    )]
+    #[OA\Parameter(
+        name: 'resolutionId',
+        description: 'The Resolution ID to Edit',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['resolution', 'width', 'height'],
+                properties: [
+                    new OA\Property(property: 'resolution', description: 'A name for the Resolution', type: 'string'),
+                    new OA\Property(
+                        property: 'width',
+                        description: 'The Display Width of the Resolution',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'height',
+                        description: 'The Display Height of the Resolution',
+                        type: 'integer'
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Resolution')
+    )]
     /**
      * Edit Resolution
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
-     * @throws \Xibo\Support\Exception\NotFoundException
-     * @SWG\Put(
-     *  path="/resolution/{resolutionId}",
-     *  operationId="resolutionEdit",
-     *  tags={"resolution"},
-     *  summary="Edit Resolution",
-     *  description="Edit new Resolution",
-     *  @SWG\Parameter(
-     *      name="resolutionId",
-     *      in="path",
-     *      description="The Resolution ID to Edit",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="resolution",
-     *      in="formData",
-     *      description="A name for the Resolution",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="width",
-     *      in="formData",
-     *      description="The Display Width of the Resolution",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="height",
-     *      in="formData",
-     *      description="The Display Height of the Resolution",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Resolution")
-     *  )
-     * )
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
-    function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $resolution = $this->resolutionFactory->getById($id);
 
@@ -386,6 +357,7 @@ class Resolution extends Base
         $resolution->width = $sanitizedParams->getInt('width');
         $resolution->height = $sanitizedParams->getInt('height');
         $resolution->enabled = $sanitizedParams->getCheckbox('enabled');
+
         $resolution->save();
 
         // Return
@@ -398,36 +370,33 @@ class Resolution extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Delete(
+        path: '/resolution/{resolutionId}',
+        operationId: 'resolutionDelete',
+        description: 'Delete Resolution',
+        summary: 'Delete Resolution',
+        tags: ['resolution']
+    )]
+    #[OA\Parameter(
+        name: 'resolutionId',
+        description: 'The Resolution ID to Delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete Resolution
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
-     * @SWG\Delete(
-     *  path="/resolution/{resolutionId}",
-     *  operationId="resolutionDelete",
-     *  tags={"resolution"},
-     *  summary="Delete Resolution",
-     *  description="Delete Resolution",
-     *  @SWG\Parameter(
-     *      name="resolutionId",
-     *      in="path",
-     *      description="The Resolution ID to Delete",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws NotFoundException
      */
-    function delete(Request $request, Response $response, $id)
+    public function delete(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $resolution = $this->resolutionFactory->getById($id);
 
@@ -444,5 +413,24 @@ class Resolution extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Get the resolution filters
+     * @param $sanitizedQueryParams
+     * @return array
+     */
+    private function getResolutionFilter($sanitizedQueryParams): array
+    {
+        return $this->gridRenderFilter([
+            'enabled' => $sanitizedQueryParams->getInt('enabled', ['default' => -1]),
+            'resolutionId' => $sanitizedQueryParams->getInt('resolutionId'),
+            'resolution' => $sanitizedQueryParams->getString('resolution'),
+            'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
+            'logicalOperatorName' => $sanitizedQueryParams->getString('logicalOperatorName'),
+            'width' => $sanitizedQueryParams->getInt('width'),
+            'height' => $sanitizedQueryParams->getInt('height'),
+            'orientation' => $sanitizedQueryParams->getString('orientation')
+        ], $sanitizedQueryParams);
     }
 }

@@ -46,7 +46,7 @@ class FolderListener
 
             // on merge we delete the original Folder and move its content to the new selected folder
             // sub-folders are moved to their new parent as well
-            foreach (array_filter(explode(',', $folder->children)) as $childFolderId) {
+            foreach (array_filter(explode(',', $folder->children ?? '')) as $childFolderId) {
                 $childFolder = $this->folderFactory->getById($childFolderId, 0);
                 $childFolder->updateFoldersAfterMove($folder->getId(), $newFolder->getId());
             }

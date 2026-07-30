@@ -13,7 +13,7 @@ node_modules
 results.xml
 containers/
 web/dist
-cypress/videos/
+web/app
 modules/bundle*.js*
 modules/assets/pdfjs
 
@@ -27,3 +27,8 @@ tests/http-client.private.env.json
 
 # Hide module/template translate file
 locale/moduletranslate.php
+
+# Hide react translate files
+locale/reacttranslate.php
+frontend/public/locale/translations/
+frontend/coverage

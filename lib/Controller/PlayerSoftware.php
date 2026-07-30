@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,234 +22,203 @@
 
 namespace Xibo\Controller;
 
+use OpenApi\Attributes as OA;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Stash\Interfaces\PoolInterface;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayProfileFactory;
-use Xibo\Factory\MediaFactory;
-use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Service\DownloadService;
 use Xibo\Service\MediaService;
 use Xibo\Service\MediaServiceInterface;
 use Xibo\Service\UploadService;
-use Xibo\Support\Exception\AccessDeniedException;
-use Xibo\Support\Exception\ConfigurationException;
-use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
-/**
-* Class PlayerSoftware
-* @package Xibo\Controller
-*/
 class PlayerSoftware extends Base
 {
-    /** @var \Stash\Interfaces\PoolInterface */
-    private $pool;
-
-    /** @var  DisplayProfileFactory */
-    private $displayProfileFactory;
-
-    /** @var  PlayerVersionFactory */
-    private $playerVersionFactory;
-
-    /** @var  DisplayFactory */
-    private $displayFactory;
-    /**
-     * @var MediaServiceInterface
-     */
-    private $mediaService;
-
-    /**
-     * Notification constructor.
-     * @param MediaFactory $mediaFactory
-     * @param PlayerVersionFactory $playerVersionFactory
-     * @param DisplayProfileFactory $displayProfileFactory
-     * @param ModuleFactory $moduleFactory
-     * @param DisplayFactory $displayFactory
-     */
-    public function __construct($pool, $playerVersionFactory, $displayProfileFactory, $displayFactory)
-    {
-        $this->pool = $pool;
-        $this->playerVersionFactory = $playerVersionFactory;
-        $this->displayProfileFactory = $displayProfileFactory;
-        $this->displayFactory = $displayFactory;
+    public function __construct(
+        private readonly PoolInterface $pool,
+        private readonly PlayerVersionFactory $playerVersionFactory,
+        private readonly DisplayProfileFactory $displayProfileFactory,
+        private readonly DisplayFactory $displayFactory,
+        private readonly MediaServiceInterface $mediaService,
+    ) {
     }
 
-    public function getPlayerVersionFactory() : PlayerVersionFactory
-    {
-        return $this->playerVersionFactory;
-    }
-
-    public function useMediaService(MediaServiceInterface $mediaService)
-    {
-        $this->mediaService = $mediaService;
-    }
-
-    public function getMediaService(): MediaServiceInterface
-    {
-        return $this->mediaService->setUser($this->getUser());
-    }
-
-    /**
-     * Displays the page logic
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    function displayPage(Request $request, Response $response)
-    {
-        $this->getState()->template = 'playersoftware-page';
-        $this->getState()->setData([
-            'types' => array_map(function ($element) {
-                return $element->jsonSerialize();
-            }, $this->playerVersionFactory->getDistinctType()),
-            'versions' => $this->playerVersionFactory->getDistinctVersion(),
-            'validExt' => implode('|', $this->getValidExtensions()),
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    function grid(Request $request, Response $response)
+    #[OA\Get(
+        path: '/playersoftware',
+        operationId: 'playerSoftwareSearch',
+        description: 'Search Player Versions',
+        summary: 'Search Player Versions',
+        tags: ['Player Software']
+    )]
+    #[OA\Parameter(
+        name: 'playerType',
+        description: 'Filter by player type',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'playerVersion',
+        description: 'Filter by player version',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'playerCode',
+        description: 'Filter by player code',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'versionId',
+        description: 'Filter by version ID',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'playerShowVersion',
+        description: 'Filter by player show version name',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'string',
+            enum: [
+                'versionId', 'type', 'version', 'code',
+                'playerShowVersion', 'fileName', 'size',
+                'createdAt', 'modifiedAt', 'modifiedBy',
+            ]
+        )
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['ASC', 'DESC'])
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ],
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/PlayerVersion')
+        )
+    )]
+    public function grid(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getParams());
 
-        $filter = [
-            'playerType' => $sanitizedQueryParams->getString('playerType'),
-            'playerVersion' => $sanitizedQueryParams->getString('playerVersion'),
-            'playerCode' => $sanitizedQueryParams->getInt('playerCode'),
-            'versionId' => $sanitizedQueryParams->getInt('versionId'),
-            'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
-            'playerShowVersion' => $sanitizedQueryParams->getString('playerShowVersion')
-        ];
+        $versions = $this->playerVersionFactory->query(
+            $this->gridRenderSort($sanitizedQueryParams, $this->isJson($request), 'code', 'desc'),
+            $this->gridRenderFilter($this->getPlayerVersionFilters($sanitizedQueryParams), $sanitizedQueryParams)
+        );
 
-        $versions = $this->playerVersionFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter($filter, $sanitizedQueryParams));
-
-        // add row buttons
         foreach ($versions as $version) {
             $version->setUnmatchedProperty('fileSizeFormatted', ByteFormatter::format($version->size));
-            if ($this->isApi($request)) {
-                continue;
-            }
-
-            $version->includeProperty('buttons');
-            $version->buttons = [];
-
-            // Buttons
-
-            // Edit
-            $version->buttons[] = [
-                'id' => 'content_button_edit',
-                'url' => $this->urlFor($request, 'playersoftware.edit.form', ['id' => $version->versionId]),
-                'text' => __('Edit')
-            ];
-
-            // Delete Button
-            $version->buttons[] = [
-                'id' => 'content_button_delete',
-                'url' => $this->urlFor($request, 'playersoftware.delete.form', ['id' => $version->versionId]),
-                'text' => __('Delete'),
-                'multi-select' => true,
-                'dataAttributes' => [
-                    [
-                        'name' => 'commit-url',
-                        'value' => $this->urlFor($request, 'playersoftware.delete', ['id' => $version->versionId])
-                    ],
-                    ['name' => 'commit-method', 'value' => 'delete'],
-                    ['name' => 'id', 'value' => 'content_button_delete'],
-                    ['name' => 'text', 'value' => __('Delete')],
-                    ['name' => 'sort-group', 'value' => 1],
-                    ['name' => 'rowtitle', 'value' => $version->fileName]
-                ]
-            ];
-
-
-            // Download
-            $version->buttons[] = array(
-                'id' => 'content_button_download',
-                'linkType' => '_self',
-                'external' => true,
-                'url' => $this->urlFor($request, 'playersoftware.download', ['id' => $version->versionId]) . '?attachment=' . $version->fileName,
-                'text' => __('Download')
-            );
         }
 
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->playerVersionFactory->countLast();
-        $this->getState()->setData($versions);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $this->playerVersionFactory->countLast())
+            ->withJson($versions);
     }
 
-    /**
-     * Version Delete Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function deleteForm(Request $request, Response $response, $id)
+    private function getPlayerVersionFilters(SanitizerInterface $params): array
+    {
+        return [
+            'playerType'        => $params->getString('playerType'),
+            'playerVersion'     => $params->getString('playerVersion'),
+            'playerCode'        => $params->getInt('playerCode'),
+            'versionId'         => $params->getInt('versionId'),
+            'useRegexForName'   => $params->getCheckbox('useRegexForName'),
+            'playerShowVersion' => $params->getString('playerShowVersion'),
+        ];
+    }
+
+    #[OA\Get(
+        path: '/playersoftware/{versionId}',
+        operationId: 'playerSoftwareSearchById',
+        description: 'Get the Player Version object specified by the provided versionId',
+        summary: 'Search Player Version by ID',
+        tags: ['Player Software']
+    )]
+    #[OA\Parameter(
+        name: 'versionId',
+        description: 'Numeric ID of the Player Version to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/PlayerVersion')
+    )]
+    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $version = $this->playerVersionFactory->getById($id);
-
-        $version->load();
-
-        $this->getState()->template = 'playersoftware-form-delete';
-        $this->getState()->setData([
-            'version' => $version,
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(200)->withJson($version);
     }
 
-    /**
-     * Delete Version
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Delete(
-     *  path="/playersoftware/{versionId}",
-     *  operationId="playerSoftwareDelete",
-     *  tags={"Player Software"},
-     *  summary="Delete Version",
-     *  description="Delete Version file from the Library and Player Versions table",
-     *  @SWG\Parameter(
-     *      name="versionId",
-     *      in="path",
-     *      description="The Version ID to Delete",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
-     */
-    public function delete(Request $request, Response $response, $id)
+    #[OA\Get(
+        path: '/playersoftware/meta',
+        operationId: 'playerSoftwareMeta',
+        description: 'Returns distinct player types, versions and valid upload extensions for use in filter dropdowns and upload configuration', // phpcs:ignore
+        summary: 'Player Software Metadata',
+        tags: ['Player Software']
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation'
+    )]
+    public function metaData(Request $request, Response $response): Response|ResponseInterface
+    {
+        return $response->withStatus(200)->withJson([
+            'types'    => $this->playerVersionFactory->getDistinctType(),
+            'versions' => $this->playerVersionFactory->getDistinctVersion(),
+            'validExt' => $this->getValidExtensions(),
+        ]);
+    }
+
+    #[OA\Delete(
+        path: '/playersoftware/{versionId}',
+        operationId: 'playerSoftwareDelete',
+        description: 'Delete Version file from the Library and Player Versions table',
+        summary: 'Delete Version',
+        tags: ['Player Software']
+    )]
+    #[OA\Parameter(
+        name: 'versionId',
+        description: 'The Version ID to Delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
+    public function delete(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $version = $this->playerVersionFactory->getById($id);
 
@@ -276,93 +245,48 @@ class PlayerSoftware extends Base
             }
         }
 
-        // Delete
         $version->delete();
 
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('Deleted %s'), $version->playerShowVersion)
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(204);
     }
 
-    /**
-     * Edit Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function editForm(Request $request, Response $response, $id)
-    {
-        $version = $this->playerVersionFactory->getById($id);
-
-        $this->getState()->template = 'playersoftware-form-edit';
-        $this->getState()->setData([
-            'version' => $version,
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Edit Player Version
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Put(
-     *  path="/playersoftware/{versionId}",
-     *  operationId="playersoftwareEdit",
-     *  tags={"Player Software"},
-     *  summary="Edit Player Version",
-     *  description="Edit a Player Version file information",
-     *  @SWG\Parameter(
-     *      name="versionId",
-     *      in="path",
-     *      description="The Version ID to Edit",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="playerShowVersion",
-     *      in="formData",
-     *      description="The Name of the player version application, this will be displayed in Version dropdowns in Display Profile and Display",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="version",
-     *      in="formData",
-     *      description="The Version number",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="code",
-     *      in="formData",
-     *      description="The Code number",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Media")
-     *  )
-     * )
-     */
-    public function edit(Request $request, Response $response, $id)
+    #[OA\Put(
+        path: '/playersoftware/{versionId}',
+        operationId: 'playersoftwareEdit',
+        description: 'Edit a Player Version file information',
+        summary: 'Edit Player Version',
+        tags: ['Player Software']
+    )]
+    #[OA\Parameter(
+        name: 'versionId',
+        description: 'The Version ID to Edit',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'playerShowVersion',
+                        description: 'The Name of the player version application, this will be displayed in Version dropdowns in Display Profile and Display', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'version', description: 'The Version number', type: 'string'),
+                    new OA\Property(property: 'code', description: 'The Code number', type: 'integer')
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/PlayerVersion')
+    )]
+    public function edit(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $version = $this->playerVersionFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -374,230 +298,60 @@ class PlayerSoftware extends Base
 
         $version->save();
 
-        // Return
-        $this->getState()->hydrate([
-            'message' => sprintf(__('Edited %s'), $version->playerShowVersion),
-            'id' => $version->versionId,
-            'data' => $version
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(200)->withJson($version);
     }
 
-    /**
-     * Install Route for SSSP XML
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function getSsspInstall(Request $request, Response $response)
+    #[OA\Post(
+        path: '/playersoftware',
+        operationId: 'playersoftwareUpload',
+        description: 'Upload a new Player version file',
+        summary: 'Player Software Upload',
+        tags: ['Player Software']
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'multipart/form-data',
+            schema: new OA\Schema(
+                required: ['files'],
+                properties: [
+                    new OA\Property(
+                        property: 'files',
+                        description: 'The Uploaded File',
+                        type: 'string',
+                        format: 'binary'
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(response: 200, description: 'successful operation')]
+    public function add(Request $request, Response $response): Response|ResponseInterface
     {
-        // Get the default SSSP display profile
-        $profile = $this->displayProfileFactory->getDefaultByType('sssp');
-
-        // See if it has a version file (if not or we can't load it, 404)
-        $versionId = $profile->getSetting('versionMediaId');
-
-        if ($versionId !== null) {
-            $version = $this->playerVersionFactory->getById($versionId);
-
-            $xml = $this->outputSsspXml($version->version . '.' . $version->code, $version->size);
-            $response = $response
-                ->withHeader('Content-Type', 'application/xml')
-                ->write($xml);
-        } else {
-            return $response->withStatus(404);
-        }
-
-        $this->setNoOutput(true);
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Install Route for SSSP WGT
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function getSsspInstallDownload(Request $request, Response $response)
-    {
-        // Get the default SSSP display profile
-        $profile = $this->displayProfileFactory->getDefaultByType('sssp');
-
-        // See if it has a version file (if not, or we can't load it, 404)
-        $versionId = $profile->getSetting('versionMediaId');
-
-        if ($versionId !== null) {
-            $response = $this->download($request, $response, $versionId);
-        } else {
-            return $response->withStatus(404);
-        }
-
-        $this->setNoOutput();
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Upgrade Route for SSSP XML
-     * @param Request $request
-     * @param Response $response
-     * @param $nonce
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function getSssp(Request $request, Response $response, $nonce)
-    {
-        // Use the cache to get the displayId for this nonce
-        $cache = $this->pool->getItem('/playerVersion/' . $nonce);
-
-        if ($cache->isMiss()) {
-            $response = $response->withStatus(404);
-            $this->setNoOutput(true);
-            return $this->render($request, $response);
-        }
-
-        $displayId = $cache->get();
-
-        // Get the Display
-        $display = $this->displayFactory->getById($displayId);
-
-        // Check if display is SSSP, throw Exception if it's not
-        if ($display->clientType != 'sssp') {
-            throw new InvalidArgumentException(__('File available only for SSSP displays'), 'clientType');
-        }
-
-        // Add the correct header
-        $response = $response->withHeader('content-type', 'application/xml');
-
-        // get the media ID from display profile
-        $versionId = $display->getSetting('versionMediaId', null, ['displayOverride' => true]);
-
-        if ($versionId !== null) {
-            $versionInformation = $this->playerVersionFactory->getById($versionId);
-
-            $xml = $this->outputSsspXml($versionInformation->version . '.' . $versionInformation->code, $versionInformation->size);
-            $response = $response->write($xml);
-        } else {
-            return $response->withStatus(404);
-        }
-
-        $this->setNoOutput(true);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Upgrade Route for SSSP WGT
-     * @param Request $request
-     * @param Response $response
-     * @param $nonce
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function getVersionFile(Request $request, Response $response, $nonce)
-    {
-        // Use the cache to get the displayId for this nonce
-        $cache = $this->pool->getItem('/playerVersion/' . $nonce);
-
-        if ($cache->isMiss()) {
-            $response = $response->withStatus(404);
-            $this->setNoOutput(true);
-            return $this->render($request, $response);
-        }
-
-        $displayId = $cache->get();
-
-        // Get display and media
-        $display = $this->displayFactory->getById($displayId);
-        $versionId = $display->getSetting('versionMediaId', null, ['displayOverride' => true]);
-
-        if ($versionId !== null) {
-            $response = $this->download($request, $response, $versionId);
-        } else {
-            return $response->withStatus(404);
-        }
-
-        $this->setNoOutput(true);
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Player Software Upload
-     *
-     * @SWG\Post(
-     *  path="/playersoftware",
-     *  operationId="playersoftwareUpload",
-     *  tags={"Player Software"},
-     *  summary="Player Software Upload",
-     *  description="Upload a new Player version file",
-     *  @SWG\Parameter(
-     *      name="files",
-     *      in="formData",
-     *      description="The Uploaded File",
-     *      type="file",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation"
-     *  )
-     * )
-     *
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws ConfigurationException
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\DuplicateEntityException
-     */
-    public function add(Request $request, Response $response)
-    {
-        if (!$this->getUser()->featureEnabled('playersoftware.add')) {
-            throw new AccessDeniedException();
-        }
-
         $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
-        // Make sure the library exists
         MediaService::ensureLibraryExists($libraryFolder);
         $validExt = $this->getValidExtensions();
 
-        // Make sure there is room in the library
         $libraryLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
 
         $options = [
             'accept_file_types' => '/\.' . implode('|', $validExt) . '$/i',
             'libraryLimit' => $libraryLimit,
-            'libraryQuotaFull' => ($libraryLimit > 0 && $this->getMediaService()->libraryUsage() > $libraryLimit),
+            'libraryQuotaFull' => (
+                $libraryLimit > 0
+                && $this->mediaService->setUser($this->getUser())->libraryUsage() > $libraryLimit
+            ),
         ];
 
-        // Output handled by UploadHandler
         $this->setNoOutput(true);
 
         $this->getLog()->debug('Hand off to Upload Handler with options: ' . json_encode($options));
 
-        // Hand off to the Upload Handler provided by jquery-file-upload
         $uploadService = new UploadService($libraryFolder . 'temp/', $options, $this->getLog(), $this->getState());
         $uploadHandler = $uploadService->createUploadHandler();
 
         $uploadHandler->setPostProcessor(function ($file, $uploadHandler) use ($libraryFolder, $request) {
-            // Return right away if the file already has an error.
             if (!empty($file->error)) {
                 $this->getState()->setCommitState(false);
                 return $file;
@@ -605,28 +359,24 @@ class PlayerSoftware extends Base
 
             $this->getUser()->isQuotaFullByUser(true);
 
-            // Get the uploaded file and move it to the right place
             $filePath = $libraryFolder . 'temp/' . $file->fileName;
 
-            // Add the Player Software record
-            $playerSoftware = $this->getPlayerVersionFactory()->createEmpty();
+            $playerSoftware = $this->playerVersionFactory->createEmpty();
             $playerSoftware->modifiedBy = $this->getUser()->userName;
 
             // SoC players have issues parsing fileNames with spaces in them
-            // replace any unexpected character in fileName with -
             $playerSoftware->fileName = preg_replace('/[^a-zA-Z0-9_.]+/', '-', $file->fileName);
             $playerSoftware->size = filesize($filePath);
             $playerSoftware->md5 = md5_file($filePath);
             $playerSoftware->decorateRecord();
 
-            // if the name was provided on upload use that here.
-            if (!empty($file->name)) {
-                $playerSoftware->playerShowVersion = $file->name;
+            $name = $this->getSanitizer($request->getParams())->getString('name');
+            if (!empty($name)) {
+                $playerSoftware->playerShowVersion = $name;
             }
 
             $playerSoftware->save();
 
-            // Test to ensure the final file size is the same as the file size we're expecting
             if ($file->size != $playerSoftware->size) {
                 throw new InvalidArgumentException(
                     __('Sorry this is a corrupted upload, the file size doesn\'t match what we\'re expecting.'),
@@ -634,13 +384,10 @@ class PlayerSoftware extends Base
                 );
             }
 
-            // everything is fine, move the file from temp folder.
             rename($filePath, $libraryFolder . 'playersoftware/' . $playerSoftware->fileName);
 
-            // Unpack if necessary
             $playerSoftware->unpack($libraryFolder, $request);
 
-            // return
             $file->id = $playerSoftware->versionId;
             $file->md5 = $playerSoftware->md5;
             $file->name = $playerSoftware->fileName;
@@ -650,51 +397,44 @@ class PlayerSoftware extends Base
 
         $uploadHandler->post();
 
-        // Explicitly set the Content-Type header to application/json
-        $response = $response->withHeader('Content-Type', 'application/json');
-
-        return $this->render($request, $response);
+        return $response->withHeader('Content-Type', 'application/json');
     }
 
-    /**
-     * @SWG\Get(
-     *  path="/playersoftware/download/{id}",
-     *  operationId="playersoftwareDownload",
-     *  tags={"Player Software"},
-     *  summary="Download Player Version file",
-     *  description="Download Player Version file",
-     *  produces={"application/octet-stream"},
-     *  @SWG\Parameter(
-     *      name="id",
-     *      in="path",
-     *      description="The Player Version ID to Download",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(type="file"),
-     *      @SWG\Header(
-     *          header="X-Sendfile",
-     *          description="Apache Send file header - if enabled.",
-     *          type="string"
-     *      ),
-     *      @SWG\Header(
-     *          header="X-Accel-Redirect",
-     *          description="nginx send file header - if enabled.",
-     *          type="string"
-     *      )
-     *  )
-     * )
-     *
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    public function download(Request $request, Response $response, $id)
+    #[OA\Get(
+        path: '/playersoftware/download/{id}',
+        operationId: 'playersoftwareDownload',
+        description: 'Download Player Version file',
+        summary: 'Download Player Version file',
+        tags: ['Player Software']
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'The Player Version ID to Download',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'X-Sendfile',
+                description: 'Apache Send file header - if enabled.',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Header(
+                header: 'X-Accel-Redirect',
+                description: 'nginx send file header - if enabled.',
+                schema: new OA\Schema(type: 'string')
+            )
+        ],
+        content: new OA\MediaType(
+            mediaType: 'application/octet-stream',
+            schema: new OA\Schema(type: 'string', format: 'binary')
+        )
+    )]
+    public function download(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $playerVersion = $this->playerVersionFactory->getById($id);
 
@@ -715,21 +455,105 @@ class PlayerSoftware extends Base
         );
     }
 
-    /**
-     * Output the SSSP XML
-     * @param $version
-     * @param $size
-     * @return string
-     */
-    private function outputSsspXml($version, $size)
+    public function getSsspInstall(Request $request, Response $response): Response|ResponseInterface
     {
-        // create sssp_config XML file with provided information
+        $profile = $this->displayProfileFactory->getDefaultByType('sssp');
+        $versionId = $profile->getSetting('versionMediaId');
+
+        if ($versionId !== null) {
+            $version = $this->playerVersionFactory->getById($versionId);
+            $xml = $this->outputSsspXml($version->version . '.' . $version->code, $version->size);
+            $response = $response
+                ->withHeader('Content-Type', 'application/xml')
+                ->write($xml);
+        } else {
+            return $response->withStatus(404);
+        }
+
+        $this->setNoOutput(true);
+        return $this->render($request, $response);
+    }
+
+    public function getSsspInstallDownload(Request $request, Response $response): Response|ResponseInterface
+    {
+        $profile = $this->displayProfileFactory->getDefaultByType('sssp');
+        $versionId = $profile->getSetting('versionMediaId');
+
+        if ($versionId !== null) {
+            $response = $this->download($request, $response, $versionId);
+        } else {
+            return $response->withStatus(404);
+        }
+
+        $this->setNoOutput();
+        return $this->render($request, $response);
+    }
+
+    public function getSssp(Request $request, Response $response, string $nonce): Response|ResponseInterface
+    {
+        $cache = $this->pool->getItem('/playerVersion/' . $nonce);
+
+        if ($cache->isMiss()) {
+            $response = $response->withStatus(404);
+            $this->setNoOutput(true);
+            return $this->render($request, $response);
+        }
+
+        $displayId = $cache->get();
+        $display = $this->displayFactory->getById($displayId);
+
+        if ($display->clientType != 'sssp') {
+            throw new InvalidArgumentException(__('File available only for SSSP displays'), 'clientType');
+        }
+
+        $response = $response->withHeader('content-type', 'application/xml');
+        $versionId = $display->getSetting('versionMediaId', null, ['displayOverride' => true]);
+
+        if ($versionId !== null) {
+            $versionInformation = $this->playerVersionFactory->getById($versionId);
+            $xml = $this->outputSsspXml(
+                $versionInformation->version . '.' . $versionInformation->code,
+                $versionInformation->size
+            );
+            $response = $response->write($xml);
+        } else {
+            return $response->withStatus(404);
+        }
+
+        $this->setNoOutput(true);
+        return $this->render($request, $response);
+    }
+
+    public function getVersionFile(Request $request, Response $response, string $nonce): Response|ResponseInterface
+    {
+        $cache = $this->pool->getItem('/playerVersion/' . $nonce);
+
+        if ($cache->isMiss()) {
+            $response = $response->withStatus(404);
+            $this->setNoOutput(true);
+            return $this->render($request, $response);
+        }
+
+        $displayId = $cache->get();
+        $display = $this->displayFactory->getById($displayId);
+        $versionId = $display->getSetting('versionMediaId', null, ['displayOverride' => true]);
+
+        if ($versionId !== null) {
+            $response = $this->download($request, $response, $versionId);
+        } else {
+            return $response->withStatus(404);
+        }
+
+        $this->setNoOutput(true);
+        return $this->render($request, $response);
+    }
+
+    private function outputSsspXml(string $version, int $size): string
+    {
         $ssspDocument = new \DOMDocument('1.0', 'UTF-8');
         $versionNode = $ssspDocument->createElement('widget');
         $version = $ssspDocument->createElement('ver', $version);
         $size = $ssspDocument->createElement('size', $size);
-
-        // Our widget name is always sssp_dl (this is appended to both the install and upgrade routes)
         $name = $ssspDocument->createElement('widgetname', 'sssp_dl');
 
         $ssspDocument->appendChild($versionNode);
@@ -742,10 +566,8 @@ class PlayerSoftware extends Base
         return $ssspDocument->saveXML();
     }
 
-    /**
-     * @return string[]
-     */
-    private function getValidExtensions()
+    /** @return string[] */
+    private function getValidExtensions(): array
     {
         return ['apk', 'ipk', 'wgt', 'chrome'];
     }

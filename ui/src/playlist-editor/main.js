@@ -208,12 +208,6 @@ pE.loadEditor = function(
           pE.editorContainer.find('#playlist-timeline'),
         );
 
-        // Move help control to the header
-        $('#help-pane').insertAfter(
-          pE.editorContainer.parents('.editor-modal')
-            .find('.editor-modal-header .modal-header--left'),
-        );
-
         // Append manager to the modal container
         $('#layout-manager').appendTo('#playlist-editor');
 
@@ -870,10 +864,6 @@ pE.close = function() {
     }
   };
 
-  // Move help control back to the top level
-  this.editorContainer.parents('.editor-modal')
-    .find('.editor-modal-header #help-pane').prependTo('body');
-
   // Clear loaded vars
   this.mainObjectId = '';
   deleteObjectProperties(this.playlist);
@@ -1411,6 +1401,9 @@ pE.handleKeyInputs = function() {
         handler.metaKey
       );
 
+      const typingInField = $(handler.target).is(
+        'input, textarea, select, [contenteditable="true"]');
+
       if ($(handler.target).is($('body'))) {
         // Delete
         if (
@@ -1421,15 +1414,16 @@ pE.handleKeyInputs = function() {
         ) {
           pE.deleteSelectedObject();
         }
+      }
 
-        // Undo
-        if (
-          handler.code == 'KeyZ' &&
-          controlOrCommandPressed &&
-          allowInputs
-        ) {
-          pE.undoLastAction();
-        }
+      if (
+        handler.code == 'KeyZ' &&
+        controlOrCommandPressed &&
+        allowInputs &&
+        !typingInField
+      ) {
+        handler.preventDefault();
+        pE.undoLastAction();
       }
     });
 };

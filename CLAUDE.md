@@ -14,7 +14,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **Backend**: PHP 8.4 with Slim 4 framework (MVC)
 - **Database**: MySQL 8.4 with Phinx migrations
-- **Frontend**: JavaScript/jQuery with Bootstrap 4, webpack
+- **Frontend (legacy)**: JavaScript/jQuery with Bootstrap 4, webpack (in `ui/`)
+- **Frontend (new)**: React 18 + TypeScript + Vite + TanStack React Table + Tailwind CSS (in `frontend/`)
 - **Dependency Injection**: PHP-DI 7.0
 - **Testing**: PHPUnit 10.5 (currently limited test suite)
 - **Logging**: Monolog 2.10
@@ -82,6 +83,32 @@ npm run local
 npm test
 npm run cypress:open
 ```
+
+**React Frontend** (`frontend/`):
+```bash
+cd frontend
+
+# Start Vite dev server on port 5173 (requires Docker PHP app running at http://localhost)
+npm run dev
+
+# Production build — outputs to web/dist/pages/
+npm run build
+
+# Type-check only (no emit)
+npm run typecheck
+
+# Lint (ESLint)
+npm run lint
+
+# Format (Prettier)
+npm run format
+
+# Unit tests (Vitest)
+npm test
+npm run test:watch
+```
+
+The Vite dev server proxies all routes except the SPA's own base (`import.meta.env.BASE_URL`, `/app/`) to `http://localhost` (the Docker PHP app). When developing the React frontend, Docker must be running. The proxy uses `changeOrigin: true`, so the PHP app sees requests as coming from `localhost` regardless of the Vite origin. Note: `/app/` is only the internal *asset* base (where the built JS/CSS live under `web/app/` and where the dev server mounts) — user-facing URLs are clean (`/design/layout`), served by PHP rendering the SPA shell (`views/app-spa.twig`) via the Slim NotFound handler. Built asset URLs are made install-root-aware at runtime via `vite.config.ts`'s `experimental.renderBuiltUrl` (which resolves chunks against `window.__XIBO_ASSET_BASE__`, injected by the shell as `rootUri + 'app/'`), so sub-folder/alias installs work.
 
 **Database Migrations** (via Phinx):
 ```bash
@@ -191,7 +218,25 @@ tests/
   └── LocalWebTestCase.php
 
 docker/                   # Docker entrypoint scripts and configurations
-containers/db/            # Docker Compose MySQL data volume
+containers/db/            # Docker Compose MySQL data volume (DO NOT SEARCH — large binary files)
+
+frontend/
+  ├── src/
+  │   ├── app/            # App root, routing config
+  │   ├── components/     # Shared React components (DataTable, MediaCell, etc.)
+  │   ├── context/        # React context providers
+  │   ├── hooks/          # Custom hooks (useOwner, useKeydown, useTableState, etc.)
+  │   ├── pages/          # Page components (Design/, Displays/, Library/)
+  │   │   ├── Design/
+  │   │   │   ├── Layouts/          # Layout list page + LayoutPreviewer, LayoutInfoPanel
+  │   │   │   ├── Campaigns/        # Campaign list page
+  │   │   │   └── Templates/        # Template list page
+  │   │   ├── Displays/
+  │   │   └── Library/Media/
+  │   ├── services/       # RTK Query API slices (layoutsApi, etc.)
+  │   ├── types/          # TypeScript interfaces (Layout, Campaign, Media, Tag, etc.)
+  │   └── utils/          # Shared utilities
+  └── vite.config.ts      # Vite build config; compiled output goes to web/dist/pages/
 ```
 
 ### Core Design Patterns
@@ -286,6 +331,19 @@ containers/db/            # Docker Compose MySQL data volume
 
 ### Frontend Architecture
 
+**React Frontend** (new — `frontend/`):
+
+The newer admin pages are built in React and served at clean root URLs (e.g. `/design/layout`, `/design/campaign`, `/displays/displays`). They are compiled by Vite (output to `frontend/dist/`, deployed to `web/app/` — the physical asset location; `base: '/app/'`) and their HTML shell is rendered by PHP (`views/app-spa.twig` via `ViteManifest`) from the Slim NotFound handler, so legacy PHP routes take precedence and any unmatched route falls through to the SPA. Two runtime-derived, distinct bases (both from values the PHP shell injects, `frontend/src/config/publicPath.ts`): the React Router `basename` = the install root (`<meta name="public-path">`, `/` or `/cms/`); the **asset base** = install root + `app/` (`window.__XIBO_ASSET_BASE__`), used for code-split chunks and locale fetches. `ViteManifest` prefixes entry-point URLs with the install root too, so everything resolves on sub-folder/alias installs.
+
+Key patterns:
+- Pages live in `frontend/src/pages/{Section}/{PageName}/`
+- Each page has a `{Page}.tsx` (component), `{Page}Config.tsx` (column defs + actions), and a `hooks/` subfolder for data fetching
+- Column definitions use TanStack React Table `ColumnDef<T>[]`
+- Thumbnails are rendered via `MediaCell` (`components/ui/table/cells/MediaCell.tsx`) — pass `onPreview` to make them clickable
+- Preview modals (e.g. `LayoutPreviewer`) receive the full row object and should use the `previewUrl` property returned by the API (includes a JWT token), not hardcoded URL patterns
+- TypeScript types for API responses live in `frontend/src/types/`; add new API-returned fields there when the backend adds them
+- API calls use RTK Query service files in `frontend/src/services/`
+
 **Webpack Bundles** (from `webpack.config.js`):
 - `vendor.bundle.js` — Third-party libraries (jQuery, Bootstrap, etc.)
 - `xibo.bundle.js` — Core Xibo UI utilities
@@ -362,6 +420,49 @@ Currently, only **XMDS API tests** are active in `phpunit.xml`. Integration and 
 - **Entity Validation**: Use `Respect\Validation` library (see `lib/Validation/`)
 - **Error Handling**: Throw appropriate exceptions from `lib/Support/Exception/`
 - **Testing**: Update or add tests in `tests/Xmds/` (other test suites commented out pending refactoring)
+- **Semgrep**: Run `semgrep --config .semgrep/rules.yml lib/ web/` locally before committing changes that touch HTTP egress or filesystem code. The rules are designed to be zero-false-positive on `develop`.
+
+## Security-sensitive patterns
+
+These are the architectural defences the May 2026 security sweep established, plus the choke-points future contributors need to respect when extending the relevant subsystems. Each defence works **at a boundary**, not at every callsite — per-callsite escaping is unnecessary by design.
+
+### HTTP egress — must go through SafeClient
+
+All outbound HTTP **must** be made through `Xibo\Helper\Guzzle\SafeClient::getSafeClient()`. Never call `new GuzzleHttp\Client(...)` directly — it bypasses `SsrfProtectionMiddleware` (scheme allow-list, IP blocklist, DNS-rebind pinning via `CURLOPT_RESOLVE`, redirect cap).
+
+`SafeClient` is safe for every call site: literal URLs, admin-settable URLs, DB-sourced URLs, connector responses. The safety checks are no-ops on safe URLs. The Semgrep rule `xibo-raw-guzzle-client` in `.semgrep/rules.yml` enforces this — a PR adding raw `new Client()` will fail the lint.
+
+**Internal services on the local network (XMR, on-premise data sources, etc.)** need `SafeClient::getSafeClientForInternal()` instead of `getSafeClient()`. The default `getSafeClient()` rejects RFC-1918 / IPv6 ULA destinations (because `allow_local_network` defaults to `false`) — calls to a Docker-network or LAN address will throw. The `*ForInternal` variant force-enables `allow_local_network` for the SsrfProtectionMiddleware config while keeping the always-block list (loopback `127/8`, AWS metadata `169.254/16`, `0.0.0.0/8`, IPv6 loopback, AWS IPv6 metadata) and the other defences active. Use it for fixed-purpose internal connections only — never for user/admin-settable URLs. Custom connectors under `custom/` that talk to on-premise data sources should override `ConnectorTrait::getClient()` to use `getSafeClientForInternal()`, or call it directly at the egress site.
+
+The `allow_local_network` config flag (default `false`, set only via `web/settings.php` / `web/settings-custom.php` — not via any admin UI) opens *all* `SafeClient::getSafeClient()` calls to RFC-1918 destinations globally. Production deployments should leave it at the default and use `getSafeClientForInternal()` per-call where needed.
+
+### DataSet SQL — boundary sanitizer at `DataSet::getData()`
+
+The DataSet pipeline assembles WHERE-clause fragments from multiple sources (clause-builder in `DataSetDataProviderListener::buildFilterClause`, raw filter on the `DataSet` entity, RSS feed clause-builder in `DataSetRss::getFeed`). **All paths converge at `DataSet::getData()`** in `lib/Entity/DataSet.php`, which calls `Sql::sanitizeFragment()` on the assembled filter and keyword fragments before they're concatenated into the final SQL.
+
+Per-callsite escaping in the assembly code is unnecessary and would hide the choke-point pattern. When extending the DataSet pipeline:
+
+- **For SQL fragments** (filter, keyword, formula strings that become part of WHERE/SELECT): use `Xibo\Widget\Definition\Sql::sanitizeFragment($input, $context)` (throws on disallowed keywords). The formula path is the only callsite that uses the bare `Sql::cleanup()` because it intentionally silently skips offending columns rather than failing the query.
+- **For SQL identifiers** (table names, column names that have to be concatenated because PDO can't bind them): use `Sql::validateIdentifier($id, $context)` — a regex check against `^[A-Za-z_][A-Za-z0-9_]*$` that throws on non-conforming input. Required for any trait or factory method that accepts table/column names as parameters.
+
+### Widget HTML — sandbox model, not output-escape
+
+Widget options of type `code`, `richText`, and the `embedded` widget's `embedHtml`/`embedScript`/`embedStyle`/`embedJavaScript` fields are **intentionally** raw — the `embedded` widget exists specifically to allow users to embed arbitrary HTML/CSS/JS. The defence is **iframe sandbox isolation**, not output escaping.
+
+Every widget-render context wraps the rendered output in `<iframe sandbox="allow-scripts">` (without `allow-same-origin`), giving the content a null opaque origin. Scripts inside cannot reach the parent CMS's cookies, localStorage, or DOM. Verified consistent across `views/notification-form-show.twig`, `views/module-html-preview.twig`, `views/dataset-data-connector-page.twig`, `views/notification-interrupt.twig`, `ui/src/core/xibo-cms.js`, `ui/src/templates/viewer-layout-preview.hbs`.
+
+When extending widget rendering:
+
+- **Do not** try to escape widget HTML options — that would break the legitimate use case.
+- **Do** ensure new render contexts apply `sandbox="allow-scripts"` (no `allow-same-origin`).
+- **Do not** add `allow-same-origin` to any existing sandbox attribute.
+- **Do not** render widget HTML directly into the parent CMS DOM — always inside a sandboxed iframe.
+
+### Library file paths — must go through LibraryFile::resolve
+
+XMDS file-read/write sinks (`web/xmds.php`, `lib/Xmds/Soap*.php`) route every `$libraryLocation . $relativePath` concatenation through `Xibo\Helper\LibraryFile::resolve()`. The helper does a string-level traversal check and a realpath-prefix verification for existing files. Defended today by upstream sanitizers; the boundary check at the sink catches future regressions.
+
+When adding new library-file callsites: always use `LibraryFile::resolve($libraryLocation, $relativePath)` rather than concatenating directly.
 
 ## Deployment
 

@@ -1,0 +1,129 @@
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+import type { TFunction } from 'i18next';
+
+import { notify } from '@/components/ui/Notification';
+import type { AppRoute } from '@/config/appRoutes';
+import { UserType, type User } from '@/types/user';
+
+export const hasFeature = (user: User | null, featureKey: string): boolean => {
+  if (!user) {
+    return false;
+  }
+
+  if (user.isSuperAdmin || user.userTypeId === UserType.SuperAdmin) {
+    return true;
+  }
+
+  if (!user.features) {
+    return false;
+  }
+
+  return user.features?.[featureKey] === true;
+};
+
+export const canSaveInFolder = (
+  user: User | null,
+  canViewFolders: boolean,
+  effectiveFolderId: number,
+  homeFolderId: number,
+): boolean => {
+  const targetFolderId = canViewFolders ? effectiveFolderId : homeFolderId;
+
+  if (targetFolderId !== 1) {
+    return true;
+  }
+
+  const isSuperAdmin = !!user?.isSuperAdmin || user?.userTypeId === UserType.SuperAdmin;
+  return isSuperAdmin || user?.settings?.FOLDERS_ALLOW_SAVE_IN_ROOT === '1';
+};
+
+export const filterByPermission = <T>(
+  items: T[],
+  checkFn: (item: T) => boolean | number | undefined | null,
+  t: TFunction,
+  actionLabel: string,
+): T[] => {
+  const permittedItems = items.filter((item) => !!checkFn(item));
+  const skippedCount = items.length - permittedItems.length;
+
+  if (permittedItems.length === 0) {
+    notify.warning(
+      t('You do not have permission to {{action}} any of the selected items.', {
+        action: actionLabel,
+      }),
+    );
+    return [];
+  }
+
+  if (skippedCount > 0) {
+    notify.info(
+      t('{{count}} items were skipped due to lack of permissions.', {
+        count: skippedCount,
+      }),
+    );
+  }
+
+  return permittedItems;
+};
+
+const isRouteAllowed = (route: AppRoute, user: User): boolean => {
+  if (route.feature && !hasFeature(user, route.feature)) {
+    return false;
+  }
+
+  if (route.validator && !route.validator(user)) {
+    return false;
+  }
+
+  return true;
+};
+
+export const filterRoutesByUser = (routes: AppRoute[], user: User): AppRoute[] => {
+  return routes.reduce((acc: AppRoute[], route) => {
+    // Check if parent is allowed
+    if (!isRouteAllowed(route, user)) {
+      return acc;
+    }
+
+    // If route has children, check them recursively
+    if (route.subLinks && route.subLinks.length > 0) {
+      const visibleSubLinks = filterRoutesByUser(route.subLinks, user);
+
+      // If parent has sublinks, but user can't see any
+      // hide the parent too
+      if (visibleSubLinks.length === 0) {
+        return acc;
+      }
+
+      // Return parent with the filtered list of sublinks
+      acc.push({ ...route, subLinks: visibleSubLinks });
+
+      return acc;
+    }
+
+    // If it's a node with no children
+    // and it passed filtering, keep it
+    acc.push(route);
+    return acc;
+  }, []);
+};

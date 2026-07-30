@@ -24,6 +24,7 @@ namespace Xibo\XTR;
 
 use Carbon\Carbon;
 use GuzzleHttp\Client;
+use Xibo\Helper\Guzzle\SafeClient;
 use GuzzleHttp\Exception\GuzzleException;
 use Xibo\Controller\Module;
 use Xibo\Event\MaintenanceDailyEvent;
@@ -188,8 +189,8 @@ class MaintenanceDailyTask implements TaskInterface
             // Make sure the library exists
             $this->mediaService->initLibrary();
 
-            // Import any layouts
-            $folder = $this->config->uri('layouts', true);
+            // Import any layouts from library/brand/layouts/
+            $folder = rtrim($this->config->getSetting('LIBRARY_LOCATION'), '/') . '/brand/layouts';
 
             foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
                 if (stripos($file, '.zip')) {
@@ -232,9 +233,9 @@ class MaintenanceDailyTask implements TaskInterface
 
             // Fonts
             // -----
-            // install fonts from the theme folder
+            // install fonts from the project fonts/ directory
             $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
-            $fontFolder =  $this->config->uri('fonts', true);
+            $fontFolder = PROJECT_ROOT . '/fonts';
             foreach (array_diff(scandir($fontFolder), array('..', '.')) as $file) {
                 // check if we already have this font file
                 if (count($this->fontFactory->getByFileName($file)) <= 0) {
@@ -325,7 +326,10 @@ class MaintenanceDailyTask implements TaskInterface
             $key = Random::generateString(20, 'xmr_');
 
             $this->getConfig()->changeSetting('XMR_CMS_KEY', $key);
-            $client = new Client($this->config->getGuzzleProxy([
+            // XMR is by-design on the local network — see the note on
+            // PlayerActionService::processQueue. Use the internal-services
+            // SafeClient variant.
+            $client = SafeClient::getSafeClientForInternal($this->config->getGuzzleProxy([
                 'base_uri' => $this->getConfig()->getSetting('XMR_ADDRESS'),
             ]));
 

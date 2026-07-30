@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -62,15 +62,20 @@ class ResolutionFactory extends BaseFactory
     /**
      * Load the Resolution by ID
      * @param int $resolutionId
+     * @param bool $isDisableUserCheck
      * @return Resolution
      * @throws NotFoundException
      */
-    public function getById($resolutionId)
+    public function getById(int $resolutionId, bool $isDisableUserCheck = true)
     {
-        $resolutions = $this->query(null, array('disableUserCheck' => 1, 'resolutionId' => $resolutionId));
+        $resolutions = $this->query(null, [
+            'disableUserCheck' => $isDisableUserCheck ? 1 : 0,
+            'resolutionId' => $resolutionId
+        ]);
 
-        if (count($resolutions) <= 0)
+        if (count($resolutions) <= 0) {
             throw new NotFoundException(null, 'Resolution');
+        }
 
         return $resolutions[0];
     }
@@ -147,12 +152,15 @@ class ResolutionFactory extends BaseFactory
     {
         $parsedFilter = $this->getSanitizer($filterBy);
 
-        if ($sortOrder === null) {
-            $sortOrder = ['resolution'];
-        }
+        // Sorting
+        $allowedColumns = ['resolutionId', 'resolution', 'width', 'height', 'enabled'];
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            defaultSort: ['resolution ASC']
+        );
 
         $entities = [];
-
         $params = [];
         $select  = '
           SELECT `resolution`.resolutionId,
@@ -192,13 +200,17 @@ class ResolutionFactory extends BaseFactory
         }
 
         if ($parsedFilter->getString('resolution') != null) {
-            $body .= ' AND resolution = :resolution ';
-            $params['resolution'] = $parsedFilter->getString('resolution');
-        }
-
-        if ($parsedFilter->getString('partialResolution') != null) {
-            $body .= ' AND resolution LIKE :partialResolution ';
-            $params['partialResolution'] = '%' . $parsedFilter->getString('partialResolution') . '%';
+            $terms = explode(',', $parsedFilter->getString('resolution'));
+            $logicalOperator = $parsedFilter->getString('logicalOperatorName', ['default' => 'OR']);
+            $this->nameFilter(
+                'resolution',
+                'resolution',
+                $terms,
+                $body,
+                $params,
+                ($parsedFilter->getCheckbox('useRegexForName') == 1),
+                $logicalOperator
+            );
         }
 
         if ($parsedFilter->getDouble('width') !== null) {
@@ -235,11 +247,7 @@ class ResolutionFactory extends BaseFactory
         }
 
         // Sorting?
-        $order = '';
-
-        if (is_array($sortOrder)) {
-            $order .= ' ORDER BY ' . implode(',', $sortOrder);
-        }
+        $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
 
         $limit = '';
         // Paging
@@ -249,7 +257,6 @@ class ResolutionFactory extends BaseFactory
 
         // The final statements
         $sql = $select . $body . $order . $limit;
-
 
         foreach($this->getStore()->select($sql, $params) as $record) {
             $entities[] = $this->createEmpty()->hydrate($record, ['intProperties' => ['width', 'height', 'version', 'enabled']]);

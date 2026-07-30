@@ -1,0 +1,54 @@
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+export interface FolderSharingEntry {
+  name: string;
+  isGroup: boolean;
+  view: number;
+  edit: number;
+  delete: number;
+}
+
+export interface FolderUsageEntry {
+  type: string;
+  count: number;
+  sizeBytes: number;
+  size: string;
+}
+
+export interface Folder {
+  id: number;
+  folderId?: number;
+  type: FolderType;
+  text: string;
+  parentId: number;
+  isRoot: number;
+  children: Folder[] | string | null;
+  ownerId: number;
+  ownerName: string;
+  createdDt: string | null;
+  modifiedDt: string | null;
+  sharing?: FolderSharingEntry[];
+  homeFolderCount?: number;
+  usage?: FolderUsageEntry[];
+}
+
+export type FolderType = 'root' | 'home' | 'disabled' | '' | null;

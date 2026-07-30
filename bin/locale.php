@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -220,4 +220,18 @@ foreach ($moduleTemplates as $moduleTemplate) {
 }
 
 file_put_contents($file, $content);
-echo 'moduletranslate.file created and data written successfully.';
+echo 'moduletranslate.file created and data written successfully.' . PHP_EOL;
+
+// Create a file for translations from React app.
+$file = PROJECT_ROOT. '/locale/reacttranslate.php';
+$content = '<?php' . PHP_EOL;
+$content .= '// React Translation ' . PHP_EOL;
+
+$jsonReact = file_get_contents(PROJECT_ROOT . '/frontend/public/locale/translations/en/translation.json');
+
+foreach (json_decode($jsonReact, true) as $key => $value) {
+    $content .= 'echo __(\''.addslashes(trim($key)).'\');' . PHP_EOL;
+}
+
+file_put_contents($file, $content);
+echo 'reacttranslate.file created and data written successfully.' . PHP_EOL;

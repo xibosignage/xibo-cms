@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,368 +22,285 @@
 
 namespace Xibo\Controller;
 
+use OpenApi\Attributes as OA;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Entity\MenuBoardProduct as MenuBoardProductEntity;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\MenuBoardCategoryFactory;
 use Xibo\Factory\MenuBoardFactory;
 use Xibo\Factory\MenuBoardProductOptionFactory;
 use Xibo\Support\Exception\AccessDeniedException;
-use Xibo\Support\Exception\GeneralException;
-use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 class MenuBoardProduct extends Base
 {
-    /**
-     * @var MenuBoardFactory
-     */
-    private $menuBoardFactory;
-
-    /**
-     * @var MenuBoardCategoryFactory
-     */
-    private $menuBoardCategoryFactory;
-
-    /**
-     * @var MenuBoardProductOptionFactory
-     */
-    private $menuBoardProductOptionFactory;
-
-    /**
-     * @var MediaFactory
-     */
-    private $mediaFactory;
-
-    /**
-     * Set common dependencies.
-     * @param MenuBoardFactory $menuBoardFactory
-     * @param MenuBoardCategoryFactory $menuBoardCategoryFactory
-     * @param MenuBoardProductOptionFactory $menuBoardProductOptionFactory
-     * @param MediaFactory $mediaFactory
-     */
     public function __construct(
-        $menuBoardFactory,
-        $menuBoardCategoryFactory,
-        $menuBoardProductOptionFactory,
-        $mediaFactory
+        private readonly MenuBoardFactory $menuBoardFactory,
+        private readonly MenuBoardCategoryFactory $menuBoardCategoryFactory,
+        private readonly MenuBoardProductOptionFactory $menuBoardProductOptionFactory,
+        private readonly MediaFactory $mediaFactory,
     ) {
-        $this->menuBoardFactory = $menuBoardFactory;
-        $this->menuBoardCategoryFactory = $menuBoardCategoryFactory;
-        $this->menuBoardProductOptionFactory = $menuBoardProductOptionFactory;
-        $this->mediaFactory = $mediaFactory;
     }
 
-    /**
-     * Displays the Menu Board Page
-     * @param Request $request
-     * @param Response $response
-     * @param int $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function displayPage(Request $request, Response $response, $id)
-    {
-        $menuBoard = $this->menuBoardFactory->getByMenuCategoryId($id);
-        $menuBoardCategory = $this->menuBoardCategoryFactory->getById($id);
-        $categories = $this->menuBoardCategoryFactory->getByMenuId($menuBoard->menuId);
-
-        // Call to render the template
-        $this->getState()->template = 'menuboard-product-page';
-        $this->getState()->setData([
-            'menuBoard' => $menuBoard,
-            'menuBoardCategory' => $menuBoardCategory,
-            'categories' => $categories
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Returns a Grid of Menu Board Products
-     *
-     * @SWG\Get(
-     *  path="/menuboard/{menuCategoryId}/products",
-     *  operationId="menuBoardProductsSearch",
-     *  tags={"menuBoard"},
-     *  summary="Search Menu Board Products",
-     *  description="Search all Menu Boards Products this user has access to",
-     *  @SWG\Parameter(
-     *      name="menuCategoryId",
-     *      in="path",
-     *      description="Filter by Menu Board Category Id",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="menuId",
-     *      in="query",
-     *      description="Filter by Menu board Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="name",
-     *      in="query",
-     *      description="Filter by name",
-     *      type="string",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="code",
-     *      in="query",
-     *      description="Filter by code",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/MenuBoard")
-     *      )
-     *  )
-     * )
-     * @param Request $request
-     * @param Response $response
-     * @param int $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     */
-    public function grid(Request $request, Response $response, $id): Response
+    #[OA\Get(
+        path: '/menuboard/{menuCategoryId}/products',
+        operationId: 'menuBoardProductsSearch',
+        description: 'Search all Menu Boards Products this user has access to',
+        summary: 'Search Menu Board Products',
+        tags: ['menuBoard']
+    )]
+    #[OA\Parameter(
+        name: 'menuCategoryId',
+        description: 'Filter by Menu Board Category Id',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'menuId',
+        description: 'Filter by Menu board Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'name',
+        description: 'Filter by name',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'code',
+        description: 'Filter by code',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'string',
+            enum: ['menuProductId', 'name', 'price', 'displayOrder', 'availability']
+        )
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ],
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/MenuBoard')
+        )
+    )]
+    public function grid(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $parsedParams = $this->getSanitizer($request->getQueryParams());
-        $menuBoard = $this->menuBoardFactory->getByMenuCategoryId($id);
-
-        $filter = [
-            'menuProductId' => $parsedParams->getInt('menuProductId'),
-            'menuCategoryId' => $id,
-            'name' => $parsedParams->getString('name'),
-            'code' => $parsedParams->getString('code')
-        ];
+        $menuBoard = $this->menuBoardFactory->getByMenuCategoryId($id, false);
 
         $menuBoardProducts = $this->menuBoardCategoryFactory->getProductData(
-            $this->gridRenderSort($parsedParams),
-            $this->gridRenderFilter($filter, $parsedParams)
+            $this->gridRenderSort($parsedParams, $this->isJson($request)),
+            $this->getMenuBoardProductFilters($parsedParams, $id)
         );
 
         foreach ($menuBoardProducts as $menuBoardProduct) {
-            if ($this->isApi($request)) {
-                continue;
-            }
-
-            $menuBoardProduct->includeProperty('buttons');
-            $menuBoardProduct->buttons = [];
-
-            if ($menuBoardProduct->mediaId != 0) {
-                $menuBoardProduct->setUnmatchedProperty(
-                    'thumbnail',
-                    $this->urlFor($request, 'library.download', ['id' => $menuBoardProduct->mediaId], ['preview' => 1]),
-                );
-            }
-
-            if ($this->getUser()->featureEnabled('menuBoard.modify') && $this->getUser()->checkEditable($menuBoard)) {
-                $menuBoardProduct->buttons[] = [
-                    'id' => 'menuBoardProduct_edit_button',
-                    'url' => $this->urlFor($request, 'menuBoard.product.edit.form', ['id' => $menuBoardProduct->menuProductId]),
-                    'text' => __('Edit')
-                ];
-            }
-
-            if ($this->getUser()->featureEnabled('menuBoard.modify') && $this->getUser()->checkDeleteable($menuBoard)) {
-                $menuBoardProduct->buttons[] = ['divider' => true];
-
-                $menuBoardProduct->buttons[] = [
-                    'id' => 'menuBoardProduct_delete_button',
-                    'url' => $this->urlFor($request, 'menuBoard.product.delete.form', ['id' => $menuBoardProduct->menuProductId]),
-                    'text' => __('Delete'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'menuBoard.product.delete', ['id' => $menuBoardProduct->menuProductId])],
-                        ['name' => 'commit-method', 'value' => 'delete'],
-                        ['name' => 'id', 'value' => 'menuBoardProduct_delete_button'],
-                        ['name' => 'text', 'value' => __('Delete')],
-                        ['name' => 'sort-group', 'value' => 1],
-                        ['name' => 'rowtitle', 'value' => $menuBoardProduct->name]
-                    ]
-                ];
-            }
+            $this->decorateProductForGrid($request, $menuBoardProduct);
         }
 
         $menuBoard->setActive();
 
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->menuBoardCategoryFactory->countLast();
-        $this->getState()->setData($menuBoardProducts);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $this->menuBoardCategoryFactory->countLast())
+            ->withJson($menuBoardProducts);
     }
 
-    public function productsForWidget(Request $request, Response $response): Response
+    private function getMenuBoardProductFilters(SanitizerInterface $params, int $categoryId): array
+    {
+        return $this->gridRenderFilter([
+            'menuProductId'  => $params->getInt('menuProductId'),
+            'menuCategoryId' => $categoryId,
+            'name'           => $params->getString('name'),
+            'useRegexForName' => $params->getCheckbox('useRegexForName'),
+            'code'           => $params->getString('code'),
+            'availability'   => $params->getInt('availability'),
+        ], $params);
+    }
+
+    private function decorateProductForGrid(Request $request, MenuBoardProductEntity $product): void
+    {
+        if ($product->mediaId != 0) {
+            $product->setUnmatchedProperty(
+                'thumbnail',
+                $this->urlFor($request, 'library.download', ['id' => $product->mediaId], ['preview' => 1])
+            );
+
+            try {
+                $media = $this->mediaFactory->getById($product->mediaId);
+                $product->setUnmatchedProperty('mediaType', $media->mediaType);
+            } catch (\Exception $e) {
+                $product->setUnmatchedProperty('mediaType', null);
+            }
+        }
+
+        $product->productOptions = $product->getOptions();
+    }
+
+    #[OA\Get(
+        path: '/menuboard/product/{menuProductId}',
+        operationId: 'menuBoardProductSearchById',
+        description: 'Get the Menu Board Product object specified by the provided menuProductId',
+        summary: 'Search Menu Board Product by ID',
+        tags: ['menuBoard']
+    )]
+    #[OA\Parameter(
+        name: 'menuProductId',
+        description: 'Numeric ID of the Menu Board Product to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/MenuBoardProduct')
+    )]
+    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
+    {
+        $menuBoardProduct = $this->menuBoardCategoryFactory->getByProductId($id);
+        $this->menuBoardFactory->getById($menuBoardProduct->menuId, false);
+        $this->decorateProductForGrid($request, $menuBoardProduct);
+
+        return $response
+            ->withStatus(200)
+            ->withJson($menuBoardProduct);
+    }
+
+    public function productsForWidget(Request $request, Response $response): Response|ResponseInterface
     {
         $parsedParams = $this->getSanitizer($request->getQueryParams());
-        $categories = $parsedParams->getString('categories');
 
-        $filter = [
-            'menuId' => $parsedParams->getInt('menuId'),
-            'menuProductId' => $parsedParams->getInt('menuProductId'),
+        if ($parsedParams->getInt('menuId') !== null) {
+            $this->menuBoardFactory->getById($parsedParams->getInt('menuId'), false);
+        }
+
+        $filter = $this->gridRenderFilter([
+            'menuId'         => $parsedParams->getInt('menuId'),
+            'menuProductId'  => $parsedParams->getInt('menuProductId'),
             'menuCategoryId' => $parsedParams->getInt('menuCategoryId'),
-            'name' => $parsedParams->getString('name'),
-            'availability' => $parsedParams->getInt('availability'),
-            'categories' => $categories
-        ];
+            'name'           => $parsedParams->getString('name'),
+            'availability'   => $parsedParams->getInt('availability'),
+            'categories'     => $parsedParams->getString('categories'),
+        ], $parsedParams);
 
         $menuBoardProducts = $this->menuBoardCategoryFactory->getProductData(
             $this->gridRenderSort($parsedParams),
-            $this->gridRenderFilter($filter, $parsedParams)
+            $filter
         );
 
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->menuBoardCategoryFactory->countLast();
-        $this->getState()->setData($menuBoardProducts);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $this->menuBoardCategoryFactory->countLast())
+            ->withJson($menuBoardProducts);
     }
 
-    /**
-     * Menu Board Category Add Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     */
-    public function addForm(Request $request, Response $response, $id): Response
-    {
-        $menuBoard = $this->menuBoardFactory->getByMenuCategoryId($id);
-
-        if (!$this->getUser()->checkEditable($menuBoard)) {
-            throw new AccessDeniedException();
-        }
-
-        $menuBoardCategory = $this->menuBoardCategoryFactory->getById($id);
-
-        $this->getState()->template = 'menuboard-product-form-add';
-        $this->getState()->setData([
-            'menuBoard' => $menuBoard,
-            'menuBoardCategory' => $menuBoardCategory
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Add a new Menu Board Product
-     *
-     * @SWG\Post(
-     *  path="/menuboard/{menuCategoryId}/product",
-     *  operationId="menuBoardProductAdd",
-     *  tags={"menuBoard"},
-     *  summary="Add Menu Board Product",
-     *  description="Add a new Menu Board Product",
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="Menu Board Product name",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="description",
-     *      in="formData",
-     *      description="Menu Board Product description",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="price",
-     *      in="formData",
-     *      description="Menu Board Product price",
-     *      type="number",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="allergyInfo",
-     *      in="formData",
-     *      description="Menu Board Product allergyInfo",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="calories",
-     *      in="formData",
-     *      description="Menu Board Product calories",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="displayOrder",
-     *      in="formData",
-     *      description="Menu Board Product Display Order, used for sorting",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="availability",
-     *      in="formData",
-     *      description="Menu Board Product availability",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="mediaId",
-     *      in="formData",
-     *      description="Media ID from CMS Library to associate with this Menu Board Product",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="code",
-     *      in="formData",
-     *      description="Menu Board Product code",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="productOptions",
-     *      in="formData",
-     *      description="An array of optional Product Option names",
-     *      type="array",
-     *      required=false,
-     *     @SWG\Items(type="string")
-     *   ),
-     *  @SWG\Parameter(
-     *      name="productValues",
-     *      in="formData",
-     *      description="An array of optional Product Option values",
-     *      type="array",
-     *      required=false,
-     *     @SWG\Items(type="string")
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/MenuBoard"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
-     * @param Request $request
-     * @param Response $response
-     * @param int $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     */
-    public function add(Request $request, Response $response, $id): Response
+    #[OA\Post(
+        path: '/menuboard/{menuCategoryId}/product',
+        operationId: 'menuBoardProductAdd',
+        description: 'Add a new Menu Board Product',
+        summary: 'Add Menu Board Product',
+        tags: ['menuBoard']
+    )]
+    #[OA\Parameter(
+        name: 'menuCategoryId',
+        description: 'The Menu Board Category ID to which we want to add this Product to',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['name', 'displayOrder'],
+                properties: [
+                    new OA\Property(property: 'name', description: 'Menu Board Product name', type: 'string'),
+                    new OA\Property(
+                        property: 'description',
+                        description: 'Menu Board Product description',
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'price', description: 'Menu Board Product price', type: 'number'),
+                    new OA\Property(
+                        property: 'allergyInfo',
+                        description: 'Menu Board Product allergyInfo',
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'calories', description: 'Menu Board Product calories', type: 'integer'),
+                    new OA\Property(
+                        property: 'displayOrder',
+                        description: 'Menu Board Product Display Order, used for sorting',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'availability',
+                        description: 'Menu Board Product availability',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'mediaId',
+                        description: 'Media ID from CMS Library to associate with this Menu Board Product', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(property: 'code', description: 'Menu Board Product code', type: 'string'),
+                    new OA\Property(
+                        property: 'productOptions',
+                        description: 'An array of optional Product Option names',
+                        type: 'array',
+                        items: new OA\Items(type: 'string')
+                    ),
+                    new OA\Property(
+                        property: 'productValues',
+                        description: 'An array of optional Product Option values',
+                        type: 'array',
+                        items: new OA\Items(type: 'string')
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ],
+        content: new OA\JsonContent(ref: '#/components/schemas/MenuBoard')
+    )]
+    public function add(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $menuBoard = $this->menuBoardFactory->getByMenuCategoryId($id);
 
@@ -394,19 +311,7 @@ class MenuBoardProduct extends Base
         $menuBoardCategory = $this->menuBoardCategoryFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        $name = $sanitizedParams->getString('name');
-        $mediaId = $sanitizedParams->getInt('mediaId');
-        $price = $sanitizedParams->getDouble('price');
-        $description = $sanitizedParams->getString('description');
-        $allergyInfo = $sanitizedParams->getString('allergyInfo');
-        $calories = $sanitizedParams->getInt('calories');
         $displayOrder = $sanitizedParams->getInt('displayOrder');
-        $availability = $sanitizedParams->getCheckbox('availability');
-        $productOptions = $sanitizedParams->getArray('productOptions', ['default' => []]);
-        $productValues = $sanitizedParams->getArray('productValues', ['default' => []]);
-        $code = $sanitizedParams->getString('code');
-
-        // If the display order is empty, get the next highest one.
         if ($displayOrder === null) {
             $displayOrder = $this->menuBoardCategoryFactory->getNextDisplayOrder($menuBoardCategory->menuCategoryId);
         }
@@ -414,17 +319,20 @@ class MenuBoardProduct extends Base
         $menuBoardProduct = $this->menuBoardCategoryFactory->createProduct(
             $menuBoard->menuId,
             $menuBoardCategory->menuCategoryId,
-            $name,
-            $price,
-            $description,
-            $allergyInfo,
-            $calories,
+            $sanitizedParams->getString('name'),
+            $sanitizedParams->getDouble('price'),
+            $sanitizedParams->getString('description'),
+            $sanitizedParams->getString('allergyInfo'),
+            $sanitizedParams->getInt('calories'),
             $displayOrder,
-            $availability,
-            $mediaId,
-            $code
+            $sanitizedParams->getCheckbox('availability'),
+            $sanitizedParams->getInt('mediaId') ?: null,
+            $sanitizedParams->getString('code')
         );
         $menuBoardProduct->save();
+
+        $productOptions = $sanitizedParams->getArray('productOptions', ['default' => []]);
+        $productValues = $sanitizedParams->getArray('productValues', ['default' => []]);
 
         if (!empty(array_filter($productOptions)) && !empty(array_filter($productValues))) {
             $productDetails = array_filter(array_combine($productOptions, $productValues));
@@ -440,156 +348,81 @@ class MenuBoardProduct extends Base
             }
         }
         $menuBoardProduct->productOptions = $menuBoardProduct->getOptions();
-        $menuBoard->save();
+        $menuBoard->touch();
 
-        // Return
-        $this->getState()->hydrate([
-            'message' => __('Added Menu Board Product'),
-            'httpStatus' => 201,
-            'id' => $menuBoardProduct->menuProductId,
-            'data' => $menuBoardProduct
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(201)
+            ->withJson($menuBoardProduct);
     }
 
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @param int $id
-     * @return Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     */
-    public function editForm(Request $request, Response $response, $id): Response
-    {
-        $menuBoardProduct = $this->menuBoardCategoryFactory->getByProductId($id);
-        $menuBoard = $this->menuBoardFactory->getById($menuBoardProduct->menuId);
-
-        if (!$this->getUser()->checkEditable($menuBoard)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'menuboard-product-form-edit';
-        $this->getState()->setData([
-            'menuBoardProduct' => $menuBoardProduct,
-            'media' => $menuBoardProduct->mediaId != null ? $this->mediaFactory->getById($menuBoardProduct->mediaId) : null
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * @SWG\Put(
-     *  path="/menuboard/{menuProductId}/product",
-     *  operationId="menuBoardProductEdit",
-     *  tags={"menuBoard"},
-     *  summary="Edit Menu Board Product",
-     *  description="Edit existing Menu Board Product",
-     *  @SWG\Parameter(
-     *      name="menuProductId",
-     *      in="path",
-     *      description="The Menu Board Product ID to Edit",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="Menu Board Product name",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="description",
-     *      in="formData",
-     *      description="Menu Board Product description",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="price",
-     *      in="formData",
-     *      description="Menu Board Product price",
-     *      type="number",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="allergyInfo",
-     *      in="formData",
-     *      description="Menu Board Product allergyInfo",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="calories",
-     *      in="formData",
-     *      description="Menu Board Product calories",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="displayOrder",
-     *      in="formData",
-     *      description="Menu Board Product Display Order, used for sorting",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="availability",
-     *      in="formData",
-     *      description="Menu Board Product availability",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="mediaId",
-     *      in="formData",
-     *      description="Media ID from CMS Library to associate with this Menu Board Product",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="code",
-     *      in="formData",
-     *      description="Menu Board Product code",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="productOptions",
-     *      in="formData",
-     *      description="An array of optional Product Option names",
-     *      type="array",
-     *      required=false,
-     *     @SWG\Items(type="string")
-     *   ),
-     *  @SWG\Parameter(
-     *      name="productValues",
-     *      in="formData",
-     *      description="An array of optional Product Option values",
-     *      type="array",
-     *      required=false,
-     *     @SWG\Items(type="string")
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
-     *
-     * @param Request $request
-     * @param Response $response
-     * @param int $id
-     * @return Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     */
-    public function edit(Request $request, Response $response, $id): Response
+    #[OA\Put(
+        path: '/menuboard/{menuProductId}/product',
+        operationId: 'menuBoardProductEdit',
+        description: 'Edit existing Menu Board Product',
+        summary: 'Edit Menu Board Product',
+        tags: ['menuBoard']
+    )]
+    #[OA\Parameter(
+        name: 'menuProductId',
+        description: 'The Menu Board Product ID to Edit',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['name', 'displayOrder'],
+                properties: [
+                    new OA\Property(property: 'name', description: 'Menu Board Product name', type: 'string'),
+                    new OA\Property(
+                        property: 'description',
+                        description: 'Menu Board Product description',
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'price', description: 'Menu Board Product price', type: 'number'),
+                    new OA\Property(
+                        property: 'allergyInfo',
+                        description: 'Menu Board Product allergyInfo',
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'calories', description: 'Menu Board Product calories', type: 'integer'),
+                    new OA\Property(
+                        property: 'displayOrder',
+                        description: 'Menu Board Product Display Order, used for sorting',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'availability',
+                        description: 'Menu Board Product availability',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'mediaId',
+                        description: 'Media ID from CMS Library to associate with this Menu Board Product', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(property: 'code', description: 'Menu Board Product code', type: 'string'),
+                    new OA\Property(
+                        property: 'productOptions',
+                        description: 'An array of optional Product Option names',
+                        type: 'array',
+                        items: new OA\Items(type: 'string')
+                    ),
+                    new OA\Property(
+                        property: 'productValues',
+                        description: 'An array of optional Product Option values',
+                        type: 'array',
+                        items: new OA\Items(type: 'string')
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(response: 200, description: 'successful operation')]
+    public function edit(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $menuBoardProduct = $this->menuBoardCategoryFactory->getByProductId($id);
         $menuBoard = $this->menuBoardFactory->getById($menuBoardProduct->menuId);
@@ -607,7 +440,7 @@ class MenuBoardProduct extends Base
         $menuBoardProduct->calories = $sanitizedParams->getInt('calories');
         $menuBoardProduct->displayOrder = $sanitizedParams->getInt('displayOrder');
         $menuBoardProduct->availability = $sanitizedParams->getCheckbox('availability');
-        $menuBoardProduct->mediaId = $sanitizedParams->getInt('mediaId');
+        $menuBoardProduct->mediaId = $sanitizedParams->getInt('mediaId') ?: null;
         $menuBoardProduct->code = $sanitizedParams->getString('code');
         $productOptions = $sanitizedParams->getArray('productOptions', ['default' => []]);
         $productValues = $sanitizedParams->getArray('productValues', ['default' => []]);
@@ -632,79 +465,29 @@ class MenuBoardProduct extends Base
         }
         $menuBoardProduct->productOptions = $menuBoardProduct->getOptions();
         $menuBoardProduct->save();
-        $menuBoard->save();
+        $menuBoard->touch();
 
-        // Success
-        $this->getState()->hydrate([
-            'httpStatus' => 200,
-            'message' => sprintf(__('Edited %s'), $menuBoardProduct->name),
-            'id' => $menuBoardProduct->menuProductId,
-            'data' => $menuBoardProduct
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson($menuBoardProduct);
     }
 
-
-    /**
-     *
-     * @param Request $request
-     * @param Response $response
-     * @param int $id
-     * @return Response
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function deleteForm(Request $request, Response $response, $id): Response
-    {
-        $menuBoardProduct = $this->menuBoardCategoryFactory->getByProductId($id);
-        $menuBoardCategory = $this->menuBoardCategoryFactory->getById($menuBoardProduct->menuCategoryId);
-        $menuBoard = $this->menuBoardFactory->getById($menuBoardProduct->menuId);
-
-        if (!$this->getUser()->checkEditable($menuBoard)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'menuboard-product-form-delete';
-        $this->getState()->setData([
-            'menuBoard' => $menuBoard,
-            'menuBoardCategory' => $menuBoardCategory,
-            'menuBoardProduct' => $menuBoardProduct
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * @SWG\Delete(
-     *  path="/menuboard/{menuProductId}/product",
-     *  operationId="menuBoardProductDelete",
-     *  tags={"menuBoard"},
-     *  summary="Delete Menu Board",
-     *  description="Delete existing Menu Board Product",
-     *  @SWG\Parameter(
-     *      name="menuProductId",
-     *      in="path",
-     *      description="The Menu Board Product ID to Delete",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
-     *
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     */
-    public function delete(Request $request, Response $response, $id): Response
+    #[OA\Delete(
+        path: '/menuboard/{menuProductId}/product',
+        operationId: 'menuBoardProductDelete',
+        description: 'Delete existing Menu Board Product',
+        summary: 'Delete Menu Board Product',
+        tags: ['menuBoard']
+    )]
+    #[OA\Parameter(
+        name: 'menuProductId',
+        description: 'The Menu Board Product ID to Delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
+    public function delete(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $menuBoardProduct = $this->menuBoardCategoryFactory->getByProductId($id);
         $menuBoard = $this->menuBoardFactory->getById($menuBoardProduct->menuId);
@@ -713,15 +496,9 @@ class MenuBoardProduct extends Base
             throw new AccessDeniedException();
         }
 
-        // Issue the delete
         $menuBoardProduct->delete();
+        $menuBoard->touch();
 
-        // Success
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('Deleted %s'), $menuBoardProduct->name)
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(204);
     }
 }

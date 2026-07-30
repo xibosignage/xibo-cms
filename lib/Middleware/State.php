@@ -50,26 +50,28 @@ use Xibo\Twig\TwigMessages;
  */
 class State implements Middleware
 {
-    /* @var App $app */
-    private $app;
-
-    public function __construct($app)
+    public function __construct(private readonly App $app)
     {
-        $this->app = $app;
     }
 
     /**
      * @param Request $request
      * @param RequestHandler $handler
      * @return Response
-     * @throws InstanceSuspendedException
-     * @throws UpgradePendingException
+     * @throws \DateInvalidTimeZoneException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Psr\Container\NotFoundExceptionInterface
+     * @throws \Xibo\Support\Exception\InstanceSuspendedException
      * @throws \Xibo\Support\Exception\NotFoundException
+     * @throws \Xibo\Support\Exception\UpgradePendingException
      */
     public function process(Request $request, RequestHandler $handler): Response
     {
         $app = $this->app;
         $container = $app->getContainer();
+
+        // Set the entry point
+        $request = $request->withAttribute('_entryPoint', $container->get('name'));
 
         // Set state
         $request = State::setState($app, $request);
@@ -100,9 +102,8 @@ class State implements Middleware
 
             // Allow non-https access to the clock page, otherwise force https
             if ($resource !== '/clock' && $container->get('configService')->getSetting('FORCE_HTTPS', 0) == 1) {
-                $redirect = "https://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
-                $response = $response->withHeader('Location', $redirect)
-                                     ->withStatus(302);
+                $redirect = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+                $response = $response->withHeader('Location', $redirect)->withStatus(302);
             }
         }
 
@@ -114,7 +115,10 @@ class State implements Middleware
 
         // Handle correctly outputting cache headers for AJAX requests
         // IE cache busting
-        if ($this->isAjax($request) && $request->getMethod() == 'GET' && $request->getAttribute('_entryPoint') == 'web') {
+        if ($request->isXhr()
+            && $request->getMethod() == 'GET'
+            && $request->getAttribute('_entryPoint') == 'web'
+        ) {
             $response = $response->withHeader('Cache-control', 'no-cache')
                      ->withHeader('Cache-control', 'no-store')
                      ->withHeader('Pragma', 'no-cache')
@@ -128,6 +132,9 @@ class State implements Middleware
      * @param App $app
      * @param \Psr\Http\Message\ServerRequestInterface $request
      * @return \Psr\Http\Message\ServerRequestInterface
+     * @throws \DateInvalidTimeZoneException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Psr\Container\NotFoundExceptionInterface
      * @throws \Xibo\Support\Exception\NotFoundException
      */
     public static function setState(App $app, Request $request): Request
@@ -164,23 +171,33 @@ class State implements Middleware
             return $reportService;
         });
 
-        // Set some public routes
-        $request = $request->withAttribute('publicRoutes', array_merge($request->getAttribute('publicRoutes', []), [
-            '/login',
-            '/login/forgotten',
-            '/clock',
-            '/about',
-            '/login/ping',
-            '/rss/{psk}',
-            '/sssp_config.xml',
-            '/sssp_dl.wgt',
-            '/playersoftware/{nonce}/sssp_dl.wgt',
-            '/playersoftware/{nonce}/sssp_config.xml',
-            '/tfa',
-            '/error',
-            '/notFound',
-            '/public/thumbnail/{id}',
-        ]));
+        // Set some public routes.
+        // The React SPA shell routes (Spa::getRoutePatterns()) are also public: they render the
+        // shell regardless of auth state and let React's own requireAuthLoader redirect to
+        // login client-side, preserving today's behaviour and any deep-link return path.
+        // Enforcing auth here instead would need WebAuthentication::redirectToLogin() to thread
+        // a return path through, which it doesn't do today.
+        $request = $request->withAttribute('publicRoutes', array_merge(
+            $request->getAttribute('publicRoutes', []),
+            [
+                '/login',
+                '/login/forgotten',
+                '/clock',
+                '/about',
+                '/about/config',
+                '/login/ping',
+                '/rss/{psk}',
+                '/sssp_config.xml',
+                '/sssp_dl.wgt',
+                '/playersoftware/{nonce}/sssp_dl.wgt',
+                '/playersoftware/{nonce}/sssp_config.xml',
+                '/tfa',
+                '/error',
+                '/notFound',
+                '/public/thumbnail/{id}',
+            ],
+            \Xibo\Controller\Spa::getRoutePatterns()
+        ));
 
         // Setup the translations for gettext
         Translate::InitLocale($container->get('configService'));
@@ -194,7 +211,10 @@ class State implements Middleware
         date_default_timezone_set($defaultTimezone);
 
         $container->set('session', function (ContainerInterface $container) use ($app) {
-            if ($container->get('name') == 'web' || $container->get('name') == 'auth') {
+            if ($container->get('name') == 'web'
+                || $container->get('name') == 'auth'
+                || $container->get('name') == 'json'
+            ) {
                 return new Session($container->get('logService'));
             } else {
                 return new NullSession();
@@ -210,7 +230,11 @@ class State implements Middleware
 
         // Inject some additional changes on a per-container basis
         $containerName = $container->get('name');
-        if ($containerName == 'web' || $containerName == 'xtr' || $containerName == 'xmds') {
+        if ($containerName == 'web'
+            || $containerName == 'json'
+            || $containerName == 'xtr'
+            || $containerName == 'xmds'
+        ) {
             /** @var Twig $view */
             $view = $container->get('view');
 
@@ -244,8 +268,10 @@ class State implements Middleware
             $container->get('logService')->setLevel(Logger::DEBUG);
         } else {
             // Log level
-            $level = \Xibo\Service\LogService::resolveLogLevel($container->get('configService')->getSetting('audit'));
-            $restingLevel = \Xibo\Service\LogService::resolveLogLevel($container->get('configService')->getSetting('RESTING_LOG_LEVEL'));
+            $level = \Xibo\Service\LogService::resolveLogLevel($container->get('configService')
+                ->getSetting('audit'));
+            $restingLevel = \Xibo\Service\LogService::resolveLogLevel($container->get('configService')
+                ->getSetting('RESTING_LOG_LEVEL'));
 
             // the higher the number the less strict the logging.
             if ($level < $restingLevel) {
@@ -253,7 +279,10 @@ class State implements Middleware
                 $elevateUntil = $container->get('configService')->getSetting('ELEVATE_LOG_UNTIL');
                 if (intval($elevateUntil) < Carbon::now()->format('U')) {
                     // Elevation has expired, revert log level
-                    $container->get('configService')->changeSetting('audit', $container->get('configService')->getSetting('RESTING_LOG_LEVEL'));
+                    $container->get('configService')->changeSetting(
+                        'audit',
+                        $container->get('configService')->getSetting('RESTING_LOG_LEVEL'),
+                    );
                     $level = $restingLevel;
                 }
             }
@@ -267,8 +296,13 @@ class State implements Middleware
 
         // Configure any extra log handlers
         // we do these last so that they can provide their own log levels independent of the system settings
-        if ($container->get('configService')->logHandlers != null && is_array($container->get('configService')->logHandlers)) {
-            $container->get('logService')->debug('Configuring %d additional log handlers from Config', count($container->get('configService')->logHandlers));
+        if ($container->get('configService')->logHandlers != null
+            && is_array($container->get('configService')->logHandlers)
+        ) {
+            $container->get('logService')->debug(sprintf(
+                'Configuring %d additional log handlers from Config',
+                count($container->get('configService')->logHandlers)
+            ));
             foreach ($container->get('configService')->logHandlers as $handler) {
                 // Direct access to the LoggerInterface here, rather than via our log service
                 $container->get('logger')->pushHandler($handler);
@@ -276,8 +310,13 @@ class State implements Middleware
         }
 
         // Configure any extra log processors
-        if ($container->get('configService')->logProcessors != null && is_array($container->get('configService')->logProcessors)) {
-            $container->get('logService')->debug('Configuring %d additional log processors from Config', count($container->get('configService')->logProcessors));
+        if ($container->get('configService')->logProcessors != null
+            && is_array($container->get('configService')->logProcessors)
+        ) {
+            $container->get('logService')->debug(sprintf(
+                'Configuring %d additional log processors from Config',
+                count($container->get('configService')->logProcessors)
+            ));
             foreach ($container->get('configService')->logProcessors as $processor) {
                 $container->get('logger')->pushProcessor($processor);
             }
@@ -296,11 +335,15 @@ class State implements Middleware
     /**
      * Set additional middleware
      * @param App $app
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Psr\Container\NotFoundExceptionInterface
      */
-    public static function setMiddleWare($app)
+    public static function setMiddleWare($app): void
     {
         // Handle additional Middleware
-        if (isset($app->getContainer()->get('configService')->middleware) && is_array($app->getContainer()->get('configService')->middleware)) {
+        if (isset($app->getContainer()->get('configService')->middleware)
+            && is_array($app->getContainer()->get('configService')->middleware)
+        ) {
             foreach ($app->getContainer()->get('configService')->middleware as $object) {
                 // Decorate our middleware with the App if it has a method to do so
                 if (method_exists($object, 'setApp')) {
@@ -315,14 +358,5 @@ class State implements Middleware
                 $app->add($object);
             }
         }
-    }
-
-    /**
-     * @param \Psr\Http\Message\ServerRequestInterface $request
-     * @return bool
-     */
-    private function isAjax(Request $request)
-    {
-        return strtolower($request->getHeaderLine('X-Requested-With')) === 'xmlhttprequest';
     }
 }

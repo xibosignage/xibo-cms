@@ -183,7 +183,7 @@ class PermissionFactory extends BaseFactory
 
         // SQL gets all Groups/User Specific Groups for non-retired users
         // then it joins them to the permission table for the object specified
-        $select = 'SELECT `permissionId`, joinedGroup.`groupId`, `view`, `edit`, `delete`, joinedGroup.isuserspecific, joinedGroup.group ';
+        $select = 'SELECT `permissionId`, joinedGroup.`groupId`, `view`, `edit`, `delete`, joinedGroup.isUserSpecific, joinedGroup.group ';
         $body = '  FROM (
                 SELECT `group`.*
                   FROM `group`
@@ -266,12 +266,27 @@ class PermissionFactory extends BaseFactory
             $params['name'] = '%' . $sanitizedFilter->getString('name') . '%';
         }
 
-        $order = '';
-        if ($sortOrder == null) {
-            $order = 'ORDER BY joinedGroup.isEveryone DESC, joinedGroup.isUserSpecific, joinedGroup.`group`';
-        } else if (is_array($sortOrder)) {
-            $order = 'ORDER BY ' . implode(',', $sortOrder);
+        if ($sanitizedFilter->getInt('isUserSpecific') !== null) {
+            $body .= ' AND joinedGroup.isUserSpecific = :isUserSpecific ';
+            $params['isUserSpecific'] = $sanitizedFilter->getInt('isUserSpecific');
         }
+
+        // Sorting
+        $customColumns = [
+            'name' => '`group`',
+            'type' => '`isUserSpecific`',
+        ];
+
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            [],
+            $customColumns,
+            ['resolution ASC']
+        );
+
+        $order = !empty($sortOrder)
+            ? 'ORDER BY ' . implode(',', $sortOrder)
+            : 'ORDER BY joinedGroup.isEveryone DESC, joinedGroup.isUserSpecific, joinedGroup.`group`';
 
         $limit = '';
         // Paging

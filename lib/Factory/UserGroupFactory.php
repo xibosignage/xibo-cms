@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -45,7 +45,7 @@ class UserGroupFactory extends BaseFactory
      * @param User $user
      * @param UserFactory $userFactory
      */
-    public function __construct($user, $userFactory)
+    public function __construct(User $user, UserFactory $userFactory)
     {
         $this->setAclDependencies($user, $userFactory);
     }
@@ -54,9 +54,15 @@ class UserGroupFactory extends BaseFactory
      * Create Empty User Group Object
      * @return UserGroup
      */
-    public function createEmpty()
+    public function createEmpty(): UserGroup
     {
-        return new UserGroup($this->getStore(), $this->getLog(), $this->getDispatcher(), $this, $this->getUserFactory());
+        return new UserGroup(
+            $this->getStore(),
+            $this->getLog(),
+            $this->getDispatcher(),
+            $this,
+            $this->getUserFactory()
+        );
     }
 
     /**
@@ -65,7 +71,7 @@ class UserGroupFactory extends BaseFactory
      * @param $libraryQuota
      * @return UserGroup
      */
-    public function create($userGroup, $libraryQuota)
+    public function create($userGroup, $libraryQuota): UserGroup
     {
         $group = $this->createEmpty();
         $group->group = $userGroup;
@@ -77,15 +83,21 @@ class UserGroupFactory extends BaseFactory
     /**
      * Get by Group Id
      * @param int $groupId
+     * @param bool $isDisableUserCheck
      * @return UserGroup
      * @throws NotFoundException
      */
-    public function getById($groupId)
+    public function getById(int $groupId, bool $isDisableUserCheck = true): UserGroup
     {
-        $groups = $this->query(null, ['disableUserCheck' => 1, 'groupId' => $groupId, 'isUserSpecific' => -1]);
+        $groups = $this->query(null, [
+            'disableUserCheck' => $isDisableUserCheck ? 1 : 0,
+            'groupId' => $groupId,
+            'isUserSpecific' => -1
+        ]);
 
-        if (count($groups) <= 0)
+        if (count($groups) <= 0) {
             throw new NotFoundException(__('Group not found'));
+        }
 
         return $groups[0];
     }
@@ -97,12 +109,17 @@ class UserGroupFactory extends BaseFactory
      * @return UserGroup
      * @throws NotFoundException
      */
-    public function getByName($group, $isUserSpecific = 0)
+    public function getByName(string $group, int $isUserSpecific = 0): UserGroup
     {
-        $groups = $this->query(null, ['disableUserCheck' => 1, 'exactGroup' => $group, 'isUserSpecific' => $isUserSpecific]);
+        $groups = $this->query(null, [
+            'disableUserCheck' => 1,
+            'exactGroup' => $group,
+            'isUserSpecific' => $isUserSpecific
+        ]);
 
-        if (count($groups) <= 0)
+        if (count($groups) <= 0) {
             throw new NotFoundException(__('Group not found'));
+        }
 
         return $groups[0];
     }
@@ -112,12 +129,13 @@ class UserGroupFactory extends BaseFactory
      * @return UserGroup
      * @throws NotFoundException
      */
-    public function getEveryone()
+    public function getEveryone(): UserGroup
     {
         $groups = $this->query(null, ['disableUserCheck' => 1, 'isEveryone' => 1]);
 
-        if (count($groups) <= 0)
+        if (count($groups) <= 0) {
             throw new NotFoundException(__('Group not found'));
+        }
 
         return $groups[0];
     }
@@ -126,9 +144,14 @@ class UserGroupFactory extends BaseFactory
      * Get isSystemNotification Group
      * @return UserGroup[]
      */
-    public function getSystemNotificationGroups()
+    public function getSystemNotificationGroups(): array
     {
-        return $this->query(null, ['disableUserCheck' => 1, 'isSystemNotification' => 1, 'isUserSpecific' => -1, 'checkRetired' => 1]);
+        return $this->query(null, [
+            'disableUserCheck' => 1,
+            'isSystemNotification' => 1,
+            'isUserSpecific' => -1,
+            'checkRetired' => 1
+        ]);
     }
 
     /**
@@ -136,7 +159,7 @@ class UserGroupFactory extends BaseFactory
      * @param int|null $displayGroupId Optionally provide a displayGroupId to restrict to view permissions.
      * @return UserGroup[]
      */
-    public function getDisplayNotificationGroups($displayGroupId = null)
+    public function getDisplayNotificationGroups(?int $displayGroupId = null): array
     {
         return $this->query(null, [
             'disableUserCheck' => 1,
@@ -152,9 +175,13 @@ class UserGroupFactory extends BaseFactory
      * @param int $userId
      * @return \Xibo\Entity\UserGroup[]
      */
-    public function getByUserId($userId)
+    public function getByUserId(int $userId): array
     {
-        return $this->query(null, ['disableUserCheck' => 1, 'userId' => $userId, 'isUserSpecific' => 0]);
+        return $this->query(null, [
+            'disableUserCheck' => 1,
+            'userId' => $userId,
+            'isUserSpecific' => 0
+        ]);
     }
 
     /**
@@ -162,7 +189,7 @@ class UserGroupFactory extends BaseFactory
      * @param int $notificationId
      * @return array[UserGroup]
      */
-    public function getByNotificationId($notificationId)
+    public function getByNotificationId(int $notificationId): array
     {
         return $this->query(
             null,
@@ -175,7 +202,7 @@ class UserGroupFactory extends BaseFactory
      * @param int $displayGroupId
      * @return UserGroup[]
      */
-    public function getByDisplayGroupId($displayGroupId)
+    public function getByDisplayGroupId(int $displayGroupId): array
     {
         return $this->query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
     }
@@ -200,19 +227,15 @@ class UserGroupFactory extends BaseFactory
     }
 
     /**
-     * @param array $sortOrder
+     * @param ?array $sortOrder
      * @param array $filterBy
      * @return UserGroup[]
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query(?array $sortOrder = [], array $filterBy = []): array
     {
         $parsedFilter = $this->getSanitizer($filterBy);
         $entries = [];
         $params = [];
-
-        if ($sortOrder === null) {
-            $sortOrder = ['`group`'];
-        }
 
         $select = '
         SELECT 	`group`.group,
@@ -354,49 +377,34 @@ class UserGroupFactory extends BaseFactory
             $params['displayGroupId'] = $parsedFilter->getInt('displayGroupId');
         }
 
-        if (in_array('`member`', $sortOrder) || in_array('`member` DESC', $sortOrder)) {
-            $members = [];
-
-            // DisplayGroup members with provided Display Group ID
-            if ($parsedFilter->getInt('userIdMember') !== null) {
-                foreach ($this->getStore()->select($select . $body, $params) as $row) {
-                    $userGroupId = $this->getSanitizer($row)->getInt('groupId');
-
-                    if ($this->getStore()->exists(
-                        'SELECT groupId FROM `lkusergroup` WHERE userId = :userId AND groupId = :groupId ',
-                        [
-                            'groupId' => $userGroupId,
-                            'userId' => $parsedFilter->getInt('userIdMember')
-                        ]
-                    )) {
-                        $members[] = $userGroupId;
-                    }
-                }
-            }
+        if ($parsedFilter->getInt('userIdMember') !== null) {
+            $body .= ' AND `group`.groupId IN (SELECT groupId FROM `lkusergroup` WHERE userId = :userIdMember) ';
+            $params['userIdMember'] = $parsedFilter->getInt('userIdMember');
         }
 
-        // Sorting?
-        $order = '';
+        // Sorting
+        $allowedColumns = [
+            'groupId',
+            'group',
+            'description',
+            'libraryQuota',
+            'isSystemNotification',
+            'isDisplayNotification',
+            'isDataSetNotification',
+            'isLayoutNotification',
+            'isLibraryNotification',
+            'isReportNotification',
+            'isScheduleNotification',
+            'isCustomNotification',
+            'isShownForAddUser',
+        ];
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            defaultSort: ['groupId ASC']
+        );
 
-        if (isset($members) && $members != []) {
-            $sqlOrderMembers = 'ORDER BY FIELD(group.groupId,' . implode(',', $members) . ')';
-
-            foreach ($sortOrder as $sort) {
-                if ($sort == '`member`') {
-                    $order .= $sqlOrderMembers;
-                    continue;
-                }
-
-                if ($sort == '`member` DESC') {
-                    $order .= $sqlOrderMembers . ' DESC';
-                    continue;
-                }
-            }
-        }
-
-        if (is_array($sortOrder) && (!in_array('`member`', $sortOrder) && !in_array('`member` DESC', $sortOrder))) {
-            $order .= ' ORDER BY ' . implode(',', $sortOrder);
-        }
+        $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
 
         $limit = '';
         // Paging
@@ -447,7 +455,7 @@ class UserGroupFactory extends BaseFactory
      * @param bool $includeIsUser
      * @return array
      */
-    public function getGroupFeaturesForUser($user, $includeIsUser = true)
+    public function getGroupFeaturesForUser(\Xibo\Entity\User $user, bool $includeIsUser = true): array
     {
         $features = [];
 
@@ -476,7 +484,7 @@ class UserGroupFactory extends BaseFactory
      * @param string $group
      * @return array
      */
-    public function getFeaturesByGroup(string $group)
+    public function getFeaturesByGroup(string $group): array
     {
         $groupFeatures = [];
         foreach ($this->getFeatures() as $feature) {
@@ -491,7 +499,7 @@ class UserGroupFactory extends BaseFactory
      * Populate the core system features and homepages
      * @return array
      */
-    public function getFeatures()
+    public function getFeatures(): array
     {
         if ($this->features === null) {
             $this->features = [
@@ -830,6 +838,16 @@ class UserGroupFactory extends BaseFactory
                     'group' => 'displays',
                     'title' => __('Page to view/add/edit/delete Commands')
                 ],
+                'command.add' => [
+                    'feature' => 'command.add',
+                    'group' => 'displays',
+                    'title' => __('Allow creation of Commands')
+                ],
+                'command.modify' => [
+                    'feature' => 'command.modify',
+                    'group' => 'displays',
+                    'title' => __('Allow edits of Commands')
+                ],
                 'display.syncView' => [
                     'feature' => 'display.syncView',
                     'group' => 'displays',
@@ -844,11 +862,6 @@ class UserGroupFactory extends BaseFactory
                     'feature' => 'display.syncModify',
                     'group' => 'displays',
                     'title' => __('Allow edits of Synchronised Groups')
-                ],
-                'fault.view' => [
-                    'feature' => 'fault.view',
-                    'group' => 'troubleshooting',
-                    'title' => __('Access to a Report Fault wizard for collecting reports to forward to the support team for analysis, which may contain sensitive data.')
                 ],
                 'log.view' => [
                     'feature' => 'log.view',
@@ -993,7 +1006,7 @@ class UserGroupFactory extends BaseFactory
     /**
      * @return \Xibo\Entity\Homepage[]
      */
-    public function getHomepages()
+    public function getHomepages(): array
     {
         if ($this->homepages === null) {
             $this->homepages = [
@@ -1032,7 +1045,7 @@ class UserGroupFactory extends BaseFactory
      * @param string $title
      * @return $this
      */
-    public function registerCustomFeature(string $feature, string $title)
+    public function registerCustomFeature(string $feature, string $title): static
     {
         $this->getFeatures();
 
@@ -1053,8 +1066,12 @@ class UserGroupFactory extends BaseFactory
      * @param string $feature
      * @return $this
      */
-    public function registerCustomHomepage(string $homepage, string $title, string $description, string $feature)
-    {
+    public function registerCustomHomepage(
+        string $homepage,
+        string $title,
+        string $description,
+        string $feature
+    ): static {
         $this->getHomepages();
 
         if (!array_key_exists($homepage, $this->homepages)) {

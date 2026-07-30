@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -23,6 +23,7 @@
 namespace Xibo\Entity;
 
 
+use OpenApi\Attributes as OA;
 use Xibo\Factory\ScheduleReminderFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -31,9 +32,8 @@ use Xibo\Storage\StorageServiceInterface;
 /**
 * Class ScheduleReminder
 * @package Xibo\Entity
-*
-* @SWG\Definition()
 */
+#[OA\Schema]
 class ScheduleReminder implements \JsonSerializable
 {
     use EntityTrait;
@@ -56,51 +56,51 @@ class ScheduleReminder implements \JsonSerializable
     public static $MONTH = 30 * 86400;
 
     /**
-     * @SWG\Property(description="Schedule Reminder ID")
      * @var int
      */
+    #[OA\Property(description: 'Schedule Reminder ID')]
     public $scheduleReminderId;
 
     /**
-     * @SWG\Property(description="The event ID of the schedule reminder")
      * @var int
      */
+    #[OA\Property(description: 'The event ID of the schedule reminder')]
     public $eventId;
 
     /**
-     * @SWG\Property(description="An integer number to define minutes, hours etc.")
      * @var int
      */
+    #[OA\Property(description: 'An integer number to define minutes, hours etc.')]
     public $value;
 
     /**
-     * @SWG\Property(description="The type of the reminder (i.e. Minute, Hour, Day, Week, Month)")
      * @var int
      */
+    #[OA\Property(description: 'The type of the reminder (i.e. Minute, Hour, Day, Week, Month)')]
     public $type;
 
     /**
-     * @SWG\Property(description="The options regarding sending a reminder for an event. (i.e., Before start, After start, Before end, After end)")
      * @var int
      */
+    #[OA\Property(description: 'The options regarding sending a reminder for an event. (i.e., Before start, After start, Before end, After end)')]
     public $option;
 
     /**
-     * @SWG\Property(description="Email flag for schedule reminder")
      * @var int
      */
+    #[OA\Property(description: 'Email flag for schedule reminder')]
     public $isEmail;
 
     /**
-     * @SWG\Property(description="A date that indicates the reminder date")
      * @var int
      */
+    #[OA\Property(description: 'A date that indicates the reminder date')]
     public $reminderDt;
 
     /**
-     * @SWG\Property(description="Last reminder date a reminder was sent")
      * @var int
      */
+    #[OA\Property(description: 'Last reminder date a reminder was sent')]
     public $lastReminderDt = 0;
 
     /**

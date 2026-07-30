@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -309,18 +309,6 @@ $(() => {
             logo: 'fa fa-unlock',
             class: 'show-on-lock',
             action: lD.showUnlockScreen,
-          },
-          {
-            id: 'scheduleLayout',
-            title: layoutEditorTrans.scheduleTitle,
-            logo: 'fa fa-clock-o',
-            action: lD.showScheduleScreen,
-            inactiveCheck: function() {
-              return lD.templateEditMode ||
-                (lD.layout.editable ||
-                  !lD.layout.scheduleNowPermission);
-            },
-            inactiveCheckClass: 'd-none',
           },
           {
             id: 'clearLayout',
@@ -5987,6 +5975,9 @@ lD.handleInputs = function() {
         handler.metaKey
       );
 
+      const typingInField = $(handler.target).is(
+        'input, textarea, select, [contenteditable="true"]');
+
       if ($(handler.target).is($('body'))) {
         // Delete ( Del or Backspace )
         if (
@@ -6007,15 +5998,6 @@ lD.handleInputs = function() {
           }, 500);
         }
 
-        // Undo ( Ctrl + Z )
-        if (
-          handler.code == 'KeyZ' &&
-          controlOrCommandPressed &&
-          allowInputs
-        ) {
-          lD.undoLastAction();
-        }
-
         // Duplicate selected object ( Shift + D )
         if (
           handler.code == 'KeyD' &&
@@ -6024,6 +6006,16 @@ lD.handleInputs = function() {
         ) {
           lD.duplicateSelectedObject();
         }
+      }
+
+      if (
+        handler.code == 'KeyZ' &&
+        controlOrCommandPressed &&
+        allowInputs &&
+        !typingInField
+      ) {
+        handler.preventDefault();
+        lD.undoLastAction();
       }
     });
 };

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,15 +22,21 @@
 
 namespace Xibo\Widget\Definition;
 
+use OpenApi\Attributes as OA;
+
 /**
- * @SWG\Definition()
  * A class representing one template extending another
  */
+#[OA\Schema(schema: 'Extend')]
 class Extend implements \JsonSerializable
 {
+    #[OA\Property()]
     public $template;
+    #[OA\Property()]
     public $override;
+    #[OA\Property()]
     public $with;
+    #[OA\Property()]
     public $escapeHtml;
 
     /** @inheritDoc */
