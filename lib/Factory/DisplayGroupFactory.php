@@ -291,6 +291,8 @@ class DisplayGroupFactory extends BaseFactory
         $sql .= ')';
 
         $this->getStore()->update($sql, $params);
+
+        return $this->query(null, ['disableUserCheck' => 1, 'displayGroupIds' => $displayGroupIds]);
     }
 
     /**
