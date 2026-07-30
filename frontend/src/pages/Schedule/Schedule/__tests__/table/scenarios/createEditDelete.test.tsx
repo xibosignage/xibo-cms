@@ -45,6 +45,7 @@ import { fetchUserPreference } from '@/services/userApi';
 import { testQueryClient } from '@/setupTests';
 import type { Event } from '@/types/event';
 import type { Layout } from '@/types/layout';
+import type * as PermissionsModule from '@/utils/permissions';
 
 // =============================================================================
 // SCENARIO TEST — this is deliberately different from the rest of the suite.
@@ -158,7 +159,7 @@ vi.mock('../../../components/EventCalendar', () => ({
   EventCalendar: () => <div data-testid="event-calendar" />,
 }));
 vi.mock('@/utils/permissions', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/utils/permissions')>()),
+  ...(await importOriginal<typeof PermissionsModule>()),
   hasFeature: vi.fn().mockReturnValue(true),
 }));
 

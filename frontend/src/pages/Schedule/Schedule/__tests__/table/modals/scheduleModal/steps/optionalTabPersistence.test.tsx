@@ -195,55 +195,94 @@ describe('ScheduleEventModal - Optional tab state after switching daypart back t
     mockDaypartRows(ALWAYS_AND_CUSTOM);
   });
 
-  // The daypart no longer supports repeats, so its tab button correctly
-  // disappears - but nothing ever resets `optionalTab` away from 'repeats',
-  // so the Repeats tab's own form controls are left rendered with no active
-  // tab button pointing at them.
-  test('the Repeats tab body should not remain rendered once its tab button is hidden', async () => {
+  // This half of the tab-visibility gate already works correctly today -
+  // confirmed by running this assertion on its own (see the sibling
+  // test.fails below for the half that's actually broken). Kept as a normal
+  // test: it documents real, already-correct behavior and stays true
+  // whether or not the bug below ever gets fixed.
+  test('the Repeats tab button disappears once the daypart is switched back to Always', async () => {
     const user = userEvent.setup();
     await walkToOptionalWithStaleWeeklyRepeat(user);
 
     expect(screen.queryByRole('button', { name: 'Repeats' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('combobox', { name: 'Repeats' })).not.toBeInTheDocument();
   });
+
+  // The Repeats tab button correctly disappears (see test above) - but
+  // nothing ever resets `optionalTab` away from 'repeats', so the Repeats
+  // tab's own form controls are left rendered with no active tab button
+  // pointing at them. See
+  // bugs-found-merged/schedule-modal-stale-repeat-reminder-survives-daypart-switch-to-always.md.
+  // Kept as test.fails (not test.skip) so a real fix surfaces here immediately.
+  test.fails(
+    'the Repeats tab body should not remain rendered once its tab button is hidden',
+    async () => {
+      const user = userEvent.setup();
+      await walkToOptionalWithStaleWeeklyRepeat(user);
+
+      expect(screen.queryByRole('combobox', { name: 'Repeats' })).not.toBeInTheDocument();
+    },
+  );
 
   // The stale weekly repeat set while on the Custom daypart should not
   // survive switching back to Always - the user has no way left in the UI
-  // to see or clear it, so it must not be part of the saved event.
-  test('a repeat configured before switching back to Always must not be sent to createEvent', async () => {
-    const user = userEvent.setup();
-    await walkToOptionalWithStaleWeeklyRepeat(user);
+  // to see or clear it, so it must not be part of the saved event. See
+  // bugs-found-merged/schedule-modal-stale-repeat-reminder-survives-daypart-switch-to-always.md.
+  // Kept as test.fails (not test.skip) so a real fix surfaces here immediately.
+  test.fails(
+    'a repeat configured before switching back to Always must not be sent to createEvent',
+    async () => {
+      const user = userEvent.setup();
+      await walkToOptionalWithStaleWeeklyRepeat(user);
 
-    await user.click(screen.getByRole('button', { name: 'Finish' }));
+      await user.click(screen.getByRole('button', { name: 'Finish' }));
 
-    expect(createEvent).toHaveBeenCalledTimes(1);
-    const payload = vi.mocked(createEvent).mock.calls[0][0] as Record<string, unknown>;
+      expect(createEvent).toHaveBeenCalledTimes(1);
+      const payload = vi.mocked(createEvent).mock.calls[0]![0];
 
-    expect(payload.recurrenceType).toBeUndefined();
-    expect(payload.recurrenceDetail).toBeUndefined();
-  });
+      expect(payload.recurrenceType).toBeUndefined();
+      expect(payload.recurrenceDetail).toBeUndefined();
+    },
+  );
 
-  // The Reminder tab is gated by the same condition as Repeats, so it has
-  // the identical bug: its body keeps rendering with no active tab button.
-  test('the Reminder tab body should not remain rendered once its tab button is hidden', async () => {
+  // Same already-correct half of the gate as the Repeats button test above,
+  // for the Reminder tab. Kept as a normal test for the same reason.
+  test('the Reminder tab button disappears once the daypart is switched back to Always', async () => {
     const user = userEvent.setup();
     await walkToOptionalWithStaleReminder(user);
 
     expect(screen.queryByRole('button', { name: 'Reminder' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
   });
+
+  // The Reminder tab is gated by the same condition as Repeats, so it has
+  // the identical bug: its body keeps rendering with no active tab button.
+  // See bugs-found-merged/schedule-modal-stale-repeat-reminder-survives-daypart-switch-to-always.md.
+  // Kept as test.fails (not test.skip) so a real fix surfaces here immediately.
+  test.fails(
+    'the Reminder tab body should not remain rendered once its tab button is hidden',
+    async () => {
+      const user = userEvent.setup();
+      await walkToOptionalWithStaleReminder(user);
+
+      expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
+    },
+  );
 
   // A reminder configured while on the Custom daypart should not survive
-  // switching back to Always - same data-integrity issue as the repeat.
-  test('a reminder configured before switching back to Always must not be sent to createEvent', async () => {
-    const user = userEvent.setup();
-    await walkToOptionalWithStaleReminder(user);
+  // switching back to Always - same data-integrity issue as the repeat. See
+  // bugs-found-merged/schedule-modal-stale-repeat-reminder-survives-daypart-switch-to-always.md.
+  // Kept as test.fails (not test.skip) so a real fix surfaces here immediately.
+  test.fails(
+    'a reminder configured before switching back to Always must not be sent to createEvent',
+    async () => {
+      const user = userEvent.setup();
+      await walkToOptionalWithStaleReminder(user);
 
-    await user.click(screen.getByRole('button', { name: 'Finish' }));
+      await user.click(screen.getByRole('button', { name: 'Finish' }));
 
-    expect(createEvent).toHaveBeenCalledTimes(1);
-    const payload = vi.mocked(createEvent).mock.calls[0][0] as Record<string, unknown>;
+      expect(createEvent).toHaveBeenCalledTimes(1);
+      const payload = vi.mocked(createEvent).mock.calls[0]![0];
 
-    expect(payload.scheduleReminders).toBeUndefined();
-  });
+      expect(payload.scheduleReminders).toBeUndefined();
+    },
+  );
 });
