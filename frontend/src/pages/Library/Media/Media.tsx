@@ -276,6 +276,7 @@ export default function Media() {
     closeModal,
     setRowSelection,
     setItemsToMove,
+    setItemsToDelete,
   });
 
   const handleDelete = (id: number) => {
