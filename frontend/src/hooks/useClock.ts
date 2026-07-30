@@ -19,26 +19,32 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type { LucideIcon } from 'lucide-react';
-import { Check, X } from 'lucide-react';
-import { twMerge } from 'tailwind-merge';
+import { useEffect, useState } from 'react';
 
-const BASE_STYLE = 'inline-flex justify-center items-center size-6 rounded-lg';
+import { fetchClock } from '@/services/clockApi';
 
-export function CheckMarkCell({ active = true, title }: { active?: boolean; title?: string }) {
-  const Icon = (active ? Check : X) as LucideIcon;
+const CLOCK_POLL_INTERVAL_MS = 1000 * 60;
 
-  return (
-    <div className="flex items-center justify-center">
-      <span
-        title={title}
-        className={twMerge(
-          BASE_STYLE,
-          active ? 'text-teal-800 bg-teal-100' : 'text-gray-500 bg-gray-50',
-        )}
-      >
-        <Icon className="size-4"></Icon>
-      </span>
-    </div>
-  );
+export function useClock() {
+  const [time, setTime] = useState<string | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const update = () => {
+      fetchClock(controller.signal)
+        .then(setTime)
+        .catch(() => {});
+    };
+
+    update();
+    const interval = setInterval(update, CLOCK_POLL_INTERVAL_MS);
+
+    return () => {
+      controller.abort();
+      clearInterval(interval);
+    };
+  }, []);
+
+  return time;
 }

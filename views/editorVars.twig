@@ -20,7 +20,7 @@
 
         // Save navbar position
         var navbarPosition = 'vertical';
-        {% set horizontalNav = currentUser.getOptionValue("navigationMenuPosition", theme.getSetting("NAVIGATION_MENU_POSITION", "vertical")) == "horizontal" %}
+        {% set horizontalNav = currentUser.getOptionValue("navigationMenuPosition", "vertical") == "horizontal" %}
         {% if horizontalNav %}
             navbarPosition = 'horizontal';
         {% endif %}

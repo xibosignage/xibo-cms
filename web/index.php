@@ -121,6 +121,9 @@ $app->addErrorMiddleware(
 require PROJECT_ROOT . '/lib/routes-web.php';
 require PROJECT_ROOT . '/lib/routes.php';
 
+// React SPA shell routes - must be required last, see comment in the file.
+require PROJECT_ROOT . '/lib/routes-spa.php';
+
 // Run App
 try {
     $app->run();

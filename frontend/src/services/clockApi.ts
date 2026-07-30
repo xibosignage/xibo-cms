@@ -19,26 +19,16 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type { LucideIcon } from 'lucide-react';
-import { Check, X } from 'lucide-react';
-import { twMerge } from 'tailwind-merge';
+import http from '@/lib/api';
 
-const BASE_STYLE = 'inline-flex justify-center items-center size-6 rounded-lg';
+interface ClockResponse {
+  time: string;
+}
 
-export function CheckMarkCell({ active = true, title }: { active?: boolean; title?: string }) {
-  const Icon = (active ? Check : X) as LucideIcon;
-
-  return (
-    <div className="flex items-center justify-center">
-      <span
-        title={title}
-        className={twMerge(
-          BASE_STYLE,
-          active ? 'text-teal-800 bg-teal-100' : 'text-gray-500 bg-gray-50',
-        )}
-      >
-        <Icon className="size-4"></Icon>
-      </span>
-    </div>
-  );
+export async function fetchClock(signal?: AbortSignal): Promise<string> {
+  const response = await http.get<ClockResponse>('/clock', {
+    signal,
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+  });
+  return response.data.time;
 }

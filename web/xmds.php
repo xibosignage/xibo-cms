@@ -488,7 +488,22 @@ try {
     $container->get('logService')->info('PDO stats: %s.', json_encode($stats, JSON_PRETTY_PRINT));
 
     if ($container->get('store')->getConnection()->inTransaction()) {
-        $container->get('store')->getConnection()->commit();
+        // SoapServer::handle() traps any exception thrown inside a SOAP method, turns it into a
+        // SOAP fault (setting the HTTP status to 500) and returns normally - so a faulted request
+        // never reaches the catch below. Without this check we would commit the partial work of a
+        // faulted request (e.g. a display row inserted without its display-specific display group).
+        // Gate the commit on the response status so faults roll back as intended.
+        if (http_response_code() >= 500) {
+            try {
+                $container->get('store')->getConnection()->rollBack();
+            } catch (\Throwable $t) {
+                // The transaction may already be gone (e.g. after a deadlock the server rolls back
+                // for us), in which case there is nothing to do here.
+                $container->get('logService')->debug('XMDS rollback no-op: ' . $t->getMessage());
+            }
+        } else {
+            $container->get('store')->getConnection()->commit();
+        }
     }
 
     // Finish any XMR work that has been logged during the request

@@ -212,30 +212,6 @@ class Settings extends Base
             );
         }
 
-        if ($this->getConfig()->isSettingEditable('GLOBAL_THEME_NAME')) {
-            $this->handleChangedSettings(
-                'GLOBAL_THEME_NAME',
-                $sanitizedParams->getString('GLOBAL_THEME_NAME'),
-                $changedSettings
-            );
-            $this->getConfig()->changeSetting(
-                'GLOBAL_THEME_NAME',
-                $sanitizedParams->getString('GLOBAL_THEME_NAME')
-            );
-        }
-
-        if ($this->getConfig()->isSettingEditable('NAVIGATION_MENU_POSITION')) {
-            $this->handleChangedSettings(
-                'NAVIGATION_MENU_POSITION',
-                $sanitizedParams->getString('NAVIGATION_MENU_POSITION'),
-                $changedSettings
-            );
-            $this->getConfig()->changeSetting(
-                'NAVIGATION_MENU_POSITION',
-                $sanitizedParams->getString('NAVIGATION_MENU_POSITION')
-            );
-        }
-
         if ($this->getConfig()->isSettingEditable('LIBRARY_MEDIA_UPDATEINALL_CHECKB')) {
             $this->handleChangedSettings(
                 'LIBRARY_MEDIA_UPDATEINALL_CHECKB',
@@ -755,18 +731,6 @@ class Settings extends Base
             $this->getConfig()->changeSetting(
                 'REQUIRED_FILES_LOOKAHEAD',
                 $sanitizedParams->getInt('REQUIRED_FILES_LOOKAHEAD')
-            );
-        }
-
-        if ($this->getConfig()->isSettingEditable('SETTING_IMPORT_ENABLED')) {
-            $this->handleChangedSettings(
-                'SETTING_IMPORT_ENABLED',
-                $sanitizedParams->getCheckbox('SETTING_IMPORT_ENABLED'),
-                $changedSettings
-            );
-            $this->getConfig()->changeSetting(
-                'SETTING_IMPORT_ENABLED',
-                $sanitizedParams->getCheckbox('SETTING_IMPORT_ENABLED')
             );
         }
 
