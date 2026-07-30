@@ -24,7 +24,7 @@ import userEvent from '@testing-library/user-event';
 import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
-import { buildEvent, mockEvent } from '../../../fixtures/event';
+import { buildEvent } from '../../../fixtures/event';
 import {
   ALWAYS_ONLY,
   mockDaypartRows,
@@ -34,7 +34,6 @@ import {
 
 import { renderScheduleModal } from './helpers/renderScheduleModal';
 
-import { fetchEventById } from '@/services/eventApi';
 import { testQueryClient } from '@/setupTests';
 import { EventTypeId } from '@/types/event';
 
@@ -54,6 +53,9 @@ vi.mock('@/services/syncGroupApi');
 vi.mock('@/services/datasetApi');
 vi.mock('@/services/scheduleCriteriaApi');
 
+// SelectDropdown rendered as a native <select>, with the `error` prop wired
+// up to an accessible description - matches validationRouting.test.tsx's
+// override so we can assert on the "Please select a Command" message.
 vi.mock('@/components/ui/forms/SelectDropdown', () => ({
   default: ({
     label,
@@ -127,74 +129,64 @@ vi.mock('@/utils/permissions', () => ({
 // Tests
 // =============================================================================
 
-describe('ScheduleEventModal - validation step-routing', () => {
+describe('ScheduleEventModal - stale formErrors after switching Event Type', () => {
   beforeEach(() => {
     testQueryClient.clear();
     vi.clearAllMocks();
 
     setupScheduleModalMocks();
-    mockFetchEventById(mockEvent);
     mockDaypartRows(ALWAYS_ONLY);
   });
 
-  test('clicking Save in edit mode with a missing campaign jumps the user back to the Content step', async () => {
+  // formErrors is only ever cleared at the start of handleFinish or in
+  // handleClose - never when the user changes Event Type. Both the
+  // Command-type content dropdown and the Action-type "Command" sub-field
+  // read the exact same `formErrors.commandId` key, so a validation error
+  // earned in one context bleeds into the other.
+  test('a "Please select a Command" error from a Command-type event should not resurface on the unrelated Action-type Command field', async () => {
     const user = userEvent.setup();
 
-    vi.mocked(fetchEventById).mockResolvedValueOnce(
-      buildEvent({
-        ...mockEvent,
-        campaignId: undefined,
-        fullScreenCampaignId: undefined,
-      }),
-    );
-
-    renderScheduleModal({ mode: 'edit', event: mockEvent });
-
-    await user.click(await screen.findByText('Optional'));
-
-    expect(screen.getByRole('button', { name: 'General' })).toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: 'Save' }));
-    expect(screen.getByRole('combobox', { name: 'Event Type' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'General' })).not.toBeInTheDocument();
-  });
-
-  test('clicking Finish in add mode with a missing daypart jumps the user to the Time step', async () => {
-    const user = userEvent.setup();
-
-    mockDaypartRows([]);
-
-    renderScheduleModal({
-      mode: 'add',
-      eventTypeId: EventTypeId.Layout,
-      contentId: 42,
+    // Edit an existing Command-type event that already has a display and a
+    // valid daypart, but clear its Command selection so Save fails
+    // validation on commandId specifically (not on some other field).
+    const commandEvent = buildEvent({
+      eventTypeId: EventTypeId.Command,
+      commandId: 5,
+      dayPartId: 1,
+      isCustom: 1,
     });
+    mockFetchEventById(commandEvent);
 
-    await user.click(await screen.findByRole('button', { name: 'Pick a display group' }));
-    await user.click(screen.getByRole('button', { name: 'Finish' }));
+    renderScheduleModal({ mode: 'edit', event: commandEvent });
 
-    expect(screen.getByRole('combobox', { name: 'Dayparting' })).toBeInTheDocument();
+    const commandContentSelect = await screen.findByRole('combobox', { name: 'Command' });
+    expect(commandContentSelect).toHaveValue('5');
 
-    expect(screen.queryByRole('button', { name: 'Pick a display group' })).not.toBeInTheDocument();
-  });
-
-  test('the field-level error message is exposed as the accessible description of the content input', async () => {
-    const user = userEvent.setup();
-
-    vi.mocked(fetchEventById).mockResolvedValueOnce(
-      buildEvent({
-        ...mockEvent,
-        campaignId: undefined,
-        fullScreenCampaignId: undefined,
-      }),
-    );
-
-    renderScheduleModal({ mode: 'edit', event: mockEvent });
-
+    // Clear the selection. This also makes `hasContent` false, which would
+    // disable the Save button while we're still sitting on Step 0 (Save is
+    // disabled by `!isStepValid`, and Step 0's validity is `hasContent`).
+    // Navigate to a different step first - edit mode unlocks every step, and
+    // any step other than 0 has its own, unrelated validity check, so Save
+    // becomes clickable again while commandId is still empty.
+    await user.selectOptions(commandContentSelect, '');
     await user.click(await screen.findByText('Optional'));
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
-    const contentCombobox = screen.getByRole('combobox', { name: 'Layout' });
-    expect(contentCombobox).toHaveAccessibleDescription('Please select a Layout or Campaign');
+    expect(screen.getByRole('combobox', { name: 'Command' })).toHaveAccessibleDescription(
+      'Please select a Command',
+    );
+
+    // Now pivot to a completely different event type/context: Action, with
+    // its Action Type set to "Command". This renders its own, unrelated
+    // "Command" dropdown (ScheduleEventModal.tsx:1309-1322) that also reads
+    // formErrors.commandId.
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Event Type' }), 'Action');
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Action Type' }), 'command');
+
+    const actionCommandSelect = screen.getByRole('combobox', { name: 'Command' });
+
+    // The user hasn't attempted to save in this new Action context yet, so
+    // there should be no error shown against this freshly-revealed field.
+    expect(actionCommandSelect).not.toHaveAccessibleDescription('Please select a Command');
   });
 });

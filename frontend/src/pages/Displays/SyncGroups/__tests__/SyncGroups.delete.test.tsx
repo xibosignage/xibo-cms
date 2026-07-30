@@ -35,6 +35,7 @@ import { mockFetchSyncGroups } from './mocks/syncGroupApi';
 
 import { deleteSyncGroup, fetchSyncGroups } from '@/services/syncGroupApi';
 import { testQueryClient } from '@/setupTests';
+import { waitForDialogToClose } from '@/testUtils/rtl';
 
 // =============================================================================
 // Module mocks
@@ -141,9 +142,7 @@ describe('Sync Groups page - single delete', () => {
     await waitFor(() => {
       expect(deleteSyncGroup).toHaveBeenCalledWith(mockSyncGroup.syncGroupId);
     });
-    await waitFor(() => {
-      expect(screen.queryByText('Delete Sync Group?')).not.toBeInTheDocument();
-    });
+    await waitForDialogToClose('Delete Sync Group?');
   });
 
   // ---------------------------------------------------------------------------
@@ -165,8 +164,9 @@ describe('Sync Groups page - single delete', () => {
 
     expect(await screen.findByRole('button', { name: /deleting/i })).toBeDisabled();
 
-    // Resolve so the test doesn't leak a pending promise.
+    // Wait for the resulting close so the update isn't left outside act().
     resolveDelete();
+    await waitForDialogToClose('Delete Sync Group?');
   });
 
   // ---------------------------------------------------------------------------

@@ -222,7 +222,9 @@ describe('AddPlayerVersionModal', () => {
     expect(uploadingButton).toBeDisabled();
     expect(screen.getByRole('button', { name: /^cancel$/i })).toBeDisabled();
 
+    // Wait for the resulting completion so the update isn't left outside act().
     resolveUpload({ id: 1, md5: 'x', name: 'player.apk' });
+    await screen.findByText('1 item completed');
   });
 
   test('the modal cannot be closed while an upload is in flight', async () => {
@@ -242,7 +244,9 @@ describe('AddPlayerVersionModal', () => {
     await user.click(screen.getByRole('button', { name: /^cancel$/i }));
     expect(onClose).not.toHaveBeenCalled();
 
+    // Wait for the resulting completion so the update isn't left outside act().
     resolveUpload({ id: 1, md5: 'x', name: 'player.apk' });
+    await screen.findByText('1 item completed');
   });
 
   test('clicking Done closes the modal when idle', async () => {
