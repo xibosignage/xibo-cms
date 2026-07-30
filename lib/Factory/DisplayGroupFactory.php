@@ -275,9 +275,8 @@ class DisplayGroupFactory extends BaseFactory
      * Set Bandwidth limit
      * @param int $bandwidthLimit
      * @param array $displayGroupIds
-     * @return DisplayGroup[]
      */
-    public function setBandwidth(int $bandwidthLimit, array $displayGroupIds): array
+    public function setBandwidth(int $bandwidthLimit, array $displayGroupIds): void
     {
         $sql = 'UPDATE `displaygroup` SET bandwidthLimit = :bandwidthLimit WHERE displayGroupId IN (0';
         $params['bandwidthLimit'] = $bandwidthLimit;
@@ -291,8 +290,6 @@ class DisplayGroupFactory extends BaseFactory
         $sql .= ')';
 
         $this->getStore()->update($sql, $params);
-
-        return $this->query(null, ['disableUserCheck' => 1, 'displayGroupIds' => $displayGroupIds]);
     }
 
     /**
