@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -68,7 +68,7 @@ class SessionFactory extends BaseFactory
      * @param array $filterBy
      * @return Session[]
      */
-    public function query(array $sortOrder = null, array $filterBy = []): array
+    public function query(?array $sortOrder = null, array $filterBy = []): array
     {
         $entries = [];
         $params = [];
