@@ -28,7 +28,6 @@ interface LogoutSessionModalProps {
   isOpen?: boolean;
   onClose: () => void;
   onLogout: () => void;
-  userName?: string;
   itemCount?: number;
   error?: string | null;
   isLoading?: boolean;
@@ -38,7 +37,6 @@ export default function LogoutSessionModal({
   isOpen = true,
   onClose,
   onLogout,
-  userName,
   itemCount,
   isLoading,
   error,
@@ -77,11 +75,7 @@ export default function LogoutSessionModal({
         </div>
         <p className="text-center text-gray-500">
           {itemCount === 1 ? (
-            <Trans
-              i18nKey='Are you sure you want to logout "<strong>{{name}}</strong>"?'
-              values={{ name: userName }}
-              components={{ strong: <strong /> }}
-            />
+            t('Are you sure you want to logout this user?')
           ) : (
             <Trans
               i18nKey="Are you sure you want to logout <strong>{{count}}</strong> sessions?"
@@ -91,7 +85,7 @@ export default function LogoutSessionModal({
           )}
         </p>
 
-        <span className="flex gap-px rounded-md bg-gray-50 p-1.5">
+        <span className="center gap-px rounded-md bg-gray-50 p-1.5">
           <Info size={12} />
           <span className="text-[12px] px-1 font-medium">
             {t(`This user will be logged out from this session`)}

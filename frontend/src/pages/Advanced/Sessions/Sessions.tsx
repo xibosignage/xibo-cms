@@ -40,6 +40,7 @@ import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { useUserContext } from '@/context/UserContext';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
@@ -49,6 +50,7 @@ import { countActiveFilters } from '@/utils/filters';
 export default function Sessions() {
   const { t } = useTranslation();
   const { formatDateTime } = useDateFormatter();
+  const { user } = useUserContext();
   const queryClient = useQueryClient();
 
   const {
@@ -141,6 +143,7 @@ export default function Sessions() {
     handleRefresh,
     closeModal,
     setRowSelection,
+    currentUserId: user?.userId,
   });
 
   const handleLogout = (id: number) => {
@@ -150,8 +153,15 @@ export default function Sessions() {
       return;
     }
 
-    setSessionToLogout([session]);
     setLogoutError(null);
+
+    // Logging out your own session needs no confirmation
+    if (id === user?.userId) {
+      confirmLogout([session]);
+      return;
+    }
+
+    setSessionToLogout([session]);
     openModal('logout');
   };
 

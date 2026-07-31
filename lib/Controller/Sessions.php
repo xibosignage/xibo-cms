@@ -27,6 +27,8 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\SessionFactory;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\LogoutTrait;
+use Xibo\Helper\Session;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 
@@ -50,6 +52,8 @@ use Xibo\Support\Exception\AccessDeniedException;
 )]
 class Sessions extends Base
 {
+    use LogoutTrait;
+
     /**
      * @var StorageServiceInterface
      */
@@ -61,14 +65,21 @@ class Sessions extends Base
     private $sessionFactory;
 
     /**
+     * @var Session
+     */
+    private $session;
+
+    /**
      * Set common dependencies.
      * @param StorageServiceInterface $store
      * @param SessionFactory $sessionFactory
+     * @param Session $session
      */
-    public function __construct($store, $sessionFactory)
+    public function __construct($store, $sessionFactory, $session)
     {
         $this->store = $store;
         $this->sessionFactory = $sessionFactory;
+        $this->session = $session;
     }
 
     #[OA\Get(
@@ -223,6 +234,13 @@ class Sessions extends Base
 
         // We log out all of this user's sessions.
         $this->sessionFactory->expireByUserId($id);
+
+        // If the caller is logging themselves out, the in-request Session object still holds
+        // the stale "not expired" state it loaded at the start of this request, and will
+        // otherwise overwrite the expiry we just set above when it's persisted at shutdown.
+        if ((int) $id === $this->getUser()->userId) {
+            $this->completeLogoutFlow($this->getUser(), $this->session, $this->getLog(), $request);
+        }
 
         return $response->withJson([
             'success' => true,
