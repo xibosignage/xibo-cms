@@ -1205,90 +1205,108 @@ class Widget extends Base
         ) {
             $this->getLog()->debug('getData: Pulling fresh data');
 
-            $dataProvider->clearData();
-            $dataProvider->clearMeta();
-            $dataProvider->addOrUpdateMeta('showFallback', $showFallback);
-
             try {
-                if ($widgetInterface !== null) {
-                    $widgetInterface->fetchData($dataProvider);
-                } else {
-                    $dataProvider->setIsUseEvent();
-                }
-
-                if ($dataProvider->isUseEvent()) {
-                    $this->getDispatcher()->dispatch(
-                        new WidgetDataRequestEvent($dataProvider),
-                        WidgetDataRequestEvent::$NAME
-                    );
-                }
-
-                // Before caching images, check to see if the data provider is handled
-                $isFallback = false;
+                // Before re-attempting a live fetch (which may be rate-limited or down), check whether this
+                // widget already has its own still-fresh fallback content from a previous cycle, and reuse it
+                // rather than hitting the live source again on every preview request while it stays in
+                // fallback mode.
                 if ($showFallback !== 'never'
-                    && $dataTypeFields !== null
-                    && (
-                        count($dataProvider->getErrors()) > 0
-                        || count($dataProvider->getData()) <= 0
-                        || $showFallback === 'always'
-                    )
+                    && $widgetDataProviderCache->decorateWithFallbackCache($dataProvider, $widget->widgetId, true)
                 ) {
-                    // Error or no data.
-                    $this->getLog()->debug('getData: eligible for fallback data');
+                    $this->getLog()->debug(
+                        'getData: reusing still-fresh fallback content for widgetId ' . $widget->widgetId
+                    );
+                } else {
+                    $dataProvider->clearData();
+                    $dataProvider->clearMeta();
+                    $dataProvider->addOrUpdateMeta('showFallback', $showFallback);
 
-                    // Pull in the fallback data
-                    foreach ($this->widgetDataFactory->getByWidgetId($dataProvider->getWidgetId()) as $item) {
-                        // Handle any special data types in the fallback data
-                        foreach ($item->data as $itemId => $itemData) {
-                            if (!empty($itemData)
-                                && array_key_exists($itemId, $dataTypeFields)
-                                && $dataTypeFields[$itemId] === 'image'
-                            ) {
-                                $item->data[$itemId] = $dataProvider->addLibraryFile($itemData);
+                    if ($widgetInterface !== null) {
+                        $widgetInterface->fetchData($dataProvider);
+                    } else {
+                        $dataProvider->setIsUseEvent();
+                    }
+
+                    if ($dataProvider->isUseEvent()) {
+                        $this->getDispatcher()->dispatch(
+                            new WidgetDataRequestEvent($dataProvider),
+                            WidgetDataRequestEvent::$NAME
+                        );
+                    }
+
+                    // Before caching images, check to see if the data provider is handled
+                    $isFallback = false;
+                    if ($showFallback !== 'never'
+                        && $dataTypeFields !== null
+                        && (
+                            count($dataProvider->getErrors()) > 0
+                            || count($dataProvider->getData()) <= 0
+                            || $showFallback === 'always'
+                        )
+                    ) {
+                        // Error or no data.
+                        $this->getLog()->debug('getData: eligible for fallback data');
+
+                        // Pull in the fallback data
+                        foreach ($this->widgetDataFactory->getByWidgetId($dataProvider->getWidgetId()) as $item) {
+                            // Handle any special data types in the fallback data
+                            foreach ($item->data as $itemId => $itemData) {
+                                if (!empty($itemData)
+                                    && array_key_exists($itemId, $dataTypeFields)
+                                    && $dataTypeFields[$itemId] === 'image'
+                                ) {
+                                    $item->data[$itemId] = $dataProvider->addLibraryFile($itemData);
+                                }
                             }
+
+                            $dataProvider->addItem($item->data);
+
+                            // Indicate we've been handled by fallback data
+                            $isFallback = true;
                         }
 
-                        $dataProvider->addItem($item->data);
-
-                        // Indicate we've been handled by fallback data
-                        $isFallback = true;
+                        if ($isFallback) {
+                            $dataProvider->addOrUpdateMeta('includesFallback', true);
+                        }
                     }
 
+                    // Remove fallback data from the cache if no-longer needed
+                    if (!$isFallback) {
+                        $dataProvider->addOrUpdateMeta('includesFallback', false);
+                    }
+
+                    // Do we have images?
+                    $media = $dataProvider->getImages();
+                    if (count($media) > 0) {
+                        // Process the downloads.
+                        $this->mediaFactory->processDownloads(function ($media) use ($widget) {
+                            // Success
+                            // We don't need to do anything else, references to mediaId will be built when we
+                            // decorate the HTML.
+                            // Nothing is linked to a display when in preview mode.
+                            $this->getLog()->debug('getData: Successfully downloaded ' . $media->mediaId);
+                        });
+                    }
+
+                    // Save to cache
                     if ($isFallback) {
-                        $dataProvider->addOrUpdateMeta('includesFallback', true);
+                        // Fallback content is this widget's own private, user-authored data - never write it
+                        // into the shared cache entry that other widgets with identical settings also read
+                        // from, or it would silently overwrite what they're meant to see. Give it its own
+                        // widget-scoped slot.
+                        $widgetDataProviderCache->saveFallbackToCache($dataProvider, $widget->widgetId);
+                    } elseif ($dataProvider->isHandled()) {
+                        $widgetDataProviderCache->saveToCache($dataProvider);
+                    } else {
+                        // Unhandled data provider.
+                        $this->getLog()->debug('getData: unhandled data provider and no fallback data');
+
+                        $message = null;
+                        foreach ($dataProvider->getErrors() as $error) {
+                            $message .= $error . PHP_EOL;
+                        }
+                        throw new ConfigurationException($message ?? __('No data providers configured'));
                     }
-                }
-
-                // Remove fallback data from the cache if no-longer needed
-                if (!$isFallback) {
-                    $dataProvider->addOrUpdateMeta('includesFallback', false);
-                }
-
-                // Do we have images?
-                $media = $dataProvider->getImages();
-                if (count($media) > 0) {
-                    // Process the downloads.
-                    $this->mediaFactory->processDownloads(function ($media) use ($widget) {
-                        // Success
-                        // We don't need to do anything else, references to mediaId will be built when we decorate
-                        // the HTML.
-                        // Nothing is linked to a display when in preview mode.
-                        $this->getLog()->debug('getData: Successfully downloaded ' . $media->mediaId);
-                    });
-                }
-
-                // Save to cache
-                if ($dataProvider->isHandled() || $isFallback) {
-                    $widgetDataProviderCache->saveToCache($dataProvider);
-                } else {
-                    // Unhandled data provider.
-                    $this->getLog()->debug('getData: unhandled data provider and no fallback data');
-
-                    $message = null;
-                    foreach ($dataProvider->getErrors() as $error) {
-                        $message .= $error . PHP_EOL;
-                    }
-                    throw new ConfigurationException($message ?? __('No data providers configured'));
                 }
             } finally {
                 $widgetDataProviderCache->finaliseCache();

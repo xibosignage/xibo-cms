@@ -64,6 +64,21 @@ class WidgetDataProviderCache
 
     private $cachedMediaIds;
 
+    /** @var int[] widgetIds which have already been notified about the currently cached data */
+    private array $notifiedWidgetIds = [];
+
+    /** @var \stdClass|null The raw cached payload (data/meta/media/notifiedWidgetIds), kept so that
+     * notifiedWidgetIds can be updated and re-persisted without a second Stash read - a second `Item::get()`
+     * call is not reliable here, since Stash's `isHit` flag is fixed by the first read/miss of this request. */
+    private ?\stdClass $cachedObject = null;
+
+    /** @var string|null The cacheDt this instance's notifiedWidgetIds/cachedObject snapshot was captured from -
+     * used to detect a concurrent save producing a newer data version before we trust/persist that snapshot. */
+    private ?string $cachedVersionDt = null;
+
+    /** @var \stdClass|null The raw payload from this widget's own widget-scoped fallback slot, if loaded */
+    private ?\stdClass $fallbackObject = null;
+
     /**
      * @param \Stash\Interfaces\PoolInterface $pool
      */
@@ -134,6 +149,8 @@ class WidgetDataProviderCache
             $hasData = false;
         } else {
             $hasData = true;
+            $this->cachedObject = $data;
+            $this->cachedVersionDt = $data->meta['cacheDt'] ?? null;
 
             // Clear the data provider and add the cached items back to it.
             $dataProvider->clearData();
@@ -142,6 +159,11 @@ class WidgetDataProviderCache
 
             // Record any cached mediaIds
             $this->cachedMediaIds = $data->media ?? [];
+
+            // Record which widgets have already been notified about this data version, so that widgets sharing
+            // this cache key (e.g. identical weather locations) don't each need to be the one that triggered the
+            // fetch in order to notify their own displays.
+            $this->notifiedWidgetIds = $data->notifiedWidgetIds ?? [];
 
             // Update any meta
             foreach (($data->meta ?? []) as $key => $item) {
@@ -210,14 +232,67 @@ class WidgetDataProviderCache
 
     /**
      * @param DataProviderInterface $dataProvider
+     * @param int|null $initiatingWidgetId The widget whose own check triggered this fresh save, if any - seeded
+     *   directly into notifiedWidgetIds so that widget doesn't need a second read-modify-write via
+     *   shouldNotifyForWidget() just to record that it already knows about the version it just wrote.
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function saveToCache(DataProviderInterface $dataProvider): void
+    public function saveToCache(DataProviderInterface $dataProvider, ?int $initiatingWidgetId = null): void
     {
         if ($this->cache === null) {
             throw new GeneralException('No cache to save');
         }
 
+        $object = $this->buildCacheObject($dataProvider);
+
+        // This is a new data version. Only the initiating widget (if any) already knows about it.
+        $this->notifiedWidgetIds = $initiatingWidgetId !== null ? [$initiatingWidgetId] : [];
+        $object->notifiedWidgetIds = $this->notifiedWidgetIds;
+        $this->cachedObject = $object;
+        $this->cachedVersionDt = $object->meta['cacheDt'] ?? null;
+
+        $this->persistItem($this->cache, $object, $dataProvider->getCacheTtl());
+
+        $this->getLog()->debug('saveToCache: cached ' . $this->key
+            . ' for ' . $dataProvider->getCacheTtl() . ' seconds');
+    }
+
+    /**
+     * Save this widget's own private fallback content into its widget-scoped cache slot, entirely separate
+     * from the shared cache entry other widgets with identical settings also read from - saving fallback
+     * content into the shared slot would silently overwrite whatever those other widgets are meant to see.
+     * @param DataProviderInterface $dataProvider
+     * @param int $widgetId
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function saveFallbackToCache(DataProviderInterface $dataProvider, int $widgetId): void
+    {
+        if ($this->key === null) {
+            throw new GeneralException('No cache key resolved - call decorateWithCache first');
+        }
+
+        $object = $this->buildCacheObject($dataProvider);
+
+        // This is a new fallback version - nothing has told this widget's displays about it yet.
+        $object->notified = false;
+
+        $item = $this->pool->getItem($this->fallbackKey($widgetId));
+        $this->persistItem($item, $object, $dataProvider->getCacheTtl());
+
+        $this->fallbackObject = $object;
+
+        $this->getLog()->debug('saveFallbackToCache: cached ' . $this->fallbackKey($widgetId)
+            . ' for ' . $dataProvider->getCacheTtl() . ' seconds');
+    }
+
+    /**
+     * Build the common data/meta/media payload shared by both the shared-cache and widget-scoped fallback
+     * save paths, stamping the cache dates onto the data provider's meta along the way.
+     * @param DataProviderInterface $dataProvider
+     * @return \stdClass
+     */
+    private function buildCacheObject(DataProviderInterface $dataProvider): \stdClass
+    {
         // Set some cache dates so that we can track when this data provider was cached and when it should expire.
         $dataProvider->addOrUpdateMeta('cacheDt', Carbon::now()->format('c'));
         $dataProvider->addOrUpdateMeta(
@@ -225,26 +300,99 @@ class WidgetDataProviderCache
             Carbon::now()->addSeconds($dataProvider->getCacheTtl())->format('c')
         );
 
-        // Set our cache from the data provider.
         $object = new \stdClass();
         $object->data = $dataProvider->getData();
         $object->meta = $dataProvider->getMeta();
         $object->media = $dataProvider->getImageIds();
-        $cached = $this->cache->set($object);
 
-        if (!$cached) {
-            throw new GeneralException('Cache failure');
-        }
+        // Available to a caller reading it back immediately after this save, in the same request.
+        $this->cachedMediaIds = $object->media;
+
+        return $object;
+    }
+
+    /**
+     * Persist a cache payload into the given Stash item and throw on failure. Shared tail for both the
+     * shared-cache and widget-scoped fallback save paths.
+     * @param Item $item
+     * @param \stdClass $object
+     * @param int $cacheTtl
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    private function persistItem(Item $item, \stdClass $object, int $cacheTtl): void
+    {
+        $item->setInvalidationMethod(Invalidation::OLD);
+        $item->set($object);
 
         // Keep the cache 50% longer than necessary
         // The expireDt must always be 15 minutes to allow plenty of time for the WidgetSyncTask to regenerate.
-        $this->cache->expiresAfter(ceil(max($dataProvider->getCacheTtl() * 1.5, 900)));
+        $item->expiresAfter(ceil(max($cacheTtl * 1.5, 900)));
 
-        // Save to the pool
-        $this->pool->save($this->cache);
+        // This is the call that actually persists the item and reports success/failure (Item::set() only
+        // stages the value in memory and always returns the Item itself, never a bool).
+        if (!$this->pool->save($item)) {
+            throw new GeneralException('Cache failure');
+        }
+    }
 
-        $this->getLog()->debug('saveToCache: cached ' . $this->key
-            . ' for ' . $dataProvider->getCacheTtl() . ' seconds');
+    /**
+     * Read a widget's own fallback content back out of its widget-scoped cache slot. Must be called after
+     * decorateWithCache() (even if that returned false) so that the base key is available to derive from.
+     * @param DataProvider $dataProvider
+     * @param int $widgetId
+     * @param bool $requireFresh When true, only return content that is still within its own refresh window
+     *   (mirrors decorateWithCache()'s isMissOrOld check, scoped to this widget's private slot) - lets a
+     *   caller reuse still-valid fallback content instead of re-attempting a live fetch every sync cycle
+     *   while a widget stays in fallback mode. XMDS callers leave this false, since they never re-fetch and
+     *   would rather serve slightly-old fallback content than nothing at all.
+     * @return bool true if fallback content was found (and, if requested, still fresh) and applied
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function decorateWithFallbackCache(
+        DataProvider $dataProvider,
+        int $widgetId,
+        bool $requireFresh = false,
+    ): bool {
+        if ($this->key === null) {
+            throw new GeneralException('No cache key resolved - call decorateWithCache first');
+        }
+
+        $item = $this->pool->getItem($this->fallbackKey($widgetId));
+        $item->setInvalidationMethod(Invalidation::OLD);
+
+        $data = $item->get();
+        if ($data === null) {
+            return false;
+        }
+
+        if ($requireFresh) {
+            $expireDt = $data->meta['expireDt'] ?? null;
+            if ($expireDt === null || Carbon::createFromFormat('c', $expireDt)->isBefore(Carbon::now())) {
+                return false;
+            }
+        }
+
+        $dataProvider->clearData();
+        $dataProvider->clearMeta();
+        $dataProvider->addItems($data->data ?? []);
+
+        $this->cachedMediaIds = $data->media ?? [];
+        $this->fallbackObject = $data;
+
+        foreach (($data->meta ?? []) as $key => $value) {
+            $dataProvider->addOrUpdateMeta($key, $value);
+        }
+
+        return true;
+    }
+
+    /**
+     * @param int $widgetId
+     * @return string
+     */
+    private function fallbackKey(int $widgetId): string
+    {
+        return $this->key . '/fallback/' . $widgetId;
     }
 
     /**
@@ -262,6 +410,125 @@ class WidgetDataProviderCache
     public function getCachedMediaIds(): array
     {
         return $this->cachedMediaIds ?? [];
+    }
+
+    /**
+     * Has the given widget already been notified about the data currently held in this cache entry?
+     * Widgets which resolve to the same cache key (e.g. identical weather locations) share a single cache entry,
+     * so whichever widget happens to trigger the fetch must not be the only one whose displays get notified -
+     * every widget sharing the key needs to check in here at least once per data version.
+     * @param int $widgetId
+     * @return bool true if this widget has not yet been notified about the current data (and should be)
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function shouldNotifyForWidget(int $widgetId): bool
+    {
+        $this->refreshIfVersionChanged();
+
+        if (in_array($widgetId, $this->notifiedWidgetIds, true)) {
+            return false;
+        }
+
+        $this->notifiedWidgetIds[] = $widgetId;
+        $this->persistNotifiedWidgetIds();
+
+        return true;
+    }
+
+    /**
+     * Re-read the shared cache entry if a concurrent save has produced a newer data version than the one this
+     * instance's in-memory notifiedWidgetIds/cachedObject snapshot was captured from. Without this, a stale
+     * snapshot (e.g. read while the cache was still valid, then overtaken by a concurrent regeneration before
+     * shouldNotifyForWidget() runs) could wrongly report a widget as "already notified" for data that was, from
+     * the cache's current point of view, just replaced by a genuinely new version.
+     */
+    private function refreshIfVersionChanged(): void
+    {
+        if ($this->key === null) {
+            return;
+        }
+
+        // A fresh Item instance, not $this->cache - Stash's `isHit` flag is fixed by the first read/miss of a
+        // given Item instance, so re-querying via a new instance is the reliable way to see the current state.
+        $item = $this->pool->getItem($this->key);
+        $item->setInvalidationMethod(Invalidation::OLD);
+        $data = $item->get();
+
+        if ($data === null) {
+            return;
+        }
+
+        $currentVersionDt = $data->meta['cacheDt'] ?? null;
+        if ($currentVersionDt !== $this->cachedVersionDt) {
+            $this->cache = $item;
+            $this->cachedObject = $data;
+            $this->notifiedWidgetIds = $data->notifiedWidgetIds ?? [];
+            $this->cachedVersionDt = $currentVersionDt;
+        }
+    }
+
+    /**
+     * Persist the current notifiedWidgetIds list back into the cache entry, preserving its existing expiry.
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    private function persistNotifiedWidgetIds(): void
+    {
+        if ($this->cache === null || $this->cachedObject === null) {
+            // Nothing to update onto - there is no cached data for us to attach the notified list to.
+            return;
+        }
+
+        // Capture the existing expiry before we mutate/save, otherwise Stash will persist this write without the
+        // original TTL. We deliberately don't call $this->cache->get() here - Stash's `isHit` flag is fixed by
+        // the first read/miss of this request, so a second get() can incorrectly return null even immediately
+        // after a set(). $this->cachedObject is the reliable in-memory source of truth instead.
+        $expiration = $this->cache->getExpiration();
+
+        $this->cachedObject->notifiedWidgetIds = $this->notifiedWidgetIds;
+
+        $this->cache->set($this->cachedObject);
+        $this->cache->expiresAt($expiration);
+
+        if (!$this->pool->save($this->cache)) {
+            throw new GeneralException('Cache failure');
+        }
+    }
+
+    /**
+     * Has this widget already been notified about the fallback content currently held in its widget-scoped
+     * cache slot? Unlike shouldNotifyForWidget(), this slot is exclusive to a single widgetId, so a plain flag
+     * on the cached object is enough - no cross-widget arbitration is needed here.
+     * @param int $widgetId
+     * @return bool true if this widget has not yet been notified about its current fallback content
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function shouldNotifyForFallback(int $widgetId): bool
+    {
+        if ($this->fallbackObject === null) {
+            // Nothing loaded to check against - default to notifying, matching the equivalent edge case in
+            // shouldNotifyForWidget()'s caller.
+            return true;
+        }
+
+        if ($this->fallbackObject->notified ?? false) {
+            return false;
+        }
+
+        $this->fallbackObject->notified = true;
+
+        $item = $this->pool->getItem($this->fallbackKey($widgetId));
+        $item->setInvalidationMethod(Invalidation::OLD);
+        $item->get();
+        $expiration = $item->getExpiration();
+
+        $item->set($this->fallbackObject);
+        $item->expiresAt($expiration);
+
+        if (!$this->pool->save($item)) {
+            throw new GeneralException('Cache failure');
+        }
+
+        return true;
     }
 
     /**

@@ -162,7 +162,7 @@ class WidgetSyncTask implements TaskInterface
                                     $widget->widgetId,
                                     [$display],
                                     $cacheData['mediaIds'],
-                                    $cacheData['fromCache']
+                                    $cacheData['shouldNotify']
                                 );
                             }
                         } else {
@@ -175,7 +175,7 @@ class WidgetSyncTask implements TaskInterface
                                 $widget->widgetId,
                                 $this->getDisplays($widget),
                                 $cacheData['mediaIds'],
-                                $cacheData['fromCache']
+                                $cacheData['shouldNotify']
                             );
                         }
 
@@ -280,93 +280,119 @@ class WidgetSyncTask implements TaskInterface
             $dataTypeFields = null;
         }
 
-        // Is this data from cache?
-        $fromCache = false;
-
+        // Should we notify displays about this widget's data? Assigned explicitly on every path below.
         if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey, $dataModifiedDt)
             || $widgetDataProviderCache->isCacheMissOrOld()
         ) {
             $this->getLogger()->debug('cache: Cache expired, pulling fresh: key: ' . $cacheKey);
 
-            $dataProvider->clearData();
-            $dataProvider->clearMeta();
-            $dataProvider->addOrUpdateMeta('showFallback', $showFallback);
-
             try {
-                if ($widgetInterface !== null) {
-                    $widgetInterface->fetchData($dataProvider);
-                } else {
-                    $dataProvider->setIsUseEvent();
-                }
-
-                if ($dataProvider->isUseEvent()) {
-                    $this->getDispatcher()->dispatch(
-                        new WidgetDataRequestEvent($dataProvider),
-                        WidgetDataRequestEvent::$NAME
-                    );
-                }
-
-                // Before caching images, check to see if the data provider is handled
-                $isFallback = false;
+                // Before re-attempting a live fetch (which may be rate-limited or down), check whether this
+                // widget already has its own still-fresh fallback content from a previous cycle, and reuse it
+                // rather than hitting the live source again every sync cycle while it stays in fallback mode.
                 if ($showFallback !== 'never'
-                    && $dataTypeFields !== null
-                    && (
-                        count($dataProvider->getErrors()) > 0
-                        || count($dataProvider->getData()) <= 0
-                        || $showFallback === 'always'
-                    )
+                    && $widgetDataProviderCache->decorateWithFallbackCache($dataProvider, $widget->widgetId, true)
                 ) {
-                    // Error or no data.
-                    // Pull in the fallback data
-                    foreach ($this->widgetDataFactory->getByWidgetId($dataProvider->getWidgetId()) as $item) {
-                        // Handle any special data types in the fallback data
-                        foreach ($item->data as $itemId => $itemData) {
-                            if (!empty($itemData)
-                                && array_key_exists($itemId, $dataTypeFields)
-                                && $dataTypeFields[$itemId] === 'image'
-                            ) {
-                                $item->data[$itemId] = $dataProvider->addLibraryFile($itemData);
+                    $this->getLogger()->debug(
+                        'cache: reusing still-fresh fallback content for widgetId ' . $widget->widgetId
+                    );
+
+                    $mediaIds = $widgetDataProviderCache->getCachedMediaIds();
+                    $shouldNotify = $widgetDataProviderCache->shouldNotifyForFallback($widget->widgetId);
+                } else {
+                    $dataProvider->clearData();
+                    $dataProvider->clearMeta();
+                    $dataProvider->addOrUpdateMeta('showFallback', $showFallback);
+
+                    if ($widgetInterface !== null) {
+                        $widgetInterface->fetchData($dataProvider);
+                    } else {
+                        $dataProvider->setIsUseEvent();
+                    }
+
+                    if ($dataProvider->isUseEvent()) {
+                        $this->getDispatcher()->dispatch(
+                            new WidgetDataRequestEvent($dataProvider),
+                            WidgetDataRequestEvent::$NAME
+                        );
+                    }
+
+                    // Before caching images, check to see if the data provider is handled
+                    $isFallback = false;
+                    if ($showFallback !== 'never'
+                        && $dataTypeFields !== null
+                        && (
+                            count($dataProvider->getErrors()) > 0
+                            || count($dataProvider->getData()) <= 0
+                            || $showFallback === 'always'
+                        )
+                    ) {
+                        // Error or no data.
+                        // Pull in the fallback data
+                        foreach ($this->widgetDataFactory->getByWidgetId($dataProvider->getWidgetId()) as $item) {
+                            // Handle any special data types in the fallback data
+                            foreach ($item->data as $itemId => $itemData) {
+                                if (!empty($itemData)
+                                    && array_key_exists($itemId, $dataTypeFields)
+                                    && $dataTypeFields[$itemId] === 'image'
+                                ) {
+                                    $item->data[$itemId] = $dataProvider->addLibraryFile($itemData);
+                                }
                             }
+
+                            $dataProvider->addItem($item->data);
+
+                            // Indicate we've been handled by fallback data
+                            $isFallback = true;
                         }
 
-                        $dataProvider->addItem($item->data);
-
-                        // Indicate we've been handled by fallback data
-                        $isFallback = true;
+                        if ($isFallback) {
+                            $dataProvider->addOrUpdateMeta('includesFallback', true);
+                        }
                     }
 
+                    // Remove fallback data from the cache if no-longer needed
+                    if (!$isFallback) {
+                        $dataProvider->addOrUpdateMeta('includesFallback', false);
+                    }
+
+                    // Do we have images?
+                    // They could be library images (i.e. they already exist) or downloads
+                    $mediaIds = $dataProvider->getImageIds();
+                    if (count($mediaIds) > 0) {
+                        // Process the downloads.
+                        $this->mediaFactory->processDownloads(function ($media) {
+                            /** @var \Xibo\Entity\Media $media */
+                            // Success
+                            // We don't need to do anything else, references to mediaId will be built when we
+                            // decorate the HTML.
+                            $this->getLogger()->debug('cache: Successfully downloaded ' . $media->mediaId);
+                        }, function ($media) use (&$mediaIds) {
+                            /** @var \Xibo\Entity\Media $media */
+                            // Error
+                            // Remove it
+                            unset($mediaIds[$media->mediaId]);
+                        });
+                    }
+
+                    // Save to cache
                     if ($isFallback) {
-                        $dataProvider->addOrUpdateMeta('includesFallback', true);
+                        // Fallback content is this widget's own private, user-authored data - never write it
+                        // into the shared cache entry that other widgets with identical settings also read
+                        // from, or it would silently overwrite what they're meant to see. Give it its own
+                        // widget-scoped slot.
+                        $widgetDataProviderCache->saveFallbackToCache($dataProvider, $widget->widgetId);
+                        $shouldNotify = $widgetDataProviderCache->shouldNotifyForFallback($widget->widgetId);
+                    } elseif ($dataProvider->isHandled()) {
+                        // Seed the initiating widget directly - it's by definition the first to know about
+                        // this version, so there's no need for a separate shouldNotifyForWidget() round trip.
+                        $widgetDataProviderCache->saveToCache($dataProvider, $widget->widgetId);
+                        $shouldNotify = true;
+                    } else {
+                        // Unhandled data provider and no fallback available - nothing to save, but still
+                        // notify so that displays check in (matches pre-existing behaviour for this edge case).
+                        $shouldNotify = true;
                     }
-                }
-
-                // Remove fallback data from the cache if no-longer needed
-                if (!$isFallback) {
-                    $dataProvider->addOrUpdateMeta('includesFallback', false);
-                }
-
-                // Do we have images?
-                // They could be library images (i.e. they already exist) or downloads
-                $mediaIds = $dataProvider->getImageIds();
-                if (count($mediaIds) > 0) {
-                    // Process the downloads.
-                    $this->mediaFactory->processDownloads(function ($media) {
-                        /** @var \Xibo\Entity\Media $media */
-                        // Success
-                        // We don't need to do anything else, references to mediaId will be built when we decorate
-                        // the HTML.
-                        $this->getLogger()->debug('cache: Successfully downloaded ' . $media->mediaId);
-                    }, function ($media) use (&$mediaIds) {
-                        /** @var \Xibo\Entity\Media $media */
-                        // Error
-                        // Remove it
-                        unset($mediaIds[$media->mediaId]);
-                    });
-                }
-
-                // Save to cache
-                if ($dataProvider->isHandled() || $isFallback) {
-                    $widgetDataProviderCache->saveToCache($dataProvider);
                 }
             } finally {
                 $widgetDataProviderCache->finaliseCache();
@@ -374,7 +400,10 @@ class WidgetSyncTask implements TaskInterface
         } else {
             $this->getLogger()->debug('cache: Cache still valid, key: ' . $cacheKey);
 
-            $fromCache = true;
+            // The cache may have been refreshed by a different widget sharing this same cache key (e.g. an
+            // identical weather location) - check whether this widget has already told its own displays about
+            // the current data version, regardless of who triggered the fetch.
+            $shouldNotify = $widgetDataProviderCache->shouldNotifyForWidget($widget->widgetId);
 
             // Get the existing mediaIds so that we can maintain the links to displays.
             $mediaIds = $widgetDataProviderCache->getCachedMediaIds();
@@ -382,7 +411,7 @@ class WidgetSyncTask implements TaskInterface
 
         return [
             'mediaIds' => $mediaIds,
-            'fromCache' => $fromCache
+            'shouldNotify' => $shouldNotify
         ];
     }
 
@@ -417,10 +446,10 @@ class WidgetSyncTask implements TaskInterface
      * @param int $widgetId
      * @param Display[] $displays
      * @param int[] $mediaIds
-     * @param bool $fromCache
+     * @param bool $shouldNotify Should each display be sent a data update notification for this widget?
      * @return void
      */
-    private function linkDisplays(int $widgetId, array $displays, array $mediaIds, bool $fromCache): void
+    private function linkDisplays(int $widgetId, array $displays, array $mediaIds, bool $shouldNotify): void
     {
         $this->getLogger()->debug('linkDisplays: ' . count($displays) . ' displays, ' . count($mediaIds) . ' media');
 
@@ -436,7 +465,7 @@ class WidgetSyncTask implements TaskInterface
         // 2 if an existing row is updated and
         // 0 if the existing row is set to its current values.
         foreach ($displays as $display) {
-            $shouldNotify = false;
+            $mediaLinksChanged = false;
             foreach ($mediaIds as $mediaId) {
                 try {
                     $affected = $this->store->update($sql, [
@@ -445,7 +474,7 @@ class WidgetSyncTask implements TaskInterface
                     ]);
 
                     if ($affected == 1) {
-                        $shouldNotify = true;
+                        $mediaLinksChanged = true;
                     }
                 } catch (\PDOException) {
                     // We link what we can, and log any failures.
@@ -459,12 +488,12 @@ class WidgetSyncTask implements TaskInterface
             // Newer displays (>= v4) should clear their cache only if linked media has changed
             // Older displays (< v4) should check in immediately on change
             if ($display->clientCode >= 400) {
-                if ($shouldNotify) {
+                if ($mediaLinksChanged) {
                     $this->displayFactory->getDisplayNotifyService()->collectLater()
                         ->notifyByDisplayId($display->displayId);
                 }
 
-                if (!$fromCache) {
+                if ($shouldNotify) {
                     $this->displayFactory->getDisplayNotifyService()
                         ->notifyDataUpdate($display, $widgetId);
                 }

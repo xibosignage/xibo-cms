@@ -149,7 +149,14 @@ class Soap7 extends Soap6
                     $widgetDataProviderCache = $this->moduleFactory->createWidgetDataProviderCache();
 
                     // We do not pass a modifiedDt in here because we always expect to be cached.
-                    if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey, null, false)) {
+                    // If the shared cache has nothing, this widget may still have its own fallback content
+                    // cached in a widget-scoped slot.
+                    if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey, null, false)
+                        && !(
+                            $module->fallbackData == 1
+                            && $widgetDataProviderCache->decorateWithFallbackCache($dataProvider, $widget->widgetId)
+                        )
+                    ) {
                         throw new NotFoundException('Cache not ready');
                     }
 
