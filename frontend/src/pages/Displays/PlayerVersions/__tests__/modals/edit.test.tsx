@@ -28,6 +28,7 @@ import { buildPlayerVersion } from '../fixtures/playerVersion';
 import { renderEditPlayerVersionModal } from './helpers/renderEditPlayerVersionModal';
 
 import { updatePlayerVersion } from '@/services/playerVersionApi';
+import { waitForClose } from '@/testUtils/rtl';
 
 // =============================================================================
 // Module mocks
@@ -167,13 +168,15 @@ describe('EditPlayerVersionModal', () => {
         resolveUpdate = resolve;
       }),
     );
-    renderEditPlayerVersionModal({ data: existing });
+    const { onClose } = renderEditPlayerVersionModal({ data: existing });
 
     await user.click(screen.getByRole('button', { name: /^save$/i }));
 
     expect(await screen.findByRole('button', { name: /saving/i })).toBeDisabled();
 
+    // Wait for the resulting close so the update isn't left outside act().
     resolveUpdate(existing);
+    await waitForClose(onClose);
   });
 
   test('an API error is displayed in the modal', async () => {

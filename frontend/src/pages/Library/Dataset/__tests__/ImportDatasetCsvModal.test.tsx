@@ -74,6 +74,14 @@ function makeFile(name = 'data.csv', content = 'col1,col2') {
   return new File([content], name, { type: 'text/csv' });
 }
 
+// fetchDatasetColumns fires on mount; flushing here lets its resolution land
+// inside act() instead of after the test ends.
+async function renderModal(props: Partial<typeof defaultProps> = {}) {
+  const result = renderWithProviders(<ImportDatasetCsvModal {...defaultProps} {...props} />);
+  await act(async () => {});
+  return result;
+}
+
 // -- Tests --
 
 describe('ImportDatasetCsvModal', () => {
@@ -85,33 +93,33 @@ describe('ImportDatasetCsvModal', () => {
   });
 
   describe('Initial render', () => {
-    it('renders "CSV Import" dialog title', () => {
-      renderWithProviders(<ImportDatasetCsvModal {...defaultProps} />);
+    it('renders "CSV Import" dialog title', async () => {
+      await renderModal();
 
       expect(screen.getByRole('dialog', { name: 'CSV Import' })).toBeInTheDocument();
     });
 
-    it('shows the "Add CSV File" dropzone area initially', () => {
-      renderWithProviders(<ImportDatasetCsvModal {...defaultProps} />);
+    it('shows the "Add CSV File" dropzone area initially', async () => {
+      await renderModal();
 
       expect(screen.getByText('Add CSV File')).toBeInTheDocument();
     });
 
-    it('Done button is disabled when no file is selected', () => {
-      renderWithProviders(<ImportDatasetCsvModal {...defaultProps} />);
+    it('Done button is disabled when no file is selected', async () => {
+      await renderModal();
 
       expect(screen.getByRole('button', { name: 'Done' })).toBeDisabled();
     });
 
-    it('"Overwrite existing data?" checkbox is unchecked by default', () => {
-      renderWithProviders(<ImportDatasetCsvModal {...defaultProps} />);
+    it('"Overwrite existing data?" checkbox is unchecked by default', async () => {
+      await renderModal();
 
       const checkbox = screen.getByRole('checkbox', { name: /Overwrite existing data/i });
       expect(checkbox).not.toBeChecked();
     });
 
-    it('"Ignore first row?" checkbox is checked by default', () => {
-      renderWithProviders(<ImportDatasetCsvModal {...defaultProps} />);
+    it('"Ignore first row?" checkbox is checked by default', async () => {
+      await renderModal();
 
       const checkbox = screen.getByRole('checkbox', { name: /Ignore first row/i });
       expect(checkbox).toBeChecked();
@@ -120,7 +128,7 @@ describe('ImportDatasetCsvModal', () => {
 
   describe('Column fetching', () => {
     it('calls fetchDatasetColumns on mount', async () => {
-      renderWithProviders(<ImportDatasetCsvModal {...defaultProps} />);
+      await renderModal();
 
       await waitFor(() => {
         expect(mockFetchDatasetColumns).toHaveBeenCalledWith(5, { start: 0, length: 100 });
@@ -136,7 +144,7 @@ describe('ImportDatasetCsvModal', () => {
         recordsTotal: 2,
       });
 
-      renderWithProviders(<ImportDatasetCsvModal {...defaultProps} />);
+      await renderModal();
 
       await waitFor(() => {
         expect(screen.getByText('Name')).toBeInTheDocument();
@@ -144,10 +152,10 @@ describe('ImportDatasetCsvModal', () => {
       });
     });
 
-    it('does not render mapping section when no columns', () => {
+    it('does not render mapping section when no columns', async () => {
       mockFetchDatasetColumns.mockResolvedValue({ rows: [], recordsTotal: 0 });
 
-      renderWithProviders(<ImportDatasetCsvModal {...defaultProps} />);
+      await renderModal();
 
       expect(screen.queryByText(/enter the column number/i)).not.toBeInTheDocument();
     });
@@ -155,7 +163,7 @@ describe('ImportDatasetCsvModal', () => {
 
   describe('File drop', () => {
     it('shows file info after a file is dropped', async () => {
-      renderWithProviders(<ImportDatasetCsvModal {...defaultProps} />);
+      await renderModal();
 
       const file = makeFile('products.csv');
       act(() => capturedOnDrop?.([file]));
@@ -164,7 +172,7 @@ describe('ImportDatasetCsvModal', () => {
     });
 
     it('Done button is enabled after a file is dropped', async () => {
-      renderWithProviders(<ImportDatasetCsvModal {...defaultProps} />);
+      await renderModal();
 
       const file = makeFile('products.csv');
       act(() => capturedOnDrop?.([file]));
@@ -175,7 +183,7 @@ describe('ImportDatasetCsvModal', () => {
     });
 
     it('hides the dropzone after a file is selected', async () => {
-      renderWithProviders(<ImportDatasetCsvModal {...defaultProps} />);
+      await renderModal();
 
       act(() => capturedOnDrop?.([makeFile()]));
 
@@ -188,7 +196,7 @@ describe('ImportDatasetCsvModal', () => {
   describe('Import action', () => {
     it('calls importDatasetCsv with the selected file on Done click', async () => {
       const user = userEvent.setup();
-      renderWithProviders(<ImportDatasetCsvModal {...defaultProps} />);
+      await renderModal();
 
       const file = makeFile('data.csv');
       act(() => capturedOnDrop?.([file]));
@@ -210,7 +218,7 @@ describe('ImportDatasetCsvModal', () => {
 
     it('shows success notification on successful import', async () => {
       const user = userEvent.setup();
-      renderWithProviders(<ImportDatasetCsvModal {...defaultProps} />);
+      await renderModal();
 
       act(() => capturedOnDrop?.([makeFile()]));
 
@@ -226,7 +234,7 @@ describe('ImportDatasetCsvModal', () => {
     it('shows error notification when import fails', async () => {
       const user = userEvent.setup();
       mockImportDatasetCsv.mockRejectedValue(new Error('Upload failed'));
-      renderWithProviders(<ImportDatasetCsvModal {...defaultProps} />);
+      await renderModal();
 
       act(() => capturedOnDrop?.([makeFile()]));
 
@@ -244,7 +252,7 @@ describe('ImportDatasetCsvModal', () => {
     it('Cancel button calls onClose', async () => {
       const user = userEvent.setup();
       const mockOnClose = vi.fn();
-      renderWithProviders(<ImportDatasetCsvModal {...defaultProps} onClose={mockOnClose} />);
+      await renderModal({ onClose: mockOnClose });
 
       await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
@@ -253,7 +261,7 @@ describe('ImportDatasetCsvModal', () => {
 
     it('passes overwrite: true when checkbox is checked', async () => {
       const user = userEvent.setup();
-      renderWithProviders(<ImportDatasetCsvModal {...defaultProps} />);
+      await renderModal();
 
       await user.click(screen.getByRole('checkbox', { name: /Overwrite existing data/i }));
 

@@ -33,6 +33,7 @@ import { UserProvider } from '@/context/UserContext';
 import AddDisplayProfileModal from '@/pages/Displays/DisplayProfile/components/AddDisplayProfileModal';
 import { createDisplayProfile } from '@/services/displayProfileApi';
 import { testQueryClient } from '@/setupTests';
+import { waitForClose } from '@/testUtils/rtl';
 
 // =============================================================================
 // Module mocks
@@ -168,7 +169,7 @@ describe('AddDisplayProfileModal', () => {
         resolveCreate = resolve;
       }),
     );
-    renderAddDisplayProfileModal();
+    const { onClose } = renderAddDisplayProfileModal();
 
     await user.type(screen.getByRole('textbox', { name: /^name$/i }), 'My Profile');
     fireEvent.change(screen.getByRole('combobox', { name: /display type/i }), {
@@ -178,7 +179,9 @@ describe('AddDisplayProfileModal', () => {
 
     expect(await screen.findByRole('button', { name: /saving/i })).toBeDisabled();
 
+    // Wait for the resulting close so the update isn't left outside act().
     resolveCreate(buildDisplayProfile());
+    await waitForClose(onClose);
   });
 
   test('an API error is displayed in the modal', async () => {

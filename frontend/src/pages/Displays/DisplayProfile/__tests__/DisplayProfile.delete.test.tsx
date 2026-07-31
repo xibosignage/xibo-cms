@@ -32,6 +32,7 @@ import { mockFetchDisplayProfile } from './mocks/displayProfileApi';
 
 import { deleteDisplayProfile, fetchDisplayProfile } from '@/services/displayProfileApi';
 import { testQueryClient } from '@/setupTests';
+import { waitForDialogToClose } from '@/testUtils/rtl';
 
 // =============================================================================
 // Module mocks
@@ -122,9 +123,7 @@ describe('DisplayProfile page - delete', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
-    await waitFor(() => {
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    });
+    await waitForDialogToClose('Delete Display Profile?');
     expect(deleteDisplayProfile).not.toHaveBeenCalled();
   });
 
@@ -140,9 +139,7 @@ describe('DisplayProfile page - delete', () => {
     const fetchCountBefore = vi.mocked(fetchDisplayProfile).mock.calls.length;
     fireEvent.click(screen.getByRole('button', { name: 'Yes, Delete' }));
 
-    await waitFor(() => {
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    });
+    await waitForDialogToClose('Delete Display Profile?');
     expect(deleteDisplayProfile).toHaveBeenCalledTimes(1);
     expect(deleteDisplayProfile).toHaveBeenCalledWith(mockDisplayProfile.displayProfileId);
     // Success triggers handleRefresh → query invalidation → a refetch.
@@ -201,7 +198,9 @@ describe('DisplayProfile page - delete', () => {
 
     expect(await screen.findByRole('button', { name: /deleting/i })).toBeDisabled();
 
+    // Wait for the resulting close so the update isn't left outside act().
     resolveDelete();
+    await waitForDialogToClose('Delete Display Profile?');
   });
 
   // ---------------------------------------------------------------------------

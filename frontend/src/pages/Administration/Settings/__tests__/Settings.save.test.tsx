@@ -105,7 +105,7 @@ describe('Settings page - save', () => {
     expect(screen.getByRole('button', { name: /^save$/i })).toBeDisabled();
 
     await goToGeneralTab(user);
-    const helpInput = screen.getByRole('textbox', { name: /user manual url/i });
+    const helpInput = screen.getByRole('textbox', { name: /location of the manual/i });
     await user.type(helpInput, '!');
 
     await waitFor(() => {
@@ -120,7 +120,7 @@ describe('Settings page - save', () => {
     await screen.findByRole('heading', { name: 'Configuration' });
 
     await goToGeneralTab(user);
-    const helpInput = screen.getByRole('textbox', { name: /user manual url/i });
+    const helpInput = screen.getByRole('textbox', { name: /location of the manual/i });
     await user.clear(helpInput);
     await user.type(helpInput, 'https://new-help.example.com');
 
@@ -140,7 +140,7 @@ describe('Settings page - save', () => {
     await screen.findByRole('heading', { name: 'Configuration' });
 
     await goToGeneralTab(user);
-    await user.type(screen.getByRole('textbox', { name: /user manual url/i }), '!');
+    await user.type(screen.getByRole('textbox', { name: /location of the manual/i }), '!');
     await user.click(screen.getByRole('button', { name: /^save$/i }));
 
     await waitFor(() => {
@@ -155,7 +155,7 @@ describe('Settings page - save', () => {
     await screen.findByRole('heading', { name: 'Configuration' });
 
     await goToGeneralTab(user);
-    await user.type(screen.getByRole('textbox', { name: /user manual url/i }), '!');
+    await user.type(screen.getByRole('textbox', { name: /location of the manual/i }), '!');
     await user.click(screen.getByRole('button', { name: /^save$/i }));
 
     await waitFor(() => {
@@ -175,7 +175,7 @@ describe('Settings page - save', () => {
     await screen.findByRole('heading', { name: 'Configuration' });
 
     await goToGeneralTab(user);
-    await user.type(screen.getByRole('textbox', { name: /user manual url/i }), '!');
+    await user.type(screen.getByRole('textbox', { name: /location of the manual/i }), '!');
     await user.click(screen.getByRole('button', { name: /^save$/i }));
 
     await waitFor(() => {
@@ -192,7 +192,7 @@ describe('Settings page - save', () => {
     await screen.findByRole('heading', { name: 'Configuration' });
 
     await goToGeneralTab(user);
-    await user.type(screen.getByRole('textbox', { name: /user manual url/i }), '!');
+    await user.type(screen.getByRole('textbox', { name: /location of the manual/i }), '!');
     await user.click(screen.getByRole('button', { name: /^save$/i }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Network Error');
@@ -204,7 +204,9 @@ describe('Settings page - save', () => {
     await screen.findByRole('heading', { name: 'Configuration' });
 
     await goToGeneralTab(user);
-    const helpInput = screen.getByRole('textbox', { name: /user manual url/i }) as HTMLInputElement;
+    const helpInput = screen.getByRole('textbox', {
+      name: /location of the manual/i,
+    }) as HTMLInputElement;
     const originalValue = helpInput.value;
     await user.clear(helpInput);
     await user.type(helpInput, 'https://changed.example.com');
@@ -216,7 +218,9 @@ describe('Settings page - save', () => {
     await user.click(screen.getByRole('button', { name: /^cancel$/i }));
 
     await waitFor(() => {
-      expect(screen.getByRole('textbox', { name: /user manual url/i })).toHaveValue(originalValue);
+      expect(screen.getByRole('textbox', { name: /location of the manual/i })).toHaveValue(
+        originalValue,
+      );
       expect(screen.getByRole('button', { name: /^save$/i })).toBeDisabled();
     });
   });
@@ -235,7 +239,7 @@ describe('Settings page - save', () => {
     await screen.findByRole('heading', { name: 'Configuration' });
     await goToGeneralTab(user);
 
-    const input = screen.getByRole('textbox', { name: /user manual url/i });
+    const input = screen.getByRole('textbox', { name: /location of the manual/i });
     expect(input).toBeDisabled();
   });
 
@@ -250,7 +254,7 @@ describe('Settings page - save', () => {
     renderSettingsPage();
     await screen.findByRole('heading', { name: 'Configuration' });
     await goToGeneralTab(user);
-    await user.type(screen.getByRole('textbox', { name: /user manual url/i }), '!');
+    await user.type(screen.getByRole('textbox', { name: /location of the manual/i }), '!');
     await user.click(screen.getByRole('button', { name: /^save$/i }));
 
     const alert = await screen.findByRole('alert');
