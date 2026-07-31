@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { screen, within, act } from '@testing-library/react';
+import { screen, within, act, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
@@ -260,9 +260,10 @@ describe('Events page — create, edit, then delete (scenario)', () => {
     const deleteDialog = await screen.findByRole('dialog');
     await user.click(within(deleteDialog).getByRole('button', { name: /Yes, delete/ }));
 
-    await screen.findByRole('columnheader', { name: 'Name' });
-    expect(
-      screen.queryByRole('cell', { name: 'Welcome Layout (renamed)' }),
-    ).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('cell', { name: 'Welcome Layout (renamed)' }),
+      ).not.toBeInTheDocument();
+    });
   });
 });
