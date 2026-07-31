@@ -232,14 +232,11 @@ class Sessions extends Base
             throw new AccessDeniedException();
         }
 
-        // We log out all of this user's sessions.
-        $this->sessionFactory->expireByUserId($id);
-
-        // If the caller is logging themselves out, the in-request Session object still holds
-        // the stale "not expired" state it loaded at the start of this request, and will
-        // otherwise overwrite the expiry we just set above when it's persisted at shutdown.
         if ((int) $id === $this->getUser()->userId) {
             $this->completeLogoutFlow($this->getUser(), $this->session, $this->getLog(), $request);
+        } else {
+            // Logging out someone else should end all of their sessions.
+            $this->sessionFactory->expireByUserId($id);
         }
 
         return $response->withJson([
