@@ -54,7 +54,6 @@ class CASAuthentication extends AuthenticationBase
         $app->map(['GET', 'POST'], '/cas/login', function (ServerRequest $request, Response $response) {
             // Initiate CAS SSO
             $this->initCasClient();
-            \phpCAS::setNoCasServerValidation();
 
             // Login happens here
             \phpCAS::forceAuthentication();
@@ -135,6 +134,14 @@ class CASAuthentication extends AuthenticationBase
             $settings['uri'],
             $settings['service_base_url']
         );
+
+        if (!empty($settings['insecure_skip_verify'])) {
+            // Explicit opt-in only — bypasses CAS server certificate validation.
+            // Intended for local development/testing, never production.
+            \phpCAS::setNoCasServerValidation();
+        } else {
+            \phpCAS::setCasServerCACert($settings['ca_cert'] ?? '/etc/ssl/certs/ca-certificates.crt');
+        }
     }
 
     /** @inheritDoc */
