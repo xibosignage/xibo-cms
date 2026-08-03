@@ -121,60 +121,6 @@ class WidgetDataProviderCache
         ?Carbon $dataModifiedDt,
         bool $isLockIfMiss = true,
     ): bool {
-        $data = $this->fetchAndComputeFreshness($cacheKey, $dataProvider, $dataModifiedDt);
-        $hasData = $data !== null;
-
-        if ($hasData) {
-            $this->applyDataToProvider($data, $dataProvider);
-        }
-
-        // If we do not have data/we're old/missed cache, and we have requested a lock, then we will be refreshing
-        // the cache, so lock the record
-        if ($isLockIfMiss && (!$hasData || $this->isMissOrOld)) {
-            $this->concurrentRequestLock();
-        }
-
-        return $hasData;
-    }
-
-    /**
-     * Like decorateWithCache(), but only mutates the given data provider when the cached data is both present
-     * and fresh (per the same isMissOrOld computation decorateWithCache() uses) - lets a caller check "do I
-     * already have fresh data for this key" without paying the cost of populating (clearData/addItems/meta
-     * loop over the full cached payload) and then immediately discarding a data provider when the answer turns
-     * out to be no. Never locks, since callers of this method always have a fallback of their own (typically a
-     * live fetch) to fall through to on a miss/stale result.
-     * @param DataProvider $dataProvider
-     * @param string $cacheKey
-     * @param Carbon|null $dataModifiedDt The date any associated data was modified.
-     * @return bool true if fresh data was found and applied to $dataProvider
-     */
-    public function decorateIfFresh(DataProvider $dataProvider, string $cacheKey, ?Carbon $dataModifiedDt): bool
-    {
-        $data = $this->fetchAndComputeFreshness($cacheKey, $dataProvider, $dataModifiedDt);
-
-        if ($data === null || $this->isMissOrOld) {
-            return false;
-        }
-
-        $this->applyDataToProvider($data, $dataProvider);
-
-        return true;
-    }
-
-    /**
-     * Resolve this instance's cache key/Item and compute isMissOrOld, without mutating $dataProvider - the
-     * shared first phase of decorateWithCache() and decorateIfFresh().
-     * @param string $cacheKey
-     * @param DataProvider $dataProvider used only to resolve the key's data type/source
-     * @param Carbon|null $dataModifiedDt
-     * @return \stdClass|null the raw cached payload, or null on a miss
-     */
-    private function fetchAndComputeFreshness(
-        string $cacheKey,
-        DataProvider $dataProvider,
-        ?Carbon $dataModifiedDt,
-    ): ?\stdClass {
         // Construct a key
         $this->key = '/widget/'
             . ($dataProvider->getDataType() ?: $dataProvider->getDataSource())
@@ -192,69 +138,64 @@ class WidgetDataProviderCache
         // Get the data (this might be OLD data)
         $data = $this->cache->get();
         $cacheCreationDt = $this->cache->getCreation();
+        $hasData = $data !== null;
 
         // Does the cache have data?
         // we keep data 50% longer than we need to, so that it has a chance to be regenerated out of band
-        if ($data === null) {
+        if (!$hasData) {
             $this->getLog()->debug('decorateWithCache: miss, no data');
             $this->isMissOrOld = true;
-
-            return null;
-        }
-
-        // Determine whether this cache is a miss (i.e. expired and being regenerated, expired, out of date)
-        // We use our own expireDt here because Stash will only return expired data with invalidation method OLD
-        // if the data is currently being regenerated and another process has called lock() on it. Read straight
-        // from the cached payload's own meta (rather than the data provider's) so this check never depends on
-        // the data provider having been mutated first.
-        $expireDt = $data->meta['expireDt'] ?? null;
-        if ($expireDt !== null) {
-            $expireDt = Carbon::createFromFormat('c', $expireDt);
         } else {
-            $expireDt = $this->cache->getExpiration();
+            // Determine whether this cache is a miss (i.e. expired and being regenerated, expired, out of date)
+            // We use our own expireDt here because Stash will only return expired data with invalidation method
+            // OLD if the data is currently being regenerated and another process has called lock() on it. Read
+            // straight from the cached payload's own meta (rather than the data provider's) so this check never
+            // depends on the data provider having been mutated first.
+            $expireDt = $data->meta['expireDt'] ?? null;
+            if ($expireDt !== null) {
+                $expireDt = Carbon::createFromFormat('c', $expireDt);
+            } else {
+                $expireDt = $this->cache->getExpiration();
+            }
+
+            // Determine if the cache returned is a miss or older than the modified/expired dates
+            $this->isMissOrOld = $this->cache->isMiss()
+                || ($dataModifiedDt !== null && $cacheCreationDt !== false
+                    && $dataModifiedDt->isAfter($cacheCreationDt))
+                || $expireDt->isBefore(Carbon::now());
+
+            $this->getLog()->debug('decorateWithCache: cache has data, is miss or old: '
+                . var_export($this->isMissOrOld, true));
+
+            $this->cachedObject = $data;
+            $this->cachedVersionDt = $data->meta['cacheDt'] ?? null;
+
+            // Clear the data provider and add the cached items back to it.
+            $dataProvider->clearData();
+            $dataProvider->clearMeta();
+            $dataProvider->addItems($data->data ?? []);
+
+            // Record any cached mediaIds
+            $this->cachedMediaIds = $data->media ?? [];
+
+            // Record which widgets have already been notified about this data version, so that widgets sharing
+            // this cache key (e.g. identical weather locations) don't each need to be the one that triggered the
+            // fetch in order to notify their own displays.
+            $this->notifiedWidgetIds = $data->notifiedWidgetIds ?? [];
+
+            // Update any meta
+            foreach (($data->meta ?? []) as $key => $item) {
+                $dataProvider->addOrUpdateMeta($key, $item);
+            }
         }
 
-        // Determine if the cache returned is a miss or older than the modified/expired dates
-        $this->isMissOrOld = $this->cache->isMiss()
-            || ($dataModifiedDt !== null && $cacheCreationDt !== false && $dataModifiedDt->isAfter($cacheCreationDt)
-            || ($expireDt->isBefore(Carbon::now()))
-        );
-
-        $this->getLog()->debug('decorateWithCache: cache has data, is miss or old: '
-            . var_export($this->isMissOrOld, true));
-
-        return $data;
-    }
-
-    /**
-     * Apply a fetched cache payload onto the given data provider, and record it as this instance's current
-     * cached state - the shared second phase of decorateWithCache() and decorateIfFresh(), only ever run once
-     * the caller has committed to using this data.
-     * @param \stdClass $data
-     * @param DataProvider $dataProvider
-     */
-    private function applyDataToProvider(\stdClass $data, DataProvider $dataProvider): void
-    {
-        $this->cachedObject = $data;
-        $this->cachedVersionDt = $data->meta['cacheDt'] ?? null;
-
-        // Clear the data provider and add the cached items back to it.
-        $dataProvider->clearData();
-        $dataProvider->clearMeta();
-        $dataProvider->addItems($data->data ?? []);
-
-        // Record any cached mediaIds
-        $this->cachedMediaIds = $data->media ?? [];
-
-        // Record which widgets have already been notified about this data version, so that widgets sharing
-        // this cache key (e.g. identical weather locations) don't each need to be the one that triggered the
-        // fetch in order to notify their own displays.
-        $this->notifiedWidgetIds = $data->notifiedWidgetIds ?? [];
-
-        // Update any meta
-        foreach (($data->meta ?? []) as $key => $item) {
-            $dataProvider->addOrUpdateMeta($key, $item);
+        // If we do not have data/we're old/missed cache, and we have requested a lock, then we will be refreshing
+        // the cache, so lock the record
+        if ($isLockIfMiss && (!$hasData || $this->isMissOrOld)) {
+            $this->concurrentRequestLock();
         }
+
+        return $hasData;
     }
 
     /**
@@ -313,23 +254,6 @@ class WidgetDataProviderCache
 
         $this->getLog()->debug('saveToCache: cached ' . $this->key
             . ' for ' . $dataProvider->getCacheTtl() . ' seconds');
-    }
-
-    /**
-     * Derive a widget-scoped variant of a shared cache key, so a widget's own fallback content can be cached
-     * separately (via a second WidgetDataProviderCache instance driven through the same decorateWithCache()/
-     * saveToCache()/shouldNotifyForWidget() API) from the shared slot other widgets with identical settings
-     * also read from - saving fallback content into the shared slot would silently overwrite whatever those
-     * other widgets are meant to see. Hashing the base key before appending the widgetId (rather than
-     * appending to the raw, pre-hash key) means a widget property value substituted into the raw key can't
-     * be crafted to collide with another widget's fallback slot.
-     * @param string $cacheKey The raw (pre-hash) shared cache key, as passed to decorateWithCache()
-     * @param int $widgetId
-     * @return string
-     */
-    public static function deriveFallbackKey(string $cacheKey, int $widgetId): string
-    {
-        return md5($cacheKey) . '/fallback/' . $widgetId;
     }
 
     /**

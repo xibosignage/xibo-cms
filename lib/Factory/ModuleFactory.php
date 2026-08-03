@@ -22,7 +22,6 @@
 
 namespace Xibo\Factory;
 
-use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
@@ -128,70 +127,6 @@ class ModuleFactory extends BaseFactory
     }
 
     /**
-     * Resolve a WidgetDataProviderCache against a widget's own fallback-scoped slot, applying its cached
-     * content only if that content is present and still fresh (check via the returned instance's own
-     * isCacheMissOrOld()) - centralizes the "construct a second instance, derive its fallback key, check
-     * freshness" pattern needed by callers (WidgetSyncTask, Widget::getData()) that may still fall through to
-     * a live fetch when the widget's own fallback content has itself gone stale. Always returns the resolved
-     * instance (never null) so that, if a live fetch also turns out to need fallback data, the caller can
-     * still call saveToCache() on this same instance - saveToCache() requires its own key/cache Item to have
-     * already been resolved by a prior decorateWithCache()/decorateIfFresh() call, which this method performs
-     * regardless of the freshness result.
-     * @param DataProviderInterface $dataProvider
-     * @param string $cacheKey The shared (raw, pre-hash) cache key this widget would otherwise share with
-     *   sibling widgets that have identical settings.
-     * @param int $widgetId
-     * @param Carbon|null $dataModifiedDt
-     * @return WidgetDataProviderCache
-     */
-    public function getFallbackDataProviderCache(
-        DataProviderInterface $dataProvider,
-        string $cacheKey,
-        int $widgetId,
-        ?Carbon $dataModifiedDt,
-    ): WidgetDataProviderCache {
-        $fallbackCache = $this->createWidgetDataProviderCache();
-
-        $fallbackCache->decorateIfFresh(
-            $dataProvider,
-            WidgetDataProviderCache::deriveFallbackKey($cacheKey, $widgetId),
-            $dataModifiedDt
-        );
-
-        return $fallbackCache;
-    }
-
-    /**
-     * Get a WidgetDataProviderCache for a widget's own fallback-scoped slot, populated with whatever content
-     * is present regardless of freshness - centralizes the "construct a second instance, derive its fallback
-     * key, check presence" pattern needed by read-only callers (XMDS) that never re-fetch, and so would rather
-     * serve stale fallback content than none at all.
-     * @param DataProviderInterface $dataProvider
-     * @param string $cacheKey The shared (raw, pre-hash) cache key this widget would otherwise share with
-     *   sibling widgets that have identical settings.
-     * @param int $widgetId
-     * @return WidgetDataProviderCache|null the populated instance if any data was found, else null
-     */
-    public function getFallbackDataProviderCacheIfPresent(
-        DataProviderInterface $dataProvider,
-        string $cacheKey,
-        int $widgetId,
-    ): ?WidgetDataProviderCache {
-        $fallbackCache = $this->createWidgetDataProviderCache();
-
-        if ($fallbackCache->decorateWithCache(
-            $dataProvider,
-            WidgetDataProviderCache::deriveFallbackKey($cacheKey, $widgetId),
-            null,
-            false
-        )) {
-            return $fallbackCache;
-        }
-
-        return null;
-    }
-
-    /**
      * Determine the cache key
      *
      * @param  Module                       $module
@@ -260,9 +195,11 @@ class ModuleFactory extends BaseFactory
                 }
             }
 
-            // Include a separate cache per fallback data?
-            if ($module->fallbackData == 1) {
-                $cacheKey .= '_fb ' . $widget->getOptionValue('showFallback', 'never');
+            // A widget with fallback configured gets its own private cache slot, so that its own fallback
+            // content (or its own live data) never shares a slot with sibling widgets that have identical
+            // settings.
+            if ($module->fallbackData == 1 && $widget->getOptionValue('showFallback', 'never') !== 'never') {
+                $cacheKey .= '_widget' . $widget->widgetId;
             }
         }
 

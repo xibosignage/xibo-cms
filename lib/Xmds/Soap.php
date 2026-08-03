@@ -2537,23 +2537,6 @@ class Soap
                                 false
                             );
 
-                            // If the shared cache has nothing, this widget may still have its own fallback
-                            // content cached in a widget-scoped slot - check that via a second
-                            // WidgetDataProviderCache instance keyed off this widget's own widgetId, and use
-                            // it in place of the shared instance if it has data.
-                            if (!$hasData && $dataModule->fallbackData == 1) {
-                                $fallbackCache = $this->moduleFactory->getFallbackDataProviderCacheIfPresent(
-                                    $dataProvider,
-                                    $cacheKey,
-                                    $widget->widgetId
-                                );
-
-                                if ($fallbackCache !== null) {
-                                    $widgetDataProviderCache = $fallbackCache;
-                                    $hasData = true;
-                                }
-                            }
-
                             if (!$hasData) {
                                 throw new NotFoundException('Cache not ready');
                             }
