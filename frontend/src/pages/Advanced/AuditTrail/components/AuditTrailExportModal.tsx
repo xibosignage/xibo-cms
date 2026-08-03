@@ -47,7 +47,10 @@ export default function AuditTrailExportModal({ onClose }: AuditTrailExportModal
     setError(null);
     setIsExporting(true);
     try {
-      await exportAuditTrail({ filterFromDt, filterToDt });
+      await exportAuditTrail({
+        filterFromDt: `${filterFromDt} 00:00:00`,
+        filterToDt: `${filterToDt} 23:59:59`,
+      });
       onClose();
     } catch {
       setError(t('Export failed. Please try again.'));
@@ -85,12 +88,14 @@ export default function AuditTrailExportModal({ onClose }: AuditTrailExportModal
           name="filterFromDt"
           value={filterFromDt}
           onChange={(_, val) => setFilterFromDt(val ?? '')}
+          showTimePicker={false}
         />
         <DateFilter
           label={t('To Date')}
           name="filterToDt"
           value={filterToDt}
           onChange={(_, val) => setFilterToDt(val ?? '')}
+          showTimePicker={false}
         />
         {error && <p className="text-sm text-red-600">{error}</p>}
       </div>

@@ -57,11 +57,13 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<AuditTrailFilt
     label: t('From Date'),
     name: 'fromDt',
     type: 'date',
+    showTimePicker: false,
   },
   {
     label: t('To Date'),
     name: 'toDt',
     type: 'date',
+    showTimePicker: false,
   },
   {
     label: t('User'),
