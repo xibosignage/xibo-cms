@@ -139,6 +139,8 @@ class Font extends Base
         $fonts = $this->fontFactory->query($this->gridRenderSort($parsedQueryParams), $this->gridRenderFilter([
             'id' => $parsedQueryParams->getInt('id'),
             'name' => $parsedQueryParams->getString('name'),
+            'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
+            'logicalOperatorName' => $parsedQueryParams->getString('logicalOperatorName'),
         ], $parsedQueryParams));
 
         foreach ($fonts as $font) {
