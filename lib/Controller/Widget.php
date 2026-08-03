@@ -1175,6 +1175,7 @@ class Widget extends Base
 
         // Will we use fallback data if available?
         $showFallback = $widget->getOptionValue('showFallback', 'never');
+        $fallbackModifiedDt = null;
         if ($showFallback !== 'never') {
             // What data type are we dealing with?
             try {
@@ -1200,6 +1201,10 @@ class Widget extends Base
         }
 
         // Use the cache if we can.
+        // $activeCache tracks whichever instance ends up holding the winning data (shared vs. this widget's
+        // own fallback-scoped slot), since getCachedMediaIds() below must read from the right one.
+        $activeCache = $widgetDataProviderCache;
+
         if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey, $dataModifiedDt)
             || $widgetDataProviderCache->isCacheMissOrOld()
         ) {
@@ -1209,13 +1214,26 @@ class Widget extends Base
                 // Before re-attempting a live fetch (which may be rate-limited or down), check whether this
                 // widget already has its own still-fresh fallback content from a previous cycle, and reuse it
                 // rather than hitting the live source again on every preview request while it stays in
-                // fallback mode.
-                if ($showFallback !== 'never'
-                    && $widgetDataProviderCache->decorateWithFallbackCache($dataProvider, $widget->widgetId, true)
-                ) {
+                // fallback mode. Fallback content lives in its own widget-scoped cache slot (a second
+                // WidgetDataProviderCache instance keyed off this widget's own widgetId) so that it never
+                // collides with the shared slot sibling widgets with identical settings also read from -
+                // driven through the exact same decorateWithCache()/saveToCache() API as the shared cache,
+                // just against a different key, rather than a bespoke parallel mechanism.
+                $fallbackCache = $showFallback !== 'never'
+                    ? $this->moduleFactory->getFallbackDataProviderCache(
+                        $dataProvider,
+                        $cacheKey,
+                        $widget->widgetId,
+                        $fallbackModifiedDt
+                    )
+                    : null;
+
+                if ($fallbackCache !== null && !$fallbackCache->isCacheMissOrOld()) {
                     $this->getLog()->debug(
                         'getData: reusing still-fresh fallback content for widgetId ' . $widget->widgetId
                     );
+
+                    $activeCache = $fallbackCache;
                 } else {
                     $dataProvider->clearData();
                     $dataProvider->clearMeta();
@@ -1292,9 +1310,12 @@ class Widget extends Base
                     if ($isFallback) {
                         // Fallback content is this widget's own private, user-authored data - never write it
                         // into the shared cache entry that other widgets with identical settings also read
-                        // from, or it would silently overwrite what they're meant to see. Give it its own
-                        // widget-scoped slot.
-                        $widgetDataProviderCache->saveFallbackToCache($dataProvider, $widget->widgetId);
+                        // from, or it would silently overwrite what they're meant to see. $fallbackCache is
+                        // guaranteed non-null here: $isFallback can only be true when $showFallback !== 'never'
+                        // (see the condition above), exactly the condition under which $fallbackCache was
+                        // constructed.
+                        $fallbackCache->saveToCache($dataProvider, $widget->widgetId);
+                        $activeCache = $fallbackCache;
                     } elseif ($dataProvider->isHandled()) {
                         $widgetDataProviderCache->saveToCache($dataProvider);
                     } else {
@@ -1316,7 +1337,7 @@ class Widget extends Base
         }
 
         // Add permissions needed to see linked media
-        $media = $widgetDataProviderCache->getCachedMediaIds();
+        $media = $activeCache->getCachedMediaIds();
         $this->getLog()->debug('getData: linking ' . count($media) . ' images');
 
         foreach ($media as $mediaId) {

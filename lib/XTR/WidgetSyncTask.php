@@ -256,6 +256,7 @@ class WidgetSyncTask implements TaskInterface
 
         // Will we use fallback data if available?
         $showFallback = $widget->getOptionValue('showFallback', 'never');
+        $fallbackModifiedDt = null;
         if ($showFallback !== 'never') {
             // What data type are we dealing with?
             try {
@@ -290,15 +291,27 @@ class WidgetSyncTask implements TaskInterface
                 // Before re-attempting a live fetch (which may be rate-limited or down), check whether this
                 // widget already has its own still-fresh fallback content from a previous cycle, and reuse it
                 // rather than hitting the live source again every sync cycle while it stays in fallback mode.
-                if ($showFallback !== 'never'
-                    && $widgetDataProviderCache->decorateWithFallbackCache($dataProvider, $widget->widgetId, true)
-                ) {
+                // Fallback content lives in its own widget-scoped cache slot (a second WidgetDataProviderCache
+                // instance keyed off this widget's own widgetId) so that it never collides with the shared
+                // slot sibling widgets with identical settings also read from - driven through the exact same
+                // decorateWithCache()/saveToCache()/shouldNotifyForWidget() API as the shared cache, just
+                // against a different key, rather than a bespoke parallel mechanism.
+                $fallbackCache = $showFallback !== 'never'
+                    ? $this->moduleFactory->getFallbackDataProviderCache(
+                        $dataProvider,
+                        $cacheKey,
+                        $widget->widgetId,
+                        $fallbackModifiedDt
+                    )
+                    : null;
+
+                if ($fallbackCache !== null && !$fallbackCache->isCacheMissOrOld()) {
                     $this->getLogger()->debug(
                         'cache: reusing still-fresh fallback content for widgetId ' . $widget->widgetId
                     );
 
-                    $mediaIds = $widgetDataProviderCache->getCachedMediaIds();
-                    $shouldNotify = $widgetDataProviderCache->shouldNotifyForFallback($widget->widgetId);
+                    $mediaIds = $fallbackCache->getCachedMediaIds();
+                    $shouldNotify = $fallbackCache->shouldNotifyForWidget($widget->widgetId);
                 } else {
                     $dataProvider->clearData();
                     $dataProvider->clearMeta();
@@ -379,10 +392,12 @@ class WidgetSyncTask implements TaskInterface
                     if ($isFallback) {
                         // Fallback content is this widget's own private, user-authored data - never write it
                         // into the shared cache entry that other widgets with identical settings also read
-                        // from, or it would silently overwrite what they're meant to see. Give it its own
-                        // widget-scoped slot.
-                        $widgetDataProviderCache->saveFallbackToCache($dataProvider, $widget->widgetId);
-                        $shouldNotify = $widgetDataProviderCache->shouldNotifyForFallback($widget->widgetId);
+                        // from, or it would silently overwrite what they're meant to see. $fallbackCache is
+                        // guaranteed non-null here: $isFallback can only be true when $showFallback !== 'never'
+                        // (see the condition above), exactly the condition under which $fallbackCache was
+                        // constructed. Seed the initiating widget directly, as below.
+                        $fallbackCache->saveToCache($dataProvider, $widget->widgetId);
+                        $shouldNotify = true;
                     } elseif ($dataProvider->isHandled()) {
                         // Seed the initiating widget directly - it's by definition the first to know about
                         // this version, so there's no need for a separate shouldNotifyForWidget() round trip.
