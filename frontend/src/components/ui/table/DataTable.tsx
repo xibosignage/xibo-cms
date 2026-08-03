@@ -200,7 +200,7 @@ export function DataTable<TData, TValue>({
 
   const handleExportCSV = () => {
     const exportableColumns = table
-      .getVisibleLeafColumns()
+      .getAllLeafColumns()
       .filter((column) => isExportableColumn(column.id, column.columnDef.meta));
 
     const headers = exportableColumns.map((column) => {
@@ -209,7 +209,7 @@ export function DataTable<TData, TValue>({
 
     const rows = table.getRowModel().rows.map((row) =>
       row
-        .getVisibleCells()
+        .getAllCells()
         .filter((cell) => isExportableColumn(cell.column.id, cell.column.columnDef.meta))
         .map((cell) => {
           const getExportValue = cell.column.columnDef.meta?.getExportValue;
