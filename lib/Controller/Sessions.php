@@ -27,8 +27,6 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\SessionFactory;
 use Xibo\Helper\DateFormatHelper;
-use Xibo\Helper\LogoutTrait;
-use Xibo\Helper\Session;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 
@@ -52,8 +50,6 @@ use Xibo\Support\Exception\AccessDeniedException;
 )]
 class Sessions extends Base
 {
-    use LogoutTrait;
-
     /**
      * @var StorageServiceInterface
      */
@@ -65,21 +61,14 @@ class Sessions extends Base
     private $sessionFactory;
 
     /**
-     * @var Session
-     */
-    private $session;
-
-    /**
      * Set common dependencies.
      * @param StorageServiceInterface $store
      * @param SessionFactory $sessionFactory
-     * @param Session $session
      */
-    public function __construct($store, $sessionFactory, $session)
+    public function __construct($store, $sessionFactory)
     {
         $this->store = $store;
         $this->sessionFactory = $sessionFactory;
-        $this->session = $session;
     }
 
     #[OA\Get(
@@ -180,6 +169,10 @@ class Sessions extends Base
             $session->expiresAt =
                 Carbon::createFromTimestamp($session->expiresAt)?->format(DateFormatHelper::getSystemFormat());
             $session->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($session));
+            $session->setUnmatchedProperty(
+                'isCurrentSession',
+                $session->userId === $this->getUser()->userId && session_id() === $session->sessionId
+            );
         }
 
         $recordsTotal = $this->sessionFactory->countLast();
@@ -193,7 +186,9 @@ class Sessions extends Base
     #[OA\Delete(
         path: '/sessions/logout/{id}',
         operationId: 'sessionLogout',
-        description: 'Logs out all sessions for the given user',
+        description: 'Logs out sessions for the given user. If the caller is acting on ' .
+            'their own account, every session other than the one making this request is ' .
+            'ended; otherwise every session belonging to the given user is ended.',
         summary: 'Session Logout',
         tags: ['session']
     )]
@@ -224,7 +219,6 @@ class Sessions extends Base
      * @throws AccessDeniedException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function logout(Request $request, Response $response, $id)
     {
@@ -232,11 +226,15 @@ class Sessions extends Base
             throw new AccessDeniedException();
         }
 
-        if ((int) $id === $this->getUser()->userId) {
-            $this->completeLogoutFlow($this->getUser(), $this->session, $this->getLog(), $request);
+        $userId = (int) $id;
+
+        if ($userId === $this->getUser()->userId) {
+            // Matches the legacy design, where logging out of another session ends all other sessions except the
+            // current one, which is handled separately via the frontend /logout redirect.
+            $this->sessionFactory->expireByUserIdExceptSessionId($userId, session_id());
         } else {
-            // Logging out someone else should end all of their sessions.
-            $this->sessionFactory->expireByUserId($id);
+            // Logging out someone else ends all of their sessions.
+            $this->sessionFactory->expireByUserId($userId);
         }
 
         return $response->withJson([

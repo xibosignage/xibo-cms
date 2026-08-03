@@ -491,8 +491,7 @@ class Controllers
             '\Xibo\Controller\Sessions' => function (ContainerInterface $c) {
                 $controller = new \Xibo\Controller\Sessions(
                     $c->get('store'),
-                    $c->get('sessionFactory'),
-                    $c->get('session')
+                    $c->get('sessionFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;

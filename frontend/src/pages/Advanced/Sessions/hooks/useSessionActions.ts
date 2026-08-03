@@ -25,7 +25,7 @@ import type { TFunction } from 'i18next';
 import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
 
-import { withPublicPath } from '@/config/publicPath';
+import { notify } from '@/components/ui/Notification';
 import { logoutSession } from '@/services/sessionApi';
 import type { Session } from '@/types/session';
 
@@ -34,7 +34,6 @@ interface UseSessionActionsProps {
   handleRefresh: () => void;
   closeModal: () => void;
   setRowSelection: Dispatch<SetStateAction<RowSelectionState>>;
-  currentUserId?: number;
 }
 
 export function useSessionActions({
@@ -42,7 +41,6 @@ export function useSessionActions({
   handleRefresh,
   closeModal,
   setRowSelection,
-  currentUserId,
 }: UseSessionActionsProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState<string | null>(null);
@@ -67,16 +65,9 @@ export function useSessionActions({
             ? reason.response.data.message
             : t('{{count}} item(s) could not be logged out.', { count: failed.length });
         setLogoutError(message);
+        notify.error(message);
         setRowSelection({});
         handleRefresh();
-        return;
-      }
-
-      // If the caller just logged out their own (only) session, their own credentials are
-      // now dead - redirect them straight to the real logout flow rather than leaving them
-      // sitting on a grid they can no longer legitimately use.
-      if (itemsToLogout.length === 1 && itemsToLogout[0]?.userId === currentUserId) {
-        window.location.href = withPublicPath('logout');
         return;
       }
 

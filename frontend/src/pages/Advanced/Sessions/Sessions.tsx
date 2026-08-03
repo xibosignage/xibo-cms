@@ -40,17 +40,22 @@ import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
-import { useUserContext } from '@/context/UserContext';
+import { withPublicPath } from '@/config/publicPath';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import type { Session } from '@/types/session';
 import { countActiveFilters } from '@/utils/filters';
 
+// Matches the legacy design: your own current session logs out via the real /logout
+// route directly, not the admin-facing bulk endpoint.
+const redirectToLogout = () => {
+  window.location.href = withPublicPath('logout');
+};
+
 export default function Sessions() {
   const { t } = useTranslation();
   const { formatDateTime } = useDateFormatter();
-  const { user } = useUserContext();
   const queryClient = useQueryClient();
 
   const {
@@ -143,24 +148,15 @@ export default function Sessions() {
     handleRefresh,
     closeModal,
     setRowSelection,
-    currentUserId: user?.userId,
   });
 
-  const handleLogout = (id: number) => {
-    const session = sessionList.find((m) => m.userId === id);
-
-    if (!session) {
+  const handleLogout = (session: Session) => {
+    if (session.isCurrentSession) {
+      redirectToLogout();
       return;
     }
 
     setLogoutError(null);
-
-    // Logging out your own session needs no confirmation
-    if (id === user?.userId) {
-      confirmLogout([session]);
-      return;
-    }
-
     setSessionToLogout([session]);
     openModal('logout');
   };
