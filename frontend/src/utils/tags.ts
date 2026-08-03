@@ -24,6 +24,10 @@ import type { Tag } from '@/types/tag';
 const tagKey = (tag: Tag): string =>
   tag.value != null && tag.value !== '' ? `${tag.tag}|${tag.value}` : tag.tag;
 
+export function formatTagsForExport(tags?: Tag[] | null): string {
+  return (tags ?? []).map(tagKey).join(', ');
+}
+
 export function mergeEntityTags(items: Array<{ tags?: Tag[] | null }>): Tag[] {
   return Array.from(
     new Map(items.flatMap((item) => item.tags ?? []).map((tag) => [tagKey(tag), tag])).values(),

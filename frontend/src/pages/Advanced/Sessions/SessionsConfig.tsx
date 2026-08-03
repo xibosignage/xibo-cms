@@ -94,6 +94,9 @@ export const getSessionColumns = (props: SessionActionsProps): ColumnDef<Session
       header: t('Last Accessed'),
       size: 180,
       cell: (info) => <TextCell weight="bold">{formatDateTime(info.getValue<string>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatDateTime(row.lastAccessed),
+      },
     },
 
     {
@@ -126,6 +129,9 @@ export const getSessionColumns = (props: SessionActionsProps): ColumnDef<Session
       header: t('Expires At'),
       size: 140,
       cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatDateTime(row.expiresAt),
+      },
     },
     {
       id: 'tableActions',

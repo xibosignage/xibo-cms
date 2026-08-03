@@ -234,6 +234,10 @@ export const getMenuBoardColumns = (props: MenuBoardActionsProps): ColumnDef<Men
         const ts = info.getValue<number>();
         return <TextCell>{ts ? formatDateTime(new Date(ts * 1000)) : ''}</TextCell>;
       },
+      meta: {
+        getExportValue: (row) =>
+          row.modifiedDt ? formatDateTime(new Date(row.modifiedDt * 1000)) : '',
+      },
     },
     {
       id: 'tableActions',

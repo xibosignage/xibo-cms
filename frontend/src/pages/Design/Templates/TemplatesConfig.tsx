@@ -47,6 +47,7 @@ import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
 import type { Template } from '@/types/templates';
 import type { DateLike } from '@/utils/date';
+import { formatTagsForExport } from '@/utils/tags';
 
 export interface TemplatesFilterInput {
   template?: string;
@@ -151,6 +152,9 @@ export const getTemplateColumn = (props: TemplatesActionsProps): ColumnDef<Templ
       header: t('Thumbnail'),
       size: 140,
       enableSorting: false,
+      meta: {
+        excludeFromExport: true,
+      },
       cell: (info) => {
         const row = info.row.original;
 
@@ -188,6 +192,9 @@ export const getTemplateColumn = (props: TemplatesActionsProps): ColumnDef<Templ
               }));
               return <TagsCell tags={formattedTags} />;
             },
+            meta: {
+              getExportValue: (row) => formatTagsForExport(row.tags),
+            },
           },
         ] as ColumnDef<Template>[])
       : []),
@@ -223,6 +230,9 @@ export const getTemplateColumn = (props: TemplatesActionsProps): ColumnDef<Templ
       size: 160,
       cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
       enableSorting: true,
+      meta: {
+        getExportValue: (row) => formatDateTime(row.modifiedDt),
+      },
     },
 
     {

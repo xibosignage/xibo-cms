@@ -222,6 +222,9 @@ export const getUserColumns = (props: UserActionsProps): ColumnDef<User>[] => {
       size: 140,
       enableSorting: false,
       cell: (info) => <TextCell>{getUserTypeLabel(t, info.getValue<number>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => getUserTypeLabel(t, row.userTypeId),
+      },
     },
     {
       accessorKey: 'email',

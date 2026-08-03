@@ -155,6 +155,9 @@ export const getAuditTrailColumns = (
       const ts = info.getValue<number>();
       return <TextCell>{ts ? formatDateTime(new Date(ts * 1000)) : ''}</TextCell>;
     },
+    meta: {
+      getExportValue: (row) => (row.logDate ? formatDateTime(new Date(row.logDate * 1000)) : ''),
+    },
   },
   {
     accessorKey: 'userName',
@@ -199,5 +202,8 @@ export const getAuditTrailColumns = (
       return JSON.stringify(row.objectAfter);
     },
     cell: (info) => <ObjectAfterCell value={info.row.original.objectAfter} />,
+    meta: {
+      excludeFromExport: true,
+    },
   },
 ];

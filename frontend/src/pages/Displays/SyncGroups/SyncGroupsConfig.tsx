@@ -158,12 +158,18 @@ export const getSyncGroupColumns = (props: SyncGroupActionsProps): ColumnDef<Syn
       header: t('Created Date'),
       size: 180,
       cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatDateTime(row.createdDt),
+      },
     },
     {
       accessorKey: 'modifiedDt',
       header: t('Modified Date'),
       size: 180,
       cell: (info) => <TextCell>{formatDateTime(info.getValue<string | null>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatDateTime(row.modifiedDt),
+      },
     },
     {
       accessorKey: 'owner',

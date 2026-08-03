@@ -419,6 +419,10 @@ export const getEventColumns = (props: EventActionsProps): ColumnDef<Event>[] =>
         }
         return <TextCell>{formatUnixTimestamp(row.original.fromDt, formatDateTime)}</TextCell>;
       },
+      meta: {
+        getExportValue: (row) =>
+          row.isAlways === 1 ? t('Always') : formatUnixTimestamp(row.fromDt, formatDateTime),
+      },
     },
     {
       accessorKey: 'toDt',
@@ -429,6 +433,10 @@ export const getEventColumns = (props: EventActionsProps): ColumnDef<Event>[] =>
           return <StatusCell label={t('Always')} variation="outline" type="neutral" />;
         }
         return <TextCell>{formatUnixTimestamp(row.original.toDt, formatDateTime)}</TextCell>;
+      },
+      meta: {
+        getExportValue: (row) =>
+          row.isAlways === 1 ? t('Always') : formatUnixTimestamp(row.toDt, formatDateTime),
       },
     },
     {
@@ -510,6 +518,9 @@ export const getEventColumns = (props: EventActionsProps): ColumnDef<Event>[] =>
       cell: (info) => (
         <TextCell>{formatUnixTimestamp(info.getValue<number>(), formatDateTime)}</TextCell>
       ),
+      meta: {
+        getExportValue: (row) => formatUnixTimestamp(row.recurrenceRange, formatDateTime),
+      },
     },
     {
       accessorKey: 'isPriority',
@@ -531,6 +542,9 @@ export const getEventColumns = (props: EventActionsProps): ColumnDef<Event>[] =>
         const val = info.getValue<string | undefined>();
         return <TextCell>{val ? formatDateTime(val) : '—'}</TextCell>;
       },
+      meta: {
+        getExportValue: (row) => (row.createdOn ? formatDateTime(row.createdOn) : ''),
+      },
     },
     {
       accessorKey: 'updatedOn',
@@ -539,6 +553,9 @@ export const getEventColumns = (props: EventActionsProps): ColumnDef<Event>[] =>
       cell: (info) => {
         const val = info.getValue<string | null | undefined>();
         return <TextCell>{val ? formatDateTime(val) : '—'}</TextCell>;
+      },
+      meta: {
+        getExportValue: (row) => (row.updatedOn ? formatDateTime(row.updatedOn) : ''),
       },
     },
     {
