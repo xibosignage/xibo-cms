@@ -23,19 +23,9 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
-import {
-  mockSuperAdmin,
-  mockFolderTree,
-  mockGroupAdmin,
-  mockUser,
-  mockUserGroup,
-} from '../../../fixtures/user';
+import { mockSuperAdmin, mockGroupAdmin, mockUser } from '../../../fixtures/user';
+import { setupAddEditUserModalMocks } from '../../../mocks/addEditUserModal';
 import { renderAddEditUserModal } from '../helpers/renderAddEditUserModal';
-
-import { fetchFolderTree } from '@/services/folderApi';
-import { fetchGroupFolderPermissions } from '@/services/permissionsApi';
-import { fetchHomepages } from '@/services/userApi';
-import { fetchUserGroups } from '@/services/userGroupApi';
 
 // =============================================================================
 // Module mocks
@@ -58,10 +48,7 @@ vi.mock('@/components/ui/modals/Modal');
 describe('AddEditUserModal - General tab', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(fetchFolderTree).mockResolvedValue(mockFolderTree);
-    vi.mocked(fetchGroupFolderPermissions).mockResolvedValue(new Map());
-    vi.mocked(fetchUserGroups).mockResolvedValue({ rows: [mockUserGroup], totalCount: 1 });
-    vi.mocked(fetchHomepages).mockResolvedValue([]);
+    setupAddEditUserModalMocks();
   });
 
   test('add mode: Username, Email, and Password fields are empty', async () => {

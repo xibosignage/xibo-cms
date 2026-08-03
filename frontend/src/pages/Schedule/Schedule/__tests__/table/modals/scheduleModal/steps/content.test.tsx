@@ -34,6 +34,7 @@ import {
   setupMediaMocks,
   setupPlaylistMocks,
   setupResolutionMocks,
+  setupScheduleCriteriaMocks,
   setupSyncGroupMocks,
 } from '../../../../mocks/api';
 import { renderScheduleModal } from '../helpers/renderScheduleModal';
@@ -87,6 +88,7 @@ vi.mock('@/services/mediaApi');
 vi.mock('@/services/playlistApi');
 vi.mock('@/services/syncGroupApi');
 vi.mock('@/services/datasetApi');
+vi.mock('@/services/scheduleCriteriaApi');
 
 vi.mock('@/components/ui/forms/DatePickerInput', () => ({
   default: ({ label }: { label?: string }) => <input aria-label={label} readOnly />,
@@ -133,6 +135,7 @@ describe('ScheduleEventModal - Step 0 (Content)', () => {
     setupMediaMocks();
     setupPlaylistMocks();
     setupSyncGroupMocks();
+    setupScheduleCriteriaMocks();
     setupDatasetMocks();
   });
 

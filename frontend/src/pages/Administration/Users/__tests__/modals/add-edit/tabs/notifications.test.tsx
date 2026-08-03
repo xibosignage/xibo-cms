@@ -23,13 +23,9 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
-import { mockSuperAdmin, mockFolderTree, mockUser, mockUserGroup } from '../../../fixtures/user';
+import { mockSuperAdmin, mockUser } from '../../../fixtures/user';
+import { setupAddEditUserModalMocks } from '../../../mocks/addEditUserModal';
 import { renderAddEditUserModal } from '../helpers/renderAddEditUserModal';
-
-import { fetchFolderTree } from '@/services/folderApi';
-import { fetchGroupFolderPermissions } from '@/services/permissionsApi';
-import { fetchHomepages } from '@/services/userApi';
-import { fetchUserGroups } from '@/services/userGroupApi';
 
 // =============================================================================
 // Module mocks
@@ -62,10 +58,7 @@ const openNotificationsTab = async (user: ReturnType<typeof userEvent.setup>) =>
 describe('AddEditUserModal - Notifications tab', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(fetchFolderTree).mockResolvedValue(mockFolderTree);
-    vi.mocked(fetchGroupFolderPermissions).mockResolvedValue(new Map());
-    vi.mocked(fetchUserGroups).mockResolvedValue({ rows: [mockUserGroup], totalCount: 1 });
-    vi.mocked(fetchHomepages).mockResolvedValue([]);
+    setupAddEditUserModalMocks();
   });
 
   test("all 7 notification switches reflect the draft's saved values", async () => {
