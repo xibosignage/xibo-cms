@@ -25,7 +25,6 @@ import type { TFunction } from 'i18next';
 import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
 
-import { notify } from '@/components/ui/Notification';
 import { logoutSession } from '@/services/sessionApi';
 import type { Session } from '@/types/session';
 
@@ -65,7 +64,6 @@ export function useSessionActions({
             ? reason.response.data.message
             : t('{{count}} item(s) could not be logged out.', { count: failed.length });
         setLogoutError(message);
-        notify.error(message);
         setRowSelection({});
         handleRefresh();
         return;
