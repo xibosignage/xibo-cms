@@ -204,6 +204,7 @@ class FontFactory extends BaseFactory
             'id',
             'name',
             'fileName',
+            'familyName',
             'createdAt',
             'modifiedAt',
             'modifiedBy',

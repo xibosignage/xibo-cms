@@ -672,10 +672,12 @@ export default function EditDisplayModal({
         if (!val) {
           return '';
         }
-        if (typeof val === 'number') {
-          return val > 0 ? new Date(val * 1000).toISOString() : '';
+        const date =
+          typeof val === 'number' ? (val > 0 ? new Date(val * 1000) : null) : new Date(val);
+        if (!date || Number.isNaN(date.getTime()) || date.getTime() < Date.now()) {
+          return '';
         }
-        return new Date(val).toISOString();
+        return date.toISOString();
       })(),
       bandwidthLimit: data.bandwidthLimit ?? null,
       clearCachedData: 1,
@@ -1634,11 +1636,13 @@ export default function EditDisplayModal({
                 )}
                 value={draft.auditingUntil}
                 onChange={(iso) => set('auditingUntil', iso)}
+                disablePastDates
               />
               <BandwidthInput
                 valueKb={draft.bandwidthLimit}
                 onChange={(kb) => set('bandwidthLimit', kb)}
                 helpText={t('The bandwidth limit that should be applied. Enter 0 for no limit.')}
+                error={fieldErrors.bandwidthLimit}
               />
               <Checkbox
                 id="clearCachedData"
