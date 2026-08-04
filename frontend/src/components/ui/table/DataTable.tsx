@@ -387,7 +387,7 @@ export function DataTable<TData, TValue>({
               {table.getRowModel().rows.length > 0 ? (
                 table.getRowModel().rows.map((row) => {
                   const isSelected = row.getIsSelected();
-                  const rowBackgroundColor = isSelected ? 'bg-blue-50' : 'bg-white';
+                  const rowBackgroundColor = isSelected ? 'bg-xibo-blue-50' : 'bg-white';
 
                   return (
                     <tr key={row.id} className={rowBackgroundColor}>
