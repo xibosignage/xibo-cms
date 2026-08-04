@@ -37,6 +37,7 @@ interface UseMediaActionsProps {
   closeModal: () => void;
   setRowSelection: Dispatch<SetStateAction<RowSelectionState>>;
   setItemsToMove: (items: Media[]) => void;
+  setItemsToDelete: (items: Media[]) => void;
 }
 
 export function useMediaActions({
@@ -45,6 +46,7 @@ export function useMediaActions({
   closeModal,
   setRowSelection,
   setItemsToMove,
+  setItemsToDelete,
 }: UseMediaActionsProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -73,16 +75,17 @@ export function useMediaActions({
         ),
       );
 
-      const failed = results.filter((r) => r.status === 'rejected');
+      const stillFailed = itemsToDelete.filter((_, index) => results[index]?.status === 'rejected');
 
-      if (failed.length > 0) {
-        const firstRejected = failed[0] as PromiseRejectedResult;
+      if (stillFailed.length > 0) {
+        const firstRejected = results.find((r) => r.status === 'rejected') as PromiseRejectedResult;
         const reason = firstRejected.reason;
         const message =
           isAxiosError(reason) && reason.response?.data?.message
             ? reason.response.data.message
-            : t('{{count}} item(s) could not be deleted.', { count: failed.length });
+            : t('{{count}} item(s) could not be deleted.', { count: stillFailed.length });
         setDeleteError(message);
+        setItemsToDelete(stillFailed);
         setRowSelection({});
         handleRefresh();
         return;
