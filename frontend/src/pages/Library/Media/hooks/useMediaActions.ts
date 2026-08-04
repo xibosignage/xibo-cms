@@ -26,7 +26,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
 
 import { notify } from '@/components/ui/Notification';
-import { selectFolder } from '@/services/folderApi';
+import { selectFolder, type ApiResult } from '@/services/folderApi';
 import { cloneMedia, deleteMedia, tidyLibrary, updateMedia } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
 import type { Tag } from '@/types/tag';
@@ -132,16 +132,17 @@ export function useMediaActions({
       return;
     }
 
-    const movePromises = itemsToMove.map((item) =>
-      selectFolder({
-        folderId: newFolderId,
-        targetId: item.mediaId,
-        targetType: 'library',
-      }),
-    );
-
     try {
-      const results = await Promise.all(movePromises);
+      const results: ApiResult[] = [];
+      for (const item of itemsToMove) {
+        results.push(
+          await selectFolder({
+            folderId: newFolderId,
+            targetId: item.mediaId,
+            targetType: 'library',
+          }),
+        );
+      }
       const failures = results.filter((res) => !res.success);
 
       if (failures.length === 0) {

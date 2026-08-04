@@ -43,7 +43,7 @@ import {
   wakeOnLan,
 } from '@/services/displaysApi';
 import type { MoveCmsData } from '@/services/displaysApi';
-import { selectFolder } from '@/services/folderApi';
+import { selectFolder, type ApiResult } from '@/services/folderApi';
 import type { Display, DisplayCommandTarget } from '@/types/display';
 
 interface UseDisplaysActionsProps {
@@ -106,14 +106,32 @@ export function useDisplaysActions({
     }
 
     try {
-      const movePromises = itemsToMove.map((item) =>
-        selectFolder({
-          folderId: newFolderId,
-          targetId: item.displayGroupId,
-          targetType: 'displaygroup',
-        }),
-      );
-      await Promise.all(movePromises);
+      const results: ApiResult[] = [];
+      for (const item of itemsToMove) {
+        results.push(
+          await selectFolder({
+            folderId: newFolderId,
+            targetId: item.displayGroupId,
+            targetType: 'displaygroup',
+          }),
+        );
+      }
+      const failures = results.filter((res) => !res.success);
+
+      if (failures.length === 0) {
+        notify.info(t('{{count}} items moved successfully!', { count: itemsToMove.length }));
+      } else if (failures.length === itemsToMove.length) {
+        notify.error(t('Failed to move items.'));
+      } else {
+        notify.warning(
+          t('Moved {{success}} items, but {{fail}} failed.', {
+            success: itemsToMove.length - failures.length,
+            fail: failures.length,
+          }),
+        );
+      }
+
+      setRowSelection({});
       handleRefresh();
       closeModal();
     } catch (error) {
