@@ -1639,6 +1639,7 @@ export default function EditDisplayModal({
                 valueKb={draft.bandwidthLimit}
                 onChange={(kb) => set('bandwidthLimit', kb)}
                 helpText={t('The bandwidth limit that should be applied. Enter 0 for no limit.')}
+                error={fieldErrors.bandwidthLimit}
               />
               <Checkbox
                 id="clearCachedData"
