@@ -822,11 +822,11 @@ class ProofOfPlay implements ReportInterface
 
         // Then add the optional groupings
         if ($groupBy === 'display') {
-            $body .= ', display.Display, stat.displayId';
+            $body .= ', display.Display, stat.displayId ';
         } elseif ($groupBy === 'displayGroup') {
-            $body .= ', displaydg.displayGroupId, displaydg.displayGroup';
+            $body .= ', displaydg.displayGroupId, displaydg.displayGroup ';
         } elseif ($groupBy === 'tag') {
-            $body .= ', value, taglink.tagId';
+            $body .= ', value, taglink.tagId ';
         }
 
         $order = '';

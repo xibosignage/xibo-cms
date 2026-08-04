@@ -28,6 +28,7 @@ type DateRangeFilterProps = {
   onChange: (name: string, value: string | number | null) => void;
   isJalali?: boolean;
   className?: string;
+  showTimePicker?: boolean;
 };
 
 export default function DateRangeFilter({
@@ -38,6 +39,7 @@ export default function DateRangeFilter({
   onChange,
   isJalali = false,
   className,
+  showTimePicker,
 }: DateRangeFilterProps) {
   const { t } = useTranslation();
   const { formatDate } = useDateFormatter();
@@ -163,6 +165,7 @@ export default function DateRangeFilter({
                   mode="range"
                   disableFutureDates
                   isJalali={isJalali}
+                  showTimePicker={showTimePicker}
                   onCancel={() => setOpenDatePicker(false)}
                   onApply={(v) => {
                     if (v.type === 'range') {

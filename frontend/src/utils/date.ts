@@ -53,6 +53,16 @@ export function formatDateTime(date: Date, timeZone?: string) {
   return `${get('year')}-${get('month')}-${get('day')} ${get('hour')}:${get('minute')}:${get('second')}`;
 }
 
+export function formatTime(date: Date, timeZone?: string) {
+  const get = getParts(date, {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    ...(timeZone ? { timeZone } : {}),
+  });
+  return `${get('hour')}:${get('minute')}`;
+}
+
 function daysFromNow(days: number) {
   return new Date(Date.now() + days * 24 * 60 * 60 * 1000);
 }

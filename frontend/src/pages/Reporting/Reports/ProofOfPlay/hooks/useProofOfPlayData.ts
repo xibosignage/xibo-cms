@@ -24,7 +24,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { ProofOfPlayFilter } from '../ProofOfPlayConfig';
 
 import { fetchProofOfPlay } from '@/services/proofOfPlayApi';
-import { formatDateTime } from '@/utils/date';
+import { formatDateTime, formatTime } from '@/utils/date';
 
 export const proofOfPlayQueryKeys = {
   all: ['proofOfPlay'] as const,
@@ -44,14 +44,20 @@ export function useProofOfPlayData({ filter, enabled }: UseProofOfPlayParams) {
       let reportFilter: string | undefined;
       let statsFromDt: string | undefined;
       let statsToDt: string | undefined;
+      let statsFromDtTime: string | undefined;
+      let statsToDtTime: string | undefined;
 
       if (filter.reportFilter.startsWith('range:')) {
         const [from, to] = filter.reportFilter.replace('range:', '').split('|');
         if (from) {
-          statsFromDt = formatDateTime(new Date(from));
+          const fromDate = new Date(from);
+          statsFromDt = formatDateTime(fromDate);
+          statsFromDtTime = formatTime(fromDate);
         }
         if (to) {
-          statsToDt = formatDateTime(new Date(to));
+          const toDate = new Date(to);
+          statsToDt = formatDateTime(toDate);
+          statsToDtTime = formatTime(toDate);
         }
       } else if (filter.reportFilter) {
         reportFilter = filter.reportFilter;
@@ -61,6 +67,8 @@ export function useProofOfPlayData({ filter, enabled }: UseProofOfPlayParams) {
         reportFilter,
         statsFromDt,
         statsToDt,
+        statsFromDtTime,
+        statsToDtTime,
         type: filter.type || undefined,
         layoutId: filter.layoutId.length > 0 ? filter.layoutId : undefined,
         mediaId: filter.mediaId.length > 0 ? filter.mediaId : undefined,
