@@ -81,7 +81,7 @@ export const useLogsData = ({
         fromDt: normalizedFromDt,
         seconds: seconds ? Number(seconds) : undefined,
         intervalType: intervalType ? Number(intervalType) : undefined,
-        useRegexForName: useRegexForName === '1' ? 1 : undefined,
+        useRegexForName: useRegexForName ? 1 : undefined,
         ...restFilters,
         userId: restFilters.userId ? Number(restFilters.userId) : undefined,
         displayId: restFilters.displayId ? Number(restFilters.displayId) : undefined,
