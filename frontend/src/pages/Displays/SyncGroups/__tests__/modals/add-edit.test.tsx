@@ -30,6 +30,7 @@ import { renderAddEditModal } from './helpers/renderAddEditModal';
 
 import { createSyncGroup, fetchSyncGroupDisplays, updateSyncGroup } from '@/services/syncGroupApi';
 import { testQueryClient } from '@/setupTests';
+import { waitForClose } from '@/testUtils/rtl';
 
 // =============================================================================
 // Module mocks
@@ -235,7 +236,7 @@ describe('AddAndEditSyncGroupModal', () => {
           resolveCreate = resolve;
         }),
       );
-      renderAddEditModal({ mode: 'add' });
+      const { onClose } = renderAddEditModal({ mode: 'add' });
 
       await user.type(screen.getByRole('textbox', { name: /^name$/i }), 'Lobby Sync');
       await user.click(screen.getByRole('button', { name: /^save$/i }));
@@ -243,8 +244,9 @@ describe('AddAndEditSyncGroupModal', () => {
       // While the promise is unresolved the button label flips to "Saving…".
       expect(await screen.findByRole('button', { name: /saving/i })).toBeDisabled();
 
-      // Resolve so the test doesn't leak a pending promise.
+      // Wait for the resulting close so the update isn't left outside act().
       resolveCreate(mockSyncGroup);
+      await waitForClose(onClose);
     });
 
     // -------------------------------------------------------------------------

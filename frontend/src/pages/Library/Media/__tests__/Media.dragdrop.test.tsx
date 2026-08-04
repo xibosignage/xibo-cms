@@ -22,6 +22,7 @@
 import { screen, waitFor } from '@testing-library/react';
 import { useDropzone } from 'react-dropzone';
 import type * as ReactDropzone from 'react-dropzone';
+import type { FileRejection } from 'react-dropzone';
 import { vi, beforeEach } from 'vitest';
 
 import { mockMediaData, renderMediaPage } from './mediaTestUtils';
@@ -81,9 +82,11 @@ const makeFile = (name = 'chucknorris.png', type = 'image/png') =>
 // Sets up the useDropzone mock. Returns getOnDrop() to retrieve the captured
 // onDrop callback after the component has rendered and registered it.
 const mockDropzone = ({ isDragActive = false } = {}) => {
-  let capturedOnDrop: ((files: File[]) => void) | undefined;
+  let capturedOnDrop: ((files: File[], fileRejections: FileRejection[]) => void) | undefined;
   vi.mocked(useDropzone).mockImplementation((options: Parameters<typeof useDropzone>[0]) => {
-    if (options?.onDrop) capturedOnDrop = options.onDrop as (files: File[]) => void;
+    if (options?.onDrop) {
+      capturedOnDrop = options.onDrop as (files: File[], fileRejections: FileRejection[]) => void;
+    }
     return {
       getRootProps: () => ({}),
       getInputProps: () => ({ ref: { current: null } }),
@@ -91,7 +94,9 @@ const mockDropzone = ({ isDragActive = false } = {}) => {
       open: vi.fn(),
     } as unknown as ReturnType<typeof useDropzone>;
   });
-  return { getOnDrop: () => capturedOnDrop };
+  return {
+    getOnDrop: () => capturedOnDrop && ((files: File[]) => capturedOnDrop!(files, [])),
+  };
 };
 
 // =============================================================================

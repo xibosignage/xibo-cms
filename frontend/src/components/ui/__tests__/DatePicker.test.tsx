@@ -73,7 +73,8 @@ const clickDay = (day: number) => fireEvent.click(findDayButton(day)!);
 const clickApply = () => fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
 const clickCancel = () => fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
-// The period select always defaults to 'PM' on fresh render.
+// The period select always defaults to 'AM' on fresh render (12 AM = midnight,
+// not midday — see e2fc095b9).
 // The hour select always defaults to '12' on fresh render.
 // The minute select always defaults to '00' on fresh render.
 const selectPeriod = (value: 'AM' | 'PM') =>
@@ -177,14 +178,14 @@ describe('DatePicker', () => {
   // Time picker is shown in single mode
   //
   // The time picker is three <select> elements: hour (default '12'),
-  // minute (default '00'), and period (default 'PM').
+  // minute (default '00'), and period (default 'AM').
   // ---------------------------------------------------------------------------
   test('shows the hour, minute, and AM/PM selects in single mode', () => {
     renderSingle();
 
     expect(screen.getByDisplayValue('12')).toBeInTheDocument(); // hour
     expect(screen.getByDisplayValue('00')).toBeInTheDocument(); // minute
-    expect(screen.getByDisplayValue('PM')).toBeInTheDocument(); // period
+    expect(screen.getByDisplayValue('AM')).toBeInTheDocument(); // period
   });
 
   // ---------------------------------------------------------------------------

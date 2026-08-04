@@ -32,6 +32,7 @@ import { UserProvider } from '@/context/UserContext';
 import { fetchDisplays } from '@/services/displaysApi';
 import { assignSyncGroupMembers, fetchSyncGroupDisplays } from '@/services/syncGroupApi';
 import { testQueryClient } from '@/setupTests';
+import { waitForClose } from '@/testUtils/rtl';
 import type { Display } from '@/types/display';
 
 // =============================================================================
@@ -297,7 +298,7 @@ describe('ManageMembersModal', () => {
 
     await user.click(screen.getByRole('button', { name: /^save$/i }));
 
-    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    await waitForClose(onClose);
     expect(assignSyncGroupMembers).not.toHaveBeenCalled();
   });
 
@@ -340,15 +341,16 @@ describe('ManageMembersModal', () => {
     );
     stageSearchResults([{ displayId: 200, display: 'New Screen' } as Display]);
 
-    renderMembersModal();
+    const { onClose } = renderMembersModal();
 
     await user.click(await screen.findByRole('button', { name: /add new screen/i }));
     await user.click(screen.getByRole('button', { name: /^save$/i }));
 
     expect(await screen.findByRole('button', { name: /saving/i })).toBeDisabled();
 
-    // Resolve so the test doesn't leak a pending promise.
+    // Wait for the resulting close so the update isn't left outside act().
     resolveAssign();
+    await waitForClose(onClose);
   });
 
   // ---------------------------------------------------------------------------

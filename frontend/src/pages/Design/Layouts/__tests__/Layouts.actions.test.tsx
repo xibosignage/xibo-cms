@@ -34,6 +34,7 @@ import {
   renderLayoutsPage,
 } from './layoutTestUtils';
 
+import type * as TagInputModule from '@/components/ui/forms/TagInput';
 import { retireLayout, saveLayoutAsTemplate, updateLayout } from '@/services/layoutsApi';
 import { testQueryClient } from '@/setupTests';
 
@@ -59,7 +60,7 @@ vi.mock('@/hooks/useOwner', () => ({
 vi.mock('@/components/ui/FolderActionModals', () => ({ default: () => null }));
 vi.mock('@/components/ui/forms/SelectFolder', () => ({ default: () => null }));
 vi.mock('@/components/ui/forms/TagInput', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/components/ui/forms/TagInput')>();
+  const actual = await importOriginal<typeof TagInputModule>();
   return { ...actual, default: () => null };
 });
 vi.mock('@/components/ui/modals/Modal');
