@@ -26,7 +26,6 @@ use GuzzleHttp\Psr7\Stream;
 use Intervention\Image\ImageManager;
 use Mimey\MimeTypes;
 use OpenApi\Attributes as OA;
-use Parsedown;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -3212,16 +3211,8 @@ class Layout extends Base
     {
         $layout->setUnmatchedProperty('descriptionFormatted', $layout->description);
 
-        if ($layout->description != '') {
-            if ($showDescriptionId == 1) {
-                // Parse down for description
-                $layout->setUnmatchedProperty(
-                    'descriptionFormatted',
-                    Parsedown::instance()->setSafeMode(true)->text($layout->description)
-                );
-            } else if ($showDescriptionId == 2) {
-                $layout->setUnmatchedProperty('descriptionFormatted', strtok($layout->description, "\n"));
-            }
+        if ($layout->description != '' && $showDescriptionId == 2) {
+            $layout->setUnmatchedProperty('descriptionFormatted', strtok($layout->description, "\n"));
         }
 
         if ($showDescriptionId === 3) {

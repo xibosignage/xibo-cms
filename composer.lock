@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f7dd4430d61d5c303791a7904d1ad7c9",
+    "content-hash": "a9783993cded7e6e07fba5f759cedb53",
     "packages": [
         {
             "name": "akrabat/ip-address-middleware",
@@ -754,63 +754,6 @@
                 }
             ],
             "time": "2025-10-31T18:36:32+00:00"
-        },
-        {
-            "name": "erusev/parsedown",
-            "version": "dev-master",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/erusev/parsedown.git",
-                "reference": "26cfde9dbffa43a77bfd45c87b0394df0dfcba85"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/erusev/parsedown/zipball/26cfde9dbffa43a77bfd45c87b0394df0dfcba85",
-                "reference": "26cfde9dbffa43a77bfd45c87b0394df0dfcba85",
-                "shasum": ""
-            },
-            "require": {
-                "ext-mbstring": "*",
-                "php": ">=7.2"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^8.5.52|^9.6.33"
-            },
-            "default-branch": true,
-            "type": "library",
-            "autoload": {
-                "psr-0": {
-                    "Parsedown": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Emanuil Rusev",
-                    "email": "hello@erusev.com",
-                    "homepage": "http://erusev.com"
-                }
-            ],
-            "description": "Parser for Markdown.",
-            "homepage": "http://parsedown.org",
-            "keywords": [
-                "markdown",
-                "parser"
-            ],
-            "support": {
-                "issues": "https://github.com/erusev/parsedown/issues",
-                "source": "https://github.com/erusev/parsedown/tree/master"
-            },
-            "funding": [
-                {
-                    "url": "https://github.com/erusev",
-                    "type": "github"
-                }
-            ],
-            "time": "2026-02-18T15:50:20+00:00"
         },
         {
             "name": "flynsarmy/slim-monolog",
@@ -9549,7 +9492,6 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "erusev/parsedown": 20,
         "infostars/picofeed": 20,
         "xibosignage/support": 20,
         "xibosignage/oauth2-xibo-cms": 20
