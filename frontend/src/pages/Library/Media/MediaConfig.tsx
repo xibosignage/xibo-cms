@@ -210,11 +210,6 @@ export const getBaseFilterKeys = (
   },
 ];
 
-// TODO: Needs translation
-export const MEDIA_FORM_OPTIONS = {
-  expiryDates: ['Never Expire', 'End of Today', 'In 7 Days', 'In 14 Days', 'In 30 Days'],
-};
-
 export const ACCEPTED_MIME_TYPES = {
   // Audio
   'audio/mpeg': ['.mp3'],

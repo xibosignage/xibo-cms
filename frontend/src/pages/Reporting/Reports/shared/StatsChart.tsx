@@ -96,6 +96,9 @@ export default function StatsChart({ rows, type }: StatsChartProps) {
   const [hidden, setHidden] = useState<Record<string, boolean>>({});
   const { active, onMouseMove, onMouseLeave } = usePieTooltip();
 
+  // DistributionReport.php spells Tuesday 'Tues', not 'Tue'.
+  const legendLabelOverrides: Record<string, string> = { Tues: t('Tues') };
+
   const toggleSeries = (dataKey: string) => {
     setHidden((prev) => ({ ...prev, [dataKey]: !prev[dataKey] }));
   };
@@ -121,7 +124,9 @@ export default function StatsChart({ rows, type }: StatsChartProps) {
                 iconType="circle"
                 iconSize={8}
                 formatter={(value: string) => (
-                  <span className="text-xs text-gray-600">{t(value)}</span>
+                  <span className="text-xs text-gray-600">
+                    {legendLabelOverrides[value] ?? t(value)}
+                  </span>
                 )}
                 wrapperStyle={{ paddingTop: 8 }}
               />

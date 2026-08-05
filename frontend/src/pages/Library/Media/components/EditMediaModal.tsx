@@ -24,7 +24,6 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Modal from '../../../../components/ui/modals/Modal';
-import { MEDIA_FORM_OPTIONS } from '../MediaConfig';
 
 import Checkbox from '@/components/ui/forms/Checkbox';
 import DurationInput from '@/components/ui/forms/DurationInput';
@@ -284,7 +283,13 @@ export default function EditMediaModal({
           {/* Expiry Date */}
           <ExpiryDateSelect
             value={expiry}
-            options={MEDIA_FORM_OPTIONS.expiryDates}
+            options={[
+              t('Never Expire'),
+              t('End of Today'),
+              t('In 7 Days'),
+              t('In 14 Days'),
+              t('In 30 Days'),
+            ]}
             onSelect={(value) => {
               setExpiry(value);
             }}

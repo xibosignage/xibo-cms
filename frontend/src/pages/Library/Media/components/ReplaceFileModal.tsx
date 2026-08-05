@@ -203,13 +203,13 @@ export default function ReplaceFileModal({
                 <span className="text-sm text-gray-500 font-semibold flex items-center gap-1">
                   {t('FILE NAME')} <HelpCircle size={12} />
                 </span>
-                <span className="text-sm">{selectedFile?.name || t(data.fileName)}</span>
+                <span className="text-sm">{selectedFile?.name || data.fileName}</span>
               </div>
               <div>
                 <span className="text-sm text-gray-500 font-semibold flex items-center gap-1">
                   {t('FILE SIZE')} <HelpCircle size={12} />
                 </span>
-                <span className="text-sm">{t(data.fileSizeFormatted)}</span>
+                <span className="text-sm">{data.fileSizeFormatted}</span>
               </div>
               <div>
                 <span className="text-sm text-gray-500 font-semibold flex items-center gap-1">

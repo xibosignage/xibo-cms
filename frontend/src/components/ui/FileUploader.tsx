@@ -100,11 +100,11 @@ function formatBytes(bytes: number, t: TFunction): string {
   }
 
   const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const sizeLabels = [t('Bytes'), t('KB'), t('MB'), t('GB'), t('TB')];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  const unit = sizes[i] ?? 'TB';
+  const unit = sizeLabels[i] ?? t('TB');
 
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + t(unit);
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + unit;
 }
 
 function formatFileSize(item: UploadItem, t: TFunction): string {
