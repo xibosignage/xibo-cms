@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -438,7 +438,7 @@ class Soap5 extends Soap4
                 $display->clientAddress = $this->getIp();
                 $display->xmrChannel = $xmrChannel;
                 $display->xmrPubKey = $xmrPubKey;
-                $display->folderId = $this->getConfig()->getSetting('DISPLAY_DEFAULT_FOLDER', 1);
+                $display->folderId = intval($this->getConfig()->getSetting('DISPLAY_DEFAULT_FOLDER', 1));
 
                 if (!$display->isDisplaySlotAvailable()) {
                     $display->licensed = 0;
@@ -539,7 +539,13 @@ class Soap5 extends Soap4
             }
         }
 
-        $display->save(Display::$saveOptionsMinimum);
+        try {
+            $display->save(Display::$saveOptionsMinimum);
+        } catch (\Throwable $e) {
+            $this->getLog()->error('RegisterDisplay: unexpected error saving display - ' . $e->getMessage());
+            $this->getLog()->debug($e->getTraceAsString());
+            return new \SoapFault('Receiver', __('Unexpected error, please contact your administrator.'));
+        }
 
         // cache checks
         $cacheSchedule = $this->getPool()->getItem($this->display->getCacheKey() . '/schedule');
