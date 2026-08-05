@@ -263,7 +263,7 @@ export default function SelectFolder({
           {renderLabel()}
         </button>
         <div className="flex items-center pr-3 h-full gap-1.5">
-          {selectedId ? (
+          {selectedId && !disabled ? (
             <button
               type="button"
               onClick={handleClear}
