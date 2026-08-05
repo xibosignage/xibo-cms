@@ -108,6 +108,7 @@ class Font extends Base
                 'id',
                 'name',
                 'fileName',
+                'familyName',
                 'createdAt',
                 'modifiedAt',
                 'modifiedBy',
@@ -597,6 +598,8 @@ class Font extends Base
         return $this->gridRenderFilter([
             'id' => $parsedQueryParams->getInt('id'),
             'name' => $parsedQueryParams->getString('name'),
+            'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
+            'logicalOperatorName' => $parsedQueryParams->getString('logicalOperatorName'),
         ], $parsedQueryParams);
     }
 }

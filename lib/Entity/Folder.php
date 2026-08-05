@@ -263,8 +263,12 @@ class Folder implements \JsonSerializable
 
     public function touch(): void
     {
+        // touch() commonly runs in the same transaction as a preceding write (e.g. selectFolder's
+        // entity save) - a deadlock here means InnoDB has already rolled back that whole transaction,
+        // so we must let it propagate rather than swallow it, or the caller's earlier write would be
+        // silently lost while the request still reports success.
         $this->modifiedDt = Carbon::now()->format(DateFormatHelper::getSystemFormat());
-        $this->getStore()->update(
+        $this->getStore()->updateWithDeadlockLoop(
             'UPDATE `folder` SET modifiedDt = :modifiedDt WHERE folderId = :folderId',
             ['modifiedDt' => $this->modifiedDt, 'folderId' => $this->id]
         );

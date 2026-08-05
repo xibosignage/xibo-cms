@@ -192,6 +192,7 @@ export default function RegionalTab({
               { value: 'Jalali', label: t('Jalali') },
             ]}
             onSelect={(v) => updateField('CALENDAR_TYPE', v)}
+            helpText={t('Which Calendar Type should the CMS use?')}
           />
         )}
       </SettingsSection>

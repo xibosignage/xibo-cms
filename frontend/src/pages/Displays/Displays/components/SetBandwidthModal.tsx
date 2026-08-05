@@ -24,6 +24,7 @@ import { useTranslation } from 'react-i18next';
 
 import BandwidthInput from '@/components/ui/forms/BandwidthInput';
 import Modal from '@/components/ui/modals/Modal';
+import { getBandwidthLimitSchema } from '@/schema/display';
 
 interface SetBandwidthModalProps {
   displayCount: number;
@@ -42,6 +43,22 @@ export default function SetBandwidthModal({
 }: SetBandwidthModalProps) {
   const { t } = useTranslation();
   const [bandwidthKb, setBandwidthKb] = useState<number | null>(null);
+  const [fieldError, setFieldError] = useState<string | undefined>();
+
+  const handleChange = (kb: number | null) => {
+    setBandwidthKb(kb);
+    setFieldError(undefined);
+  };
+
+  const handleSave = () => {
+    const result = getBandwidthLimitSchema(t).safeParse(bandwidthKb ?? 0);
+    if (!result.success) {
+      setFieldError(result.error.issues[0]?.message);
+      return;
+    }
+    setFieldError(undefined);
+    onConfirm(result.data);
+  };
 
   return (
     <Modal
@@ -55,9 +72,7 @@ export default function SetBandwidthModal({
         { label: t('Cancel'), onClick: onClose, variant: 'secondary', disabled: isActionPending },
         {
           label: isActionPending ? t('Saving…') : t('Save'),
-          onClick: () => {
-            onConfirm(bandwidthKb ?? 0);
-          },
+          onClick: handleSave,
           disabled: isActionPending || bandwidthKb === null,
         },
       ]}
@@ -68,9 +83,10 @@ export default function SetBandwidthModal({
         </p>
         <BandwidthInput
           valueKb={bandwidthKb}
-          onChange={setBandwidthKb}
+          onChange={handleChange}
           label={t('Bandwidth limit')}
           helpText={t('The bandwidth limit that should be applied. Enter 0 for no limit.')}
+          error={fieldError}
         />
       </div>
     </Modal>

@@ -25,7 +25,7 @@ import {
   Calendar,
   Copy,
   Edit,
-  Folder,
+  FolderInput,
   Terminal,
   Tags,
   Trash2,
@@ -241,7 +241,7 @@ export const getDisplayGroupItemActions = ({
     if (canModify && canEdit && openMoveModal) {
       actions.push({
         label: t('Move'),
-        icon: Folder,
+        icon: FolderInput,
         onClick: () => openMoveModal(displayGroup),
       });
     }
@@ -345,7 +345,7 @@ export const getBulkActions = ({
   if (canModify) {
     actions.push({
       label: t('Move'),
-      icon: Folder,
+      icon: FolderInput,
       onClick: onMove,
     });
   }

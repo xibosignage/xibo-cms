@@ -23,6 +23,7 @@ import { isAxiosError } from 'axios';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { notify } from '@/components/ui/Notification';
 import Checkbox from '@/components/ui/forms/Checkbox';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
 import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagInput';
@@ -115,6 +116,7 @@ export default function SaveAsTemplateModal({
         folderId,
       });
 
+      notify.success(t('Template saved successfully'));
       onClose();
     } catch (err) {
       console.error(err);

@@ -40,11 +40,18 @@ import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { withPublicPath } from '@/config/publicPath';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import type { Session } from '@/types/session';
 import { countActiveFilters } from '@/utils/filters';
+
+// Matches the legacy design: your own current session logs out via the real /logout
+// route directly, not the admin-facing bulk endpoint.
+const redirectToLogout = () => {
+  window.location.href = withPublicPath('logout');
+};
 
 export default function Sessions() {
   const { t } = useTranslation();
@@ -143,15 +150,14 @@ export default function Sessions() {
     setRowSelection,
   });
 
-  const handleLogout = (id: number) => {
-    const session = sessionList.find((m) => m.userId === id);
-
-    if (!session) {
+  const handleLogout = (session: Session) => {
+    if (session.isCurrentSession) {
+      redirectToLogout();
       return;
     }
 
-    setSessionToLogout([session]);
     setLogoutError(null);
+    setSessionToLogout([session]);
     openModal('logout');
   };
 

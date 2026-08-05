@@ -66,7 +66,7 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<SessionFilterI
 
 export interface SessionActionsProps {
   t: TFunction;
-  onLogout: (id: number) => void;
+  onLogout: (session: Session) => void;
   formatDateTime: (value: DateLike) => string;
 }
 
@@ -78,7 +78,7 @@ export const getSessionItemActions = ({
     {
       label: t('Logout'),
       icon: LogOut,
-      onClick: () => onLogout(session.userId),
+      onClick: () => onLogout(session),
       isQuickAction: true,
       variant: 'danger' as const,
     },
