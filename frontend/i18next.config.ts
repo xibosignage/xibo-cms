@@ -24,8 +24,17 @@ import { defineConfig } from 'i18next-cli';
 import type { Plugin } from 'i18next-cli';
 
 // Discovers property names used as t(identifier.property) and harvests their literal values:
-// *Key-suffixed names (labelKey, titleKey...) tree-wide; other names same-file only (too generic
-// otherwise, e.g. value/name/type).
+// *Key-suffixed names (labelKey, titleKey...) and known option-label names (label, title...) tree-wide;
+// other names same-file only (too generic otherwise, e.g. value/name/type).
+const TREE_WIDE_PROPERTY_NAMES = new Set([
+  'label',
+  'title',
+  'scheduleTitle',
+  'category',
+  'desc',
+  'example',
+]);
+
 const labelKeyExtractionPlugin = (): Plugin => {
   const fileTextByPath = new Map<string, string>();
   let currentFilePath: string | undefined;
@@ -67,7 +76,7 @@ const labelKeyExtractionPlugin = (): Plugin => {
       if (!arg || arg.type !== 'MemberExpression' || arg.property.type !== 'Identifier') return;
 
       const propertyName = arg.property.value;
-      if (/Key$/.test(propertyName)) {
+      if (/Key$/.test(propertyName) || TREE_WIDE_PROPERTY_NAMES.has(propertyName)) {
         keySuffixPropertyNames.add(propertyName);
       } else if (currentFilePath) {
         if (!propertyNamesByFile.has(currentFilePath)) {
@@ -99,6 +108,7 @@ export default defineConfig({
     keySeparator: false,
     nsSeparator: false,
     input: 'src/**/*.{js,jsx,ts,tsx}',
+    ignore: ['src/login/**', '**/__tests__/**'],
     extractFromComments: false,
     output: 'public/locale/translations/{{language}}/{{namespace}}.json',
   },

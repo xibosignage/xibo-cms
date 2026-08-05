@@ -107,7 +107,7 @@ export default function ExpiryDateSelect({
           {value && value.type === 'never'
             ? t('Never Expire')
             : value?.type === 'preset'
-              ? t(value.value)
+              ? value.value
               : formatDateTime(value?.date)}
         </span>
         <button
@@ -155,7 +155,7 @@ export default function ExpiryDateSelect({
                       setIsOpen(false);
                     }}
                   >
-                    {t(option)}
+                    {option}
                   </button>
                 ))}
 

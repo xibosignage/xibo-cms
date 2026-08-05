@@ -147,7 +147,7 @@ function InfoTooltip({ text }: { text: string }) {
             {...getFloatingProps()}
             className="z-9999 bg-white shadow-xl rounded-lg border border-gray-100 max-w-xs p-3 text-xs text-gray-600"
           >
-            {t(text)}
+            {text}
           </div>
         )}
       </FloatingPortal>
@@ -747,7 +747,7 @@ function PropertyCard({
               key={key}
               className="flex items-center justify-between rounded-lg border border-gray-200 p-2"
             >
-              <span className="text-sm font-medium text-gray-700">{t(label)}</span>
+              <span className="text-sm font-medium text-gray-700">{label}</span>
               <div className="w-fit shrink-0">
                 <Switch
                   size="sm"
