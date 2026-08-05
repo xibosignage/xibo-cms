@@ -91,7 +91,7 @@ export const mockFetchEventById = (event: Event): void => {
 // Layouts
 export const setupLayoutsMocks = (): void => {
   vi.mocked(fetchLayouts).mockResolvedValue({ rows: [], totalCount: 0 });
-  vi.mocked(fetchLayoutCodes).mockResolvedValue([]);
+  vi.mocked(fetchLayoutCodes).mockResolvedValue({ rows: [], totalCount: 0 });
 };
 
 // Media
