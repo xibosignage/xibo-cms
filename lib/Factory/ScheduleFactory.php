@@ -655,8 +655,8 @@ class ScheduleFactory extends BaseFactory
                     IFNULL(`schedule`.recurrence_type, \'\') <> \'\'
                     AND `schedule`.fromDt < :futureSchedulesTo
                     AND (
-                        `schedule`.recurrence_range >= :futureSchedulesFrom 
-                        OR IFNULL(`schedule`.recurrence_range, 0) = 0 
+                        `schedule`.recurrence_range >= :futureSchedulesFrom
+                        OR IFNULL(`schedule`.recurrence_range, 0) = 0
                     )
                 )
             ) ';

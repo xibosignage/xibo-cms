@@ -22,7 +22,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { Plus } from 'lucide-react';
-import type { DateTime } from 'luxon';
+import { DateTime } from 'luxon';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -43,6 +43,7 @@ import { EventModals } from './components/EventModals';
 import { useEventActions } from './hooks/useEventActions';
 import { useEventData } from './hooks/useEventData';
 import { useEventFilterOptions } from './hooks/useEventFilterOptions';
+import { isDayExcluded } from './utils/expandRecurringEvents';
 
 import Button from '@/components/ui/Button';
 import FilterButton from '@/components/ui/FilterButton';
@@ -143,7 +144,12 @@ export default function Events() {
     };
   }, []);
 
+  const [dateRangeViewState, setDateRangeViewState] = useState<DateRangeControllerState | null>(
+    null,
+  );
+
   const handleDateRangeStateChange = (state: DateRangeControllerState) => {
+    setDateRangeViewState(state);
     pendingDateRangeState.current = state;
     if (dateRangeDebounceRef.current) {
       clearTimeout(dateRangeDebounceRef.current);
@@ -163,6 +169,7 @@ export default function Events() {
   const [agendaDayEvents, setAgendaDayEvents] = useState<Event[]>([]);
 
   const [itemsToDelete, setItemsToDelete] = useState<Event[]>([]);
+  const [isOccurrenceDeleteAllowed, setIsOccurrenceDeleteAllowed] = useState(false);
   const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
 
@@ -184,6 +191,19 @@ export default function Events() {
 
   const data = queryData?.rows ?? [];
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
+
+  // In Day view, hide rows whose only occurrence on the viewed day has been excluded -
+  // the grid query itself has no concept of exclusions, so this is done client-side using
+  // the scheduleExclusions data already fetched for the Exceptions badge column.
+  const viewedDaySeconds =
+    dateRangeViewState?.viewMode === 'day' && dateRangeViewState?.currentDate
+      ? DateTime.fromISO(dateRangeViewState.currentDate, { zone: timezone }).toUnixInteger()
+      : null;
+
+  const visibleData =
+    viewedDaySeconds !== null
+      ? data.filter((event) => !isDayExcluded(event.scheduleExclusions, viewedDaySeconds, timezone))
+      : data;
 
   const { data: calendarQueryData, isFetching: isCalendarFetching } = useEventData({
     pagination: { pageIndex: 0, pageSize: 500 },
@@ -249,13 +269,44 @@ export default function Events() {
     const event = data.find((m) => m.eventId === id);
     if (!event) return;
 
-    setItemsToDelete([event]);
+    // In Day view, the currently viewed date is an unambiguous target for "this instance
+    // only" - combine it with the row's own time-of-day (stable across occurrences) and
+    // duration to resolve the specific occurrence, without needing a picker. Any other view
+    // (week/month/etc.) can't identify a single occurrence, so whole-series delete only.
+    const isDayView = dateRangeViewState?.viewMode === 'day';
+    if (isDayView && event.recurringEvent && dateRangeViewState?.currentDate) {
+      const viewedDay = DateTime.fromISO(dateRangeViewState.currentDate, {
+        zone: timezone,
+      }).startOf('day');
+      const rowStart = DateTime.fromSeconds(Number(event.fromDt), { zone: timezone });
+      const occurrenceStart = viewedDay.set({
+        hour: rowStart.hour,
+        minute: rowStart.minute,
+        second: rowStart.second,
+      });
+      const durationSecs = Number(event.toDt) - Number(event.fromDt);
+      const occurrenceEnd = occurrenceStart.plus({ seconds: durationSecs });
+
+      setItemsToDelete([
+        {
+          ...event,
+          fromDt: occurrenceStart.toUnixInteger(),
+          toDt: occurrenceEnd.toUnixInteger(),
+        },
+      ]);
+      setIsOccurrenceDeleteAllowed(true);
+    } else {
+      setItemsToDelete([event]);
+      setIsOccurrenceDeleteAllowed(false);
+    }
+
     setDeleteError(null);
     openModal('delete');
   };
 
   const handleDeleteFromCalendar = (scheduleEvent: Event) => {
     setItemsToDelete([scheduleEvent]);
+    setIsOccurrenceDeleteAllowed(true);
     setDeleteError(null);
     openModal('delete');
   };
@@ -461,7 +512,7 @@ export default function Events() {
           ) : (
             <DataTable
               columns={columns}
-              data={data}
+              data={visibleData}
               pageCount={pageCount}
               rowCount={queryData?.totalCount || 0}
               pagination={pagination}
@@ -499,6 +550,7 @@ export default function Events() {
           displayGroups: agendaDisplayGroups,
           displaySpecificGroupIds: filterInputs.displaySpecificGroupIds ?? [],
           displayGroupIds: filterInputs.displayGroupIds ?? [],
+          isOccurrenceDeleteAllowed,
         }}
         selection={{
           selectedEvent,

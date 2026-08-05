@@ -141,7 +141,7 @@ export default function Daypart() {
   const existingNames = daypartList.map((m) => m.name);
 
   const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['daypart'] });
+    return queryClient.invalidateQueries({ queryKey: ['daypart'] });
   };
 
   const { isDeleting, deleteError, setDeleteError, confirmDelete } = useDaypartActions({

@@ -979,10 +979,33 @@ class Schedule extends Base
         // Recurring event start/end
         $eventStart = $sanitizedParams->getInt('eventStart', ['default' => 1000]);
         $eventEnd = $sanitizedParams->getInt('eventEnd', ['default' => 1000]);
-        $scheduleExclusion = $this->scheduleExclusionFactory->create($schedule->eventId, $eventStart, $eventEnd);
 
-        $this->getLog()->debug('Create a schedule exclusion record');
-        $scheduleExclusion->save();
+        // Schedule::getEvents() matches exclusions against day-part-adjusted occurrence
+        if (!$schedule->isAlwaysDayPart() && !$schedule->isCustomDayPart()) {
+            $dayPart = $this->dayPartFactory->getById($schedule->dayPartId);
+            $dayPart->adjustForDate(Carbon::createFromTimestamp($eventStart));
+            $eventStart = $dayPart->adjustedStart->format('U');
+            $eventEnd = $dayPart->adjustedEnd->format('U');
+        }
+
+        // Guard against creating a duplicate exclusion for a day that's already excluded
+        $exclusionDay = Carbon::createFromTimestamp($eventStart)->format('Y-m-d');
+        $alreadyExcluded = array_filter(
+            $this->scheduleExclusionFactory->query(null, ['eventId' => $schedule->eventId]),
+            fn ($exclusion) => Carbon::createFromTimestamp($exclusion->fromDt)->format('Y-m-d') === $exclusionDay
+        );
+
+        if (empty($alreadyExcluded)) {
+            $scheduleExclusion = $this->scheduleExclusionFactory->create($schedule->eventId, $eventStart, $eventEnd);
+
+            $this->getLog()->debug('Create a schedule exclusion record');
+            $scheduleExclusion->save();
+
+            // Notify affected displays so a display that has already cached its schedule
+            // response for this window doesn't keep playing the now-excluded occurrence.
+            $schedule->setDisplayNotifyService($this->displayFactory->getDisplayNotifyService());
+            $schedule->notifyDisplaysOfChange();
+        }
 
         // Return
         return $response->withStatus(204);

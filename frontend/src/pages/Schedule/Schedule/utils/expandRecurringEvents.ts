@@ -23,6 +23,19 @@ import { DateTime } from 'luxon';
 
 import type { Event } from '@/types/event';
 
+// Check the exclusion on day view via grid or the calendar
+export function isDayExcluded(
+  exclusions: { fromDt: number; toDt: number }[] | undefined,
+  targetDaySeconds: number,
+  timezone: string,
+): boolean {
+  if (!exclusions || exclusions.length === 0) return false;
+  const targetDay = DateTime.fromSeconds(targetDaySeconds, { zone: timezone }).toISODate();
+  return exclusions.some(
+    (ex) => DateTime.fromSeconds(Number(ex.fromDt), { zone: timezone }).toISODate() === targetDay,
+  );
+}
+
 export function expandRecurringEvents(
   events: Event[],
   viewStart: DateTime,
@@ -193,18 +206,17 @@ export function expandRecurringEvents(
   };
 
   events.forEach((sourceEv) => {
-    const exclusions = sourceEv.scheduleExclusions ?? [];
+    const exclusions = sourceEv.scheduleExclusions;
 
-    const isExcluded = (fromDt: number, toDt: number) =>
-      exclusions.some((ex) => Number(ex.fromDt) === fromDt && Number(ex.toDt) === toDt);
-
-    if (!isExcluded(Number(sourceEv.fromDt), Number(sourceEv.toDt))) {
+    if (!isDayExcluded(exclusions, Number(sourceEv.fromDt), timezone)) {
       allOccurrences.push(sourceEv);
     }
 
     if (sourceEv.recurringEvent) {
       const recurrences = generateRecurrences(sourceEv);
-      allOccurrences.push(...recurrences.filter((ev) => !isExcluded(ev.fromDt, ev.toDt)));
+      allOccurrences.push(
+        ...recurrences.filter((ev) => !isDayExcluded(exclusions, ev.fromDt, timezone)),
+      );
     }
   });
 
