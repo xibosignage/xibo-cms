@@ -25,7 +25,6 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { useCampaignActions } from '../../hooks/useCampaignActions';
-
 import { mockCampaign } from '../campaignTestUtils';
 
 import { trackSequentialCalls } from '@/testUtils/sequentialMock';

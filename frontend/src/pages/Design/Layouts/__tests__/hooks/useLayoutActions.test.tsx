@@ -25,7 +25,6 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { useLayoutActions } from '../../hooks/useLayoutActions';
-
 import { mockLayout } from '../layoutTestUtils';
 
 import { trackSequentialCalls } from '@/testUtils/sequentialMock';

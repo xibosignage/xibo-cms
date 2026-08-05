@@ -25,7 +25,6 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { useTemplateActions } from '../../hooks/useTemplateActions';
-
 import { mockTemplate } from '../templateTestUtils';
 
 import { trackSequentialCalls } from '@/testUtils/sequentialMock';

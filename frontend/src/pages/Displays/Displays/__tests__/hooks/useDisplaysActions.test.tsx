@@ -25,7 +25,6 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { useDisplaysActions } from '../../hooks/useDisplaysActions';
-
 import { buildDisplay } from '../fixtures/display';
 
 import { trackSequentialCalls } from '@/testUtils/sequentialMock';

@@ -24,7 +24,6 @@ import type { TFunction } from 'i18next';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { useDisplayGroupActions } from '../../hooks/useDisplayGroupActions';
-
 import { buildDisplayGroup } from '../fixtures/displayGroup';
 
 import { trackSequentialCalls } from '@/testUtils/sequentialMock';

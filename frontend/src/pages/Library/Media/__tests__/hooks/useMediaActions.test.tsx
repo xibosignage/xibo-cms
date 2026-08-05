@@ -24,7 +24,6 @@ import type { TFunction } from 'i18next';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { useMediaActions } from '../../hooks/useMediaActions';
-
 import { mockEditMedia } from '../mediaTestUtils';
 
 import { trackSequentialCalls } from '@/testUtils/sequentialMock';
