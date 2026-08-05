@@ -35,6 +35,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ChevronDown, FolderPlus, Loader2, X } from 'lucide-react';
 import { useEffect, useRef, useState, useId } from 'react';
 import { useTranslation } from 'react-i18next';
+import { twMerge } from 'tailwind-merge';
 
 import Button from '../Button';
 import FolderActionModals from '../FolderActionModals';
@@ -57,6 +58,7 @@ interface SelectFolderProps {
   onAction?: (action: FolderAction, folder: Folder) => void;
   optional?: boolean;
   enforceViewPermission?: boolean;
+  disabled?: boolean;
 }
 
 export default function SelectFolder({
@@ -69,6 +71,7 @@ export default function SelectFolder({
   onAction,
   optional = false,
   enforceViewPermission = true,
+  disabled = false,
 }: SelectFolderProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
@@ -108,6 +111,7 @@ export default function SelectFolder({
   const { refs, floatingStyles, context } = useFloating({
     open: isOpen,
     onOpenChange: (open) => {
+      if (disabled) return;
       setIsOpen(open);
       if (!open) {
         setFolderSearch('');
@@ -130,7 +134,7 @@ export default function SelectFolder({
     ],
   });
 
-  const click = useClick(context);
+  const click = useClick(context, { enabled: !disabled });
   const dismiss = useDismiss(context);
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
 
@@ -245,7 +249,12 @@ export default function SelectFolder({
       <div
         ref={refs.setReference}
         {...getReferenceProps()}
-        className="w-full border border-gray-200 rounded-lg flex items-center bg-white transition-shadow hover:shadow-sm cursor-pointer h-11.25"
+        tabIndex={disabled ? -1 : undefined}
+        aria-disabled={disabled || undefined}
+        className={twMerge(
+          'w-full border border-gray-200 rounded-lg flex items-center bg-white transition-shadow hover:shadow-sm cursor-pointer h-11.25',
+          disabled && 'bg-gray-50 cursor-not-allowed pointer-events-none',
+        )}
       >
         <button
           type="button"
