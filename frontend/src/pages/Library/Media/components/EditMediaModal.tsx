@@ -284,11 +284,10 @@ export default function EditMediaModal({
           <ExpiryDateSelect
             value={expiry}
             options={[
-              t('Never Expire'),
-              t('End of Today'),
-              t('In 7 Days'),
-              t('In 14 Days'),
-              t('In 30 Days'),
+              { value: 'end_of_today', label: t('End of Today') },
+              { value: 'in_7_days', label: t('In 7 Days') },
+              { value: 'in_14_days', label: t('In 14 Days') },
+              { value: 'in_30_days', label: t('In 30 Days') },
             ]}
             onSelect={(value) => {
               setExpiry(value);

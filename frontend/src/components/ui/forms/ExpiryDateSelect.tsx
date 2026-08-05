@@ -39,11 +39,16 @@ import { twMerge } from 'tailwind-merge';
 import DatePicker from '../DatePicker';
 
 import { useDateFormatter } from '@/hooks/useDateFormatter';
-import type { ExpiryValue } from '@/utils/date';
+import type { ExpiryPresetId, ExpiryValue } from '@/utils/date';
+
+export interface ExpiryPresetOption {
+  value: ExpiryPresetId;
+  label: string;
+}
 
 interface ExpiryDateSelectProps {
   value?: ExpiryValue;
-  options: string[];
+  options: ExpiryPresetOption[];
   onSelect: (value: ExpiryValue) => void;
   optional?: boolean;
 }
@@ -107,7 +112,7 @@ export default function ExpiryDateSelect({
           {value && value.type === 'never'
             ? t('Never Expire')
             : value?.type === 'preset'
-              ? value.value
+              ? (options.find((option) => option.value === value.value)?.label ?? value.value)
               : formatDateTime(value?.date)}
         </span>
         <button
@@ -138,24 +143,31 @@ export default function ExpiryDateSelect({
 
             <div className="flex">
               <div className="flex flex-col text-sm p-3 flex-1 border-r border-gray-200">
+                <button
+                  type="button"
+                  className="text-left p-2 rounded-lg hover:bg-gray-100 font-medium cursor-pointer"
+                  onClick={() => {
+                    onSelect({ type: 'never' });
+                    setIsOpen(false);
+                  }}
+                >
+                  {t('Never Expire')}
+                </button>
+
                 {options.map((option) => (
                   <button
-                    key={option}
+                    key={option.value}
                     type="button"
                     className="text-left p-2 rounded-lg hover:bg-gray-100 font-medium cursor-pointer"
                     onClick={() => {
-                      if (option === 'Never Expire') {
-                        onSelect({ type: 'never' });
-                      } else {
-                        onSelect({
-                          type: 'preset',
-                          value: option,
-                        });
-                      }
+                      onSelect({
+                        type: 'preset',
+                        value: option.value,
+                      });
                       setIsOpen(false);
                     }}
                   >
-                    {option}
+                    {option.label}
                   </button>
                 ))}
 
