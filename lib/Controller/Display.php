@@ -25,7 +25,7 @@ use Carbon\Carbon;
 use GeoJson\Feature\Feature;
 use GeoJson\Feature\FeatureCollection;
 use GeoJson\Geometry\Point;
-use Intervention\Image\ImageManagerStatic as Img;
+use Intervention\Image\ImageManager;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Respect\Validation\Validator as v;
@@ -1359,17 +1359,18 @@ class Display extends Base
             $fileName = $this->getConfig()->uri('forms/filenotfound.gif');
         }
 
-        Img::configure(array('driver' => 'gd'));
-        $img = Img::make($fileName);
+        $img = ImageManager::gd()->read($fileName);
 
         $date = $display->getCurrentScreenShotTime($this->pool);
 
         if ($date != '') {
             $img
-                ->rectangle(0, 0, 110, 15, function ($draw) {
+                ->drawRectangle(0, 0, function ($draw) {
+                    $draw->size(110, 15);
                     $draw->background('#ffffff');
                 })
-                ->text($date, 10, 10);
+                ->text($date, 10, 10, function ($font) {
+                });
         }
 
         // Cache headers
@@ -1383,7 +1384,7 @@ class Display extends Base
         }
 
         $response->write($img->encode());
-        $response = $response->withHeader('Content-Type', $img->mime());
+        $response = $response->withHeader('Content-Type', $img->origin()->mediaType());
         return $this->render($request, $response);
     }
 
