@@ -82,7 +82,7 @@ function getColumns(
         enableSorting: false,
         cell: ({ row }) => (
           <button
-            className="cursor-pointer text-blue-600 hover:text-blue-800 p-1"
+            className="cursor-pointer text-xibo-blue-600 hover:text-xibo-blue-800 p-1"
             onClick={() => onViewDetails(row.original)}
             title={t('View Details')}
           >

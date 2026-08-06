@@ -89,7 +89,7 @@ function ReportCardBase({
     >
       <div
         className={
-          'flex h-11.5 w-11.5 items-center justify-center rounded-full bg-blue-100 text-blue-800'
+          'flex h-11.5 w-11.5 items-center justify-center rounded-full bg-xibo-blue-100 text-xibo-blue-800'
         }
       >
         <Icon size={24} />

@@ -73,7 +73,7 @@ export default function ConnectorCard({
       )}
 
       <div className="flex flex-col gap-2 justify-center items-center">
-        <div className="flex items-center justify-center bg-blue-100 rounded-full w-20 h-20">
+        <div className="flex items-center justify-center bg-xibo-blue-100 rounded-full w-20 h-20">
           <img
             src={imgSrc}
             alt={cardTitle}
@@ -97,7 +97,7 @@ export default function ConnectorCard({
             href={externalLink.href}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm font-normal text-blue-600 hover:underline"
+            className="inline-flex items-center gap-1.5 text-sm font-normal text-xibo-blue-600 hover:underline"
           >
             {externalLink.label}
             <ExternalLink size={13} />

@@ -279,7 +279,7 @@ export default function UserGroupFeaturesModal({
                       features.map((feat) => (
                         <div
                           key={feat.feature}
-                          className="grid grid-cols-[1fr_100px] items-center border-b border-gray-50 hover:bg-blue-50/30 transition-colors pr-3"
+                          className="grid grid-cols-[1fr_100px] items-center border-b border-gray-50 hover:bg-xibo-blue-50/30 transition-colors pr-3"
                         >
                           <div className="px-4 py-2.5 pl-10">
                             <span className="text-sm text-gray-700">{feat.title}</span>
