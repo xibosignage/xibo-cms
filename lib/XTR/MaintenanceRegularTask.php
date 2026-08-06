@@ -261,7 +261,11 @@ class MaintenanceRegularTask implements TaskInterface
 
                         try {
                             WakeOnLan::TransmitWakeOnLan($display->macAddress, $display->secureOn, $display->broadCastAddress, $display->cidr, '9', $this->log);
-                            $this->runMessage .= ' - ' . $display->display . ' Sent WOL Message. Previous WOL send time: ' . DateFormatHelper::createFromTimestamp($display->lastWakeOnLanCommandSent)->format(DateFormatHelper::getSystemFormat()) . PHP_EOL;
+                            $this->runMessage .= ' - ' . $display->display
+                                . ' Sent WOL Message. Previous WOL send time: '
+                                . DateFormatHelper::createFromTimestamp($display->lastWakeOnLanCommandSent)
+                                    ->format(DateFormatHelper::getSystemFormat())
+                                . PHP_EOL;
 
                             $display->lastWakeOnLanCommandSent = Carbon::now()->format('U');
                             $display->save(['validate' => false, 'audit' => true]);
@@ -271,7 +275,11 @@ class MaintenanceRegularTask implements TaskInterface
                         }
                     }
                     else {
-                        $this->runMessage .= ' - ' . $display->display . ' Display already awake. Previous WOL send time: ' . DateFormatHelper::createFromTimestamp($display->lastWakeOnLanCommandSent)->format(DateFormatHelper::getSystemFormat()) . PHP_EOL;
+                        $this->runMessage .= ' - ' . $display->display
+                            . ' Display already awake. Previous WOL send time: '
+                            . DateFormatHelper::createFromTimestamp($display->lastWakeOnLanCommandSent)
+                                ->format(DateFormatHelper::getSystemFormat())
+                            . PHP_EOL;
                     }
                 }
                 else {

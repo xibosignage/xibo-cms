@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -32,7 +32,6 @@ use Xibo\Entity\Display;
 use Xibo\Entity\Region;
 use Xibo\Entity\RequiredFile;
 use Xibo\Entity\Schedule;
-use Xibo\Helper\LibraryFile;
 use Xibo\Event\DataConnectorScriptRequestEvent;
 use Xibo\Event\XmdsDependencyListEvent;
 use Xibo\Factory\BandwidthFactory;
@@ -55,6 +54,7 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\LibraryFile;
 use Xibo\Helper\LinkSigner;
 use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Status;
@@ -1372,11 +1372,15 @@ class Soap
                     // the current CMS timezone)
                     // Does the Display have a timezone?
                     if ($isSyncTimezone) {
-                        $fromDt = Carbon::createFromTimestamp($scheduleEvent->fromDt, $this->display->timeZone)->format(DateFormatHelper::getSystemFormat());
-                        $toDt = Carbon::createFromTimestamp($scheduleEvent->toDt, $this->display->timeZone)->format(DateFormatHelper::getSystemFormat());
+                        $fromDt = Carbon::createFromTimestamp($scheduleEvent->fromDt, $this->display->timeZone)
+                            ->format(DateFormatHelper::getSystemFormat());
+                        $toDt = Carbon::createFromTimestamp($scheduleEvent->toDt, $this->display->timeZone)
+                            ->format(DateFormatHelper::getSystemFormat());
                     } else {
-                        $fromDt = DateFormatHelper::createFromTimestamp($scheduleEvent->fromDt)->format(DateFormatHelper::getSystemFormat());
-                        $toDt = DateFormatHelper::createFromTimestamp($scheduleEvent->toDt)->format(DateFormatHelper::getSystemFormat());
+                        $fromDt = DateFormatHelper::createFromTimestamp($scheduleEvent->fromDt)
+                            ->format(DateFormatHelper::getSystemFormat());
+                        $toDt = DateFormatHelper::createFromTimestamp($scheduleEvent->toDt)
+                            ->format(DateFormatHelper::getSystemFormat());
                     }
 
                     $scheduleId = $row['eventId'];

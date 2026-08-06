@@ -1359,8 +1359,8 @@ class Schedule implements \JsonSerializable
 
         $this->getLog()->debug(
             'Request for schedule events on eventId ' . $this->eventId
-            . ' from: ' . DateFormatHelper::createFromTimestamp($generateFromDt->format(DateFormatHelper::getSystemFormat()))
-            . ' to: ' . DateFormatHelper::createFromTimestamp($generateToDt->format(DateFormatHelper::getSystemFormat()))
+            . ' from: ' . $generateFromDt->format(DateFormatHelper::getSystemFormat())
+            . ' to: ' . $generateToDt->format(DateFormatHelper::getSystemFormat())
             . ' [eventId:' . $this->eventId . ']'
         );
 

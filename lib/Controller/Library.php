@@ -336,7 +336,11 @@ class Library extends Base
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
-            'message' => sprintf(__('For Media %s Enable Stats Collection is set to %s'), $media->name, __($media->enableStat ?? ''))
+            'message' => sprintf(
+                __('For Media %s Enable Stats Collection is set to %s'),
+                $media->name,
+                __($media->enableStat ?? '')
+            )
         ]);
 
         return $this->render($request, $response);

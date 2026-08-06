@@ -219,7 +219,8 @@ trait EntityTrait
                 if (isset($this->datesToFormat) && in_array($key, $this->datesToFormat)) {
                     $original = empty($this->getOriginalValue($key))
                         ? $this->getOriginalValue($key)
-                        : DateFormatHelper::createFromTimestamp($this->getOriginalValue($key))->format(DateFormatHelper::getSystemFormat());
+                        : DateFormatHelper::createFromTimestamp($this->getOriginalValue($key))
+                            ->format(DateFormatHelper::getSystemFormat());
                     $new = empty($value)
                         ? $value
                         : DateFormatHelper::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
@@ -307,7 +308,8 @@ trait EntityTrait
 
         foreach ($objectAsJson as $key => $value) {
             if (isset($this->datesToFormat) && in_array($key, $this->datesToFormat)) {
-                $objectAsJson[$key] = DateFormatHelper::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
+                $objectAsJson[$key] = DateFormatHelper::createFromTimestamp($value)
+                    ->format(DateFormatHelper::getSystemFormat());
             }
 
             if ($jsonEncodeArrays) {

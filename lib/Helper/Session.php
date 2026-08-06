@@ -464,7 +464,8 @@ class Session implements \SessionHandlerInterface
             'session_id' => $key,
             'session_data' => $data,
             'session_expiration' => $expiry,
-            'lastAccessed' => DateFormatHelper::createFromTimestamp($lastAccessed)->format(DateFormatHelper::getSystemFormat()),
+            'lastAccessed' => DateFormatHelper::createFromTimestamp($lastAccessed)
+                ->format(DateFormatHelper::getSystemFormat()),
             'userId' => $this->userId,
             'expired' => ($this->expired) ? 1 : 0,
             'useragent' => substr(htmlspecialchars($_SERVER['HTTP_USER_AGENT']), 0, 253),
@@ -520,7 +521,8 @@ class Session implements \SessionHandlerInterface
         $params = [
             'session_data' => $data,
             'session_expiration' => $expiry,
-            'lastAccessed' => DateFormatHelper::createFromTimestamp($lastAccessed)->format(DateFormatHelper::getSystemFormat()),
+            'lastAccessed' => DateFormatHelper::createFromTimestamp($lastAccessed)
+                ->format(DateFormatHelper::getSystemFormat()),
             'userId' => $this->userId,
             'expired' => ($this->expired) ? 1 : 0,
             'session_id' => $key

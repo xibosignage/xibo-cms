@@ -247,7 +247,8 @@ class TimeConnected implements ReportInterface
             // lastAccessed drives the "Last seen" value shown against each row.
             $displayMeta[$displayId] = [
                 'lastAccessed' => !empty($row['lastAccessed'])
-                    ? DateFormatHelper::createFromTimestamp($row['lastAccessed'])->format(DateFormatHelper::getSystemFormat())
+                    ? DateFormatHelper::createFromTimestamp($row['lastAccessed'])
+                        ->format(DateFormatHelper::getSystemFormat())
                     : null,
             ];
 

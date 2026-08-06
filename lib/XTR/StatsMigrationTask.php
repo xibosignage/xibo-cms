@@ -280,7 +280,10 @@ class StatsMigrationTask implements TaskInterface
                     'start' => DateFormatHelper::createFromTimestamp($stat['start'])->format('U'),
                     'end' => DateFormatHelper::createFromTimestamp($stat['end'])->format('U'),
                     'tag' => $stat['tag'],
-                    'duration' => isset($stat['duration']) ? (int) $stat['duration'] : DateFormatHelper::createFromTimestamp($stat['end'])->format('U') - DateFormatHelper::createFromTimestamp($stat['start'])->format('U'),
+                    'duration' => isset($stat['duration'])
+                        ? (int) $stat['duration']
+                        : DateFormatHelper::createFromTimestamp($stat['end'])->format('U')
+                            - DateFormatHelper::createFromTimestamp($stat['start'])->format('U'),
                     'count' => isset($stat['count']) ? (int) $stat['count'] : 1,
                 ];
 

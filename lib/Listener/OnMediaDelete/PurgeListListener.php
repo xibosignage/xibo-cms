@@ -55,7 +55,9 @@ class PurgeListListener
             $this->store->insert('INSERT INTO `purge_list` (mediaId, storedAs, expiryDate) VALUES (:mediaId, :storedAs, :expiryDate)', [
                 'mediaId' => $event->getMedia()->mediaId,
                 'storedAs' => $event->getMedia()->storedAs,
-                'expiryDate' => Carbon::now()->addDays((int) $this->configService->getSetting('DEFAULT_PURGE_LIST_TTL'))->format(DateFormatHelper::getSystemFormat())
+                'expiryDate' => Carbon::now()
+                    ->addDays((int) $this->configService->getSetting('DEFAULT_PURGE_LIST_TTL'))
+                    ->format(DateFormatHelper::getSystemFormat())
             ]);
         }
     }

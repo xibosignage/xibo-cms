@@ -1177,11 +1177,13 @@ class DistributionReport implements ReportInterface
                 $id = $period['id'];
 
                 if ($groupByFilter == 'byhour') {
-                    $label = DateFormatHelper::createFromTimestamp($period['start']->toDateTime()->format('U'))->format('g:i A');
+                    $label = DateFormatHelper::createFromTimestamp($period['start']->toDateTime()->format('U'))
+                        ->format('g:i A');
                 } elseif ($groupByFilter == 'bydayofweek') {
                     $label = $day[$id];
                 } elseif ($groupByFilter == 'bydayofmonth') {
-                    $label = DateFormatHelper::createFromTimestamp($period['start']->toDateTime()->format('U'))->format('d');
+                    $label = DateFormatHelper::createFromTimestamp($period['start']->toDateTime()->format('U'))
+                        ->format('d');
                 }
 
                 $matched = false;

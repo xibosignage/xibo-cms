@@ -864,7 +864,8 @@ class ProofOfPlay implements ReportInterface
         }
 
         return [
-            'periodStart' => DateFormatHelper::createFromTimestamp($fromDt)->format(DateFormatHelper::getSystemFormat()),
+            'periodStart' => DateFormatHelper::createFromTimestamp($fromDt)
+                ->format(DateFormatHelper::getSystemFormat()),
             'periodEnd' => DateFormatHelper::createFromTimestamp($toDt)->format(DateFormatHelper::getSystemFormat()),
             'result' => $rows,
             'count' => count($rows)

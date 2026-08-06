@@ -1488,14 +1488,16 @@ class Layout implements \JsonSerializable
                 if ($widget->fromDt != null || $widget->fromDt === Widget::$DATE_MIN) {
                     $mediaNode->setAttribute(
                         'fromDt',
-                        DateFormatHelper::createFromTimestamp($widget->fromDt)->format(DateFormatHelper::getSystemFormat())
+                        DateFormatHelper::createFromTimestamp($widget->fromDt)
+                            ->format(DateFormatHelper::getSystemFormat())
                     );
                 }
 
                 if ($widget->toDt != null || $widget->toDt === Widget::$DATE_MAX) {
                     $mediaNode->setAttribute(
                         'toDt',
-                        DateFormatHelper::createFromTimestamp($widget->toDt)->format(DateFormatHelper::getSystemFormat())
+                        DateFormatHelper::createFromTimestamp($widget->toDt)
+                            ->format(DateFormatHelper::getSystemFormat())
                     );
                 }
 

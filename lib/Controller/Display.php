@@ -1132,7 +1132,8 @@ class Display extends Base
                 ->format(DateFormatHelper::getSystemFormat());
             $display->auditingUntil = ($display->auditingUntil == 0)
                 ? 0
-                : DateFormatHelper::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
+                : DateFormatHelper::createFromTimestamp($display->auditingUntil)
+                    ->format(DateFormatHelper::getSystemFormat());
         }
 
         // Return
@@ -2160,11 +2161,12 @@ class Display extends Base
         // Only format these as human-readable strings for true API (OAuth) clients.
         // the React frontend expects raw timestamps and formats them itself.
         if ($this->isApi($request)) {
-            $display->lastAccessed =
-                DateFormatHelper::createFromTimestamp($display->lastAccessed)->format(DateFormatHelper::getSystemFormat());
+            $display->lastAccessed = DateFormatHelper::createFromTimestamp($display->lastAccessed)
+                ->format(DateFormatHelper::getSystemFormat());
             $display->auditingUntil = ($display->auditingUntil == 0)
                 ? 0
-                : DateFormatHelper::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
+                : DateFormatHelper::createFromTimestamp($display->auditingUntil)
+                    ->format(DateFormatHelper::getSystemFormat());
         }
 
         // use try and catch here to cover scenario
