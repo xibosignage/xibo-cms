@@ -20,7 +20,7 @@
  */
 
 import { ChevronLeftSquare, ChevronRightSquare } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet, useLocation, useLoaderData } from 'react-router-dom';
 
 import { SessionExpiredModal } from '@/components/auth/SessionExpiredModal';
@@ -43,6 +43,12 @@ export default function RootLayout() {
 
   // Init preline
   usePreline();
+
+  // Clear stale-chunk reload flag on successful route load so future
+  // deploys in the same session can still trigger an auto-reload.
+  useEffect(() => {
+    sessionStorage.removeItem('xibo_chunk_reload');
+  }, []);
 
   return (
     <BrandingProvider branding={user?.branding}>
