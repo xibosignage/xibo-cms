@@ -224,12 +224,6 @@ export const getUserColumns = (props: UserActionsProps): ColumnDef<User>[] => {
       cell: (info) => <TextCell>{getUserTypeLabel(t, info.getValue<number>())}</TextCell>,
     },
     {
-      accessorKey: 'email',
-      header: t('Email'),
-      size: 200,
-      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
-    },
-    {
       accessorKey: 'homePage',
       header: t('Home Page'),
       size: 160,
@@ -237,10 +231,28 @@ export const getUserColumns = (props: UserActionsProps): ColumnDef<User>[] => {
       cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
     },
     {
+      accessorKey: 'homeFolder',
+      header: t('Home Folder'),
+      size: 160,
+      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
+    },
+    {
+      accessorKey: 'email',
+      header: t('Email'),
+      size: 200,
+      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
+    },
+    {
       accessorKey: 'libraryQuotaFormatted',
       header: t('Library Quota'),
       size: 140,
-      enableSorting: false,
+      enableSorting: true,
+      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
+    },
+    {
+      accessorKey: 'lastAccessed',
+      header: t('Last Accessed'),
+      size: 180,
       cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
     },
     {
@@ -260,7 +272,7 @@ export const getUserColumns = (props: UserActionsProps): ColumnDef<User>[] => {
       accessorKey: 'twoFactorDescription',
       header: t('Two Factor'),
       size: 140,
-      enableSorting: false,
+      enableSorting: true,
       cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
     },
     {
@@ -279,18 +291,6 @@ export const getUserColumns = (props: UserActionsProps): ColumnDef<User>[] => {
       accessorKey: 'phone',
       header: t('Phone'),
       size: 140,
-      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
-    },
-    {
-      accessorKey: 'homeFolder',
-      header: t('Home Folder'),
-      size: 160,
-      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
-    },
-    {
-      accessorKey: 'lastAccessed',
-      header: t('Last Accessed'),
-      size: 180,
       cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
     },
     {
