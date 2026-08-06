@@ -21,6 +21,7 @@
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
+
 import type { PlayerVersionFilterInput } from '../PlayerVersionsConfig';
 
 import { fetchPlayerVersions } from '@/services/playerVersionApi';

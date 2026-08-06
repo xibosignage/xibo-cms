@@ -1,5 +1,6 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
+
 import type { CampaignFilterInput } from '../CampaignConfig';
 
 import { fetchCampaigns } from '@/services/campaignApi';

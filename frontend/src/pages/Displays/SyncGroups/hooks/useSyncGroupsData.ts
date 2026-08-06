@@ -21,6 +21,7 @@
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
+
 import type { SyncGroupsFilterInput } from '../SyncGroupsConfig';
 
 import { fetchSyncGroups } from '@/services/syncGroupApi';

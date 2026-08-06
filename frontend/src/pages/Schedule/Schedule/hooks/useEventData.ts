@@ -21,6 +21,7 @@
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
+
 import type { EventFilterInput } from '../EventsConfig';
 
 import type { FetchEventRequest } from '@/services/eventApi';
