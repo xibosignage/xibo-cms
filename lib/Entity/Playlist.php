@@ -355,7 +355,7 @@ class Playlist implements \JsonSerializable
                     ? $this->name = $this->getReassignedPlaylistName()
                     : throw new DuplicateEntityException(
                         sprintf(__("You already own a Playlist called '%s'. Please choose another name."), $this->name)
-                     );
+                    );
             }
         }
 
@@ -1227,6 +1227,6 @@ class Playlist implements \JsonSerializable
             $i++;
         }
 
-        return $i === 0 ? $this->name : $this->name . " ($i)";
+        return $i === 0 ? $this->name : $this->name . ' (' . $i . ')';
     }
 }
