@@ -30,6 +30,7 @@ import ProtectedRoute from '@/components/layout/ProtectedRoute';
 import { APP_ROUTES, DEFAULT_INTERNAL_ROUTE } from '@/config/appRoutes';
 import type { AppRoute } from '@/config/appRoutes';
 import { getRouterBasename, publicPath } from '@/config/publicPath';
+import ErrorPage from '@/pages/ErrorPage/ErrorPage';
 
 const flattenRoutes = (routes: AppRoute[], base = ''): RouteObject[] => {
   return routes.reduce((acc: RouteObject[], route: AppRoute) => {
@@ -62,6 +63,7 @@ export const router = createBrowserRouter(
     {
       path: '/',
       element: <RootLayout />,
+      errorElement: <ErrorPage />,
       loader: requireAuthLoader,
       // App loader
       hydrateFallbackElement: <></>,
@@ -84,6 +86,7 @@ export const router = createBrowserRouter(
     {
       path: 'user/force-change-password',
       loader: requireAuthOnlyLoader,
+      errorElement: <ErrorPage />,
       lazy: () =>
         import('@/pages/User/ForceChangePassword/ForceChangePassword').then((m) => ({
           Component: m.default,
@@ -92,6 +95,7 @@ export const router = createBrowserRouter(
     {
       path: 'application/authorize',
       loader: requireAuthOnlyLoader,
+      errorElement: <ErrorPage />,
       lazy: () =>
         import('@/pages/Administration/Applications/Authorize/AuthorizeApplication').then((m) => ({
           Component: m.default,
@@ -100,6 +104,7 @@ export const router = createBrowserRouter(
     {
       path: 'design/layout/:id/editor',
       loader: requireAuthLoader,
+      errorElement: <ErrorPage />,
       hydrateFallbackElement: <></>,
       lazy: () =>
         import('@/pages/Design/Layouts/LayoutEditorHost').then((m) => ({
