@@ -362,6 +362,10 @@ class Playlist implements \JsonSerializable
         if ($this->isDynamic === 1 && $this->maxNumberOfItems > $this->config->getSetting('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT')) {
             throw new InvalidArgumentException(__('Maximum number of items cannot exceed the limit set in CMS Settings'), 'maxNumberOfItems');
         }
+
+        if ($this->isDynamic === 1 && $this->maxNumberOfItems < 1) {
+            throw new InvalidArgumentException(__('Maximum number of items must be at least 1'), 'maxNumberOfItems');
+        }
     }
 
     /**

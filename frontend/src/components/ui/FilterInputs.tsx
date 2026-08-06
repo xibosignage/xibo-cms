@@ -340,6 +340,7 @@ export default function FilterInputs<T>({
                   prefix={prefix}
                   suffix={suffix}
                   allowValues={false}
+                  compact
                 />
               );
             }
