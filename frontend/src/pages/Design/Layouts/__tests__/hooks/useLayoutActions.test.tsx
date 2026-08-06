@@ -19,6 +19,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import '@/testUtils/notifyMock';
+
 import { renderHook, act } from '@testing-library/react';
 import type { TFunction } from 'i18next';
 import { MemoryRouter } from 'react-router-dom';
@@ -27,6 +29,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useLayoutActions } from '../../hooks/useLayoutActions';
 import { mockLayout } from '../layoutTestUtils';
 
+import { mockNotifyError, mockNotifyInfo, mockNotifyWarning } from '@/testUtils/notifyMock';
 import { trackSequentialCalls } from '@/testUtils/sequentialMock';
 
 vi.mock('@/services/layoutsApi', () => ({
@@ -43,19 +46,6 @@ vi.mock('@/services/layoutsApi', () => ({
 const mockSelectFolder = vi.fn();
 vi.mock('@/services/folderApi', () => ({
   selectFolder: (...args: unknown[]) => mockSelectFolder(...args),
-}));
-
-const mockNotifySuccess = vi.fn();
-const mockNotifyError = vi.fn();
-const mockNotifyInfo = vi.fn();
-const mockNotifyWarning = vi.fn();
-vi.mock('@/components/ui/Notification', () => ({
-  notify: {
-    success: (...args: unknown[]) => mockNotifySuccess(...args),
-    error: (...args: unknown[]) => mockNotifyError(...args),
-    info: (...args: unknown[]) => mockNotifyInfo(...args),
-    warning: (...args: unknown[]) => mockNotifyWarning(...args),
-  },
 }));
 
 describe('useLayoutActions - handleConfirmMove', () => {
