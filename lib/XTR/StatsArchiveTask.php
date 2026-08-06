@@ -82,7 +82,7 @@ class StatsArchiveTask implements TaskInterface
             $this->log->debug('Archive Enabled');
 
             // Archive tasks by week.
-            $periodSizeInDays = $this->getOption('periodSizeInDays', 7);
+            $periodSizeInDays = (int) $this->getOption('periodSizeInDays', 7);
             $maxPeriods = $this->getOption('maxPeriods', 4);
             $periodsToKeep = $this->getOption('periodsToKeep', 1);
             $this->setArchiveOwner();
@@ -171,14 +171,14 @@ class StatsArchiveTask implements TaskInterface
             $sanitizedRow = $this->getSanitizer($row);
 
             if ($this->timeSeriesStore->getEngine() == 'mongodb') {
-                $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()) : null;
-                $start = Carbon::createFromTimestamp($row['start']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat());
-                $end = Carbon::createFromTimestamp($row['end']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat());
+                $statDate = isset($row['statDate']) ? DateFormatHelper::createFromTimestamp($row['statDate']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()) : null;
+                $start = DateFormatHelper::createFromTimestamp($row['start']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat());
+                $end = DateFormatHelper::createFromTimestamp($row['end']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat());
                 $engagements = isset($row['engagements']) ? json_encode($row['engagements']) : '[]';
             } else {
-                $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate'])->format(DateFormatHelper::getSystemFormat()) : null;
-                $start = Carbon::createFromTimestamp($row['start'])->format(DateFormatHelper::getSystemFormat());
-                $end = Carbon::createFromTimestamp($row['end'])->format(DateFormatHelper::getSystemFormat());
+                $statDate = isset($row['statDate']) ? DateFormatHelper::createFromTimestamp($row['statDate'])->format(DateFormatHelper::getSystemFormat()) : null;
+                $start = DateFormatHelper::createFromTimestamp($row['start'])->format(DateFormatHelper::getSystemFormat());
+                $end = DateFormatHelper::createFromTimestamp($row['end'])->format(DateFormatHelper::getSystemFormat());
                 $engagements = isset($row['engagements']) ? $row['engagements'] : '[]';
             }
 

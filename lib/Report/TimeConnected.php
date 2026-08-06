@@ -150,7 +150,7 @@ class TimeConnected implements ReportInterface
         $metadata = [
             'periodStart' => $json['metadata']['periodStart'],
             'periodEnd' => $json['metadata']['periodEnd'],
-            'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)
+            'generatedOn' => DateFormatHelper::createFromTimestamp($savedReport->generatedOn)
                 ->format(DateFormatHelper::getSystemFormat()),
             'title' => $savedReport->saveAs,
         ];
@@ -247,7 +247,7 @@ class TimeConnected implements ReportInterface
             // lastAccessed drives the "Last seen" value shown against each row.
             $displayMeta[$displayId] = [
                 'lastAccessed' => !empty($row['lastAccessed'])
-                    ? Carbon::createFromTimestamp($row['lastAccessed'])->format(DateFormatHelper::getSystemFormat())
+                    ? DateFormatHelper::createFromTimestamp($row['lastAccessed'])->format(DateFormatHelper::getSystemFormat())
                     : null,
             ];
 

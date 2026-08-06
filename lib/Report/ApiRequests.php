@@ -129,7 +129,7 @@ class ApiRequests implements ReportInterface
         $metadata = [
             'periodStart' => $json['metadata']['periodStart'],
             'periodEnd' => $json['metadata']['periodEnd'],
-            'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)
+            'generatedOn' => DateFormatHelper::createFromTimestamp($savedReport->generatedOn)
                 ->format(DateFormatHelper::getSystemFormat()),
             'title' => $savedReport->saveAs,
             'logType' => $json['metadata']['logType']
@@ -265,7 +265,7 @@ class ApiRequests implements ReportInterface
                     $auditRecord->objectAfter = json_decode($auditRecord->objectAfter ?? '');
                 }
 
-                $auditRecord->logDate = Carbon::createFromTimestamp($auditRecord->logDate)
+                $auditRecord->logDate = DateFormatHelper::createFromTimestamp($auditRecord->logDate)
                     ->format(DateFormatHelper::getSystemFormat());
 
                 $rows[] = $auditRecord;

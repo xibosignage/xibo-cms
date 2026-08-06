@@ -345,7 +345,7 @@ class Display extends Base
         return $response->withJson([
             'requiredFiles' => [],
             'display' => $display,
-            'timeAgo' => Carbon::createFromTimestamp($display->lastAccessed)->diffForHumans(),
+            'timeAgo' => DateFormatHelper::createFromTimestamp($display->lastAccessed)->diffForHumans(),
             'errorSearch' => http_build_query([
                 'displayId' => $display->displayId,
                 'type' => 'ERROR',
@@ -1128,11 +1128,11 @@ class Display extends Base
         $display->save();
 
         if ($this->isApi($request)) {
-            $display->lastAccessed = Carbon::createFromTimestamp($display->lastAccessed)
+            $display->lastAccessed = DateFormatHelper::createFromTimestamp($display->lastAccessed)
                 ->format(DateFormatHelper::getSystemFormat());
             $display->auditingUntil = ($display->auditingUntil == 0)
                 ? 0
-                : Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
+                : DateFormatHelper::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
         }
 
         // Return
@@ -2089,7 +2089,7 @@ class Display extends Base
             $body = sprintf(
                 __('Display ID %d is offline since %s.'),
                 $display->displayId,
-                Carbon::createFromTimestamp($display->lastAccessed)
+                DateFormatHelper::createFromTimestamp($display->lastAccessed)
                     ->format(DateFormatHelper::getSystemFormat())
             );
 
@@ -2161,10 +2161,10 @@ class Display extends Base
         // the React frontend expects raw timestamps and formats them itself.
         if ($this->isApi($request)) {
             $display->lastAccessed =
-                Carbon::createFromTimestamp($display->lastAccessed)->format(DateFormatHelper::getSystemFormat());
+                DateFormatHelper::createFromTimestamp($display->lastAccessed)->format(DateFormatHelper::getSystemFormat());
             $display->auditingUntil = ($display->auditingUntil == 0)
                 ? 0
-                : Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
+                : DateFormatHelper::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
         }
 
         // use try and catch here to cover scenario

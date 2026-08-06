@@ -138,7 +138,7 @@ class AuditLog extends Base
                 $out,
                 [
                     $row->logId,
-                    Carbon::createFromTimestamp($row->logDate)->format(DateFormatHelper::getSystemFormat()),
+                    DateFormatHelper::createFromTimestamp($row->logDate)->format(DateFormatHelper::getSystemFormat()),
                     $row->userName,
                     $row->entity,
                     $row->entityId,

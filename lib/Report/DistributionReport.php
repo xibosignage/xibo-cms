@@ -211,7 +211,7 @@ class DistributionReport implements ReportInterface
             'periodEnd' => $json['metadata']['periodEnd'],
             'type' => $json['metadata']['type'] ?? '',
             'subject' => $json['metadata']['subject'] ?? '',
-            'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)
+            'generatedOn' => DateFormatHelper::createFromTimestamp($savedReport->generatedOn)
                 ->format(DateFormatHelper::getSystemFormat()),
             'title' => $savedReport->saveAs,
         ];
@@ -632,7 +632,7 @@ class DistributionReport implements ReportInterface
             $filterRangeStart = new UTCDateTime($fromDt->format('U') * 1000);
             $filterRangeEnd = new UTCDateTime($toDt->format('U') * 1000);
 
-            $diffInDays = $toDt->diffInDays($fromDt);
+            $diffInDays = (int) $toDt->diffInDays($fromDt);
             if ($groupByFilter == 'byhour') {
                 $hour = 1;
                 $input = range(0, 24 * $diffInDays - 1); // subtract 1 as we start from 0
@@ -1177,11 +1177,11 @@ class DistributionReport implements ReportInterface
                 $id = $period['id'];
 
                 if ($groupByFilter == 'byhour') {
-                    $label = Carbon::createFromTimestamp($period['start']->toDateTime()->format('U'))->format('g:i A');
+                    $label = DateFormatHelper::createFromTimestamp($period['start']->toDateTime()->format('U'))->format('g:i A');
                 } elseif ($groupByFilter == 'bydayofweek') {
                     $label = $day[$id];
                 } elseif ($groupByFilter == 'bydayofmonth') {
-                    $label = Carbon::createFromTimestamp($period['start']->toDateTime()->format('U'))->format('d');
+                    $label = DateFormatHelper::createFromTimestamp($period['start']->toDateTime()->format('U'))->format('d');
                 }
 
                 $matched = false;

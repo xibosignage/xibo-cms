@@ -254,7 +254,7 @@ class ProofOfPlay implements ReportInterface
         // Get Meta data
         $metadata['periodStart'] = $json['metadata']['periodStart'];
         $metadata['periodEnd'] = $json['metadata']['periodEnd'];
-        $metadata['generatedOn'] = Carbon::createFromTimestamp($savedReport->generatedOn)
+        $metadata['generatedOn'] = DateFormatHelper::createFromTimestamp($savedReport->generatedOn)
             ->format(DateFormatHelper::getSystemFormat());
         $metadata['title'] = $savedReport->saveAs;
 
@@ -464,9 +464,9 @@ class ProofOfPlay implements ReportInterface
             $entry['tag'] = $sanitizedRow->getString('tag');
             $entry['numberPlays'] = $sanitizedRow->getInt('numberPlays');
             $entry['duration'] = $sanitizedRow->getInt('duration');
-            $entry['minStart'] = Carbon::createFromTimestamp($row['minStart'])
+            $entry['minStart'] = DateFormatHelper::createFromTimestamp($row['minStart'])
                 ->format(DateFormatHelper::getSystemFormat());
-            $entry['maxEnd'] = Carbon::createFromTimestamp($row['maxEnd'])
+            $entry['maxEnd'] = DateFormatHelper::createFromTimestamp($row['maxEnd'])
                 ->format(DateFormatHelper::getSystemFormat());
             $entry['mediaId'] = $sanitizedRow->getInt('mediaId');
             $entry['displayGroup'] = $sanitizedRow->getString('displayGroup');
@@ -864,8 +864,8 @@ class ProofOfPlay implements ReportInterface
         }
 
         return [
-            'periodStart' => Carbon::createFromTimestamp($fromDt)->format(DateFormatHelper::getSystemFormat()),
-            'periodEnd' => Carbon::createFromTimestamp($toDt)->format(DateFormatHelper::getSystemFormat()),
+            'periodStart' => DateFormatHelper::createFromTimestamp($fromDt)->format(DateFormatHelper::getSystemFormat()),
+            'periodEnd' => DateFormatHelper::createFromTimestamp($toDt)->format(DateFormatHelper::getSystemFormat()),
             'result' => $rows,
             'count' => count($rows)
         ];

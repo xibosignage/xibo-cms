@@ -2668,7 +2668,7 @@ class Library extends Base
         $media->setUnmatchedProperty('mediaNoExpiryDate', __('Never'));
         $media->expires = ($media->expires == 0)
             ? 0
-            : Carbon::createFromTimestamp($media->expires)->format(DateFormatHelper::getSystemFormat());
+            : DateFormatHelper::createFromTimestamp($media->expires)->format(DateFormatHelper::getSystemFormat());
 
         // Description
         $releasedDescription = LibraryDescription::getMediaReleasedDescription($media->released);

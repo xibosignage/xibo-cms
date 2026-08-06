@@ -921,7 +921,7 @@ class Soap
                             // Get the widget modified date
                             // we will use the latter of this vs the layout modified date as the updated attribute
                             // on required files
-                            $widgetModifiedDt = Carbon::createFromTimestamp($widget->modifiedDt);
+                            $widgetModifiedDt = DateFormatHelper::createFromTimestamp($widget->modifiedDt);
 
                             // Updated date is the greatest of layout/widget modified date
                             $updatedDt = ($layoutModifiedDt->greaterThan($widgetModifiedDt))
@@ -1375,8 +1375,8 @@ class Soap
                         $fromDt = Carbon::createFromTimestamp($scheduleEvent->fromDt, $this->display->timeZone)->format(DateFormatHelper::getSystemFormat());
                         $toDt = Carbon::createFromTimestamp($scheduleEvent->toDt, $this->display->timeZone)->format(DateFormatHelper::getSystemFormat());
                     } else {
-                        $fromDt = Carbon::createFromTimestamp($scheduleEvent->fromDt)->format(DateFormatHelper::getSystemFormat());
-                        $toDt = Carbon::createFromTimestamp($scheduleEvent->toDt)->format(DateFormatHelper::getSystemFormat());
+                        $fromDt = DateFormatHelper::createFromTimestamp($scheduleEvent->fromDt)->format(DateFormatHelper::getSystemFormat());
+                        $toDt = DateFormatHelper::createFromTimestamp($scheduleEvent->toDt)->format(DateFormatHelper::getSystemFormat());
                     }
 
                     $scheduleId = $row['eventId'];
@@ -2049,7 +2049,7 @@ class Soap
 
                 // Do we need to set the duration of this record (we will do for older individually collected stats)
                 if ($duration == '') {
-                    $duration = $toDt->diffInSeconds($fromDt);
+                    $duration = (int) $toDt->diffInSeconds($fromDt);
                 }
             } catch (\Exception $e) {
                 // Protect against the date format being unreadable
@@ -3014,7 +3014,7 @@ class Soap
 
         // TODO use new sanitizer here
         //$rfLookAhead = $this->getSanitizer()->int($this->getConfig()->getSetting('REQUIRED_FILES_LOOKAHEAD'));
-        $rfLookAhead = $this->getConfig()->getSetting('REQUIRED_FILES_LOOKAHEAD');
+        $rfLookAhead = (int) $this->getConfig()->getSetting('REQUIRED_FILES_LOOKAHEAD');
         if ($rfLookAhead >= 3600) {
             // Go from the top of this hour
             $fromFilter

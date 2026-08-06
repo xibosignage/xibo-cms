@@ -713,7 +713,7 @@ class Widget implements \JsonSerializable
      */
     public function isExpired()
     {
-        return ($this->toDt !== self::$DATE_MAX && Carbon::createFromTimestamp($this->toDt)->format('U') < Carbon::now()->format('U'));
+        return ($this->toDt !== self::$DATE_MAX && DateFormatHelper::createFromTimestamp($this->toDt)->format('U') < Carbon::now()->format('U'));
     }
 
     /**
