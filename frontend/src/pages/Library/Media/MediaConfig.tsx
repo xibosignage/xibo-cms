@@ -60,6 +60,7 @@ import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
 import type { DateLike } from '@/utils/date';
 import { formatDuration } from '@/utils/formatters';
+import { formatTagsForExport } from '@/utils/tags';
 
 export interface MediaFilterInput {
   type?: string;
@@ -468,6 +469,9 @@ export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] =>
       header: t('Thumbnail'),
       size: 150,
       enableSorting: false,
+      meta: {
+        excludeFromExport: true,
+      },
       cell: (info) => (
         <MediaCell
           thumb={info.row.original.thumbnail}
@@ -508,6 +512,9 @@ export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] =>
               }));
               return <TagsCell tags={formattedTags} />;
             },
+            meta: {
+              getExportValue: (row) => formatTagsForExport(row.tags),
+            },
           },
         ] as ColumnDef<Media>[])
       : []),
@@ -517,6 +524,9 @@ export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] =>
       header: t('Duration'),
       size: 140,
       cell: (info) => <TextCell>{formatDuration(info.getValue<number>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatDuration(row.duration),
+      },
     },
     {
       id: 'durationSeconds',
@@ -598,12 +608,18 @@ export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] =>
       header: t('Created'),
       size: 180,
       cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatDateTime(row.createdDt),
+      },
     },
     {
       accessorKey: 'modifiedDt',
       header: t('Modified'),
       size: 180,
       cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatDateTime(row.modifiedDt),
+      },
     },
     {
       accessorKey: 'expires',

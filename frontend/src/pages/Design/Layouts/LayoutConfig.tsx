@@ -61,6 +61,7 @@ import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
 import type { DateLike } from '@/utils/date';
 import { formatDuration } from '@/utils/formatters';
+import { formatTagsForExport } from '@/utils/tags';
 
 export interface LayoutFilterInput {
   campaignId?: number | null;
@@ -519,6 +520,9 @@ export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[]
       header: t('Thumbnail'),
       size: 140,
       enableSorting: false,
+      meta: {
+        excludeFromExport: true,
+      },
       cell: (info) => {
         const row = info.row.original;
 
@@ -559,6 +563,9 @@ export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[]
               }));
               return <TagsCell tags={formattedTags} />;
             },
+            meta: {
+              getExportValue: (row) => formatTagsForExport(row.tags),
+            },
           },
         ] as ColumnDef<Layout>[])
       : []),
@@ -592,6 +599,9 @@ export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[]
         const value = info.getValue<number>();
         return <TextCell>{formatDuration(value)}</TextCell>;
       },
+      meta: {
+        getExportValue: (row) => formatDuration(row.duration),
+      },
     },
 
     {
@@ -623,6 +633,9 @@ export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[]
       header: t('Modified'),
       size: 160,
       cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatDateTime(row.modifiedDt),
+      },
     },
     {
       accessorKey: 'layoutId',

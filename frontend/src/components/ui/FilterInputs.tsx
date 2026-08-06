@@ -228,7 +228,7 @@ export default function FilterInputs<T>({
         transition-all duration-300 ease-in-out w-full relative
         ${
           isOpen
-            ? `opacity-100 visible mt-4 ${onApply ? 'max-h-100 sm:max-h-125 2xl:max-h-150 overflow-auto' : 'max-h-150 overflow-visible'}`
+            ? 'opacity-100 visible mt-4 shrink-0 max-h-[min(37.5rem,50vh)] overflow-auto'
             : 'max-h-0 opacity-0 invisible mt-0 overflow-hidden'
         }
       `}

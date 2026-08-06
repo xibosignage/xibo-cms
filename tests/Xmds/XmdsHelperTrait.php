@@ -133,4 +133,21 @@ trait XmdsHelperTrait
           </soap:Body>
         </soap:Envelope>';
     }
+
+    public function submitStats($version, $statXml): string
+    {
+        return '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+        xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
+          xmlns:tns="urn:xmds" xmlns:types="urn:xmds/encodedTypes"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+          <soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+            <tns:SubmitStats>
+              <serverKey xsi:type="xsd:string">6v4RduQhaw5Q</serverKey>
+              <hardwareKey xsi:type="xsd:string">PHPUnit'. $version .'</hardwareKey>
+              <statXml xsi:type="xsd:string">'. htmlspecialchars($statXml) .'</statXml>
+            </tns:SubmitStats>
+          </soap:Body>
+        </soap:Envelope>';
+    }
 }
