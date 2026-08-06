@@ -509,13 +509,17 @@ class BaseFactory
      * @param array $allowedColumns - sortable columns in datatable
      * @param array $customColumns - computed or formatted columns in datatable
      * @param array $defaultSort - default sorting
+     * @param string|null $uniqueColumn - a column guaranteed unique per row (e.g. the primary key),
+     *   appended as a tiebreaker so rows sharing the same value in the requested sort column
+     *   return in a consistent order
      * @return array
      */
     public function buildSortQuery(
         ?array $sortOrder,
         array $allowedColumns,
         array $customColumns = [],
-        array $defaultSort = []
+        array $defaultSort = [],
+        ?string $uniqueColumn = null
     ): array {
         $columnMapping = [];
 
@@ -548,6 +552,12 @@ class BaseFactory
                 : ' ASC';
 
             $order[] = $columnMapping[$column] . $dir;
+        }
+
+        // Append the unique column as a tiebreaker so rows sharing the same value in the
+        // requested sort column return in a consistent order, unless it's already part of the sort.
+        if ($uniqueColumn !== null && !str_contains(implode(', ', $order), '`' . $uniqueColumn . '`')) {
+            $order[] = '`' . $uniqueColumn . '` ASC';
         }
 
         return $order;

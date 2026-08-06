@@ -377,7 +377,8 @@ class UserFactory extends BaseFactory
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            defaultSort: ['userId ASC']
+            defaultSort: ['userId ASC'],
+            uniqueColumn: 'userId'
         );
 
         $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
