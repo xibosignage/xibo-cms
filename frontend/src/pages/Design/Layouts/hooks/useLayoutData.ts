@@ -25,6 +25,7 @@ import type { AxiosError } from 'axios';
 
 import type { LayoutFilterInput } from '../LayoutConfig';
 
+import { serializeTags } from '@/components/ui/forms/TagInput';
 import type { FetchLayoutRequest } from '@/services/layoutsApi';
 import { fetchLayouts } from '@/services/layoutsApi';
 import { resolveLastModified } from '@/utils/date';
@@ -91,8 +92,7 @@ export const useLayoutData = ({
         logicalOperator,
       } = advancedFilters;
 
-      const normalizedTags =
-        tags && tags.length > 0 ? tags.map((tag) => tag.tag).join(',') : undefined;
+      const normalizedTags = tags && tags.length > 0 ? serializeTags(tags) : undefined;
 
       const request: FetchLayoutRequest = {
         start: startOffset,

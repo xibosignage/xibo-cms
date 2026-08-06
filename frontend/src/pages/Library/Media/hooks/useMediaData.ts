@@ -25,6 +25,7 @@ import type { AxiosError } from 'axios';
 
 import type { MediaFilterInput } from '../MediaConfig';
 
+import { serializeTags } from '@/components/ui/forms/TagInput';
 import type { FetchMediaRequest } from '@/services/mediaApi';
 import { fetchMedia } from '@/services/mediaApi';
 import { resolveLastModified } from '@/utils/date';
@@ -74,8 +75,7 @@ export const useMediaData = ({
       const { lastModified, tags, mediaId, layoutId, exactTags, useRegexForName, ...restFilters } =
         advancedFilters;
 
-      const normalizedTags =
-        tags && tags.length > 0 ? tags.map((tag) => tag.tag).join(',') : undefined;
+      const normalizedTags = tags && tags.length > 0 ? serializeTags(tags) : undefined;
 
       const request: FetchMediaRequest = {
         start: startOffset,

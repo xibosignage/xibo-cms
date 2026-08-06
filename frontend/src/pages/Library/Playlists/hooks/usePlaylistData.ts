@@ -25,6 +25,7 @@ import type { AxiosError } from 'axios';
 
 import type { PlaylistFilterInput } from '../PlaylistsConfig';
 
+import { serializeTags } from '@/components/ui/forms/TagInput';
 import type { FetchPlaylistRequest } from '@/services/playlistApi';
 import { fetchPlaylist } from '@/services/playlistApi';
 import { resolveLastModified } from '@/utils/date';
@@ -81,8 +82,7 @@ export const usePlaylistData = ({
         ...restFilters
       } = advancedFilters;
 
-      const normalizedTags =
-        tags && tags.length > 0 ? tags.map((tag) => tag.tag).join(',') : undefined;
+      const normalizedTags = tags && tags.length > 0 ? serializeTags(tags) : undefined;
 
       const request: FetchPlaylistRequest = {
         start: startOffset,
