@@ -21,8 +21,6 @@
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
-import type { AxiosError } from 'axios';
-
 import type { ResolutionFilterInput } from '../ResolutionsConfig';
 
 import type { FetchResolutionRequest } from '@/services/resolutionApi';
@@ -87,9 +85,5 @@ export const useResolutionData = ({
 
     placeholderData: keepPreviousData, // Keep showing previous page's data while the new page loads
     staleTime: 1000 * 60 * 1, // Cache for 1 minute
-
-    throwOnError: (error: AxiosError) => {
-      return error.response?.status ? error.response.status >= 500 : false;
-    },
   });
 };

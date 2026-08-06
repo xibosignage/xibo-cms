@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import axios from 'axios';
 import { redirect } from 'react-router-dom';
 
 import http from '@/lib/api';
@@ -57,7 +58,11 @@ async function getUserSession(): Promise<User | null> {
       if (isValidUser(res.data)) {
         return res.data;
       }
-    } catch {
+    } catch (err) {
+      // Server error — let it bubble to errorElement
+      if (axios.isAxiosError(err) && err.response && err.response.status >= 500) {
+        throw err;
+      }
       // 401 / network error — fall through to retry, then null.
     }
 
