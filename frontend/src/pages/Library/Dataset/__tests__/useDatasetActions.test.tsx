@@ -19,6 +19,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import '@/testUtils/notifyMock';
+
 import { renderHook, act } from '@testing-library/react';
 import type { TFunction } from 'i18next';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -26,6 +28,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useDatasetActions } from '../hooks/useDatasetActions';
 
 import { mockDataset } from './DatasetSetup';
+
+import { mockNotifySuccess, mockNotifyError, mockNotifyWarning } from '@/testUtils/notifyMock';
+import { trackSequentialCalls } from '@/testUtils/sequentialMock';
 
 const mockDeleteDataset = vi.fn();
 const mockCloneDataset = vi.fn();
@@ -37,19 +42,6 @@ vi.mock('@/services/datasetApi', () => ({
 const mockSelectFolder = vi.fn();
 vi.mock('@/services/folderApi', () => ({
   selectFolder: (...args: unknown[]) => mockSelectFolder(...args),
-}));
-
-const mockNotifySuccess = vi.fn();
-const mockNotifyError = vi.fn();
-const mockNotifyWarning = vi.fn();
-const mockNotifyInfo = vi.fn();
-vi.mock('@/components/ui/Notification', () => ({
-  notify: {
-    success: (...args: unknown[]) => mockNotifySuccess(...args),
-    error: (...args: unknown[]) => mockNotifyError(...args),
-    info: (...args: unknown[]) => mockNotifyInfo(...args),
-    warning: (...args: unknown[]) => mockNotifyWarning(...args),
-  },
 }));
 
 describe('useDatasetActions', () => {
@@ -328,6 +320,27 @@ describe('useDatasetActions', () => {
       expect(mockSelectFolder).toHaveBeenCalledWith(
         expect.objectContaining({ targetType: 'dataset' }),
       );
+    });
+
+    // Regression test — see trackSequentialCalls in testUtils/sequentialMock.ts
+    // for why sequencing (not just call count) is what's being proven here.
+    it('sends move requests sequentially, not concurrently', async () => {
+      const tracker = trackSequentialCalls(mockSelectFolder);
+
+      const { result } = renderActions();
+      const itemsToMove = [
+        mockDataset({ dataSetId: 1 }),
+        mockDataset({ dataSetId: 2 }),
+        mockDataset({ dataSetId: 3 }),
+      ];
+
+      await act(async () => {
+        await result.current.handleConfirmMove(itemsToMove, 10);
+      });
+
+      expect(mockSelectFolder).toHaveBeenCalledTimes(3);
+      expect(tracker.maxInFlight).toBe(1);
+      expect(tracker.callOrder).toEqual([1, 2, 3]);
     });
   });
 });
