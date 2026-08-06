@@ -112,7 +112,6 @@
     "exussum12/coverage-checker": "^0.11.2",
     "doctrine/instantiator": "1.5.0",
     "doctrine/annotations": "^1",
-    "league/oauth2-client": "^2.4",
     "micheh/phpcs-gitlab": "^1.1",
     "phpunit/phpunit": "10.5.*",
     "shipmonk/composer-dependency-analyser": "^1.8",
