@@ -194,6 +194,9 @@ export const getTaskColumns = (props: TaskActionsProps): ColumnDef<Task>[] => {
           <StatusCell label={getTaskStatusLabel(status, t)} type={getTaskStatusType(status)} />
         );
       },
+      meta: {
+        getExportValue: (row) => getTaskStatusLabel(row.status, t),
+      },
     },
     {
       id: 'nextRunDt',
@@ -203,6 +206,9 @@ export const getTaskColumns = (props: TaskActionsProps): ColumnDef<Task>[] => {
       cell: (info) => (
         <TextCell>{formatUnixTimestamp(info.getValue<number>(), formatDateTime)}</TextCell>
       ),
+      meta: {
+        getExportValue: (row) => formatUnixTimestamp(row.nextRunDt, formatDateTime),
+      },
     },
     {
       accessorKey: 'runNow',
@@ -215,6 +221,9 @@ export const getTaskColumns = (props: TaskActionsProps): ColumnDef<Task>[] => {
       cell: (info) => (
         <TextCell>{formatUnixTimestamp(info.getValue<number>(), formatDateTime)}</TextCell>
       ),
+      meta: {
+        getExportValue: (row) => formatUnixTimestamp(row.lastRunDt, formatDateTime),
+      },
     },
     {
       accessorKey: 'lastRunStatus',
