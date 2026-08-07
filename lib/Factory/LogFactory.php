@@ -74,8 +74,12 @@ class LogFactory extends BaseFactory
         $params = [];
         $limit = '';
 
+        $isPaged = $filterBy !== null
+            && $parsedFilter->getInt('start') !== null
+            && $parsedFilter->getInt('length', ['default' => 10]) !== null;
+
         $select = '
-            SELECT `logId`,
+            SELECT ' . ($isPaged ? 'SQL_CALC_FOUND_ROWS ' : '') . '`logId`,
                 `runNo`,
                 `logDate`,
                 `channel`,
@@ -210,10 +214,7 @@ class LogFactory extends BaseFactory
         $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
 
         // Paging
-        if ($filterBy !== null
-            && $parsedFilter->getInt('start') !== null
-            && $parsedFilter->getInt('length', ['default' => 10]) !== null
-        ) {
+        if ($isPaged) {
             $limit = ' LIMIT ' . $parsedFilter->getInt('start', ['default' => 0]) . ', '
                 . $parsedFilter->getInt('length', ['default' => 10]);
         }
@@ -224,9 +225,12 @@ class LogFactory extends BaseFactory
             $entries[] = $this->createEmpty()->hydrate($row, ['htmlStringProperties' => ['message']]);
         }
 
-        // Paging
-        if ($limit != '' && count($entries) > 0) {
-            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+        // Paging: FOUND_ROWS() reflects the row count of the SELECT just executed on this same
+        // connection, so it can't be skewed by rows another session/request inserts in between
+        // (unlike a separate COUNT(*) query, which can race against concurrent writes) and it
+        // still reports the true total even when this page's LIMIT window returned zero rows.
+        if ($isPaged) {
+            $results = $this->getStore()->select('SELECT FOUND_ROWS() AS total', []);
             $this->_countLast = intval($results[0]['total']);
         }
 
