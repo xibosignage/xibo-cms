@@ -20,7 +20,9 @@ RUN find -type d -name '.git' -exec rm -r {} + && \
     find -type d -name 'docs' -depth -exec rm -r {} + && \
     find -type d -name 'examples' -depth -exec rm -r {} + && \
     find -type f -name 'phpunit.xml' -exec rm -r {} + && \
-    find -type f -name '*.md' -exec rm -r {} +
+    find -type f -name '*.md' -exec rm -r {} + && \
+    test -d /app/vendor/james-heinrich/getid3/helperapps && \
+    rm -rf /app/vendor/james-heinrich/getid3/helperapps
 
 
 # Stage 2
