@@ -354,6 +354,26 @@ const formatUnixTimestamp = (
   return formatDateTime(new Date(ts * 1000));
 };
 
+const formatRecurrenceRepeatsOn = (event: Event, t: TFunction): string => {
+  if (event.recurrenceType !== 'Week' || !event.recurrenceRepeatsOn) {
+    return '—';
+  }
+
+  const weekdayLabels = [
+    t('Sunday'),
+    t('Monday'),
+    t('Tuesday'),
+    t('Wednesday'),
+    t('Thursday'),
+    t('Friday'),
+    t('Saturday'),
+  ];
+  return event.recurrenceRepeatsOn
+    .split(',')
+    .map((day) => weekdayLabels[Number(day) % 7] ?? '')
+    .join(', ');
+};
+
 export const getEventColumns = (props: EventActionsProps): ColumnDef<Event>[] => {
   const { t, timezone } = props;
   const formatDateTime =
@@ -509,7 +529,7 @@ export const getEventColumns = (props: EventActionsProps): ColumnDef<Event>[] =>
       accessorKey: 'recurrenceRepeatsOn',
       header: t('Recurrence Repeats On'),
       size: 180,
-      cell: (info) => <TextCell>{info.getValue<string | null>() || '—'}</TextCell>,
+      cell: ({ row }) => <TextCell>{formatRecurrenceRepeatsOn(row.original, t)}</TextCell>,
     },
     {
       accessorKey: 'recurrenceRange',
