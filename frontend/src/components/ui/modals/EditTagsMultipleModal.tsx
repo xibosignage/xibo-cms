@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { isAxiosError } from 'axios';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -34,7 +35,7 @@ interface EditTagsMultipleModalProps {
   ids: Array<number | string>;
   existingTags?: Tag[];
   onClose: () => void;
-  onSuccess?: () => void;
+  onSuccess?: () => void | Promise<void>;
 }
 
 export default function EditTagsMultipleModal({
@@ -83,19 +84,34 @@ export default function EditTagsMultipleModal({
       setIsLoading(true);
       setError(undefined);
 
-      await editMultipleTags({
+      const result = await editMultipleTags({
         targetType,
         ids,
         addTags: serializeTags(finalAdd),
         removeTags: serializeTags(finalRemove),
       });
 
-      notify.success(t('Tags updated for {{count}} selected items.', { count: ids.length }));
-      onSuccess?.();
+      if (result.failedCount > 0) {
+        notify.error(
+          t('{{count}} of {{total}} item(s) could not be updated', {
+            count: result.failedCount,
+            total: ids.length,
+          }),
+          { description: result.failedNames.join(', ') },
+        );
+      } else {
+        notify.success(t('Tags updated for {{count}} selected items.', { count: ids.length }));
+      }
+
+      await onSuccess?.();
       onClose();
     } catch (err) {
       console.error(err);
-      setError(t('Failed to update tags.'));
+      setError(
+        isAxiosError(err) && err.response?.data?.message
+          ? err.response.data.message
+          : t('Failed to update tags.'),
+      );
     } finally {
       setIsLoading(false);
     }
