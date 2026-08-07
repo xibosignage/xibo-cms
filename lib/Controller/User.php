@@ -2157,9 +2157,7 @@ class User extends Base
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
-                required: ['navigationMenuPosition'],
                 properties: [
-                    new OA\Property(property: 'navigationMenuPosition', type: 'string'),
                     new OA\Property(property: 'useLibraryDuration', type: 'integer'),
                     new OA\Property(property: 'showThumbnailColumn', type: 'integer'),
                     new OA\Property(property: 'rememberFolderTreeStateGlobally', type: 'integer')
@@ -2182,20 +2180,12 @@ class User extends Base
         $parsedParams = $this->getSanitizer($request->getParams());
 
         $this->getUser()->setOptionValue(
-            'navigationMenuPosition',
-            $parsedParams->getString('navigationMenuPosition', ['defaultOnEmptyString' => true])
-        );
-        $this->getUser()->setOptionValue(
             'useLibraryDuration',
             $parsedParams->getCheckbox('useLibraryDuration')
         );
         $this->getUser()->setOptionValue(
             'showThumbnailColumn',
             $parsedParams->getCheckbox('showThumbnailColumn')
-        );
-        $this->getUser()->setOptionValue(
-            'isAlwaysUseManualAddUserForm',
-            $parsedParams->getCheckbox('isAlwaysUseManualAddUserForm')
         );
         $this->getUser()->setOptionValue(
             'rememberFolderTreeStateGlobally',

@@ -51,6 +51,8 @@ interface UseDisplaysActionsProps {
   handleRefresh: () => void;
   closeModal: () => void;
   setRowSelection: Dispatch<SetStateAction<RowSelectionState>>;
+  showThumbnailColumn: boolean;
+  revealThumbnailColumns: () => void;
 }
 
 export function useDisplaysActions({
@@ -58,6 +60,8 @@ export function useDisplaysActions({
   handleRefresh,
   closeModal,
   setRowSelection,
+  showThumbnailColumn,
+  revealThumbnailColumns,
 }: UseDisplaysActionsProps) {
   const navigate = useNavigate();
 
@@ -182,12 +186,17 @@ export function useDisplaysActions({
   const confirmCheckLicence = (display: Display, options?: { notifyOnError?: boolean }) =>
     runAction(() => checkLicence(display.displayId), t('Failed to check licence.'), options);
 
-  const confirmRequestScreenShot = (display: Display, options?: { notifyOnError?: boolean }) =>
-    runAction(
+  const confirmRequestScreenShot = (display: Display, options?: { notifyOnError?: boolean }) => {
+    if (showThumbnailColumn) {
+      revealThumbnailColumns();
+    }
+
+    return runAction(
       () => requestScreenShot(display.displayId),
       t('Failed to request screenshot.'),
       options,
     );
+  };
 
   const confirmCollectNow = (display: Display, options?: { notifyOnError?: boolean }) =>
     runAction(
@@ -271,11 +280,16 @@ export function useDisplaysActions({
       t('Failed to check licence for one or more displays.'),
     );
 
-  const confirmBulkRequestScreenShot = (items: Display[]) =>
-    runBulkAction(
+  const confirmBulkRequestScreenShot = (items: Display[]) => {
+    if (showThumbnailColumn) {
+      revealThumbnailColumns();
+    }
+
+    return runBulkAction(
       items.map((d) => () => requestScreenShot(d.displayId)),
       t('Failed to request screenshot for one or more displays.'),
     );
+  };
 
   const confirmBulkCollectNow = (items: Display[]) =>
     runBulkAction(

@@ -24,7 +24,11 @@ import type { PaginationState, SortingState, VisibilityState } from '@tanstack/r
 import { useState, useEffect, useRef } from 'react';
 
 import type { ViewMode } from '@/components/ui/table/types';
+import { useUserContext } from '@/context/UserContext';
 import { fetchUserPreference, saveUserPreference } from '@/services/userApi';
+import { isPreferenceEnabled } from '@/utils/preferences';
+
+const FOLDER_ID_GLOBAL_KEY = 'globalSelectedFolderId';
 
 export interface TablePreferences<TFilters> {
   pagination: PaginationState;
@@ -42,6 +46,12 @@ export function useTableState<TFilters>(
   debounceMs = 500,
 ) {
   const queryClient = useQueryClient();
+  const { user } = useUserContext();
+  const rememberFolderGlobally = isPreferenceEnabled(
+    user?.settings?.rememberFolderTreeStateGlobally,
+    true,
+  );
+  const folderIdKey = rememberFolderGlobally ? FOLDER_ID_GLOBAL_KEY : `${pageKey}_folderId`;
 
   const [pagination, setPagination] = useState<PaginationState>(defaultState.pagination);
   const [sorting, setSorting] = useState<SortingState>(defaultState.sorting);
@@ -56,7 +66,34 @@ export function useTableState<TFilters>(
 
   const [filterInputs, setFilterInputs] = useState<TFilters>(defaultState.filterInputs);
 
-  const [folderId, setFolderId] = useState<number | null>(defaultState.folderId ?? null);
+  const [folderId, setFolderIdState] = useState<number | null>(defaultState.folderId ?? null);
+  const [isFolderIdHydrated, setIsFolderIdHydrated] = useState(false);
+  const hasInteractedWithFolderRef = useRef(false);
+
+  useEffect(() => {
+    let isActive = true;
+    hasInteractedWithFolderRef.current = false;
+    setIsFolderIdHydrated(false);
+
+    fetchUserPreference<number | null>(folderIdKey).then((stored) => {
+      if (isActive) {
+        if (!hasInteractedWithFolderRef.current && stored !== null && stored !== undefined) {
+          setFolderIdState(stored);
+        }
+        setIsFolderIdHydrated(true);
+      }
+    });
+
+    return () => {
+      isActive = false;
+    };
+  }, [folderIdKey]);
+
+  const setFolderId = (value: number | null) => {
+    hasInteractedWithFolderRef.current = true;
+    setFolderIdState(value);
+    saveUserPreference({ option: folderIdKey, value });
+  };
 
   const [isHydrated, setIsHydrated] = useState(false);
 
@@ -80,9 +117,6 @@ export function useTableState<TFilters>(
         }
         if (savedPrefs.filterInputs) {
           setFilterInputs(savedPrefs.filterInputs);
-        }
-        if (savedPrefs.folderId !== undefined) {
-          setFolderId(savedPrefs.folderId);
         }
       }
       setIsHydrated(true);
@@ -108,7 +142,6 @@ export function useTableState<TFilters>(
     columnVisibility,
     viewMode,
     filterInputs,
-    folderId,
   };
 
   const prefsString = JSON.stringify(currentPrefs);
@@ -177,6 +210,6 @@ export function useTableState<TFilters>(
     setFilterInputs,
     folderId,
     setFolderId,
-    isHydrated,
+    isHydrated: isHydrated && isFolderIdHydrated,
   };
 }

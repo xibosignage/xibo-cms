@@ -59,6 +59,7 @@ import { useTableState } from '@/hooks/useTableState';
 import type { Display } from '@/types/display';
 import { countActiveFilters } from '@/utils/filters';
 import { hasFeature } from '@/utils/permissions';
+import { isPreferenceEnabled } from '@/utils/preferences';
 
 export default function Displays() {
   const { t } = useTranslation();
@@ -281,6 +282,9 @@ export default function Displays() {
     handleRefresh,
     closeModal,
     setRowSelection,
+    showThumbnailColumn: isPreferenceEnabled(user?.settings?.showThumbnailColumn, true),
+    revealThumbnailColumns: () =>
+      setColumnVisibility((prev) => ({ ...prev, screenShotRequested: true, thumbnail: true })),
   });
 
   const { guard } = useAutoSubmit();
