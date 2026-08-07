@@ -198,12 +198,17 @@ export default function ReplaceFileModal({
                 )}
               </div>
             </div>
-            <div className="flex flex-col justify-between flex-1">
+            <div className="flex flex-col justify-between flex-1 min-w-0">
               <div>
                 <span className="text-sm text-gray-500 font-semibold flex items-center gap-1">
                   {t('FILE NAME')} <HelpCircle size={12} />
                 </span>
-                <span className="text-sm">{selectedFile?.name || t(data.fileName)}</span>
+                <span
+                  className="text-sm truncate block"
+                  title={selectedFile?.name || data.fileName}
+                >
+                  {selectedFile?.name || t(data.fileName)}
+                </span>
               </div>
               <div>
                 <span className="text-sm text-gray-500 font-semibold flex items-center gap-1">
@@ -240,7 +245,10 @@ export default function ReplaceFileModal({
           </div>
           {selectedFile && isSaving && (
             <div className="flex flex-col">
-              <span className="text-sm text-xibo-black font-semibold mt-1 block px-4">
+              <span
+                className="text-sm text-xibo-black font-semibold mt-1 block px-4 truncate"
+                title={selectedFile.name}
+              >
                 {selectedFile.name}
               </span>
               <div className="px-4 pb-3 flex items-center gap-4">
