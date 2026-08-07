@@ -105,7 +105,7 @@ export default function Welcome() {
               href="https://docs.xibosignage.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+              className="inline-flex items-center rounded-lg bg-xibo-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-xibo-blue-700"
             >
               {t('Documentation')}
             </a>
@@ -146,7 +146,7 @@ export default function Welcome() {
                   className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/30 opacity-0 transition-opacity hover:opacity-100"
                 >
                   <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/90 cursor-pointer">
-                    <Play className="h-6 w-6 text-blue-600" />
+                    <Play className="h-6 w-6 text-xibo-blue-600" />
                   </div>
                 </button>
               )}

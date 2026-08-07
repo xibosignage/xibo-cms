@@ -402,6 +402,12 @@ PlaylistTimeline.prototype.updateInfo = function() {
     }}),
   );
 
+  // Update duration on topbar
+  this.DOMObject.parents('.playlist-editor-opened')
+    .find('.editor-top-bar #playlistInfo .playlist-info-duration > span')
+    .html(pE.playlist.duration);
+
+
   // Inject HTML into container
   this.DOMObject.parents('#playlist-editor')
     .find('.selected-info').html(html);

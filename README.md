@@ -1,4 +1,10 @@
-[![Xibo - Digital Signage](docker/brand/xibologo.png)](https://xibosignage.com)
+<a href="https://xibosignage.com">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docker/brand/logo.svg">
+    <source media="(prefers-color-scheme: light)" srcset="docker/brand/logo-dark.svg">
+    <img alt="Xibo Logo" src="docker/brand/logo-dark.svg" width="300">
+  </picture>
+</a>
 
 [![Github All Releases](https://img.shields.io/github/downloads/xibosignage/xibo-cms/total.svg)]()
 

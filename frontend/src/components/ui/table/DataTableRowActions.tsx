@@ -122,7 +122,7 @@ export default function DataTableRowActions<TData>({
                       action.variant === 'danger'
                         ? 'text-red-800 hover:bg-red-50 focus:bg-red-100'
                         : action.variant === 'primary'
-                          ? 'text-blue-800 hover:bg-blue-50 focus:bg-blue-100'
+                          ? 'text-xibo-blue-800 hover:bg-xibo-blue-50 focus:bg-xibo-blue-100'
                           : 'text-gray-800 hover:bg-gray-50 focus:bg-gray-100',
                     )}
                   >

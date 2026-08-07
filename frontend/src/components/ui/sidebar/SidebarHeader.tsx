@@ -53,7 +53,7 @@ export function SidebarHeader({ isCollapsed, contentHidden, closeMobileDrawer }:
       <button
         onClick={closeMobileDrawer}
         className="md:hidden flex w-9.5 h-9.5 items-center
-          text-xibo-blue-100 justify-center rounded-lg hover:bg-white/10"
+          text-(--sidebar-fg-muted) justify-center rounded-lg hover:bg-(--sidebar-overlay)"
       >
         <X size={16} />
       </button>
