@@ -22,6 +22,7 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManagerStatic as Img;
 use OpenApi\Attributes as OA;
@@ -2665,9 +2666,20 @@ class Library extends Base
         $media->setUnmatchedProperty('fileSizeFormatted', ByteFormatter::format($media->fileSize));
 
         // Expiry
-        $media->setUnmatchedProperty('mediaExpiresIn', __('Expires %s'));
-        $media->setUnmatchedProperty('mediaExpiryFailed', __('Expired '));
-        $media->setUnmatchedProperty('mediaNoExpiryDate', __('Never'));
+        $expiresTimestamp = $media->expires;
+        $now = Carbon::now();
+
+        if ($expiresTimestamp == 0) {
+            $expiresFormatted = __('Never');
+        } elseif ($expiresTimestamp > $now->timestamp) {
+            $relative = Carbon::createFromTimestamp($expiresTimestamp)
+                ->diffForHumans($now, CarbonInterface::DIFF_RELATIVE_TO_NOW);
+            $expiresFormatted = str_replace('%s', $relative, __('Expires %s'));
+        } else {
+            $expiresFormatted = __('Expired ');
+        }
+        $media->setUnmatchedProperty('expiresFormatted', $expiresFormatted);
+
         $media->expires = ($media->expires == 0)
             ? 0
             : Carbon::createFromTimestamp($media->expires)->format(DateFormatHelper::getSystemFormat());
