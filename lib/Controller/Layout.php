@@ -268,6 +268,7 @@ class Layout extends Base
                 '/preview/layout/preview/' . $layout->layoutId,
                 3600,
             )->toString(),
+            'brandLogoFile' => $this->getConfig()->getBrandAssetFile('logo'),
         ];
 
         // Call the render the template
