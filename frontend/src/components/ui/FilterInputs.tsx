@@ -37,6 +37,7 @@ import TextInput from './forms/TextInput';
 
 import type { FilterOption } from '@/types/filter';
 import type { Tag } from '@/types/tag';
+import { isValidRegex } from '@/utils/regex';
 
 export type { FilterOption };
 
@@ -143,20 +144,14 @@ function DebouncedTextWithControls({
   const handleChange = (val: string) => {
     setLocalValue(val);
 
-    if (isRegex && val) {
-      try {
-        new RegExp(val);
-        setRegexError('');
-      } catch {
-        setRegexError(t('Invalid regular expression'));
-        if (debounceRef.current) {
-          clearTimeout(debounceRef.current);
-        }
-        return;
+    if (isRegex && val && !isValidRegex(val)) {
+      setRegexError(t('Invalid regular expression'));
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
       }
-    } else {
-      setRegexError('');
+      return;
     }
+    setRegexError('');
 
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
@@ -173,7 +168,13 @@ function DebouncedTextWithControls({
   const suffix = showRegex ? (
     <div
       className="px-3 py-2 flex items-center cursor-pointer justify-center"
-      onClick={() => onRegexChange && onRegexChange(!isRegex)}
+      onClick={() => {
+        if (!isRegex && localValue && !isValidRegex(localValue)) {
+          setRegexError(t('Invalid regular expression'));
+          return;
+        }
+        onRegexChange?.(!isRegex);
+      }}
       title={t('Use RegEx pattern matching')}
     >
       <Button
