@@ -48,7 +48,7 @@ const STYLE_VARIANTS = {
     success: 'bg-white border text-teal-500 border-teal-400',
     warning: 'bg-white border text-yellow-500 border-yellow-400',
     danger: 'bg-white border text-red-500 border-red-400',
-    info: 'bg-white border text-xibo-blue-600 border-blue-400',
+    info: 'bg-white border text-blue-600 border-blue-400',
     neutral: 'bg-white border text-gray-800 border-gray-200',
     light: 'bg-white border text-gray-800 border-gray-200',
     dark: 'bg-white border text-gray-800 border-gray-400',

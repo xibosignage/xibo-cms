@@ -93,7 +93,9 @@ type ActiveTab =
 function tabClass(activeTab: ActiveTab, tab: ActiveTab): string {
   const isActive = activeTab === tab;
   return `py-2 px-3 inline-flex items-center gap-2 border-b-2 text-sm font-semibold whitespace-nowrap focus:outline-none transition-all ${
-    isActive ? 'border-blue-600 text-blue-500' : 'border-gray-200 text-gray-500 hover:text-blue-600'
+    isActive
+      ? 'border-xibo-blue-600 text-xibo-blue-500'
+      : 'border-gray-200 text-gray-500 hover:text-xibo-blue-600'
   }`;
 }
 
