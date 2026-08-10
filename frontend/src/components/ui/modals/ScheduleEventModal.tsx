@@ -24,6 +24,7 @@ import { ArrowLeft, ArrowRight, CalendarClock, Minus, Plus, Tablet } from 'lucid
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 
+import Badge from '../Badge';
 import Button from '../Button';
 import GeoScheduleMap from '../GeoScheduleMap';
 import InfoBanner from '../InfoBanner';
@@ -33,6 +34,7 @@ import Checkbox from '../forms/Checkbox';
 import DatePickerInput from '../forms/DatePickerInput';
 import NumberInput from '../forms/NumberInput';
 import SelectDropdown from '../forms/SelectDropdown';
+import Switch from '../forms/Switch';
 import TextInput from '../forms/TextInput';
 import { DataTable } from '../table/DataTable';
 import { TextCell } from '../table/cells';
@@ -178,6 +180,7 @@ export default function ScheduleEventModal({
   const [syncDisplays, setSyncDisplays] = useState<SyncGroupDisplay[]>([]);
   const [syncLayoutOptions, setSyncLayoutOptions] = useState<SelectOption[]>([]);
   const [isLoadingSyncDisplays, setIsLoadingSyncDisplays] = useState(false);
+  const [syncMirror, setSyncMirror] = useState(false);
 
   const [isPending, startTransition] = useTransition();
   const [apiError, setApiError] = useState<string | undefined>();
@@ -658,6 +661,7 @@ export default function ScheduleEventModal({
     if (!isOpen || !isSyncType || !draft.syncGroupId) {
       setSyncDisplays([]);
       setSyncLayoutOptions([]);
+      setSyncMirror(false);
       return;
     }
 
@@ -987,6 +991,7 @@ export default function ScheduleEventModal({
     setShowDisplayBanner(false);
     setSyncDisplays([]);
     setSyncLayoutOptions([]);
+    setSyncMirror(false);
     setFormErrors({});
     setApiError(undefined);
     onClose();
@@ -994,34 +999,101 @@ export default function ScheduleEventModal({
 
   const syncDisplayColumns: ColumnDef<SyncGroupDisplay>[] = [
     {
+      accessorKey: 'displayId',
+      header: t('ID'),
+      size: 50,
+      cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
+    },
+    {
       accessorKey: 'display',
       header: t('Display'),
-      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
+      size: 150,
+      cell: ({ row }) => (
+        <TextCell truncate>
+          {row.original.display}
+          {row.original.displayId === row.original.leadDisplayId && (
+            <Badge type="success" className="ml-2 shrink-0">
+              {t('Lead')}
+            </Badge>
+          )}
+        </TextCell>
+      ),
     },
     {
       id: 'layout',
       header: t('Layout'),
-      cell: ({ row }) => (
-        <SelectDropdown
-          value={
-            draft.syncDisplayLayouts[row.original.displayId]
-              ? String(draft.syncDisplayLayouts[row.original.displayId])
-              : ''
-          }
-          options={syncLayoutOptions}
-          onSelect={(value) => {
-            setDraft((prev) => ({
-              ...prev,
-              syncDisplayLayouts: {
-                ...prev.syncDisplayLayouts,
-                [row.original.displayId]: Number(value),
-              },
-            }));
-          }}
-          placeholder={t('Select Layout')}
-          searchable
-        />
-      ),
+      cell: ({ row }) => {
+        const isLead = row.original.displayId === row.original.leadDisplayId;
+        const leadLayoutId = draft.syncDisplayLayouts[row.original.displayId];
+        return (
+          <div className="flex items-center gap-2">
+            <div className="w-52">
+              <SelectDropdown
+                value={leadLayoutId ? String(leadLayoutId) : ''}
+                options={syncLayoutOptions}
+                onSelect={(value) => {
+                  const layoutId = Number(value);
+                  if (!isLead && syncMirror) {
+                    setSyncMirror(false);
+                  }
+                  setDraft((prev) => {
+                    const updated = {
+                      ...prev.syncDisplayLayouts,
+                      [row.original.displayId]: layoutId,
+                    };
+                    if (isLead && syncMirror) {
+                      for (const display of syncDisplays) {
+                        if (display.displayId !== row.original.displayId) {
+                          updated[display.displayId] = layoutId;
+                        }
+                      }
+                    }
+                    return { ...prev, syncDisplayLayouts: updated };
+                  });
+                }}
+                placeholder={t('Select Layout')}
+                searchable
+              />
+            </div>
+            {isLead && (
+              <div className="flex items-center gap-2 shrink-0">
+                <Switch
+                  ariaLabel={t('Mirror layout to all displays')}
+                  checked={syncMirror}
+                  hideOnOff
+                  size="sm"
+                  disabled={!leadLayoutId}
+                  onChange={(checked) => {
+                    setSyncMirror(checked);
+                    if (checked && leadLayoutId) {
+                      setDraft((prev) => {
+                        const updated = { ...prev.syncDisplayLayouts };
+                        for (const display of syncDisplays) {
+                          if (display.displayId !== row.original.displayId) {
+                            updated[display.displayId] = leadLayoutId;
+                          }
+                        }
+                        return { ...prev, syncDisplayLayouts: updated };
+                      });
+                    } else {
+                      setDraft((prev) => {
+                        const updated = { ...prev.syncDisplayLayouts };
+                        for (const display of syncDisplays) {
+                          if (display.displayId !== row.original.displayId) {
+                            delete updated[display.displayId];
+                          }
+                        }
+                        return { ...prev, syncDisplayLayouts: updated };
+                      });
+                    }
+                  }}
+                />
+                <span className="text-sm text-gray-600">{t('Mirror')}</span>
+              </div>
+            )}
+          </div>
+        );
+      },
     },
   ];
 

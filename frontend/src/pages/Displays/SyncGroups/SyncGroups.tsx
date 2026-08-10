@@ -385,6 +385,10 @@ export default function SyncGroups() {
             setSelectedSyncGroupId(syncGroup.syncGroupId);
             openModal('members');
           },
+          openEditForSyncGroup: (syncGroup: SyncGroup) => {
+            setSelectedSyncGroupId(syncGroup.syncGroupId);
+            openModal('edit');
+          },
           deleteError,
           isDeleting,
         }}
