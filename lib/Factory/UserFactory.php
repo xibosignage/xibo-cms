@@ -363,10 +363,8 @@ class UserFactory extends BaseFactory
             'lastName',
             'email',
             'homeFolder',
-            'libraryQuota',
             'lastAccessed',
             'retired',
-            'twoFactorTypeId',
             'phone',
             'ref1',
             'ref2',
@@ -374,9 +372,16 @@ class UserFactory extends BaseFactory
             'ref4',
             'ref5',
         ];
+
+        $customColumns = [
+            'libraryQuotaFormatted' => '`libraryQuota`',
+            'twoFactorDescription' => '`twoFactorTypeId`',
+        ];
+
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
-            $allowedColumns,
+            $allowedColumns,  
+            $customColumns,
             defaultSort: ['userId ASC'],
             uniqueColumn: 'userId'
         );

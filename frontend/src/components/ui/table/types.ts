@@ -19,4 +19,15 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import type { RowData } from '@tanstack/react-table';
+
 export type ViewMode = 'table' | 'grid' | 'map' | 'calendar' | 'chart';
+
+// Per-column CSV export overrides, separate from on-screen `cell` rendering.
+declare module '@tanstack/react-table' {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- TValue required by upstream generic
+  interface ColumnMeta<TData extends RowData, TValue> {
+    getExportValue?: (row: TData) => string;
+    excludeFromExport?: boolean;
+  }
+}

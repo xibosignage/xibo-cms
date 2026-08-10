@@ -280,7 +280,7 @@ function UploadItemRow({ item, onRemove, onUpdate, canTag = true }: RowProps) {
                 disabled={isUploading}
                 value={localName}
                 onChange={(e) => setLocalName(e.target.value)}
-                className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none"
+                className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-xibo-blue-500 focus:ring-xibo-blue-500 disabled:opacity-50 disabled:pointer-events-none"
                 placeholder={t('File Name')}
               />
             </div>
@@ -463,7 +463,7 @@ export function FileUploader({
       <div
         {...getRootProps()}
         className={`p-5 border-2 border-dashed flex flex-col rounded-xl items-center justify-center transition-colors
-          ${isDragActive ? 'border-xibo-blue-600 text-xibo-blue-600 bg-blue-50' : 'border-gray-200 text-gray-800 bg-gray-50'}
+          ${isDragActive ? 'border-xibo-blue-600 text-xibo-blue-600 bg-xibo-blue-50' : 'border-gray-200 text-gray-800 bg-gray-50'}
           cursor-pointer hover:shadow-4 hover:shadow-blue-500/25
         `}
       >
@@ -537,7 +537,7 @@ export function FileUploader({
               />
               <button
                 type="button"
-                className="p-3 justify-center text-blue-600 hover:text-blue-800 hover:bg-xibo-blue-50/25 items-center text-sm rounded-e-md border border-gray-200 border-l-0 disabled:text-blue-600/50 disabled:pointer-events-none"
+                className="p-3 justify-center text-xibo-blue-600 hover:text-xibo-blue-800 hover:bg-xibo-blue-50/25 items-center text-sm rounded-e-md border border-gray-200 border-l-0 disabled:text-xibo-blue-600/50 disabled:pointer-events-none"
                 onClick={handleUrlUpload}
                 disabled={!urlInput || disabled}
               >

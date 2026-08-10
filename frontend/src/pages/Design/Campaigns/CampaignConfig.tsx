@@ -41,6 +41,7 @@ import type { Campaign } from '@/types/campaign';
 import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
 import type { DateLike } from '@/utils/date';
+import { formatTagsForExport } from '@/utils/tags';
 
 export interface CampaignFilterInput {
   name?: string;
@@ -213,6 +214,10 @@ export const getCampaignColumn = (props: CampaignActionsProps): ColumnDef<Campai
               const value = info.getValue<number>();
               return <TextCell>{value ? formatDateTime(new Date(value * 1000)) : '-'}</TextCell>;
             },
+            meta: {
+              getExportValue: (row) =>
+                row.startDt ? formatDateTime(new Date(row.startDt * 1000)) : '',
+            },
           },
           {
             accessorKey: 'endDt',
@@ -222,6 +227,10 @@ export const getCampaignColumn = (props: CampaignActionsProps): ColumnDef<Campai
             cell: (info) => {
               const value = info.getValue<number>();
               return <TextCell>{value ? formatDateTime(new Date(value * 1000)) : '-'}</TextCell>;
+            },
+            meta: {
+              getExportValue: (row) =>
+                row.endDt ? formatDateTime(new Date(row.endDt * 1000)) : '',
             },
           },
         ] as ColumnDef<Campaign>[])
@@ -250,6 +259,9 @@ export const getCampaignColumn = (props: CampaignActionsProps): ColumnDef<Campai
               }));
               return <TagsCell tags={formattedTags} />;
             },
+            meta: {
+              getExportValue: (row) => formatTagsForExport(row.tags),
+            },
           },
         ] as ColumnDef<Campaign>[])
       : []),
@@ -275,6 +287,9 @@ export const getCampaignColumn = (props: CampaignActionsProps): ColumnDef<Campai
             type={value ? 'success' : 'neutral'}
           />
         );
+      },
+      meta: {
+        getExportValue: (row) => (row.cyclePlaybackEnabled ? t('Enabled') : t('Disabled')),
       },
     },
 

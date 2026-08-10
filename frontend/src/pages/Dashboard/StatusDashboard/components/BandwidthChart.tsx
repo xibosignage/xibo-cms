@@ -23,6 +23,8 @@ import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 
+import { BRAND_PRIMARY } from '@/styles/brandColors';
+
 interface BandwidthDataset {
   label: string;
   backgroundColor: string;
@@ -146,9 +148,9 @@ export default function BandwidthChart({ bandwidthWidget, bandwidthSuffix }: Ban
             dataKey="used"
             name={t('Used')}
             stackId="bandwidth"
-            fill="#0E70F6"
+            fill={BRAND_PRIMARY}
             radius={hasLimit ? [0, 0, 0, 0] : [4, 4, 0, 0]}
-            onMouseEnter={handleBarEnter('used', t('Used'), '#0E70F6')}
+            onMouseEnter={handleBarEnter('used', t('Used'), BRAND_PRIMARY)}
             onMouseLeave={clearTooltip}
           />
           {hasLimit && (

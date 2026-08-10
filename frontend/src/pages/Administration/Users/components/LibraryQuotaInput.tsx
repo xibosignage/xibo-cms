@@ -138,7 +138,7 @@ export default function LibraryQuotaInput({ value, onChange, error }: LibraryQuo
                   onClick={() => handleUnitChange(u)}
                   className={`w-full text-left px-3 py-2 text-sm transition-colors ${
                     u === unit
-                      ? 'bg-blue-50 text-blue-600 font-medium'
+                      ? 'bg-xibo-blue-50 text-xibo-blue-600 font-medium'
                       : 'text-gray-700 hover:bg-gray-50'
                   }`}
                 >

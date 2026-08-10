@@ -39,7 +39,7 @@ import { twMerge } from 'tailwind-merge';
 import DatePicker from './DatePicker';
 
 import { useDateFormatter } from '@/hooks/useDateFormatter';
-import { formatDateTime } from '@/utils/date';
+import { formatCmsDate, formatDateTime, toLocalDateKey } from '@/utils/date';
 
 type DateFilterProps = {
   label: string;
@@ -48,6 +48,7 @@ type DateFilterProps = {
   onChange: (name: string, value: string | null) => void;
   isJalali?: boolean;
   className?: string;
+  showTimePicker?: boolean;
 };
 
 export default function DateFilter({
@@ -57,9 +58,10 @@ export default function DateFilter({
   onChange,
   isJalali = false,
   className,
+  showTimePicker = true,
 }: DateFilterProps) {
   const { t } = useTranslation();
-  const { formatDate } = useDateFormatter();
+  const { formatDate, dateFormat } = useDateFormatter();
   const [open, setOpen] = useState(false);
 
   const { refs, floatingStyles, context } = useFloating({
@@ -88,6 +90,11 @@ export default function DateFilter({
 
   const getDisplayLabel = () => {
     if (!value) return t('Any time');
+
+    if (!showTimePicker) {
+      return formatCmsDate(value, { format: dateFormat, timeZone: 'UTC' });
+    }
+
     const date = new Date(value.replace(' ', 'T'));
     if (isNaN(date.getTime())) return value;
     return formatDate(date);
@@ -130,10 +137,14 @@ export default function DateFilter({
                 mode="single"
                 disableFutureDates
                 isJalali={isJalali}
+                showTimePicker={showTimePicker}
                 onCancel={() => setOpen(false)}
                 onApply={(v) => {
                   if (v.type === 'single') {
-                    onChange(name, formatDateTime(v.date));
+                    onChange(
+                      name,
+                      showTimePicker ? formatDateTime(v.date) : toLocalDateKey(v.date),
+                    );
                   }
                   setOpen(false);
                 }}

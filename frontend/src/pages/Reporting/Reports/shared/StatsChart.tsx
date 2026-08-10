@@ -41,9 +41,10 @@ import type { StatsChartType } from './types';
 
 import { makePieTooltip, usePieTooltip } from '@/components/ui/charts/pieTooltip';
 import type { StatsReportTableRow } from '@/services/statsReportApi';
+import { BRAND_PRIMARY } from '@/styles/brandColors';
 
 const DURATION_COLOR = '#14b8a6';
-const COUNT_COLOR = '#0e70f6';
+const COUNT_COLOR = BRAND_PRIMARY;
 
 const SLICE_COLORS = [
   '#0e70f6',

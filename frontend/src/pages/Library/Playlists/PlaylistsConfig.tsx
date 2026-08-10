@@ -51,6 +51,7 @@ import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
 import type { DateLike } from '@/utils/date';
 import { formatDuration } from '@/utils/formatters';
+import { formatTagsForExport } from '@/utils/tags';
 
 export interface PlaylistFilterInput {
   playlistId?: number | null;
@@ -326,6 +327,9 @@ export const getPlaylistColumns = (props: PlaylistActionsProps): ColumnDef<Playl
               }));
               return <TagsCell tags={formattedTags} />;
             },
+            meta: {
+              getExportValue: (row) => formatTagsForExport(row.tags),
+            },
           },
         ] as ColumnDef<Playlist>[])
       : []),
@@ -368,6 +372,12 @@ export const getPlaylistColumns = (props: PlaylistActionsProps): ColumnDef<Playl
 
         return <TextCell>{formatDuration(duration)}</TextCell>;
       },
+      meta: {
+        getExportValue: (row) =>
+          row.requiresDurationUpdate === 1
+            ? t('Changes have been made and we are recalculating this Playlist’s duration')
+            : formatDuration(row.duration),
+      },
     },
     {
       accessorKey: 'owner',
@@ -400,12 +410,18 @@ export const getPlaylistColumns = (props: PlaylistActionsProps): ColumnDef<Playl
       header: t('Created'),
       size: 160,
       cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatDateTime(row.createdDt),
+      },
     },
     {
       accessorKey: 'modifiedDt',
       header: t('Modified'),
       size: 160,
       cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatDateTime(row.modifiedDt),
+      },
     },
     {
       id: 'tableActions',

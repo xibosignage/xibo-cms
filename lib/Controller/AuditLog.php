@@ -121,7 +121,7 @@ class AuditLog extends Base
         }
 
         $fromTimeStamp = $filterFromDt->setTime(0, 0, 0)->format('U');
-        $toTimeStamp = $filterToDt->setTime(0, 0, 0)->format('U');
+        $toTimeStamp = $filterToDt->setTime(23, 59, 59)->format('U');
 
         $rows = $this->auditLogFactory->query(
             ['logId'],

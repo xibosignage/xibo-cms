@@ -196,6 +196,9 @@ export const getNotificationColumns = (
       size: 140,
       enableSorting: true,
       cell: (info) => <TextCell>{formatReleaseDt(info.getValue<number | string>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatReleaseDt(row.releaseDt),
+      },
     },
     {
       accessorKey: 'isInterrupt',

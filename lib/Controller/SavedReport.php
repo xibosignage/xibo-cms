@@ -281,7 +281,10 @@ class SavedReport extends Base
                 $emailTemplate,
                 [
                     'header' => $report->description,
-                    'logo' => ($showLogo) ? rtrim($this->getConfig()->getSetting('LIBRARY_LOCATION'), '/') . '/brand/xibologo.png' : null,
+                    'logo' => ($showLogo)
+                        ? rtrim($this->getConfig()->getSetting('LIBRARY_LOCATION'), '/')
+                            . '/brand/' . $this->getConfig()->getBrandLogoDarkFile()
+                        : null,
                     'title' => $savedReport->saveAs,
                     'metadata' => $results->metadata,
                     'tableData' => $tableData ?? null,
