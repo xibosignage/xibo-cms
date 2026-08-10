@@ -100,8 +100,8 @@ class IcsProvider implements WidgetProviderInterface
 
         // Set up fuzzy filtering supported by the ICal library. This is included for performance.
         // https://github.com/u01jmg3/ics-parser?tab=readme-ov-file#variables
-        $iCalConfig['filterDaysBefore'] = $rangeStart->diffInDays(Carbon::now(), false) + 2;
-        $iCalConfig['filterDaysAfter'] = $rangeEnd->diffInDays(Carbon::now()) + 2;
+        $iCalConfig['filterDaysBefore'] = (int) $rangeStart->diffInDays(Carbon::now(), false) + 2;
+        $iCalConfig['filterDaysAfter'] = (int) $rangeEnd->diffInDays(Carbon::now()) + 2;
 
         $this->getLog()->debug('Range start: ' . $rangeStart->toDateTimeString()
             . ', range end: ' . $rangeEnd->toDateTimeString()

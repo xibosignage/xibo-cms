@@ -2906,10 +2906,10 @@ class LayoutFactory extends BaseFactory
      */
     private function setWidgetExpiryDatesOrDefault($widget)
     {
-        $minSubYear = Carbon::createFromTimestamp(Widget::$DATE_MIN)->subYear()->format('U');
-        $minAddYear = Carbon::createFromTimestamp(Widget::$DATE_MIN)->addYear()->format('U');
-        $maxSubYear = Carbon::createFromTimestamp(Widget::$DATE_MAX)->subYear()->format('U');
-        $maxAddYear = Carbon::createFromTimestamp(Widget::$DATE_MAX)->addYear()->format('U');
+        $minSubYear = DateFormatHelper::createFromTimestamp(Widget::$DATE_MIN)->subYear()->format('U');
+        $minAddYear = DateFormatHelper::createFromTimestamp(Widget::$DATE_MIN)->addYear()->format('U');
+        $maxSubYear = DateFormatHelper::createFromTimestamp(Widget::$DATE_MAX)->subYear()->format('U');
+        $maxAddYear = DateFormatHelper::createFromTimestamp(Widget::$DATE_MAX)->addYear()->format('U');
 
         // if we are importing from layout.json the Widget from/to expiry dates are already timestamps
         // for old Layouts when the Widget from/to dt are missing we set them to timestamps as well.

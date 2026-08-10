@@ -29,6 +29,7 @@ use Respect\Validation\Validator as v;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\ScheduleFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -341,7 +342,7 @@ class Campaign implements \JsonSerializable
      */
     public function getStartDt()
     {
-        return $this->startDt == 0 ? null : Carbon::createFromTimestamp($this->startDt);
+        return $this->startDt == 0 ? null : DateFormatHelper::createFromTimestamp($this->startDt);
     }
 
     /**
@@ -349,7 +350,7 @@ class Campaign implements \JsonSerializable
      */
     public function getEndDt()
     {
-        return $this->endDt == 0 ? null : Carbon::createFromTimestamp($this->endDt);
+        return $this->endDt == 0 ? null : DateFormatHelper::createFromTimestamp($this->endDt);
     }
 
     /**
@@ -374,7 +375,7 @@ class Campaign implements \JsonSerializable
 
         // if start and end date are the same
         // set the daysTotal to 1, to avoid potential division by 0 later on.
-        $progress->daysTotal = ($this->startDt === $this->endDt) ? 1 : $endDt->diffInDays($startDt);
+        $progress->daysTotal = ($this->startDt === $this->endDt) ? 1 : (int) $endDt->diffInDays($startDt);
 
         $progress->targetPerDay = $this->target / $progress->daysTotal;
 
@@ -387,11 +388,11 @@ class Campaign implements \JsonSerializable
                 $progress->daysIn = $progress->daysTotal;
                 $progress->progressTime = 100;
             } else {
-                $progress->daysIn = $testDate->diffInDays($startDt);
+                $progress->daysIn = (int) $testDate->diffInDays($startDt);
 
                 // Use hours to calculate more accurate progress
                 $hoursTotal = $progress->daysTotal * 24;
-                $hoursIn = $testDate->diffInHours($startDt);
+                $hoursIn = (int) $testDate->diffInHours($startDt);
                 $progress->progressTime = $hoursIn / $hoursTotal * 100;
             }
 

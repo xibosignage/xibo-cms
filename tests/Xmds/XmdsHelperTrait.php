@@ -46,7 +46,7 @@ trait XmdsHelperTrait
     <tns:NotifyStatus>
       <serverKey xsi:type="xsd:string">6v4RduQhaw5Q</serverKey>
       <hardwareKey xsi:type="xsd:string">PHPUnit'.$version.'</hardwareKey>
-      <status xsi:type-="xsd:string">'.$status.'</status>
+      <status xsi:type="xsd:string">'.$status.'</status>
     </tns:NotifyStatus>
   </soap:Body>
 </soap:Envelope>';

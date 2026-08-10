@@ -20,7 +20,9 @@ RUN find -type d -name '.git' -exec rm -r {} + && \
     find -type d -name 'docs' -depth -exec rm -r {} + && \
     find -type d -name 'examples' -depth -exec rm -r {} + && \
     find -type f -name 'phpunit.xml' -exec rm -r {} + && \
-    find -type f -name '*.md' -exec rm -r {} +
+    find -type f -name '*.md' -exec rm -r {} + && \
+    test -d /app/vendor/james-heinrich/getid3/helperapps && \
+    rm -rf /app/vendor/james-heinrich/getid3/helperapps
 
 
 # Stage 2
@@ -71,13 +73,13 @@ RUN npm run build
 
 # Stage 4
 # Build the CMS container
-FROM debian:bullseye-slim
+FROM debian:trixie-slim
 MAINTAINER Xibo Signage <support@xibosignage.com>
 LABEL org.opencontainers.image.authors="support@xibosignage.com"
 
 # Install apache, PHP, and supplimentary programs.
 RUN apt update && \
-    apt install -y software-properties-common lsb-release ca-certificates curl && \
+    apt install -y lsb-release ca-certificates curl && \
     rm -rf /var/lib/apt/lists/* && \
     ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime
 
@@ -91,7 +93,7 @@ RUN LC_ALL=C.UTF-8 DEBIAN_FRONTEND=noninteractive apt update && apt upgrade -y &
     curl \
     apache2 \
     libapache2-mod-xsendfile \
-    netcat \
+    netcat-openbsd \
     iputils-ping \
     gnupg \
     php8.4 \

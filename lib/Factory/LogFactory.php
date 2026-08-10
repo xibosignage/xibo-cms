@@ -103,14 +103,14 @@ class LogFactory extends BaseFactory
 
         if ($parsedFilter->getInt('fromDt') !== null) {
             $body .= ' AND `logdate` > :fromDt ';
-            $params['fromDt'] = Carbon::createFromTimestamp(
+            $params['fromDt'] = DateFormatHelper::createFromTimestamp(
                 $parsedFilter->getInt('fromDt')
             )->format(DateFormatHelper::getSystemFormat());
         }
 
         if ($parsedFilter->getInt('toDt') !== null) {
             $body .= ' AND `logdate` <= :toDt ';
-            $params['toDt'] = Carbon::createFromTimestamp(
+            $params['toDt'] = DateFormatHelper::createFromTimestamp(
                 $parsedFilter->getInt('toDt')
             )->format(DateFormatHelper::getSystemFormat());
         }

@@ -127,8 +127,7 @@ vendor/bin/phpunit --configuration phpunit.xml
 
 # Tests located in: tests/
 # Bootstrap: tests/Bootstrap.php
-# Currently uncommented: tests/Xmds/ (XMDS API tests)
-# Commented out: tests/integration/, tests/Widget/
+# Only suite: tests/Xmds/ (XMDS API tests)
 ```
 
 **API Documentation**:
@@ -212,10 +211,8 @@ db/migrations/            # Phinx database migrations (timestamp-based naming)
 
 tests/
   ├── Bootstrap.php       # PHPUnit bootstrap
-  ├── Xmds/               # XMDS API tests (currently only active test suite)
-  ├── integration/        # Integration tests (commented out)
-  ├── resources/          # Test fixtures
-  └── LocalWebTestCase.php
+  ├── Xmds/               # XMDS API tests (only active test suite)
+  └── resources/          # Test fixtures (layout seeds used by SeedDatabaseTask)
 
 docker/                   # Docker entrypoint scripts and configurations
 containers/db/            # Docker Compose MySQL data volume (DO NOT SEARCH — large binary files)
@@ -364,9 +361,7 @@ Key patterns:
 
 ### Testing Strategy
 
-Currently, only **XMDS API tests** are active in `phpunit.xml`. Integration and unit test suites are commented out but available in:
-- `tests/integration/` — Integration tests (requires running containers)
-- `tests/Widget/` — Widget unit tests
+Only **XMDS API tests** exist in `phpunit.xml` (`tests/Xmds/`). The integration test suite was removed entirely (unmaintained, never run in CI) — don't recreate a `tests/integration/` directory expecting it to still exist.
 
 **Test Bootstrap** (`tests/Bootstrap.php`):
 - Sets up test environment
