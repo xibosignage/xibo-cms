@@ -23,6 +23,7 @@ import { isAxiosError } from 'axios';
 import { useEffect, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { notify } from '@/components/ui/Notification';
 import NumberInput from '@/components/ui/forms/NumberInput';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import type { SelectOption } from '@/components/ui/forms/SelectDropdown';
@@ -76,6 +77,7 @@ export default function AddAndEditSyncGroupModal({
   const [apiError, setApiError] = useState<string | undefined>();
   const [draft, setDraft] = useState<SyncGroupDraft>({ ...DEFAULT_DRAFT });
   const [memberDisplayOptions, setMemberDisplayOptions] = useState<SelectOption[]>([]);
+  const [isLoadingMembers, setIsLoadingMembers] = useState(false);
 
   const isEdit = mode === 'edit';
 
@@ -91,11 +93,18 @@ export default function AddAndEditSyncGroupModal({
           folderId: syncGroup.folderId || null,
         });
 
-        fetchSyncGroupDisplays(syncGroup.syncGroupId).then((displays) => {
-          setMemberDisplayOptions(
-            displays.map((d) => ({ value: String(d.displayId), label: d.display })),
-          );
-        });
+        setMemberDisplayOptions([]);
+        setIsLoadingMembers(true);
+        fetchSyncGroupDisplays(syncGroup.syncGroupId)
+          .then((displays) => {
+            setMemberDisplayOptions(
+              displays.map((d) => ({ value: String(d.displayId), label: d.display })),
+            );
+          })
+          .catch(() => {
+            notify.error(t("Failed to load this sync group's member displays."));
+          })
+          .finally(() => setIsLoadingMembers(false));
       } else {
         setDraft({ ...DEFAULT_DRAFT });
         setMemberDisplayOptions([]);
@@ -107,7 +116,7 @@ export default function AddAndEditSyncGroupModal({
 
   const handleSave = () => {
     startTransition(async () => {
-      const schema = getSyncGroupSchema(t);
+      const schema = getSyncGroupSchema(t, isEdit);
       const result = schema.safeParse(draft);
 
       if (!result.success) {
@@ -117,6 +126,11 @@ export default function AddAndEditSyncGroupModal({
         Object.entries(fieldErrors).forEach(([key, value]) => {
           if (value?.[0]) mappedErrors[key as keyof FormErrors] = value[0];
         });
+        if (mappedErrors.leadDisplayId && memberDisplayOptions.length === 0) {
+          mappedErrors.leadDisplayId = t(
+            'This sync group has no members yet. Assign members before choosing a lead display.',
+          );
+        }
         setFormErrors(mappedErrors);
         return;
       }
@@ -172,7 +186,6 @@ export default function AddAndEditSyncGroupModal({
       onClose={onClose}
       isOpen={isOpen}
       isPending={isPending}
-      scrollable={false}
       size="lg"
       error={apiError}
       actions={modalActions}
@@ -227,12 +240,20 @@ export default function AddAndEditSyncGroupModal({
         {isEdit && (
           <SelectDropdown
             label={t('Lead Display')}
-            helpText={t('Select Lead Display for this sync group')}
+            helpText={
+              !isLoadingMembers && memberDisplayOptions.length === 0
+                ? t(
+                    'This sync group has no members yet. Assign members before choosing a lead display.',
+                  )
+                : t('Select Lead Display for this sync group')
+            }
             value={draft.leadDisplayId ? String(draft.leadDisplayId) : ''}
             options={memberDisplayOptions}
             onSelect={(val) =>
               setDraft((prev) => ({ ...prev, leadDisplayId: val ? Number(val) : null }))
             }
+            error={formErrors.leadDisplayId}
+            isLoading={isLoadingMembers}
             clearable
             searchable
           />

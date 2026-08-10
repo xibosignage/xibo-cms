@@ -73,7 +73,6 @@ export default function AddDisplayModal({ isOpen = true, onClose, onAdded }: Add
       onClose={onClose}
       isOpen={isOpen}
       isPending={isPending}
-      scrollable={false}
       error={apiError}
       actions={[
         { label: t('Cancel'), onClick: onClose, variant: 'secondary', disabled: isPending },

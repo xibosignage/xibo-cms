@@ -86,6 +86,11 @@ export function SyncGroupModals({ actions, selection, handlers }: SyncGroupModal
           syncGroup={selection.selectedSyncGroup}
           onClose={actions.closeModal}
           onSuccess={actions.handleRefresh}
+          onNeedsLeadDisplay={() => {
+            if (selection.selectedSyncGroup) {
+              actions.openEditForSyncGroup(selection.selectedSyncGroup);
+            }
+          }}
           onAfterSave={
             selection.selectedSyncGroup && !selection.selectedSyncGroup.leadDisplayId
               ? () => actions.openEditForSyncGroup(selection.selectedSyncGroup!)

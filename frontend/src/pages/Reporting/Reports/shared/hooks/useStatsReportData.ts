@@ -22,14 +22,9 @@
 import { useQuery } from '@tanstack/react-query';
 
 import type { StatsFilter } from '../types';
+import { resolveReportDateRange } from '../utils/resolveReportDateRange';
 
 import { fetchStatsReport } from '@/services/statsReportApi';
-
-function formatDateParam(iso: string): string {
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-}
 
 export const statsReportQueryKeys = {
   all: ['statsReport'] as const,
@@ -48,21 +43,11 @@ export function useStatsReportData({ reportName, filter, enabled }: UseStatsRepo
     queryKey: statsReportQueryKeys.report(reportName, filter as unknown as Record<string, unknown>),
 
     queryFn: async ({ signal }) => {
-      let reportFilter: string | undefined;
-      let statsFromDt: string | undefined;
-      let statsToDt: string | undefined;
-
-      if (filter.reportFilter.startsWith('range:')) {
-        const [from, to] = filter.reportFilter.replace('range:', '').split('|');
-        if (from) {
-          statsFromDt = formatDateParam(from);
-        }
-        if (to) {
-          statsToDt = formatDateParam(to);
-        }
-      } else if (filter.reportFilter) {
-        reportFilter = filter.reportFilter;
-      }
+      const {
+        reportFilter,
+        fromDt: statsFromDt,
+        toDt: statsToDt,
+      } = resolveReportDateRange(filter.reportFilter);
 
       const response = await fetchStatsReport(reportName, {
         type: filter.type,

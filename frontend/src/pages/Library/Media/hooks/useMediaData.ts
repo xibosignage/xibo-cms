@@ -25,6 +25,7 @@ import type { AxiosError } from 'axios';
 
 import type { MediaFilterInput } from '../MediaConfig';
 
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import type { FetchMediaRequest } from '@/services/mediaApi';
 import { fetchMedia } from '@/services/mediaApi';
 import { resolveLastModified } from '@/utils/date';
@@ -52,6 +53,8 @@ export const useMediaData = ({
   advancedFilters,
   enabled = true,
 }: UseMediaParams) => {
+  const { timeZone } = useDateFormatter();
+
   // Combine settings into one object to create a unique cache key
   const queryParams = {
     pageIndex: pagination.pageIndex,
@@ -92,7 +95,7 @@ export const useMediaData = ({
         ...(useRegexForName && advancedFilters.media && isValidRegex(advancedFilters.media)
           ? { useRegexForName: 1 }
           : {}),
-        ...resolveLastModified(lastModified),
+        ...resolveLastModified(lastModified, timeZone),
       };
 
       if (typeof folderId === 'number') {
