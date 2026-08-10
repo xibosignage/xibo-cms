@@ -19,22 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type { ChangeEvent } from 'react';
-
-interface CheckboxCellProps {
-  checked?: boolean;
-  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
-  ariaLabel?: string;
-}
-
-export function CheckboxCell({ checked, onChange, ariaLabel = 'Select row' }: CheckboxCellProps) {
-  return (
-    <input
-      type="checkbox"
-      checked={checked}
-      onChange={onChange}
-      aria-label={ariaLabel}
-      className="rounded border-gray-200 no-print cursor-pointer text-xibo-blue-600 focus:border-xibo-blue-500 focus:border-2 focus:ring-0 focus:outline-0"
-    />
-  );
-}
+// CSS var references (not resolved hex) so theme.css overrides apply live.
+// Safe for SVG/CSS colour props (e.g. Recharts fill/stroke); not for <canvas>.
+export const BRAND_PRIMARY = 'var(--brand-primary)';
+export const BRAND_ACCENT = 'var(--brand-accent)';

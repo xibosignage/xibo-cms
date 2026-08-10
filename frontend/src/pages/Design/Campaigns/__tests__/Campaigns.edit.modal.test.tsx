@@ -210,7 +210,7 @@ describe('EditCampaignModal', () => {
   test('General tab is active by default', async () => {
     await renderEditModal();
     const generalTab = screen.getByRole('button', { name: 'General' });
-    expect(generalTab).toHaveClass('border-blue-600');
+    expect(generalTab).toHaveClass('border-xibo-blue-600');
   });
 
   test('Name field is pre-populated with the campaign name', async () => {

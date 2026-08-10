@@ -288,7 +288,7 @@ export default function SpotRow({
       <div className="flex flex-1">
         <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} />
         <div
-          className={`w-full h-16 flex justify-center items-center border space-x-2 border-dashed rounded-lg transition-colors ${isDragOver ? 'border-xibo-blue-600 bg-blue-100' : 'border-xibo-blue-600'}`}
+          className={`w-full h-16 flex justify-center items-center border space-x-2 border-dashed rounded-lg transition-colors ${isDragOver ? 'border-xibo-blue-600 bg-xibo-blue-100' : 'border-xibo-blue-600'}`}
         >
           <Upload className="h-3.5 w-3.5 text-xibo-blue-600" />
           <span className="text-sm text-gray-500">
@@ -314,7 +314,7 @@ export default function SpotRow({
     <div
       className={twMerge(
         `flex relative justify-stretch items-center gap-4 rounded-lg border bg-white p-4 transition-colors `,
-        isDragOver ? 'border-xibo-blue-600 bg-blue-50' : 'border-gray-200',
+        isDragOver ? 'border-xibo-blue-600 bg-xibo-blue-50' : 'border-gray-200',
       )}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}

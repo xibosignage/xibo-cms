@@ -29,6 +29,7 @@ use Xibo\Service\BaseDependenciesService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class BaseFactory
@@ -394,24 +395,33 @@ class BaseFactory
                 return;
             }
 
+            $isNegated = str_starts_with($searchName, '-');
+            $pattern = $isNegated ? ltrim($searchName, '-') : $searchName;
+
+            // MySQL throws a raw SQL error for an invalid REGEXP pattern, which would
+            // otherwise surface as an unhandled 500 - validate up-front instead.
+            if ($useRegex && @preg_match('/' . str_replace('/', '\/', $pattern) . '/', '') === false) {
+                throw new InvalidArgumentException(__('Invalid regular expression'), $tableColumn);
+            }
+
             // increase here, after we expect additional sql to be added.
             $i++;
 
             // Not like, or like?
-            if (str_starts_with($searchName, '-')) {
+            if ($isNegated) {
                 if ($i === 1) {
                     $body .= ' AND ( '.$tableAndColumn.' NOT RLIKE (:search'.$i.') ';
                 } else {
                     $body .= ' ' . $logicalOperator . ' '.$tableAndColumn.' NOT RLIKE (:search'.$i.') ';
                 }
-                $params['search' . $i] = $useRegex ? ltrim(($searchName), '-') : preg_quote(ltrim(($searchName), '-'));
+                $params['search' . $i] = $useRegex ? $pattern : preg_quote($pattern);
             } else {
                 if ($i === 1) {
                     $body .= ' AND ( '.$tableAndColumn.' RLIKE (:search'.$i.') ';
                 } else {
                     $body .= ' ' . $logicalOperator . ' '.$tableAndColumn.' RLIKE (:search'.$i.') ';
                 }
-                $params['search' . $i] = $useRegex ? $searchName : preg_quote($searchName);
+                $params['search' . $i] = $useRegex ? $pattern : preg_quote($pattern);
             }
         }
 
