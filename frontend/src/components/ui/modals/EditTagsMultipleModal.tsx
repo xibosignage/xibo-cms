@@ -104,7 +104,6 @@ export default function EditTagsMultipleModal({
       }
 
       await onSuccess?.();
-      onClose();
     } catch (err) {
       console.error(err);
       setError(
