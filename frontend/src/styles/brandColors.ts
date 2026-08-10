@@ -1,8 +1,7 @@
-{#
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -19,13 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-#}
-{% extends "non-authed.twig" %}
 
-{% block content %}
-
-    <p>{% trans "Sorry we could not find that page." %}</p>
-    <p>{% trans "Please press the button below to go to your homepage or press back in your browser" %}</p>
-    <a class="btn btn-brand" href="{{ homeUrl }}">{% trans "Home" %}</a>
-
-{% endblock %}
+// CSS var references (not resolved hex) so theme.css overrides apply live.
+// Safe for SVG/CSS colour props (e.g. Recharts fill/stroke); not for <canvas>.
+export const BRAND_PRIMARY = 'var(--brand-primary)';
+export const BRAND_ACCENT = 'var(--brand-accent)';

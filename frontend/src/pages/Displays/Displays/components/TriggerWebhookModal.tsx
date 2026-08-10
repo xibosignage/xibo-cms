@@ -88,7 +88,7 @@ export default function TriggerWebhookModal({
             value={triggerCode}
             onChange={(e) => setTriggerCode(e.target.value)}
             placeholder={t('Enter trigger code')}
-            className="w-full py-2 px-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full py-2 px-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-xibo-blue-500"
           />
           <p className="text-xs text-gray-500 mt-1">
             {t(

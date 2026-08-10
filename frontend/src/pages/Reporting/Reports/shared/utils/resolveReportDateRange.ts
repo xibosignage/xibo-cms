@@ -19,22 +19,28 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type { ChangeEvent } from 'react';
+import { dateKeyToDayBoundary } from '@/utils/date';
 
-interface CheckboxCellProps {
-  checked?: boolean;
-  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
-  ariaLabel?: string;
+export interface ReportDateRange {
+  reportFilter?: string;
+  fromDt?: string;
+  toDt?: string;
 }
 
-export function CheckboxCell({ checked, onChange, ariaLabel = 'Select row' }: CheckboxCellProps) {
-  return (
-    <input
-      type="checkbox"
-      checked={checked}
-      onChange={onChange}
-      aria-label={ariaLabel}
-      className="rounded border-gray-200 no-print cursor-pointer text-xibo-blue-600 focus:border-xibo-blue-500 focus:border-2 focus:ring-0 focus:outline-0"
-    />
-  );
+// Report date-range filters are either a named preset (passed through to the server as-is)
+// or a `range:<fromKey>|<toKey>` pair of calendar-day keys picked in DateRangeFilter.
+export function resolveReportDateRange(reportFilter: string): ReportDateRange {
+  if (reportFilter.startsWith('range:')) {
+    const [from, to] = reportFilter.replace('range:', '').split('|');
+    return {
+      fromDt: dateKeyToDayBoundary(from, 'start'),
+      toDt: dateKeyToDayBoundary(to, 'end'),
+    };
+  }
+
+  if (reportFilter) {
+    return { reportFilter };
+  }
+
+  return {};
 }

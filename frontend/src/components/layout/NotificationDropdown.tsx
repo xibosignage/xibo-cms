@@ -73,7 +73,7 @@ function NotificationItem({
       type="button"
       onClick={() => onClick(notification)}
       className={`w-full text-left px-3 flex items-start gap-3 mb-1 rounded-lg cursor-pointer transition-colors ${
-        isUnread ? 'py-3 bg-blue-50 hover:bg-blue-100' : 'py-2 hover:bg-gray-100'
+        isUnread ? 'py-3 bg-xibo-blue-50 hover:bg-xibo-blue-100' : 'py-2 hover:bg-gray-100'
       }`}
     >
       <div className="shrink-0 mt-1.5">
@@ -234,7 +234,7 @@ export default function NotificationDropdown() {
       <button
         ref={refs.setReference}
         type="button"
-        className="cursor-pointer flex items-center justify-center relative h-9.5 w-9.5"
+        className="cursor-pointer flex items-center justify-center relative h-9.5 w-9.5 rounded-lg transition hover:bg-blue-100"
         {...getReferenceProps()}
         aria-label={t('Notifications')}
         title={t('Notifications')}

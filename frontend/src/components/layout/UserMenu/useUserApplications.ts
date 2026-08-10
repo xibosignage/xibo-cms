@@ -52,7 +52,7 @@ export function useUserApplications(userId: number | undefined, enabled: boolean
         userApplicationsQueryKeys.byUser(userId!),
         (prev) => prev?.filter((app) => app.id !== application.id) ?? [],
       );
-      notify.success(t(`Access to ${application.name} revoked`));
+      notify.success(t('Access to {{name}} revoked', { name: application.name }));
     },
     onError: () => {
       notify.error(t('Failed to revoke access for this application'));

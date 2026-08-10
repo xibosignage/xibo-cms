@@ -53,7 +53,7 @@ export function AboutModalContent() {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="animate-spin h-8 w-8 rounded-full border-4 border-blue-200 border-t-blue-600" />
+        <div className="animate-spin h-8 w-8 rounded-full border-4 border-xibo-blue-200 border-t-xibo-blue-600" />
       </div>
     );
   }

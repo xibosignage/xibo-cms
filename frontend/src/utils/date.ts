@@ -19,9 +19,13 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+export const EXPIRY_PRESET_IDS = ['end_of_today', 'in_7_days', 'in_14_days', 'in_30_days'] as const;
+
+export type ExpiryPresetId = (typeof EXPIRY_PRESET_IDS)[number];
+
 export type ExpiryValue =
   | { type: 'never' }
-  | { type: 'preset'; value: string }
+  | { type: 'preset'; value: ExpiryPresetId }
   | { type: 'datePicked'; date: Date };
 
 function getParts(date: Date, options: Intl.DateTimeFormatOptions) {
@@ -64,21 +68,21 @@ export function expiryToDateTime(expiry: ExpiryValue): string | undefined {
 
   if (expiry.type === 'preset') {
     switch (expiry.value) {
-      case 'End of Today': {
+      case 'end_of_today': {
         date = new Date();
         date.setHours(23, 59, 59, 0);
         break;
       }
 
-      case 'In 7 Days':
+      case 'in_7_days':
         date = daysFromNow(7);
         break;
 
-      case 'In 14 Days':
+      case 'in_14_days':
         date = daysFromNow(14);
         break;
 
-      case 'In 30 Days':
+      case 'in_30_days':
         date = daysFromNow(30);
         break;
 
@@ -109,49 +113,61 @@ export function expiresToExpiryValue(expires?: string): ExpiryValue {
   };
 }
 
-export function resolveLastModified(value?: string | null) {
+export const DATE_KEY_REGEX = /^(\d{4})-(\d{2})-(\d{2})/;
+
+// Reads back the local Y/M/D a day-only picker produced - no timezone involved.
+export function toLocalDateKey(date: Date): string {
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+// Expands a plain calendar-day key (as produced by toLocalDateKey) to a day boundary -
+// no timezone conversion, since the key is already the calendar day the user picked.
+export function dateKeyToDayBoundary(
+  value: string | undefined,
+  boundary: 'start' | 'end',
+): string | undefined {
+  const match = value?.match(DATE_KEY_REGEX);
+  if (!match) return undefined;
+  return `${match[0]} ${boundary === 'start' ? '00:00:00' : '23:59:59'}`;
+}
+
+function cmsDayBoundary(date: Date, boundary: 'start' | 'end', timeZone?: string): string {
+  const p = extractParts(date, timeZone);
+  const time = boundary === 'start' ? '00:00:00' : '23:59:59';
+  return `${pad(p.year, 4)}-${pad(p.month)}-${pad(p.day)} ${time}`;
+}
+
+export function resolveLastModified(value?: string | null, timeZone?: string) {
   if (!value) return {};
 
   const now = new Date();
 
-  function startOfDay(date: Date) {
-    const d = new Date(date);
-    d.setHours(0, 0, 0, 0);
-    return d;
-  }
-
-  function endOfDay(date: Date) {
-    const d = new Date(date);
-    d.setHours(23, 59, 59, 999);
-    return d;
-  }
-
   if (value === 'today') {
     return {
-      modifiedDateFrom: formatDateTime(startOfDay(now)),
-      modifiedDateTo: formatDateTime(endOfDay(now)),
+      modifiedDateFrom: cmsDayBoundary(now, 'start', timeZone),
+      modifiedDateTo: cmsDayBoundary(now, 'end', timeZone),
     };
   }
   const daysAgo = (days: number) => new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
   if (value === '7d') {
     return {
-      modifiedDateFrom: formatDateTime(daysAgo(7)),
-      modifiedDateTo: formatDateTime(now),
+      modifiedDateFrom: formatDateTime(daysAgo(7), timeZone),
+      modifiedDateTo: formatDateTime(now, timeZone),
     };
   }
 
   if (value === '30d') {
     return {
-      modifiedDateFrom: formatDateTime(daysAgo(30)),
-      modifiedDateTo: formatDateTime(now),
+      modifiedDateFrom: formatDateTime(daysAgo(30), timeZone),
+      modifiedDateTo: formatDateTime(now, timeZone),
     };
   }
 
   if (value === '1y') {
     return {
-      modifiedDateFrom: formatDateTime(daysAgo(365)),
-      modifiedDateTo: formatDateTime(now),
+      modifiedDateFrom: formatDateTime(daysAgo(365), timeZone),
+      modifiedDateTo: formatDateTime(now, timeZone),
     };
   }
 
@@ -162,12 +178,11 @@ export function resolveLastModified(value?: string | null) {
     if (parts.length !== 2) return {};
 
     const [from, to] = parts;
-    if (!from || !to) return {};
+    const modifiedDateFrom = dateKeyToDayBoundary(from, 'start');
+    const modifiedDateTo = dateKeyToDayBoundary(to, 'end');
+    if (!modifiedDateFrom || !modifiedDateTo) return {};
 
-    return {
-      modifiedDateFrom: formatDateTime(startOfDay(new Date(from))),
-      modifiedDateTo: formatDateTime(endOfDay(new Date(to))),
-    };
+    return { modifiedDateFrom, modifiedDateTo };
   }
 
   return {};

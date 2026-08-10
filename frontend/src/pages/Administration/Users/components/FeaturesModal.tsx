@@ -41,7 +41,9 @@ type FeatureTab = string;
 function tabClass(activeTab: FeatureTab, tab: FeatureTab): string {
   const isActive = activeTab === tab;
   return `py-2 px-3 inline-flex items-center gap-2 border-b-2 text-sm font-semibold whitespace-nowrap focus:outline-none transition-all ${
-    isActive ? 'border-blue-600 text-blue-500' : 'border-gray-200 text-gray-500 hover:text-blue-600'
+    isActive
+      ? 'border-xibo-blue-600 text-xibo-blue-500'
+      : 'border-gray-200 text-gray-500 hover:text-xibo-blue-600'
   }`;
 }
 
@@ -295,7 +297,7 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
                             if (el) el.indeterminate = someEnabled;
                           }}
                           onChange={() => toggleGroup(features)}
-                          className="h-4 w-4 border-gray-300 rounded cursor-pointer text-blue-600 focus:ring-blue-500"
+                          className="h-4 w-4 border-gray-300 rounded cursor-pointer text-xibo-blue-600 focus:ring-xibo-blue-500"
                         />
                       </div>
                       <div className="flex justify-center">
@@ -317,7 +319,7 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
                       features.map((feat) => (
                         <div
                           key={feat.feature}
-                          className="grid grid-cols-[1fr_100px_100px] items-center border-b border-gray-50 hover:bg-blue-50/30 transition-colors pr-3"
+                          className="grid grid-cols-[1fr_100px_100px] items-center border-b border-gray-50 hover:bg-xibo-blue-50/30 transition-colors pr-3"
                         >
                           <div className="px-4 py-2.5 pl-10">
                             <span className="text-sm text-gray-700">{feat.title}</span>
@@ -328,7 +330,7 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
                               aria-label={t('Enable {{feature}}', { feature: feat.title })}
                               checked={enabledFeatures.has(feat.feature)}
                               onChange={() => toggleFeature(feat.feature)}
-                              className="h-4 w-4 border-gray-300 rounded cursor-pointer text-blue-600 focus:ring-blue-500"
+                              className="h-4 w-4 border-gray-300 rounded cursor-pointer text-xibo-blue-600 focus:ring-xibo-blue-500"
                             />
                           </div>
                           <div className="flex justify-center">
