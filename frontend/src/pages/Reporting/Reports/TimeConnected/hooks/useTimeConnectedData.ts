@@ -23,9 +23,9 @@ import { useQuery } from '@tanstack/react-query';
 
 import type { DisplayReportRow, TimeConnectedFilter } from '../TimeConnectedConfig';
 
+import { resolveReportDateRange } from '@/pages/Reporting/Reports/shared/utils/resolveReportDateRange';
 import type { TimeConnectedTable } from '@/services/timeConnectedApi';
 import { fetchTimeConnected } from '@/services/timeConnectedApi';
-import { formatDateTime } from '@/utils/date';
 
 export function transformData(table: TimeConnectedTable): DisplayReportRow[] {
   const rows: DisplayReportRow[] = [];
@@ -95,21 +95,7 @@ export function useTimeConnectedData({ filter, enabled }: UseTimeConnectedParams
     queryKey: timeConnectedQueryKeys.report(serverParams),
 
     queryFn: async ({ signal }) => {
-      let reportFilter: string | undefined;
-      let fromDt: string | undefined;
-      let toDt: string | undefined;
-
-      if (filter.reportFilter && !filter.reportFilter.startsWith('range:')) {
-        reportFilter = filter.reportFilter;
-      } else if (filter.reportFilter.startsWith('range:')) {
-        const [from, to] = filter.reportFilter.replace('range:', '').split('|');
-        if (from) {
-          fromDt = formatDateTime(new Date(from));
-        }
-        if (to) {
-          toDt = formatDateTime(new Date(to));
-        }
-      }
+      const { reportFilter, fromDt, toDt } = resolveReportDateRange(filter.reportFilter);
 
       const displayGroupId = [...filter.displaySpecificGroupIds, ...filter.displayGroupIds];
 

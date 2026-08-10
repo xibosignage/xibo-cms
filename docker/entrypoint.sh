@@ -180,7 +180,7 @@ if [ "$main_logo_customised" = false ]; then
 fi
 
 # Single-file brand images: safe to auto-refresh via the same stock-hash check.
-for f in favicon.ico xibologo.png 192x192.png 512x512.png; do
+for f in favicon.ico 192x192.png 512x512.png; do
   refresh_stock_file "/var/www/cms/library/brand/$f" "/brand/$f" "$STOCK_HASH_DIR/$f.sha256"
 done
 

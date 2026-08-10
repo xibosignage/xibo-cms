@@ -325,7 +325,7 @@ function TagInput({
         {...getReferenceProps()}
         className={twMerge(
           'flex rounded-lg bg-white border border-gray-200 overflow-hidden transition-colors min-h-11.25',
-          'focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500',
+          'focus-within:border-xibo-blue-500 focus-within:ring-1 focus-within:ring-xibo-blue-500',
           disabled && 'opacity-50 pointer-events-none bg-gray-50',
         )}
       >
@@ -347,7 +347,7 @@ function TagInput({
                 aria-label={t('Remove tag {{tag}}', { tag: tagObj.tag })}
                 onClick={() => removeTag(tagObj.tag)}
                 disabled={disabled}
-                className="text-blue-600 w-3 rounded-full h-3 flex items-center justify-center bg-blue-200 hover:text-gray-600"
+                className="text-xibo-blue-600 w-3 rounded-full h-3 flex items-center justify-center bg-xibo-blue-200 hover:text-gray-600"
               >
                 <X size={8} />
               </button>
@@ -465,7 +465,7 @@ function TagInput({
               id={valueInputId}
               ref={valueInputRef}
               className={twMerge(
-                'w-full text-sm px-3 py-2.5 rounded-lg border border-gray-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 min-h-11.25',
+                'w-full text-sm px-3 py-2.5 rounded-lg border border-gray-200 outline-none focus:border-xibo-blue-500 focus:ring-1 focus:ring-xibo-blue-500 min-h-11.25',
                 valueError && 'border-red-500 focus:border-red-500 focus:ring-red-500',
               )}
               aria-invalid={valueError}

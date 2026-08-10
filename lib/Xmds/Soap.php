@@ -2088,8 +2088,10 @@ class Soap
 
             // ScheduleId is supplied to all layout stats, but not event stats.
             $scheduleId = $node->getAttribute('scheduleid');
-            if (empty($scheduleId)) {
+            if (empty($scheduleId) || !is_numeric($scheduleId)) {
                 $scheduleId = 0;
+            } else {
+                $scheduleId = (int) $scheduleId;
             }
 
             $layoutId = $node->getAttribute('layoutid');

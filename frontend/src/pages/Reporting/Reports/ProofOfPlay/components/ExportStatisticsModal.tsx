@@ -196,7 +196,7 @@ export default function ExportStatisticsModal({ isOpen, onClose }: ExportStatist
             id="isOutputUtc"
             checked={isOutputUtc}
             onChange={(e) => setIsOutputUtc(e.target.checked)}
-            className="mt-0.5 shrink-0 border-gray-200 rounded-sm cursor-pointer text-blue-600 focus:ring-blue-500 checked:border-blue-500"
+            className="mt-0.5 shrink-0 border-gray-200 rounded-sm cursor-pointer text-xibo-blue-600 focus:ring-xibo-blue-500 checked:border-xibo-blue-500"
           />
           <label htmlFor="isOutputUtc" className="text-sm text-gray-600 cursor-pointer">
             {t('Output dates as UTC? Leave unchecked for local CMS time.')}

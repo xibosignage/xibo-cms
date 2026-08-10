@@ -312,7 +312,7 @@ export function SearchAssignPanel<TItem>({
               value={keyword}
               onChange={(e) => handleKeywordChange(e.target.value)}
               placeholder={searchPlaceholder ?? t('Search\u2026')}
-              className="w-full py-2 px-3 pl-10 h-11 bg-gray-100 rounded-lg text-sm border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none"
+              className="w-full py-2 px-3 pl-10 h-11 bg-gray-100 rounded-lg text-sm border-gray-200 focus:outline-none focus:ring-2 focus:ring-xibo-blue-500 disabled:opacity-50 disabled:pointer-events-none"
             />
           </div>
         </div>

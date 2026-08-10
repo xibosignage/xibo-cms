@@ -246,7 +246,7 @@ export default function ReplaceFileModal({
               <div className="px-4 pb-3 flex items-center gap-4">
                 <div className="h-2 bg-gray-200 rounded overflow-hidden w-full">
                   <div
-                    className="h-full bg-blue-500 transition-all duration-200"
+                    className="h-full bg-xibo-blue-500 transition-all duration-200"
                     style={{ width: `${uploadProgress}%` }}
                   />
                 </div>

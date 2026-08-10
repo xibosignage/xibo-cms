@@ -191,26 +191,49 @@ export function DataTable<TData, TValue>({
     getRowId: getRowId,
   });
 
-  // TODO: Check if format is the intended
+  // Columns injected by the table itself (selection checkbox, row actions) have no
+  // exportable/printable data of their own.
+  const nonPrintableColumns = ['tableSelection', 'tableActions'];
+
+  const isExportableColumn = (columnId: string, meta?: { excludeFromExport?: boolean }) =>
+    !nonPrintableColumns.includes(columnId) && !meta?.excludeFromExport;
+
   const handleExportCSV = () => {
-    const headers = table.getVisibleLeafColumns().map((column) => {
+    const exportableColumns = table
+      .getAllLeafColumns()
+      .filter((column) => isExportableColumn(column.id, column.columnDef.meta));
+
+    const headers = exportableColumns.map((column) => {
       return typeof column.columnDef.header === 'string' ? column.columnDef.header : column.id;
     });
 
     const rows = table.getRowModel().rows.map((row) =>
-      row.getVisibleCells().map((cell) => {
-        const value = cell.getValue();
+      row
+        .getAllCells()
+        .filter((cell) => isExportableColumn(cell.column.id, cell.column.columnDef.meta))
+        .map((cell) => {
+          const getExportValue = cell.column.columnDef.meta?.getExportValue;
 
-        // Some tables have an object row so we need to convert it to JSON string
-        const raw =
-          value === null || value === undefined
-            ? ''
-            : typeof value === 'object'
-              ? JSON.stringify(value)
-              : String(value);
-        const stringValue = raw.replace(/"/g, '""');
-        return `"${stringValue}"`;
-      }),
+          let raw: string;
+          if (getExportValue) {
+            // Column declares its own CSV representation (e.g. formatted dates,
+            // status labels) separately from its on-screen `cell` renderer.
+            raw = getExportValue(row.original) ?? '';
+          } else {
+            const value = cell.getValue();
+
+            // Some tables have an object row so we need to convert it to JSON string
+            raw =
+              value === null || value === undefined
+                ? ''
+                : typeof value === 'object'
+                  ? JSON.stringify(value)
+                  : String(value);
+          }
+
+          const stringValue = raw.replace(/"/g, '""');
+          return `"${stringValue}"`;
+        }),
     );
 
     const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
@@ -232,8 +255,6 @@ export function DataTable<TData, TValue>({
   const selectedCount = Object.keys(rowSelection).length;
 
   const selectedRowsData = table.getSelectedRowModel().rows.map((row) => row.original);
-
-  const nonPrintableColumns = ['tableSelection', 'tableActions'];
 
   // Prevent loading to show if request takes less than X seconds
   useEffect(() => {
@@ -387,7 +408,7 @@ export function DataTable<TData, TValue>({
               {table.getRowModel().rows.length > 0 ? (
                 table.getRowModel().rows.map((row) => {
                   const isSelected = row.getIsSelected();
-                  const rowBackgroundColor = isSelected ? 'bg-blue-50' : 'bg-white';
+                  const rowBackgroundColor = isSelected ? 'bg-xibo-blue-50' : 'bg-white';
 
                   return (
                     <tr key={row.id} className={rowBackgroundColor}>

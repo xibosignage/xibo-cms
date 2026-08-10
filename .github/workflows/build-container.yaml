@@ -42,6 +42,7 @@ jobs:
           build-args: GIT_COMMIT=${{ github.sha }}
           push: true
           load: false
+          provenance: false
 
       # Release branch
       - name: Build Branch
@@ -56,3 +57,4 @@ jobs:
           build-args: GIT_COMMIT=${{ github.sha }}
           push: true
           load: false
+          provenance: false
