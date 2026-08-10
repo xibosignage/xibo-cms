@@ -40,3 +40,4 @@ jobs:
           build-args: GIT_COMMIT=${{ github.event.head.sha }}
           push: true
           load: false
+          provenance: false
