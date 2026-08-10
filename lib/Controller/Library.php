@@ -2668,11 +2668,12 @@ class Library extends Base
         // Expiry
         $expiresTimestamp = $media->expires;
         $now = Carbon::now();
+        $appTimezone = \date_default_timezone_get();
 
         if ($expiresTimestamp == 0) {
             $expiresFormatted = __('Never');
         } elseif ($expiresTimestamp > $now->timestamp) {
-            $relative = Carbon::createFromTimestamp($expiresTimestamp)
+            $relative = Carbon::createFromTimestamp($expiresTimestamp, $appTimezone)
                 ->diffForHumans($now, CarbonInterface::DIFF_RELATIVE_TO_NOW);
             $expiresFormatted = str_replace('%s', $relative, __('Expires %s'));
         } else {
@@ -2682,7 +2683,7 @@ class Library extends Base
 
         $media->expires = ($media->expires == 0)
             ? 0
-            : Carbon::createFromTimestamp($media->expires)->format(DateFormatHelper::getSystemFormat());
+            : Carbon::createFromTimestamp($media->expires, $appTimezone)->format(DateFormatHelper::getSystemFormat());
 
         // Description
         $releasedDescription = LibraryDescription::getMediaReleasedDescription($media->released);

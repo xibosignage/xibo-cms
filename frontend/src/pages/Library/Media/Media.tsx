@@ -110,7 +110,7 @@ export default function Media() {
       revised: false,
       released: false,
       fileName: false,
-      expires: false,
+      expiresFormatted: false,
       enableStat: false,
       ownerId: false,
     },
