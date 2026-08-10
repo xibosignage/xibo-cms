@@ -207,7 +207,7 @@ export default function ReplaceFileModal({
                   className="text-sm truncate block"
                   title={selectedFile?.name || data.fileName}
                 >
-                  {selectedFile?.name || t(data.fileName)}
+                  {selectedFile?.name || data.fileName}
                 </span>
               </div>
               <div>
