@@ -57,8 +57,10 @@ import { useFolderActions } from '@/hooks/useFolderActions';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
 import type { Display } from '@/types/display';
+import type { Tag } from '@/types/tag';
 import { countActiveFilters } from '@/utils/filters';
 import { hasFeature } from '@/utils/permissions';
+import { toggleTag } from '@/utils/tags';
 
 export default function Displays() {
   const { t } = useTranslation();
@@ -316,6 +318,11 @@ export default function Displays() {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
+  const handleTagClick = (tag: Tag) => {
+    setFilterInputs((prev) => ({ ...prev, tags: toggleTag(prev.tags, tag) }));
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
+
   const columns = getDisplayColumns({
     t,
     canModify,
@@ -375,6 +382,8 @@ export default function Displays() {
     onSchedule: canSchedule ? (display) => openActionModal(display, 'schedule') : undefined,
     onPreviewScreenshot: (display) => setPreviewDisplay(display),
     formatDateTime,
+    onTagClick: handleTagClick,
+    selectedTagIds: (filterInputs.tags ?? []).map((tag) => tag.tagId),
   });
 
   const getAllSelectedItems = (): Display[] => {

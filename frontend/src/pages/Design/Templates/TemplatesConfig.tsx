@@ -41,6 +41,7 @@ import {
   ActionsCell,
   MediaCell,
   TagsCell,
+  toDisplayTags,
   getSharingColumn,
 } from '@/components/ui/table/cells';
 import type { ActionItem, BaseModalType } from '@/types/table';
@@ -128,10 +129,12 @@ export interface TemplatesActionsProps {
   exportTemplate?: (id: number) => void;
   openDetails?: (id: number) => void;
   openTemplate?: (id: number) => void;
+  onTagClick?: (tag: Tag) => void;
+  selectedTagIds?: (string | number)[];
 }
 
 export const getTemplateColumn = (props: TemplatesActionsProps): ColumnDef<Template>[] => {
-  const { t, formatDateTime, canTag = false } = props;
+  const { t, formatDateTime, canTag = false, onTagClick, selectedTagIds } = props;
   const getActions = getTemplateItemActions(props);
 
   return [
@@ -186,11 +189,13 @@ export const getTemplateColumn = (props: TemplatesActionsProps): ColumnDef<Templ
             size: 150,
             cell: (info) => {
               const tags = info.getValue<Tag[]>() || [];
-              const formattedTags = tags.map((tag) => ({
-                id: tag.tagId,
-                label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
-              }));
-              return <TagsCell tags={formattedTags} />;
+              return (
+                <TagsCell
+                  tags={toDisplayTags(tags)}
+                  onTagClick={onTagClick}
+                  selectedTagIds={selectedTagIds}
+                />
+              );
             },
             meta: {
               getExportValue: (row) => formatTagsForExport(row.tags),
