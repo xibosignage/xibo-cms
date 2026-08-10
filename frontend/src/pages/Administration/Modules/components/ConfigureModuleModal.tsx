@@ -58,20 +58,18 @@ function DynamicSettingField({
   value: string | number | undefined;
   onChange: (id: string, val: string | number) => void;
 }) {
-  const { t } = useTranslation();
-
   if (setting.type === 'checkbox') {
     return (
       <div className="flex flex-col gap-1 mb-4">
         <div className="flex items-center gap-2">
           <Checkbox
             id={`setting-${setting.id}`}
-            label={t(setting.title)}
+            label={setting.title}
             checked={value === 1 || value === '1'}
             onChange={(e) => onChange(setting.id, e.target.checked ? 1 : 0)}
           />
         </div>
-        {setting.helpText && <p className="text-xs text-gray-500 ml-6">{t(setting.helpText)}</p>}
+        {setting.helpText && <p className="text-xs text-gray-500 ml-6">{setting.helpText}</p>}
       </div>
     );
   }
@@ -79,17 +77,17 @@ function DynamicSettingField({
   if ((setting.type === 'dropdown' || setting.type === 'select') && setting.options?.length) {
     const selectOptions: SelectOption[] = setting.options.map((opt) => ({
       value: opt.name,
-      label: t(opt.title),
+      label: opt.title,
     }));
 
     return (
       <div className="mb-4">
         <SelectDropdown
-          label={t(setting.title)}
+          label={setting.title}
           value={String(value ?? '')}
           options={selectOptions}
           onSelect={(val) => onChange(setting.id, val)}
-          helpText={setting.helpText ? t(setting.helpText) : undefined}
+          helpText={setting.helpText}
         />
       </div>
     );
@@ -99,10 +97,10 @@ function DynamicSettingField({
     <div className="mb-4">
       <TextInput
         name={setting.id}
-        label={t(setting.title)}
+        label={setting.title}
         value={String(value ?? '')}
         type={setting.type === 'number' ? 'number' : 'text'}
-        helpText={setting.helpText ? t(setting.helpText) : undefined}
+        helpText={setting.helpText}
         onChange={(val) => onChange(setting.id, setting.type === 'number' ? Number(val) : val)}
       />
     </div>

@@ -100,7 +100,7 @@ export default function DateRangeFilter({
         className,
       )}
     >
-      <label className="text-sm font-semibold text-gray-500 leading-5">{t(label)}</label>
+      <label className="text-sm font-semibold text-gray-500 leading-5">{label}</label>
       <button
         ref={refs.setReference}
         {...getReferenceProps()}

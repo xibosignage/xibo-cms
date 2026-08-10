@@ -52,6 +52,7 @@ import {
   ActionsCell,
   MediaCell,
   TagsCell,
+  toDisplayTags,
   DescriptionCell,
   getSharingColumn,
 } from '@/components/ui/table/cells';
@@ -273,6 +274,8 @@ export interface LayoutActionsProps {
   openEnableStatsModal?: (layout: Layout) => void;
   openScheduleModal?: (layout: Layout) => void;
   showDescriptionId?: number | null;
+  onTagClick?: (tag: Tag) => void;
+  selectedTagIds?: (string | number)[];
 }
 
 export const getLayoutItemActions = ({
@@ -504,7 +507,14 @@ export const getLayoutItemActions = ({
 };
 
 export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[] => {
-  const { t, showDescriptionId, formatDateTime, canTag = false } = props;
+  const {
+    t,
+    showDescriptionId,
+    formatDateTime,
+    canTag = false,
+    onTagClick,
+    selectedTagIds,
+  } = props;
   const getActions = getLayoutItemActions(props);
 
   return [
@@ -556,11 +566,13 @@ export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[]
             size: 150,
             cell: (info) => {
               const tags = info.getValue<Tag[]>() || [];
-              const formattedTags = tags.map((tag) => ({
-                id: tag.tagId,
-                label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
-              }));
-              return <TagsCell tags={formattedTags} />;
+              return (
+                <TagsCell
+                  tags={toDisplayTags(tags)}
+                  onTagClick={onTagClick}
+                  selectedTagIds={selectedTagIds}
+                />
+              );
             },
             meta: {
               getExportValue: (row) => formatTagsForExport(row.tags),

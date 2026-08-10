@@ -558,7 +558,8 @@ class MediaFactory extends BaseFactory
             $sortOrder,
             $allowedColumns,
             $customColumns,
-            ['name ASC']
+            ['name ASC'],
+            'mediaId'
         );
 
         $entries = [];

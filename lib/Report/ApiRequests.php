@@ -408,7 +408,7 @@ class ApiRequests implements ReportInterface
 
     private function buildOrderBy(string $type, SanitizerInterface $sanitizedParams, bool $isJson): string
     {
-        [$defaultSortBy, $allowedColumns, $defaultSort] = match ($type) {
+        [$defaultSortBy, $allowedColumns, $defaultSort, $uniqueColumn] = match ($type) {
             'audit' => [
                 'logDate',
                 [
@@ -417,6 +417,7 @@ class ApiRequests implements ReportInterface
                     'startTime', 'applicationName',
                 ],
                 ['logDate DESC'],
+                'logId',
             ],
             'debug' => [
                 'logDate',
@@ -426,16 +427,23 @@ class ApiRequests implements ReportInterface
                     'method', 'startTime', 'applicationName',
                 ],
                 ['logDate DESC'],
+                'logId',
             ],
             default => [
                 'startTime',
                 ['applicationId', 'requestId', 'userId', 'url', 'method', 'startTime', 'applicationName', 'userName'],
                 ['startTime DESC'],
+                'requestId',
             ],
         };
 
         $sortOrder = $this->gridRenderSort($sanitizedParams, $isJson, $defaultSortBy);
-        $order = $this->apiRequestsFactory->buildSortQuery($sortOrder, $allowedColumns, defaultSort: $defaultSort);
+        $order = $this->apiRequestsFactory->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            defaultSort: $defaultSort,
+            uniqueColumn: $uniqueColumn
+        );
 
         return !empty($order) ? ' ORDER BY ' . implode(', ', $order) : '';
     }

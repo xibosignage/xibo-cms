@@ -395,7 +395,7 @@ class SessionHistory implements ReportInterface
 
     private function buildOrderBy(string $type, SanitizerInterface $sanitizedParams, bool $isJson): string
     {
-        [$defaultSortBy, $allowedColumns, $defaultSort] = match ($type) {
+        [$defaultSortBy, $allowedColumns, $defaultSort, $uniqueColumn] = match ($type) {
             'audit' => [
                 'logDate',
                 [
@@ -403,6 +403,7 @@ class SessionHistory implements ReportInterface
                     'userId', 'ipAddress', 'sessionHistoryId', 'userAgent',
                 ],
                 ['logDate DESC'],
+                'logId',
             ],
             'debug' => [
                 'logDate',
@@ -412,16 +413,23 @@ class SessionHistory implements ReportInterface
                     'displayId', 'display', 'ipAddress', 'userAgent',
                 ],
                 ['logDate DESC'],
+                'logId',
             ],
             default => [
                 'startTime',
                 ['sessionId', 'startTime', 'userId', 'userAgent', 'ipAddress', 'lastUsedTime', 'userName', 'userType'],
                 ['startTime DESC'],
+                'sessionId',
             ],
         };
 
         $sortOrder = $this->gridRenderSort($sanitizedParams, $isJson, $defaultSortBy);
-        $order = $this->logFactory->buildSortQuery($sortOrder, $allowedColumns, defaultSort: $defaultSort);
+        $order = $this->logFactory->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            defaultSort: $defaultSort,
+            uniqueColumn: $uniqueColumn
+        );
 
         return !empty($order) ? ' ORDER BY ' . implode(', ', $order) : '';
     }

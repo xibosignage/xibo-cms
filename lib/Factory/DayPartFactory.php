@@ -189,7 +189,8 @@ class DayPartFactory extends BaseFactory
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            defaultSort: ['name ASC']
+            defaultSort: ['name ASC'],
+            uniqueColumn: 'dayPartId'
         );
 
         $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';

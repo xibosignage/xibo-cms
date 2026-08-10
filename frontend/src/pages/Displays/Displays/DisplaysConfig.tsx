@@ -56,6 +56,7 @@ import {
   CheckMarkCell,
   StatusCell,
   TagsCell,
+  toDisplayTags,
   MediaCell,
   getSharingColumn,
 } from '@/components/ui/table/cells';
@@ -442,6 +443,8 @@ export interface DisplayActionsProps {
   onSchedule?: (display: Display) => void;
   onPreviewScreenshot?: (display: Display) => void;
   formatDateTime: (value: DateLike) => string;
+  onTagClick?: (tag: Tag) => void;
+  selectedTagIds?: (string | number)[];
 }
 
 // Client types for which a commercial licence check is available (matches release44).
@@ -689,7 +692,7 @@ export const getDisplayItemActions = ({
 };
 
 export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display>[] => {
-  const { t, formatDateTime, canTag = false } = props;
+  const { t, formatDateTime, canTag = false, onTagClick, selectedTagIds } = props;
   const getActions = getDisplayItemActions(props);
 
   return [
@@ -823,10 +826,9 @@ export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display
               const tags = info.getValue<Tag[]>() ?? [];
               return (
                 <TagsCell
-                  tags={tags.map((tag) => ({
-                    id: tag.tagId,
-                    label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
-                  }))}
+                  tags={toDisplayTags(tags)}
+                  onTagClick={onTagClick}
+                  selectedTagIds={selectedTagIds}
                 />
               );
             },
