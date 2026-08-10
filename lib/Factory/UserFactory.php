@@ -380,7 +380,7 @@ class UserFactory extends BaseFactory
 
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
-            $allowedColumns,  
+            $allowedColumns,
             $customColumns,
             defaultSort: ['userId ASC'],
             uniqueColumn: 'userId'
