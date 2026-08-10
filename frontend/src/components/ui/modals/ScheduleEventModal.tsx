@@ -1009,14 +1009,14 @@ export default function ScheduleEventModal({
       header: t('Display'),
       size: 150,
       cell: ({ row }) => (
-        <TextCell truncate>
-          {row.original.display}
+        <div className="flex items-center w-full min-w-0 gap-2">
+          <span className="text-gray-800 text-sm truncate min-w-0">{row.original.display}</span>
           {row.original.displayId === row.original.leadDisplayId && (
-            <Badge type="success" className="ml-2 shrink-0">
+            <Badge type="success" className="shrink-0">
               {t('Lead')}
             </Badge>
           )}
-        </TextCell>
+        </div>
       ),
     },
     {
