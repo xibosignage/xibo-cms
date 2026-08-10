@@ -506,7 +506,8 @@ class DisplayProfileFactory extends BaseFactory
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            defaultSort: ['displayProfileId ASC']
+            defaultSort: ['displayProfileId ASC'],
+            uniqueColumn: 'displayProfileId'
         );
 
         $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';

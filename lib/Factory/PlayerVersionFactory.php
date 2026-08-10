@@ -123,6 +123,7 @@ class PlayerVersionFactory extends BaseFactory
             ],
             [],
             ['code DESC'],
+            'versionId',
         );
 
         $params = [];

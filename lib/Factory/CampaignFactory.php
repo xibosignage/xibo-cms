@@ -465,7 +465,8 @@ class CampaignFactory extends BaseFactory
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            defaultSort: ['campaign ASC']
+            defaultSort: ['campaign ASC'],
+            uniqueColumn: 'campaignId'
         );
 
         $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';

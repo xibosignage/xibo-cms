@@ -2275,7 +2275,8 @@ class LayoutFactory extends BaseFactory
             $sortOrder,
             $allowedColumns,
             $customColumns,
-            ['layout ASC']
+            ['layout ASC'],
+            'layoutId'
         );
 
         $select  = 'SELECT `layout`.layoutID, 

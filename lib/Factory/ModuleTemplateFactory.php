@@ -353,7 +353,8 @@ class ModuleTemplateFactory extends BaseFactory
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            defaultSort: ['id ASC']
+            defaultSort: ['id ASC'],
+            uniqueColumn: 'id'
         );
 
         $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';

@@ -382,7 +382,8 @@ class UserFactory extends BaseFactory
             $sortOrder,
             $allowedColumns,
             $customColumns,
-            defaultSort: ['userId ASC']
+            defaultSort: ['userId ASC'],
+            uniqueColumn: 'userId'
         );
 
         $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
