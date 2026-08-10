@@ -1290,9 +1290,7 @@ class Display extends Base
             $displayGroup->load();
             $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
 
-            if (!$this->getUser()->checkEditable($displayGroup)) {
-                throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
-            }
+            $this->assertDisplayGroupManuallyAssignable($displayGroup);
 
             $displayGroup->assignDisplay($display);
             $displayGroup->save(['validate' => false]);
@@ -1304,9 +1302,7 @@ class Display extends Base
             $displayGroup->load();
             $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
 
-            if (!$this->getUser()->checkEditable($displayGroup)) {
-                throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
-            }
+            $this->assertDisplayGroupManuallyAssignable($displayGroup);
 
             $displayGroup->unassignDisplay($display);
             $displayGroup->save(['validate' => false]);
@@ -1323,6 +1319,37 @@ class Display extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Ensure a Display Group's membership can be manually changed from the Display side of the
+     * assign/unassign relationship (display-specific and Dynamic Groups manage their own membership).
+     * @param \Xibo\Entity\DisplayGroup $displayGroup
+     * @throws AccessDeniedException
+     * @throws InvalidArgumentException
+     */
+    private function assertDisplayGroupManuallyAssignable($displayGroup): void
+    {
+        if ($displayGroup->isDisplaySpecific == 1) {
+            throw new InvalidArgumentException(
+                __('This is a Display specific Display Group and its assignments cannot be modified.'),
+                'displayGroupId'
+            );
+        }
+
+        if (!$this->getUser()->checkEditable($displayGroup)) {
+            throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
+        }
+
+        if ($displayGroup->isDynamic == 1) {
+            throw new InvalidArgumentException(
+                sprintf(
+                    __('%s is a Dynamic Group and displays cannot be manually assigned or unassigned'),
+                    $displayGroup->displayGroup
+                ),
+                'isDynamic'
+            );
+        }
     }
 
     /**

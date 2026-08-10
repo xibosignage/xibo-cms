@@ -87,8 +87,15 @@ export default function ManageGroupMembershipModal({
 
   const searchRows = searchData?.rows ?? [];
   const pageCount = Math.ceil((searchData?.totalCount ?? 0) / pagination.pageSize);
+  const hasDynamicGroup = assignedGroups.some((g) => g.isDynamic === 1);
+  const dynamicGroupMessage = t(
+    'Dynamic Groups cannot be manually assigned or unassigned — membership is determined automatically.',
+  );
 
   const handleAdd = (group: DisplayGroup) => {
+    if (group.isDynamic === 1) {
+      return;
+    }
     if (assignedGroups.some((g) => g.displayGroupId === group.displayGroupId)) {
       return;
     }
@@ -98,18 +105,23 @@ export default function ManageGroupMembershipModal({
   };
 
   const handleRemove = (group: DisplayGroup) => {
+    if (group.isDynamic === 1) {
+      return;
+    }
     setAssignedGroups((prev) => prev.filter((g) => g.displayGroupId !== group.displayGroupId));
     setToRemove((prev) => [...prev, group.displayGroupId]);
     setToAdd((prev) => prev.filter((id) => id !== group.displayGroupId));
   };
 
   const handleClearAll = () => {
-    const originalIds = assignedGroups
+    const removable = assignedGroups.filter((g) => g.isDynamic !== 1);
+    const locked = assignedGroups.filter((g) => g.isDynamic === 1);
+    const originalRemovableIds = removable
       .filter((g) => !toAdd.includes(g.displayGroupId))
       .map((g) => g.displayGroupId);
-    setAssignedGroups([]);
-    setToAdd([]);
-    setToRemove((prev) => [...new Set([...prev, ...originalIds])]);
+    setAssignedGroups(locked);
+    setToAdd((prev) => prev.filter((id) => !removable.some((g) => g.displayGroupId === id)));
+    setToRemove((prev) => [...new Set([...prev, ...originalRemovableIds])]);
   };
 
   const handleSave = async () => {
@@ -168,6 +180,9 @@ export default function ManageGroupMembershipModal({
           onClearAll={handleClearAll}
           assignedLabel={t('Member Groups')}
           noAssignedText={t('No groups assigned.')}
+          warningMessage={hasDynamicGroup ? dynamicGroupMessage : undefined}
+          isItemActionDisabled={(g) => g.isDynamic === 1}
+          disabledActionMessage={dynamicGroupMessage}
           getItemId={(g) => g.displayGroupId}
           getItemLabel={(g) => g.displayGroup}
           keyword={keyword}
