@@ -79,7 +79,7 @@ class LogFactory extends BaseFactory
             && $parsedFilter->getInt('length', ['default' => 10]) !== null;
 
         $select = '
-            SELECT ' . ($isPaged ? 'SQL_CALC_FOUND_ROWS ' : '') . '`logId`,
+            SELECT `logId`,
                 `runNo`,
                 `logDate`,
                 `channel`,
@@ -225,12 +225,11 @@ class LogFactory extends BaseFactory
             $entries[] = $this->createEmpty()->hydrate($row, ['htmlStringProperties' => ['message']]);
         }
 
-        // Paging: FOUND_ROWS() reflects the row count of the SELECT just executed on this same
-        // connection, so it can't be skewed by rows another session/request inserts in between
-        // (unlike a separate COUNT(*) query, which can race against concurrent writes) and it
-        // still reports the true total even when this page's LIMIT window returned zero rows.
+        // Paging: run unconditionally (not just when $entries is non-empty) so an
+        // out-of-range page (filters changed, fewer rows than before) still reports
+        // the true total rather than 0.
         if ($isPaged) {
-            $results = $this->getStore()->select('SELECT FOUND_ROWS() AS total', []);
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);
         }
 
