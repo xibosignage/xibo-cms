@@ -23,17 +23,11 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
-import {
-  mockSuperAdmin,
-  mockFolderTree,
-  mockGroupAdmin,
-  mockUser,
-  mockUserGroup,
-} from '../../fixtures/user';
+import { mockSuperAdmin, mockGroupAdmin, mockUser, mockUserGroup } from '../../fixtures/user';
+import { setupAddEditUserModalMocks } from '../../mocks/addEditUserModal';
 
 import { renderAddEditUserModal } from './helpers/renderAddEditUserModal';
 
-import { fetchFolderTree } from '@/services/folderApi';
 import { fetchGroupFolderPermissions, saveMultiPermissions } from '@/services/permissionsApi';
 import { createUser, fetchHomepages, updateUser } from '@/services/userApi';
 import { fetchUserGroups } from '@/services/userGroupApi';
@@ -79,10 +73,7 @@ const fillRequiredAddFields = async (user: ReturnType<typeof userEvent.setup>) =
 describe('AddEditUserModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(fetchFolderTree).mockResolvedValue(mockFolderTree);
-    vi.mocked(fetchGroupFolderPermissions).mockResolvedValue(new Map());
-    vi.mocked(saveMultiPermissions).mockResolvedValue(undefined);
-    vi.mocked(fetchUserGroups).mockResolvedValue({ rows: [mockUserGroup], totalCount: 1 });
+    setupAddEditUserModalMocks();
     vi.mocked(fetchHomepages).mockResolvedValue([
       { homepage: 'icondashboard.view', title: 'Icon Dashboard' },
     ]);

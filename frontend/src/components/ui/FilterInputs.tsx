@@ -37,6 +37,7 @@ import TextInput from './forms/TextInput';
 
 import type { FilterOption } from '@/types/filter';
 import type { Tag } from '@/types/tag';
+import { isValidRegex } from '@/utils/regex';
 
 export type { FilterOption };
 
@@ -143,20 +144,14 @@ function DebouncedTextWithControls({
   const handleChange = (val: string) => {
     setLocalValue(val);
 
-    if (isRegex && val) {
-      try {
-        new RegExp(val);
-        setRegexError('');
-      } catch {
-        setRegexError(t('Invalid regular expression'));
-        if (debounceRef.current) {
-          clearTimeout(debounceRef.current);
-        }
-        return;
+    if (isRegex && val && !isValidRegex(val)) {
+      setRegexError(t('Invalid regular expression'));
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
       }
-    } else {
-      setRegexError('');
+      return;
     }
+    setRegexError('');
 
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
@@ -173,7 +168,13 @@ function DebouncedTextWithControls({
   const suffix = showRegex ? (
     <div
       className="px-3 py-2 flex items-center cursor-pointer justify-center"
-      onClick={() => onRegexChange && onRegexChange(!isRegex)}
+      onClick={() => {
+        if (!isRegex && localValue && !isValidRegex(localValue)) {
+          setRegexError(t('Invalid regular expression'));
+          return;
+        }
+        onRegexChange?.(!isRegex);
+      }}
       title={t('Use RegEx pattern matching')}
     >
       <Button
@@ -228,7 +229,7 @@ export default function FilterInputs<T>({
         transition-all duration-300 ease-in-out w-full relative
         ${
           isOpen
-            ? `opacity-100 visible mt-4 ${onApply ? 'max-h-100 sm:max-h-125 2xl:max-h-150 overflow-auto' : 'max-h-150 overflow-visible'}`
+            ? 'opacity-100 visible mt-4 shrink-0 max-h-[min(37.5rem,50vh)] overflow-auto'
             : 'max-h-0 opacity-0 invisible mt-0 overflow-hidden'
         }
       `}

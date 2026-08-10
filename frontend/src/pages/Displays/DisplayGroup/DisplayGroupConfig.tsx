@@ -25,7 +25,7 @@ import {
   Calendar,
   Copy,
   Edit,
-  Folder,
+  FolderInput,
   Terminal,
   Tags,
   Trash2,
@@ -48,6 +48,7 @@ import type { DisplayGroup } from '@/types/displayGroup';
 import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
 import type { DateLike } from '@/utils/date';
+import { formatTagsForExport } from '@/utils/tags';
 
 export type ModalType =
   | BaseModalType
@@ -240,7 +241,7 @@ export const getDisplayGroupItemActions = ({
     if (canModify && canEdit && openMoveModal) {
       actions.push({
         label: t('Move'),
-        icon: Folder,
+        icon: FolderInput,
         onClick: () => openMoveModal(displayGroup),
       });
     }
@@ -344,7 +345,7 @@ export const getBulkActions = ({
   if (canModify) {
     actions.push({
       label: t('Move'),
-      icon: Folder,
+      icon: FolderInput,
       onClick: onMove,
     });
   }
@@ -446,6 +447,9 @@ export const getDisplayGroupColumns = (
                 }))}
               />
             ),
+            meta: {
+              getExportValue: (row) => formatTagsForExport(row.tags),
+            },
           },
         ] as ColumnDef<DisplayGroup>[])
       : []),
@@ -485,12 +489,18 @@ export const getDisplayGroupColumns = (
       header: t('Created Date'),
       size: 160,
       cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatDateTime(row.createdDt),
+      },
     },
     {
       accessorKey: 'modifiedDt',
       header: t('Modified Date'),
       size: 160,
       cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatDateTime(row.modifiedDt),
+      },
     },
     {
       id: 'tableActions',

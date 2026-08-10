@@ -66,7 +66,7 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<SessionFilterI
 
 export interface SessionActionsProps {
   t: TFunction;
-  onLogout: (id: number) => void;
+  onLogout: (session: Session) => void;
   formatDateTime: (value: DateLike) => string;
 }
 
@@ -78,7 +78,7 @@ export const getSessionItemActions = ({
     {
       label: t('Logout'),
       icon: LogOut,
-      onClick: () => onLogout(session.userId),
+      onClick: () => onLogout(session),
       isQuickAction: true,
       variant: 'danger' as const,
     },
@@ -94,6 +94,9 @@ export const getSessionColumns = (props: SessionActionsProps): ColumnDef<Session
       header: t('Last Accessed'),
       size: 180,
       cell: (info) => <TextCell weight="bold">{formatDateTime(info.getValue<string>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatDateTime(row.lastAccessed),
+      },
     },
 
     {
@@ -126,6 +129,9 @@ export const getSessionColumns = (props: SessionActionsProps): ColumnDef<Session
       header: t('Expires At'),
       size: 140,
       cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatDateTime(row.expiresAt),
+      },
     },
     {
       id: 'tableActions',

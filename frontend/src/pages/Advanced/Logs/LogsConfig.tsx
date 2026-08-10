@@ -39,7 +39,7 @@ export interface LogsFilterInput {
   function?: string;
   displayId?: string;
   display?: string;
-  useRegexForName?: string;
+  useRegexForName?: boolean;
   displayGroupId?: string;
   message?: string;
   excludeLog?: boolean;
@@ -59,7 +59,7 @@ export const INITIAL_FILTER_STATE: LogsFilterInput = {
   function: '',
   displayId: '',
   display: '',
-  useRegexForName: '',
+  useRegexForName: false,
   displayGroupId: '',
   message: '',
   excludeLog: false,

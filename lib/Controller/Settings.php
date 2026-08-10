@@ -640,12 +640,12 @@ class Settings extends Base
         if ($this->getConfig()->isSettingEditable('DISPLAY_DEFAULT_FOLDER')) {
             $this->handleChangedSettings(
                 'DISPLAY_DEFAULT_FOLDER',
-                $sanitizedParams->getInt('DISPLAY_DEFAULT_FOLDER'),
+                $sanitizedParams->getInt('DISPLAY_DEFAULT_FOLDER', ['default' => 1]),
                 $changedSettings
             );
             $this->getConfig()->changeSetting(
                 'DISPLAY_DEFAULT_FOLDER',
-                $sanitizedParams->getInt('DISPLAY_DEFAULT_FOLDER'),
+                $sanitizedParams->getInt('DISPLAY_DEFAULT_FOLDER', ['default' => 1]),
                 1
             );
         }

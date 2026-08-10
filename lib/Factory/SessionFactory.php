@@ -20,9 +20,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\Factory;
-
 
 use Xibo\Entity\Session;
 use Xibo\Helper\DateFormatHelper;
@@ -49,6 +47,18 @@ class SessionFactory extends BaseFactory
         $this->getStore()->update(
             'UPDATE `session` SET IsExpired = 1 WHERE userID = :userId ',
             ['userId' => $userId]
+        );
+    }
+
+    /**
+     * @param int $userId
+     * @param string $exceptSessionId
+     */
+    public function expireByUserIdExceptSessionId(int $userId, string $exceptSessionId): void
+    {
+        $this->getStore()->update(
+            'UPDATE `session` SET IsExpired = 1 WHERE userID = :userId AND session_id <> :sessionId ',
+            ['userId' => $userId, 'sessionId' => $exceptSessionId]
         );
     }
 

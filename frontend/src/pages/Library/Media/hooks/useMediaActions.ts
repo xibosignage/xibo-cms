@@ -26,7 +26,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
 
 import { notify } from '@/components/ui/Notification';
-import { selectFolder } from '@/services/folderApi';
+import { selectFolder, type ApiResult } from '@/services/folderApi';
 import { cloneMedia, deleteMedia, tidyLibrary, updateMedia } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
 import type { Tag } from '@/types/tag';
@@ -37,6 +37,7 @@ interface UseMediaActionsProps {
   closeModal: () => void;
   setRowSelection: Dispatch<SetStateAction<RowSelectionState>>;
   setItemsToMove: (items: Media[]) => void;
+  setItemsToDelete: (items: Media[]) => void;
 }
 
 export function useMediaActions({
@@ -45,6 +46,7 @@ export function useMediaActions({
   closeModal,
   setRowSelection,
   setItemsToMove,
+  setItemsToDelete,
 }: UseMediaActionsProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -73,16 +75,17 @@ export function useMediaActions({
         ),
       );
 
-      const failed = results.filter((r) => r.status === 'rejected');
+      const stillFailed = itemsToDelete.filter((_, index) => results[index]?.status === 'rejected');
 
-      if (failed.length > 0) {
-        const firstRejected = failed[0] as PromiseRejectedResult;
+      if (stillFailed.length > 0) {
+        const firstRejected = results.find((r) => r.status === 'rejected') as PromiseRejectedResult;
         const reason = firstRejected.reason;
         const message =
           isAxiosError(reason) && reason.response?.data?.message
             ? reason.response.data.message
-            : t('{{count}} item(s) could not be deleted.', { count: failed.length });
+            : t('{{count}} item(s) could not be deleted.', { count: stillFailed.length });
         setDeleteError(message);
+        setItemsToDelete(stillFailed);
         setRowSelection({});
         handleRefresh();
         return;
@@ -129,16 +132,17 @@ export function useMediaActions({
       return;
     }
 
-    const movePromises = itemsToMove.map((item) =>
-      selectFolder({
-        folderId: newFolderId,
-        targetId: item.mediaId,
-        targetType: 'library',
-      }),
-    );
-
     try {
-      const results = await Promise.all(movePromises);
+      const results: ApiResult[] = [];
+      for (const item of itemsToMove) {
+        results.push(
+          await selectFolder({
+            folderId: newFolderId,
+            targetId: item.mediaId,
+            targetType: 'library',
+          }),
+        );
+      }
       const failures = results.filter((res) => !res.success);
 
       if (failures.length === 0) {

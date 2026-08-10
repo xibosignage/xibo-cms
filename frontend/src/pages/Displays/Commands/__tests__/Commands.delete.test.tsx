@@ -29,6 +29,7 @@ import { mockFetchCommands } from './mocks/commandApi';
 
 import { deleteCommand, fetchCommands } from '@/services/commandApi';
 import { testQueryClient } from '@/setupTests';
+import { waitForDialogToClose } from '@/testUtils/rtl';
 
 // =============================================================================
 // Module mocks
@@ -110,9 +111,7 @@ describe('Commands page - single delete', () => {
     await waitFor(() => {
       expect(deleteCommand).toHaveBeenCalledWith(mockCommand.commandId);
     });
-    await waitFor(() => {
-      expect(screen.queryByText('Delete Command?')).not.toBeInTheDocument();
-    });
+    await waitForDialogToClose('Delete Command?');
   });
 
   test('Delete button shows "Deleting…" while the request is in progress', async () => {
@@ -130,8 +129,9 @@ describe('Commands page - single delete', () => {
 
     expect(await screen.findByRole('button', { name: /deleting/i })).toBeDisabled();
 
-    // Resolve so the test doesn't leak a pending promise.
+    // Wait for the resulting close so the update isn't left outside act().
     resolveDelete();
+    await waitForDialogToClose('Delete Command?');
   });
 
   test('a failed delete keeps the modal open and shows the error', async () => {

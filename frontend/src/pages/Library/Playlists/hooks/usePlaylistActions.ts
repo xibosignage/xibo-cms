@@ -26,7 +26,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
 
 import { notify } from '@/components/ui/Notification';
-import { selectFolder } from '@/services/folderApi';
+import { selectFolder, type ApiResult } from '@/services/folderApi';
 import { clonePlaylist, deletePlaylist, updatePlaylist } from '@/services/playlistApi';
 import type { Playlist } from '@/types/playlist';
 
@@ -116,16 +116,17 @@ export function usePlaylistActions({
       return;
     }
 
-    const movePromises = itemsToMove.map((item) =>
-      selectFolder({
-        folderId: newFolderId,
-        targetId: item.playlistId,
-        targetType: 'playlist',
-      }),
-    );
-
     try {
-      const results = await Promise.all(movePromises);
+      const results: ApiResult[] = [];
+      for (const item of itemsToMove) {
+        results.push(
+          await selectFolder({
+            folderId: newFolderId,
+            targetId: item.playlistId,
+            targetType: 'playlist',
+          }),
+        );
+      }
       const failures = results.filter((res) => !res.success);
 
       if (failures.length === 0) {

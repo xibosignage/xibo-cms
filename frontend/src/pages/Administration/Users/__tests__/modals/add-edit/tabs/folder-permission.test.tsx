@@ -23,13 +23,12 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
-import { mockFolderTree, mockUser, mockUserGroup } from '../../../fixtures/user';
+import { mockFolderTree, mockUser } from '../../../fixtures/user';
+import { setupAddEditUserModalMocks } from '../../../mocks/addEditUserModal';
 import { renderAddEditUserModal } from '../helpers/renderAddEditUserModal';
 
 import { fetchFolderById, fetchFolderTree } from '@/services/folderApi';
 import { fetchGroupFolderPermissions } from '@/services/permissionsApi';
-import { fetchHomepages } from '@/services/userApi';
-import { fetchUserGroups } from '@/services/userGroupApi';
 
 // =============================================================================
 // Module mocks
@@ -64,11 +63,8 @@ const openFolderPermissionTab = async (user: ReturnType<typeof userEvent.setup>)
 describe('AddEditUserModal - Folder Permission tab', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(fetchFolderTree).mockResolvedValue(mockFolderTree);
+    setupAddEditUserModalMocks();
     vi.mocked(fetchFolderById).mockResolvedValue({ ...mockFolderTree[0]!, text: 'Root' });
-    vi.mocked(fetchGroupFolderPermissions).mockResolvedValue(new Map());
-    vi.mocked(fetchUserGroups).mockResolvedValue({ rows: [mockUserGroup], totalCount: 1 });
-    vi.mocked(fetchHomepages).mockResolvedValue([]);
   });
 
   test("the home folder selector shows the draft's currently selected folder", async () => {

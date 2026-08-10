@@ -78,18 +78,18 @@ export function SidebarPopup({ route, isCollapsed, children }: SidebarPopupProps
             ref={refs.setFloating}
             style={floatingStyles}
             {...getFloatingProps()}
-            className="z-100 min-w-50 text-white bg-xibo-blue-800 rounded-e-md shadow-lg"
+            className="z-100 min-w-50 text-(--sidebar-fg) bg-(--sidebar-bg) rounded-e-md shadow-lg"
           >
             {/* Parent label */}
             <a
               href={!route.subLinks ? route.externalURL || route.path : ''}
-              className={`block px-4 py-2 text-sm bg-white/10 ${route.subLinks ? 'pointer-events-none' : 'cursor-pointer'}`}
+              className={`block px-4 py-2 text-sm bg-(--sidebar-overlay) ${route.subLinks ? 'pointer-events-none' : 'cursor-pointer'}`}
             >
               {t(route.labelKey)}
             </a>
 
             {route.subLinks && (
-              <div className="flex flex-col w-full gap-1 px-6 py-2 bg-black/10 border-white/20">
+              <div className="flex flex-col w-full gap-1 px-6 py-2 bg-black/10 border-(--sidebar-overlay-strong)">
                 {route.subLinks.map((sub) => {
                   const fullPath = `/${route.path}/${sub.path}`;
                   const isSubActive =
@@ -100,8 +100,10 @@ export function SidebarPopup({ route, isCollapsed, children }: SidebarPopupProps
                     <a
                       key={sub.labelKey}
                       href={sub.externalURL}
-                      className={`text-sm px-3 py-2 rounded transition-colors hover:bg-white/10 ${
-                        isSubActive ? 'text-white bg-white/10' : 'text-xibo-blue-100'
+                      className={`text-sm px-3 py-2 rounded transition-colors hover:bg-(--sidebar-overlay) ${
+                        isSubActive
+                          ? 'text-(--sidebar-fg) bg-(--sidebar-overlay)'
+                          : 'text-(--sidebar-fg-muted)'
                       }`}
                     >
                       {t(sub.labelKey)}
@@ -111,8 +113,10 @@ export function SidebarPopup({ route, isCollapsed, children }: SidebarPopupProps
                       key={sub.path}
                       to={fullPath}
                       className={({ isActive }) =>
-                        `text-sm px-3 py-2 rounded transition-colors hover:bg-white/10 ${
-                          isActive ? 'text-white bg-white/10' : 'text-xibo-blue-100'
+                        `text-sm px-3 py-2 rounded transition-colors hover:bg-(--sidebar-overlay) ${
+                          isActive
+                            ? 'text-(--sidebar-fg) bg-(--sidebar-overlay)'
+                            : 'text-(--sidebar-fg-muted)'
                         }`
                       }
                     >

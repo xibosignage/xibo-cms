@@ -38,6 +38,8 @@ vi.mock('@/services/moduleApi');
 vi.mock('@/services/userApi', () => ({
   fetchUserPreference: vi.fn().mockResolvedValue(null),
   saveUserPreference: vi.fn().mockResolvedValue(undefined),
+  autoSubmitPrefQueryKey: (formId: string) => ['userPref', `autoSubmit.${formId}`],
+  fetchAutoSubmitPreference: vi.fn().mockResolvedValue(false),
 }));
 vi.mock('@/components/ui/modals/Modal');
 vi.mock('../hooks/useModuleFilterOptions', () => ({

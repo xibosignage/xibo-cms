@@ -29,16 +29,7 @@ import {
   ALWAYS_ONLY,
   mockDaypartRows,
   mockFetchEventById,
-  setupCampaignMocks,
-  setupCommandMocks,
-  setupDatasetMocks,
-  setupDaypartMocks,
-  setupEventMocks,
-  setupLayoutsMocks,
-  setupMediaMocks,
-  setupPlaylistMocks,
-  setupResolutionMocks,
-  setupSyncGroupMocks,
+  setupScheduleModalMocks,
 } from '../../../mocks/api';
 
 import { renderScheduleModal } from './helpers/renderScheduleModal';
@@ -61,6 +52,7 @@ vi.mock('@/services/mediaApi');
 vi.mock('@/services/playlistApi');
 vi.mock('@/services/syncGroupApi');
 vi.mock('@/services/datasetApi');
+vi.mock('@/services/scheduleCriteriaApi');
 
 vi.mock('@/components/ui/forms/SelectDropdown', () => ({
   default: ({
@@ -140,16 +132,7 @@ describe('ScheduleEventModal - validation step-routing', () => {
     testQueryClient.clear();
     vi.clearAllMocks();
 
-    setupEventMocks();
-    setupDaypartMocks();
-    setupResolutionMocks();
-    setupLayoutsMocks();
-    setupCampaignMocks();
-    setupCommandMocks();
-    setupMediaMocks();
-    setupPlaylistMocks();
-    setupSyncGroupMocks();
-    setupDatasetMocks();
+    setupScheduleModalMocks();
     mockFetchEventById(mockEvent);
     mockDaypartRows(ALWAYS_ONLY);
   });

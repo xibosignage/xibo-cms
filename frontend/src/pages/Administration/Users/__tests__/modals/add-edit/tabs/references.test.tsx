@@ -23,13 +23,9 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
-import { mockFolderTree, mockUser, mockUserGroup } from '../../../fixtures/user';
+import { mockUser } from '../../../fixtures/user';
+import { setupAddEditUserModalMocks } from '../../../mocks/addEditUserModal';
 import { renderAddEditUserModal } from '../helpers/renderAddEditUserModal';
-
-import { fetchFolderTree } from '@/services/folderApi';
-import { fetchGroupFolderPermissions } from '@/services/permissionsApi';
-import { fetchHomepages } from '@/services/userApi';
-import { fetchUserGroups } from '@/services/userGroupApi';
 
 // =============================================================================
 // Module mocks
@@ -62,10 +58,7 @@ const openReferencesTab = async (user: ReturnType<typeof userEvent.setup>) => {
 describe('AddEditUserModal - References tab', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(fetchFolderTree).mockResolvedValue(mockFolderTree);
-    vi.mocked(fetchGroupFolderPermissions).mockResolvedValue(new Map());
-    vi.mocked(fetchUserGroups).mockResolvedValue({ rows: [mockUserGroup], totalCount: 1 });
-    vi.mocked(fetchHomepages).mockResolvedValue([]);
+    setupAddEditUserModalMocks();
   });
 
   test('edit mode pre-fills Phone Number and Reference 1-5 from the user', async () => {
