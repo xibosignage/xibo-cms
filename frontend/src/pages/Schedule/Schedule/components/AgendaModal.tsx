@@ -700,7 +700,7 @@ function AgendaTablePagination({
                 )}
               >
                 {size}
-                {pageSize === size && <Check className="size-3.5 text-blue-600" />}
+                {pageSize === size && <Check className="size-3.5 text-xibo-blue-600" />}
               </button>
             ))}
           </div>
@@ -1043,7 +1043,11 @@ function EventTypeTable({
                   key={`${event.eventId}-${i}`}
                   className={twMerge(
                     'cursor-pointer transition-colors',
-                    isSelected ? 'bg-blue-100' : isLinked ? 'bg-blue-50' : 'hover:bg-gray-50',
+                    isSelected
+                      ? 'bg-xibo-blue-100'
+                      : isLinked
+                        ? 'bg-xibo-blue-50'
+                        : 'hover:bg-gray-50',
                   )}
                   onClick={() =>
                     onRowClick({ type: 'layout', layoutId: event.layoutId, eventId: event.eventId })
@@ -1132,9 +1136,9 @@ function SidebarList({ title, items, isSelected, isLinked, onRowClick }: Sidebar
             className={twMerge(
               'flex items-center gap-2.5 px-5 py-1.5 cursor-pointer text-xs transition-colors',
               isSelected(item.id)
-                ? 'bg-blue-100'
+                ? 'bg-xibo-blue-100'
                 : isLinked(item.id)
-                  ? 'bg-blue-50'
+                  ? 'bg-xibo-blue-50'
                   : 'hover:bg-gray-50',
             )}
             onClick={() => onRowClick(item.id)}

@@ -52,7 +52,7 @@ export default function RootLayout() {
             {/* Desktop Sidebar Drawer */}
             <div className="relative md:block hidden flex-none">
               <aside
-                className={`h-full bg-xibo-blue-800 dark:bg-orange-300 transition-[width] duration-300 ease-in-out overflow-clip whitespace-nowrap will-change-[width]
+                className={`h-full bg-(--sidebar-bg) dark:bg-orange-300 transition-[width] duration-300 ease-in-out overflow-clip whitespace-nowrap will-change-[width]
             ${isCollapsed ? 'w-21' : 'w-60'}
           `}
               >
@@ -62,7 +62,7 @@ export default function RootLayout() {
               <button
                 onClick={() => setIsCollapsed(!isCollapsed)}
                 aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                className="absolute top-5 -right-3 z-10 md:flex hidden items-center justify-center w-6 h-6 rounded-lg bg-xibo-blue-800 dark:bg-orange-300 text-xibo-white dark:text-black transition-colors hover:bg-xibo-blue-700 dark:hover:bg-orange-400 cursor-pointer"
+                className="absolute top-5 -right-3 z-10 md:flex hidden items-center justify-center w-6 h-6 rounded-lg bg-(--sidebar-bg) dark:bg-orange-300 text-(--sidebar-fg) dark:text-black transition-colors hover:bg-(--sidebar-bg-hover) dark:hover:bg-orange-400 cursor-pointer"
               >
                 {isCollapsed ? <ChevronRightSquare size={16} /> : <ChevronLeftSquare size={16} />}
               </button>
@@ -71,7 +71,7 @@ export default function RootLayout() {
             <div
               className={`
           fixed inset-y-0 left-0 z-40 w-full
-          bg-xibo-blue-800 dark:bg-orange-300
+          bg-(--sidebar-bg) dark:bg-orange-300
           transform transition-transform duration-300 ease-in-out
           md:hidden sm:px-8 px-0 overflow-visible
           ${openMobileDrawer ? 'translate-x-0' : '-translate-x-full'}

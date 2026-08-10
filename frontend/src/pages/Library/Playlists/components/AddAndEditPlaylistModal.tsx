@@ -482,7 +482,7 @@ export default function AddAndEditPlaylistModal({
                           <input
                             type="checkbox"
                             title={t('Exact')}
-                            className="shrink-0 mt-0.5 border-gray-200 rounded text-blue-600 focus:ring-blue-500"
+                            className="shrink-0 mt-0.5 border-gray-200 rounded text-xibo-blue-600 focus:ring-xibo-blue-500"
                             checked={draft.exactTags}
                             onChange={(e) =>
                               setDraft((prev) => ({ ...prev, exactTags: e.target.checked }))

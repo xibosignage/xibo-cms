@@ -22,10 +22,21 @@
 import type { TFunction } from 'i18next';
 import z from 'zod';
 
-export const getSyncGroupSchema = (t: TFunction) =>
-  z.object({
-    name: z.string().min(1, t('Name is required')),
-    syncPublisherPort: z.number().min(1, t('Publisher Port must be greater than 0')),
-    syncSwitchDelay: z.number().min(0, t('Switch Delay cannot be negative')),
-    syncVideoPauseDelay: z.number().min(0, t('Video Pause Delay cannot be negative')),
-  });
+export const getSyncGroupSchema = (t: TFunction, isEdit: boolean) =>
+  z
+    .object({
+      name: z.string().min(1, t('Name is required')),
+      syncPublisherPort: z.number().min(1, t('Publisher Port must be greater than 0')),
+      syncSwitchDelay: z.number().min(0, t('Switch Delay cannot be negative')),
+      syncVideoPauseDelay: z.number().min(0, t('Video Pause Delay cannot be negative')),
+      leadDisplayId: z.number().nullable(),
+    })
+    .superRefine((data, ctx) => {
+      if (isEdit && !data.leadDisplayId) {
+        ctx.addIssue({
+          path: ['leadDisplayId'],
+          code: z.ZodIssueCode.custom,
+          message: t('Please select a Lead Display for this sync group'),
+        });
+      }
+    });

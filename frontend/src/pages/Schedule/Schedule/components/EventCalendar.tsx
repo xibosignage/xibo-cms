@@ -630,7 +630,7 @@ export function EventCalendar({
                         );
                       }
                     }}
-                    className={`relative group flex ${dayEvents.length > 0 ? 'cursor-pointer' : ''} flex-col overflow-hidden${di > 0 ? ' border-l border-gray-200' : ''} ${isSelected ? 'bg-blue-50' : isToday ? 'bg-slate-50' : 'bg-white'}`}
+                    className={`relative group flex ${dayEvents.length > 0 ? 'cursor-pointer' : ''} flex-col overflow-hidden${di > 0 ? ' border-l border-gray-200' : ''} ${isSelected ? 'bg-xibo-blue-50' : isToday ? 'bg-slate-50' : 'bg-white'}`}
                   >
                     {isToday && (
                       <div className="absolute top-0 left-0 bottom-0 w-0.5 bg-xibo-blue-500 z-1"></div>

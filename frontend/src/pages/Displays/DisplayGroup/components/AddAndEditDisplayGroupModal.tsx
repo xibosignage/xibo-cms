@@ -337,8 +337,8 @@ export default function AddAndEditDisplayGroupModal({
               onClick={() => setActiveTab(tab)}
               className={`py-2 px-3 inline-flex items-center gap-2 border-b-2 text-sm font-semibold whitespace-nowrap focus:outline-none transition-all  ${
                 activeTab === tab
-                  ? 'border-blue-600 text-blue-500'
-                  : 'border-gray-200 text-gray-500 hover:text-blue-600'
+                  ? 'border-xibo-blue-600 text-xibo-blue-500'
+                  : 'border-gray-200 text-gray-500 hover:text-xibo-blue-600'
               }`}
             >
               {tab === 'general' ? t('General') : t('Reference')}
@@ -446,7 +446,7 @@ export default function AddAndEditDisplayGroupModal({
                           <input
                             type="checkbox"
                             title={t('Exact')}
-                            className="shrink-0 mt-0.5 border-gray-200 rounded text-blue-600 focus:ring-blue-500"
+                            className="shrink-0 mt-0.5 border-gray-200 rounded text-xibo-blue-600 focus:ring-xibo-blue-500"
                             checked={draft.exactTags}
                             onChange={(e) =>
                               setDraft((prev) => ({ ...prev, exactTags: e.target.checked }))
