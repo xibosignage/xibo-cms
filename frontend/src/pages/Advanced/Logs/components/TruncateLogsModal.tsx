@@ -65,7 +65,6 @@ export default function TruncateLogsModal({ onClose, onSuccess }: TruncateLogsMo
       onClose={onClose}
       size="sm"
       variant="confirmation"
-      scrollable={false}
       autoSubmitFormId={AUTO_SUBMIT_FORMS.logTruncate}
       isPending={isTruncating}
       error={error ?? undefined}

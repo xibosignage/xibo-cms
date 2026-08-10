@@ -25,6 +25,7 @@ import type { AxiosError } from 'axios';
 
 import type { LayoutFilterInput } from '../LayoutConfig';
 
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import type { FetchLayoutRequest } from '@/services/layoutsApi';
 import { fetchLayouts } from '@/services/layoutsApi';
 import { resolveLastModified } from '@/utils/date';
@@ -52,6 +53,8 @@ export const useLayoutData = ({
   advancedFilters,
   enabled = true,
 }: UseLayoutParams) => {
+  const { timeZone } = useDateFormatter();
+
   const queryParams = {
     pageIndex: pagination.pageIndex,
     pageSize: pagination.pageSize,
@@ -113,7 +116,7 @@ export const useLayoutData = ({
         ...(mediaLike ? { mediaLike } : {}),
         ...(layoutId != null ? { layoutId } : {}),
         ...(activeDisplayGroupId != null ? { activeDisplayGroupId } : {}),
-        ...resolveLastModified(lastModified),
+        ...resolveLastModified(lastModified, timeZone),
         ...(useRegexForName && name && isValidRegex(name) ? { useRegexForName: 1 } : {}),
         ...(logicalOperatorName ? { logicalOperatorName } : {}),
         ...(exactTags !== undefined ? { exactTags: exactTags ? 1 : 0 } : {}),
