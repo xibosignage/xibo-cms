@@ -65,9 +65,6 @@ export default function AuditTrailExportModal({ onClose }: AuditTrailExportModal
       onClose={onClose}
       title={t('Output Audit Trail as CSV')}
       size="sm"
-      scrollable={false}
-      className="overflow-visible"
-      contentClassName="overflow-visible"
       actions={[
         {
           label: t('Cancel'),
