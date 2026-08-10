@@ -159,8 +159,14 @@ export default function DatePicker({
     return timeZone ? toFakeLocalDate(value.date, timeZone) : value.date;
   });
   const [range, setRange] = useState<DateRange | undefined>({
-    from: value?.from,
-    to: value?.to,
+    from:
+      value?.from && timeZone && effectiveShowTimePicker
+        ? toFakeLocalDate(value.from, timeZone)
+        : value?.from,
+    to:
+      value?.to && timeZone && effectiveShowTimePicker
+        ? toFakeLocalDate(value.to, timeZone)
+        : value?.to,
   });
 
   const [time, setTime] = useState<TimeParts>(() =>

@@ -11,6 +11,7 @@ import {
   FloatingPortal,
 } from '@floating-ui/react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
+import { DateTime } from 'luxon';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
@@ -19,7 +20,42 @@ import DatePicker from './DatePicker';
 
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import type { FilterOption } from '@/types/filter';
-import { formatCmsDate, toLocalDateKey } from '@/utils/date';
+import { DATE_KEY_REGEX, formatCmsDate, formatTime, toLocalDateKey } from '@/utils/date';
+
+// Reconstructs the Date the user picked from a `<dateKey>` or `<dateKey>T<HH:mm>` boundary, so
+// reopening the picker can be seeded with the previous selection.
+function parseRangeBoundary(raw: string | undefined, timeZone?: string): Date | undefined {
+  if (!raw) return undefined;
+  const [dateKey, time] = raw.split('T');
+  const match = dateKey?.match(DATE_KEY_REGEX);
+  if (!match) return undefined;
+  const [, year, month, day] = match;
+  if (!time) return new Date(Number(year), Number(month) - 1, Number(day));
+  const [hour, minute] = time.split(':').map(Number);
+  if (timeZone) {
+    return DateTime.fromObject(
+      { year: Number(year), month: Number(month), day: Number(day), hour, minute },
+      { zone: timeZone },
+    ).toJSDate();
+  }
+  return new Date(Number(year), Number(month) - 1, Number(day), hour, minute);
+}
+
+function parseRangeValue(value: string, timeZone?: string): { from?: Date; to?: Date } | undefined {
+  if (!value.startsWith('range:')) return undefined;
+  const [fromRaw, toRaw] = value.replace('range:', '').split('|');
+  const from = parseRangeBoundary(fromRaw, timeZone);
+  const to = parseRangeBoundary(toRaw, timeZone);
+  return from && to ? { from, to } : undefined;
+}
+
+// Mirrors the AM/PM display already used by DatePicker's own time-of-day selects.
+function formatTimeLabel(time: string): string {
+  const [hour = 0, minute = 0] = time.split(':').map(Number);
+  const period = hour >= 12 ? 'PM' : 'AM';
+  const hour12 = hour % 12 || 12;
+  return `${String(hour12).padStart(2, '0')}:${String(minute).padStart(2, '0')} ${period}`;
+}
 
 type DateRangeFilterProps = {
   label: string;
@@ -43,7 +79,7 @@ export default function DateRangeFilter({
   showTimePicker,
 }: DateRangeFilterProps) {
   const { t } = useTranslation();
-  const { dateFormat } = useDateFormatter();
+  const { dateFormat, timeZone } = useDateFormatter();
   const [open, setOpen] = useState(false);
   const [openDatePicker, setOpenDatePicker] = useState(false);
 
@@ -86,9 +122,17 @@ export default function DateRangeFilter({
 
   const getDisplayLabel = () => {
     if (typeof value === 'string' && value.startsWith('range:')) {
-      const [from, to] = value.replace('range:', '').split('|');
+      const [fromRaw, toRaw] = value.replace('range:', '').split('|');
+      const [from, fromTimeKey] = fromRaw?.split('T') ?? [];
+      const [to, toTimeKey] = toRaw?.split('T') ?? [];
       if (from && to) {
-        return `${formatRangeBoundary(from)} - ${formatRangeBoundary(to)}`;
+        const fromLabel = fromTimeKey
+          ? `${formatRangeBoundary(from)} ${formatTimeLabel(fromTimeKey)}`
+          : formatRangeBoundary(from);
+        const toLabel = toTimeKey
+          ? `${formatRangeBoundary(to)} ${formatTimeLabel(toTimeKey)}`
+          : formatRangeBoundary(to);
+        return `${fromLabel} - ${toLabel}`;
       }
       return t('Custom Range');
     }
@@ -170,10 +214,17 @@ export default function DateRangeFilter({
                   disableFutureDates
                   isJalali={isJalali}
                   showTimePicker={showTimePicker}
+                  value={parseRangeValue(value, timeZone)}
                   onCancel={() => setOpenDatePicker(false)}
                   onApply={(v) => {
                     if (v.type === 'range') {
-                      onChange(name, `range:${toLocalDateKey(v.from)}|${toLocalDateKey(v.to)}`);
+                      const fromKey = toLocalDateKey(v.from);
+                      const toKey = toLocalDateKey(v.to);
+                      const rangeValue = showTimePicker
+                        ? `range:${fromKey}T${formatTime(v.from, timeZone)}` +
+                          `|${toKey}T${formatTime(v.to, timeZone)}`
+                        : `range:${fromKey}|${toKey}`;
+                      onChange(name, rangeValue);
                     }
                     handleClose();
                   }}
