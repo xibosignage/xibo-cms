@@ -264,7 +264,7 @@ HistoryManager.prototype.uploadChange = function(
       } else {
         // Login Form needed?
         if (data.login) {
-          window.location.reload();
+          LoginBox();
         } else {
           // Just an error we dont know about
           if (data.message == undefined) {
@@ -423,7 +423,7 @@ HistoryManager.prototype.revertChange = function() {
           } else {
             // Login Form needed?
             if (data.login) {
-              window.location.reload();
+              LoginBox();
             } else {
               // Just an error we dont know about
               if (data.message == undefined) {

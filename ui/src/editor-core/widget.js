@@ -709,7 +709,7 @@ Widget.prototype.editPropertyForm = function(property, type) {
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.reload();
+        LoginBox();
       } else {
         toastr.error(errorMessagesTrans.formLoadFailed);
 
@@ -900,7 +900,7 @@ Widget.prototype.saveElements = function(
         if (!res.success) {
           // Login Form needed?
           if (res.login) {
-            window.location.reload();
+            LoginBox();
           } else {
             toastr.error(errorMessagesTrans.formLoadFailed);
 
@@ -1079,7 +1079,7 @@ Widget.prototype.saveElements = function(
       } else {
         // Login Form needed?
         if (res.login) {
-          window.location.reload();
+          LoginBox();
         } else {
           if (res.statusText != 'requestAborted') {
             // Just an error we dont know about
