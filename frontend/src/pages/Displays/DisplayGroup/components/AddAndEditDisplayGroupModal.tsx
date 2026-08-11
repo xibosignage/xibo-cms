@@ -31,7 +31,7 @@ import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagI
 import TextInput from '@/components/ui/forms/TextInput';
 import Modal from '@/components/ui/modals/Modal';
 import { DataTable } from '@/components/ui/table/DataTable';
-import { CheckMarkCell, TagsCell, TextCell } from '@/components/ui/table/cells';
+import { CheckMarkCell, TagsCell, TextCell, toDisplayTags } from '@/components/ui/table/cells';
 import { useUserContext } from '@/context/UserContext';
 import { useDebounce } from '@/hooks/useDebounce';
 import { getDisplayGroupSchema } from '@/schema/displayGroup';
@@ -279,14 +279,7 @@ export default function AddAndEditDisplayGroupModal({
       header: t('Tags'),
       size: 140,
       enableSorting: false,
-      cell: ({ row }) => (
-        <TagsCell
-          tags={(row.original.tags ?? []).map((tag) => ({
-            id: tag.tagId,
-            label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
-          }))}
-        />
-      ),
+      cell: ({ row }) => <TagsCell tags={toDisplayTags(row.original.tags)} />,
     },
     {
       accessorKey: 'loggedIn',

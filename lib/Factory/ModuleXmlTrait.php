@@ -127,8 +127,8 @@ trait ModuleXmlTrait
                 $property->parseTranslations = $node->getAttribute('parseTranslations') === 'true';
                 $property->saveDefault = $node->getAttribute('saveDefault') === 'true';
                 $property->sendToElements = $node->getAttribute('sendToElements') === 'true';
-                $property->title = __($this->getFirstValueOrDefaultFromXmlNode($node, 'title'));
-                $property->helpText = __($this->getFirstValueOrDefaultFromXmlNode($node, 'helpText'));
+                $property->title = __($this->getFirstValueOrDefaultFromXmlNode($node, 'title') ?? '');
+                $property->helpText = __($this->getFirstValueOrDefaultFromXmlNode($node, 'helpText') ?? '');
                 $property->dependsOn = $this->getFirstValueOrDefaultFromXmlNode($node, 'dependsOn');
 
                 // How should we default includeInXlf?
@@ -262,7 +262,7 @@ trait ModuleXmlTrait
                 }
 
                 // Custom popover
-                $property->customPopOver = __($this->getFirstValueOrDefaultFromXmlNode($node, 'customPopOver'));
+                $property->customPopOver = __($this->getFirstValueOrDefaultFromXmlNode($node, 'customPopOver') ?? '');
 
                 $properties[] = $property;
             }
@@ -322,8 +322,8 @@ trait ModuleXmlTrait
                 $propertyGroup = new PropertyGroup();
                 $propertyGroup->id = $propertyGroupNode->getAttribute('id');
                 $propertyGroup->expanded = $propertyGroupNode->getAttribute('expanded') === 'true';
-                $propertyGroup->title = __($this->getFirstValueOrDefaultFromXmlNode($propertyGroupNode, 'title'));
-                $propertyGroup->helpText = __($this->getFirstValueOrDefaultFromXmlNode($propertyGroupNode, 'helpText'));
+                $propertyGroup->title = __($this->getFirstValueOrDefaultFromXmlNode($propertyGroupNode, 'title') ?? '');
+                $propertyGroup->helpText = __($this->getFirstValueOrDefaultFromXmlNode($propertyGroupNode, 'helpText') ?? '');
                 $propertyGroups[] = $propertyGroup;
             }
         }

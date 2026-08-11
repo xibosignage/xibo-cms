@@ -375,7 +375,7 @@ class MediaService implements MediaServiceInterface
                 [
                     'mediaId' => $entry->mediaId,
                     'name' => $entry->name,
-                    'expired' => Carbon::createFromTimestamp($entry->expires)
+                    'expired' => DateFormatHelper::createFromTimestamp($entry->expires)
                         ->format(DateFormatHelper::getSystemFormat())
                 ]
             );

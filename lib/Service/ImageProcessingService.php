@@ -23,8 +23,8 @@
 namespace Xibo\Service;
 
 use Xibo\Service\ImageProcessingServiceInterface;
-use Intervention\Image\Exception\NotReadableException;
-use Intervention\Image\ImageManagerStatic as Img;
+use Intervention\Image\Exceptions\DecoderException;
+use Intervention\Image\ImageManager;
 
 /**
  * Class ImageProcessingService
@@ -57,19 +57,16 @@ class ImageProcessingService implements ImageProcessingServiceInterface
     public function resizeImage($filePath, $width, $height)
     {
         try {
-            Img::configure(array('driver' => 'gd'));
-            $img = Img::make($filePath);
-            $img->resize($width, $height, function ($constraint)  {
-                $constraint->aspectRatio();
-            });
+            $img = ImageManager::gd()->read($filePath);
+            // No upsize() constraint originally, so upsizing is allowed - scale() matches.
+            $img->scale($width, $height);
 
             // Get the updated height and width
             $updatedHeight = $img->height();
             $updatedWidth = $img->width();
 
             $img->save($filePath);
-            $img->destroy();
-        } catch (NotReadableException $notReadableException) {
+        } catch (DecoderException $notReadableException) {
             $this->log->error('Image not readable: ' . $notReadableException->getMessage());
         }
 

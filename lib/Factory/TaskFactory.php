@@ -149,7 +149,8 @@ class TaskFactory extends BaseFactory
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            defaultSort: ['name ASC']
+            defaultSort: ['name ASC'],
+            uniqueColumn: 'taskId'
         );
 
         $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';

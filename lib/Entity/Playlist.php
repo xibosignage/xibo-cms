@@ -355,12 +355,16 @@ class Playlist implements \JsonSerializable
                     ? $this->name = $this->getReassignedPlaylistName()
                     : throw new DuplicateEntityException(
                         sprintf(__("You already own a Playlist called '%s'. Please choose another name."), $this->name)
-                     );
+                    );
             }
         }
 
         if ($this->isDynamic === 1 && $this->maxNumberOfItems > $this->config->getSetting('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT')) {
             throw new InvalidArgumentException(__('Maximum number of items cannot exceed the limit set in CMS Settings'), 'maxNumberOfItems');
+        }
+
+        if ($this->isDynamic === 1 && $this->maxNumberOfItems < 1) {
+            throw new InvalidArgumentException(__('Maximum number of items must be at least 1'), 'maxNumberOfItems');
         }
     }
 
@@ -1223,6 +1227,6 @@ class Playlist implements \JsonSerializable
             $i++;
         }
 
-        return $i === 0 ? $this->name : $this->name . " ($i)";
+        return $i === 0 ? $this->name : $this->name . ' (' . $i . ')';
     }
 }

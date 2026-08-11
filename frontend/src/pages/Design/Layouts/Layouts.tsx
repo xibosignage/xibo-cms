@@ -52,8 +52,10 @@ import { useOwner } from '@/hooks/useOwner';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
 import type { Layout } from '@/types/layout';
+import type { Tag } from '@/types/tag';
 import { countActiveFilters } from '@/utils/filters';
 import { canSaveInFolder, hasFeature } from '@/utils/permissions';
+import { toggleTag } from '@/utils/tags';
 
 export default function Layouts() {
   const { t } = useTranslation();
@@ -340,6 +342,11 @@ export default function Layouts() {
     openModal('schedule');
   };
 
+  const handleTagClick = (tag: Tag) => {
+    setFilterInputs((prev) => ({ ...prev, tags: toggleTag(prev.tags, tag) }));
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
+
   const columns = getLayoutColumns({
     t,
     canModify: hasFeature(user, 'layout.modify'),
@@ -396,6 +403,8 @@ export default function Layouts() {
     openEnableStatsModal,
     openScheduleModal: canSchedule ? openScheduleModal : undefined,
     showDescriptionId: filterInputs.showDescriptionId,
+    onTagClick: handleTagClick,
+    selectedTagIds: (filterInputs.tags ?? []).map((tag) => tag.tagId),
   });
 
   const getAllSelectedItems = (): Layout[] => {

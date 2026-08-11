@@ -22,7 +22,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { Search, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { ModalType } from './DaypartConfig';
@@ -45,6 +45,7 @@ import { DataTable } from '@/components/ui/table/DataTable';
 import { useUserContext } from '@/context/UserContext';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
+import { fetchDaypartScheduleCount } from '@/services/daypartApi';
 import type { Daypart } from '@/types/daypart';
 import { countActiveFilters } from '@/utils/filters';
 import { hasFeature } from '@/utils/permissions';
@@ -89,6 +90,8 @@ export default function Daypart() {
   const [activeModal, setActiveModal] = useState<ModalType | null>(null);
 
   const [itemsToDelete, setItemsToDelete] = useState<Daypart[]>([]);
+  const [scheduleCount, setScheduleCount] = useState<number | undefined>(undefined);
+  const scheduleCountRequestIdRef = useRef<number | null>(null);
   const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
   const [selectedDaypartId, setSelectedDaypartId] = useState<number | null>(null);
 
@@ -156,8 +159,18 @@ export default function Daypart() {
     if (!daypart) return;
 
     setItemsToDelete([daypart]);
+    setScheduleCount(undefined);
     setDeleteError(null);
     openModal('delete');
+
+    scheduleCountRequestIdRef.current = id;
+    fetchDaypartScheduleCount(id)
+      .then((count) => {
+        if (scheduleCountRequestIdRef.current === id) setScheduleCount(count);
+      })
+      .catch(() => {
+        if (scheduleCountRequestIdRef.current === id) setScheduleCount(undefined);
+      });
   };
 
   const openAddEditModal = (daypart: Daypart | null) => {
@@ -202,6 +215,8 @@ export default function Daypart() {
     onDelete: () => {
       const allItems = getAllSelectedItems();
       setItemsToDelete(allItems);
+      setScheduleCount(undefined);
+      scheduleCountRequestIdRef.current = null;
       setDeleteError(null);
       openModal('delete');
     },
@@ -335,6 +350,7 @@ export default function Daypart() {
           selectedDaypart,
           selectedDaypartId,
           itemsToDelete,
+          scheduleCount,
           existingNames,
           shareEntityIds,
           setShareEntityIds,

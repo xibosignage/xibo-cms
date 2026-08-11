@@ -185,6 +185,7 @@ export default function ModuleTemplateEdit() {
                             value={formValues[config.field] ?? ''}
                             onChange={(v) => updateField(config.field, v)}
                             language={config.language}
+                            label={tabKey}
                           />
                         </div>
                       ) : null,

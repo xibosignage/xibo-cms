@@ -133,7 +133,7 @@ class Settings extends Base
             if ($elevateLogUntil <= Carbon::now()->format('U')) {
                 $elevateLogUntil = null;
             } else {
-                $elevateLogUntil = Carbon::createFromTimestamp($elevateLogUntil)
+                $elevateLogUntil = DateFormatHelper::createFromTimestamp($elevateLogUntil)
                     ->format(DateFormatHelper::getSystemFormat());
             }
         }
@@ -1349,10 +1349,10 @@ class Settings extends Base
                 );
             }
             if ($setting === 'ELEVATE_LOG_UNTIL') {
-                $changedSettings[$setting] = Carbon::createFromTimestamp($oldValue)
+                $changedSettings[$setting] = DateFormatHelper::createFromTimestamp($oldValue)
                     ->format(DateFormatHelper::getSystemFormat())
                     . ' > '
-                    . Carbon::createFromTimestamp($newValue)
+                    . DateFormatHelper::createFromTimestamp($newValue)
                         ->format(DateFormatHelper::getSystemFormat());
             } else {
                 $changedSettings[$setting] = $oldValue . ' > ' . $newValue;

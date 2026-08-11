@@ -19,9 +19,13 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+export const EXPIRY_PRESET_IDS = ['end_of_today', 'in_7_days', 'in_14_days', 'in_30_days'] as const;
+
+export type ExpiryPresetId = (typeof EXPIRY_PRESET_IDS)[number];
+
 export type ExpiryValue =
   | { type: 'never' }
-  | { type: 'preset'; value: string }
+  | { type: 'preset'; value: ExpiryPresetId }
   | { type: 'datePicked'; date: Date };
 
 function getParts(date: Date, options: Intl.DateTimeFormatOptions) {
@@ -74,21 +78,21 @@ export function expiryToDateTime(expiry: ExpiryValue): string | undefined {
 
   if (expiry.type === 'preset') {
     switch (expiry.value) {
-      case 'End of Today': {
+      case 'end_of_today': {
         date = new Date();
         date.setHours(23, 59, 59, 0);
         break;
       }
 
-      case 'In 7 Days':
+      case 'in_7_days':
         date = daysFromNow(7);
         break;
 
-      case 'In 14 Days':
+      case 'in_14_days':
         date = daysFromNow(14);
         break;
 
-      case 'In 30 Days':
+      case 'in_30_days':
         date = daysFromNow(30);
         break;
 

@@ -98,7 +98,7 @@ class DynamicPlaylistSyncTask implements TaskInterface
 
             $lastMediaUpdate = Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $lastMediaUpdate);
             $lastPlaylistUpdate = Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $lastPlaylistUpdate);
-            $lastTaskRun = Carbon::createFromTimestamp($this->getTask()->lastRunDt);
+            $lastTaskRun = DateFormatHelper::createFromTimestamp($this->getTask()->lastRunDt);
 
             if ($lastMediaUpdate->lessThanOrEqualTo($lastTaskRun)
                 && $lastPlaylistUpdate->lessThanOrEqualTo($lastTaskRun))
