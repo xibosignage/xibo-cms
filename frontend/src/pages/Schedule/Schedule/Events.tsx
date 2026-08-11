@@ -43,7 +43,7 @@ import { EventModals } from './components/EventModals';
 import { useEventActions } from './hooks/useEventActions';
 import { useEventData } from './hooks/useEventData';
 import { useEventFilterOptions } from './hooks/useEventFilterOptions';
-import { isDayExcluded } from './utils/expandRecurringEvents';
+import { expandRecurringEvents } from './utils/expandRecurringEvents';
 
 import Button from '@/components/ui/Button';
 import FilterButton from '@/components/ui/FilterButton';
@@ -192,18 +192,47 @@ export default function Events() {
   const data = queryData?.rows ?? [];
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
 
-  // In Day view, hide rows whose only occurrence on the viewed day has been excluded -
-  // the grid query itself has no concept of exclusions, so this is done client-side using
-  // the scheduleExclusions data already fetched for the Exceptions badge column.
-  const viewedDaySeconds =
+  // In Day view, resolve rows to their actual occurrence on the viewed day (or drop them if
+  // the recurrence doesn't land on that day, or it's been excluded). This mirrors
+  // the Calendar's own fetch-broad-then-resolve-client-side approach below.
+  const dayViewRange =
     dateRangeViewState?.viewMode === 'day' && dateRangeViewState?.currentDate
-      ? DateTime.fromISO(dateRangeViewState.currentDate, { zone: timezone }).toUnixInteger()
+      ? {
+          start: DateTime.fromISO(dateRangeViewState.currentDate, { zone: timezone }).startOf(
+            'day',
+          ),
+          end: DateTime.fromISO(dateRangeViewState.currentDate, { zone: timezone }).endOf('day'),
+        }
       : null;
 
-  const visibleData =
-    viewedDaySeconds !== null
-      ? data.filter((event) => !isDayExcluded(event.scheduleExclusions, viewedDaySeconds, timezone))
-      : data;
+  const { data: dayViewQueryData, isFetching: isDayViewFetching } = useEventData({
+    pagination: { pageIndex: 0, pageSize: 500 },
+    sorting: [],
+    filter: '',
+    advancedFilters: filterInputs,
+    enabled: isHydrated && viewMode === 'table' && dayViewRange !== null,
+  });
+
+  const dayViewOccurrences = dayViewRange
+    ? expandRecurringEvents(
+        dayViewQueryData?.rows ?? [],
+        dayViewRange.start,
+        dayViewRange.end,
+        timezone,
+      )
+    : [];
+
+  const visibleData = dayViewRange
+    ? dayViewOccurrences.slice(
+        pagination.pageIndex * pagination.pageSize,
+        (pagination.pageIndex + 1) * pagination.pageSize,
+      )
+    : data;
+
+  const visibleRowCount = dayViewRange ? dayViewOccurrences.length : queryData?.totalCount || 0;
+  const visiblePageCount = dayViewRange
+    ? Math.max(1, Math.ceil(dayViewOccurrences.length / pagination.pageSize))
+    : pageCount;
 
   const { data: calendarQueryData, isFetching: isCalendarFetching } = useEventData({
     pagination: { pageIndex: 0, pageSize: 500 },
@@ -230,7 +259,8 @@ export default function Events() {
 
     setSelectionCache((prev) => {
       const next = { ...prev };
-      data.forEach((item) => {
+      // In Day view, rendered rows come from `dayViewOccurrences`, not `data`
+      (dayViewRange ? dayViewOccurrences : data).forEach((item) => {
         const id = getRowId(item);
         if (newSelection[id]) {
           next[id] = item;
@@ -240,8 +270,10 @@ export default function Events() {
     });
   };
 
+  // In Day view, a rendered row's eventId may not exist in `data` so that has to be checked too
   const selectedEvent =
     data.find((m) => m.eventId === selectedEventId) ??
+    dayViewOccurrences.find((m) => m.eventId === selectedEventId) ??
     calendarEvents.find((m) => m.eventId === selectedEventId) ??
     null;
   const existingNames = data.map((m) => m.name ?? '');
@@ -266,40 +298,16 @@ export default function Events() {
   });
 
   const handleDelete = (id: number) => {
-    const event = data.find((m) => m.eventId === id);
+    // In Day view, visibleData is already resolved to the specific occurrence on the viewed
+    // day (via expandRecurringEvents), so its fromDt/toDt are the correct delete-occurrence
+    // target. Any other view (week/month/etc.) can't identify a single occurrence, so
+    // whole-series delete only.
+    const isDayView = dateRangeViewState?.viewMode === 'day';
+    const event = (isDayView ? visibleData : data).find((m) => m.eventId === id);
     if (!event) return;
 
-    // In Day view, the currently viewed date is an unambiguous target for "this instance
-    // only" - combine it with the row's own time-of-day (stable across occurrences) and
-    // duration to resolve the specific occurrence, without needing a picker. Any other view
-    // (week/month/etc.) can't identify a single occurrence, so whole-series delete only.
-    const isDayView = dateRangeViewState?.viewMode === 'day';
-    if (isDayView && event.recurringEvent && dateRangeViewState?.currentDate) {
-      const viewedDay = DateTime.fromISO(dateRangeViewState.currentDate, {
-        zone: timezone,
-      }).startOf('day');
-      const rowStart = DateTime.fromSeconds(Number(event.fromDt), { zone: timezone });
-      const occurrenceStart = viewedDay.set({
-        hour: rowStart.hour,
-        minute: rowStart.minute,
-        second: rowStart.second,
-      });
-      const durationSecs = Number(event.toDt) - Number(event.fromDt);
-      const occurrenceEnd = occurrenceStart.plus({ seconds: durationSecs });
-
-      setItemsToDelete([
-        {
-          ...event,
-          fromDt: occurrenceStart.toUnixInteger(),
-          toDt: occurrenceEnd.toUnixInteger(),
-        },
-      ]);
-      setIsOccurrenceDeleteAllowed(true);
-    } else {
-      setItemsToDelete([event]);
-      setIsOccurrenceDeleteAllowed(false);
-    }
-
+    setItemsToDelete([event]);
+    setIsOccurrenceDeleteAllowed(isDayView && !!event.recurringEvent);
     setDeleteError(null);
     openModal('delete');
   };
@@ -513,15 +521,15 @@ export default function Events() {
             <DataTable
               columns={columns}
               data={visibleData}
-              pageCount={pageCount}
-              rowCount={queryData?.totalCount || 0}
+              pageCount={visiblePageCount}
+              rowCount={visibleRowCount}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}
               onSortingChange={setSorting}
               globalFilter=""
               onGlobalFilterChange={() => {}}
-              loading={isFetching}
+              loading={dayViewRange ? isDayViewFetching : isFetching}
               rowSelection={rowSelection}
               onRowSelectionChange={handleRowSelectionChange}
               onRefresh={handleRefresh}
