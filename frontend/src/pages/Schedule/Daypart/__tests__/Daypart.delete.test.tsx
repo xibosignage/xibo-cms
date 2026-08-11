@@ -25,7 +25,7 @@ import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import { mockDaypart, MULTIPLE_DAYPARTS, SINGLE_DAYPART } from './fixtures/daypart';
 import { renderDaypartPage } from './helpers/renderDaypartPage';
-import { mockFetchDaypart } from './mocks/daypartApi';
+import { mockFetchDaypart, mockFetchDaypartScheduleCount } from './mocks/daypartApi';
 
 import { deleteDaypart, fetchDaypart } from '@/services/daypartApi';
 import { testQueryClient } from '@/setupTests';
@@ -67,6 +67,7 @@ describe('Dayparting page - single delete', () => {
     testQueryClient.clear();
     vi.clearAllMocks();
     mockFetchDaypart(SINGLE_DAYPART);
+    mockFetchDaypartScheduleCount();
   });
 
   test('the Delete row action opens the confirmation modal showing the daypart name', async () => {
