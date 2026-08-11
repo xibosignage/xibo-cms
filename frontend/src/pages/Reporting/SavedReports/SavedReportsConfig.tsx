@@ -192,9 +192,9 @@ export const getSavedReportColumns = (props: SavedReportActionsProps): ColumnDef
     {
       id: 'tableActions',
       header: '',
-      size: 120,
-      minSize: 120,
-      maxSize: 120,
+      size: 80,
+      minSize: 80,
+      maxSize: 80,
       enableHiding: false,
       enableSorting: false,
       enableResizing: false,
