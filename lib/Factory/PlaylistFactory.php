@@ -192,7 +192,8 @@ class PlaylistFactory extends BaseFactory
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            defaultSort: ['name ASC']
+            defaultSort: ['name ASC'],
+            uniqueColumn: 'playlistId'
         );
 
         $entries = [];

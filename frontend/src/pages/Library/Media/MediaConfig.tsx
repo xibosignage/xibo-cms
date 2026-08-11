@@ -52,6 +52,7 @@ import {
   StatusCell,
   ActionsCell,
   TagsCell,
+  toDisplayTags,
   getSharingColumn,
 } from '@/components/ui/table/cells';
 import { getCommonFormOptions } from '@/config/commonForms';
@@ -211,11 +212,6 @@ export const getBaseFilterKeys = (
   },
 ];
 
-// TODO: Needs translation
-export const MEDIA_FORM_OPTIONS = {
-  expiryDates: ['Never Expire', 'End of Today', 'In 7 Days', 'In 14 Days', 'In 30 Days'],
-};
-
 export const ACCEPTED_MIME_TYPES = {
   // Audio
   'audio/mpeg': ['.mp3'],
@@ -284,6 +280,8 @@ export interface MediaActionsProps {
   openUsageReportModal?: (id: number) => void;
   scheduleWithView?: boolean;
   canModify?: boolean;
+  onTagClick?: (tag: Tag) => void;
+  selectedTagIds?: (string | number)[];
 }
 
 export const getMediaItemActions = ({
@@ -455,7 +453,7 @@ export const filterMediaByPermission = <T,>(
 };
 
 export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] => {
-  const { t, onPreview, formatDateTime, canTag = false } = props;
+  const { t, onPreview, formatDateTime, canTag = false, onTagClick, selectedTagIds } = props;
   const getActions = getMediaItemActions(props);
   return [
     {
@@ -506,11 +504,13 @@ export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] =>
             size: 150,
             cell: (info) => {
               const tags = info.getValue<Tag[]>() || [];
-              const formattedTags = tags.map((tag) => ({
-                id: tag.tagId,
-                label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
-              }));
-              return <TagsCell tags={formattedTags} />;
+              return (
+                <TagsCell
+                  tags={toDisplayTags(tags)}
+                  onTagClick={onTagClick}
+                  selectedTagIds={selectedTagIds}
+                />
+              );
             },
             meta: {
               getExportValue: (row) => formatTagsForExport(row.tags),

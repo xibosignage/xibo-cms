@@ -166,8 +166,8 @@ class Sessions extends Base
             // Normalise the date
             $session->lastAccessed =
                 Carbon::createFromTimeString($session->lastAccessed)?->format(DateFormatHelper::getSystemFormat());
-            $session->expiresAt =
-                Carbon::createFromTimestamp($session->expiresAt)?->format(DateFormatHelper::getSystemFormat());
+            $session->expiresAt = DateFormatHelper::createFromTimestamp($session->expiresAt)
+                ?->format(DateFormatHelper::getSystemFormat());
             $session->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($session));
             $session->setUnmatchedProperty(
                 'isCurrentSession',

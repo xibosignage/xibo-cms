@@ -214,7 +214,8 @@ class FontFactory extends BaseFactory
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            defaultSort: ['name ASC']
+            defaultSort: ['name ASC'],
+            uniqueColumn: 'id'
         );
 
         $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';

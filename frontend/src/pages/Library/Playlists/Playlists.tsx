@@ -53,8 +53,10 @@ import { useFolderActions } from '@/hooks/useFolderActions';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
 import type { Playlist } from '@/types/playlist';
+import type { Tag } from '@/types/tag';
 import { countActiveFilters } from '@/utils/filters';
 import { canSaveInFolder, hasFeature } from '@/utils/permissions';
+import { toggleTag } from '@/utils/tags';
 
 export default function Playlist() {
   const { t } = useTranslation();
@@ -258,6 +260,11 @@ export default function Playlist() {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
+  const handleTagClick = (tag: Tag) => {
+    setFilterInputs((prev) => ({ ...prev, tags: toggleTag(prev.tags, tag) }));
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
+
   const openCopyModal = (playlistId: number) => {
     setSelectedPlaylistId(playlistId);
     openModal('copy');
@@ -272,6 +279,8 @@ export default function Playlist() {
     t,
     canModify,
     canTag,
+    onTagClick: handleTagClick,
+    selectedTagIds: (filterInputs.tags ?? []).map((tag) => tag.tagId),
     canUserShare: hasFeature(user, 'user.sharing'),
     scheduleWithView: Number(user?.settings?.SCHEDULE_WITH_VIEW_PERMISSION) === 1,
     formatDateTime,

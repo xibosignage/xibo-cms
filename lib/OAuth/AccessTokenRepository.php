@@ -57,8 +57,11 @@ class AccessTokenRepository implements AccessTokenRepositoryInterface
     }
 
     /** @inheritDoc */
-    public function getNewToken(ClientEntityInterface $clientEntity, array $scopes, $userIdentifier = null)
-    {
+    public function getNewToken(
+        ClientEntityInterface $clientEntity,
+        array $scopes,
+        ?string $userIdentifier = null
+    ): AccessTokenEntity {
         $this->logger->debug('Getting new Access Token');
 
         $accessToken = new AccessTokenEntity();
@@ -90,7 +93,7 @@ class AccessTokenRepository implements AccessTokenRepositoryInterface
     }
 
     /** @inheritDoc */
-    public function isAccessTokenRevoked($tokenId)
+    public function isAccessTokenRevoked(string $tokenId): bool
     {
         $cache = $this->pool->getItem('C_' . $tokenId);
         $data = $cache->get();
@@ -128,7 +131,7 @@ class AccessTokenRepository implements AccessTokenRepositoryInterface
     }
 
     /** @inheritDoc */
-    public function persistNewAccessToken(AccessTokenEntityInterface $accessTokenEntity)
+    public function persistNewAccessToken(AccessTokenEntityInterface $accessTokenEntity): void
     {
         $date = clone $accessTokenEntity->getExpiryDateTime();
         // since stash cache sets expiresAt at up to provided date
@@ -166,7 +169,7 @@ class AccessTokenRepository implements AccessTokenRepositoryInterface
     }
 
     /** @inheritDoc */
-    public function revokeAccessToken($tokenId)
+    public function revokeAccessToken(string $tokenId): void
     {
         $this->pool->getItem('C_' . $tokenId)->clear();
     }

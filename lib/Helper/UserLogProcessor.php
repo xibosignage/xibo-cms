@@ -23,6 +23,8 @@
 
 namespace Xibo\Helper;
 
+use Monolog\LogRecord;
+
 /**
  * Class UserLogProcessor
  * @package Xibo\Helper
@@ -42,11 +44,7 @@ class UserLogProcessor
     ) {
     }
 
-    /**
-     * @param array $record
-     * @return array
-     */
-    public function __invoke(array $record): array
+    public function __invoke(LogRecord $record): LogRecord
     {
         $record['extra']['userId'] = $this->userId;
         

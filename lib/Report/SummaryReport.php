@@ -191,7 +191,7 @@ class SummaryReport implements ReportInterface
             'periodEnd' => $json['metadata']['periodEnd'],
             'type' => $json['metadata']['type'] ?? '',
             'subject' => $json['metadata']['subject'] ?? '',
-            'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)
+            'generatedOn' => DateFormatHelper::createFromTimestamp($savedReport->generatedOn)
                 ->format(DateFormatHelper::getSystemFormat()),
             'title' => $savedReport->saveAs,
         ];
@@ -628,7 +628,7 @@ class SummaryReport implements ReportInterface
         $reportFilter
     ) {
 
-        $diffInDays = $toDt->diffInDays($fromDt);
+        $diffInDays = (int) $toDt->diffInDays($fromDt);
         if ($groupByFilter == 'byhour') {
             $hour = 1;
             $input = range(0, 23);
@@ -1037,8 +1037,8 @@ class SummaryReport implements ReportInterface
             $period_end_u = $period['end']->toDateTime()->format('U');
 
             // CMS date
-            $period_start = Carbon::createFromTimestamp($period_start_u);
-            $period_end = Carbon::createFromTimestamp($period_end_u);
+            $period_start = DateFormatHelper::createFromTimestamp($period_start_u);
+            $period_end = DateFormatHelper::createFromTimestamp($period_end_u);
 
             if ($groupByFilter == 'byhour') {
                 $label = $period_start->format('g:i A');

@@ -24,7 +24,7 @@ namespace Xibo\Controller;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Str;
-use Intervention\Image\ImageManagerStatic as Img;
+use Intervention\Image\ImageManager;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Respect\Validation\Validator as v;
@@ -337,7 +337,11 @@ class Library extends Base
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
-            'message' => sprintf(__('For Media %s Enable Stats Collection is set to %s'), $media->name, __($media->enableStat))
+            'message' => sprintf(
+                __('For Media %s Enable Stats Collection is set to %s'),
+                $media->name,
+                __($media->enableStat ?? '')
+            )
         ]);
 
         return $this->render($request, $response);
@@ -1338,7 +1342,7 @@ class Library extends Base
 
             // Output a 1px image if we're not allowed to see the media.
             if (!$this->getUser()->checkViewable($media) && $request->getAttribute('authedViaToken') !== true) {
-                echo Img::make(PROJECT_ROOT . '/web/img/1x1.png')->encode();
+                echo ImageManager::gd()->read(PROJECT_ROOT . '/web/img/1x1.png')->encode();
                 return $this->render($request, $response->withHeader('Content-Type', 'image/png'));
             }
 
@@ -1465,7 +1469,7 @@ class Library extends Base
         // Permissions.
         if (!$this->getUser()->checkViewable($media) && $request->getAttribute('authedViaToken') !== true) {
             // Output a 1px image if we're not allowed to see the media.
-            echo Img::make(PROJECT_ROOT . '/web/img/1x1.png')->encode();
+            echo ImageManager::gd()->read(PROJECT_ROOT . '/web/img/1x1.png')->encode();
             return $this->render($request, $response);
         }
 
@@ -2274,18 +2278,16 @@ class Library extends Base
         }
 
         try {
-            Img::configure(array('driver' => 'gd'));
-
             // Load the image
-            $image = Img::make($imageData);
+            $image = ImageManager::gd()->read($imageData);
             $image->save($libraryLocation . $mediaId . '_' . $media->mediaType . 'cover.png');
         } catch (\Exception $exception) {
             $this->getLog()->error('Exception adding Video cover image. e = ' . $exception->getMessage());
             throw new InvalidArgumentException(__('Invalid image data'));
         }
 
-        $media->width = $image->getWidth();
-        $media->height = $image->getHeight();
+        $media->width = $image->width();
+        $media->height = $image->height();
         $media->orientation = ($media->width >= $media->height) ? 'landscape' : 'portrait';
         $media->save(['saveTags' => false, 'validate' => false]);
 
@@ -2683,7 +2685,7 @@ class Library extends Base
 
         $media->expires = ($media->expires == 0)
             ? 0
-            : Carbon::createFromTimestamp($media->expires, $appTimezone)->format(DateFormatHelper::getSystemFormat());
+            : DateFormatHelper::createFromTimestamp($media->expires)->format(DateFormatHelper::getSystemFormat());
 
         // Description
         $releasedDescription = LibraryDescription::getMediaReleasedDescription($media->released);

@@ -248,7 +248,8 @@ class SavedReportFactory extends BaseFactory
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            defaultSort: ['generatedOn DESC']
+            defaultSort: ['generatedOn DESC'],
+            uniqueColumn: 'savedReportId'
         );
 
         $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';

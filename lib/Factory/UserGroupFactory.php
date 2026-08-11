@@ -401,7 +401,8 @@ class UserGroupFactory extends BaseFactory
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            defaultSort: ['groupId ASC']
+            defaultSort: ['groupId ASC'],
+            uniqueColumn: 'groupId'
         );
 
         $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';

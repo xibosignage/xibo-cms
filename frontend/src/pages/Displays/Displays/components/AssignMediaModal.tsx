@@ -205,7 +205,7 @@ export default function AssignMediaModal({ display, onClose, onSave }: AssignMed
                   setPagination((prev) => ({ ...prev, pageIndex: 0 }));
                 }}
                 options={MEDIA_TYPE_OPTIONS}
-                placeholder="All"
+                placeholder={t('All')}
                 clearable
               />
             </div>

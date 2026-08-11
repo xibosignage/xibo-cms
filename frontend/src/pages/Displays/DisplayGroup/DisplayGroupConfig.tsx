@@ -42,6 +42,7 @@ import {
   CheckMarkCell,
   getSharingColumn,
   TagsCell,
+  toDisplayTags,
   TextCell,
 } from '@/components/ui/table/cells';
 import type { DisplayGroup } from '@/types/displayGroup';
@@ -168,6 +169,8 @@ export interface DisplayGroupActionsProps {
   collectNow: (displayGroup: DisplayGroup) => void;
   triggerWebhook: (displayGroup: DisplayGroup) => void;
   formatDateTime: (value: DateLike) => string;
+  onTagClick?: (tag: Tag) => void;
+  selectedTagIds?: (string | number)[];
 }
 
 export const getDisplayGroupItemActions = ({
@@ -393,7 +396,7 @@ export const getBulkActions = ({
 export const getDisplayGroupColumns = (
   props: DisplayGroupActionsProps,
 ): ColumnDef<DisplayGroup>[] => {
-  const { t, formatDateTime, canTag = false } = props;
+  const { t, formatDateTime, canTag = false, onTagClick, selectedTagIds } = props;
   const getActions = getDisplayGroupItemActions(props);
   return [
     {
@@ -441,10 +444,9 @@ export const getDisplayGroupColumns = (
             size: 160,
             cell: ({ row }) => (
               <TagsCell
-                tags={(row.original.tags ?? []).map((tag) => ({
-                  id: tag.tagId,
-                  label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
-                }))}
+                tags={toDisplayTags(row.original.tags)}
+                onTagClick={onTagClick}
+                selectedTagIds={selectedTagIds}
               />
             ),
             meta: {
