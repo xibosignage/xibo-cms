@@ -127,3 +127,10 @@ export async function deleteDaypart(daypartId: number | string): Promise<void> {
     headers: { 'X-Requested-With': 'XMLHttpRequest' },
   });
 }
+
+export async function fetchDaypartScheduleCount(dayPartId: number): Promise<number> {
+  const response = await http.get(`/daypart/${dayPartId}`, {
+    params: { embed: 'scheduleCount' },
+  });
+  return response.data?.scheduleCount ?? 0;
+}

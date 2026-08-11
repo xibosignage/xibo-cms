@@ -458,7 +458,7 @@ Canvas.prototype.editPropertyForm = function(property) {
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.reload();
+        LoginBox();
       } else {
         toastr.error(errorMessagesTrans.formLoadFailed);
 

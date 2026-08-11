@@ -23,6 +23,7 @@
 namespace Xibo\Report;
 
 use Carbon\Carbon;
+use Xibo\Helper\DateFormatHelper;
 
 /**
  * Trait PeriodTrait
@@ -56,7 +57,7 @@ trait PeriodTrait
                 $periodData[$range]['end'] = $filterRangeEnd;
             }
 
-            $hourofday = Carbon::createFromTimestamp($periodData[$range]['start'])->hour;
+            $hourofday = DateFormatHelper::createFromTimestamp($periodData[$range]['start'])->hour;
 
             // groupbycol =  hour
             $periodData[$range]['groupbycol'] = $hourofday;
@@ -90,9 +91,9 @@ trait PeriodTrait
             }
 
             if ($groupByFilter == 'bydayofweek') {
-                $groupbycol = Carbon::createFromTimestamp($periodData[$range]['start'])->dayOfWeekIso;
+                $groupbycol = DateFormatHelper::createFromTimestamp($periodData[$range]['start'])->dayOfWeekIso;
             } else {
-                $groupbycol =  Carbon::createFromTimestamp($periodData[$range]['start'])->day;
+                $groupbycol =  DateFormatHelper::createFromTimestamp($periodData[$range]['start'])->day;
             }
 
             // groupbycol =  dayofweek

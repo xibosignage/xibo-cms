@@ -530,6 +530,9 @@ export const getEventColumns = (props: EventActionsProps): ColumnDef<Event>[] =>
       header: t('Recurrence Repeats On'),
       size: 180,
       cell: ({ row }) => <TextCell>{formatRecurrenceRepeatsOn(row.original, t)}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatRecurrenceRepeatsOn(row, t),
+      },
     },
     {
       accessorKey: 'recurrenceRange',

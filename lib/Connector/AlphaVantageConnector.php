@@ -367,7 +367,7 @@ class AlphaVantageConnector implements ConnectorInterface
 
                 // Cache this and expire in the cache period
                 $cache->set($data);
-                $cache->expiresAt(Carbon::now()->addSeconds($this->getSetting('cachePeriod', 14400)));
+                $cache->expiresAt(Carbon::now()->addSeconds((int) $this->getSetting('cachePeriod', 14400)));
 
                 $this->getPool()->save($cache);
             } else {
@@ -610,7 +610,7 @@ class AlphaVantageConnector implements ConnectorInterface
 
                 // Cache this and expire in the cache period
                 $cache->set($data);
-                $cache->expiresAt(Carbon::now()->addSeconds($this->getSetting('cachePeriod', 14400)));
+                $cache->expiresAt(Carbon::now()->addSeconds((int) $this->getSetting('cachePeriod', 14400)));
 
                 $this->getPool()->save($cache);
             } else {

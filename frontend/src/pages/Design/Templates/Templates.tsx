@@ -49,9 +49,11 @@ import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
+import type { Tag } from '@/types/tag';
 import type { Template } from '@/types/templates';
 import { countActiveFilters } from '@/utils/filters';
 import { canSaveInFolder, hasFeature } from '@/utils/permissions';
+import { toggleTag } from '@/utils/tags';
 
 export default function Templates() {
   const { t } = useTranslation();
@@ -236,6 +238,11 @@ export default function Templates() {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
+  const handleTagClick = (tag: Tag) => {
+    setFilterInputs((prev) => ({ ...prev, tags: toggleTag(prev.tags, tag) }));
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
+
   const alterTemplate = (layoutId: number) => {
     handleAlterTemplate(layoutId);
   };
@@ -273,6 +280,8 @@ export default function Templates() {
     canExport: hasFeature(user, 'layout.export'),
     canViewFolders: hasFeature(user, 'folder.view'),
     canTag,
+    onTagClick: handleTagClick,
+    selectedTagIds: (filterInputs.tags ?? []).map((tag) => tag.tagId),
     formatDateTime,
     onDelete: handleDelete,
     openAddEditModal,

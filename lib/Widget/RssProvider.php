@@ -57,7 +57,7 @@ class RssProvider implements WidgetProviderInterface
 
         // Image expiry
         $expiresImage = Carbon::now()
-            ->addMinutes($dataProvider->getProperty('updateIntervalImages', 1440))
+            ->addMinutes((int) $dataProvider->getProperty('updateIntervalImages', 1440))
             ->format('U');
 
         try {

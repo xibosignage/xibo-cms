@@ -176,7 +176,8 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            ['name ASC']
+            defaultSort: ['name ASC'],
+            uniqueColumn: 'key'
         );
 
         // Sorting?

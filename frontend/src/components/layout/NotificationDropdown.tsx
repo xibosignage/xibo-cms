@@ -234,7 +234,7 @@ export default function NotificationDropdown() {
       <button
         ref={refs.setReference}
         type="button"
-        className="cursor-pointer flex items-center justify-center relative h-9.5 w-9.5"
+        className="cursor-pointer flex items-center justify-center relative h-9.5 w-9.5 rounded-lg transition hover:bg-blue-100"
         {...getReferenceProps()}
         aria-label={t('Notifications')}
         title={t('Notifications')}

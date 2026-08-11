@@ -30,6 +30,7 @@ interface DeleteDaypartModalProps {
   onDelete: () => void;
   itemCount: number;
   daypartName?: string;
+  scheduleCount?: number;
   error?: string | null;
   isLoading?: boolean;
 }
@@ -41,6 +42,7 @@ export default function DeleteDaypartModal({
   daypartName,
   isLoading,
   itemCount,
+  scheduleCount,
   error,
 }: DeleteDaypartModalProps) {
   const { t } = useTranslation();
@@ -90,6 +92,24 @@ export default function DeleteDaypartModal({
             />
           )}
         </p>
+
+        {itemCount === 1 && scheduleCount !== undefined && scheduleCount > 0 && (
+          <p className="text-center text-gray-500">
+            {scheduleCount === 1 ? (
+              <Trans
+                i18nKey="There is <strong>{{count}}</strong> scheduled event that will also be deleted."
+                values={{ count: scheduleCount }}
+                components={{ strong: <strong /> }}
+              />
+            ) : (
+              <Trans
+                i18nKey="There are <strong>{{count}}</strong> scheduled events that will also be deleted."
+                values={{ count: scheduleCount }}
+                components={{ strong: <strong /> }}
+              />
+            )}
+          </p>
+        )}
 
         {error && (
           <div className="mt-2 text-center">

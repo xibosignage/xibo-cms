@@ -22,7 +22,6 @@
 namespace Xibo\Controller;
 
 use OpenApi\Attributes as OA;
-use Parsedown;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -265,7 +264,7 @@ class Template extends Base
                 // Handle the description
                 $searchResult->description = '';
                 if (!empty($template->description)) {
-                    $searchResult->description = Parsedown::instance()->setSafeMode(true)->line($template->description);
+                    $searchResult->description = $template->description;
                 }
                 $searchResult->orientation = $template->orientation;
                 $searchResult->width = $template->width;
@@ -677,12 +676,6 @@ class Template extends Base
                 $this->urlFor($request, 'layout.download.thumbnail', ['id' => $template->layoutId])
             );
         }
-
-        // Parse down for description
-        $template->setUnmatchedProperty(
-            'descriptionWithMarkup',
-            Parsedown::instance()->setSafeMode(true)->text($template->description),
-        );
 
         $template->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($template));
     }

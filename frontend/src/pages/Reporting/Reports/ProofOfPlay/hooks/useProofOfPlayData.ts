@@ -23,8 +23,8 @@ import { useQuery } from '@tanstack/react-query';
 
 import type { ProofOfPlayFilter } from '../ProofOfPlayConfig';
 
+import { resolveReportDateRange } from '@/pages/Reporting/Reports/shared/utils/resolveReportDateRange';
 import { fetchProofOfPlay } from '@/services/proofOfPlayApi';
-import { formatDateTime } from '@/utils/date';
 
 export const proofOfPlayQueryKeys = {
   all: ['proofOfPlay'] as const,
@@ -41,21 +41,11 @@ export function useProofOfPlayData({ filter, enabled }: UseProofOfPlayParams) {
     queryKey: proofOfPlayQueryKeys.report(filter as unknown as Record<string, unknown>),
 
     queryFn: async ({ signal }) => {
-      let reportFilter: string | undefined;
-      let statsFromDt: string | undefined;
-      let statsToDt: string | undefined;
-
-      if (filter.reportFilter.startsWith('range:')) {
-        const [from, to] = filter.reportFilter.replace('range:', '').split('|');
-        if (from) {
-          statsFromDt = formatDateTime(new Date(from));
-        }
-        if (to) {
-          statsToDt = formatDateTime(new Date(to));
-        }
-      } else if (filter.reportFilter) {
-        reportFilter = filter.reportFilter;
-      }
+      const {
+        reportFilter,
+        fromDt: statsFromDt,
+        toDt: statsToDt,
+      } = resolveReportDateRange(filter.reportFilter);
 
       const response = await fetchProofOfPlay({
         reportFilter,
