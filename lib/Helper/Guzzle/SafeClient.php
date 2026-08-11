@@ -48,10 +48,12 @@ class SafeClient
      *
      * The other SSRF defences still apply: scheme allow-list (http/https only),
      * the always-block list (loopback 127/8, AWS metadata 169.254/16, current
-     * network 0.0.0.0/8, IPv6 loopback ::1, AWS IPv6 metadata fd00:ec2::254),
-     * DNS-rebind pinning via CURLOPT_RESOLVE, redirect cap. Even with
-     * allow_local_network=true an attacker can't redirect a request to the
-     * cloud-metadata endpoint.
+     * network 0.0.0.0/8, IPv6 loopback ::1, AWS IPv6 metadata fd00:ec2::254, and
+     * IPv6 transition prefixes that can smuggle an arbitrary embedded IPv4 address —
+     * deprecated IPv4-compatible ::/96, NAT64 64:ff9b::/96 and 64:ff9b:1::/48,
+     * 6to4 2002::/16, Teredo 2001::/32), DNS-rebind pinning via CURLOPT_RESOLVE,
+     * redirect cap. Even with allow_local_network=true an attacker can't redirect
+     * a request to the cloud-metadata endpoint or through one of these prefixes.
      *
      * Don't use this for arbitrary user/admin-settable URLs — only for
      * fixed-purpose internal connections.
