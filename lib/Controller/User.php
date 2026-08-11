@@ -23,6 +23,7 @@ namespace Xibo\Controller;
 
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
+use RobThree\Auth\Algorithm;
 use RobThree\Auth\TwoFactorAuth;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -56,6 +57,32 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class User extends Base
 {
+    /**
+     * The subset of global CMS settings /user/me exposes to every authenticated user
+     * (regardless of privilege level). Anything not listed here stays out of the
+     * response.
+     */
+    private const EXPOSED_SETTINGS_KEYS = [
+        'defaultTimezone',
+        'LIBRARY_SIZE_LIMIT_KB',
+        'DEFAULT_LAT',
+        'DEFAULT_LONG',
+        'FOLDERS_ALLOW_SAVE_IN_ROOT',
+        'SETTING_LIBRARY_TIDY_ENABLED',
+        'SYSTEM_USER',
+        'DISPLAY_LOCK_NAME_TO_DEVICENAME',
+        'DATASET_HARD_ROW_LIMIT',
+        'DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT',
+        'DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER',
+        'PLAYLIST_STATS_ENABLED_DEFAULT',
+        'SCHEDULE_WITH_VIEW_PERMISSION',
+        'LAYOUT_COPY_MEDIA_CHECKB',
+        'LIBRARY_MEDIA_UPDATEINALL_CHECKB',
+        'LIBRARY_MEDIA_DELETEOLDVER_CHECKB',
+        'DISPLAY_PROFILE_CURRENT_LAYOUT_STATUS_ENABLED',
+        'DISPLAY_PROFILE_SCREENSHOT_INTERVAL_ENABLED',
+    ];
+
     public function __construct(
         private readonly UserFactory $userFactory,
         private readonly UserTypeFactory $userTypeFactory,
@@ -117,21 +144,13 @@ class User extends Base
      */
     public function myDetails(Request $request, Response $response): Response|ResponseInterface
     {
-        $settings = $this->getConfig()->getSettings();
+        $allSettings = $this->getConfig()->getSettings();
+        $settings = array_intersect_key($allSettings, array_flip(self::EXPOSED_SETTINGS_KEYS));
 
         // Date format
-        $settings['DATE_FORMAT_JS'] = DateFormatHelper::convertPhpToMomentFormat($settings['DATE_FORMAT']);
-        $settings['DATE_FORMAT_JALALI_JS'] = DateFormatHelper::convertMomentToJalaliFormat($settings['DATE_FORMAT_JS']);
-        $settings['TIME_FORMAT'] = DateFormatHelper::extractTimeFormat($settings['DATE_FORMAT']);
-        $settings['TIME_FORMAT_JS'] = DateFormatHelper::convertPhpToMomentFormat($settings['TIME_FORMAT']);
-        $settings['DATE_ONLY_FORMAT'] = DateFormatHelper::extractDateOnlyFormat($settings['DATE_FORMAT']);
-        $settings['DATE_ONLY_FORMAT_JS'] = DateFormatHelper::convertPhpToMomentFormat($settings['DATE_ONLY_FORMAT']);
-        $settings['DATE_ONLY_FORMAT_JALALI_JS'] = DateFormatHelper::convertMomentToJalaliFormat(
-            $settings['DATE_ONLY_FORMAT_JS']
-        );
-        $settings['systemDateFormat'] = DateFormatHelper::convertPhpToMomentFormat(DateFormatHelper::getSystemFormat());
-        $settings['systemTimeFormat'] = DateFormatHelper::convertPhpToMomentFormat(
-            DateFormatHelper::extractTimeFormat(DateFormatHelper::getSystemFormat())
+        $settings['DATE_FORMAT_JS'] = DateFormatHelper::convertPhpToMomentFormat($allSettings['DATE_FORMAT']);
+        $settings['TIME_FORMAT_JS'] = DateFormatHelper::convertPhpToMomentFormat(
+            DateFormatHelper::extractTimeFormat($allSettings['DATE_FORMAT'])
         );
 
         $settings['translate'] = [
@@ -140,6 +159,15 @@ class User extends Base
             'jsShortLocale' => Translate::getRequestedJsLocale(['short' => true])
         ];
         $settings['accountId'] = defined('ACCOUNT_ID') ? constant('ACCOUNT_ID') : null;
+
+        // Per-user preferences (stored on the user's own options, not the global setting
+        // table) - defaults mirror what the Preferences form has always assumed client-side.
+        $settings['useLibraryDuration'] = $this->getUser()->getOptionValue('useLibraryDuration', 0);
+        $settings['showThumbnailColumn'] = $this->getUser()->getOptionValue('showThumbnailColumn', 1);
+        $settings['rememberFolderTreeStateGlobally'] = $this->getUser()->getOptionValue(
+            'rememberFolderTreeStateGlobally',
+            1
+        );
 
         // Branding is served from library/brand/ via the /brand Apache alias.
         $brandConfig = $this->getConfig()->getBrandConfig();
@@ -237,10 +265,10 @@ class User extends Base
                 'lastName',
                 'email',
                 'homeFolder',
-                'libraryQuota',
+                'libraryQuotaFormatted',
                 'lastAccessed',
                 'retired',
-                'twoFactorTypeId',
+                'twoFactorDescription',
                 'phone',
                 'ref1',
                 'ref2',
@@ -1142,7 +1170,7 @@ class User extends Base
             $issuer = $appName;
         }
 
-        $tfa = new TwoFactorAuth($issuer, 6, 30, 'sha1', new QuickChartQRProvider($quickChartUrl));
+        $tfa = new TwoFactorAuth($issuer, 6, 30, Algorithm::Sha1, new QuickChartQRProvider($quickChartUrl));
 
         // create two factor secret and store it in user record
         if (!isset($user->twoFactorSecret)) {

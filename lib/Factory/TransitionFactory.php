@@ -150,7 +150,8 @@ class TransitionFactory extends BaseFactory
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            defaultSort: ['transition ASC']
+            defaultSort: ['transition ASC'],
+            uniqueColumn: 'transitionId'
         );
 
         $sql .= !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';

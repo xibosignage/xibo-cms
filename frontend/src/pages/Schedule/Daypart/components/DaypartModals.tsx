@@ -39,6 +39,7 @@ interface DaypartModalsProps {
     selectedDaypart: Daypart | null;
     selectedDaypartId: number | null;
     itemsToDelete: Daypart[];
+    scheduleCount?: number;
     existingNames: string[];
     shareEntityIds: number | number[] | null;
     setShareEntityIds: React.Dispatch<React.SetStateAction<number | number[] | null>>;
@@ -73,6 +74,7 @@ export function DaypartModals({ actions, selection, handlers }: DaypartModalsPro
           daypartName={
             selection.itemsToDelete.length === 1 ? selection.itemsToDelete[0]?.name : undefined
           }
+          scheduleCount={selection.scheduleCount}
           error={actions.deleteError}
           isLoading={actions.isDeleting}
         />

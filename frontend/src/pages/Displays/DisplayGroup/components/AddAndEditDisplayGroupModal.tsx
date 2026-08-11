@@ -31,7 +31,7 @@ import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagI
 import TextInput from '@/components/ui/forms/TextInput';
 import Modal from '@/components/ui/modals/Modal';
 import { DataTable } from '@/components/ui/table/DataTable';
-import { CheckMarkCell, TagsCell, TextCell } from '@/components/ui/table/cells';
+import { CheckMarkCell, TagsCell, TextCell, toDisplayTags } from '@/components/ui/table/cells';
 import { useUserContext } from '@/context/UserContext';
 import { useDebounce } from '@/hooks/useDebounce';
 import { getDisplayGroupSchema } from '@/schema/displayGroup';
@@ -279,14 +279,7 @@ export default function AddAndEditDisplayGroupModal({
       header: t('Tags'),
       size: 140,
       enableSorting: false,
-      cell: ({ row }) => (
-        <TagsCell
-          tags={(row.original.tags ?? []).map((tag) => ({
-            id: tag.tagId,
-            label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
-          }))}
-        />
-      ),
+      cell: ({ row }) => <TagsCell tags={toDisplayTags(row.original.tags)} />,
     },
     {
       accessorKey: 'loggedIn',
@@ -344,8 +337,8 @@ export default function AddAndEditDisplayGroupModal({
               onClick={() => setActiveTab(tab)}
               className={`py-2 px-3 inline-flex items-center gap-2 border-b-2 text-sm font-semibold whitespace-nowrap focus:outline-none transition-all  ${
                 activeTab === tab
-                  ? 'border-blue-600 text-blue-500'
-                  : 'border-gray-200 text-gray-500 hover:text-blue-600'
+                  ? 'border-xibo-blue-600 text-xibo-blue-500'
+                  : 'border-gray-200 text-gray-500 hover:text-xibo-blue-600'
               }`}
             >
               {tab === 'general' ? t('General') : t('Reference')}
@@ -453,7 +446,7 @@ export default function AddAndEditDisplayGroupModal({
                           <input
                             type="checkbox"
                             title={t('Exact')}
-                            className="shrink-0 mt-0.5 border-gray-200 rounded text-blue-600 focus:ring-blue-500"
+                            className="shrink-0 mt-0.5 border-gray-200 rounded text-xibo-blue-600 focus:ring-xibo-blue-500"
                             checked={draft.exactTags}
                             onChange={(e) =>
                               setDraft((prev) => ({ ...prev, exactTags: e.target.checked }))

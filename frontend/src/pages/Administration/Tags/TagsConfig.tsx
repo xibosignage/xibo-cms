@@ -141,6 +141,16 @@ export const getTagItemActions = ({
   };
 };
 
+const formatTagOptions = (raw: string | null | undefined): string => {
+  if (!raw) return '';
+  try {
+    const parsed = JSON.parse(raw) as string[];
+    return Array.isArray(parsed) ? parsed.join(', ') : raw;
+  } catch {
+    return raw;
+  }
+};
+
 export const getTagColumns = (props: TagActionsProps): ColumnDef<Tag>[] => {
   const { t } = props;
   const getActions = getTagItemActions(props);
@@ -164,15 +174,9 @@ export const getTagColumns = (props: TagActionsProps): ColumnDef<Tag>[] => {
     {
       accessorKey: 'options',
       header: t('Values'),
-      cell: (info) => {
-        const raw = info.getValue<string | null>();
-        if (!raw) return <TextCell>{''}</TextCell>;
-        try {
-          const parsed = JSON.parse(raw) as string[];
-          return <TextCell>{Array.isArray(parsed) ? parsed.join(', ') : raw}</TextCell>;
-        } catch {
-          return <TextCell>{raw}</TextCell>;
-        }
+      cell: (info) => <TextCell>{formatTagOptions(info.getValue<string | null>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatTagOptions(row.options),
       },
     },
     {

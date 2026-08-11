@@ -91,7 +91,7 @@ describe('FeaturesModal', () => {
 
     await waitFor(() => {
       expect(fetchUserGroupById).toHaveBeenCalledWith(2);
-      expect(fetchUserGroups).toHaveBeenCalledWith({ start: 0, length: 1000 });
+      expect(fetchUserGroups).toHaveBeenCalledWith({ start: 0, length: 1000, userIdMember: 2 });
     });
   });
 

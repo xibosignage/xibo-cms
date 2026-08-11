@@ -25,10 +25,11 @@ import { Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import type { SspSummaryStats } from '../SspActivityConfig';
 
 import { makePieTooltip, usePieTooltip } from '@/components/ui/charts/pieTooltip';
+import { BRAND_PRIMARY } from '@/styles/brandColors';
 
 const ERRORS_COLOR = '#e7000b';
 const PLAYS_COLOR = '#00a63e';
-const MISSES_COLOR = '#0e70f6';
+const MISSES_COLOR = BRAND_PRIMARY;
 
 const PieTooltipContent = makePieTooltip<{ name: string; value: number; fill: string }>(
   (entry) => ({

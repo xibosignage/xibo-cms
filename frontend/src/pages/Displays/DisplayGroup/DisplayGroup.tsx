@@ -54,8 +54,10 @@ import { useFolderActions } from '@/hooks/useFolderActions';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
 import type { DisplayGroup } from '@/types/displayGroup';
+import type { Tag } from '@/types/tag';
 import { countActiveFilters } from '@/utils/filters';
 import { hasFeature } from '@/utils/permissions';
+import { toggleTag } from '@/utils/tags';
 
 export default function DisplayGroupPage() {
   const { t } = useTranslation();
@@ -171,6 +173,11 @@ export default function DisplayGroupPage() {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
+  const handleTagClick = (tag: Tag) => {
+    setFilterInputs((prev) => ({ ...prev, tags: toggleTag(prev.tags, tag) }));
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
+
   const {
     isDeleting,
     deleteError,
@@ -230,6 +237,8 @@ export default function DisplayGroupPage() {
     t,
     canModify,
     canTag,
+    onTagClick: handleTagClick,
+    selectedTagIds: (filterInputs.tags ?? []).map((tag) => tag.tagId),
     canUserShare: hasFeature(user, 'user.sharing'),
     canLimitedView,
     canCommandView,

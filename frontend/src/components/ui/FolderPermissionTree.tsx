@@ -245,7 +245,7 @@ function PermissionCheckbox({
       checked={checked}
       disabled={disabled}
       onChange={onChange}
-      className="h-5 w-5 shrink-0 border-gray-300 rounded cursor-pointer text-blue-600 focus:ring-blue-500 checked:border-blue-500 disabled:opacity-40 disabled:cursor-not-allowed"
+      className="h-5 w-5 shrink-0 border-gray-300 rounded cursor-pointer text-xibo-blue-600 focus:ring-xibo-blue-500 checked:border-xibo-blue-500 disabled:opacity-40 disabled:cursor-not-allowed"
     />
   );
 }

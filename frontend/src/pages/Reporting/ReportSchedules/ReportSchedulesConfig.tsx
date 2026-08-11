@@ -248,6 +248,9 @@ export const getReportScheduleColumns = (
       cell: (info) => (
         <TextCell>{formatUnixTimestamp(info.getValue<number>(), formatDateTime)}</TextCell>
       ),
+      meta: {
+        getExportValue: (row) => formatUnixTimestamp(row.lastRunDt, formatDateTime),
+      },
     },
     {
       id: 'nextRunDt',
@@ -258,6 +261,9 @@ export const getReportScheduleColumns = (
       cell: (info) => (
         <TextCell>{formatUnixTimestamp(info.getValue<number>(), formatDateTime)}</TextCell>
       ),
+      meta: {
+        getExportValue: (row) => formatUnixTimestamp(row.nextRunDt, formatDateTime),
+      },
     },
     {
       accessorKey: 'previousRunDt',
@@ -266,6 +272,9 @@ export const getReportScheduleColumns = (
       cell: (info) => (
         <TextCell>{formatUnixTimestamp(info.getValue<number>(), formatDateTime)}</TextCell>
       ),
+      meta: {
+        getExportValue: (row) => formatUnixTimestamp(row.previousRunDt, formatDateTime),
+      },
     },
     {
       accessorKey: 'fromDt',
@@ -274,6 +283,9 @@ export const getReportScheduleColumns = (
       cell: (info) => (
         <TextCell>{formatUnixTimestamp(info.getValue<number>(), formatDateTime)}</TextCell>
       ),
+      meta: {
+        getExportValue: (row) => formatUnixTimestamp(row.fromDt, formatDateTime),
+      },
     },
     {
       accessorKey: 'toDt',
@@ -282,6 +294,9 @@ export const getReportScheduleColumns = (
       cell: (info) => (
         <TextCell>{formatUnixTimestamp(info.getValue<number>(), formatDateTime)}</TextCell>
       ),
+      meta: {
+        getExportValue: (row) => formatUnixTimestamp(row.toDt, formatDateTime),
+      },
     },
     {
       accessorKey: 'message',
@@ -296,6 +311,9 @@ export const getReportScheduleColumns = (
       cell: (info) => (
         <TextCell>{formatUnixTimestamp(info.getValue<number>(), formatDateTime)}</TextCell>
       ),
+      meta: {
+        getExportValue: (row) => formatUnixTimestamp(row.createdDt, formatDateTime),
+      },
     },
     {
       accessorKey: 'isActive',
@@ -309,6 +327,9 @@ export const getReportScheduleColumns = (
             type={active ? 'success' : 'warning'}
           />
         );
+      },
+      meta: {
+        getExportValue: (row) => (row.isActive === 1 ? t('Active') : t('Paused')),
       },
     },
     {

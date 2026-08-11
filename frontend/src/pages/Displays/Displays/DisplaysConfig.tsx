@@ -56,6 +56,7 @@ import {
   CheckMarkCell,
   StatusCell,
   TagsCell,
+  toDisplayTags,
   MediaCell,
   getSharingColumn,
 } from '@/components/ui/table/cells';
@@ -64,6 +65,7 @@ import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
 import type { UIStatus } from '@/types/uiStatus';
 import type { DateLike } from '@/utils/date';
+import { formatTagsForExport } from '@/utils/tags';
 
 export interface DisplayFilterInput {
   displayId?: number | null;
@@ -441,6 +443,8 @@ export interface DisplayActionsProps {
   onSchedule?: (display: Display) => void;
   onPreviewScreenshot?: (display: Display) => void;
   formatDateTime: (value: DateLike) => string;
+  onTagClick?: (tag: Tag) => void;
+  selectedTagIds?: (string | number)[];
 }
 
 // Client types for which a commercial licence check is available (matches release44).
@@ -688,7 +692,7 @@ export const getDisplayItemActions = ({
 };
 
 export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display>[] => {
-  const { t, formatDateTime, canTag = false } = props;
+  const { t, formatDateTime, canTag = false, onTagClick, selectedTagIds } = props;
   const getActions = getDisplayItemActions(props);
 
   return [
@@ -718,12 +722,18 @@ export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display
           />
         );
       },
+      meta: {
+        getExportValue: (row) => getInventoryStatusLabel(t, row.mediaInventoryStatus),
+      },
     },
     {
       accessorKey: 'clientType',
       header: t('Player Type'),
       size: 120,
       cell: (info) => <TextCell>{getClientTypeLabel(t, info.getValue<string | null>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => getClientTypeLabel(t, row.clientType),
+      },
     },
     {
       accessorKey: 'clientAddress',
@@ -816,12 +826,14 @@ export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display
               const tags = info.getValue<Tag[]>() ?? [];
               return (
                 <TagsCell
-                  tags={tags.map((tag) => ({
-                    id: tag.tagId,
-                    label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
-                  }))}
+                  tags={toDisplayTags(tags)}
+                  onTagClick={onTagClick}
+                  selectedTagIds={selectedTagIds}
                 />
               );
+            },
+            meta: {
+              getExportValue: (row) => formatTagsForExport(row.tags),
             },
           },
         ] as ColumnDef<Display>[])
@@ -852,6 +864,10 @@ export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display
         const value = info.getValue<number | null>();
         return <TextCell>{value ? formatDateTime(new Date(Number(value) * 1000)) : ''}</TextCell>;
       },
+      meta: {
+        getExportValue: (row) =>
+          row.lastAccessed ? formatDateTime(new Date(Number(row.lastAccessed) * 1000)) : '',
+      },
     },
     {
       accessorKey: 'displayProfile',
@@ -873,6 +889,16 @@ export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display
             ? `${typeAndVersion}-${clientCode}`
             : typeAndVersion;
         return <TextCell>{value}</TextCell>;
+      },
+      meta: {
+        getExportValue: (row) => {
+          const typeAndVersion = [getClientTypeLabel(t, row.clientType), row.clientVersion]
+            .filter(Boolean)
+            .join(' ');
+          return row.clientCode != null && typeAndVersion !== ''
+            ? `${typeAndVersion}-${row.clientCode}`
+            : typeAndVersion;
+        },
       },
     },
     {
@@ -922,6 +948,9 @@ export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display
       header: t('Thumbnail'),
       size: 120,
       enableSorting: false,
+      meta: {
+        excludeFromExport: true,
+      },
       cell: ({ row }) => (
         <MediaCell
           thumb={row.original.thumbnail || undefined}
@@ -951,6 +980,9 @@ export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display
       header: t('Last Command'),
       size: 130,
       cell: (info) => <TextCell>{getLastCommandLabel(t, info.getValue<number>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => getLastCommandLabel(t, row.lastCommandSuccess),
+      },
     },
     {
       id: 'xmrRegistered',
@@ -971,6 +1003,9 @@ export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display
             type={getCommercialLicenceStatus(value)}
           />
         );
+      },
+      meta: {
+        getExportValue: (row) => getCommercialLicenceLabel(t, row.commercialLicence),
       },
     },
     {
@@ -1052,12 +1087,18 @@ export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display
       header: t('Created Date'),
       size: 170,
       cell: (info) => <TextCell>{formatDateTime(info.getValue<string | null>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatDateTime(row.createdDt),
+      },
     },
     {
       accessorKey: 'modifiedDt',
       header: t('Modified Date'),
       size: 170,
       cell: (info) => <TextCell>{formatDateTime(info.getValue<string | null>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatDateTime(row.modifiedDt),
+      },
     },
     {
       accessorKey: 'countFaults',

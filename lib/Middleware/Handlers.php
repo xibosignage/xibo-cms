@@ -168,7 +168,7 @@ class Handlers
                 'aboutUrl' => $configService->rootUri() . 'about',
                 'loginUrl' => $configService->rootUri() . 'login',
                 'version' => Environment::$WEBSITE_VERSION_NAME,
-                'brandLogoFile' => $configService->getBrandAssetFile('logo'),
+                'brandLogoFile' => $configService->getBrandLogoDarkFile(),
             ];
 
             // Handle 404's

@@ -61,8 +61,10 @@ import { useTableState } from '@/hooks/useTableState';
 import { useMediaFilterOptions } from '@/pages/Library/Media/hooks/useMediaFilterOptions';
 import { downloadMedia, downloadMediaAsZip } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
+import type { Tag } from '@/types/tag';
 import { countActiveFilters } from '@/utils/filters';
 import { canSaveInFolder, hasFeature } from '@/utils/permissions';
+import { toggleTag } from '@/utils/tags';
 
 export default function Media() {
   const { t } = useTranslation();
@@ -323,6 +325,11 @@ export default function Media() {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
+  const handleTagClick = (tag: Tag) => {
+    setFilterInputs((prev) => ({ ...prev, tags: toggleTag(prev.tags, tag) }));
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
+
   const openCopyModal = (mediaId: number) => {
     setSelectedMediaId(mediaId);
     openModal('copy');
@@ -343,6 +350,8 @@ export default function Media() {
     canTag,
     canUserShare: hasFeature(user, 'user.sharing'),
     formatDateTime,
+    onTagClick: handleTagClick,
+    selectedTagIds: (filterInputs.tags ?? []).map((tag) => tag.tagId),
     onPreview: handlePreviewClick,
     onDelete: handleDelete,
     onDownload: handleDownload,
@@ -664,7 +673,7 @@ export default function Media() {
           </div>
         )}
 
-        <div className="min-h-0 flex flex-col">
+        <div className="flex-1 min-h-0 flex flex-col">
           {!isHydrated ? (
             <div className="flex-1 flex items-center justify-center bg-gray-50 animate-pulse rounded-lg border border-gray-200">
               <span className="text-gray-400 font-medium">

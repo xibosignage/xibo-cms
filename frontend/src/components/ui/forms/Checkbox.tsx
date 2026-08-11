@@ -20,6 +20,7 @@
  */
 
 import { useEffect, useRef, type ChangeEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
 interface CheckboxProps {
@@ -47,6 +48,7 @@ export default function Checkbox({
   onChange,
   title,
 }: CheckboxProps) {
+  const { t } = useTranslation();
   const checkboxRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -65,8 +67,9 @@ export default function Checkbox({
         disabled={disabled}
         onChange={onChange}
         aria-label={title}
+        title={indeterminate && !title ? t('Indeterminate State') : title}
         className={twMerge(
-          'shrink-0 mt-0.5 border-gray-200 rounded-sm cursor-pointer text-blue-600 focus:ring-blue-500 checked:border-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:border-neutral-700 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800',
+          'shrink-0 mt-0.5 border-gray-200 rounded-sm cursor-pointer text-xibo-blue-600 focus:ring-xibo-blue-500 checked:border-xibo-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:border-neutral-700 dark:checked:bg-xibo-blue-500 dark:checked:border-xibo-blue-500 dark:focus:ring-offset-gray-800',
           classNameInput,
         )}
       />

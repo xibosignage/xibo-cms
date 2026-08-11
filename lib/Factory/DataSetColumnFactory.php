@@ -158,7 +158,8 @@ class DataSetColumnFactory extends BaseFactory
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            defaultSort: ['columnOrder ASC']
+            defaultSort: ['columnOrder ASC'],
+            uniqueColumn: 'dataSetColumnId'
         );
 
         $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';

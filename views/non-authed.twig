@@ -61,6 +61,17 @@
             .login-logo {
                 width: 200px;
             }
+            .btn-brand {
+                background-color: var(--brand-primary, #0e70f6);
+                border-color: var(--brand-primary, #0e70f6);
+                color: #fff;
+            }
+            .btn-brand:hover,
+            .btn-brand:focus {
+                background-color: color-mix(in srgb, var(--brand-primary, #0e70f6) 88%, #000);
+                border-color: color-mix(in srgb, var(--brand-primary, #0e70f6) 88%, #000);
+                color: #fff;
+            }
 
         </style>
         {% block style %}{% endblock %}

@@ -1261,8 +1261,8 @@ class Schedule implements \JsonSerializable
         }
 
         // Load the dates into a date object for parsing
-        $eventStart = Carbon::createFromTimestamp($this->fromDt);
-        $eventEnd = ($this->toDt == null) ? $eventStart->copy() :  Carbon::createFromTimestamp($this->toDt);
+        $eventStart = DateFormatHelper::createFromTimestamp($this->fromDt);
+        $eventEnd = ($this->toDt == null) ? $eventStart->copy() :  DateFormatHelper::createFromTimestamp($this->toDt);
 
         // Does the original event go over the month boundary?
         if ($eventStart->month !== $eventEnd->month) {
@@ -1359,8 +1359,8 @@ class Schedule implements \JsonSerializable
 
         $this->getLog()->debug(
             'Request for schedule events on eventId ' . $this->eventId
-            . ' from: ' . Carbon::createFromTimestamp($generateFromDt->format(DateFormatHelper::getSystemFormat()))
-            . ' to: ' . Carbon::createFromTimestamp($generateToDt->format(DateFormatHelper::getSystemFormat()))
+            . ' from: ' . $generateFromDt->format(DateFormatHelper::getSystemFormat())
+            . ' to: ' . $generateToDt->format(DateFormatHelper::getSystemFormat())
             . ' [eventId:' . $this->eventId . ']'
         );
 
@@ -1403,8 +1403,8 @@ class Schedule implements \JsonSerializable
         // Handle recurrence
         $originalStart = $start->copy();
         $lastWatermark = ($this->lastRecurrenceWatermark != 0)
-            ? Carbon::createFromTimestamp($this->lastRecurrenceWatermark)
-            : Carbon::createFromTimestamp(self::$DATE_MIN);
+            ? DateFormatHelper::createFromTimestamp($this->lastRecurrenceWatermark)
+            : DateFormatHelper::createFromTimestamp(self::$DATE_MIN);
 
         $this->getLog()->debug(
             'Recurrence calculation required - last water mark is set to: ' . $lastWatermark->toRssString()
@@ -1421,7 +1421,7 @@ class Schedule implements \JsonSerializable
             );
 
             // Need to set the toDt based on the original event duration and the watermark start date
-            $eventDuration = $start->diffInSeconds($end, true);
+            $eventDuration = (int) $start->diffInSeconds($end, true);
 
             /** @var Carbon $start */
             $start = $lastWatermark->copy();
@@ -1442,7 +1442,7 @@ class Schedule implements \JsonSerializable
         // range should be the smallest of the recurrence range and the generate window todt
         // the start/end date should be the the first recurrence in the current window
         if ($this->recurrenceRange != 0) {
-            $range = Carbon::createFromTimestamp($this->recurrenceRange);
+            $range = DateFormatHelper::createFromTimestamp($this->recurrenceRange);
 
             // Override the range to be within the period we are looking
             $range = ($range < $generateToDt) ? $range : $generateToDt->copy();
@@ -1566,7 +1566,7 @@ class Schedule implements \JsonSerializable
 
                 case 'Month':
                     // We use the difference to set the end date
-                    $difference = $end->diffInSeconds($start);
+                    $difference = (int) $end->diffInSeconds($start);
 
                     // Are we repeating on the day of the month, or the day of the week
                     if ($this->recurrenceMonthlyRepeatsOn == 1) {
@@ -1937,7 +1937,7 @@ class Schedule implements \JsonSerializable
         $toDt = $now->copy();
 
         // For a future event we need to forward now to event fromDt
-        $fromDt = Carbon::createFromTimestamp($this->fromDt);
+        $fromDt = DateFormatHelper::createFromTimestamp($this->fromDt);
         if ($fromDt > $toDt) {
             $toDt = $fromDt;
         }
@@ -2068,7 +2068,7 @@ class Schedule implements \JsonSerializable
 
             if (in_array($key, $this->datesToFormat)) {
                 $objectAsJson[$key] = !empty($value)
-                    ? Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat())
+                    ? DateFormatHelper::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat())
                     : $value;
             }
 
@@ -2100,11 +2100,11 @@ class Schedule implements \JsonSerializable
                 if (in_array($key, $this->datesToFormat)) {
                     $original = empty($this->getOriginalValue($key))
                         ? $this->getOriginalValue($key)
-                        : Carbon::createFromTimestamp($this->getOriginalValue($key))
+                        : DateFormatHelper::createFromTimestamp($this->getOriginalValue($key))
                             ->format(DateFormatHelper::getSystemFormat());
                     $new = empty($value)
                         ? $value
-                        : Carbon::createFromTimestamp($value)
+                        : DateFormatHelper::createFromTimestamp($value)
                             ->format(DateFormatHelper::getSystemFormat());
                     $changedProperties[$key] = $original . ' > ' . $new;
                 } else {

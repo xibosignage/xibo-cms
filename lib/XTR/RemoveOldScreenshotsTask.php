@@ -25,6 +25,7 @@ namespace Xibo\XTR;
 
 use Carbon\Carbon;
 use Xibo\Factory\MediaFactory;
+use Xibo\Helper\DateFormatHelper;
 
 class RemoveOldScreenshotsTask implements TaskInterface
 {
@@ -54,7 +55,7 @@ class RemoveOldScreenshotsTask implements TaskInterface
             foreach (array_diff(scandir($screenshotLocation), ['..', '.']) as $file) {
                 $fileLocation = $screenshotLocation . $file;
 
-                $lastModified = Carbon::createFromTimestamp(filemtime($fileLocation));
+                $lastModified = DateFormatHelper::createFromTimestamp(filemtime($fileLocation));
                 $now = Carbon::now();
                 $diff = $now->diffInDays($lastModified);
 

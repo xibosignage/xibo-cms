@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -103,7 +103,9 @@ class Session implements \SessionHandlerInterface
     public function open($savePath, $sessionName): bool
     {
         //$this->log->debug('Session open');
-        $this->maxLifetime = ini_get('session.gc_maxlifetime');
+        // ini_get() always returns a string - Carbon 3's addSeconds()/subSeconds() strictly
+        // require int|float, unlike Carbon 2 which coerced this automatically.
+        $this->maxLifetime = (int) ini_get('session.gc_maxlifetime');
         return true;
     }
 
@@ -462,7 +464,8 @@ class Session implements \SessionHandlerInterface
             'session_id' => $key,
             'session_data' => $data,
             'session_expiration' => $expiry,
-            'lastAccessed' => Carbon::createFromTimestamp($lastAccessed)->format(DateFormatHelper::getSystemFormat()),
+            'lastAccessed' => DateFormatHelper::createFromTimestamp($lastAccessed)
+                ->format(DateFormatHelper::getSystemFormat()),
             'userId' => $this->userId,
             'expired' => ($this->expired) ? 1 : 0,
             'useragent' => substr(htmlspecialchars($_SERVER['HTTP_USER_AGENT']), 0, 253),
@@ -518,7 +521,8 @@ class Session implements \SessionHandlerInterface
         $params = [
             'session_data' => $data,
             'session_expiration' => $expiry,
-            'lastAccessed' => Carbon::createFromTimestamp($lastAccessed)->format(DateFormatHelper::getSystemFormat()),
+            'lastAccessed' => DateFormatHelper::createFromTimestamp($lastAccessed)
+                ->format(DateFormatHelper::getSystemFormat()),
             'userId' => $this->userId,
             'expired' => ($this->expired) ? 1 : 0,
             'session_id' => $key

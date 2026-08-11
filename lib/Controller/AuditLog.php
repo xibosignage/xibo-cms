@@ -121,7 +121,7 @@ class AuditLog extends Base
         }
 
         $fromTimeStamp = $filterFromDt->setTime(0, 0, 0)->format('U');
-        $toTimeStamp = $filterToDt->setTime(0, 0, 0)->format('U');
+        $toTimeStamp = $filterToDt->setTime(23, 59, 59)->format('U');
 
         $rows = $this->auditLogFactory->query(
             ['logId'],
@@ -138,7 +138,7 @@ class AuditLog extends Base
                 $out,
                 [
                     $row->logId,
-                    Carbon::createFromTimestamp($row->logDate)->format(DateFormatHelper::getSystemFormat()),
+                    DateFormatHelper::createFromTimestamp($row->logDate)->format(DateFormatHelper::getSystemFormat()),
                     $row->userName,
                     $row->entity,
                     $row->entityId,

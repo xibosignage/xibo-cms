@@ -339,7 +339,8 @@ class ScheduleFactory extends BaseFactory
             $sortOrder,
             $allowedColumns,
             $customColumns,
-            ['eventId ASC']
+            ['eventId ASC'],
+            'eventId'
         );
 
         $select = '

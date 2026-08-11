@@ -220,6 +220,18 @@ export function PictureOptionsInput({
     label: t(def.name),
   }));
 
+  // def.labels values are computed via array index, invisible to the extractor — seed them here.
+  const sliderWordLabels: Record<string, string> = {
+    off: t('off'),
+    low: t('low'),
+    medium: t('medium'),
+    high: t('high'),
+    auto: t('auto'),
+    normal: t('normal'),
+    extended: t('extended'),
+    high2: t('high2'),
+  };
+
   const getSliderLabels = (property: string) => {
     if (property === 'tint') {
       return { left: t('Red'), right: t('Green') };
@@ -232,10 +244,9 @@ export function PictureOptionsInput({
       return { left: '0', right: '0' };
     }
     if (def.labels) {
-      return {
-        left: t(def.labels[def.min] ?? String(def.min)),
-        right: t(def.labels[def.max] ?? String(def.max)),
-      };
+      const left = def.labels[def.min] ?? String(def.min);
+      const right = def.labels[def.max] ?? String(def.max);
+      return { left: sliderWordLabels[left] ?? left, right: sliderWordLabels[right] ?? right };
     }
     return { left: String(def.min), right: String(def.max) };
   };
@@ -246,7 +257,8 @@ export function PictureOptionsInput({
       return String(value);
     }
     if (def.labels) {
-      return t(def.labels[value] ?? String(value));
+      const label = def.labels[value] ?? String(value);
+      return sliderWordLabels[label] ?? label;
     }
     return String(value);
   };
