@@ -19,15 +19,25 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { ArrowLeft, SearchX } from 'lucide-react';
+import { isAxiosError } from 'axios';
+import { ArrowLeft, RotateCw, AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { isRouteErrorResponse, useNavigate, useRouteError } from 'react-router-dom';
 
 import Button from '@/components/ui/Button';
 
-export default function NotFound() {
+export default function ErrorPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const error = useRouteError();
+
+  const message = isRouteErrorResponse(error)
+    ? error.statusText || error.data?.message
+    : isAxiosError(error)
+      ? error.response?.data?.message || error.message
+      : error instanceof Error
+        ? error.message
+        : undefined;
 
   const handleBack = () => {
     if (window.history.length > 1) navigate(-1);
@@ -37,17 +47,20 @@ export default function NotFound() {
   return (
     <section className="flex min-h-screen flex-col items-center justify-center gap-3 text-center">
       <div className="inline-flex justify-center items-center size-15.5 rounded-full bg-xibo-blue-100 text-xibo-blue-800 border-7 border-xibo-blue-50">
-        <SearchX className="shrink-0 size-6" />
+        <AlertTriangle className="shrink-0 size-6" />
       </div>
 
       <div>
-        <h1 className="text-4xl font-bold text-gray-800">{t('Page not found')}</h1>
-        <p className="mt-3 text-gray-500">
-          {t('Sorry, the page you are looking for could not be found.')}
-        </p>
+        <h1 className="text-4xl font-bold text-gray-800">{t('Unexpected Error')}</h1>
+        <p className="mt-3 text-gray-500">{t('Sorry, we are working on fixing the problem.')}</p>
+        <p className="text-gray-500">{t('Be back soon.')}</p>
+        {message && <p className="mt-2 font-mono text-sm text-gray-400">{message}</p>}
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-3">
+        <Button variant="secondary" leftIcon={RotateCw} onClick={() => window.location.reload()}>
+          {t('Reload page')}
+        </Button>
         <Button variant="secondary" leftIcon={ArrowLeft} onClick={handleBack}>
           {t('Go back')}
         </Button>
