@@ -345,12 +345,15 @@ class Application implements \JsonSerializable, ClientEntityInterface
     }
 
     /** @inheritDoc */
-    public function getRedirectUri()
+    public function getRedirectUri(): string|array
     {
         $count = count($this->redirectUris);
 
         if ($count <= 0) {
-            return null;
+            // league/oauth2-server treats an empty string as the "no redirect URI configured"
+            // sentinel (see AuthCodeGrant::validateAuthorizationRequest()) - the interface
+            // return type is non-nullable, so we can't use null here.
+            return '';
         } else if (count($this->redirectUris) == 1) {
             return $this->redirectUris[0]->redirectUri;
         } else {

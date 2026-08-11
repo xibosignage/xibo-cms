@@ -24,6 +24,7 @@ namespace Xibo\Helper;
 
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Logger;
+use Monolog\LogRecord;
 use Xibo\Storage\PdoStorageService;
 
 /**
@@ -38,9 +39,6 @@ class DatabaseLogHandler extends AbstractProcessingHandler
     /** @var \PDOStatement|null */
     private static $statement;
 
-    /** @var int Log Level */
-    protected $level = Logger::ERROR;
-
     /** @var int Track the number of failures since a success */
     private $failureCount = 0;
 
@@ -53,31 +51,10 @@ class DatabaseLogHandler extends AbstractProcessingHandler
     }
 
     /**
-     * Gets minimum logging level at which this handler will be triggered.
-     *
-     * @return int
-     */
-    public function getLevel(): int
-    {
-        return $this->level;
-    }
-
-    /**
-     * @param int|string $level
-     * @return $this|\Monolog\Handler\AbstractHandler
-     */
-    public function setLevel($level): \Monolog\Handler\AbstractHandler
-    {
-        $this->level = Logger::toMonologLevel($level);
-
-        return $this;
-    }
-
-    /**
      * @inheritDoc
      * @throws \Exception
      */
-    protected function write(array $record): void
+    protected function write(LogRecord $record): void
     {
         if (self::$statement == null) {
             self::$pdo = PdoStorageService::newConnection('log');

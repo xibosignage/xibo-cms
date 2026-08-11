@@ -29,6 +29,7 @@ use Xibo\Event\MenuBoardModifiedDtRequest;
 use Xibo\Event\MenuBoardProductRequest;
 use Xibo\Factory\MenuBoardCategoryFactory;
 use Xibo\Factory\MenuBoardFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -162,6 +163,6 @@ class MenuBoardProviderListener
     public function onModifiedDtRequest(MenuBoardModifiedDtRequest $event): void
     {
         $menu = $this->menuBoardFactory->getById($event->getDataSetId());
-        $event->setModifiedDt(Carbon::createFromTimestamp($menu->modifiedDt));
+        $event->setModifiedDt(DateFormatHelper::createFromTimestamp($menu->modifiedDt));
     }
 }

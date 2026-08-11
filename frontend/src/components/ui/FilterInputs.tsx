@@ -64,6 +64,7 @@ export interface FilterConfigItem<T> {
   regexKey?: keyof T & string;
   showExactTags?: boolean;
   exactTagsKey?: keyof T & string;
+  showTimePicker?: boolean;
 }
 
 type FilterValue = string | number | boolean | null | Tag[];
@@ -341,6 +342,7 @@ export default function FilterInputs<T>({
                   prefix={prefix}
                   suffix={suffix}
                   allowValues={false}
+                  compact
                 />
               );
             }
@@ -355,6 +357,7 @@ export default function FilterInputs<T>({
                   onChange={(name, val) => onChange(name as keyof T & string, val)}
                   isJalali={filter.isJalali}
                   className={filter.className}
+                  showTimePicker={filter.showTimePicker}
                 />
               );
             }

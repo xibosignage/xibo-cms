@@ -181,7 +181,7 @@ export const getCriteriaTypeOptions = (
     return [custom];
   }
 
-  return [custom, ...criteria.types.map((type) => ({ value: type.id, label: t(type.name) }))];
+  return [custom, ...criteria.types.map((type) => ({ value: type.id, label: type.name }))];
 };
 
 const getNumberConditions = (t: TFunction): SelectOption[] => [
@@ -356,10 +356,10 @@ export function getCriteriaTypeMetrics(
     result[type.id] = {
       metrics: type.metrics.map((metric) => ({
         id: metric.id,
-        label: t(metric.name),
-        conditions: metric.conditions.map((c) => ({ value: c.id, label: t(c.name) })),
+        label: metric.name,
+        conditions: metric.conditions.map((c) => ({ value: c.id, label: c.name })),
         inputType: metric.values?.inputType ?? 'text',
-        values: metric.values?.values.map((v) => ({ value: v.id, label: t(v.title) })),
+        values: metric.values?.values.map((v) => ({ value: v.id, label: v.title })),
       })),
     };
   }

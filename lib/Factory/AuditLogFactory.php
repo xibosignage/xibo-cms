@@ -188,7 +188,8 @@ class AuditLogFactory extends BaseFactory
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            defaultSort: ['logId DESC']
+            defaultSort: ['logId DESC'],
+            uniqueColumn: 'logId'
         );
 
         $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';

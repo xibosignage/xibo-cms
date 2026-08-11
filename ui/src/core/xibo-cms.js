@@ -2137,6 +2137,24 @@ window.XiboRedirect = function(url) {
  * @param {String} message
  */
 window.LoginBox = function(message) {
+  if (window.top !== window.self) {
+    // Embedded (e.g. Layout/Playlist Editor inside the React shell's EditorHost
+    // iframe). A same-frame reload would re-request this legacy page as a
+    // top-level nav *inside* the iframe; for SAML that renders the IdP's login
+    // page inside an iframe it refuses to load in.
+    // Escape to the real top-level window instead, carrying priorRoute
+    // so the SPA's existing session-expiry flow returns the user here
+    // after re-auth (same URL shape as SessionExpiredModal/requireAuthLoader).
+    const publicPathMeta = document.querySelector('meta[name="public-path"]');
+    const publicPath = (publicPathMeta && publicPathMeta.content) || '/';
+    const priorRoute =
+      window.top.location.pathname + window.top.location.search;
+
+    window.top.location.href =
+      publicPath + 'login?priorRoute=' + encodeURIComponent(priorRoute);
+    return;
+  }
+
   // Reload the page (appending the message)
   window.location.reload();
 };

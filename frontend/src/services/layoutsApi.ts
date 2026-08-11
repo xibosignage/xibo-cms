@@ -371,10 +371,30 @@ export interface LayoutCode {
   layout: string;
 }
 
-export async function fetchLayoutCodes(code?: string): Promise<LayoutCode[]> {
+export interface FetchLayoutCodesRequest {
+  start: number;
+  length: number;
+  code?: string;
+}
+
+export interface FetchLayoutCodesResponse {
+  rows: LayoutCode[];
+  totalCount: number;
+}
+
+export async function fetchLayoutCodes(
+  options: FetchLayoutCodesRequest = { start: 0, length: 10 },
+): Promise<FetchLayoutCodesResponse> {
   const response = await http.get('/layout/codes', {
-    params: code ? { code } : undefined,
+    params: options,
   });
 
-  return response.data;
+  const rows = response.data;
+  const totalCountHeader = response.headers['x-total-count'];
+  const totalCount = totalCountHeader ? parseInt(totalCountHeader, 10) : 0;
+
+  return {
+    rows,
+    totalCount,
+  };
 }

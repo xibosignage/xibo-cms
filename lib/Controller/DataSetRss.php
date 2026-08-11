@@ -588,7 +588,7 @@ class DataSetRss extends Base
             // What is the edit date of this data set
             $dataSetEditDate = ($dataSet->lastDataEdit == 0)
                 ? Carbon::now()->subMonths(2)
-                : Carbon::createFromTimestamp($dataSet->lastDataEdit);
+                : DateFormatHelper::createFromTimestamp($dataSet->lastDataEdit);
 
             // Do we have this feed in the cache?
             $cache = $this->pool->getItem('/dataset/rss/' . $feed->id);
@@ -800,7 +800,7 @@ class DataSetRss extends Base
                             // Dataset date columns are stored as system-format strings (Y-m-d H:i:s);
                             // treat purely numeric values as Unix timestamps for backwards-compat.
                             $date = is_numeric($value)
-                                ? Carbon::createFromTimestamp($value)
+                                ? DateFormatHelper::createFromTimestamp($value)
                                 : Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $value);
                         } catch (\Exception) {
                             $date = $dataSetEditDate;

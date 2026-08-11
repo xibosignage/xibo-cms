@@ -23,6 +23,7 @@ namespace Xibo\Controller;
 
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
+use RobThree\Auth\Algorithm;
 use RobThree\Auth\TwoFactorAuth;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -264,10 +265,10 @@ class User extends Base
                 'lastName',
                 'email',
                 'homeFolder',
-                'libraryQuota',
+                'libraryQuotaFormatted',
                 'lastAccessed',
                 'retired',
-                'twoFactorTypeId',
+                'twoFactorDescription',
                 'phone',
                 'ref1',
                 'ref2',
@@ -1169,7 +1170,7 @@ class User extends Base
             $issuer = $appName;
         }
 
-        $tfa = new TwoFactorAuth($issuer, 6, 30, 'sha1', new QuickChartQRProvider($quickChartUrl));
+        $tfa = new TwoFactorAuth($issuer, 6, 30, Algorithm::Sha1, new QuickChartQRProvider($quickChartUrl));
 
         // create two factor secret and store it in user record
         if (!isset($user->twoFactorSecret)) {

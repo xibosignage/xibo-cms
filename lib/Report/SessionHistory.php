@@ -126,7 +126,7 @@ class SessionHistory implements ReportInterface
         $metadata = [
             'periodStart' => $json['metadata']['periodStart'],
             'periodEnd' => $json['metadata']['periodEnd'],
-            'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)
+            'generatedOn' => DateFormatHelper::createFromTimestamp($savedReport->generatedOn)
                 ->format(DateFormatHelper::getSystemFormat()),
             'title' => $savedReport->saveAs,
             'type' => $json['metadata']['type'] ?? '',
@@ -251,7 +251,7 @@ class SessionHistory implements ReportInterface
                     $auditRecord->objectAfter = json_decode($auditRecord->objectAfter);
                 }
 
-                $auditRecord->logDate = Carbon::createFromTimestamp($auditRecord->logDate)
+                $auditRecord->logDate = DateFormatHelper::createFromTimestamp($auditRecord->logDate)
                     ->format(DateFormatHelper::getSystemFormat());
 
                 $rows[] = $auditRecord;
@@ -395,7 +395,7 @@ class SessionHistory implements ReportInterface
 
     private function buildOrderBy(string $type, SanitizerInterface $sanitizedParams, bool $isJson): string
     {
-        [$defaultSortBy, $allowedColumns, $defaultSort] = match ($type) {
+        [$defaultSortBy, $allowedColumns, $defaultSort, $uniqueColumn] = match ($type) {
             'audit' => [
                 'logDate',
                 [
@@ -403,6 +403,7 @@ class SessionHistory implements ReportInterface
                     'userId', 'ipAddress', 'sessionHistoryId', 'userAgent',
                 ],
                 ['logDate DESC'],
+                'logId',
             ],
             'debug' => [
                 'logDate',
@@ -412,16 +413,23 @@ class SessionHistory implements ReportInterface
                     'displayId', 'display', 'ipAddress', 'userAgent',
                 ],
                 ['logDate DESC'],
+                'logId',
             ],
             default => [
                 'startTime',
                 ['sessionId', 'startTime', 'userId', 'userAgent', 'ipAddress', 'lastUsedTime', 'userName', 'userType'],
                 ['startTime DESC'],
+                'sessionId',
             ],
         };
 
         $sortOrder = $this->gridRenderSort($sanitizedParams, $isJson, $defaultSortBy);
-        $order = $this->logFactory->buildSortQuery($sortOrder, $allowedColumns, defaultSort: $defaultSort);
+        $order = $this->logFactory->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            defaultSort: $defaultSort,
+            uniqueColumn: $uniqueColumn
+        );
 
         return !empty($order) ? ' ORDER BY ' . implode(', ', $order) : '';
     }

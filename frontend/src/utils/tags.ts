@@ -33,3 +33,15 @@ export function mergeEntityTags(items: Array<{ tags?: Tag[] | null }>): Tag[] {
     new Map(items.flatMap((item) => item.tags ?? []).map((tag) => [tagKey(tag), tag])).values(),
   );
 }
+
+// Add tag if not already present (by tagKey - name, or name+value), remove it if it is -
+// used to let clicking a tag chip in a grid toggle it in/out of that page's Tags filter.
+// Matches by tagKey rather than tagId since TagInput itself (which renders/edits this same
+// array) treats the tag name as the identity - typed tags always have tagId 0, so comparing
+// by tagId would let a typed "december" and a clicked "december" coexist as two entries with
+// the same name, which TagInput then renders with duplicate React keys.
+export function toggleTag(tags: Tag[] | undefined, tag: Tag): Tag[] {
+  const current = tags ?? [];
+  const isSelected = current.some((t) => tagKey(t) === tagKey(tag));
+  return isSelected ? current.filter((t) => tagKey(t) !== tagKey(tag)) : [...current, tag];
+}
