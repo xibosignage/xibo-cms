@@ -21,8 +21,16 @@
 
 import { vi } from 'vitest';
 
-import { fetchDaypart, type FetchDaypartResponse } from '@/services/daypartApi';
+import {
+  fetchDaypart,
+  fetchDaypartScheduleCount,
+  type FetchDaypartResponse,
+} from '@/services/daypartApi';
 
 export const mockFetchDaypart = (data: FetchDaypartResponse) => {
   vi.mocked(fetchDaypart).mockResolvedValue(data);
+};
+
+export const mockFetchDaypartScheduleCount = (count = 0) => {
+  vi.mocked(fetchDaypartScheduleCount).mockResolvedValue(count);
 };
