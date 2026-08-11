@@ -25,6 +25,7 @@ import type { TFunction } from 'i18next';
 import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
 
+import { notify } from '@/components/ui/Notification';
 import { deleteApplication } from '@/services/applicationApi';
 import type { Application } from '@/types/application';
 
@@ -69,6 +70,9 @@ export function useApplicationActions({
         return;
       }
 
+      notify.success(
+        t('{{count}} application(s) deleted successfully.', { count: itemsToDelete.length }),
+      );
       setRowSelection({});
       handleRefresh();
       closeModal();

@@ -73,6 +73,7 @@ export function useTasksActions({
         return;
       }
 
+      notify.success(t('{{count}} task(s) deleted successfully.', { count: itemsToDelete.length }));
       setRowSelection({});
       handleRefresh();
       closeModal();
