@@ -422,7 +422,7 @@ export interface ReplaceMediaRequest {
   oldMediaId: number;
   name?: string;
   folderId?: number | string;
-  tags?: string[];
+  tags?: string;
   updateInLayouts?: boolean;
   deleteOldRevisions?: boolean;
   onProgress?: (progress: number) => void;
@@ -434,7 +434,7 @@ export async function replaceMedia({
   oldMediaId,
   name,
   folderId = 1,
-  tags = [],
+  tags = '',
   updateInLayouts = false,
   deleteOldRevisions = false,
   onProgress,
@@ -453,11 +453,8 @@ export async function replaceMedia({
     formData.append('folderId', folderId.toString());
   }
 
-  if (tags.length > 0) {
-    tags.forEach((tag) => formData.append('tags[]', tag));
-  } else {
-    formData.append('tags[]', '');
-  }
+  formData.append('tags[]', tags);
+  formData.append('tagsReplaceMode', 'replace');
 
   const response = await http.post<UploadMediaResponse>('/library', formData, {
     headers: {

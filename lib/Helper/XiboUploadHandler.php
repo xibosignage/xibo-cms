@@ -123,6 +123,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 // The media name might be empty here, because the user isn't forced to select it
                 $name = ($name == '') ? $oldMedia->name : $name;
                 $tags = ($tags == '') ? '' : $tags;
+                $tagsReplaceMode = $this->getParam(null, 'tagsReplaceMode', 'append');
 
                 // Add the Media
                 // the userId is either the existing user
@@ -134,9 +135,17 @@ class XiboUploadHandler extends BlueImpUploadHandler
                     $oldMedia->getOwnerId()
                 );
 
-                if ($tags != '') {
+                if ($tagsReplaceMode === 'replace') {
+                    // React frontend sends the complete desired tag set
+                    $media->updateTagLinks(
+                        $controller->getTagFactory()->tagsFromString($tags)
+                    );
+                } elseif ($tags != '') {
+                    // Legacy frontend sends only new tags — append to existing
                     $concatTags = $oldMedia->getTagString() . ',' . $tags;
-                    $media->updateTagLinks($controller->getTagFactory()->tagsFromString($concatTags));
+                    $media->updateTagLinks(
+                        $controller->getTagFactory()->tagsFromString($concatTags)
+                    );
                 }
 
                 // Apply the duration from the old media, unless we're a video
