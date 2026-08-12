@@ -26,7 +26,6 @@ import {
   Film,
   Music,
   FileText,
-  Archive,
   File as FileIcon,
   Edit,
   Download,
@@ -56,7 +55,7 @@ import {
   getSharingColumn,
 } from '@/components/ui/table/cells';
 import { getCommonFormOptions } from '@/config/commonForms';
-import type { Media } from '@/types/media';
+import type { Media, MediaType } from '@/types/media';
 import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
 import type { DateLike } from '@/utils/date';
@@ -93,14 +92,10 @@ export const getMediaIcon = (mediaType: string) => {
       return Music;
     case 'pdf':
       return FileText;
-    case 'archive':
-      return Archive;
     default:
       return FileIcon;
   }
 };
-
-type MediaType = 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';
 
 export type ModalType =
   | BaseModalType
@@ -123,6 +118,7 @@ export const INITIAL_FILTER_STATE: MediaFilterInput = {
   orientation: '',
   layoutId: null,
   lastModified: '',
+  retired: 0,
   logicalOperatorName: 'OR',
   useRegexForName: false,
   logicalOperator: 'OR',
@@ -179,12 +175,13 @@ export const getBaseFilterKeys = (
     label: t('Type'),
     name: 'type',
     options: [
-      { label: t('Image'), value: 'image' },
-      { label: t('Video'), value: 'video' },
       { label: t('Audio'), value: 'audio' },
+      { label: t('Generic File'), value: 'genericfile' },
+      { label: t('HTML Package'), value: 'htmlpackage' },
+      { label: t('Image'), value: 'image' },
       { label: t('PDF'), value: 'pdf' },
-      { label: t('Archive'), value: 'archive' },
-      { label: t('Other'), value: 'other' },
+      { label: t('PowerPoint'), value: 'powerpoint' },
+      { label: t('Video'), value: 'video' },
     ],
   },
   {
@@ -474,7 +471,7 @@ export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] =>
         <MediaCell
           thumb={info.row.original.thumbnail}
           alt={info.row.original.name}
-          mediaType={(info.row.original.mediaType as MediaType) || 'other'}
+          mediaType={(info.row.original.mediaType as MediaType) || 'genericfile'}
           onPreview={() => onPreview?.(info.row.original)}
         />
       ),

@@ -125,10 +125,13 @@ export default function ReplaceFileModal({
       case 'pdf':
         return 'application/pdf,.pdf';
 
-      case 'archive':
-        return '.zip,.rar,.7z,.tar,.gz';
+      case 'powerpoint':
+        return '.ppt,.pps,.pptx,.ppsx';
 
-      case 'other':
+      case 'htmlpackage':
+        return '.htz';
+
+      case 'genericfile':
       default:
         return '';
     }
