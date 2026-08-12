@@ -54,7 +54,7 @@ interface LayoutModalsProps {
   actions: {
     activeModal: string | null;
     closeModal: () => void;
-    handleRefresh: () => void;
+    handleRefresh: () => Promise<unknown>;
     deleteError: string | null;
     isDeleting: boolean;
     isCloning: boolean;
@@ -266,9 +266,9 @@ export function LayoutModals({
           ids={bulkIds}
           existingTags={bulkExistingTags}
           onClose={actions.closeModal}
-          onSuccess={() => {
+          onSuccess={async () => {
+            await actions.handleRefresh();
             actions.closeModal();
-            actions.handleRefresh();
           }}
         />
       )}

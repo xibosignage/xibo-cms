@@ -20,7 +20,6 @@
  */
 
 import { useQueryClient } from '@tanstack/react-query';
-import type { RowSelectionState } from '@tanstack/react-table';
 import { Search, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -45,6 +44,7 @@ import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useSelectionState } from '@/hooks/useSelectionState';
 import { useTableState } from '@/hooks/useTableState';
 import type { Campaign } from '@/types/campaign';
 import type { Tag } from '@/types/tag';
@@ -129,8 +129,6 @@ export default function Campaigns() {
   }, [locationLayoutId, isHydrated, setFilterInputs, setPagination]);
 
   const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [selectionCache, setSelectionCache] = useState<Record<string, Campaign>>({});
   const [openFilter, setOpenFilter] = useState(false);
 
   const [showFolderSidebar, setShowFolderSidebar] = useState(false);
@@ -185,28 +183,22 @@ export default function Campaigns() {
   const selectedCampaign = campaignList.find((m) => m.campaignId === selectedCampaignId) ?? null;
   const existingNames = campaignList.map((m) => m.campaign);
 
-  const getRowId = (row: Campaign) => row.campaignId.toString();
+  const {
+    rowSelection,
+    setRowSelection,
+    onRowSelectionChange: handleRowSelectionChange,
+    getRowId,
+    getAllSelectedItems,
+  } = useSelectionState<Campaign>({
+    list: campaignList,
+    getRowId: (row) => row.campaignId.toString(),
+  });
 
-  const handleRowSelectionChange = (
-    updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
-  ) => {
-    const newSelection =
-      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
-    setRowSelection(newSelection);
-    setSelectionCache((prev) => {
-      const next = { ...prev };
-      campaignList.forEach((item) => {
-        const id = getRowId(item);
-        if (newSelection[id]) next[id] = item;
-      });
-      return next;
-    });
-  };
-
-  const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['campaign'] });
-    queryClient.invalidateQueries({ queryKey: ['layouts', 'campaign'] });
-  };
+  const handleRefresh = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['campaign'] }),
+      queryClient.invalidateQueries({ queryKey: ['layouts', 'campaign'] }),
+    ]);
 
   const handleFolderChange = (folder: { id: number | null; text: string | '' }) => {
     setSelectedFolderId(folder.id);
@@ -304,12 +296,6 @@ export default function Campaigns() {
     onSchedule: canSchedule ? openScheduleModal : undefined,
     onPreview: handlePreview,
   });
-
-  const getAllSelectedItems = (): Campaign[] => {
-    return Object.keys(rowSelection)
-      .map((id) => selectionCache[id])
-      .filter((item): item is Campaign => !!item);
-  };
 
   const bulkActions = getBulkActions({
     t,
