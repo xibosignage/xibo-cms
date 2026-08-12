@@ -44,6 +44,7 @@ export type ModalType = BaseModalType | null;
 export const INITIAL_FILTER_STATE: DaypartFilterInput = {
   logicalOperatorName: 'OR',
   useRegexForName: false,
+  retired: 0,
 };
 
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DaypartFilterInput>[] => [
@@ -62,6 +63,7 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DaypartFilterI
     label: t('Retired'),
     name: 'retired',
     options: getCommonFormOptions(t).retired,
+    compareToDefault: true,
   },
 ];
 

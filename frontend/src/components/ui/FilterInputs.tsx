@@ -65,6 +65,7 @@ export interface FilterConfigItem<T> {
   showExactTags?: boolean;
   exactTagsKey?: keyof T & string;
   showTimePicker?: boolean;
+  compareToDefault?: boolean;
 }
 
 type FilterValue = string | number | boolean | null | Tag[];

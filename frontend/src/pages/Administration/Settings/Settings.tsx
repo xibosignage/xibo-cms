@@ -41,6 +41,7 @@ import { useSettingsData, settingsQueryKeys } from './hooks/useSettingsData';
 import { useSettingsForm } from './hooks/useSettingsForm';
 
 import Button from '@/components/ui/Button';
+import InfoBanner from '@/components/ui/InfoBanner';
 import { notify } from '@/components/ui/Notification';
 import TabNav from '@/components/ui/TabNav';
 import type { TabNavItem } from '@/components/ui/TabNav';
@@ -56,7 +57,7 @@ export default function Settings() {
   const adminTabs = useFilteredTabs('administration');
   const { updateUser } = useUserContext();
 
-  const { data, isLoading, isError, error: queryError } = useSettingsData();
+  const { data, isLoading, isError, isPaused, error: queryError } = useSettingsData();
   const { formValues, updateField, isVisible, isEditable, isDirty, resetForm } =
     useSettingsForm(data);
 
@@ -141,12 +142,17 @@ export default function Settings() {
           </div>
 
           {isError && (
-            <div
-              className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-lg"
-              role="alert"
-            >
+            <InfoBanner type="danger" className="w-full! mt-2 items-center">
               {queryError instanceof Error ? queryError.message : t('Failed to load settings')}
-            </div>
+            </InfoBanner>
+          )}
+
+          {isPaused && (
+            <InfoBanner type="warning" className="w-full! mt-2 items-center">
+              {t(
+                "You're offline. Showing previously loaded results. This will update automatically once your connection is restored.",
+              )}
+            </InfoBanner>
           )}
           <div className="flex-1 overflow-y-auto flex flex-col">
             {isLoading && (

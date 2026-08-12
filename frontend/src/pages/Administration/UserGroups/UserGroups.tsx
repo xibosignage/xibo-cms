@@ -40,6 +40,7 @@ import { useUserGroupsData } from './hooks/useUserGroupsData';
 import Button from '@/components/ui/Button';
 import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
+import InfoBanner from '@/components/ui/InfoBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useUserContext } from '@/context/UserContext';
@@ -118,6 +119,7 @@ export default function UserGroups() {
     data: queryData,
     isFetching,
     isError,
+    isPaused,
     error: queryError,
   } = useUserGroupsData({
     pagination,
@@ -258,9 +260,17 @@ export default function UserGroups() {
         />
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
+          <InfoBanner type="danger" className="w-full! mt-2 items-center">
             {error}
-          </div>
+          </InfoBanner>
+        )}
+
+        {isPaused && (
+          <InfoBanner type="warning" className="w-full! mt-2 items-center">
+            {t(
+              "You're offline. Showing previously loaded results. This will update automatically once your connection is restored.",
+            )}
+          </InfoBanner>
         )}
 
         <div className="min-h-0 flex flex-col">
