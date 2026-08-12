@@ -202,33 +202,38 @@ export default function DateRangeFilter({
             </ul>
             <div
               className={twMerge(
-                'transition-all duration-1000 ease-out overflow-hidden',
+                'grid transition-[grid-template-rows,opacity,max-width] duration-1000 ease-out',
                 openDatePicker
-                  ? 'opacity-100 max-w-95 max-h-125'
-                  : 'opacity-0 max-w-0 max-h-0 pointer-events-none',
+                  ? 'opacity-100 max-w-95 grid-rows-[1fr]'
+                  : 'opacity-0 max-w-0 grid-rows-[0fr] pointer-events-none',
               )}
             >
-              <div className="pb-4 box-border">
-                <DatePicker
-                  mode="range"
-                  disableFutureDates
-                  isJalali={isJalali}
-                  showTimePicker={showTimePicker}
-                  value={parseRangeValue(value, timeZone)}
-                  onCancel={() => setOpenDatePicker(false)}
-                  onApply={(v) => {
-                    if (v.type === 'range') {
-                      const fromKey = toLocalDateKey(v.from, showTimePicker ? timeZone : undefined);
-                      const toKey = toLocalDateKey(v.to, showTimePicker ? timeZone : undefined);
-                      const rangeValue = showTimePicker
-                        ? `range:${fromKey}T${formatTime(v.from, timeZone)}` +
-                          `|${toKey}T${formatTime(v.to, timeZone)}`
-                        : `range:${fromKey}|${toKey}`;
-                      onChange(name, rangeValue);
-                    }
-                    handleClose();
-                  }}
-                />
+              <div className="overflow-hidden min-h-0">
+                <div className="pb-4 box-border">
+                  <DatePicker
+                    mode="range"
+                    disableFutureDates
+                    isJalali={isJalali}
+                    showTimePicker={showTimePicker}
+                    value={parseRangeValue(value, timeZone)}
+                    onCancel={() => setOpenDatePicker(false)}
+                    onApply={(v) => {
+                      if (v.type === 'range') {
+                        const fromKey = toLocalDateKey(
+                          v.from,
+                          showTimePicker ? timeZone : undefined,
+                        );
+                        const toKey = toLocalDateKey(v.to, showTimePicker ? timeZone : undefined);
+                        const rangeValue = showTimePicker
+                          ? `range:${fromKey}T${formatTime(v.from, timeZone)}` +
+                            `|${toKey}T${formatTime(v.to, timeZone)}`
+                          : `range:${fromKey}|${toKey}`;
+                        onChange(name, rangeValue);
+                      }
+                      handleClose();
+                    }}
+                  />
+                </div>
               </div>
             </div>
           </div>
