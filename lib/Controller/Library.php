@@ -541,10 +541,19 @@ class Library extends Base
 
         $recordsTotal = $this->mediaFactory->countLast();
 
-        return $response
-            ->withStatus(200)
-            ->withHeader('X-Total-Count', $recordsTotal)
-            ->withJson($mediaList);
+        if ($this->isApi($request) || $this->isJson($request)) {
+            return $response
+                ->withStatus(200)
+                ->withHeader('X-Total-Count', $recordsTotal)
+                ->withJson($mediaList);
+        }
+
+        // TODO: Remove this once the legacy media picker (toolbar.js) is retired
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = $recordsTotal;
+        $this->getState()->setData($mediaList);
+
+        return $this->render($request, $response);
     }
 
     #[OA\Get(
