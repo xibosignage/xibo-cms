@@ -34,6 +34,7 @@ import type * as TagInputModule from '@/components/ui/forms/TagInput';
 import { UserProvider } from '@/context/UserContext';
 import { createCampaign } from '@/services/campaignApi';
 import { testQueryClient } from '@/setupTests';
+import type { Campaign } from '@/types/campaign';
 
 // =============================================================================
 // Module mocks
@@ -260,7 +261,7 @@ describe('AddCampaignModal', () => {
   // API calls — happy path (list campaign)
   // ---------------------------------------------------------------------------
   test('successful list campaign creation calls createCampaign with correct payload', async () => {
-    vi.mocked(createCampaign).mockResolvedValueOnce({ campaignId: 1 });
+    vi.mocked(createCampaign).mockResolvedValueOnce({ campaignId: 1 } as Campaign);
     const onSuccess = vi.fn();
     const onClose = vi.fn();
     renderModal({ onSuccess, onClose });
@@ -287,7 +288,7 @@ describe('AddCampaignModal', () => {
   });
 
   test('list campaign with cycle playback enabled calls createCampaign with playCount', async () => {
-    vi.mocked(createCampaign).mockResolvedValueOnce({ campaignId: 2 });
+    vi.mocked(createCampaign).mockResolvedValueOnce({ campaignId: 2 } as Campaign);
     renderModal({ onSuccess: vi.fn(), onClose: vi.fn() });
 
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Cycle Campaign' } });
@@ -313,7 +314,7 @@ describe('AddCampaignModal', () => {
   });
 
   test('list campaign with Block play order calls createCampaign with listPlayOrder: "block"', async () => {
-    vi.mocked(createCampaign).mockResolvedValueOnce({ campaignId: 3 });
+    vi.mocked(createCampaign).mockResolvedValueOnce({ campaignId: 3 } as Campaign);
     renderModal({ onSuccess: vi.fn(), onClose: vi.fn() });
 
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Block Campaign' } });
@@ -340,7 +341,7 @@ describe('AddCampaignModal', () => {
   // API calls — happy path (ad campaign)
   // ---------------------------------------------------------------------------
   test('successful ad campaign creation calls createCampaign with type, targetType, and target', async () => {
-    vi.mocked(createCampaign).mockResolvedValueOnce({ campaignId: 4 });
+    vi.mocked(createCampaign).mockResolvedValueOnce({ campaignId: 4 } as Campaign);
     renderModal({ onSuccess: vi.fn(), onClose: vi.fn() });
 
     const typeCombobox = screen.getAllByRole('combobox')[0]!;
