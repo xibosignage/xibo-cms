@@ -178,7 +178,7 @@ class ApplicationScopeFactory extends BaseFactory implements ScopeRepositoryInte
     /**
      * {@inheritdoc}
      */
-    public function getScopeEntityByIdentifier($scopeIdentifier)
+    public function getScopeEntityByIdentifier(string $scopeIdentifier): ?ScopeEntity
     {
         $this->getLog()->debug('getScopeEntityByIdentifier: ' . $scopeIdentifier);
 
@@ -197,9 +197,10 @@ class ApplicationScopeFactory extends BaseFactory implements ScopeRepositoryInte
      */
     public function finalizeScopes(
         array $scopes,
-        $grantType,
+        string $grantType,
         ClientEntityInterface $clientEntity,
-        $userIdentifier = null
+        ?string $userIdentifier = null,
+        ?string $authCodeId = null
     ): array {
         /** @var \Xibo\Entity\Application $clientEntity */
         $countOfScopesRequested = count($scopes);

@@ -35,7 +35,7 @@
             {% if horizontalNav %}
                 <nav class="navbar navbar-default navbar-expand-lg">
                     <a class="navbar-brand xibo-logo-container" href="#">
-                        <img class="xibo-logo" src="/brand/xibologo.png">
+                        <img class="xibo-logo" src="/brand/{{ brandLogoFile }}">
                     </a>
 
                     <!-- Brand and toggle get grouped for better mobile display -->
@@ -69,7 +69,7 @@
                 <div class="row header header-side">
                     <div class="col-sm-12">
                         <div class="meta pull-left xibo-logo-container">
-                            <div class="page"><img class="xibo-logo" src="/brand/xibologo.png"></div>
+                            <div class="page"><img class="xibo-logo" src="/brand/{{ brandLogoFile }}"></div>
                         </div>
                         {% if not forceHide %}
                             {% if not hideNavigation == "1" %}

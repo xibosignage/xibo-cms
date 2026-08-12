@@ -114,7 +114,6 @@ export default function AddDisplayProfileModal({
       onClose={onClose}
       isOpen={isOpen}
       isPending={isPending}
-      scrollable={false}
       error={apiError}
       actions={[
         { label: t('Cancel'), onClick: onClose, variant: 'secondary', disabled: isPending },

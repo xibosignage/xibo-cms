@@ -263,7 +263,8 @@ class DisplayFactory extends BaseFactory
             $sortOrder,
             $allowedColumns,
             $customColumns,
-            ['display ASC']
+            ['display ASC'],
+            'displayId'
         );
 
         // SQL function for ST_X/X and ST_Y/Y dependent on MySQL version

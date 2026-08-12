@@ -57,7 +57,7 @@ export default function InfoBanner({
       role="status"
     >
       {!hideInfoIcon && <Info size={18} className="shrink-0 mt-0.5" />}
-      <div>{children}</div>
+      <div className="flex-1">{children}</div>
     </div>
   );
 }

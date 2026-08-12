@@ -86,7 +86,12 @@ class SessionFactory extends BaseFactory
 
         // Sorting
         $allowedColumns = ['lastAccessed', 'isExpired', 'userName', 'remoteAddress', 'userAgent', 'expiresAt'];
-        $sortOrder = $this->buildSortQuery($sortOrder, $allowedColumns, defaultSort: ['lastAccessed ASC']);
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            defaultSort: ['lastAccessed ASC'],
+            uniqueColumn: 'sessionId'
+        );
 
         $select = '
             SELECT `session`.session_id AS sessionId, 

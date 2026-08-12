@@ -21,8 +21,9 @@
 namespace Xibo\Helper;
 
 use CachedFileReader;
-use Gettext\Translations;
+use Gettext\Loader\MoLoader;
 use Gettext\Translator;
+use Gettext\TranslatorFunctions;
 use gettext_reader;
 use Illuminate\Support\Str;
 use Xibo\Service\ConfigServiceInterface;
@@ -110,9 +111,9 @@ class Translate
         }
 
         // Load translations
-        $translator = new Translator();
-        $translator->loadTranslations(Translations::fromMoFile($localeDir . '/' . $foundLanguage . '.mo'));
-        $translator->register();
+        $translations = (new MoLoader())->loadFile($localeDir . '/' . $foundLanguage . '.mo');
+        $translator = Translator::createFromTranslations($translations);
+        TranslatorFunctions::register($translator);
 
         // Store our resolved language locales
         self::$locale = $foundLanguage;
@@ -152,9 +153,9 @@ class Translate
         }
 
         // Load translations
-        $translator = new Translator();
-        $translator->loadTranslations(Translations::fromMoFile($localeDir . '/' . $foundLanguage . '.mo'));
-        $translator->register();
+        $translations = (new MoLoader())->loadFile($localeDir . '/' . $foundLanguage . '.mo');
+        $translator = Translator::createFromTranslations($translations);
+        TranslatorFunctions::register($translator);
 
         return $translator;
     }

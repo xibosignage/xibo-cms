@@ -198,18 +198,23 @@ export default function ReplaceFileModal({
                 )}
               </div>
             </div>
-            <div className="flex flex-col justify-between flex-1">
+            <div className="flex flex-col justify-between flex-1 min-w-0">
               <div>
                 <span className="text-sm text-gray-500 font-semibold flex items-center gap-1">
                   {t('FILE NAME')} <HelpCircle size={12} />
                 </span>
-                <span className="text-sm">{selectedFile?.name || t(data.fileName)}</span>
+                <span
+                  className="text-sm truncate block"
+                  title={selectedFile?.name || data.fileName}
+                >
+                  {selectedFile?.name || data.fileName}
+                </span>
               </div>
               <div>
                 <span className="text-sm text-gray-500 font-semibold flex items-center gap-1">
                   {t('FILE SIZE')} <HelpCircle size={12} />
                 </span>
-                <span className="text-sm">{t(data.fileSizeFormatted)}</span>
+                <span className="text-sm">{data.fileSizeFormatted}</span>
               </div>
               <div>
                 <span className="text-sm text-gray-500 font-semibold flex items-center gap-1">
@@ -240,13 +245,16 @@ export default function ReplaceFileModal({
           </div>
           {selectedFile && isSaving && (
             <div className="flex flex-col">
-              <span className="text-sm text-xibo-black font-semibold mt-1 block px-4">
+              <span
+                className="text-sm text-xibo-black font-semibold mt-1 block px-4 truncate"
+                title={selectedFile.name}
+              >
                 {selectedFile.name}
               </span>
               <div className="px-4 pb-3 flex items-center gap-4">
                 <div className="h-2 bg-gray-200 rounded overflow-hidden w-full">
                   <div
-                    className="h-full bg-blue-500 transition-all duration-200"
+                    className="h-full bg-xibo-blue-500 transition-all duration-200"
                     style={{ width: `${uploadProgress}%` }}
                   />
                 </div>

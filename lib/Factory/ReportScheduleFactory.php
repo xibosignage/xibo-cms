@@ -204,7 +204,8 @@ class ReportScheduleFactory extends BaseFactory
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            ['reportName ASC']
+            defaultSort: ['reportName ASC'],
+            uniqueColumn: 'reportScheduleId'
         );
 
         $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';

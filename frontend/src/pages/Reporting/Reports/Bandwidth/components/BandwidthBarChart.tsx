@@ -32,8 +32,9 @@ import {
 } from 'recharts';
 
 import type { BandwidthTableRow } from '@/services/bandwidthReportApi';
+import { BRAND_PRIMARY } from '@/styles/brandColors';
 
-const BAR_COLOR = '#0E70F6';
+const BAR_COLOR = BRAND_PRIMARY;
 const DELETED_COLOR = '#e7000b';
 const TRACK_COLOR = '#ECECEC';
 

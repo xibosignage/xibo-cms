@@ -22,7 +22,8 @@
 namespace Xibo\Xmds;
 
 use Carbon\Carbon;
-use Intervention\Image\ImageManagerStatic as Img;
+use Intervention\Image\Encoders\JpegEncoder;
+use Intervention\Image\ImageManager;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
 use Xibo\Event\XmdsDependencyRequestEvent;
@@ -782,9 +783,9 @@ class Soap4 extends Soap
         );
 
         foreach (array('imagick', 'gd') as $imgDriver) {
-            Img::configure(array('driver' => $imgDriver));
             try {
-                $screenShotImg = Img::make($screenShot);
+                $manager = $imgDriver === 'imagick' ? ImageManager::imagick() : ImageManager::gd();
+                $screenShotImg = $manager->read($screenShot);
             } catch (\Exception $e) {
                 $this->getLog()->debug($imgDriver . ' - ' . $e->getMessage());
             }
@@ -795,13 +796,13 @@ class Soap4 extends Soap
         }
 
         if ($screenShotImg !== false) {
-            $imgMime = $screenShotImg->mime();
+            $imgMime = $screenShotImg->origin()->mediaType();
 
             if ($imgMime != $screenShotMime) {
                 $needConversion = true;
                 try {
                     $this->getLog()->debug("converting: '" . $imgMime . "' to '" . $screenShotMime . "'");
-                    $screenShot = (string) $screenShotImg->encode($screenShotFmt);
+                    $screenShot = (string) $screenShotImg->encode(new JpegEncoder());
                     $converted = true;
                 } catch (\Exception $e) {
                     $this->getLog()->debug($e->getMessage());

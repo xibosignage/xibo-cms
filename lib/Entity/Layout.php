@@ -1488,14 +1488,16 @@ class Layout implements \JsonSerializable
                 if ($widget->fromDt != null || $widget->fromDt === Widget::$DATE_MIN) {
                     $mediaNode->setAttribute(
                         'fromDt',
-                        Carbon::createFromTimestamp($widget->fromDt)->format(DateFormatHelper::getSystemFormat())
+                        DateFormatHelper::createFromTimestamp($widget->fromDt)
+                            ->format(DateFormatHelper::getSystemFormat())
                     );
                 }
 
                 if ($widget->toDt != null || $widget->toDt === Widget::$DATE_MAX) {
                     $mediaNode->setAttribute(
                         'toDt',
-                        Carbon::createFromTimestamp($widget->toDt)->format(DateFormatHelper::getSystemFormat())
+                        DateFormatHelper::createFromTimestamp($widget->toDt)
+                            ->format(DateFormatHelper::getSystemFormat())
                     );
                 }
 
@@ -2213,7 +2215,7 @@ class Layout implements \JsonSerializable
                 // need our parent.
                 $parent = $this->layoutFactory->loadById($this->parentId);
 
-                $layoutCurrentPublishedDate = Carbon::createFromTimestamp($parent->publishedDate);
+                $layoutCurrentPublishedDate = DateFormatHelper::createFromTimestamp($parent->publishedDate);
                 $newPublishDateString =  Carbon::now()->addMinutes(30)->format(DateFormatHelper::getSystemFormat());
                 $newPublishDate = Carbon::createFromTimeString($newPublishDateString);
 

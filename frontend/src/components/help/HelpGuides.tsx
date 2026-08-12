@@ -20,6 +20,7 @@
  */
 
 import { useTranslation } from 'react-i18next';
+import Markdown from 'react-markdown';
 
 import HelpHeader from './HelpHeader';
 
@@ -31,6 +32,9 @@ interface HelpGuidesProps {
   isXiboThemed: boolean;
 }
 
+// Render markdown inline (no wrapping <p>) since summary is a single line of text.
+const markdownComponents = { p: 'span' } as const;
+
 function GuideLink({ title, url, summary }: { title: string; url: string; summary?: string }) {
   return (
     <a
@@ -41,7 +45,9 @@ function GuideLink({ title, url, summary }: { title: string; url: string; summar
     >
       <div className="text-sm font-semibold text-gray-800">{title}</div>
       {summary && (
-        <div className="text-xs text-xibo-blue-600" dangerouslySetInnerHTML={{ __html: summary }} />
+        <div className="text-xs text-xibo-blue-600">
+          <Markdown components={markdownComponents}>{summary}</Markdown>
+        </div>
       )}
     </a>
   );

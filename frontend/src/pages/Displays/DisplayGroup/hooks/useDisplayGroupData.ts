@@ -25,6 +25,7 @@ import type { AxiosError } from 'axios';
 
 import type { DisplayGroupFilterInput } from '../DisplayGroupConfig';
 
+import { serializeTags } from '@/components/ui/forms/TagInput';
 import type { FetchDisplayGroupRequest } from '@/services/displayGroupApi';
 import { fetchDisplayGroups } from '@/services/displayGroupApi';
 import { isValidRegex } from '@/utils/regex';
@@ -83,8 +84,7 @@ export const useDisplayGroupData = ({
         logicalOperator,
       } = advancedFilters;
 
-      const normalizedTags =
-        tags && tags.length > 0 ? tags.map((tag) => tag.tag).join(',') : undefined;
+      const normalizedTags = tags && tags.length > 0 ? serializeTags(tags) : undefined;
 
       const request: FetchDisplayGroupRequest = {
         start: startOffset,

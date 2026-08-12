@@ -30,13 +30,23 @@ import {
   useInteractions,
 } from '@floating-ui/react';
 import { useState } from 'react';
+import Markdown from 'react-markdown';
+
+/**
+ * 'html' is CMS-generated HTML (e.g. showDescriptionId=3, Widget List) and is trusted.
+ * 'markdown' is user-authored markdown, rendered safely (no dangerouslySetInnerHTML).
+ */
+type DescriptionCellMode = 'text' | 'html' | 'markdown';
 
 interface DescriptionCellProps {
   value: string | undefined | null;
-  isHtml?: boolean;
+  mode?: DescriptionCellMode;
 }
 
-export function DescriptionCell({ value, isHtml = false }: DescriptionCellProps) {
+// Render markdown inline (no wrapping <p>) to match how this content is displayed elsewhere.
+const markdownComponents = { p: 'span' } as const;
+
+export function DescriptionCell({ value, mode = 'text' }: DescriptionCellProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const { refs, floatingStyles, context } = useFloating({
@@ -54,6 +64,15 @@ export function DescriptionCell({ value, isHtml = false }: DescriptionCellProps)
     return null;
   }
 
+  const content =
+    mode === 'html' ? (
+      <span dangerouslySetInnerHTML={{ __html: value }} />
+    ) : mode === 'markdown' ? (
+      <Markdown components={markdownComponents}>{value}</Markdown>
+    ) : (
+      value
+    );
+
   return (
     <>
       <div
@@ -61,8 +80,7 @@ export function DescriptionCell({ value, isHtml = false }: DescriptionCellProps)
         {...getReferenceProps()}
         className="truncate text-gray-800 text-xs w-full cursor-default"
       >
-        {/* isHtml is only true for showDescriptionId=3 (Widget List), which is CMS-generated HTML */}
-        {isHtml ? <span dangerouslySetInnerHTML={{ __html: value }} /> : value}
+        {content}
       </div>
 
       <FloatingPortal>
@@ -73,7 +91,7 @@ export function DescriptionCell({ value, isHtml = false }: DescriptionCellProps)
             {...getFloatingProps()}
             className="z-9999 max-w-90 p-3 bg-white shadow-xl rounded-lg border border-gray-100 dark:bg-neutral-800 dark:border-neutral-700 text-xs text-gray-800 dark:text-gray-200 wrap-break-word"
           >
-            {isHtml ? <span dangerouslySetInnerHTML={{ __html: value }} /> : value}
+            {content}
           </div>
         )}
       </FloatingPortal>

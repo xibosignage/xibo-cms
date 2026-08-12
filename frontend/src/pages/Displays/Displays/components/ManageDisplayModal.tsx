@@ -29,6 +29,7 @@ import { useBandwidthData, useDisplayManageData } from '../hooks/useDisplayManag
 import Modal from '@/components/ui/modals/Modal';
 import { useUserContext } from '@/context/UserContext';
 import DisplayChart from '@/pages/Dashboard/StatusDashboard/components/DisplayChart';
+import { BRAND_PRIMARY } from '@/styles/brandColors';
 import type { Display } from '@/types/display';
 import type {
   ManageDependency,
@@ -348,7 +349,12 @@ function BandwidthSection({
                 )}
                 wrapperStyle={{ paddingTop: 8 }}
               />
-              <Bar dataKey="value" name={t('Bandwidth')} fill="#0E70F6" radius={[4, 4, 0, 0]} />
+              <Bar
+                dataKey="value"
+                name={t('Bandwidth')}
+                fill={BRAND_PRIMARY}
+                radius={[4, 4, 0, 0]}
+              />
             </BarChart>
           </ResponsiveContainer>
         )}

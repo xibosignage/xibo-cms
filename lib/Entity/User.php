@@ -491,9 +491,9 @@ class User implements \JsonSerializable, UserEntityInterface
     }
 
     /** @inheritDoc */
-    public function getIdentifier()
+    public function getIdentifier(): string
     {
-        return $this->userId;
+        return (string) $this->userId;
     }
 
     /**

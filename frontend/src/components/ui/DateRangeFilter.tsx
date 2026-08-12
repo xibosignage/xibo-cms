@@ -19,6 +19,7 @@ import DatePicker from './DatePicker';
 
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import type { FilterOption } from '@/types/filter';
+import { formatCmsDate, toLocalDateKey } from '@/utils/date';
 
 type DateRangeFilterProps = {
   label: string;
@@ -40,7 +41,7 @@ export default function DateRangeFilter({
   className,
 }: DateRangeFilterProps) {
   const { t } = useTranslation();
-  const { formatDate } = useDateFormatter();
+  const { dateFormat } = useDateFormatter();
   const [open, setOpen] = useState(false);
   const [openDatePicker, setOpenDatePicker] = useState(false);
 
@@ -78,11 +79,14 @@ export default function DateRangeFilter({
 
   const selectedOption = options.find((o) => String(o.value ?? '') === value);
 
+  const formatRangeBoundary = (dateKey: string) =>
+    formatCmsDate(dateKey, { format: dateFormat, timeZone: 'UTC' });
+
   const getDisplayLabel = () => {
     if (typeof value === 'string' && value.startsWith('range:')) {
       const [from, to] = value.replace('range:', '').split('|');
       if (from && to) {
-        return `${formatDate(from)} - ${formatDate(to)}`;
+        return `${formatRangeBoundary(from)} - ${formatRangeBoundary(to)}`;
       }
       return t('Custom Range');
     }
@@ -96,7 +100,7 @@ export default function DateRangeFilter({
         className,
       )}
     >
-      <label className="text-sm font-semibold text-gray-500 leading-5">{t(label)}</label>
+      <label className="text-sm font-semibold text-gray-500 leading-5">{label}</label>
       <button
         ref={refs.setReference}
         {...getReferenceProps()}
@@ -166,7 +170,7 @@ export default function DateRangeFilter({
                   onCancel={() => setOpenDatePicker(false)}
                   onApply={(v) => {
                     if (v.type === 'range') {
-                      onChange(name, `range:${v.from.toISOString()}|${v.to.toISOString()}`);
+                      onChange(name, `range:${toLocalDateKey(v.from)}|${toLocalDateKey(v.to)}`);
                     }
                     handleClose();
                   }}
