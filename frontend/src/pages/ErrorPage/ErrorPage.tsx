@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { TriangleAlert, RefreshCw } from 'lucide-react';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRouteError } from 'react-router-dom';
@@ -75,19 +75,19 @@ export default function ErrorPage() {
   }
 
   return (
-    <section className="flex min-h-screen flex-col items-center justify-center gap-6 text-center px-4">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
-        <TriangleAlert className="h-7 w-7 text-blue-900" />
+    <section className="flex min-h-screen flex-col items-center justify-center gap-3 text-center">
+      <div className="inline-flex justify-center items-center size-15.5 rounded-full bg-xibo-blue-100 text-xibo-blue-800 border-7 border-xibo-blue-50">
+        <AlertTriangle className="shrink-0 size-6" />
       </div>
 
       <div>
         <h1
-          className="text-3xl font-bold text-gray-900"
+          className="text-4xl font-bold text-gray-800"
           style={{ fontFamily: "'Maven Pro', sans-serif" }}
         >
           {t('Unexpected Error')}
         </h1>
-        <p className="mt-2 text-gray-500">
+        <p className="mt-3 text-gray-500">
           {t('An error occurred while loading this page. Please try again.')}
         </p>
       </div>
