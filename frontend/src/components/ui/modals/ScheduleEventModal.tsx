@@ -1421,7 +1421,7 @@ export default function ScheduleEventModal({
                   </div>
                 )}
 
-              {isMediaType && !!draft.mediaId && (
+              {isMediaType && !!draft.mediaId && hasFeature(user, 'library.view') && (
                 <div className="inline-flex flex-col gap-1 items-start">
                   <Button
                     variant="secondary"
@@ -1430,7 +1430,7 @@ export default function ScheduleEventModal({
                     disabled={isLoadingMediaPreview}
                     onClick={handlePreviewMedia}
                   >
-                    {t('Preview')}
+                    {isLoadingMediaPreview ? t('Loading...') : t('Preview')}
                   </Button>
                   <span className="text-xs text-gray-400 mt-1 whitespace-pre-line">
                     {t('Preview the selected media')}
