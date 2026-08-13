@@ -446,6 +446,8 @@ export function EventCalendar({
 }: EventCalendarProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
+  // The CMS-wide `defaultTimezone` setting, not a personal/browser timezone
+  // - see User::myDetails() in lib/Controller/User.php.
   const timezone = user?.settings?.defaultTimezone ?? 'UTC';
 
   const handleEditEvent = onEditEvent
