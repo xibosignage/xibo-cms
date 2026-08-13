@@ -36,7 +36,7 @@ describe('getLogsColumns', () => {
     const headers = columns.map((c) => c.header);
     expect(headers).toEqual([
       'ID',
-      'Run No',
+      'Run',
       'Date',
       'Channel',
       'Function',
