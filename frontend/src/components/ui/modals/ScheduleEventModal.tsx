@@ -122,6 +122,12 @@ export default function ScheduleEventModal({
   const { t } = useTranslation();
   const { user } = useUserContext();
   const { formatDateTime } = useDateFormatter();
+  // The CMS-wide `defaultTimezone` setting, not a personal/browser timezone
+  // - see User::myDetails() in lib/Controller/User.php. Distinct from the
+  // `syncTimezone` ("Run at CMS Time?") field below: that one controls
+  // *playback* time (CMS time vs. display-local time) and is resolved
+  // server-side against the per-display Display.timeZone column in
+  // lib/Xmds/Soap.php - it never feeds into this `timezone` value.
   const timezone = user?.settings?.defaultTimezone ?? 'UTC';
 
   const canGeoSchedule = hasFeature(user, 'schedule.geoLocation');

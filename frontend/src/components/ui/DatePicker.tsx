@@ -146,6 +146,11 @@ export default function DatePicker({
 }: DatePickerProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
+  // The CMS-wide `defaultTimezone` setting (see User::myDetails() in
+  // lib/Controller/User.php) - not a personal preference or the browser's
+  // local timezone. Anchoring picked times to this zone (via
+  // DateTime.fromObject below) keeps them in the same frame the backend
+  // uses via date_default_timezone_set().
   const timeZone = user?.settings?.defaultTimezone;
   const { formatDate } = useDateFormatter();
 
