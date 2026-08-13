@@ -584,6 +584,7 @@ class WidgetHtmlRenderer
         $twig['height'] = $region->height;
         $twig['cmsDateFormat'] = $this->config->getSetting('DATE_FORMAT');
         $twig['locale'] = Translate::GetJSLocale();
+        $twig['productName'] = $this->config->getThemeConfig('theme_title', 'Xibo Digital Signage');
 
         // Output some data for each widget.
         $twig['data'] = [];
