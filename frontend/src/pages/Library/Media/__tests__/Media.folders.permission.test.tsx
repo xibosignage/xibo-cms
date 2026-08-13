@@ -204,10 +204,15 @@ describe('Media page – folder permissions', () => {
       fireEvent.click(modalMoveBtn);
 
       // The file already in the destination should be skipped so the move
-      // completes cleanly with no partial-failure message.
+      // completes cleanly with no partial-failure message. Wait for the move
+      // to fully settle (dialog closes once handleConfirmMove resolves) before
+      // asserting — otherwise this can flakily "pass" mid-flight, after the
+      // first sequential selectFolder call resolves but before the second
+      // (still-buggy) call has even been dispatched.
       await waitFor(() => {
-        expect(vi.mocked(selectFolder)).toHaveBeenCalledTimes(1);
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
       });
+      expect(vi.mocked(selectFolder)).toHaveBeenCalledTimes(1);
       expect(vi.mocked(selectFolder)).toHaveBeenCalledWith(
         expect.objectContaining({ targetId: 1, folderId: mockDesignFolder.id }),
       );

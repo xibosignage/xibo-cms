@@ -244,15 +244,14 @@ describe('Tasks page — bulk actions', () => {
     expect(await screen.findByRole('button', { name: /delete selected/i })).toBeEnabled();
   });
 
-  test('Delete Selected never appears when config-locked, even with rows selected', async () => {
-    const user = userEvent.setup();
+  test('Delete Selected never appears when config-locked, and row selection is disabled', async () => {
     mockFetchTasks(TWO_LOCKED_TASKS);
     renderTasksPage();
     await screen.findByText('Task Alpha');
 
-    const checkboxes = screen.getAllByRole('checkbox', { name: /select row/i });
-    await user.click(checkboxes[0]!);
-
+    // Bulk actions are empty when config-locked, so DataTable renders with
+    // enableSelection={false} — no checkbox column at all, not just unclickable ones.
+    expect(screen.queryByRole('checkbox', { name: /select row/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /delete selected/i })).not.toBeInTheDocument();
   });
 });
