@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -752,8 +752,8 @@ class Soap4 extends Soap
         $serverKey = $sanitizer->getString('serverKey');
         $hardwareKey = $sanitizer->getString('hardwareKey');
 
-        $screenShotFmt = "jpg";
-        $screenShotMime = "image/jpeg";
+        $screenShotFmt = 'jpg';
+        $screenShotMime = 'image/jpeg';
         $screenShotImg = false;
 
         $converted = false;
@@ -761,7 +761,10 @@ class Soap4 extends Soap
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
-            throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
+            throw new \SoapFault(
+                'Sender',
+                'The Server key you entered does not match with the server key at this address'
+            );
         }
 
         // Auth this request...
@@ -771,7 +774,7 @@ class Soap4 extends Soap
 
         // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
         if (!$this->checkBandwidth($this->display->displayId)) {
-            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
+            throw new \SoapFault('Receiver', 'Bandwidth Limit exceeded');
         }
 
         $this->getLog()->debug('Received Screen shot');
@@ -782,15 +785,15 @@ class Soap4 extends Soap
             'screenshots/' . $this->display->displayId . '_screenshot.' . $screenShotFmt
         );
 
-        foreach (array('imagick', 'gd') as $imgDriver) {
+        foreach (['imagick', 'gd'] as $driverName) {
             try {
-                $manager = $imgDriver === 'imagick' ? ImageManager::imagick() : ImageManager::gd();
+                $manager = $driverName === 'imagick' ? ImageManager::imagick() : ImageManager::gd();
                 $screenShotImg = $manager->read($screenShot);
             } catch (\Exception $e) {
-                $this->getLog()->debug($imgDriver . ' - ' . $e->getMessage());
+                $this->getLog()->debug($driverName . ' - ' . $e->getMessage());
             }
             if ($screenShotImg !== false) {
-                $this->getLog()->debug('Use ' . $imgDriver);
+                $this->getLog()->debug('Use ' . $driverName);
                 break;
             }
         }
@@ -825,7 +828,10 @@ class Soap4 extends Soap
         $this->display->save(Display::$saveOptionsMinimum);
 
         // Cache the current screen shot time
-        $this->display->setCurrentScreenShotTime($this->getPool(), Carbon::now()->format(DateFormatHelper::getSystemFormat()));
+        $this->display->setCurrentScreenShotTime(
+            $this->getPool(),
+            Carbon::now()->format(DateFormatHelper::getSystemFormat())
+        );
 
         $this->logBandwidth($this->display->displayId, Bandwidth::$SCREENSHOT, filesize($location));
 
