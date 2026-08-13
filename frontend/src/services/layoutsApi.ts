@@ -79,14 +79,21 @@ export async function fetchLayouts(
   };
 }
 
-export async function createLayout() {
-  const response = await http.post(
-    '/layout',
-    new URLSearchParams({
-      name: 'Untitled Layout',
-      resolutionId: '1',
-    }),
-  );
+export interface CreateLayoutRequest {
+  folderId?: number | null;
+}
+
+export async function createLayout(payload: CreateLayoutRequest = {}) {
+  const params = new URLSearchParams({
+    name: 'Untitled Layout',
+    resolutionId: '1',
+  });
+
+  if (payload.folderId) {
+    params.append('folderId', String(payload.folderId));
+  }
+
+  const response = await http.post('/layout', params);
 
   return response.data;
 }
