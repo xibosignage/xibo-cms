@@ -20,7 +20,6 @@
  */
 
 import { useQueryClient } from '@tanstack/react-query';
-import type { RowSelectionState } from '@tanstack/react-table';
 import { Search, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -55,6 +54,7 @@ import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useSelectionState } from '@/hooks/useSelectionState';
 import { useTableState } from '@/hooks/useTableState';
 import type { Display } from '@/types/display';
 import type { Tag } from '@/types/tag';
@@ -166,8 +166,6 @@ export default function Displays() {
 
   const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
   const [showFolderSidebar, setShowFolderSidebar] = useState(false);
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [selectionCache, setSelectionCache] = useState<Record<string, Display>>({});
   const [openFilter, setOpenFilter] = useState(false);
 
   const [activeModal, setActiveModal] = useState<ModalType | null>(null);
@@ -221,33 +219,20 @@ export default function Displays() {
   const error = isError && queryError instanceof Error ? queryError.message : '';
   const displayList = data ?? [];
 
-  const getRowId = (row: Display) => row.displayId.toString();
-
-  const handleRowSelectionChange = (
-    updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
-  ) => {
-    const newSelection =
-      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
-
-    setRowSelection(newSelection);
-
-    setSelectionCache((prev) => {
-      const next = { ...prev };
-      displayList.forEach((item) => {
-        const id = getRowId(item);
-        if (newSelection[id]) {
-          next[id] = item;
-        }
-      });
-      return next;
-    });
-  };
+  const {
+    rowSelection,
+    setRowSelection,
+    onRowSelectionChange: handleRowSelectionChange,
+    getRowId,
+    getAllSelectedItems,
+  } = useSelectionState<Display>({
+    list: displayList,
+    getRowId: (row) => row.displayId.toString(),
+  });
 
   const selectedDisplay = displayList.find((d) => d.displayId === selectedDisplayId) ?? null;
 
-  const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['display'] });
-  };
+  const handleRefresh = () => queryClient.invalidateQueries({ queryKey: ['display'] });
 
   const {
     isDeleting,
@@ -385,12 +370,6 @@ export default function Displays() {
     onTagClick: handleTagClick,
     selectedTagIds: (filterInputs.tags ?? []).map((tag) => tag.tagId),
   });
-
-  const getAllSelectedItems = (): Display[] => {
-    return Object.keys(rowSelection)
-      .map((id) => selectionCache[id])
-      .filter((item): item is Display => !!item);
-  };
 
   const openBulkModal = (modal: ModalType) => {
     const allItems = getAllSelectedItems();

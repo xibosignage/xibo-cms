@@ -77,6 +77,7 @@ interface DataTableProps<TData, TValue> {
   onColumnVisibilityChange?: OnChangeFn<VisibilityState>;
   noResultsCustom?: React.ReactNode;
   tableLabel?: string;
+  exportRows?: TData[];
 }
 
 const getCommonPinningStyles = <TData, TValue>(column: Column<TData, TValue>): CSSProperties => {
@@ -129,6 +130,7 @@ export function DataTable<TData, TValue>({
   onColumnVisibilityChange,
   noResultsCustom,
   tableLabel,
+  exportRows,
 }: DataTableProps<TData, TValue>) {
   const { t } = useTranslation();
 
@@ -191,6 +193,16 @@ export function DataTable<TData, TValue>({
     getRowId: getRowId,
   });
 
+  // When a page paginates/sorts on the client over a larger fetched set (e.g. Logs), `data` is
+  // only the current on-screen page. `exportRows` lets the caller supply the full fetched set so
+  // CSV export isn't limited to whatever page happens to be visible.
+  const exportTable = useReactTable({
+    data: exportRows ?? data,
+    columns: tableColumns,
+    getCoreRowModel: getCoreRowModel(),
+    getRowId,
+  });
+
   // Columns injected by the table itself (selection checkbox, row actions) have no
   // exportable/printable data of their own.
   const nonPrintableColumns = ['tableSelection', 'tableActions'];
@@ -207,7 +219,7 @@ export function DataTable<TData, TValue>({
       return typeof column.columnDef.header === 'string' ? column.columnDef.header : column.id;
     });
 
-    const rows = table.getRowModel().rows.map((row) =>
+    const rows = exportTable.getRowModel().rows.map((row) =>
       row
         .getAllCells()
         .filter((cell) => isExportableColumn(cell.column.id, cell.column.columnDef.meta))

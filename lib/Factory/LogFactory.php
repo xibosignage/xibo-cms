@@ -74,6 +74,10 @@ class LogFactory extends BaseFactory
         $params = [];
         $limit = '';
 
+        $isPaged = $filterBy !== null
+            && $parsedFilter->getInt('start') !== null
+            && $parsedFilter->getInt('length', ['default' => 10]) !== null;
+
         $select = '
             SELECT `logId`,
                 `runNo`,
@@ -211,10 +215,7 @@ class LogFactory extends BaseFactory
         $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
 
         // Paging
-        if ($filterBy !== null
-            && $parsedFilter->getInt('start') !== null
-            && $parsedFilter->getInt('length', ['default' => 10]) !== null
-        ) {
+        if ($isPaged) {
             $limit = ' LIMIT ' . $parsedFilter->getInt('start', ['default' => 0]) . ', '
                 . $parsedFilter->getInt('length', ['default' => 10]);
         }
@@ -225,8 +226,10 @@ class LogFactory extends BaseFactory
             $entries[] = $this->createEmpty()->hydrate($row, ['htmlStringProperties' => ['message']]);
         }
 
-        // Paging
-        if ($limit != '' && count($entries) > 0) {
+        // Paging: run unconditionally (not just when $entries is non-empty) so an
+        // out-of-range page (filters changed, fewer rows than before) still reports
+        // the true total rather than 0.
+        if ($isPaged) {
             $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);
         }

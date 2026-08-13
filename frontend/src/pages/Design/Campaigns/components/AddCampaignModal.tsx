@@ -300,6 +300,7 @@ export default function AddCampaignModal({
                   name="playCount"
                   label={t('Play count')}
                   type="number"
+                  placeholder={t('Add number')}
                   value={draft.playCount === '' ? '' : String(draft.playCount)}
                   onChange={(val) =>
                     setDraft((prev) => ({
