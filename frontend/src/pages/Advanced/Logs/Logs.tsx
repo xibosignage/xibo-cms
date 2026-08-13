@@ -35,6 +35,7 @@ import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import InfoBanner from '@/components/ui/InfoBanner';
 import { notify } from '@/components/ui/Notification';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
@@ -197,19 +198,7 @@ export default function Logs() {
           onApply={handleApply}
         />
 
-        {error && (
-          <InfoBanner type="danger" className="w-full! mt-2 items-center">
-            {error}
-          </InfoBanner>
-        )}
-
-        {isPaused && (
-          <InfoBanner type="warning" className="w-full! mt-2 items-center">
-            {t(
-              "You're offline. Showing previously loaded results. This will update automatically once your connection is restored.",
-            )}
-          </InfoBanner>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         {hasNextPage && (
           <InfoBanner type="warning" className="w-full! mt-4 items-center">

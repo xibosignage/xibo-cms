@@ -32,7 +32,7 @@ import { DatasetColumnModals } from './components/DatasetColumnsModals';
 import { useDatasetColumnsData } from './hooks/useDatasetColumnsData';
 
 import Button from '@/components/ui/Button';
-import InfoBanner from '@/components/ui/InfoBanner';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useUserContext } from '@/context/UserContext';
@@ -343,19 +343,7 @@ export default function DatasetColumns() {
           </div>
         </div>
 
-        {error && (
-          <InfoBanner type="danger" className="w-full! mt-2 items-center">
-            {error}
-          </InfoBanner>
-        )}
-
-        {isPaused && (
-          <InfoBanner type="warning" className="w-full! mt-2 items-center">
-            {t(
-              "You're offline. Showing previously loaded results. This will update automatically once your connection is restored.",
-            )}
-          </InfoBanner>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         <div className="min-h-0 flex flex-col">
           {!isHydrated ? (

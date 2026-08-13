@@ -41,8 +41,8 @@ import { useSettingsData, settingsQueryKeys } from './hooks/useSettingsData';
 import { useSettingsForm } from './hooks/useSettingsForm';
 
 import Button from '@/components/ui/Button';
-import InfoBanner from '@/components/ui/InfoBanner';
 import { notify } from '@/components/ui/Notification';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import type { TabNavItem } from '@/components/ui/TabNav';
 import { useUserContext } from '@/context/UserContext';
@@ -60,6 +60,11 @@ export default function Settings() {
   const { data, isLoading, isError, isPaused, error: queryError } = useSettingsData();
   const { formValues, updateField, isVisible, isEditable, isDirty, resetForm } =
     useSettingsForm(data);
+  const error = isError
+    ? queryError instanceof Error
+      ? queryError.message
+      : t('Failed to load settings')
+    : '';
 
   const [activeTab, setActiveTab] = useState('Configuration');
   const [isPending, startTransition] = useTransition();
@@ -141,19 +146,7 @@ export default function Settings() {
             ))}
           </div>
 
-          {isError && (
-            <InfoBanner type="danger" className="w-full! mt-2 items-center">
-              {queryError instanceof Error ? queryError.message : t('Failed to load settings')}
-            </InfoBanner>
-          )}
-
-          {isPaused && (
-            <InfoBanner type="warning" className="w-full! mt-2 items-center">
-              {t(
-                "You're offline. Showing previously loaded results. This will update automatically once your connection is restored.",
-              )}
-            </InfoBanner>
-          )}
+          <QueryStatusBanner error={error} isPaused={isPaused} />
           <div className="flex-1 overflow-y-auto flex flex-col">
             {isLoading && (
               <div className="flex-1 flex items-center justify-center p-5 space-y-5 bg-gray-50 ">

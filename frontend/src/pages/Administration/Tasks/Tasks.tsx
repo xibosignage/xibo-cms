@@ -36,7 +36,7 @@ import { taskQueryKeys, useTaskData } from './hooks/useTasksData';
 import Button from '@/components/ui/Button';
 import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
-import InfoBanner from '@/components/ui/InfoBanner';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
@@ -270,19 +270,7 @@ export default function Tasks() {
           onReset={handleResetFilters}
         />
 
-        {error && (
-          <InfoBanner type="danger" className="w-full! mt-2 items-center">
-            {error}
-          </InfoBanner>
-        )}
-
-        {isPaused && (
-          <InfoBanner type="warning" className="w-full! mt-2 items-center">
-            {t(
-              "You're offline. Showing previously loaded results. This will update automatically once your connection is restored.",
-            )}
-          </InfoBanner>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         <div className="min-h-0 flex flex-col">
           {!isHydrated ? (

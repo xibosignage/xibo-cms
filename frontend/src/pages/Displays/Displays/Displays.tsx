@@ -44,7 +44,7 @@ import FilterInputs from '@/components/ui/FilterInputs';
 import FolderActionModals from '@/components/ui/FolderActionModals';
 import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
 import FolderSidebar from '@/components/ui/FolderSidebar';
-import InfoBanner from '@/components/ui/InfoBanner';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataMap } from '@/components/ui/table/DataMap';
 import { DataTable } from '@/components/ui/table/DataTable';
@@ -508,19 +508,7 @@ export default function Displays() {
           onReset={handleResetFilters}
         />
 
-        {error && (
-          <InfoBanner type="danger" className="w-full! mt-2 items-center">
-            {error}
-          </InfoBanner>
-        )}
-
-        {isPaused && (
-          <InfoBanner type="warning" className="w-full! mt-2 items-center">
-            {t(
-              "You're offline. Showing previously loaded results. This will update automatically once your connection is restored.",
-            )}
-          </InfoBanner>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         <div className={`min-h-0 flex flex-col ${viewMode === 'map' && 'flex-1'}`}>
           {!isHydrated ? (

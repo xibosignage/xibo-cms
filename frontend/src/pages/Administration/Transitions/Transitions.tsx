@@ -30,7 +30,7 @@ import { TransitionModals } from './components/TransitionModals';
 import { useTransitionActions } from './hooks/useTransitionActions';
 import { useTransitionData } from './hooks/useTransitionData';
 
-import InfoBanner from '@/components/ui/InfoBanner';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
@@ -119,19 +119,7 @@ export default function Transitions() {
           <TabNav activeTab="Transitions" navigation={administrationTabs} />
         </div>
 
-        {error && (
-          <InfoBanner type="danger" className="w-full! mt-2 items-center">
-            {error}
-          </InfoBanner>
-        )}
-
-        {isPaused && (
-          <InfoBanner type="warning" className="w-full! mt-2 items-center">
-            {t(
-              "You're offline. Showing previously loaded results. This will update automatically once your connection is restored.",
-            )}
-          </InfoBanner>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         <div className="min-h-0 flex flex-col">
           {!isHydrated ? (
