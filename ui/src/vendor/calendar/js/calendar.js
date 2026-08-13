@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -763,6 +763,7 @@ if(!String.prototype.formatNum) {
 		var t = {tooltip: '', cal: this};
 		var layouts = [];
 		var maxPriority = 0;
+		var hasTzPlugin = !!moment().tz;
 		
 		for (var i = 0; i < ev.length; i++) {
 			if (ev[i].isPriority > maxPriority && ev[i].eventTypeId == type) {
@@ -796,8 +797,8 @@ if(!String.prototype.formatNum) {
 					layoutName: layout.layout,
 					layoutStatus: layout.status,
 					previewToken: layout.previewJwt,
-					eventFromDt: moment(event.fromDt, "X").tz ? moment(event.fromDt, "X").tz(timezone).format(jsDateFormat) : moment(event.fromDt, "X").format(jsDateFormat),
-					eventToDt: moment(event.toDt, "X").tz ? moment(event.toDt, "X").tz(timezone).format(jsDateFormat) : moment(event.toDt, "X").format(jsDateFormat),
+					eventFromDt: hasTzPlugin ? moment(event.fromDt, "X").tz(timezone).format(jsDateFormat) : moment(event.fromDt, "X").format(jsDateFormat),
+					eventToDt: hasTzPlugin ? moment(event.toDt, "X").tz(timezone).format(jsDateFormat) : moment(event.toDt, "X").format(jsDateFormat),
 					eventDayPartId: event.dayPartId,
 					isAlways: event.isAlways,
 					isCustom: event.isCustom,
