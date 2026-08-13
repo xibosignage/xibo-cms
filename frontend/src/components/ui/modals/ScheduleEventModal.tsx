@@ -42,6 +42,7 @@ import Modal, { type ModalAction } from './Modal';
 import { withPublicPath } from '@/config/publicPath';
 import { useUserContext } from '@/context/UserContext';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
+import MediaPreviewer from '@/pages/Library/Media/components/MediaPreviewer';
 import { DisplayGroupMultiSelect } from '@/pages/Schedule/Schedule/components/DisplayGroupMultiSelect';
 import {
   type DraftCriterion,
@@ -87,6 +88,7 @@ import {
 import { fetchSyncGroups, fetchSyncGroupDisplays } from '@/services/syncGroupApi';
 import type { Daypart } from '@/types/daypart';
 import { EventTypeId, type Event } from '@/types/event';
+import type { Media } from '@/types/media';
 import type { SyncGroupDisplay } from '@/types/syncGroup';
 import { hasFeature } from '@/utils/permissions';
 
@@ -155,6 +157,8 @@ export default function ScheduleEventModal({
 
   const [contentOptions, setContentOptions] = useState<SelectOption[]>([]);
   const [isLoadingContent, setIsLoadingContent] = useState(false);
+  const [previewMedia, setPreviewMedia] = useState<Media | null>(null);
+  const [isLoadingMediaPreview, setIsLoadingMediaPreview] = useState(false);
   const [showDisplayBanner, setShowDisplayBanner] = useState(false);
   const [daypartOptions, setDaypartOptions] = useState<SelectOption[]>([]);
   const [resolutionOptions, setResolutionOptions] = useState<SelectOption[]>([]);
@@ -684,6 +688,33 @@ export default function ScheduleEventModal({
         }).then(({ rows }) => rows.map((l) => ({ value: String(l.layoutId), label: l.layout }))),
       setSyncLayoutOptions,
     );
+  };
+
+  const handlePreviewMedia = () => {
+    const requestedId = draft.mediaId;
+    if (!requestedId) {
+      return;
+    }
+
+    setIsLoadingMediaPreview(true);
+    fetchMedia({ start: 0, length: 1, mediaId: requestedId })
+      .then(({ rows }) => {
+        if (draft.mediaId !== requestedId) {
+          return;
+        }
+        const [media] = rows;
+        if (!media) {
+          notify.error(t('Failed to load media preview.'));
+          return;
+        }
+        setPreviewMedia(media);
+      })
+      .catch(() => {
+        notify.error(t('Failed to load media preview.'));
+      })
+      .finally(() => {
+        setIsLoadingMediaPreview(false);
+      });
   };
 
   useEffect(() => {
@@ -1389,6 +1420,23 @@ export default function ScheduleEventModal({
                     </span>
                   </div>
                 )}
+
+              {isMediaType && !!draft.mediaId && (
+                <div className="inline-flex flex-col gap-1 items-start">
+                  <Button
+                    variant="secondary"
+                    className="mb-0"
+                    rightIcon={Tablet}
+                    disabled={isLoadingMediaPreview}
+                    onClick={handlePreviewMedia}
+                  >
+                    {t('Preview')}
+                  </Button>
+                  <span className="text-xs text-gray-400 mt-1 whitespace-pre-line">
+                    {t('Preview the selected media')}
+                  </span>
+                </div>
+              )}
 
               {/* Sync Group: per-display layout selection table */}
               {isSyncType && draft.syncGroupId && (
@@ -2203,6 +2251,16 @@ export default function ScheduleEventModal({
           )}
         </div>
       </div>
+
+      {previewMedia && (
+        <MediaPreviewer
+          mediaId={previewMedia.mediaId}
+          mediaType={previewMedia.mediaType}
+          fileName={previewMedia.name}
+          mediaData={previewMedia}
+          onClose={() => setPreviewMedia(null)}
+        />
+      )}
     </Modal>
   );
 }
