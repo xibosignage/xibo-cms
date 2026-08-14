@@ -91,7 +91,8 @@ export default function PlaylistDashboard() {
     | null
   >(null);
 
-  const { data, isLoading } = usePlaylistSpots(selectedPlaylistId);
+  const { data, isLoading, isError, error: queryError } = usePlaylistSpots(selectedPlaylistId);
+  const error = isError && queryError instanceof Error ? queryError.message : '';
   const { uploadStates, startUpload, handleDeleteWidget, handleRemoveAll, isDeleting } =
     usePlaylistDashboardActions(queryClient, selectedPlaylistId);
 
@@ -122,6 +123,12 @@ export default function PlaylistDashboard() {
       <div>
         <PlaylistDropdown value={selectedPlaylistId} onSelect={setSelectedPlaylistId} />
       </div>
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
+          {error}
+        </div>
+      )}
+
       <div className="space-y-2">
         <div className="flex justify-between">
           <h2 className="text-lg font-semibold text-gray-800">{t('Playlist Content')}</h2>
