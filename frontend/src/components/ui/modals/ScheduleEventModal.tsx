@@ -356,6 +356,8 @@ export default function ScheduleEventModal({
       return;
     }
 
+    const token = syncLayoutSearchTokenRef.current[displayId] ?? 0;
+
     setSyncLayoutOverrideByDisplay((prev) => ({
       ...prev,
       [displayId]: { ...current, isLoadingMore: true },
@@ -363,6 +365,9 @@ export default function ScheduleEventModal({
 
     fetchLayouts({ start: current.options.length, length: DROPDOWN_PAGE_SIZE, layout: search })
       .then(({ rows }) => {
+        if (syncLayoutSearchTokenRef.current[displayId] !== token) {
+          return;
+        }
         setSyncLayoutOverrideByDisplay((prev) => {
           const existing = prev[displayId];
           if (!existing) {
@@ -379,6 +384,9 @@ export default function ScheduleEventModal({
         });
       })
       .finally(() => {
+        if (syncLayoutSearchTokenRef.current[displayId] !== token) {
+          return;
+        }
         setSyncLayoutOverrideByDisplay((prev) => {
           const existing = prev[displayId];
           if (!existing) {
@@ -468,6 +476,7 @@ export default function ScheduleEventModal({
   }, [isOpen]);
 
   useEffect(() => {
+    loadVersionRef.current.resolution += 1;
     if (!isOpen) {
       return;
     }
@@ -504,6 +513,7 @@ export default function ScheduleEventModal({
   }, [isOpen, resolutionDebouncedSearch]);
 
   useEffect(() => {
+    loadVersionRef.current.daypart += 1;
     if (!isOpen) return;
 
     let cancelled = false;
@@ -686,6 +696,7 @@ export default function ScheduleEventModal({
   };
 
   useEffect(() => {
+    loadVersionRef.current.content += 1;
     if (!isOpen || !draft.eventTypeId) {
       setContentOptions([]);
       contentFetchedCountRef.current = 0;
@@ -727,6 +738,19 @@ export default function ScheduleEventModal({
 
   type PaginationKey = keyof typeof pagination;
 
+  // Bumped by each list's own reset effect whenever its context changes (event type,
+  // search term, sync group, open/close). Lets loadMore() below detect and discard a
+  // load-more response that resolves after the user has already moved on to a
+  // different list, instead of merging stale rows into the new one.
+  const loadVersionRef = useRef<Record<PaginationKey, number>>({
+    content: 0,
+    daypart: 0,
+    command: 0,
+    layoutCode: 0,
+    resolution: 0,
+    syncLayout: 0,
+  });
+
   const loadMore = (
     key: PaginationKey,
     fetchFn: () => Promise<SelectOption[]>,
@@ -736,9 +760,13 @@ export default function ScheduleEventModal({
       return;
     }
     loadingMoreRef.current[key] = true;
+    const version = loadVersionRef.current[key];
     setPagination((prev) => ({ ...prev, [key]: { ...prev[key], isLoadingMore: true } }));
     fetchFn()
       .then((newOptions) => {
+        if (loadVersionRef.current[key] !== version) {
+          return;
+        }
         setOptions((prev) => {
           const seen = new Set(prev.map((o) => o.value));
           return [...prev, ...newOptions.filter((o) => !seen.has(o.value))];
@@ -843,6 +871,7 @@ export default function ScheduleEventModal({
   };
 
   useEffect(() => {
+    loadVersionRef.current.layoutCode += 1;
     if (!isOpen || draft.eventTypeId !== EventTypeId.Action) {
       setLayoutCodeOptions([]);
       setCommandOptions([]);
@@ -890,6 +919,7 @@ export default function ScheduleEventModal({
   }, [isOpen, draft.eventTypeId, layoutCodeDebouncedSearch]);
 
   useEffect(() => {
+    loadVersionRef.current.command += 1;
     if (!isOpen || draft.eventTypeId !== EventTypeId.Action) {
       return;
     }
@@ -972,6 +1002,7 @@ export default function ScheduleEventModal({
 
   // Fetch layout options for the sync group per-display layout dropdowns
   useEffect(() => {
+    loadVersionRef.current.syncLayout += 1;
     if (!isOpen || !isSyncType || !draft.syncGroupId) {
       setSyncLayoutOptions([]);
       return;
