@@ -5,7 +5,7 @@ import Logs from '../Logs';
 import { INITIAL_FILTER_STATE } from '../LogsConfig';
 import { useLogsData } from '../hooks/useLogsData';
 
-import { createMockLogEntry, mockLogsList, renderWithProviders } from './Setup';
+import { createMockLogEntry, createMockLogsQuery, renderWithProviders } from './Setup';
 
 import { useUserContext } from '@/context/UserContext';
 import { useTableState } from '@/hooks/useTableState';
@@ -61,12 +61,7 @@ describe('Logs Page - Rendering', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(useTableState).mockReturnValue(defaultTableState as never);
-    vi.mocked(useLogsData).mockReturnValue({
-      data: { rows: mockLogsList, totalCount: 3 },
-      isFetching: false,
-      isError: false,
-      error: null,
-    } as never);
+    vi.mocked(useLogsData).mockReturnValue(createMockLogsQuery() as never);
   });
 
   it('shows a loading pulse when the page is not yet hydrated', () => {
@@ -101,12 +96,13 @@ describe('Logs Page - Rendering', () => {
   });
 
   it('shows an error alert banner when the API call fails', async () => {
-    vi.mocked(useLogsData).mockReturnValue({
-      data: undefined,
-      isFetching: false,
-      isError: true,
-      error: new Error('Server Error'),
-    } as never);
+    vi.mocked(useLogsData).mockReturnValue(
+      createMockLogsQuery([], {
+        data: undefined,
+        isError: true,
+        error: new Error('Server Error'),
+      }) as never,
+    );
 
     const { user } = renderWithProviders(<Logs />);
 
@@ -164,15 +160,14 @@ describe('Logs Page - Rendering', () => {
   });
 
   it('decodes HTML entities in the message column after filters are applied', async () => {
-    vi.mocked(useLogsData).mockReturnValue({
-      data: {
-        rows: [createMockLogEntry({ logId: 99, message: '&amp; &lt;b&gt;bold&lt;/b&gt;' })],
-        totalCount: 1,
-      },
-      isFetching: false,
-      isError: false,
-      error: null,
-    } as never);
+    vi.mocked(useLogsData).mockReturnValue(
+      createMockLogsQuery([
+        {
+          rows: [createMockLogEntry({ logId: 99, message: '&amp; &lt;b&gt;bold&lt;/b&gt;' })],
+          totalCount: 1,
+        },
+      ]) as never,
+    );
 
     const { user } = renderWithProviders(<Logs />);
 

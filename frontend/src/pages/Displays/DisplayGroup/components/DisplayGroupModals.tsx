@@ -44,7 +44,7 @@ interface DisplayGroupModalsProps {
   actions: {
     activeModal: string | null;
     closeModal: () => void;
-    handleRefresh: () => void;
+    handleRefresh: () => Promise<unknown>;
     deleteError: string | null;
     isDeleting: boolean;
     isCopying: boolean;
@@ -83,6 +83,10 @@ export function DisplayGroupModals({ actions, selection, handlers }: DisplayGrou
         display: selection.selectedDisplayGroup.displayGroup,
       }
     : null;
+
+  const editTagsSelectedItems = isModalOpen('editTagsMultiple')
+    ? handlers.getAllSelectedItems()
+    : [];
 
   return (
     <>
@@ -227,12 +231,12 @@ export function DisplayGroupModals({ actions, selection, handlers }: DisplayGrou
       {isModalOpen('editTagsMultiple') && (
         <EditTagsMultipleModal
           targetType="displayGroup"
-          ids={handlers.getAllSelectedItems().map((dg) => dg.displayGroupId)}
-          existingTags={mergeEntityTags(handlers.getAllSelectedItems())}
+          ids={editTagsSelectedItems.map((dg) => dg.displayGroupId)}
+          existingTags={mergeEntityTags(editTagsSelectedItems)}
           onClose={actions.closeModal}
-          onSuccess={() => {
+          onSuccess={async () => {
+            await actions.handleRefresh();
             actions.closeModal();
-            actions.handleRefresh();
           }}
         />
       )}

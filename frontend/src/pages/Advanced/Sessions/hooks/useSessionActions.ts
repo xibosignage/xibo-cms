@@ -25,6 +25,7 @@ import type { TFunction } from 'i18next';
 import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
 
+import { notify } from '@/components/ui/Notification';
 import { logoutSession } from '@/services/sessionApi';
 import type { Session } from '@/types/session';
 
@@ -69,6 +70,9 @@ export function useSessionActions({
         return;
       }
 
+      notify.success(
+        t('{{count}} session(s) logged out successfully.', { count: itemsToLogout.length }),
+      );
       setRowSelection({});
       handleRefresh();
       closeModal();
