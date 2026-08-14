@@ -2207,7 +2207,9 @@ class DisplayGroup extends Base
             $new->updateTagLinks($displayGroup->tags);
         }
 
-        $new->save();
+        $new->save([
+            'manageDynamicDisplayLinks' => $copyMembers,
+        ]);
 
         // Return
         $this->getState()->hydrate([
