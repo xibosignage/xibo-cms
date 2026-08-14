@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -23,10 +23,13 @@
 namespace Xibo\Twig;
 
 use Twig\Extension\AbstractExtension;
+use Twig\TwigFilter;
 
 /**
  * Class DateFormatTwigExtension
  * @package Xibo\Twig
+ *
+ * Registers the `datehms` Twig filter, which formats a duration given in seconds as HH:mm:ss.
  */
 class DateFormatTwigExtension extends AbstractExtension
 {
@@ -35,21 +38,18 @@ class DateFormatTwigExtension extends AbstractExtension
      */
     public function getFilters()
     {
-        return array(
-            new \Twig\TwigFilter('datehms', [$this, 'dateFormat'])
-        );
+        return [
+            new TwigFilter('datehms', [$this, 'dateFormat'])
+        ];
     }
 
     /**
-     * Formats a date
-     *
-     * @param string $date in seconds
-     *
-     * @return string formated as HH:mm:ss
+     * @param int $seconds
+     * @return string formatted as HH:mm:ss
      */
-    public function dateFormat($date)
+    public function dateFormat($seconds)
     {
-        return gmdate('H:i:s', $date);
+        return gmdate('H:i:s', $seconds);
     }
 
     /**

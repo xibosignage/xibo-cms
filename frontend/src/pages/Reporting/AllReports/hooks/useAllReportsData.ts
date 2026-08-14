@@ -20,7 +20,6 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { isAxiosError } from 'axios';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 
@@ -70,6 +69,5 @@ export const useAllReportsData = (enabled: boolean) => {
     select: (data) => (isSuperAdmin ? withSspActivityReport(data, t) : data),
     staleTime: 60_000,
     enabled,
-    throwOnError: (error: unknown) => isAxiosError(error) && (error.response?.status ?? 0) >= 500,
   });
 };

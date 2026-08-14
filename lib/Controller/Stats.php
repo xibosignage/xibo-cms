@@ -874,8 +874,8 @@ class Stats extends Base
             $entry['isFinished'] = $row['end'] !== null;
 
             // Get the start/end date
-            $start = Carbon::createFromTimestamp($row['start']);
-            $end = Carbon::createFromTimestamp($row['end']);
+            $start = DateFormatHelper::createFromTimestamp($row['start']);
+            $end = DateFormatHelper::createFromTimestamp($row['end']);
 
             if ($returnDisplayLocalTime) {
                 // Convert the dates to the display timezone.
@@ -894,7 +894,7 @@ class Stats extends Base
             }
             $entry['start'] = $start->format($returnDateFormat);
             $entry['end'] = $end->format($returnDateFormat);
-            $entry['duration'] = $end->diffInSeconds($start);
+            $entry['duration'] = (int) $end->diffInSeconds($start);
             $rows[] = $entry;
         }
 

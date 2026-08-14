@@ -10,6 +10,10 @@ jobs:
     name: Build Containers
     if: github.repository == 'xibosignage/xibo-cms'
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+      packages: read
+      actions: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,10 +41,27 @@ jobs:
           build-args: GIT_COMMIT=${{ github.sha }}
           push: true
           load: false
+          provenance: false
 
       - name: Pull Image
         run: |
           docker pull ghcr.io/xibosignage/xibo-cms:release-${GITHUB_REF##*/}
+
+      - name: Generate SBOM (SPDX)
+        uses: anchore/sbom-action@v0
+        with:
+          image: ghcr.io/xibosignage/xibo-cms:release-${{ github.ref_name }}
+          format: spdx-json
+          output-file: xibo-cms-${{ github.ref_name }}.spdx.json
+          artifact-name: sbom-spdx-${{ github.ref_name }}
+
+      - name: Generate SBOM (CycloneDX)
+        uses: anchore/sbom-action@v0
+        with:
+          image: ghcr.io/xibosignage/xibo-cms:release-${{ github.ref_name }}
+          format: cyclonedx-json
+          output-file: xibo-cms-${{ github.ref_name }}.cdx.json
+          artifact-name: sbom-cyclonedx-${{ github.ref_name }}
 
       - name: Build archive
         run: |
@@ -60,3 +81,5 @@ jobs:
           files: |
             **.tar.gz
             **.zip
+            xibo-cms-${{ github.ref_name }}.spdx.json
+            xibo-cms-${{ github.ref_name }}.cdx.json

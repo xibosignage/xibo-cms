@@ -122,6 +122,12 @@ export default function ScheduleEventModal({
   const { t } = useTranslation();
   const { user } = useUserContext();
   const { formatDateTime } = useDateFormatter();
+  // The CMS-wide `defaultTimezone` setting, not a personal/browser timezone
+  // - see User::myDetails() in lib/Controller/User.php. Distinct from the
+  // `syncTimezone` ("Run at CMS Time?") field below: that one controls
+  // *playback* time (CMS time vs. display-local time) and is resolved
+  // server-side against the per-display Display.timeZone column in
+  // lib/Xmds/Soap.php - it never feeds into this `timezone` value.
   const timezone = user?.settings?.defaultTimezone ?? 'UTC';
 
   const canGeoSchedule = hasFeature(user, 'schedule.geoLocation');
@@ -167,12 +173,15 @@ export default function ScheduleEventModal({
     daypart: { totalCount: 0, isLoading: false, isLoadingMore: false },
     command: { totalCount: 0, isLoading: false, isLoadingMore: false },
     layoutCode: { totalCount: 0, isLoading: false, isLoadingMore: false },
+    resolution: { totalCount: 0, isLoading: false, isLoadingMore: false },
+    syncLayout: { totalCount: 0, isLoading: false, isLoadingMore: false },
   });
 
   const loadingMoreRef = useRef<Record<string, boolean>>({});
 
   const [alwaysDayPartId, setAlwaysDayPartId] = useState<string>('');
   const [customDayPartId, setCustomDayPartId] = useState<string>('');
+  const [shareOfVoicePercentInput, setShareOfVoicePercentInput] = useState<string | null>(null);
 
   // Sync group per-display layout state
   const [syncDisplays, setSyncDisplays] = useState<SyncGroupDisplay[]>([]);
@@ -210,6 +219,36 @@ export default function ScheduleEventModal({
     clearTimeout(daypartSearchTimerRef.current);
     daypartSearchTimerRef.current = setTimeout(() => {
       setDaypartDebouncedSearch(term);
+    }, 300);
+  };
+
+  const [layoutCodeDebouncedSearch, setLayoutCodeDebouncedSearch] = useState('');
+  const layoutCodeSearchTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  const handleLayoutCodeSearch = (term: string) => {
+    clearTimeout(layoutCodeSearchTimerRef.current);
+    layoutCodeSearchTimerRef.current = setTimeout(() => {
+      setLayoutCodeDebouncedSearch(term);
+    }, 300);
+  };
+
+  const [resolutionDebouncedSearch, setResolutionDebouncedSearch] = useState('');
+  const resolutionSearchTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  const handleResolutionSearch = (term: string) => {
+    clearTimeout(resolutionSearchTimerRef.current);
+    resolutionSearchTimerRef.current = setTimeout(() => {
+      setResolutionDebouncedSearch(term);
+    }, 300);
+  };
+
+  const [syncLayoutDebouncedSearch, setSyncLayoutDebouncedSearch] = useState('');
+  const syncLayoutSearchTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  const handleSyncLayoutSearch = (term: string) => {
+    clearTimeout(syncLayoutSearchTimerRef.current);
+    syncLayoutSearchTimerRef.current = setTimeout(() => {
+      setSyncLayoutDebouncedSearch(term);
     }, 300);
   };
 
@@ -295,12 +334,37 @@ export default function ScheduleEventModal({
     if (!isOpen) {
       return;
     }
-    fetchResolution({ start: 0, length: 100 }).then(({ rows }) => {
-      setResolutionOptions(
-        rows.map((r) => ({ value: String(r.resolutionId), label: r.resolution })),
-      );
-    });
-  }, [isOpen]);
+
+    let cancelled = false;
+    setPagination((prev) => ({ ...prev, resolution: { ...prev.resolution, isLoading: true } }));
+
+    fetchResolution({
+      start: 0,
+      length: DROPDOWN_PAGE_SIZE,
+      resolution: resolutionDebouncedSearch || undefined,
+    })
+      .then(({ rows, totalCount }) => {
+        if (cancelled) {
+          return;
+        }
+        setResolutionOptions(
+          rows.map((r) => ({ value: String(r.resolutionId), label: r.resolution })),
+        );
+        setPagination((prev) => ({ ...prev, resolution: { ...prev.resolution, totalCount } }));
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setPagination((prev) => ({
+            ...prev,
+            resolution: { ...prev.resolution, isLoading: false },
+          }));
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, resolutionDebouncedSearch]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -542,6 +606,9 @@ export default function ScheduleEventModal({
   const hasMoreContent = contentOptions.length < pagination.content.totalCount;
   const hasMoreDayparts = daypartOptions.length < pagination.daypart.totalCount;
   const hasMoreCommands = commandOptions.length < pagination.command.totalCount;
+  const hasMoreLayoutCodes = layoutCodeOptions.length < pagination.layoutCode.totalCount;
+  const hasMoreResolutions = resolutionOptions.length < pagination.resolution.totalCount;
+  const hasMoreSyncLayouts = syncLayoutOptions.length < pagination.syncLayout.totalCount;
 
   const loadMoreContent = () => {
     if (!draft.eventTypeId || isLoadingContent) return;
@@ -583,6 +650,49 @@ export default function ScheduleEventModal({
     );
   };
 
+  const loadMoreLayoutCodes = () => {
+    loadMore(
+      'layoutCode',
+      () =>
+        fetchLayoutCodes({
+          start: layoutCodeOptions.length,
+          length: DROPDOWN_PAGE_SIZE,
+          code: layoutCodeDebouncedSearch || undefined,
+        }).then(({ rows }) =>
+          rows.map((c) => ({ value: c.code, label: `${c.layout} (${c.code})` })),
+        ),
+      setLayoutCodeOptions,
+    );
+  };
+
+  const loadMoreResolutions = () => {
+    loadMore(
+      'resolution',
+      () =>
+        fetchResolution({
+          start: resolutionOptions.length,
+          length: DROPDOWN_PAGE_SIZE,
+          resolution: resolutionDebouncedSearch || undefined,
+        }).then(({ rows }) =>
+          rows.map((r) => ({ value: String(r.resolutionId), label: r.resolution })),
+        ),
+      setResolutionOptions,
+    );
+  };
+
+  const loadMoreSyncLayouts = () => {
+    loadMore(
+      'syncLayout',
+      () =>
+        fetchLayouts({
+          start: syncLayoutOptions.length,
+          length: DROPDOWN_PAGE_SIZE,
+          layout: syncLayoutDebouncedSearch || undefined,
+        }).then(({ rows }) => rows.map((l) => ({ value: String(l.layoutId), label: l.layout }))),
+      setSyncLayoutOptions,
+    );
+  };
+
   useEffect(() => {
     if (!isOpen || draft.eventTypeId !== EventTypeId.Action) {
       setLayoutCodeOptions([]);
@@ -590,31 +700,45 @@ export default function ScheduleEventModal({
       return;
     }
 
+    let cancelled = false;
     setPagination((prev) => ({
       ...prev,
       layoutCode: { ...prev.layoutCode, isLoading: true },
     }));
 
-    fetchLayoutCodes()
-      .then((codes) => {
+    fetchLayoutCodes({
+      start: 0,
+      length: DROPDOWN_PAGE_SIZE,
+      code: layoutCodeDebouncedSearch || undefined,
+    })
+      .then(({ rows: codes, totalCount }) => {
+        if (cancelled) {
+          return;
+        }
         setLayoutCodeOptions(
           codes.map((c) => ({ value: c.code, label: `${c.layout} (${c.code})` })),
         );
         setPagination((prev) => ({
           ...prev,
-          layoutCode: { ...prev.layoutCode, totalCount: codes.length },
+          layoutCode: { ...prev.layoutCode, totalCount },
         }));
       })
       .catch((err) => {
         console.error('fetchLayoutCodes failed:', err);
       })
       .finally(() => {
-        setPagination((prev) => ({
-          ...prev,
-          layoutCode: { ...prev.layoutCode, isLoading: false },
-        }));
+        if (!cancelled) {
+          setPagination((prev) => ({
+            ...prev,
+            layoutCode: { ...prev.layoutCode, isLoading: false },
+          }));
+        }
       });
-  }, [isOpen, draft.eventTypeId]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, draft.eventTypeId, layoutCodeDebouncedSearch]);
 
   useEffect(() => {
     if (!isOpen || draft.eventTypeId !== EventTypeId.Action) {
@@ -657,21 +781,16 @@ export default function ScheduleEventModal({
   useEffect(() => {
     if (!isOpen || !isSyncType || !draft.syncGroupId) {
       setSyncDisplays([]);
-      setSyncLayoutOptions([]);
       return;
     }
 
     let cancelled = false;
     setIsLoadingSyncDisplays(true);
 
-    Promise.all([
-      fetchSyncGroupDisplays(draft.syncGroupId, isEditMode ? event?.eventId : undefined),
-      fetchLayouts({ start: 0, length: 100 }),
-    ])
-      .then(([displays, { rows: layouts }]) => {
+    fetchSyncGroupDisplays(draft.syncGroupId, isEditMode ? event?.eventId : undefined)
+      .then((displays) => {
         if (cancelled) return;
         setSyncDisplays(displays);
-        setSyncLayoutOptions(layouts.map((l) => ({ value: String(l.layoutId), label: l.layout })));
         // Pre-populate syncDisplayLayouts from fetched data (edit mode)
         const layoutMap: Record<number, number | null> = {};
         displays.forEach((d) => {
@@ -697,6 +816,40 @@ export default function ScheduleEventModal({
       cancelled = true;
     };
   }, [isOpen, isSyncType, draft.syncGroupId]);
+
+  // Fetch layout options for the sync group per-display layout dropdowns
+  useEffect(() => {
+    if (!isOpen || !isSyncType || !draft.syncGroupId) {
+      setSyncLayoutOptions([]);
+      return;
+    }
+
+    let cancelled = false;
+    setPagination((prev) => ({ ...prev, syncLayout: { ...prev.syncLayout, isLoading: true } }));
+
+    fetchLayouts({
+      start: 0,
+      length: DROPDOWN_PAGE_SIZE,
+      layout: syncLayoutDebouncedSearch || undefined,
+    })
+      .then(({ rows: layouts, totalCount }) => {
+        if (cancelled) return;
+        setSyncLayoutOptions(layouts.map((l) => ({ value: String(l.layoutId), label: l.layout })));
+        setPagination((prev) => ({ ...prev, syncLayout: { ...prev.syncLayout, totalCount } }));
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setPagination((prev) => ({
+            ...prev,
+            syncLayout: { ...prev.syncLayout, isLoading: false },
+          }));
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, isSyncType, draft.syncGroupId, syncLayoutDebouncedSearch]);
 
   const updateDraft = <K extends keyof ScheduleEventDraft>(
     key: K,
@@ -989,6 +1142,7 @@ export default function ScheduleEventModal({
     setSyncLayoutOptions([]);
     setFormErrors({});
     setApiError(undefined);
+    setShareOfVoicePercentInput(null);
     onClose();
   };
 
@@ -1020,6 +1174,11 @@ export default function ScheduleEventModal({
           }}
           placeholder={t('Select Layout')}
           searchable
+          onSearch={handleSyncLayoutSearch}
+          isLoading={pagination.syncLayout.isLoading}
+          onLoadMore={loadMoreSyncLayouts}
+          hasMore={hasMoreSyncLayouts}
+          isLoadingMore={pagination.syncLayout.isLoadingMore}
         />
       ),
     },
@@ -1313,7 +1472,11 @@ export default function ScheduleEventModal({
                         'Please select the Code identifier for the Layout that Player should navigate to when this Action is triggered.',
                       )}
                       searchable
+                      onSearch={handleLayoutCodeSearch}
                       isLoading={pagination.layoutCode.isLoading}
+                      onLoadMore={loadMoreLayoutCodes}
+                      hasMore={hasMoreLayoutCodes}
+                      isLoadingMore={pagination.layoutCode.isLoadingMore}
                       error={formErrors.actionLayoutCode}
                     />
                   )}
@@ -1405,7 +1568,10 @@ export default function ScheduleEventModal({
                         name="shareOfVoice"
                         label={t('Share of Voice')}
                         value={draft.shareOfVoice}
-                        onChange={(num) => updateDraft('shareOfVoice', num)}
+                        onChange={(num) => {
+                          updateDraft('shareOfVoice', num);
+                          setShareOfVoicePercentInput(null);
+                        }}
                         helpText={t(
                           'The amount of time this Layout should be shown, in seconds per hour.',
                         )}
@@ -1417,9 +1583,26 @@ export default function ScheduleEventModal({
                         </label>
                         <input
                           type="text"
-                          readOnly
-                          value={((draft.shareOfVoice / 3600) * 100).toFixed(2)}
-                          className="h-11.25 rounded-lg border border-gray-200 px-3 text-sm bg-gray-50 text-gray-500"
+                          inputMode="decimal"
+                          value={
+                            shareOfVoicePercentInput ??
+                            ((draft.shareOfVoice / 3600) * 100).toFixed(2)
+                          }
+                          onChange={(e) => {
+                            const raw = e.target.value;
+                            setShareOfVoicePercentInput(raw);
+
+                            const percent = Number(raw);
+                            if (raw.trim() !== '' && Number.isFinite(percent)) {
+                              const clampedPercent = Math.min(100, Math.max(0, percent));
+                              updateDraft(
+                                'shareOfVoice',
+                                Math.round((3600 * clampedPercent) / 100),
+                              );
+                            }
+                          }}
+                          onBlur={() => setShareOfVoicePercentInput(null)}
+                          className="h-11.25 rounded-lg border border-gray-200 px-3 text-sm font-normal text-gray-800 hover:border-gray-400 focus:border-xibo-blue-600 focus:ring-1 focus:ring-xibo-blue-600/25"
                         />
                       </div>
                     </div>
@@ -1618,6 +1801,12 @@ export default function ScheduleEventModal({
                           'Optionally select a Resolution to use for the selected Media. Leave blank to match with an existing Resolution closest in size to the selected media.',
                         )}
                         clearable
+                        searchable
+                        onSearch={handleResolutionSearch}
+                        isLoading={pagination.resolution.isLoading}
+                        onLoadMore={loadMoreResolutions}
+                        hasMore={hasMoreResolutions}
+                        isLoadingMore={pagination.resolution.isLoadingMore}
                       />
                       <div className="flex flex-col gap-1.5">
                         <label className="text-sm font-semibold text-gray-500">

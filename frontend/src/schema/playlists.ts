@@ -72,4 +72,12 @@ export const getPlaylistSchema = (t: TFunction, maxNumberOfItemsLimit = 0) =>
           path: ['maxNumberOfItems'],
         });
       }
+
+      if ((data.maxNumberOfItems ?? 0) < 1) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: t('Max number of items must be at least 1'),
+          path: ['maxNumberOfItems'],
+        });
+      }
     });

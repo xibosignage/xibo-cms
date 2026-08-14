@@ -21,10 +21,11 @@
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
-import type { AxiosError } from 'axios';
 
 import type { MediaFilterInput } from '../MediaConfig';
 
+import { serializeTags } from '@/components/ui/forms/TagInput';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import type { FetchMediaRequest } from '@/services/mediaApi';
 import { fetchMedia } from '@/services/mediaApi';
 import { resolveLastModified } from '@/utils/date';
@@ -52,6 +53,8 @@ export const useMediaData = ({
   advancedFilters,
   enabled = true,
 }: UseMediaParams) => {
+  const { timeZone } = useDateFormatter();
+
   // Combine settings into one object to create a unique cache key
   const queryParams = {
     pageIndex: pagination.pageIndex,
@@ -74,8 +77,7 @@ export const useMediaData = ({
       const { lastModified, tags, mediaId, layoutId, exactTags, useRegexForName, ...restFilters } =
         advancedFilters;
 
-      const normalizedTags =
-        tags && tags.length > 0 ? tags.map((tag) => tag.tag).join(',') : undefined;
+      const normalizedTags = tags && tags.length > 0 ? serializeTags(tags) : undefined;
 
       const request: FetchMediaRequest = {
         start: startOffset,
@@ -92,7 +94,7 @@ export const useMediaData = ({
         ...(useRegexForName && advancedFilters.media && isValidRegex(advancedFilters.media)
           ? { useRegexForName: 1 }
           : {}),
-        ...resolveLastModified(lastModified),
+        ...resolveLastModified(lastModified, timeZone),
       };
 
       if (typeof folderId === 'number') {
@@ -106,9 +108,5 @@ export const useMediaData = ({
 
     placeholderData: keepPreviousData, // Keep showing previous page's data while the new page loads
     staleTime: 1000 * 60 * 1, // Cache for 1 minute
-
-    throwOnError: (error: AxiosError) => {
-      return error.response?.status ? error.response.status >= 500 : false;
-    },
   });
 };

@@ -348,7 +348,7 @@ export default function FolderTreeList({
               }`}
             >
               {tab === 'Home' && <Home size={14} />}
-              {t(tab)}
+              {tab === 'Home' ? t('Home') : t('Shared with me')}
             </button>
           ))}
         </div>

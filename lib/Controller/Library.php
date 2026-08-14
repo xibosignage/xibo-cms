@@ -22,8 +22,9 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Str;
-use Intervention\Image\ImageManagerStatic as Img;
+use Intervention\Image\ImageManager;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Respect\Validation\Validator as v;
@@ -336,7 +337,11 @@ class Library extends Base
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
-            'message' => sprintf(__('For Media %s Enable Stats Collection is set to %s'), $media->name, __($media->enableStat))
+            'message' => sprintf(
+                __('For Media %s Enable Stats Collection is set to %s'),
+                $media->name,
+                __($media->enableStat ?? '')
+            )
         ]);
 
         return $this->render($request, $response);
@@ -537,10 +542,19 @@ class Library extends Base
 
         $recordsTotal = $this->mediaFactory->countLast();
 
-        return $response
-            ->withStatus(200)
-            ->withHeader('X-Total-Count', $recordsTotal)
-            ->withJson($mediaList);
+        if ($this->isApi($request) || $this->isJson($request)) {
+            return $response
+                ->withStatus(200)
+                ->withHeader('X-Total-Count', $recordsTotal)
+                ->withJson($mediaList);
+        }
+
+        // TODO: Remove this once the legacy media picker (toolbar.js) is retired
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = $recordsTotal;
+        $this->getState()->setData($mediaList);
+
+        return $this->render($request, $response);
     }
 
     #[OA\Get(
@@ -1337,7 +1351,7 @@ class Library extends Base
 
             // Output a 1px image if we're not allowed to see the media.
             if (!$this->getUser()->checkViewable($media) && $request->getAttribute('authedViaToken') !== true) {
-                echo Img::make(PROJECT_ROOT . '/web/img/1x1.png')->encode();
+                echo ImageManager::gd()->read(PROJECT_ROOT . '/web/img/1x1.png')->encode();
                 return $this->render($request, $response->withHeader('Content-Type', 'image/png'));
             }
 
@@ -1464,7 +1478,7 @@ class Library extends Base
         // Permissions.
         if (!$this->getUser()->checkViewable($media) && $request->getAttribute('authedViaToken') !== true) {
             // Output a 1px image if we're not allowed to see the media.
-            echo Img::make(PROJECT_ROOT . '/web/img/1x1.png')->encode();
+            echo ImageManager::gd()->read(PROJECT_ROOT . '/web/img/1x1.png')->encode();
             return $this->render($request, $response);
         }
 
@@ -2273,18 +2287,16 @@ class Library extends Base
         }
 
         try {
-            Img::configure(array('driver' => 'gd'));
-
             // Load the image
-            $image = Img::make($imageData);
+            $image = ImageManager::gd()->read($imageData);
             $image->save($libraryLocation . $mediaId . '_' . $media->mediaType . 'cover.png');
         } catch (\Exception $exception) {
             $this->getLog()->error('Exception adding Video cover image. e = ' . $exception->getMessage());
             throw new InvalidArgumentException(__('Invalid image data'));
         }
 
-        $media->width = $image->getWidth();
-        $media->height = $image->getHeight();
+        $media->width = $image->width();
+        $media->height = $image->height();
         $media->orientation = ($media->width >= $media->height) ? 'landscape' : 'portrait';
         $media->save(['saveTags' => false, 'validate' => false]);
 
@@ -2665,12 +2677,23 @@ class Library extends Base
         $media->setUnmatchedProperty('fileSizeFormatted', ByteFormatter::format($media->fileSize));
 
         // Expiry
-        $media->setUnmatchedProperty('mediaExpiresIn', __('Expires %s'));
-        $media->setUnmatchedProperty('mediaExpiryFailed', __('Expired '));
-        $media->setUnmatchedProperty('mediaNoExpiryDate', __('Never'));
+        $expiresTimestamp = $media->expires;
+        $now = Carbon::now();
+
+        if ($expiresTimestamp == 0) {
+            $expiresFormatted = __('Never');
+        } elseif ($expiresTimestamp > $now->timestamp) {
+            $relative = DateFormatHelper::createFromTimestamp($expiresTimestamp)
+                ->diffForHumans($now, CarbonInterface::DIFF_RELATIVE_TO_NOW);
+            $expiresFormatted = str_replace('%s', $relative, __('Expires %s'));
+        } else {
+            $expiresFormatted = __('Expired ');
+        }
+        $media->setUnmatchedProperty('expiresFormatted', $expiresFormatted);
+
         $media->expires = ($media->expires == 0)
             ? 0
-            : Carbon::createFromTimestamp($media->expires)->format(DateFormatHelper::getSystemFormat());
+            : DateFormatHelper::createFromTimestamp($media->expires)->format(DateFormatHelper::getSystemFormat());
 
         // Description
         $releasedDescription = LibraryDescription::getMediaReleasedDescription($media->released);

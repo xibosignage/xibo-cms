@@ -25,6 +25,7 @@ import type { TFunction } from 'i18next';
 import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
 
+import { notify } from '@/components/ui/Notification';
 import { copyDisplayProfile, deleteDisplayProfile } from '@/services/displayProfileApi';
 import type { DisplayProfile } from '@/types/displayProfile';
 
@@ -75,6 +76,11 @@ export function useDisplayProfileActions({
         return;
       }
 
+      notify.success(
+        t('{{count}} display profile(s) deleted successfully.', {
+          count: itemsToDelete.length,
+        }),
+      );
       setRowSelection({});
       handleRefresh();
       closeModal();

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -32,7 +32,6 @@ use Xibo\Entity\Display;
 use Xibo\Entity\Region;
 use Xibo\Entity\RequiredFile;
 use Xibo\Entity\Schedule;
-use Xibo\Helper\LibraryFile;
 use Xibo\Event\DataConnectorScriptRequestEvent;
 use Xibo\Event\XmdsDependencyListEvent;
 use Xibo\Factory\BandwidthFactory;
@@ -55,6 +54,7 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\LibraryFile;
 use Xibo\Helper\LinkSigner;
 use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Status;
@@ -921,7 +921,7 @@ class Soap
                             // Get the widget modified date
                             // we will use the latter of this vs the layout modified date as the updated attribute
                             // on required files
-                            $widgetModifiedDt = Carbon::createFromTimestamp($widget->modifiedDt);
+                            $widgetModifiedDt = DateFormatHelper::createFromTimestamp($widget->modifiedDt);
 
                             // Updated date is the greatest of layout/widget modified date
                             $updatedDt = ($layoutModifiedDt->greaterThan($widgetModifiedDt))
@@ -939,12 +939,12 @@ class Soap
                                 $newRfIds[] = $getResourceRf->rfId;
 
                                 // Append this item to required files
-                                $resourceFile = $requiredFilesXml->createElement('file');
-                                $resourceFile->setAttribute('type', 'resource');
-                                $resourceFile->setAttribute('id', $widget->widgetId);
-                                $resourceFile->setAttribute('layoutid', $layoutId);
-                                $resourceFile->setAttribute('regionid', $region->regionId);
-                                $resourceFile->setAttribute('mediaid', $widget->widgetId);
+                                $resourceFileNode = $requiredFilesXml->createElement('file');
+                                $resourceFileNode->setAttribute('type', 'resource');
+                                $resourceFileNode->setAttribute('id', $widget->widgetId);
+                                $resourceFileNode->setAttribute('layoutid', $layoutId);
+                                $resourceFileNode->setAttribute('regionid', $region->regionId);
+                                $resourceFileNode->setAttribute('mediaid', $widget->widgetId);
                             }
 
                             // Get the module
@@ -1015,8 +1015,8 @@ class Soap
 
                             if ($isShouldSendHtml) {
                                 // Append our resource node.
-                                $resourceFile->setAttribute('updated', $updatedDt->format('U'));
-                                $fileElements->appendChild($resourceFile);
+                                $resourceFileNode->setAttribute('updated', $updatedDt->format('U'));
+                                $fileElements->appendChild($resourceFileNode);
                             }
                         }
 
@@ -1372,11 +1372,15 @@ class Soap
                     // the current CMS timezone)
                     // Does the Display have a timezone?
                     if ($isSyncTimezone) {
-                        $fromDt = Carbon::createFromTimestamp($scheduleEvent->fromDt, $this->display->timeZone)->format(DateFormatHelper::getSystemFormat());
-                        $toDt = Carbon::createFromTimestamp($scheduleEvent->toDt, $this->display->timeZone)->format(DateFormatHelper::getSystemFormat());
+                        $fromDt = Carbon::createFromTimestamp($scheduleEvent->fromDt, $this->display->timeZone)
+                            ->format(DateFormatHelper::getSystemFormat());
+                        $toDt = Carbon::createFromTimestamp($scheduleEvent->toDt, $this->display->timeZone)
+                            ->format(DateFormatHelper::getSystemFormat());
                     } else {
-                        $fromDt = Carbon::createFromTimestamp($scheduleEvent->fromDt)->format(DateFormatHelper::getSystemFormat());
-                        $toDt = Carbon::createFromTimestamp($scheduleEvent->toDt)->format(DateFormatHelper::getSystemFormat());
+                        $fromDt = DateFormatHelper::createFromTimestamp($scheduleEvent->fromDt)
+                            ->format(DateFormatHelper::getSystemFormat());
+                        $toDt = DateFormatHelper::createFromTimestamp($scheduleEvent->toDt)
+                            ->format(DateFormatHelper::getSystemFormat());
                     }
 
                     $scheduleId = $row['eventId'];
@@ -2049,7 +2053,7 @@ class Soap
 
                 // Do we need to set the duration of this record (we will do for older individually collected stats)
                 if ($duration == '') {
-                    $duration = $toDt->diffInSeconds($fromDt);
+                    $duration = (int) $toDt->diffInSeconds($fromDt);
                 }
             } catch (\Exception $e) {
                 // Protect against the date format being unreadable
@@ -3016,7 +3020,7 @@ class Soap
 
         // TODO use new sanitizer here
         //$rfLookAhead = $this->getSanitizer()->int($this->getConfig()->getSetting('REQUIRED_FILES_LOOKAHEAD'));
-        $rfLookAhead = $this->getConfig()->getSetting('REQUIRED_FILES_LOOKAHEAD');
+        $rfLookAhead = (int) $this->getConfig()->getSetting('REQUIRED_FILES_LOOKAHEAD');
         if ($rfLookAhead >= 3600) {
             // Go from the top of this hour
             $fromFilter

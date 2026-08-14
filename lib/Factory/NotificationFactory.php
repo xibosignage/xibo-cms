@@ -270,7 +270,8 @@ class NotificationFactory extends BaseFactory
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            defaultSort: ['subject ASC']
+            defaultSort: ['subject ASC'],
+            uniqueColumn: 'notificationId'
         );
 
         $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';

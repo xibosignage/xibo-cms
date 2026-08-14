@@ -931,7 +931,17 @@ function EventTypeTable({
   onPreview,
 }: EventTypeTableProps) {
   const { t } = useTranslation();
-  const label = EVENT_TYPE_LABELS[typeId];
+  // EVENT_TYPE_LABELS values are computed via record index, invisible to the extractor — seed them here.
+  const eventTypeLabels: Record<number, string> = {
+    1: t('Layouts'),
+    3: t('Overlay Layouts'),
+    4: t('Interrupt Layouts'),
+    5: t('Campaign Layouts'),
+    7: t('Fullscreen Video / Image'),
+    8: t('Fullscreen Playlist'),
+    9: t('Synchronised'),
+  };
+  const label = eventTypeLabels[typeId] ?? EVENT_TYPE_LABELS[typeId];
   const [sortCol, setSortCol] = useState<SortCol>('fromDt');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [pageIndex, setPageIndex] = useState(0);
@@ -959,7 +969,7 @@ function EventTypeTable({
   return (
     <section>
       <div className="flex items-center gap-2 mb-2">
-        <h3 className="font-semibold text-gray-700">{t(label ?? '')}</h3>
+        <h3 className="font-semibold text-gray-700">{label ?? ''}</h3>
         <span className="text-xs text-gray-500 bg-gray-100 rounded-full px-2 py-0.5">
           {events.length}
         </span>

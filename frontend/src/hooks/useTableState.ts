@@ -198,7 +198,10 @@ export function useTableState<TFilters>(
     pagination,
     setPagination,
     sorting,
-    setSorting,
+    setSorting: ((updater) => {
+      setSorting(updater);
+      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    }) as typeof setSorting,
     columnVisibility,
     setColumnVisibility,
     viewMode,

@@ -217,7 +217,7 @@ class SyncGroupFactory extends BaseFactory
 
         // Sorting
         $allowedColumns = ['syncGroupId', 'name', 'createdDt', 'modifiedDt', 'owner', 'modifiedByName'];
-        $sortOrder = $this->buildSortQuery($sortOrder, $allowedColumns, [], ['name ASC']);
+        $sortOrder = $this->buildSortQuery($sortOrder, $allowedColumns, [], ['name ASC'], 'syncGroupId');
         $order = empty($sortOrder) ? '' : ' ORDER BY ' . implode(', ', $sortOrder);
 
         $limit = '';

@@ -299,7 +299,8 @@ class TagFactory extends BaseFactory
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            defaultSort: ['tagId ASC']
+            defaultSort: ['tagId ASC'],
+            uniqueColumn: 'tagId'
         );
 
         $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';

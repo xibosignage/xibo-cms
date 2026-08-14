@@ -206,7 +206,7 @@ class MenuBoardCategoryFactory extends BaseFactory
         }
 
         $allowedColumns = ['menuCategoryId', 'name', 'code'];
-        $sortOrder = $this->buildSortQuery($sortOrder, $allowedColumns, [], ['name ASC']);
+        $sortOrder = $this->buildSortQuery($sortOrder, $allowedColumns, [], ['name ASC'], 'menuCategoryId');
         $order = empty($sortOrder) ? '' : ' ORDER BY ' . implode(', ', $sortOrder);
 
         $limit = '';
@@ -332,7 +332,8 @@ class MenuBoardCategoryFactory extends BaseFactory
             $sortOrder,
             $allowedColumns,
             [],
-            ['displayOrder ASC', 'availability DESC', 'menuProductId ASC']
+            ['displayOrder ASC', 'availability DESC', 'menuProductId ASC'],
+            'menuProductId'
         );
         $order = empty($sortOrder) ? '' : ' ORDER BY ' . implode(', ', $sortOrder);
 

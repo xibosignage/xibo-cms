@@ -178,6 +178,7 @@ export default function GeneralTab({
               { value: 'yes', label: t('Yes') },
             ]}
             onSelect={(v) => updateField('INSTANCE_SUSPENDED', v)}
+            disabled={!isEditable('INSTANCE_SUSPENDED')}
           />
         )}
         {isVisible('LATEST_NEWS_URL') && (

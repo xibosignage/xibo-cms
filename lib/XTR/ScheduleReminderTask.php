@@ -29,6 +29,7 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\ScheduleReminderFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -173,7 +174,7 @@ class ScheduleReminderTask implements TaskInterface
                     // Keep the last reminder date
                     $lastReminderDate = $nextReminderDate;
 
-                    $now = Carbon::createFromTimestamp($nextReminderDate + 1);
+                    $now = DateFormatHelper::createFromTimestamp($nextReminderDate + 1);
                     try {
                         $nextReminderDate = $schedule->getNextReminderDate($now, $reminder, $remindSeconds);
                     } catch (NotFoundException $error) {

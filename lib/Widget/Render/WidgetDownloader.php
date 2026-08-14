@@ -24,7 +24,7 @@ namespace Xibo\Widget\Render;
 
 use GuzzleHttp\Psr7\LimitStream;
 use GuzzleHttp\Psr7\Stream;
-use Intervention\Image\ImageManagerStatic as Img;
+use Intervention\Image\ImageManager;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use Slim\Http\Response as Response;
@@ -202,16 +202,16 @@ class WidgetDownloader
             }
 
             // Does the thumbnail exist already?
-            Img::configure(['driver' => 'gd']);
+            $manager = ImageManager::gd();
             $img = null;
             $regenerate = true;
             if (file_exists($thumbnailFilePath)) {
-                $img = Img::make($thumbnailFilePath);
+                $img = $manager->read($thumbnailFilePath);
                 if ($img->width() === $width || $img->height() === $height) {
                     // Correct cache
                     $regenerate = false;
                 }
-                $response = $response->withHeader('Content-Type', $img->mime());
+                $response = $response->withHeader('Content-Type', $img->origin()->mediaType());
             }
 
             if ($regenerate) {
@@ -226,12 +226,12 @@ class WidgetDownloader
                 }
 
                 // Get the full image and make a thumbnail
-                $img = Img::make($filePath);
-                $img->resize($width, $height, function ($constraint) {
-                    $constraint->aspectRatio();
-                });
+                $img = $manager->read($filePath);
+                // Original resize() call used aspectRatio() only (no upsize() constraint), which in
+                // Intervention v2 allowed enlarging beyond the source size — scale() matches that.
+                $img->scale($width, $height);
                 $img->save($thumbnailFilePath);
-                $response = $response->withHeader('Content-Type', $img->mime());
+                $response = $response->withHeader('Content-Type', $img->origin()->mediaType());
             }
 
             // Output Etag
@@ -242,11 +242,11 @@ class WidgetDownloader
             $this->logger->debug('thumbnail: exception raised.');
 
             if ($errorThumb !== null) {
-                $img = Img::make($errorThumb);
+                $img = ImageManager::gd()->read($errorThumb);
                 $response->write($img->encode());
 
                 // Output the mime type
-                $response = $response->withHeader('Content-Type', $img->mime());
+                $response = $response->withHeader('Content-Type', $img->origin()->mediaType());
             }
         }
 
@@ -307,34 +307,34 @@ class WidgetDownloader
                 . ', upsizeConstraint ' . var_export($useUpsizeConstraint, true));
 
             // Does the thumbnail exist already?
-            Img::configure(['driver' => 'gd']);
-            $img = Img::make($filePath);
+            $img = ImageManager::gd()->read($filePath);
 
             // Output a specific width/height
             if ($width > 0 && $height > 0) {
                 if ($fit) {
-                    $img->fit($width, $height);
+                    $img->cover($width, $height);
+                } elseif ($proportional) {
+                    // $useUpsizeConstraint previously added the upsize() constraint, which in
+                    // Intervention v2 *prevents* enlarging beyond the source size - scaleDown() matches that.
+                    if ($useUpsizeConstraint) {
+                        $img->scaleDown($width, $height);
+                    } else {
+                        $img->scale($width, $height);
+                    }
                 } else {
-                    $img->resize($width, $height, function ($constraint) use ($proportional, $useUpsizeConstraint) {
-                        if ($proportional) {
-                            $constraint->aspectRatio();
-                        }
-                        if ($useUpsizeConstraint) {
-                            $constraint->upsize();
-                        }
-                    });
+                    $img->resize($width, $height);
                 }
             }
 
             $response->write($img->encode());
             $response = HttpCacheProvider::withExpires($response, '+1 week');
 
-            $response = $response->withHeader('Content-Type', $img->mime());
+            $response = $response->withHeader('Content-Type', $img->origin()->mediaType());
         } catch (\Exception $e) {
             if ($errorThumb !== null) {
-                $img = Img::make($errorThumb);
+                $img = ImageManager::gd()->read($errorThumb);
                 $response->write($img->encode());
-                $response = $response->withHeader('Content-Type', $img->mime());
+                $response = $response->withHeader('Content-Type', $img->origin()->mediaType());
             } else {
                 $this->logger->error('Cannot parse image: ' . $e->getMessage());
                 throw new InvalidArgumentException(__('Cannot parse image.'), 'storedAs');

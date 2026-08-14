@@ -40,7 +40,7 @@ interface CampaignModalsProps {
   actions: {
     activeModal: string | null;
     closeModal: () => void;
-    handleRefresh: () => void;
+    handleRefresh: () => Promise<unknown>;
     deleteError: string | null;
     isDeleting: boolean;
     isCloning: boolean;
@@ -59,6 +59,7 @@ interface CampaignModalsProps {
     confirmDelete: (items: Campaign[]) => void;
     handleConfirmMove: (newFolderId: number) => void;
     handleConfirmClone: (campaign: Campaign | null, newName: string) => void;
+    handleAddSuccess: (campaign: Campaign) => void;
   };
   folderActions: ReturnType<typeof useFolderActions>;
 }
@@ -90,9 +91,7 @@ export function CampaignModals({
         <AddCampaignModal
           defaultFolderId={selection.defaultFolderId}
           onClose={actions.closeModal}
-          onSuccess={() => {
-            actions.handleRefresh();
-          }}
+          onSuccess={handlers.handleAddSuccess}
         />
       )}
       {/* Folder Actions */}
@@ -154,9 +153,9 @@ export function CampaignModals({
           ids={selection.bulkItems.map((item) => item.campaignId)}
           existingTags={mergeEntityTags(selection.bulkItems)}
           onClose={actions.closeModal}
-          onSuccess={() => {
+          onSuccess={async () => {
+            await actions.handleRefresh();
             actions.closeModal();
-            actions.handleRefresh();
           }}
         />
       )}

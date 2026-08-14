@@ -139,7 +139,7 @@ class LayoutLock implements Middleware
         // run only if we have layout id, that will exclude non Region specific Playlist requests.
         if ($this->layoutId !== null) {
             $this->userId = $this->app->getContainer()->get('user')->userId;
-            $this->entryPoint = $this->app->getContainer()->get('name');
+            $this->entryPoint = $this->normalizeEntryPoint($this->app->getContainer()->get('name'));
             $key = $this->getKey();
             $this->lock = $this->getPool()->getItem('locks/layout/' . $key);
 
@@ -173,7 +173,9 @@ class LayoutLock implements Middleware
                     . $this->lock->getExpiration()->format(DateFormatHelper::getSystemFormat()) . ', created '
                     . $this->lock->getCreation()->format(DateFormatHelper::getSystemFormat()));
 
-                if ($locked->userId == $this->userId && $locked->entryPoint == $this->entryPoint) {
+                if ($locked->userId == $this->userId
+                    && $this->normalizeEntryPoint($locked->entryPoint) == $this->entryPoint
+                ) {
                     // the same user in the same entry point is editing the same layoutId
                     $this->lock->expiresAfter($this->ttl);
                     $objectToCache->expires = $this->lock->getExpiration()->format(DateFormatHelper::getSystemFormat());
@@ -205,6 +207,20 @@ class LayoutLock implements Middleware
     private function getPool()
     {
         return $this->app->getContainer()->get('pool');
+    }
+
+    /**
+     * The legacy admin UI ('web') and the React SPA's API calls ('json') are two front
+     * controllers for the same interactive CMS session (the SPA drives the grid/API actions
+     * while iframing the legacy Designer for canvas editing) - treat them as one entry point
+     * for locking purposes so a user's own edits across both surfaces don't collide.
+     * Other entry points (api, pwa, preview) remain distinct.
+     * @param string $entryPoint
+     * @return string
+     */
+    private function normalizeEntryPoint(string $entryPoint): string
+    {
+        return in_array($entryPoint, ['web', 'json'], true) ? 'web' : $entryPoint;
     }
 
     /**
