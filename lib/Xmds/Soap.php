@@ -939,12 +939,12 @@ class Soap
                                 $newRfIds[] = $getResourceRf->rfId;
 
                                 // Append this item to required files
-                                $resourceFile = $requiredFilesXml->createElement('file');
-                                $resourceFile->setAttribute('type', 'resource');
-                                $resourceFile->setAttribute('id', $widget->widgetId);
-                                $resourceFile->setAttribute('layoutid', $layoutId);
-                                $resourceFile->setAttribute('regionid', $region->regionId);
-                                $resourceFile->setAttribute('mediaid', $widget->widgetId);
+                                $resourceFileNode = $requiredFilesXml->createElement('file');
+                                $resourceFileNode->setAttribute('type', 'resource');
+                                $resourceFileNode->setAttribute('id', $widget->widgetId);
+                                $resourceFileNode->setAttribute('layoutid', $layoutId);
+                                $resourceFileNode->setAttribute('regionid', $region->regionId);
+                                $resourceFileNode->setAttribute('mediaid', $widget->widgetId);
                             }
 
                             // Get the module
@@ -1015,8 +1015,8 @@ class Soap
 
                             if ($isShouldSendHtml) {
                                 // Append our resource node.
-                                $resourceFile->setAttribute('updated', $updatedDt->format('U'));
-                                $fileElements->appendChild($resourceFile);
+                                $resourceFileNode->setAttribute('updated', $updatedDt->format('U'));
+                                $fileElements->appendChild($resourceFileNode);
                             }
                         }
 
