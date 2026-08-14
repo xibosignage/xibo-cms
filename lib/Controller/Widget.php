@@ -1469,11 +1469,11 @@ class Widget extends Base
         // Parse out the dates
         $fromDt = $widget->fromDt === \Xibo\Entity\Widget::$DATE_MIN
             ? ''
-            : Carbon::createFromTimestamp($widget->fromDt)->format(DateFormatHelper::getSystemFormat());
+            : DateFormatHelper::createFromTimestamp($widget->fromDt)->format(DateFormatHelper::getSystemFormat());
 
         $toDt = $widget->toDt === \Xibo\Entity\Widget::$DATE_MAX
             ? ''
-            : Carbon::createFromTimestamp($widget->toDt)->format(DateFormatHelper::getSystemFormat());
+            : DateFormatHelper::createFromTimestamp($widget->toDt)->format(DateFormatHelper::getSystemFormat());
 
         // Pass to view
         $this->getState()->template = 'module-form-expiry';
@@ -1604,16 +1604,16 @@ class Widget extends Base
         ]);
 
         if ($this->isApi($request)) {
-            $widget->createdDt = Carbon::createFromTimestamp($widget->createdDt)
+            $widget->createdDt = DateFormatHelper::createFromTimestamp($widget->createdDt)
                 ->format(DateFormatHelper::getSystemFormat());
 
-            $widget->modifiedDt = Carbon::createFromTimestamp($widget->modifiedDt)
+            $widget->modifiedDt = DateFormatHelper::createFromTimestamp($widget->modifiedDt)
                 ->format(DateFormatHelper::getSystemFormat());
 
-            $widget->fromDt = Carbon::createFromTimestamp($widget->fromDt)
+            $widget->fromDt = DateFormatHelper::createFromTimestamp($widget->fromDt)
                 ->format(DateFormatHelper::getSystemFormat());
 
-            $widget->toDt = Carbon::createFromTimestamp($widget->toDt)
+            $widget->toDt = DateFormatHelper::createFromTimestamp($widget->toDt)
                 ->format(DateFormatHelper::getSystemFormat());
         }
 

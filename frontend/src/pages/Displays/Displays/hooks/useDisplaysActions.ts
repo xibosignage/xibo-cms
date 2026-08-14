@@ -92,6 +92,9 @@ export function useDisplaysActions({
         return;
       }
 
+      notify.success(
+        t('{{count}} display(s) deleted successfully.', { count: itemsToDelete.length }),
+      );
       setRowSelection({});
       handleRefresh();
       closeModal();
@@ -214,7 +217,11 @@ export function useDisplaysActions({
       t('Failed to set default layout.'),
     );
 
-  const runBulkAction = async (promises: (() => Promise<unknown>)[], errorMessage: string) => {
+  const runBulkAction = async (
+    promises: (() => Promise<unknown>)[],
+    errorMessage: string,
+    successMessage?: string,
+  ) => {
     try {
       setIsActionPending(true);
       const results = await Promise.allSettled(promises.map((fn) => fn()));
@@ -229,6 +236,9 @@ export function useDisplaysActions({
         setActionError(message);
         handleRefresh();
       } else {
+        if (successMessage) {
+          notify.success(successMessage);
+        }
         handleRefresh();
         closeModal();
       }
@@ -244,61 +254,68 @@ export function useDisplaysActions({
     runBulkAction(
       items.map((d) => () => moveCms(d.displayId, data)),
       t('Failed to transfer one or more displays to another CMS.'),
+      t('{{count}} display(s) transferred successfully.', { count: items.length }),
     );
 
   const confirmMoveCmsCancel = (display: Display) =>
     runAction(() => moveCmsCancel(display.displayId), t('Failed to cancel CMS transfer.'));
 
   const confirmSetBandwidth = (items: Display[], bandwidthLimitKb: number) =>
-    runAction(
-      () =>
-        setBandwidthLimitMultiple(
-          items.map((d) => d.displayId),
-          bandwidthLimitKb,
-        ),
-      t('Failed to set bandwidth limit.'),
-    );
+    runAction(async () => {
+      await setBandwidthLimitMultiple(
+        items.map((d) => d.displayId),
+        bandwidthLimitKb,
+      );
+      notify.success(t('{{count}} display(s) updated successfully.', { count: items.length }));
+    }, t('Failed to set bandwidth limit.'));
 
   const confirmBulkAuthorise = (items: Display[]) =>
     runBulkAction(
       items.map((d) => () => toggleDisplayAuthorised(d.displayId)),
       t('Failed to toggle authorisation for one or more displays.'),
+      t('{{count}} display(s) updated successfully.', { count: items.length }),
     );
 
   const confirmBulkCheckLicence = (items: Display[]) =>
     runBulkAction(
       items.map((d) => () => checkLicence(d.displayId)),
       t('Failed to check licence for one or more displays.'),
+      t('Licence check requested for {{count}} display(s).', { count: items.length }),
     );
 
   const confirmBulkRequestScreenShot = (items: Display[]) =>
     runBulkAction(
       items.map((d) => () => requestScreenShot(d.displayId)),
       t('Failed to request screenshot for one or more displays.'),
+      t('Screenshot requested for {{count}} display(s).', { count: items.length }),
     );
 
   const confirmBulkCollectNow = (items: Display[]) =>
     runBulkAction(
       items.map((d) => () => collectNow(d.displayGroupId)),
       t('Failed to trigger collection for one or more displays.'),
+      t('Collection triggered for {{count}} display(s).', { count: items.length }),
     );
 
   const confirmBulkTriggerWebhook = (items: DisplayCommandTarget[], triggerCode: string) =>
     runBulkAction(
       items.map((d) => () => triggerWebhook(d.displayGroupId, triggerCode)),
       t('Failed to trigger webhook for one or more displays.'),
+      t('Webhook triggered for {{count}} display(s).', { count: items.length }),
     );
 
   const confirmBulkSetDefaultLayout = (items: Display[], layoutId: number) =>
     runBulkAction(
       items.map((d) => () => setDefaultLayout(d.displayId, layoutId)),
       t('Failed to set default layout for one or more displays.'),
+      t('Default layout set for {{count}} display(s).', { count: items.length }),
     );
 
   const confirmSendCommand = (items: DisplayCommandTarget[], commandId: number) =>
     runBulkAction(
       items.map((d) => () => sendCommand(d.displayGroupId, commandId)),
       t('Failed to send command to one or more displays.'),
+      t('Command sent to {{count}} display(s).', { count: items.length }),
     );
 
   const handleJumpToScheduledLayouts = (displayGroupId: number) => {

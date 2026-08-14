@@ -30,6 +30,7 @@ use Xibo\Event\DataSetDataTypeRequestEvent;
 use Xibo\Event\DataSetModifiedDtRequestEvent;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
@@ -148,7 +149,7 @@ class DataSetDataProviderListener
 
         try {
             $dataSet = $this->dataSetFactory->getById($event->getDataSetId());
-            $event->setModifiedDt(Carbon::createFromTimestamp($dataSet->lastDataEdit));
+            $event->setModifiedDt(DateFormatHelper::createFromTimestamp($dataSet->lastDataEdit));
 
             // Remote dataSets are kept "active" by required files
             $dataSet->setActive();

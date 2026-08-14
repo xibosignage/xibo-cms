@@ -167,6 +167,7 @@ export default function UsersTab({
               searchable
               searchPlaceholder={t('Search users...')}
               onSearch={userOptions.setSearch}
+              disabled={!isEditable('SYSTEM_USER')}
               className="flex-1"
             />
           )}
@@ -185,6 +186,7 @@ export default function UsersTab({
               searchable
               searchPlaceholder={t('Search groups...')}
               onSearch={userGroupOptions.setSearch}
+              disabled={!isEditable('DEFAULT_USERGROUP')}
               className="flex-1"
             />
           )}
@@ -202,6 +204,7 @@ export default function UsersTab({
               { value: 'Super Admin', label: t('Super Admin') },
             ]}
             onSelect={(v) => updateField('defaultUsertype', v)}
+            disabled={!isEditable('defaultUsertype')}
           />
         )}
       </SettingsSection>
@@ -241,6 +244,7 @@ export default function UsersTab({
               { value: 'On', label: t('On') },
             ]}
             onSelect={(v) => updateField('PASSWORD_REMINDER_ENABLED', v)}
+            disabled={!isEditable('PASSWORD_REMINDER_ENABLED')}
           />
         )}
         {isVisible('TWOFACTOR_ISSUER') && (

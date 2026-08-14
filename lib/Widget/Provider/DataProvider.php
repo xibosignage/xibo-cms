@@ -28,6 +28,7 @@ use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Module;
 use Xibo\Entity\Widget;
 use Xibo\Factory\MediaFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Guzzle\SafeClient;
 use Xibo\Helper\SanitizerService;
 use Xibo\Support\Sanitizer\SanitizerInterface;
@@ -281,7 +282,7 @@ class DataProvider implements DataProviderInterface
      */
     public function getWidgetModifiedDt(): ?Carbon
     {
-        return Carbon::createFromTimestamp($this->widget->modifiedDt);
+        return DateFormatHelper::createFromTimestamp($this->widget->modifiedDt);
     }
 
     /**

@@ -47,6 +47,7 @@ export default function SharingTab({
               { value: 'Sharing Colouring', label: t('Sharing Colouring') },
             ]}
             onSelect={(v) => updateField('REGION_OPTIONS_COLOURING', v)}
+            disabled={!isEditable('REGION_OPTIONS_COLOURING')}
           />
         )}
       </SettingsSection>

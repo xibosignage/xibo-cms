@@ -216,6 +216,13 @@ class DayPart extends Base
         }
         $dayPart->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($dayPart));
 
+        if (in_array('scheduleCount', $embed)) {
+            $dayPart->setUnmatchedProperty(
+                'scheduleCount',
+                count($this->scheduleFactory->getByDayPartId($id))
+            );
+        }
+
         return $response
             ->withStatus(200)
             ->withJson($dayPart);

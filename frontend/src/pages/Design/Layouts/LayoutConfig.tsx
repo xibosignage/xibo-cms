@@ -212,6 +212,7 @@ export const getBaseFilterKeys = (
     name: 'showDescriptionId',
     className: '',
     options: [
+      { label: t('Markdown'), value: 1 },
       { label: t('1st line'), value: 2 },
       { label: t('Widget List'), value: 3 },
     ],
@@ -587,7 +588,9 @@ export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[]
       cell: (info) => {
         const row = info.row.original;
         const value = row.descriptionFormatted ?? info.getValue<string>();
-        return <DescriptionCell value={value} isHtml={showDescriptionId === 3} />;
+        const mode =
+          showDescriptionId === 3 ? 'html' : showDescriptionId === 1 ? 'markdown' : 'text';
+        return <DescriptionCell value={value} mode={mode} />;
       },
       enableSorting: false,
     },

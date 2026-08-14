@@ -50,6 +50,7 @@ export default function MaintenanceTab({
               { value: 'Protected', label: t('Protected') },
             ]}
             onSelect={(v) => updateField('MAINTENANCE_ENABLED', v)}
+            disabled={!isEditable('MAINTENANCE_ENABLED')}
           />
         )}
       </SettingsSection>

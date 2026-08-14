@@ -29,6 +29,7 @@ use Xibo\Event\NotificationCacheKeyRequestEvent;
 use Xibo\Event\NotificationDataRequestEvent;
 use Xibo\Event\NotificationModifiedDtRequestEvent;
 use Xibo\Factory\NotificationFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Widget\Provider\DataProviderInterface;
 
@@ -75,7 +76,7 @@ class NotificationDataProviderListener
 
     public function getData(DataProviderInterface $dataProvider)
     {
-        $age = $dataProvider->getProperty('age', 0);
+        $age = (int) $dataProvider->getProperty('age', 0);
 
         $filter = [
             'releaseDt' => ($age === 0) ? null : Carbon::now()->subMinutes($age)->unix(),
@@ -97,8 +98,8 @@ class NotificationDataProviderListener
             $item = [];
             $item['subject'] = $notification->subject;
             $item['body'] = strip_tags($notification->body);
-            $item['date'] = Carbon::createFromTimestamp($notification->releaseDt)->format('c');
-            $item['createdAt'] = Carbon::createFromTimestamp($notification->createDt)->format('c');
+            $item['date'] = DateFormatHelper::createFromTimestamp($notification->releaseDt)->format('c');
+            $item['createdAt'] = DateFormatHelper::createFromTimestamp($notification->createDt)->format('c');
 
             $dataProvider->addItem($item);
         }
@@ -115,7 +116,8 @@ class NotificationDataProviderListener
 
         // If we're a user, we should always refresh
         if ($displayId === 0) {
-            $event->setModifiedDt(Carbon::maxValue());
+            // Carbon::maxValue() was removed in Carbon 3 - this is its old 64-bit implementation.
+            $event->setModifiedDt(Carbon::create(9999, 12, 31, 23, 59, 59));
             return;
         }
 
@@ -127,7 +129,7 @@ class NotificationDataProviderListener
         ]);
 
         if (count($notifications) > 0) {
-            $event->setModifiedDt(Carbon::createFromTimestamp($notifications[0]->releaseDt));
+            $event->setModifiedDt(DateFormatHelper::createFromTimestamp($notifications[0]->releaseDt));
         }
     }
 }

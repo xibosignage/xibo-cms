@@ -318,23 +318,27 @@ export default function AddAndEditPlaylistModal({
         return <StatusCell label={value} type={getStatusTypeFromMediaType(value)} />;
       },
     },
-    {
-      accessorKey: 'tags',
-      header: t('Tags'),
-      enableSorting: false,
-      size: 120,
-      cell: (info) => {
-        const tags = info.getValue<Tag[]>() || [];
-        return (
-          <TagsCell
-            tags={toDisplayTags(tags)}
-            noTagsPlaceholder="-"
-            onTagClick={handlePreviewTagClick}
-            selectedTagIds={draft.filterMediaTag.map((tag) => tag.tagId)}
-          />
-        );
-      },
-    },
+    ...(hasFeature(user, 'tag.tagging')
+      ? ([
+          {
+            accessorKey: 'tags',
+            header: t('Tags'),
+            enableSorting: false,
+            size: 120,
+            cell: (info) => {
+              const tags = info.getValue<Tag[]>() || [];
+              return (
+                <TagsCell
+                  tags={toDisplayTags(tags)}
+                  noTagsPlaceholder="-"
+                  onTagClick={handlePreviewTagClick}
+                  selectedTagIds={draft.filterMediaTag.map((tag) => tag.tagId)}
+                />
+              );
+            },
+          },
+        ] as ColumnDef<Media>[])
+      : []),
     {
       id: 'formattedDuration',
       accessorKey: 'duration',

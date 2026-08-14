@@ -28,7 +28,7 @@ class UserOnboardingMigration extends AbstractMigration
             ->addColumn('defaultHomepageId', 'string', [
                 'null' => true,
                 'default' => null,
-                'limit' => '255'
+                'limit' => 255
             ])
             ->save();
 

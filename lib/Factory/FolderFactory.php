@@ -290,7 +290,7 @@ class FolderFactory extends BaseFactory
             $count = intval($row['cnt'] ?? 0);
             if ($count > 0) {
                 $usage[] = [
-                    'type' => __($row['type']),
+                    'type' => __($row['type'] ?? ''),
                     'count' => $count,
                     'sizeBytes' => intval($row['size'] ?? 0),
                     'size' => ByteFormatter::format(intval($row['size'] ?? 0)),

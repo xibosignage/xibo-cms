@@ -65,6 +65,7 @@ describe('useLayoutActions - handleConfirmMove', () => {
           setRowSelection: mockSetRowSelection,
           setItemsToMove: mockSetItemsToMove,
           timezone: 'UTC',
+          folderId: null,
         }),
       { wrapper: ({ children }) => <MemoryRouter>{children}</MemoryRouter> },
     );
