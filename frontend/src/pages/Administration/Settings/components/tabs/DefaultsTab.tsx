@@ -152,6 +152,7 @@ export default function DefaultsTab({
               isLoadingMore={transIn.isLoadingMore}
               onSearch={() => {}}
               clearable
+              disabled={!isEditable('DEFAULT_TRANSITION_IN')}
               className="w-full"
             />
           )}
@@ -170,6 +171,7 @@ export default function DefaultsTab({
               isLoadingMore={transOut.isLoadingMore}
               onSearch={() => {}}
               clearable
+              disabled={!isEditable('DEFAULT_TRANSITION_OUT')}
               className="w-full"
             />
           )}
