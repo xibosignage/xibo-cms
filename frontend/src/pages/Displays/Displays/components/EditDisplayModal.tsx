@@ -523,6 +523,7 @@ export default function EditDisplayModal({
   const { user } = useUserContext();
   const { formatDateTime } = useDateFormatter();
   const [isPending, startTransition] = useTransition();
+  const isDisplayNameLocked = Number(user?.settings?.DISPLAY_LOCK_NAME_TO_DEVICENAME) === 1;
 
   const displayTypes: SelectOption[] = [
     { value: '', label: '' },
@@ -1199,13 +1200,19 @@ export default function EditDisplayModal({
               <TextInput
                 name="display"
                 label={t('Display')}
-                helpText={t('The Name of the Display - (1 - 50 characters).')}
+                helpText={
+                  isDisplayNameLocked
+                    ? t(
+                        'The Name of the Display - your administrator has locked this to the device name',
+                      )
+                    : t('The Name of the Display - (1 - 50 characters).')
+                }
                 placeholder={t('Enter name')}
                 value={draft.display}
                 onChange={(v) => set('display', v)}
                 error={fieldErrors.display}
                 maxLength={50}
-                disabled={Number(user?.settings?.DISPLAY_LOCK_NAME_TO_DEVICENAME) === 1}
+                disabled={isDisplayNameLocked}
               />
               <TextInput
                 name="license"
