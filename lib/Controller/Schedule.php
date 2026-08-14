@@ -120,7 +120,7 @@ class Schedule extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
@@ -640,7 +640,7 @@ class Schedule extends Base
      *
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws NotFoundException
@@ -960,7 +960,7 @@ class Schedule extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
@@ -983,16 +983,17 @@ class Schedule extends Base
         // Schedule::getEvents() matches exclusions against day-part-adjusted occurrence
         if (!$schedule->isAlwaysDayPart() && !$schedule->isCustomDayPart()) {
             $dayPart = $this->dayPartFactory->getById($schedule->dayPartId);
-            $dayPart->adjustForDate(Carbon::createFromTimestamp($eventStart));
+            $dayPart->adjustForDate(DateFormatHelper::createFromTimestamp($eventStart));
             $eventStart = $dayPart->adjustedStart->format('U');
             $eventEnd = $dayPart->adjustedEnd->format('U');
         }
 
         // Guard against creating a duplicate exclusion for a day that's already excluded
-        $exclusionDay = Carbon::createFromTimestamp($eventStart)->format('Y-m-d');
+        $exclusionDay = DateFormatHelper::createFromTimestamp($eventStart)->format('Y-m-d');
         $alreadyExcluded = array_filter(
             $this->scheduleExclusionFactory->query(null, ['eventId' => $schedule->eventId]),
-            fn ($exclusion) => Carbon::createFromTimestamp($exclusion->fromDt)->format('Y-m-d') === $exclusionDay
+            fn ($exclusion) => DateFormatHelper::createFromTimestamp($exclusion->fromDt)->format('Y-m-d')
+                === $exclusionDay
         );
 
         if (empty($alreadyExcluded)) {
@@ -1178,7 +1179,7 @@ class Schedule extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
@@ -1640,7 +1641,7 @@ class Schedule extends Base
      * @param Request $request
      * @param Response $response
      * @param int $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
