@@ -102,7 +102,7 @@ class MastodonProvider implements WidgetProviderInterface
             $this->getLog()->debug('Mastodon: count: ' . count($result));
 
             // Expiry time for any media that is downloaded
-            $expires = Carbon::now()->addHours($dataProvider->getSetting('cachePeriodImages', 24))->format('U');
+            $expires = Carbon::now()->addHours((int) $dataProvider->getSetting('cachePeriodImages', 24))->format('U');
 
             $results = [];
 

@@ -127,7 +127,7 @@ class DisplayAlerts implements ReportInterface
         $metadata = [
             'periodStart' => $json['metadata']['periodStart'],
             'periodEnd' => $json['metadata']['periodEnd'],
-            'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)
+            'generatedOn' => DateFormatHelper::createFromTimestamp($savedReport->generatedOn)
                 ->format(DateFormatHelper::getSystemFormat()),
             'title' => $savedReport->saveAs,
         ];
@@ -139,12 +139,12 @@ class DisplayAlerts implements ReportInterface
         $table = $json['table'];
         foreach ($table as &$row) {
             if (!array_key_exists('startFormatted', $row) && array_key_exists('start', $row)) {
-                $row['startFormatted'] = Carbon::createFromTimestamp($row['start'])
+                $row['startFormatted'] = DateFormatHelper::createFromTimestamp($row['start'])
                     ->format(DateFormatHelper::getSystemFormat());
             }
             if (!array_key_exists('endFormatted', $row) && array_key_exists('end', $row)) {
                 $row['endFormatted'] = $row['end'] !== null
-                    ? Carbon::createFromTimestamp($row['end'])->format(DateFormatHelper::getSystemFormat())
+                    ? DateFormatHelper::createFromTimestamp($row['end'])->format(DateFormatHelper::getSystemFormat())
                     : '';
             }
         }
@@ -363,12 +363,12 @@ class DisplayAlerts implements ReportInterface
             // periodStart/periodEnd and generatedOn metadata pattern above.
             $displayEvent->setUnmatchedProperty(
                 'startFormatted',
-                Carbon::createFromTimestamp($row['start'])->format(DateFormatHelper::getSystemFormat())
+                DateFormatHelper::createFromTimestamp($row['start'])->format(DateFormatHelper::getSystemFormat())
             );
             $displayEvent->setUnmatchedProperty(
                 'endFormatted',
                 $row['end'] !== null
-                    ? Carbon::createFromTimestamp($row['end'])->format(DateFormatHelper::getSystemFormat())
+                    ? DateFormatHelper::createFromTimestamp($row['end'])->format(DateFormatHelper::getSystemFormat())
                     : ''
             );
 

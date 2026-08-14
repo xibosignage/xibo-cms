@@ -157,7 +157,8 @@ class ResolutionFactory extends BaseFactory
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            defaultSort: ['resolution ASC']
+            defaultSort: ['resolution ASC'],
+            uniqueColumn: 'resolutionId'
         );
 
         $entities = [];

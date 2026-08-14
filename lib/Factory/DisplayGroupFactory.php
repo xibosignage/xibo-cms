@@ -591,7 +591,8 @@ class DisplayGroupFactory extends BaseFactory
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            defaultSort: ['displayGroupId ASC']
+            defaultSort: ['displayGroupId ASC'],
+            uniqueColumn: 'displayGroupId'
         );
 
         $orderParts = [];

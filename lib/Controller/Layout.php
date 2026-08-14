@@ -23,10 +23,9 @@ namespace Xibo\Controller;
 
 use Carbon\Carbon;
 use GuzzleHttp\Psr7\Stream;
-use Intervention\Image\ImageManagerStatic as Img;
+use Intervention\Image\ImageManager;
 use Mimey\MimeTypes;
 use OpenApi\Attributes as OA;
-use Parsedown;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -268,6 +267,7 @@ class Layout extends Base
                 '/preview/layout/preview/' . $layout->layoutId,
                 3600,
             )->toString(),
+            'brandLogoFile' => $this->getConfig()->getBrandAssetFile('logo'),
         ];
 
         // Call the render the template
@@ -2722,18 +2722,18 @@ class Layout extends Base
 
         // Create a thumbnail image
         try {
-            Img::configure(['driver' => 'gd']);
+            $manager = ImageManager::gd();
 
             if ($layout->backgroundImageId !== null && $layout->backgroundImageId !== 0) {
                 // Start from a background image
                 $media = $this->mediaFactory->getById($layout->backgroundImageId);
-                $image = Img::make($libraryLocation . $media->storedAs);
+                $image = $manager->read($libraryLocation . $media->storedAs);
 
                 // Resize this image (without cropping it) to the size of this layout
                 $image->resize($layout->width, $layout->height);
             } else {
                 // Start from a Canvas
-                $image = Img::canvas($layout->width, $layout->height, $layout->backgroundColor);
+                $image = $manager->create($layout->width, $layout->height)->fill($layout->backgroundColor);
             }
 
             $countRegions = count($layout->regions);
@@ -2752,12 +2752,11 @@ class Layout extends Base
 
                     if (count($widgets) <= 0) {
                         // Render the region (draw a grey box)
-                        $image->rectangle(
+                        $image->drawRectangle(
                             $region->left,
                             $region->top,
-                            $region->left + $region->width,
-                            $region->top + $region->height,
-                            function ($draw) {
+                            function ($draw) use ($region) {
+                                $draw->size($region->width, $region->height);
                                 $draw->background('rgba(196, 196, 196, 0.6)');
                             }
                         );
@@ -2780,45 +2779,40 @@ class Layout extends Base
                         $widget = $widgets[0];
                         if ($widget->type === 'image') {
                             $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
-                            $cover = Img::make($libraryLocation . $media->storedAs);
+                            $cover = $manager->read($libraryLocation . $media->storedAs);
                             $proportional = $widget->getOptionValue('scaleType', 'stretch') !== 'stretch';
                             $fit = $widget->getOptionValue('scaleType', 'stretch') === 'fit';
 
                             if ($fit) {
-                                $cover->fit($region->width, $region->height);
+                                $cover->cover($region->width, $region->height);
+                            } elseif ($proportional) {
+                                // No upsize() constraint originally, so upsizing is allowed - scale() matches.
+                                $cover->scale($region->width, $region->height);
                             } else {
-                                $cover->resize(
-                                    $region->width,
-                                    $region->height,
-                                    function ($constraint) use ($proportional) {
-                                        if ($proportional) {
-                                            $constraint->aspectRatio();
-                                        }
-                                    }
-                                );
+                                $cover->resize($region->width, $region->height);
                             }
                             if ($proportional) {
                                 $cover->resizeCanvas($region->width, $region->height);
                             }
-                            $image->insert($cover, 'top-left', $region->left, $region->top);
+                            $image->place($cover, 'top-left', $region->left, $region->top);
                         } else if ($widget->type === 'video'
                             && file_exists($libraryLocation . $widget->getPrimaryMediaId() . '_videocover.png')
                         ) {
                             // Render the video cover
-                            $cover = Img::make($libraryLocation . $widget->getPrimaryMediaId() . '_videocover.png');
-                            $cover->resize($region->width, $region->height, function ($constraint) {
-                                $constraint->aspectRatio();
-                            });
+                            $cover = $manager->read(
+                                $libraryLocation . $widget->getPrimaryMediaId() . '_videocover.png'
+                            );
+                            // No upsize() constraint originally, so upsizing is allowed - scale() matches.
+                            $cover->scale($region->width, $region->height);
                             $cover->resizeCanvas($region->width, $region->height);
-                            $image->insert($cover, 'top-left', $region->left, $region->top);
+                            $image->place($cover, 'top-left', $region->left, $region->top);
                         } else {
                             // Draw the region in the widget colouring
-                            $image->rectangle(
+                            $image->drawRectangle(
                                 $region->left,
                                 $region->top,
-                                $region->left + $region->width,
-                                $region->top + $region->height,
-                                function ($draw) {
+                                function ($draw) use ($region) {
+                                    $draw->size($region->width, $region->height);
                                     $draw->background('rgba(196, 196, 196, 0.6)');
                                 }
                             );
@@ -2859,7 +2853,7 @@ class Layout extends Base
             }
 
             // Resize the entire layout down to a thumbnail
-            $image->widen(1080);
+            $image->scale(1080);
 
             // Save the file
             $image->save($saveTo);
@@ -3218,16 +3212,8 @@ class Layout extends Base
     {
         $layout->setUnmatchedProperty('descriptionFormatted', $layout->description);
 
-        if ($layout->description != '') {
-            if ($showDescriptionId == 1) {
-                // Parse down for description
-                $layout->setUnmatchedProperty(
-                    'descriptionFormatted',
-                    Parsedown::instance()->setSafeMode(true)->text($layout->description)
-                );
-            } else if ($showDescriptionId == 2) {
-                $layout->setUnmatchedProperty('descriptionFormatted', strtok($layout->description, "\n"));
-            }
+        if ($layout->description != '' && $showDescriptionId == 2) {
+            $layout->setUnmatchedProperty('descriptionFormatted', strtok($layout->description, "\n"));
         }
 
         if ($showDescriptionId === 3) {

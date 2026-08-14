@@ -24,6 +24,7 @@ import type { PaginationState, SortingState } from '@tanstack/react-table';
 
 import type { SessionFilterInput } from '../SessionsConfig';
 
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import type { FetchSessionRequest } from '@/services/sessionApi';
 import { fetchSession } from '@/services/sessionApi';
 import { resolveLastModified } from '@/utils/date';
@@ -46,6 +47,8 @@ export const useSessionData = ({
   advancedFilters,
   enabled = true,
 }: UseSessionParams) => {
+  const { timeZone } = useDateFormatter();
+
   // Combine settings into one object to create a unique cache key
   const queryParams = {
     pageIndex: pagination.pageIndex,
@@ -64,8 +67,8 @@ export const useSessionData = ({
       const sortDir = sorting?.[0]?.desc ? 'desc' : 'asc';
 
       const { lastModified, ...restFilters } = advancedFilters;
-      const lastAccessedDateFrom = resolveLastModified(lastModified).modifiedDateFrom;
-      const lastAccessedDateTo = resolveLastModified(lastModified).modifiedDateTo;
+      const { modifiedDateFrom: lastAccessedDateFrom, modifiedDateTo: lastAccessedDateTo } =
+        resolveLastModified(lastModified, timeZone);
 
       const request: FetchSessionRequest = {
         start: startOffset,

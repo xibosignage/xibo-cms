@@ -119,7 +119,7 @@ docker run --name test-pr-web-"$SERVER_PORT" \
 echo "Containers starting, waiting for ready event"
 
 docker exec -t test-pr-web-"$SERVER_PORT" /bin/bash -c "/usr/local/bin/wait-for-command.sh -q -t 300 -c \"nc -z localhost 80\""
-docker exec -t test-pr-web-"$SERVER_PORT" /bin/bash -c "chown -R www-data.www-data /var/www/cms"
+docker exec -t test-pr-web-"$SERVER_PORT" /bin/bash -c "chown -R www-data:www-data /var/www/cms"
 docker exec --user www-data -t test-pr-web-"$SERVER_PORT" /bin/bash -c "cd /var/www/cms; /usr/bin/php bin/run.php 1"
 sleep 5
 

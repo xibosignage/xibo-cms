@@ -19,8 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import type { PaginationState, SortingState } from '@tanstack/react-table';
+import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query';
 
 import type { LogsFilterInput } from '../LogsConfig';
 
@@ -33,34 +32,26 @@ export const logsQueryKeys = {
   list: (params: Record<string, unknown>) => [...logsQueryKeys.all, 'list', params] as const,
 };
 
+// Set a limit for a single batch of results, and show a message
+// if we need to request more if we go over that value
+export const LOG_BATCH_SIZE = 5000;
+
 interface UseLogsParams {
-  pagination: PaginationState;
-  sorting: SortingState;
   advancedFilters: LogsFilterInput;
+  anchorTime: string | null;
   enabled?: boolean;
 }
 
-export const useLogsData = ({
-  pagination,
-  sorting,
-  advancedFilters,
-  enabled = true,
-}: UseLogsParams) => {
-  const queryParams = {
-    pageIndex: pagination.pageIndex,
-    pageSize: pagination.pageSize,
-    sorting,
-    ...advancedFilters,
-  };
+export const useLogsData = ({ advancedFilters, anchorTime, enabled = true }: UseLogsParams) => {
+  return useInfiniteQuery({
+    queryKey: logsQueryKeys.list({
+      ...advancedFilters,
+      anchorTime,
+    }),
 
-  return useQuery({
-    queryKey: logsQueryKeys.list(queryParams),
+    initialPageParam: 0,
 
-    queryFn: async ({ signal }) => {
-      const startOffset = pagination.pageIndex * pagination.pageSize;
-      const sortBy = sorting?.[0]?.id;
-      const sortDir = sorting?.[0]?.desc ? 'desc' : 'asc';
-
+    queryFn: async ({ pageParam, signal }) => {
       const { fromDt, seconds, intervalType, useRegexForName, ...restFilters } = advancedFilters;
 
       let normalizedFromDt: string | undefined;
@@ -69,13 +60,15 @@ export const useLogsData = ({
         if (!isNaN(d.getTime())) {
           normalizedFromDt = formatDateTime(d);
         }
+      } else if (anchorTime) {
+        normalizedFromDt = anchorTime;
       }
 
       const request: FetchLogsRequest = {
-        start: startOffset,
-        length: pagination.pageSize,
-        sortBy,
-        sortDir: sorting.length ? sortDir : undefined,
+        start: pageParam,
+        length: LOG_BATCH_SIZE,
+        sortBy: 'logId',
+        sortDir: 'desc',
         signal,
         fromDt: normalizedFromDt,
         seconds: seconds ? Number(seconds) : undefined,
@@ -89,6 +82,11 @@ export const useLogsData = ({
       };
 
       return fetchLogs(request);
+    },
+
+    getNextPageParam: (lastPage, allPages) => {
+      const loaded = allPages.reduce((sum, page) => sum + page.rows.length, 0);
+      return loaded < lastPage.totalCount ? loaded : undefined;
     },
 
     enabled,

@@ -86,9 +86,6 @@ class HelpService implements HelpServiceInterface
                 if (!Str::startsWith($helpLink->url, ['http://', 'https://'])) {
                     $helpLink->url = $this->helpBase . $helpLink->url;
                 }
-                if (!empty($helpLink->summary)) {
-                    $helpLink->summary = \Parsedown::instance()->setSafeMode(true)->line($helpLink->summary);
-                }
 
                 $this->links[$pageName][] = $helpLink;
             }

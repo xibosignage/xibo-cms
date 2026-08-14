@@ -24,6 +24,7 @@ import type { PaginationState, SortingState } from '@tanstack/react-table';
 
 import type { TemplatesFilterInput } from '../TemplatesConfig';
 
+import { serializeTags } from '@/components/ui/forms/TagInput';
 import type { FetchTemplateRequest } from '@/services/templatesApi';
 import { fetchTemplates } from '@/services/templatesApi';
 import { isValidRegex } from '@/utils/regex';
@@ -77,7 +78,7 @@ export const useTemplateData = ({
         ...restFilters
       } = advancedFilters;
 
-      const normalizedTags = tags && tags.length > 0 ? tags.map((t) => t.tag).join(',') : undefined;
+      const normalizedTags = tags && tags.length > 0 ? serializeTags(tags) : undefined;
 
       const request: FetchTemplateRequest = {
         start: startOffset,

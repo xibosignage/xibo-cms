@@ -20,7 +20,6 @@
  */
 
 import { useQueryClient } from '@tanstack/react-query';
-import type { RowSelectionState } from '@tanstack/react-table';
 import { Search, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -51,10 +50,13 @@ import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useSelectionState } from '@/hooks/useSelectionState';
 import { useTableState } from '@/hooks/useTableState';
 import type { Playlist } from '@/types/playlist';
+import type { Tag } from '@/types/tag';
 import { countActiveFilters } from '@/utils/filters';
 import { canSaveInFolder, hasFeature } from '@/utils/permissions';
+import { toggleTag } from '@/utils/tags';
 
 export default function Playlist() {
   const { t } = useTranslation();
@@ -122,8 +124,6 @@ export default function Playlist() {
   }, [layoutId, isHydrated, setFilterInputs, setPagination]);
 
   const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [selectionCache, setSelectionCache] = useState<Record<string, Playlist>>({});
   const [openFilter, setOpenFilter] = useState(false);
 
   const [showFolderSidebar, setShowFolderSidebar] = useState(false);
@@ -175,36 +175,21 @@ export default function Playlist() {
     },
   });
 
-  const getRowId = (row: Playlist) => {
-    return row.playlistId.toString();
-  };
-
-  const handleRowSelectionChange = (
-    updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
-  ) => {
-    const newSelection =
-      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
-
-    setRowSelection(newSelection);
-
-    setSelectionCache((prev) => {
-      const next = { ...prev };
-      playlistList.forEach((item) => {
-        const id = getRowId(item);
-        if (newSelection[id]) {
-          next[id] = item;
-        }
-      });
-      return next;
-    });
-  };
+  const {
+    rowSelection,
+    setRowSelection,
+    onRowSelectionChange: handleRowSelectionChange,
+    getRowId,
+    getAllSelectedItems,
+  } = useSelectionState<Playlist>({
+    list: playlistList,
+    getRowId: (row) => row.playlistId.toString(),
+  });
 
   const selectedPlaylist = playlistList.find((m) => m.playlistId === selectedPlaylistId) ?? null;
   const existingNames = playlistList.map((m) => m.name);
 
-  const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['playlist'] });
-  };
+  const handleRefresh = () => queryClient.invalidateQueries({ queryKey: ['playlist'] });
 
   const handleFolderChange = (folder: { id: number | null; text: string | '' }) => {
     setSelectedFolderId(folder.id);
@@ -258,6 +243,11 @@ export default function Playlist() {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
+  const handleTagClick = (tag: Tag) => {
+    setFilterInputs((prev) => ({ ...prev, tags: toggleTag(prev.tags, tag) }));
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
+
   const openCopyModal = (playlistId: number) => {
     setSelectedPlaylistId(playlistId);
     openModal('copy');
@@ -272,6 +262,8 @@ export default function Playlist() {
     t,
     canModify,
     canTag,
+    onTagClick: handleTagClick,
+    selectedTagIds: (filterInputs.tags ?? []).map((tag) => tag.tagId),
     canUserShare: hasFeature(user, 'user.sharing'),
     scheduleWithView: Number(user?.settings?.SCHEDULE_WITH_VIEW_PERMISSION) === 1,
     formatDateTime,
@@ -299,12 +291,6 @@ export default function Playlist() {
         }
       : undefined,
   });
-
-  const getAllSelectedItems = (): Playlist[] => {
-    return Object.keys(rowSelection)
-      .map((id) => selectionCache[id])
-      .filter((item): item is Playlist => !!item);
-  };
 
   const bulkActions = getBulkActions({
     t,

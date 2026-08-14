@@ -23,8 +23,8 @@ import { useQuery } from '@tanstack/react-query';
 
 import type { SessionHistoryFilter } from '../SessionHistoryConfig';
 
+import { resolveReportDateRange } from '@/pages/Reporting/Reports/shared/utils/resolveReportDateRange';
 import { fetchSessionHistory } from '@/services/sessionHistoryApi';
-import { formatDateTime } from '@/utils/date';
 
 export const sessionHistoryQueryKeys = {
   all: ['sessionHistory'] as const,
@@ -41,21 +41,7 @@ export function useSessionHistoryData({ filter, enabled }: UseSessionHistoryPara
     queryKey: sessionHistoryQueryKeys.report(filter as unknown as Record<string, unknown>),
 
     queryFn: async ({ signal }) => {
-      let reportFilter: string | undefined;
-      let fromDt: string | undefined;
-      let toDt: string | undefined;
-
-      if (filter.reportFilter.startsWith('range:')) {
-        const [from, to] = filter.reportFilter.replace('range:', '').split('|');
-        if (from) {
-          fromDt = formatDateTime(new Date(from));
-        }
-        if (to) {
-          toDt = formatDateTime(new Date(to));
-        }
-      } else if (filter.reportFilter) {
-        reportFilter = filter.reportFilter;
-      }
+      const { reportFilter, fromDt, toDt } = resolveReportDateRange(filter.reportFilter);
 
       const response = await fetchSessionHistory({
         reportFilter,

@@ -33,7 +33,7 @@ import SelectFolder from '@/components/ui/forms/SelectFolder';
 import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
 import { DataTable } from '@/components/ui/table/DataTable';
-import { StatusCell, TagsCell, TextCell } from '@/components/ui/table/cells';
+import { StatusCell, TagsCell, TextCell, toDisplayTags } from '@/components/ui/table/cells';
 import { getCommonFormOptions } from '@/config/commonForms';
 import { useUserContext } from '@/context/UserContext';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -50,6 +50,7 @@ import type { Playlist } from '@/types/playlist';
 import type { Tag } from '@/types/tag';
 import { formatDuration } from '@/utils/formatters';
 import { hasFeature } from '@/utils/permissions';
+import { toggleTag } from '@/utils/tags';
 
 interface AddAndEditPlaylistModalProps {
   type: 'add' | 'edit';
@@ -123,7 +124,7 @@ const buildDraftFromPlaylist = (data: Playlist): PlaylistDraft => ({
   exactTags: Boolean(data.filterExactTags),
   logicalOperator: data.filterMediaTagsLogicalOperator || 'OR',
   filterFolderId: data.filterFolderId ? Number(data.filterFolderId) : null,
-  maxNumberOfItems: Number(data.maxNumberOfItems) || 0,
+  maxNumberOfItems: Number(data.maxNumberOfItems) || FALLBACK_MAX_NUMBER_OF_ITEMS,
 });
 
 export default function AddAndEditPlaylistModal({
@@ -289,6 +290,11 @@ export default function AddAndEditPlaylistModal({
     draft.filterMediaTag.length > 0,
   );
 
+  const handlePreviewTagClick = (tag: Tag) => {
+    setDraft((prev) => ({ ...prev, filterMediaTag: toggleTag(prev.filterMediaTag, tag) }));
+    setPreviewPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
+
   const previewColumns = [
     {
       accessorKey: 'mediaId',
@@ -312,20 +318,27 @@ export default function AddAndEditPlaylistModal({
         return <StatusCell label={value} type={getStatusTypeFromMediaType(value)} />;
       },
     },
-    {
-      accessorKey: 'tags',
-      header: t('Tags'),
-      enableSorting: false,
-      size: 120,
-      cell: (info) => {
-        const tags = info.getValue<Tag[]>() || [];
-        const formattedTags = tags.map((tag) => ({
-          id: tag.tagId,
-          label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
-        }));
-        return <TagsCell tags={formattedTags} noTagsPlaceholder="-" />;
-      },
-    },
+    ...(hasFeature(user, 'tag.tagging')
+      ? ([
+          {
+            accessorKey: 'tags',
+            header: t('Tags'),
+            enableSorting: false,
+            size: 120,
+            cell: (info) => {
+              const tags = info.getValue<Tag[]>() || [];
+              return (
+                <TagsCell
+                  tags={toDisplayTags(tags)}
+                  noTagsPlaceholder="-"
+                  onTagClick={handlePreviewTagClick}
+                  selectedTagIds={draft.filterMediaTag.map((tag) => tag.tagId)}
+                />
+              );
+            },
+          },
+        ] as ColumnDef<Media>[])
+      : []),
     {
       id: 'formattedDuration',
       accessorKey: 'duration',
@@ -473,7 +486,7 @@ export default function AddAndEditPlaylistModal({
                           <input
                             type="checkbox"
                             title={t('Exact')}
-                            className="shrink-0 mt-0.5 border-gray-200 rounded text-blue-600 focus:ring-blue-500"
+                            className="shrink-0 mt-0.5 border-gray-200 rounded text-xibo-blue-600 focus:ring-xibo-blue-500"
                             checked={draft.exactTags}
                             onChange={(e) =>
                               setDraft((prev) => ({ ...prev, exactTags: e.target.checked }))
@@ -506,6 +519,7 @@ export default function AddAndEditPlaylistModal({
                   )}
                   value={draft.maxNumberOfItems}
                   onChange={(num) => setDraft((prev) => ({ ...prev, maxNumberOfItems: num }))}
+                  min={1}
                   max={maxNumberOfItemsLimit}
                   error={formErrors.maxNumberOfItems}
                 />

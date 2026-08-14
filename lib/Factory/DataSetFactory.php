@@ -340,7 +340,8 @@ class DataSetFactory extends BaseFactory
             $sortOrder,
             $allowedColumns,
             ['dataLastModified' => '`lastDataEdit`'],
-            ['dataSetId ASC']
+            ['dataSetId ASC'],
+            'dataSetId'
         );
 
         $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';

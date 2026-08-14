@@ -147,7 +147,7 @@ class AuditLogArchiveTask implements TaskInterface
             }
 
             // Take the earliest date and roll forward until the max age
-            $earliestDate = Carbon::createFromTimestamp($earliestDate[0]['minDate'])->startOfDay();
+            $earliestDate = DateFormatHelper::createFromTimestamp($earliestDate[0]['minDate'])->startOfDay();
             $i = 0;
 
             // We only archive up until the max age, leaving newer records alone.

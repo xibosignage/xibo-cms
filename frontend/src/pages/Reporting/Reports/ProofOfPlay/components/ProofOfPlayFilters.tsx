@@ -88,6 +88,7 @@ export default function ProofOfPlayFilters({
             value={filter.reportFilter || ''}
             options={DATE_RANGE_OPTIONS.map((o) => ({ ...o, label: t(o.label) }))}
             onChange={(_name, value) => onFilterChange({ reportFilter: String(value ?? '') })}
+            showTimePicker
           />
 
           <SelectDropdown

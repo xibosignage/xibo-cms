@@ -72,7 +72,7 @@ export default function Slider({
         value={value}
         disabled={disabled}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full accent-blue-500 disabled:opacity-50 disabled:pointer-events-none"
+        className="w-full accent-xibo-blue-500 disabled:opacity-50 disabled:pointer-events-none"
       />
       {(leftLabel !== undefined || rightLabel !== undefined || displayValue !== undefined) && (
         <div className="flex justify-between text-xs text-gray-500">

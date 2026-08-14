@@ -44,7 +44,7 @@ class FeaturesMigration extends AbstractMigration
             ->changeColumn('homePageId', 'string', [
                 'null' => true,
                 'default' => 'null',
-                'limit' => '255'
+                'limit' => 255
             ])
             ->save();
 

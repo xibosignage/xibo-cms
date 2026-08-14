@@ -3,6 +3,7 @@ import type { PaginationState, SortingState } from '@tanstack/react-table';
 
 import type { CampaignFilterInput } from '../CampaignConfig';
 
+import { serializeTags } from '@/components/ui/forms/TagInput';
 import { fetchCampaigns } from '@/services/campaignApi';
 import type { FetchCampaignRequest } from '@/services/campaignApi';
 import { isValidRegex } from '@/utils/regex';
@@ -50,7 +51,7 @@ export const useCampaignData = ({
       const { useRegexForName, logicalOperatorName, exactTags, logicalOperator } = advancedFilters;
 
       const normalizedTags = advancedFilters.tags?.length
-        ? advancedFilters.tags.map((t) => t.tag).join(',')
+        ? serializeTags(advancedFilters.tags)
         : undefined;
 
       const request: FetchCampaignRequest = {

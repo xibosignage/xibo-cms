@@ -219,10 +219,11 @@ trait EntityTrait
                 if (isset($this->datesToFormat) && in_array($key, $this->datesToFormat)) {
                     $original = empty($this->getOriginalValue($key))
                         ? $this->getOriginalValue($key)
-                        : Carbon::createFromTimestamp($this->getOriginalValue($key))->format(DateFormatHelper::getSystemFormat());
+                        : DateFormatHelper::createFromTimestamp($this->getOriginalValue($key))
+                            ->format(DateFormatHelper::getSystemFormat());
                     $new = empty($value)
                         ? $value
-                        : Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
+                        : DateFormatHelper::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
                     $changedProperties[$key] = $original . ' > ' . $new;
                 } else {
                     $changedProperties[$key] = $this->getOriginalValue($key) . ' > ' . $value;
@@ -307,7 +308,8 @@ trait EntityTrait
 
         foreach ($objectAsJson as $key => $value) {
             if (isset($this->datesToFormat) && in_array($key, $this->datesToFormat)) {
-                $objectAsJson[$key] = Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
+                $objectAsJson[$key] = DateFormatHelper::createFromTimestamp($value)
+                    ->format(DateFormatHelper::getSystemFormat());
             }
 
             if ($jsonEncodeArrays) {

@@ -231,7 +231,7 @@ class MenuBoardFactory extends BaseFactory
         }
 
         $allowedColumns = ['menuId', 'name', 'code', 'modifiedDt', 'owner', 'folderName', 'groupsWithPermissions'];
-        $sortOrder = $this->buildSortQuery($sortOrder, $allowedColumns, [], ['name ASC']);
+        $sortOrder = $this->buildSortQuery($sortOrder, $allowedColumns, [], ['name ASC'], 'menuId');
         $order = empty($sortOrder) ? '' : ' ORDER BY ' . implode(', ', $sortOrder);
 
         $limit = '';

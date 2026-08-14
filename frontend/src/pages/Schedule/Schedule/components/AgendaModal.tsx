@@ -700,7 +700,7 @@ function AgendaTablePagination({
                 )}
               >
                 {size}
-                {pageSize === size && <Check className="size-3.5 text-blue-600" />}
+                {pageSize === size && <Check className="size-3.5 text-xibo-blue-600" />}
               </button>
             ))}
           </div>
@@ -931,7 +931,17 @@ function EventTypeTable({
   onPreview,
 }: EventTypeTableProps) {
   const { t } = useTranslation();
-  const label = EVENT_TYPE_LABELS[typeId];
+  // EVENT_TYPE_LABELS values are computed via record index, invisible to the extractor — seed them here.
+  const eventTypeLabels: Record<number, string> = {
+    1: t('Layouts'),
+    3: t('Overlay Layouts'),
+    4: t('Interrupt Layouts'),
+    5: t('Campaign Layouts'),
+    7: t('Fullscreen Video / Image'),
+    8: t('Fullscreen Playlist'),
+    9: t('Synchronised'),
+  };
+  const label = eventTypeLabels[typeId] ?? EVENT_TYPE_LABELS[typeId];
   const [sortCol, setSortCol] = useState<SortCol>('fromDt');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [pageIndex, setPageIndex] = useState(0);
@@ -959,7 +969,7 @@ function EventTypeTable({
   return (
     <section>
       <div className="flex items-center gap-2 mb-2">
-        <h3 className="font-semibold text-gray-700">{t(label ?? '')}</h3>
+        <h3 className="font-semibold text-gray-700">{label ?? ''}</h3>
         <span className="text-xs text-gray-500 bg-gray-100 rounded-full px-2 py-0.5">
           {events.length}
         </span>
@@ -1043,7 +1053,11 @@ function EventTypeTable({
                   key={`${event.eventId}-${i}`}
                   className={twMerge(
                     'cursor-pointer transition-colors',
-                    isSelected ? 'bg-blue-100' : isLinked ? 'bg-blue-50' : 'hover:bg-gray-50',
+                    isSelected
+                      ? 'bg-xibo-blue-100'
+                      : isLinked
+                        ? 'bg-xibo-blue-50'
+                        : 'hover:bg-gray-50',
                   )}
                   onClick={() =>
                     onRowClick({ type: 'layout', layoutId: event.layoutId, eventId: event.eventId })
@@ -1132,9 +1146,9 @@ function SidebarList({ title, items, isSelected, isLinked, onRowClick }: Sidebar
             className={twMerge(
               'flex items-center gap-2.5 px-5 py-1.5 cursor-pointer text-xs transition-colors',
               isSelected(item.id)
-                ? 'bg-blue-100'
+                ? 'bg-xibo-blue-100'
                 : isLinked(item.id)
-                  ? 'bg-blue-50'
+                  ? 'bg-xibo-blue-50'
                   : 'hover:bg-gray-50',
             )}
             onClick={() => onRowClick(item.id)}

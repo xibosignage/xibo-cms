@@ -147,7 +147,7 @@ function InfoTooltip({ text }: { text: string }) {
             {...getFloatingProps()}
             className="z-9999 bg-white shadow-xl rounded-lg border border-gray-100 max-w-xs p-3 text-xs text-gray-600"
           >
-            {t(text)}
+            {text}
           </div>
         )}
       </FloatingPortal>
@@ -175,7 +175,7 @@ function OptionsSubControl({
     <div className="flex flex-col gap-2 border border-gray-200 rounded-md bg-gray-50 p-2">
       <SectionLabel
         label={t('Options')}
-        action={<InfoTooltip text="Options for the dropdown control" />}
+        action={<InfoTooltip text={t('Options for the dropdown control')} />}
       />
 
       {options.length > 0 && (
@@ -575,6 +575,13 @@ function PlayerCompatibilitySubControl({
   onChange: (v: PlayerCompatibilityValue) => void;
 }) {
   const { t } = useTranslation();
+  const platformLabels: Record<keyof PlayerCompatibilityValue, string> = {
+    windows: t('Windows'),
+    android: t('Android'),
+    linux: t('Linux'),
+    webos: t('WebOS'),
+    tizen: t('Tizen'),
+  };
 
   return (
     <div className="flex flex-col gap-2 border border-gray-200 rounded-md bg-gray-50 p-3">
@@ -584,7 +591,7 @@ function PlayerCompatibilitySubControl({
           <TextInput
             key={key}
             name={`compat-${key}`}
-            label={t(label)}
+            label={platformLabels[key] ?? label}
             value={playerCompatibility[key] ?? ''}
             onChange={(v) => onChange({ ...playerCompatibility, [key]: v || undefined })}
           />
@@ -684,7 +691,7 @@ function PropertyCard({
           <TextInput
             name={`default-${index}`}
             label={t('Default')}
-            labelExtra={<InfoTooltip text="Default value" />}
+            labelExtra={<InfoTooltip text={t('Default value')} />}
             value={property.default ?? ''}
             onChange={(v) => update('default', v)}
           />
@@ -730,17 +737,17 @@ function PropertyCard({
         <div className="border-t border-gray-100 pt-3 flex flex-col gap-2">
           {(
             [
-              ['allowLibraryRefs', 'Allow Library Refs'],
-              ['allowAssetRefs', 'Allow Asset Refs'],
-              ['parseTranslations', 'Parse Translations'],
-              ['includeInXlf', 'Include In XLF'],
+              ['allowLibraryRefs', t('Allow Library Refs')],
+              ['allowAssetRefs', t('Allow Asset Refs')],
+              ['parseTranslations', t('Parse Translations')],
+              ['includeInXlf', t('Include In XLF')],
             ] as [keyof ModuleTemplateProperty, string][]
           ).map(([key, label]) => (
             <div
               key={key}
               className="flex items-center justify-between rounded-lg border border-gray-200 p-2"
             >
-              <span className="text-sm font-medium text-gray-700">{t(label)}</span>
+              <span className="text-sm font-medium text-gray-700">{label}</span>
               <div className="w-fit shrink-0">
                 <Switch
                   size="sm"

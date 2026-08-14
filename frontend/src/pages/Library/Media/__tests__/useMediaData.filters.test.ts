@@ -27,6 +27,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { INITIAL_FILTER_STATE } from '../MediaConfig';
 import { useMediaData } from '../hooks/useMediaData';
 
+import { UserProvider } from '@/context/UserContext';
 import type { Tag } from '@/types/tag';
 
 // ---------------------------------------------------------------------------
@@ -47,7 +48,10 @@ vi.mock('@/services/mediaApi', () => ({
 function createWrapper() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return ({ children }: { children: ReactNode }) =>
-    createElement(QueryClientProvider, { client: qc }, children);
+    createElement(UserProvider, {
+      initialUser: null,
+      children: createElement(QueryClientProvider, { client: qc }, children),
+    });
 }
 
 /** Minimal params shared by most tests — only advancedFilters varies. */

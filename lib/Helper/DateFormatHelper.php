@@ -42,6 +42,20 @@ class DateFormatHelper
     }
 
     /**
+     * Create a Carbon instance from a unix timestamp, in the CMS's configured default timezone.
+     *
+     * Carbon\Carbon::createFromTimestamp() stopped falling back to date_default_timezone_get()
+     * as of Carbon 3 when no timezone is passed explicitly - it now stays in UTC instead. This
+     * wrapper restores the old (timezone-aware) default behaviour at a single choke point.
+     * @param float|int|string $timestamp
+     * @return Carbon
+     */
+    public static function createFromTimestamp($timestamp): Carbon
+    {
+        return Carbon::createFromTimestamp($timestamp, date_default_timezone_get());
+    }
+
+    /**
      * @inheritdoc
      */
     public static function extractTimeFormat($format)

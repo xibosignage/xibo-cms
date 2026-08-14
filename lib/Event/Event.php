@@ -25,7 +25,7 @@ namespace Xibo\Event;
 /**
  * An event
  */
-abstract class Event extends \Symfony\Component\EventDispatcher\Event
+abstract class Event extends \Symfony\Contracts\EventDispatcher\Event
 {
     private static $NAME = 'generic.event';
 

@@ -144,6 +144,9 @@ export const getCategoryColumnDefinitions = (
       header: t('Media'),
       size: 100,
       enableSorting: false,
+      meta: {
+        excludeFromExport: true,
+      },
       cell: (info) => {
         const thumb = info.getValue<string | undefined>();
         if (!thumb) {

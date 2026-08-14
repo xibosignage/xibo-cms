@@ -24,6 +24,8 @@ import type { PaginationState, SortingState } from '@tanstack/react-table';
 
 import type { LayoutFilterInput } from '../LayoutConfig';
 
+import { serializeTags } from '@/components/ui/forms/TagInput';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import type { FetchLayoutRequest } from '@/services/layoutsApi';
 import { fetchLayouts } from '@/services/layoutsApi';
 import { resolveLastModified } from '@/utils/date';
@@ -51,6 +53,8 @@ export const useLayoutData = ({
   advancedFilters,
   enabled = true,
 }: UseLayoutParams) => {
+  const { timeZone } = useDateFormatter();
+
   const queryParams = {
     pageIndex: pagination.pageIndex,
     pageSize: pagination.pageSize,
@@ -90,8 +94,7 @@ export const useLayoutData = ({
         logicalOperator,
       } = advancedFilters;
 
-      const normalizedTags =
-        tags && tags.length > 0 ? tags.map((tag) => tag.tag).join(',') : undefined;
+      const normalizedTags = tags && tags.length > 0 ? serializeTags(tags) : undefined;
 
       const request: FetchLayoutRequest = {
         start: startOffset,
@@ -112,7 +115,7 @@ export const useLayoutData = ({
         ...(mediaLike ? { mediaLike } : {}),
         ...(layoutId != null ? { layoutId } : {}),
         ...(activeDisplayGroupId != null ? { activeDisplayGroupId } : {}),
-        ...resolveLastModified(lastModified),
+        ...resolveLastModified(lastModified, timeZone),
         ...(useRegexForName && name && isValidRegex(name) ? { useRegexForName: 1 } : {}),
         ...(logicalOperatorName ? { logicalOperatorName } : {}),
         ...(exactTags !== undefined ? { exactTags: exactTags ? 1 : 0 } : {}),

@@ -128,12 +128,16 @@ describe('INITIAL_FILTER_STATE', () => {
     expect(INITIAL_FILTER_STATE.intervalType).toBe('1');
   });
 
-  it('defaults excludeLog to false', () => {
-    expect(INITIAL_FILTER_STATE.excludeLog).toBe(false);
+  it('defaults excludeLog to true', () => {
+    expect(INITIAL_FILTER_STATE.excludeLog).toBe(true);
+  });
+
+  it('defaults useRegexForName to false', () => {
+    expect(INITIAL_FILTER_STATE.useRegexForName).toBe(false);
   });
 
   it('defaults all other string fields to empty string', () => {
-    const skipKeys = new Set(['seconds', 'intervalType', 'excludeLog']);
+    const skipKeys = new Set(['seconds', 'intervalType', 'excludeLog', 'useRegexForName']);
     for (const [key, value] of Object.entries(INITIAL_FILTER_STATE)) {
       if (!skipKeys.has(key)) {
         expect(value).toBe('');

@@ -129,7 +129,7 @@ class ApiRequests implements ReportInterface
         $metadata = [
             'periodStart' => $json['metadata']['periodStart'],
             'periodEnd' => $json['metadata']['periodEnd'],
-            'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)
+            'generatedOn' => DateFormatHelper::createFromTimestamp($savedReport->generatedOn)
                 ->format(DateFormatHelper::getSystemFormat()),
             'title' => $savedReport->saveAs,
             'logType' => $json['metadata']['logType']
@@ -265,7 +265,7 @@ class ApiRequests implements ReportInterface
                     $auditRecord->objectAfter = json_decode($auditRecord->objectAfter ?? '');
                 }
 
-                $auditRecord->logDate = Carbon::createFromTimestamp($auditRecord->logDate)
+                $auditRecord->logDate = DateFormatHelper::createFromTimestamp($auditRecord->logDate)
                     ->format(DateFormatHelper::getSystemFormat());
 
                 $rows[] = $auditRecord;
@@ -408,7 +408,7 @@ class ApiRequests implements ReportInterface
 
     private function buildOrderBy(string $type, SanitizerInterface $sanitizedParams, bool $isJson): string
     {
-        [$defaultSortBy, $allowedColumns, $defaultSort] = match ($type) {
+        [$defaultSortBy, $allowedColumns, $defaultSort, $uniqueColumn] = match ($type) {
             'audit' => [
                 'logDate',
                 [
@@ -417,6 +417,7 @@ class ApiRequests implements ReportInterface
                     'startTime', 'applicationName',
                 ],
                 ['logDate DESC'],
+                'logId',
             ],
             'debug' => [
                 'logDate',
@@ -426,16 +427,23 @@ class ApiRequests implements ReportInterface
                     'method', 'startTime', 'applicationName',
                 ],
                 ['logDate DESC'],
+                'logId',
             ],
             default => [
                 'startTime',
                 ['applicationId', 'requestId', 'userId', 'url', 'method', 'startTime', 'applicationName', 'userName'],
                 ['startTime DESC'],
+                'requestId',
             ],
         };
 
         $sortOrder = $this->gridRenderSort($sanitizedParams, $isJson, $defaultSortBy);
-        $order = $this->apiRequestsFactory->buildSortQuery($sortOrder, $allowedColumns, defaultSort: $defaultSort);
+        $order = $this->apiRequestsFactory->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            defaultSort: $defaultSort,
+            uniqueColumn: $uniqueColumn
+        );
 
         return !empty($order) ? ' ORDER BY ' . implode(', ', $order) : '';
     }

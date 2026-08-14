@@ -20,7 +20,6 @@
  */
 
 import { useQueryClient } from '@tanstack/react-query';
-import type { RowSelectionState } from '@tanstack/react-table';
 import { Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -52,10 +51,13 @@ import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useSelectionState } from '@/hooks/useSelectionState';
 import { useTableState } from '@/hooks/useTableState';
 import type { DisplayGroup } from '@/types/displayGroup';
+import type { Tag } from '@/types/tag';
 import { countActiveFilters } from '@/utils/filters';
 import { hasFeature } from '@/utils/permissions';
+import { toggleTag } from '@/utils/tags';
 
 export default function DisplayGroupPage() {
   const { t } = useTranslation();
@@ -115,8 +117,6 @@ export default function DisplayGroupPage() {
   const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
   const [openFilter, setOpenFilter] = useState(false);
   const [showFolderSidebar, setShowFolderSidebar] = useState(false);
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [selectionCache, setSelectionCache] = useState<Record<string, DisplayGroup>>({});
   const [activeModal, setActiveModal] = useState<ModalType | null>(null);
   const [itemsToDelete, setItemsToDelete] = useState<DisplayGroup[]>([]);
   const [itemsToMove, setItemsToMove] = useState<DisplayGroup[]>([]);
@@ -145,9 +145,18 @@ export default function DisplayGroupPage() {
   const error = isError && queryError instanceof Error ? queryError.message : '';
   const displayGroupList = data ?? [];
 
-  const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['displayGroup'] });
-  };
+  const {
+    rowSelection,
+    setRowSelection,
+    onRowSelectionChange: handleRowSelectionChange,
+    getRowId,
+    getAllSelectedItems,
+  } = useSelectionState<DisplayGroup>({
+    list: displayGroupList,
+    getRowId: (row) => row.displayGroupId.toString(),
+  });
+
+  const handleRefresh = () => queryClient.invalidateQueries({ queryKey: ['displayGroup'] });
 
   const handleFolderChange = (folder: { id: number | null; text: string | '' }) => {
     setSelectedFolderId(folder.id);
@@ -168,6 +177,11 @@ export default function DisplayGroupPage() {
 
   const handleResetFilters = () => {
     setFilterInputs(INITIAL_FILTER_STATE);
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
+
+  const handleTagClick = (tag: Tag) => {
+    setFilterInputs((prev) => ({ ...prev, tags: toggleTag(prev.tags, tag) }));
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
@@ -197,39 +211,14 @@ export default function DisplayGroupPage() {
 
   const { guard } = useAutoSubmit();
 
-  const getRowId = (row: DisplayGroup) => row.displayGroupId.toString();
-
-  const handleRowSelectionChange = (
-    updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
-  ) => {
-    const newSelection =
-      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
-
-    setRowSelection(newSelection);
-
-    setSelectionCache((prev) => {
-      const next = { ...prev };
-      displayGroupList.forEach((item) => {
-        const id = getRowId(item);
-        if (newSelection[id]) {
-          next[id] = item;
-        }
-      });
-      return next;
-    });
-  };
-
   const existingNames = displayGroupList.map((g) => g.displayGroup).filter(Boolean);
-
-  const getAllSelectedItems = (): DisplayGroup[] =>
-    Object.keys(rowSelection)
-      .map((id) => selectionCache[id])
-      .filter((item): item is DisplayGroup => !!item);
 
   const columns = getDisplayGroupColumns({
     t,
     canModify,
     canTag,
+    onTagClick: handleTagClick,
+    selectedTagIds: (filterInputs.tags ?? []).map((tag) => tag.tagId),
     canUserShare: hasFeature(user, 'user.sharing'),
     canLimitedView,
     canCommandView,

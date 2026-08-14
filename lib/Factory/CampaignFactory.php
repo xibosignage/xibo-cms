@@ -261,6 +261,10 @@ class CampaignFactory extends BaseFactory
             $params['type'] = $sanitizedFilter->getString('type');
         }
 
+        if ($sanitizedFilter->getCheckbox('excludeAdCampaigns')) {
+            $body .= " AND campaign.type <> 'ad' ";
+        }
+
         if ($sanitizedFilter->getInt('ownerId', ['default' => 0]) != 0) {
             // Join Campaign back onto it again
             $body .= ' AND `campaign`.userId = :ownerId ';
@@ -465,7 +469,8 @@ class CampaignFactory extends BaseFactory
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            defaultSort: ['campaign ASC']
+            defaultSort: ['campaign ASC'],
+            uniqueColumn: 'campaignId'
         );
 
         $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
