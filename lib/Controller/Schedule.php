@@ -2215,7 +2215,7 @@ class Schedule extends Base
                     $this->getLog()->debug('grid: the first day of the month for this date is: '
                         . $firstDay->toAtomString());
 
-                    $nth = $firstDay->diffInDays($date) / 7 + 1;
+                    $nth = intdiv($date->day - $firstDay->day, 7) + 1;
                     $repeatWeekDayDate = $date->copy()->setDay($nth)->format('jS');
                     $repeatsOn = 'the ' . $repeatWeekDayDate . ' '
                         . $date->format('l')

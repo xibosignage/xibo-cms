@@ -352,6 +352,7 @@ export default function EditCampaignModal({
                 <TextInput
                   name="playCount"
                   label={t('Play count')}
+                  placeholder={t('Add number')}
                   type="number"
                   value={draft.playCount === '' ? '' : String(draft.playCount)}
                   onChange={(val) =>
