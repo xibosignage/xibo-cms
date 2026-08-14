@@ -25,6 +25,8 @@ import type { AxiosError } from 'axios';
 
 import type { PlaylistFilterInput } from '../PlaylistsConfig';
 
+import { serializeTags } from '@/components/ui/forms/TagInput';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import type { FetchPlaylistRequest } from '@/services/playlistApi';
 import { fetchPlaylist } from '@/services/playlistApi';
 import { resolveLastModified } from '@/utils/date';
@@ -52,6 +54,8 @@ export const usePlaylistData = ({
   advancedFilters,
   enabled = true,
 }: UsePlaylistParams) => {
+  const { timeZone } = useDateFormatter();
+
   // Combine settings into one object to create a unique cache key
   const queryParams = {
     pageIndex: pagination.pageIndex,
@@ -81,8 +85,7 @@ export const usePlaylistData = ({
         ...restFilters
       } = advancedFilters;
 
-      const normalizedTags =
-        tags && tags.length > 0 ? tags.map((tag) => tag.tag).join(',') : undefined;
+      const normalizedTags = tags && tags.length > 0 ? serializeTags(tags) : undefined;
 
       const request: FetchPlaylistRequest = {
         start: startOffset,
@@ -93,7 +96,7 @@ export const usePlaylistData = ({
         ...restFilters,
         ...((restFilters.name || filter) && { name: restFilters.name || filter }),
         ...(normalizedTags ? { tags: normalizedTags } : {}),
-        ...resolveLastModified(lastModified),
+        ...resolveLastModified(lastModified, timeZone),
         ...(useRegexForName && restFilters.name && isValidRegex(restFilters.name)
           ? { useRegexForName: 1 }
           : {}),

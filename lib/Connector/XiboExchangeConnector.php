@@ -25,7 +25,6 @@ namespace Xibo\Connector;
 use Carbon\Carbon;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Str;
-use Parsedown;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\SearchResult;
 use Xibo\Event\TemplateProviderEvent;
@@ -260,7 +259,7 @@ class XiboExchangeConnector implements ConnectorInterface
         $searchResult->title = $template->title;
         $searchResult->description = empty($template->description)
             ? null
-            : Parsedown::instance()->setSafeMode(true)->line($template->description);
+            : $template->description;
 
         // Optional data
         if (property_exists($template, 'tags') && count($template->tags) > 0) {

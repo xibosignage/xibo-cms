@@ -52,6 +52,7 @@ import {
   StatusCell,
   ActionsCell,
   TagsCell,
+  toDisplayTags,
   getSharingColumn,
 } from '@/components/ui/table/cells';
 import { getCommonFormOptions } from '@/config/commonForms';
@@ -60,6 +61,7 @@ import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
 import type { DateLike } from '@/utils/date';
 import { formatDuration } from '@/utils/formatters';
+import { formatTagsForExport } from '@/utils/tags';
 
 export interface MediaFilterInput {
   type?: string;
@@ -210,11 +212,6 @@ export const getBaseFilterKeys = (
   },
 ];
 
-// TODO: Needs translation
-export const MEDIA_FORM_OPTIONS = {
-  expiryDates: ['Never Expire', 'End of Today', 'In 7 Days', 'In 14 Days', 'In 30 Days'],
-};
-
 export const ACCEPTED_MIME_TYPES = {
   // Audio
   'audio/mpeg': ['.mp3'],
@@ -283,6 +280,8 @@ export interface MediaActionsProps {
   openUsageReportModal?: (id: number) => void;
   scheduleWithView?: boolean;
   canModify?: boolean;
+  onTagClick?: (tag: Tag) => void;
+  selectedTagIds?: (string | number)[];
 }
 
 export const getMediaItemActions = ({
@@ -454,7 +453,7 @@ export const filterMediaByPermission = <T,>(
 };
 
 export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] => {
-  const { t, onPreview, formatDateTime, canTag = false } = props;
+  const { t, onPreview, formatDateTime, canTag = false, onTagClick, selectedTagIds } = props;
   const getActions = getMediaItemActions(props);
   return [
     {
@@ -468,6 +467,9 @@ export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] =>
       header: t('Thumbnail'),
       size: 150,
       enableSorting: false,
+      meta: {
+        excludeFromExport: true,
+      },
       cell: (info) => (
         <MediaCell
           thumb={info.row.original.thumbnail}
@@ -502,11 +504,16 @@ export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] =>
             size: 150,
             cell: (info) => {
               const tags = info.getValue<Tag[]>() || [];
-              const formattedTags = tags.map((tag) => ({
-                id: tag.tagId,
-                label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
-              }));
-              return <TagsCell tags={formattedTags} />;
+              return (
+                <TagsCell
+                  tags={toDisplayTags(tags)}
+                  onTagClick={onTagClick}
+                  selectedTagIds={selectedTagIds}
+                />
+              );
+            },
+            meta: {
+              getExportValue: (row) => formatTagsForExport(row.tags),
             },
           },
         ] as ColumnDef<Media>[])
@@ -517,6 +524,9 @@ export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] =>
       header: t('Duration'),
       size: 140,
       cell: (info) => <TextCell>{formatDuration(info.getValue<number>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatDuration(row.duration),
+      },
     },
     {
       id: 'durationSeconds',
@@ -598,22 +608,24 @@ export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] =>
       header: t('Created'),
       size: 180,
       cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatDateTime(row.createdDt),
+      },
     },
     {
       accessorKey: 'modifiedDt',
       header: t('Modified'),
       size: 180,
       cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatDateTime(row.modifiedDt),
+      },
     },
     {
-      accessorKey: 'expires',
+      accessorKey: 'expiresFormatted',
       header: t('Expires'),
       size: 180,
-      cell: (info) => {
-        const val = info.getValue() as number;
-        if (val === 0) return <span className="text-gray-400">-</span>;
-        return <TextCell>{val}</TextCell>;
-      },
+      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
     },
     {
       id: 'tableActions',

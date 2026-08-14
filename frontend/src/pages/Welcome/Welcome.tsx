@@ -101,22 +101,12 @@ export default function Welcome() {
             )}
           </p>
           <div className="flex gap-2 mt-5">
-            <a
-              href="https://docs.xibosignage.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
-            >
-              {t('Documentation')}
+            <a href="https://docs.xibosignage.com" target="_blank" rel="noopener noreferrer">
+              <Button variant="primary">{t('Documentation')}</Button>
             </a>
             {isXiboThemed && (
-              <a
-                href="https://xibosignage.com/training"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                {t('Training')}
+              <a href="https://xibosignage.com/training" target="_blank" rel="noopener noreferrer">
+                <Button variant="secondary">{t('Training')}</Button>
               </a>
             )}
           </div>
@@ -146,7 +136,7 @@ export default function Welcome() {
                   className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/30 opacity-0 transition-opacity hover:opacity-100"
                 >
                   <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/90 cursor-pointer">
-                    <Play className="h-6 w-6 text-blue-600" />
+                    <Play className="h-6 w-6 text-xibo-blue-600" />
                   </div>
                 </button>
               )}

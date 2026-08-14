@@ -49,6 +49,7 @@ interface UsePlaylistActionsProps {
   setRowSelection: Dispatch<SetStateAction<RowSelectionState>>;
   setItemsToMove: (items: Layout[]) => void;
   timezone: string;
+  folderId: number | null;
 }
 
 export function useLayoutActions({
@@ -58,6 +59,7 @@ export function useLayoutActions({
   setRowSelection,
   setItemsToMove,
   timezone,
+  folderId,
 }: UsePlaylistActionsProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -176,12 +178,13 @@ export function useLayoutActions({
 
   const handleCreateLayout = async () => {
     try {
-      const newLayout = await createLayout();
+      const newLayout = await createLayout({ folderId });
 
       if (!newLayout?.layoutId) {
         throw new Error('Invalid layout response');
       }
 
+      handleRefresh();
       navigate(`/design/layout/${newLayout.layoutId}/editor`);
     } catch (error) {
       console.error(error);

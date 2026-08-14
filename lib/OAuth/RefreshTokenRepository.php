@@ -50,7 +50,7 @@ class RefreshTokenRepository implements RefreshTokenRepositoryInterface
     /**
      * {@inheritdoc}
      */
-    public function persistNewRefreshToken(RefreshTokenEntityInterface $refreshTokenEntity)
+    public function persistNewRefreshToken(RefreshTokenEntityInterface $refreshTokenEntity): void
     {
         $date = clone $refreshTokenEntity->getExpiryDateTime();
         // since stash cache sets expiresAt at up to provided date
@@ -72,7 +72,7 @@ class RefreshTokenRepository implements RefreshTokenRepositoryInterface
     /**
      * {@inheritdoc}
      */
-    public function revokeRefreshToken($tokenId)
+    public function revokeRefreshToken(string $tokenId): void
     {
         $this->pool->getItem('R_' . $tokenId)->clear();
     }
@@ -80,7 +80,7 @@ class RefreshTokenRepository implements RefreshTokenRepositoryInterface
     /**
      * {@inheritdoc}
      */
-    public function isRefreshTokenRevoked($tokenId)
+    public function isRefreshTokenRevoked(string $tokenId): bool
     {
         // get cache by refresh token identifier
         $cache = $this->pool->getItem('R_' . $tokenId);
@@ -114,7 +114,7 @@ class RefreshTokenRepository implements RefreshTokenRepositoryInterface
     /**
      * {@inheritdoc}
      */
-    public function getNewRefreshToken()
+    public function getNewRefreshToken(): RefreshTokenEntity
     {
         return new RefreshTokenEntity();
     }

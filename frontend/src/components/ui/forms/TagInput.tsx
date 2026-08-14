@@ -114,6 +114,7 @@ interface TagInputProps {
   allowValues?: boolean;
   suggestions?: boolean;
   onPendingValueChange?: (isPending: boolean) => void;
+  compact?: boolean;
 }
 
 function TagInput({
@@ -133,6 +134,7 @@ function TagInput({
   allowValues = true,
   suggestions = true,
   onPendingValueChange,
+  compact = false,
 }: TagInputProps) {
   const { t } = useTranslation();
   const inputId = useId();
@@ -324,8 +326,9 @@ function TagInput({
         ref={refs.setReference}
         {...getReferenceProps()}
         className={twMerge(
-          'flex rounded-lg bg-white border border-gray-200 overflow-hidden transition-colors min-h-11.25',
-          'focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500',
+          'flex rounded-lg bg-white border border-gray-200 overflow-hidden transition-colors',
+          compact ? 'h-11.25' : 'min-h-11.25',
+          'focus-within:border-xibo-blue-500 focus-within:ring-1 focus-within:ring-xibo-blue-500',
           disabled && 'opacity-50 pointer-events-none bg-gray-50',
         )}
       >
@@ -333,26 +336,45 @@ function TagInput({
           <div className="flex items-center border-e border-gray-200 shrink-0">{prefix}</div>
         )}
 
-        <div className="flex-1 p-2 flex flex-wrap gap-2 items-center min-w-0">
-          {tags.map((tagObj) => (
-            <span
-              key={tagObj.tag}
-              className="flex items-center gap-1 px-2 py-1 text-sm font-semibold border text-xibo-blue-600 border-xibo-blue-400 rounded-full"
-            >
-              {tagObj.value !== '' && tagObj.value != null
+        <div
+          className={twMerge(
+            'flex-1 p-2 flex flex-wrap gap-2 items-center min-w-0',
+            compact && 'overflow-y-auto overflow-x-hidden h-full',
+          )}
+        >
+          {tags.map((tagObj) => {
+            const label =
+              tagObj.value !== '' && tagObj.value != null
                 ? `${tagObj.tag}|${tagObj.value}`
-                : tagObj.tag}
-              <button
-                type="button"
-                aria-label={t('Remove tag {{tag}}', { tag: tagObj.tag })}
-                onClick={() => removeTag(tagObj.tag)}
-                disabled={disabled}
-                className="text-blue-600 w-3 rounded-full h-3 flex items-center justify-center bg-blue-200 hover:text-gray-600"
+                : tagObj.tag;
+
+            return (
+              <span
+                key={label}
+                className={twMerge(
+                  'flex items-center gap-1 px-2 py-1 font-semibold border text-xibo-blue-600 border-xibo-blue-400 rounded-full',
+                  compact ? 'text-xs min-w-0 max-w-full' : 'text-sm',
+                )}
               >
-                <X size={8} />
-              </button>
-            </span>
-          ))}
+                {compact ? (
+                  <span className="block min-w-0 max-w-32 truncate" title={label}>
+                    {label}
+                  </span>
+                ) : (
+                  label
+                )}
+                <button
+                  type="button"
+                  aria-label={t('Remove tag {{tag}}', { tag: tagObj.tag })}
+                  onClick={() => removeTag(tagObj.tag)}
+                  disabled={disabled}
+                  className="text-xibo-blue-600 w-3 rounded-full h-3 flex items-center justify-center bg-xibo-blue-200 hover:text-gray-600 shrink-0"
+                >
+                  <X size={8} />
+                </button>
+              </span>
+            );
+          })}
           <input
             id={inputId}
             role="combobox"
@@ -364,7 +386,10 @@ function TagInput({
                 ? `${listboxId}-option-${highlightIndex}`
                 : undefined
             }
-            className="flex-1 min-w-10 text-sm p-1 bg-transparent border-none outline-none focus:outline-none focus:ring-0"
+            className={twMerge(
+              'flex-1 min-w-10 p-1 bg-transparent border-none outline-none focus:outline-none focus:ring-0',
+              compact ? 'text-xs' : 'text-sm',
+            )}
             value={input}
             disabled={disabled || pendingValueTag !== null}
             onChange={(e) => {
@@ -465,7 +490,7 @@ function TagInput({
               id={valueInputId}
               ref={valueInputRef}
               className={twMerge(
-                'w-full text-sm px-3 py-2.5 rounded-lg border border-gray-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 min-h-11.25',
+                'w-full text-sm px-3 py-2.5 rounded-lg border border-gray-200 outline-none focus:border-xibo-blue-500 focus:ring-1 focus:ring-xibo-blue-500 min-h-11.25',
                 valueError && 'border-red-500 focus:border-red-500 focus:ring-red-500',
               )}
               aria-invalid={valueError}

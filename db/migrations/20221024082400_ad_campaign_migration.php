@@ -64,7 +64,7 @@ class AdCampaignMigration extends AbstractMigration
                 'default' => null,
             ])
             ->addColumn('targetType', 'string', [
-                'length' => '6',
+                'length' => 6,
                 'null' => true,
                 'default' => null,
             ])

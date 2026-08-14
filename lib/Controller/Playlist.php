@@ -961,6 +961,7 @@ class Playlist extends Base
             'playlist'  => $playlist,
             'timeZones' => $timeZones,
             'modules'   => $this->moduleFactory->getAssignableModules(),
+            'brandLogoFile' => $this->getConfig()->getBrandAssetFile('logo'),
         ]);
 
         return $this->render($request, $response);

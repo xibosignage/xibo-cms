@@ -2192,7 +2192,7 @@ class Schedule extends Base
                     $this->getLog()->debug('grid: the first day of the month for this date is: '
                         . $firstDay->toAtomString());
 
-                    $nth = $firstDay->diffInDays($date) / 7 + 1;
+                    $nth = intdiv($date->day - $firstDay->day, 7) + 1;
                     $repeatWeekDayDate = $date->copy()->setDay($nth)->format('jS');
                     $repeatsOn = 'the ' . $repeatWeekDayDate . ' '
                         . $date->format('l')
@@ -2201,7 +2201,7 @@ class Schedule extends Base
             }
 
             if (!empty($event->recurrenceRange)) {
-                $repeatsUntil = Carbon::createFromTimestamp($event->recurrenceRange)
+                $repeatsUntil = DateFormatHelper::createFromTimestamp($event->recurrenceRange)
                     ->format(DateFormatHelper::getSystemFormat());
             }
 
@@ -2226,7 +2226,7 @@ class Schedule extends Base
 
         if (!$event->isAlwaysDayPart() && !$event->isCustomDayPart()) {
             $dayPart = $this->dayPartFactory->getById($event->dayPartId);
-            $dayPart->adjustForDate(Carbon::createFromTimestamp($event->fromDt));
+            $dayPart->adjustForDate(DateFormatHelper::createFromTimestamp($event->fromDt));
             $event->fromDt = $dayPart->adjustedStart->format('U');
             $event->toDt = $dayPart->adjustedEnd->format('U');
         }
@@ -2239,13 +2239,13 @@ class Schedule extends Base
         $event->setUnmatchedProperty(
             'displayFromDt',
             $event->fromDt !== null
-                ? Carbon::createFromTimestamp($event->fromDt)->format(DateFormatHelper::getSystemFormat())
+                ? DateFormatHelper::createFromTimestamp($event->fromDt)->format(DateFormatHelper::getSystemFormat())
                 : ''
         );
         $event->setUnmatchedProperty(
             'displayToDt',
             $event->toDt !== null
-                ? Carbon::createFromTimestamp($event->toDt)->format(DateFormatHelper::getSystemFormat())
+                ? DateFormatHelper::createFromTimestamp($event->toDt)->format(DateFormatHelper::getSystemFormat())
                 : ''
         );
 

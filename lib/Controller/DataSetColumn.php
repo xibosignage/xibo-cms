@@ -184,8 +184,8 @@ class DataSetColumn extends Base
         $userPermissions = $this->getUser()->getPermission($dataSet);
 
         foreach ($dataSetColumns as $column) {
-            $column->dataType = __($column->dataType);
-            $column->dataSetColumnType = __($column->dataSetColumnType);
+            $column->dataType = __($column->dataType ?? '');
+            $column->dataSetColumnType = __($column->dataSetColumnType ?? '');
             $column->setUnmatchedProperty('userPermissions', $userPermissions);
         }
 

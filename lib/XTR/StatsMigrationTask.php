@@ -27,6 +27,7 @@ use Xibo\Entity\Task;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\TaskFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -269,17 +270,20 @@ class StatsMigrationTask implements TaskInterface
 
                 $params = [
                     'type' => $stat['type'],
-                    'statDate' =>  Carbon::createFromTimestamp($stat['statDate'])->format('U'),
+                    'statDate' =>  DateFormatHelper::createFromTimestamp($stat['statDate'])->format('U'),
                     'scheduleId' => (int) $stat['scheduleId'],
                     'displayId' => (int) $stat['displayId'],
                     'campaignId' => $campaignId,
                     'layoutId' => (int) $stat['layoutId'],
                     'mediaId' => (int) $stat['mediaId'],
                     'widgetId' => (int) $stat['widgetId'],
-                    'start' => Carbon::createFromTimestamp($stat['start'])->format('U'),
-                    'end' => Carbon::createFromTimestamp($stat['end'])->format('U'),
+                    'start' => DateFormatHelper::createFromTimestamp($stat['start'])->format('U'),
+                    'end' => DateFormatHelper::createFromTimestamp($stat['end'])->format('U'),
                     'tag' => $stat['tag'],
-                    'duration' => isset($stat['duration']) ? (int) $stat['duration'] : Carbon::createFromTimestamp($stat['end'])->format('U') - Carbon::createFromTimestamp($stat['start'])->format('U'),
+                    'duration' => isset($stat['duration'])
+                        ? (int) $stat['duration']
+                        : DateFormatHelper::createFromTimestamp($stat['end'])->format('U')
+                            - DateFormatHelper::createFromTimestamp($stat['start'])->format('U'),
                     'count' => isset($stat['count']) ? (int) $stat['count'] : 1,
                 ];
 
@@ -380,10 +384,10 @@ class StatsMigrationTask implements TaskInterface
 
                 $entry = [];
 
-                $entry['statDate'] = Carbon::createFromTimestamp($stat['statDate']);
+                $entry['statDate'] = DateFormatHelper::createFromTimestamp($stat['statDate']);
                 $entry['type'] = $stat['type'];
-                $entry['fromDt'] = Carbon::createFromTimestamp($stat['start']);
-                $entry['toDt'] = Carbon::createFromTimestamp($stat['end']);
+                $entry['fromDt'] = DateFormatHelper::createFromTimestamp($stat['start']);
+                $entry['toDt'] = DateFormatHelper::createFromTimestamp($stat['end']);
                 $entry['scheduleId'] = (int) $stat['scheduleId'];
                 $entry['mediaId'] = (int) $stat['mediaId'];
                 $entry['layoutId'] = (int) $stat['layoutId'];
@@ -502,9 +506,9 @@ class StatsMigrationTask implements TaskInterface
                     $campaignId = 0;
                 }
 
-                $statDate = Carbon::createFromTimestamp($stat['statDate']);
-                $start =  Carbon::createFromTimestamp($stat['start']);
-                $end =  Carbon::createFromTimestamp($stat['end']);
+                $statDate = DateFormatHelper::createFromTimestamp($stat['statDate']);
+                $start =  DateFormatHelper::createFromTimestamp($stat['start']);
+                $end =  DateFormatHelper::createFromTimestamp($stat['end']);
 
                 $entry['statDate'] = $statDate;
                 $entry['type'] = $stat['type'];

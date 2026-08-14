@@ -324,8 +324,8 @@ export default function ManageMembersModal({
               onClick={() => setActiveTab(tab.key)}
               className={`py-2 px-3 inline-flex items-center gap-2 border-b-2 text-sm font-semibold whitespace-nowrap focus:outline-none transition-all  ${
                 activeTab === tab.key
-                  ? 'border-blue-600 text-blue-500'
-                  : 'border-gray-200 text-gray-500 hover:text-blue-600'
+                  ? 'border-xibo-blue-600 text-xibo-blue-500'
+                  : 'border-gray-200 text-gray-500 hover:text-xibo-blue-600'
               }`}
             >
               {tab.label}

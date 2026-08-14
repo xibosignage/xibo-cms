@@ -174,6 +174,10 @@ export const getUserGroupColumns = (props: UserGroupActionsProps): ColumnDef<Use
         const kb = info.getValue<number>();
         return <TextCell>{kb ? formatFileSizeIEC(kb * 1024) : t('Unlimited')}</TextCell>;
       },
+      meta: {
+        getExportValue: (row) =>
+          row.libraryQuota ? formatFileSizeIEC(row.libraryQuota * 1024) : t('Unlimited'),
+      },
     },
     {
       accessorKey: 'isShownForAddUser',

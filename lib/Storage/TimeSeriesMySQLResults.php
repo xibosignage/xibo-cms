@@ -23,6 +23,7 @@
 namespace Xibo\Storage;
 
 use Carbon\Carbon;
+use Xibo\Helper\DateFormatHelper;
 
 /**
  * Class TimeSeriesMySQLResults
@@ -66,7 +67,7 @@ class TimeSeriesMySQLResults implements TimeSeriesResultsInterface
     /** @inheritDoc */
     public function getDateFromValue($value)
     {
-        return Carbon::createFromTimestamp($value);
+        return DateFormatHelper::createFromTimestamp($value);
     }
 
     /** @inheritDoc */

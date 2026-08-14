@@ -23,7 +23,7 @@
 // Test type: Page integration test
 // Mocks: folderApi, useMediaData, Modal, userApi
 // Tests: folder sidebar visibility and bulk/row-action permissions by user role
-// Bugs documented: TC-BUG-02 (selection not cleared), TC-BUG-05 (duplicate moves)
+// Bugs documented: selection not cleared after a move
 // =============================================================================
 
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
@@ -168,12 +168,15 @@ describe('Media page – folder permissions', () => {
 
   describe('inconsistent results when moving items from different folders', () => {
     // -------------------------------------------------------------------------
-    // Both files should move successfully even if one is already in the target
-    // folder. Known bug: the extra API call fails and the UI shows a partial error.
+    // Both files should move successfully even if one is already in the
+    // target folder — useMediaActions skips items whose folderId already
+    // matches the destination instead of sending them to the API.
     // -------------------------------------------------------------------------
-    test.fails('all selected items are moved when they come from different folders', async () => {
+    test('all selected items are moved when they come from different folders', async () => {
       vi.mocked(fetchFolderTree).mockResolvedValue([mockDesignFolder]);
-      // Item 1 moves successfully. Item 2 is already in Design so the server rejects it.
+      // Item 1 moves successfully. Item 2 is already in Design, so it must
+      // never reach selectFolder — this resolved value would surface as a
+      // failure if the already-there skip regressed.
       vi.mocked(selectFolder)
         .mockResolvedValueOnce({ success: true, data: undefined })
         .mockResolvedValueOnce({ success: false, error: 'Already in destination folder' });
@@ -203,16 +206,20 @@ describe('Media page – folder permissions', () => {
       await waitFor(() => expect(modalMoveBtn).not.toBeDisabled());
       fireEvent.click(modalMoveBtn);
 
-      // The file already in the destination should be skipped so the move
-      // completes cleanly with no partial-failure message. Wait for the move
-      // to fully settle (dialog closes once handleConfirmMove resolves) before
-      // asserting — otherwise this can flakily "pass" mid-flight, after the
-      // first sequential selectFolder call resolves but before the second
-      // (still-buggy) call has even been dispatched.
+      // Wait for handleConfirmMove to fully finish (closeModal unmounts the
+      // dialog) before inspecting the mock. Polling the call count instead
+      // races against the sequential per-item awaits inside the handler —
+      // it can catch count===1 between the two calls and pass regardless of
+      // whether the second (already-there) item was skipped.
       await waitFor(() => {
         expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
       });
-      expect(vi.mocked(selectFolder)).toHaveBeenCalledTimes(1);
+
+      // The file already in the destination should be skipped so the move
+      // completes cleanly with no partial-failure message.
+      await waitFor(() => {
+        expect(vi.mocked(selectFolder)).toHaveBeenCalledTimes(1);
+      });
       expect(vi.mocked(selectFolder)).toHaveBeenCalledWith(
         expect.objectContaining({ targetId: 1, folderId: mockDesignFolder.id }),
       );

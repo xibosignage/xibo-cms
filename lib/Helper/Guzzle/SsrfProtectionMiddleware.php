@@ -144,9 +144,41 @@ class SsrfProtectionMiddleware
                 if ($packedIp === inet_pton('fd00:ec2::254')) {
                     return false;
                 }
+
+                // ALWAYS Block IPv6 transition mechanisms that can smuggle an arbitrary
+                // embedded IPv4 address (incl. RFC 1918 / link-local / cloud metadata)
+                // through filter_var()'s IPv6 "public" check, which has no notion of them.
+                if (array_any(
+                    self::IPV6_TRANSITION_PREFIXES,
+                    fn (array $range) => self::hasIpv6Prefix($packedIp, $range[0], $range[1])
+                )) {
+                    return false;
+                }
             }
         }
 
         return true;
+    }
+
+    /**
+     * IPv6 prefixes that can carry an arbitrary embedded IPv4 address (transition/compatibility
+     * mechanisms), none of which are a legitimate outbound destination for this CMS.
+     * Each entry is [prefix, prefix length in bits]; all lengths here are byte-aligned.
+     */
+    private const array IPV6_TRANSITION_PREFIXES = [
+        ['::', 96],           // Deprecated IPv4-compatible IPv6 (RFC 4291/5156)
+        ['64:ff9b::', 96],    // NAT64 Well-Known Prefix (RFC 6052)
+        ['64:ff9b:1::', 48],  // NAT64 Local-Use Prefix (RFC 8215)
+        ['2002::', 16],       // 6to4 (RFC 3056)
+        ['2001::', 32],       // Teredo (RFC 4380)
+    ];
+
+    /**
+     * Checks whether a packed IPv6 address falls within a given byte-aligned prefix.
+     */
+    private static function hasIpv6Prefix(string $packedIp, string $prefixIp, int $prefixBits): bool
+    {
+        $byteLen = intdiv($prefixBits, 8);
+        return substr($packedIp, 0, $byteLen) === substr(inet_pton($prefixIp), 0, $byteLen);
     }
 }
