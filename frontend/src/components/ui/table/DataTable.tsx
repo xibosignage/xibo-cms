@@ -78,6 +78,7 @@ interface DataTableProps<TData, TValue> {
   noResultsCustom?: React.ReactNode;
   tableLabel?: string;
   exportRows?: TData[];
+  meta?: Record<string, unknown>;
 }
 
 const getCommonPinningStyles = <TData, TValue>(column: Column<TData, TValue>): CSSProperties => {
@@ -131,6 +132,7 @@ export function DataTable<TData, TValue>({
   noResultsCustom,
   tableLabel,
   exportRows,
+  meta,
 }: DataTableProps<TData, TValue>) {
   const { t } = useTranslation();
 
@@ -169,6 +171,7 @@ export function DataTable<TData, TValue>({
     columns: tableColumns,
     pageCount,
     rowCount,
+    meta,
     state: {
       sorting,
       globalFilter,
