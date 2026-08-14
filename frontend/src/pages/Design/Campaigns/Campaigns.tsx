@@ -138,7 +138,7 @@ export default function Campaigns() {
   const [itemsToMove, setItemsToMove] = useState<Campaign[]>([]);
   const [bulkItems, setBulkItems] = useState<Campaign[]>([]);
   const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
-  const [selectedCampaignId, setSelectedCampaignId] = useState<number | null>(null);
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
 
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
@@ -180,7 +180,6 @@ export default function Campaigns() {
     },
   });
 
-  const selectedCampaign = campaignList.find((m) => m.campaignId === selectedCampaignId) ?? null;
   const existingNames = campaignList.map((m) => m.campaign);
 
   const {
@@ -233,7 +232,7 @@ export default function Campaigns() {
   };
 
   const openEditModal = (campaign: Campaign) => {
-    setSelectedCampaignId(campaign.campaignId);
+    setSelectedCampaign(campaign);
     openModal('edit');
   };
 
@@ -242,7 +241,7 @@ export default function Campaigns() {
   };
 
   const openCopyModal = (campaign: Campaign) => {
-    setSelectedCampaignId(campaign.campaignId);
+    setSelectedCampaign(campaign);
     openModal('copy');
   };
 
@@ -258,12 +257,22 @@ export default function Campaigns() {
   };
 
   const openScheduleModal = (campaign: Campaign) => {
-    setSelectedCampaignId(campaign.campaignId);
+    setSelectedCampaign(campaign);
     openModal('schedule');
   };
 
   const openAddModal = () => {
     openModal('add');
+  };
+
+  const handleAddSuccess = (campaign: Campaign) => {
+    handleRefresh();
+
+    if (campaign.type === 'ad') {
+      openAdEditor(campaign);
+    } else {
+      openEditModal(campaign);
+    }
   };
 
   const handleResetFilters = () => {
@@ -470,6 +479,7 @@ export default function Campaigns() {
           confirmDelete,
           handleConfirmMove: (folderId) => handleConfirmMove(itemsToMove, folderId),
           handleConfirmClone,
+          handleAddSuccess,
         }}
         folderActions={folderActions}
       />
