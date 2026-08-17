@@ -203,6 +203,11 @@ export default function MenuBoardCategories() {
         return;
       }
 
+      notify.success(
+        t('{{count}} item(s) deleted successfully.', {
+          count: itemsToDelete.length,
+        }),
+      );
       setRowSelection({});
       handleRefresh();
       closeModal();

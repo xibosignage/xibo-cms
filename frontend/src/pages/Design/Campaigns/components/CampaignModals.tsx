@@ -59,6 +59,7 @@ interface CampaignModalsProps {
     confirmDelete: (items: Campaign[]) => void;
     handleConfirmMove: (newFolderId: number) => void;
     handleConfirmClone: (campaign: Campaign | null, newName: string) => void;
+    handleAddSuccess: (campaign: Campaign) => void;
   };
   folderActions: ReturnType<typeof useFolderActions>;
 }
@@ -90,9 +91,7 @@ export function CampaignModals({
         <AddCampaignModal
           defaultFolderId={selection.defaultFolderId}
           onClose={actions.closeModal}
-          onSuccess={() => {
-            actions.handleRefresh();
-          }}
+          onSuccess={handlers.handleAddSuccess}
         />
       )}
       {/* Folder Actions */}

@@ -217,7 +217,9 @@ describe('Media page – folder permissions', () => {
 
       // The file already in the destination should be skipped so the move
       // completes cleanly with no partial-failure message.
-      expect(vi.mocked(selectFolder)).toHaveBeenCalledTimes(1);
+      await waitFor(() => {
+        expect(vi.mocked(selectFolder)).toHaveBeenCalledTimes(1);
+      });
       expect(vi.mocked(selectFolder)).toHaveBeenCalledWith(
         expect.objectContaining({ targetId: 1, folderId: mockDesignFolder.id }),
       );

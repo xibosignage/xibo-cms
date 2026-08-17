@@ -21,12 +21,11 @@
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
-import type { AxiosError } from 'axios';
 
 import type { LayoutFilterInput } from '../LayoutConfig';
 
-import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { serializeTags } from '@/components/ui/forms/TagInput';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import type { FetchLayoutRequest } from '@/services/layoutsApi';
 import { fetchLayouts } from '@/services/layoutsApi';
 import { resolveLastModified } from '@/utils/date';
@@ -134,9 +133,5 @@ export const useLayoutData = ({
 
     placeholderData: keepPreviousData,
     staleTime: 1000 * 60 * 1,
-
-    throwOnError: (error: AxiosError) => {
-      return error.response?.status ? error.response.status >= 500 : false;
-    },
   });
 };

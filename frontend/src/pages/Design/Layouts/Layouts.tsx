@@ -239,6 +239,7 @@ export default function Layouts() {
     setRowSelection,
     setItemsToMove,
     timezone: user?.settings?.defaultTimezone ?? 'UTC',
+    folderId: effectiveFolderId,
   });
 
   const { guard } = useAutoSubmit();

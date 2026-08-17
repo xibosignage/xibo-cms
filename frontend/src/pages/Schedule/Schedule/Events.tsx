@@ -67,6 +67,8 @@ export default function Events() {
   const queryClient = useQueryClient();
   const { user } = useUserContext();
   const { formatDateTime } = useDateFormatter();
+  // The CMS-wide `defaultTimezone` setting, not a personal/browser timezone
+  // - see User::myDetails() in lib/Controller/User.php.
   const timezone = user?.settings?.defaultTimezone ?? 'UTC';
   const canModifySchedule = hasFeature(user, 'schedule.modify');
 

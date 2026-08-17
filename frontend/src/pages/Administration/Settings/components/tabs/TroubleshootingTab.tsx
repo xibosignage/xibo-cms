@@ -32,6 +32,7 @@ export default function TroubleshootingTab({
   formValues,
   updateField,
   isVisible,
+  isEditable,
 }: SettingsTabProps) {
   const { t } = useTranslation();
 
@@ -53,6 +54,7 @@ export default function TroubleshootingTab({
                 { value: 'error', label: t('Error') },
               ]}
               onSelect={(v) => updateField('RESTING_LOG_LEVEL', v)}
+              disabled={!isEditable('RESTING_LOG_LEVEL')}
               className="w-full"
             />
           )}
@@ -74,6 +76,7 @@ export default function TroubleshootingTab({
                 { value: 'debug', label: t('Debug') },
               ]}
               onSelect={(v) => updateField('audit', v)}
+              disabled={!isEditable('audit')}
               className="w-full"
             />
           )}
@@ -83,6 +86,7 @@ export default function TroubleshootingTab({
             label={t('Elevate Log Until')}
             helpText={t('Elevate the log level until this date.')}
             value={formValues.ELEVATE_LOG_UNTIL || undefined}
+            disabled={!isEditable('ELEVATE_LOG_UNTIL')}
             onChange={(isoString) => {
               if (!isoString) {
                 updateField('ELEVATE_LOG_UNTIL', '');
@@ -106,6 +110,7 @@ export default function TroubleshootingTab({
               { value: 'Test', label: t('Test') },
             ]}
             onSelect={(v) => updateField('SERVER_MODE', v)}
+            disabled={!isEditable('SERVER_MODE')}
           />
         )}
       </SettingsSection>

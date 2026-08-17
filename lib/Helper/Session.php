@@ -557,15 +557,15 @@ class Session implements \SessionHandlerInterface
      */
     private function getIp(): string
     {
-        $clientIp = '';
-        $keys = array('X_FORWARDED_FOR', 'HTTP_X_FORWARDED_FOR', 'CLIENT_IP', 'REMOTE_ADDR');
-        foreach ($keys as $key) {
-            if (isset($_SERVER[$key]) && filter_var($_SERVER[$key], FILTER_VALIDATE_IP) !== false) {
-                $clientIp = $_SERVER[$key];
-                break;
+        $ipHeaderKeys = ['X_FORWARDED_FOR', 'HTTP_X_FORWARDED_FOR', 'CLIENT_IP', 'REMOTE_ADDR'];
+
+        foreach ($ipHeaderKeys as $ipHeaderKey) {
+            if (isset($_SERVER[$ipHeaderKey]) && filter_var($_SERVER[$ipHeaderKey], FILTER_VALIDATE_IP) !== false) {
+                return $_SERVER[$ipHeaderKey];
             }
         }
-        return $clientIp;
+
+        return '';
     }
 
     /**
