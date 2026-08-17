@@ -25,16 +25,24 @@ export interface ReportDateRange {
   reportFilter?: string;
   fromDt?: string;
   toDt?: string;
+  fromDtTime?: string;
+  toDtTime?: string;
 }
 
 // Report date-range filters are either a named preset (passed through to the server as-is)
-// or a `range:<fromKey>|<toKey>` pair of calendar-day keys picked in DateRangeFilter.
+// or a `range:<fromKey>|<toKey>` pair of calendar-day keys picked in DateRangeFilter, where
+// each key may carry an optional `T<HH:mm>` time-of-day suffix (only when the picker had
+// showTimePicker enabled).
 export function resolveReportDateRange(reportFilter: string): ReportDateRange {
   if (reportFilter.startsWith('range:')) {
-    const [from, to] = reportFilter.replace('range:', '').split('|');
+    const [fromRaw, toRaw] = reportFilter.replace('range:', '').split('|');
+    const [from, fromDtTime] = fromRaw?.split('T') ?? [];
+    const [to, toDtTime] = toRaw?.split('T') ?? [];
     return {
       fromDt: dateKeyToDayBoundary(from, 'start'),
       toDt: dateKeyToDayBoundary(to, 'end'),
+      fromDtTime,
+      toDtTime,
     };
   }
 

@@ -75,6 +75,9 @@ export function useMenuBoardActions({
         return;
       }
 
+      notify.success(
+        t('{{count}} menu board(s) deleted successfully.', { count: itemsToDelete.length }),
+      );
       setRowSelection({});
       handleRefresh();
       closeModal();
