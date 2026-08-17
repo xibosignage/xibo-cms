@@ -26,6 +26,7 @@ import { useRouteError } from 'react-router-dom';
 
 import Button from '@/components/ui/Button';
 import { publicPath } from '@/config/publicPath';
+import { BrandingProvider } from '@/context/BrandingContext';
 
 const RELOAD_KEY = 'xibo_chunk_reload';
 
@@ -68,38 +69,42 @@ export default function ErrorPage() {
   // While auto-reloading for stale chunks, show a minimal message
   if (reloading) {
     return (
-      <section className="flex min-h-screen flex-col items-center justify-center gap-4 text-center">
-        <p className="text-gray-500">{t('Updating application...')}</p>
-      </section>
+      <BrandingProvider>
+        <section className="flex min-h-screen flex-col items-center justify-center gap-4 text-center">
+          <p className="text-gray-500">{t('Updating application...')}</p>
+        </section>
+      </BrandingProvider>
     );
   }
 
   return (
-    <section className="flex min-h-screen flex-col items-center justify-center gap-3 text-center">
-      <div className="inline-flex justify-center items-center size-15.5 rounded-full bg-xibo-blue-100 text-xibo-blue-800 border-7 border-xibo-blue-50">
-        <AlertTriangle className="shrink-0 size-6" />
-      </div>
+    <BrandingProvider>
+      <section className="flex min-h-screen flex-col items-center justify-center gap-3 text-center">
+        <div className="inline-flex justify-center items-center size-15.5 rounded-full bg-xibo-blue-100 text-xibo-blue-800 border-7 border-xibo-blue-50">
+          <AlertTriangle className="shrink-0 size-6" />
+        </div>
 
-      <div>
-        <h1
-          className="text-4xl font-bold text-gray-800"
-          style={{ fontFamily: "'Maven Pro', sans-serif" }}
-        >
-          {t('Unexpected Error')}
-        </h1>
-        <p className="mt-3 text-gray-500">
-          {t('An error occurred while loading this page. Please try again.')}
-        </p>
-      </div>
+        <div>
+          <h1
+            className="text-4xl font-bold text-gray-800"
+            style={{ fontFamily: "'Maven Pro', sans-serif" }}
+          >
+            {t('Unexpected Error')}
+          </h1>
+          <p className="mt-3 text-gray-500">
+            {t('An error occurred while loading this page. Please try again.')}
+          </p>
+        </div>
 
-      <div className="flex items-center justify-center gap-3">
-        <Button variant="secondary" leftIcon={RefreshCw} onClick={() => window.location.reload()}>
-          {t('Reload Page')}
-        </Button>
-        <Button variant="primary" onClick={() => (window.location.href = publicPath || '/')}>
-          {t('Go to Dashboard')}
-        </Button>
-      </div>
-    </section>
+        <div className="flex items-center justify-center gap-3">
+          <Button variant="secondary" leftIcon={RefreshCw} onClick={() => window.location.reload()}>
+            {t('Reload Page')}
+          </Button>
+          <Button variant="primary" onClick={() => (window.location.href = publicPath || '/')}>
+            {t('Go to Dashboard')}
+          </Button>
+        </div>
+      </section>
+    </BrandingProvider>
   );
 }
