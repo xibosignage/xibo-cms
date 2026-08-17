@@ -25,6 +25,7 @@ import type { TFunction } from 'i18next';
 import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
 
+import { notify } from '@/components/ui/Notification';
 import { deleteResolution } from '@/services/resolutionApi';
 import type { Resolution } from '@/types/resolution';
 
@@ -69,6 +70,9 @@ export function useResolutionActions({
         return;
       }
 
+      notify.success(
+        t('{{count}} resolution(s) deleted successfully.', { count: itemsToDelete.length }),
+      );
       setRowSelection({});
       handleRefresh();
       closeModal();

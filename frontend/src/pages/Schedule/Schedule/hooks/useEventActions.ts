@@ -73,6 +73,9 @@ export function useEventActions({
         return;
       }
 
+      notify.success(
+        t('{{count}} event(s) deleted successfully.', { count: itemsToDelete.length }),
+      );
       setRowSelection({});
       handleRefresh();
       closeModal();
