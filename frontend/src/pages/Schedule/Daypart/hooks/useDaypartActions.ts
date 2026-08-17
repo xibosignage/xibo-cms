@@ -25,6 +25,7 @@ import type { TFunction } from 'i18next';
 import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
 
+import { notify } from '@/components/ui/Notification';
 import { deleteDaypart } from '@/services/daypartApi';
 import type { Daypart } from '@/types/daypart';
 
@@ -69,6 +70,9 @@ export function useDaypartActions({
         return;
       }
 
+      notify.success(
+        t('{{count}} daypart(s) deleted successfully.', { count: itemsToDelete.length }),
+      );
       setRowSelection({});
       handleRefresh();
       closeModal();

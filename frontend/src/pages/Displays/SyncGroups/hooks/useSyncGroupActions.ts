@@ -25,6 +25,7 @@ import type { TFunction } from 'i18next';
 import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
 
+import { notify } from '@/components/ui/Notification';
 import { deleteSyncGroup } from '@/services/syncGroupApi';
 import type { SyncGroup } from '@/types/syncGroup';
 
@@ -69,6 +70,9 @@ export function useSyncGroupActions({
         return;
       }
 
+      notify.success(
+        t('{{count}} sync group(s) deleted successfully.', { count: itemsToDelete.length }),
+      );
       setRowSelection({});
       handleRefresh();
       closeModal();
