@@ -119,6 +119,7 @@ export default function DisplaysTab({
             searchable
             searchPlaceholder={t('Search layouts...')}
             onSearch={layoutOptions.setSearch}
+            disabled={!isEditable('DEFAULT_LAYOUT')}
           />
         )}
         {isVisible('DISPLAY_DEFAULT_FOLDER') && (
@@ -131,6 +132,7 @@ export default function DisplaysTab({
             onSelect={(folder) =>
               updateField('DISPLAY_DEFAULT_FOLDER', folder ? String(folder.id) : '')
             }
+            disabled={!isEditable('DISPLAY_DEFAULT_FOLDER')}
           />
         )}
         {isVisible('MAX_LICENSED_DISPLAYS') && (
@@ -236,6 +238,7 @@ export default function DisplaysTab({
               { value: 'Daily', label: t('Daily') },
             ]}
             onSelect={(v) => updateField('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT', v)}
+            disabled={!isEditable('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT')}
           />
         )}
         {isVisible('DISPLAY_PROFILE_STATS_DEFAULT') && (
@@ -274,6 +277,7 @@ export default function DisplaysTab({
                 { value: 'Inherit', label: t('Inherit') },
               ]}
               onSelect={(v) => updateField('MEDIA_STATS_ENABLED_DEFAULT', v)}
+              disabled={!isEditable('MEDIA_STATS_ENABLED_DEFAULT')}
               className="flex-1"
             />
           )}
@@ -290,6 +294,7 @@ export default function DisplaysTab({
                 { value: 'Inherit', label: t('Inherit') },
               ]}
               onSelect={(v) => updateField('PLAYLIST_STATS_ENABLED_DEFAULT', v)}
+              disabled={!isEditable('PLAYLIST_STATS_ENABLED_DEFAULT')}
               className="flex-1"
             />
           )}
@@ -307,6 +312,7 @@ export default function DisplaysTab({
               { value: 'Inherit', label: t('Inherit') },
             ]}
             onSelect={(v) => updateField('WIDGET_STATS_ENABLED_DEFAULT', v)}
+            disabled={!isEditable('WIDGET_STATS_ENABLED_DEFAULT')}
           />
         )}
         {isVisible('DISPLAY_PROFILE_CURRENT_LAYOUT_STATUS_ENABLED') && (

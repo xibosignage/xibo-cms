@@ -54,7 +54,7 @@ interface MediaModalsProps {
   actions: {
     activeModal: string | null;
     closeModal: () => void;
-    handleRefresh: () => void;
+    handleRefresh: () => Promise<unknown>;
     deleteError: string | null;
     isDeleting: boolean;
     isCloning: boolean;
@@ -197,9 +197,9 @@ export function MediaModals({
           ids={selection.bulkItems.map((item) => item.mediaId)}
           existingTags={mergeEntityTags(selection.bulkItems)}
           onClose={actions.closeModal}
-          onSuccess={() => {
+          onSuccess={async () => {
+            await actions.handleRefresh();
             actions.closeModal();
-            actions.handleRefresh();
           }}
         />
       )}
