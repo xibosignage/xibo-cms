@@ -118,6 +118,18 @@ vi.mock('@/components/ui/FolderBreadCrumb', () => ({
 // Tests
 // =============================================================================
 
+// useTableState disables the Filters button until it has hydrated (page prefs
+// AND the folder-id preference). findByRole matches the disabled button too,
+// so clicking as soon as it's found — before it's enabled — is a no-op.
+const openFilters = async () => {
+  const filtersButton = await screen.findByRole('button', { name: 'Filters' });
+  await waitFor(() => expect(filtersButton).toBeEnabled());
+
+  await act(async () => {
+    fireEvent.click(filtersButton);
+  });
+};
+
 describe('Campaigns page - search, filters, pagination, and folder navigation', () => {
   beforeEach(() => {
     testQueryClient.clear();
@@ -210,9 +222,7 @@ describe('Campaigns page - search, filters, pagination, and folder navigation', 
 
     expect(screen.queryByRole('button', { name: 'Reset' })).not.toBeInTheDocument();
 
-    await act(async () => {
-      fireEvent.click(await screen.findByRole('button', { name: 'Filters' }));
-    });
+    await openFilters();
 
     expect(screen.getByRole('button', { name: 'Reset' })).toBeInTheDocument();
   });
@@ -227,9 +237,7 @@ describe('Campaigns page - search, filters, pagination, and folder navigation', 
   test('selecting Type = "Layout List" passes type: "list" to useCampaignData', async () => {
     renderCampaignsPage();
 
-    await act(async () => {
-      fireEvent.click(await screen.findByRole('button', { name: 'Filters' }));
-    });
+    await openFilters();
 
     const typeContainer = getTypeFilterContainer();
     await act(async () => {
@@ -249,9 +257,7 @@ describe('Campaigns page - search, filters, pagination, and folder navigation', 
   test('selecting Type = "Ad Campaign" passes type: "ad" to useCampaignData', async () => {
     renderCampaignsPage();
 
-    await act(async () => {
-      fireEvent.click(await screen.findByRole('button', { name: 'Filters' }));
-    });
+    await openFilters();
 
     const typeContainer = getTypeFilterContainer();
     await act(async () => {
@@ -271,9 +277,7 @@ describe('Campaigns page - search, filters, pagination, and folder navigation', 
   test('selecting Has Layouts = "Yes" passes hasLayouts: "1" to useCampaignData', async () => {
     renderCampaignsPage();
 
-    await act(async () => {
-      fireEvent.click(await screen.findByRole('button', { name: 'Filters' }));
-    });
+    await openFilters();
 
     const layoutLabel = screen.getByText('Layout');
     const layoutContainer = layoutLabel.closest('div')!;
@@ -294,9 +298,7 @@ describe('Campaigns page - search, filters, pagination, and folder navigation', 
   test('selecting Has Layouts = "No" passes hasLayouts: "0" to useCampaignData', async () => {
     renderCampaignsPage();
 
-    await act(async () => {
-      fireEvent.click(await screen.findByRole('button', { name: 'Filters' }));
-    });
+    await openFilters();
 
     const layoutLabel = screen.getByText('Layout');
     const layoutContainer = layoutLabel.closest('div')!;
@@ -317,9 +319,7 @@ describe('Campaigns page - search, filters, pagination, and folder navigation', 
   test('selecting Cycle Based = "Enabled" passes cyclePlaybackEnabled: "1" to useCampaignData', async () => {
     renderCampaignsPage();
 
-    await act(async () => {
-      fireEvent.click(await screen.findByRole('button', { name: 'Filters' }));
-    });
+    await openFilters();
 
     const cycleLabel = screen.getByText('Cycle Based');
     const cycleContainer = cycleLabel.closest('div')!;
@@ -340,9 +340,7 @@ describe('Campaigns page - search, filters, pagination, and folder navigation', 
   test('selecting Retired = "Yes" passes retired: 1 to useCampaignData', async () => {
     renderCampaignsPage();
 
-    await act(async () => {
-      fireEvent.click(await screen.findByRole('button', { name: 'Filters' }));
-    });
+    await openFilters();
 
     const retiredLabel = screen.getByText('Retired');
     const retiredContainer = retiredLabel.closest('div')!;
@@ -363,9 +361,7 @@ describe('Campaigns page - search, filters, pagination, and folder navigation', 
   test('clicking Reset clears all advanced filter values back to defaults', async () => {
     renderCampaignsPage();
 
-    await act(async () => {
-      fireEvent.click(await screen.findByRole('button', { name: 'Filters' }));
-    });
+    await openFilters();
 
     // Set a filter value first — pick the Type label that is NOT in a <th>.
     const typeLabel = screen.getAllByText('Type').find((el) => el.closest('th') === null)!;
