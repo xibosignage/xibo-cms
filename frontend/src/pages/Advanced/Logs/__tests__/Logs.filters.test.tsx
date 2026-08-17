@@ -4,7 +4,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import Logs from '../Logs';
 import { INITIAL_FILTER_STATE } from '../LogsConfig';
 
-import { mockLogsList, renderWithProviders } from './Setup';
+import { createMockLogsQuery, renderWithProviders } from './Setup';
 
 import { useTableState } from '@/hooks/useTableState';
 
@@ -45,12 +45,7 @@ describe('Logs Page - Filters', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(useTableState).mockReturnValue(defaultTableState as never);
-    mockUseLogsData.mockReturnValue({
-      data: { rows: mockLogsList, totalCount: 3 },
-      isFetching: false,
-      isError: false,
-      error: null,
-    });
+    mockUseLogsData.mockReturnValue(createMockLogsQuery());
   });
 
   // FilterInputs renders its children in the DOM at all times but hides them with

@@ -49,6 +49,7 @@ interface DatePickerInputProps {
   disableFutureDates?: boolean;
   showTimePicker?: boolean;
   optional?: boolean;
+  disabled?: boolean;
 }
 
 export default function DatePickerInput({
@@ -62,6 +63,7 @@ export default function DatePickerInput({
   disableFutureDates = false,
   showTimePicker = true,
   optional = false,
+  disabled = false,
 }: DatePickerInputProps) {
   const { t } = useTranslation();
   const { formatDateTime, formatDate } = useDateFormatter();
@@ -69,13 +71,16 @@ export default function DatePickerInput({
 
   const { refs, floatingStyles, context } = useFloating({
     open: isOpen,
-    onOpenChange: setIsOpen,
+    onOpenChange: (open) => {
+      if (disabled) return;
+      setIsOpen(open);
+    },
     placement: 'bottom-start',
     whileElementsMounted: autoUpdate,
     middleware: [offset(4), flip(), shift()],
   });
 
-  const click = useClick(context);
+  const click = useClick(context, { enabled: !disabled });
   const dismiss = useDismiss(context);
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
 
@@ -94,11 +99,19 @@ export default function DatePickerInput({
       <div
         ref={refs.setReference}
         {...getReferenceProps()}
-        className="flex relative cursor-pointer h-11.25"
+        aria-disabled={disabled || undefined}
+        className={twMerge(
+          'flex relative cursor-pointer h-11.25',
+          disabled && 'cursor-not-allowed pointer-events-none',
+        )}
       >
         <button
           type="button"
-          className="flex items-center justify-center bg-white border border-gray-200 border-r-0 rounded-l-lg px-3 hover:bg-gray-200 transition-colors"
+          disabled={disabled}
+          className={twMerge(
+            'flex items-center justify-center bg-white border border-gray-200 border-r-0 rounded-l-lg px-3 hover:bg-gray-200 transition-colors',
+            disabled && 'bg-gray-50',
+          )}
         >
           <Calendar size={18} className="text-gray-500" />
         </button>
@@ -106,15 +119,17 @@ export default function DatePickerInput({
         <input
           type="text"
           readOnly
+          disabled={disabled}
           value={displayValue}
           placeholder={t('Select date')}
           className={twMerge(
             'flex-1 py-2 px-3 bg-white border border-gray-200 text-sm cursor-pointer outline-none focus:border-xibo-blue-500',
             !value ? 'rounded-r-lg' : '',
+            disabled && 'bg-gray-50 cursor-not-allowed',
           )}
         />
 
-        {value && (
+        {value && !disabled && (
           <button
             type="button"
             onClick={(e) => {

@@ -55,6 +55,28 @@ export const mockLogsList: LogEntry[] = [
   }),
 ];
 
+export interface MockLogsPage {
+  rows: LogEntry[];
+  totalCount: number;
+}
+
+// useLogsData is an infinite query, so its result carries `data.pages`, not a flat row list.
+// Every test that mocks the hook builds its return value here, so a future change to the hook's
+// shape is a one-line fix rather than a hunt through each spec.
+export const createMockLogsQuery = (
+  pages: MockLogsPage[] = [{ rows: mockLogsList, totalCount: mockLogsList.length }],
+  overrides: Record<string, unknown> = {},
+) => ({
+  data: { pages, pageParams: pages.map((_, index) => index) },
+  isFetching: false,
+  isFetchingNextPage: false,
+  hasNextPage: false,
+  fetchNextPage: vi.fn(),
+  isError: false,
+  error: null,
+  ...overrides,
+});
+
 // --- Render Helpers ---
 
 export const createTestQueryClient = (): QueryClient =>

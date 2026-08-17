@@ -20,7 +20,6 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import type { AxiosError } from 'axios';
 
 import { fetchAgendaEvents } from '@/services/eventApi';
 import type { FetchAgendaEventsRequest } from '@/services/eventApi';
@@ -40,6 +39,5 @@ export const useAgendaData = (
     queryFn: ({ signal }) => fetchAgendaEvents({ ...params, signal }),
     enabled,
     staleTime: 1000 * 30,
-    throwOnError: (error: AxiosError) => (error.response?.status ?? 0) >= 500,
   });
 };

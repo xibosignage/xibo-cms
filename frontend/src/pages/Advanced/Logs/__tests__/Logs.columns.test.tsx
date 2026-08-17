@@ -128,8 +128,8 @@ describe('INITIAL_FILTER_STATE', () => {
     expect(INITIAL_FILTER_STATE.intervalType).toBe('1');
   });
 
-  it('defaults excludeLog to false', () => {
-    expect(INITIAL_FILTER_STATE.excludeLog).toBe(false);
+  it('defaults excludeLog to true', () => {
+    expect(INITIAL_FILTER_STATE.excludeLog).toBe(true);
   });
 
   it('defaults useRegexForName to false', () => {
