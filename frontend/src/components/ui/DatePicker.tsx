@@ -72,6 +72,68 @@ function toFakeLocalDate(date: Date, timeZone: string): Date {
   return new Date(dt.year, dt.month - 1, dt.day, dt.hour, dt.minute, dt.second);
 }
 
+interface TimeParts {
+  hour: string;
+  minute: string;
+  period: 'AM' | 'PM';
+}
+
+const DEFAULT_TIME: TimeParts = { hour: '12', minute: '00', period: 'AM' };
+
+function getTimeParts(date: Date, timeZone?: string): TimeParts {
+  const dt = timeZone ? DateTime.fromJSDate(date, { zone: timeZone }) : null;
+  const h = dt ? dt.hour : date.getHours();
+  const m = dt ? dt.minute : date.getMinutes();
+  return {
+    hour: String(h % 12 || 12).padStart(2, '0'),
+    minute: String(m).padStart(2, '0'),
+    period: h >= 12 ? 'PM' : 'AM',
+  };
+}
+
+interface TimeOfDaySelectProps {
+  value: TimeParts;
+  onChange: (value: TimeParts) => void;
+}
+
+function TimeOfDaySelect({ value, onChange }: TimeOfDaySelectProps) {
+  const timeClass =
+    'h-[32px] font-semibold w-[70px] rounded-lg border border-gray-200 px-3 text-xs bg-white';
+
+  return (
+    <div className="flex items-center gap-x-2">
+      <select
+        value={value.hour}
+        onChange={(e) => onChange({ ...value, hour: e.target.value })}
+        className={timeClass}
+      >
+        {HOURS.map((h) => (
+          <option key={h}>{h}</option>
+        ))}
+      </select>
+      <span className="text-gray-500 font-semibold">:</span>
+      <select
+        value={value.minute}
+        onChange={(e) => onChange({ ...value, minute: e.target.value })}
+        className={timeClass}
+      >
+        {MINUTES.map((m) => (
+          <option key={m}>{m}</option>
+        ))}
+      </select>
+      <select
+        value={value.period}
+        onChange={(e) => onChange({ ...value, period: e.target.value as 'AM' | 'PM' })}
+        className={timeClass}
+      >
+        {PERIODS.map((p) => (
+          <option key={p}>{p}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 export default function DatePicker({
   onApply,
   onCancel,
@@ -80,12 +142,21 @@ export default function DatePicker({
   isJalali = false,
   disablePastDates = false,
   disableFutureDates = false,
-  showTimePicker = true,
+  showTimePicker,
 }: DatePickerProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
+  // The CMS-wide `defaultTimezone` setting (see User::myDetails() in
+  // lib/Controller/User.php) - not a personal preference or the browser's
+  // local timezone. Anchoring picked times to this zone (via
+  // DateTime.fromObject below) keeps them in the same frame the backend
+  // uses via date_default_timezone_set().
   const timeZone = user?.settings?.defaultTimezone;
   const { formatDate } = useDateFormatter();
+
+  // Single mode has always shown its time picker by default; range mode never has, so an
+  // unset prop must resolve differently per mode to keep every existing caller unaffected.
+  const effectiveShowTimePicker = showTimePicker ?? mode === 'single';
 
   const defaultClassNames = getDefaultClassNames();
   const [single, setSingle] = useState<Date | undefined>(() => {
@@ -93,40 +164,25 @@ export default function DatePicker({
     return timeZone ? toFakeLocalDate(value.date, timeZone) : value.date;
   });
   const [range, setRange] = useState<DateRange | undefined>({
-    from: value?.from,
-    to: value?.to,
+    from:
+      value?.from && timeZone && effectiveShowTimePicker
+        ? toFakeLocalDate(value.from, timeZone)
+        : value?.from,
+    to:
+      value?.to && timeZone && effectiveShowTimePicker
+        ? toFakeLocalDate(value.to, timeZone)
+        : value?.to,
   });
 
-  const [hour, setHour] = useState(() => {
-    if (!value?.date) {
-      return '12';
-    }
-    const h = timeZone
-      ? DateTime.fromJSDate(value.date, { zone: timeZone }).hour
-      : value.date.getHours();
-    return String(h % 12 || 12).padStart(2, '0');
-  });
-  const [minute, setMinute] = useState(() => {
-    if (!value?.date) {
-      return '00';
-    }
-    const m = timeZone
-      ? DateTime.fromJSDate(value.date, { zone: timeZone }).minute
-      : value.date.getMinutes();
-    return String(m).padStart(2, '0');
-  });
-  const [period, setPeriod] = useState<'AM' | 'PM'>(() => {
-    if (!value?.date) {
-      return 'AM';
-    }
-    const h = timeZone
-      ? DateTime.fromJSDate(value.date, { zone: timeZone }).hour
-      : value.date.getHours();
-    return h >= 12 ? 'PM' : 'AM';
-  });
-
-  const timeClass =
-    'h-[32px] font-semibold w-[70px] rounded-lg border border-gray-200 px-3 text-xs bg-white';
+  const [time, setTime] = useState<TimeParts>(() =>
+    value?.date ? getTimeParts(value.date, timeZone) : DEFAULT_TIME,
+  );
+  const [fromTime, setFromTime] = useState<TimeParts>(() =>
+    value?.from ? getTimeParts(value.from, timeZone) : DEFAULT_TIME,
+  );
+  const [toTime, setToTime] = useState<TimeParts>(() =>
+    value?.to ? getTimeParts(value.to, timeZone) : DEFAULT_TIME,
+  );
 
   const getDisabledRules = () => {
     if (disablePastDates) return { before: new Date() };
@@ -134,8 +190,8 @@ export default function DatePicker({
     return undefined;
   };
 
-  const applyTime = (date: Date) => {
-    const h24 = to24Hour(hour, period);
+  const applyTime = (date: Date, time: TimeParts) => {
+    const h24 = to24Hour(time.hour, time.period);
     if (timeZone) {
       return DateTime.fromObject(
         {
@@ -143,7 +199,7 @@ export default function DatePicker({
           month: date.getMonth() + 1,
           day: date.getDate(),
           hour: h24,
-          minute: Number(minute),
+          minute: Number(time.minute),
           second: 0,
           millisecond: 0,
         },
@@ -152,26 +208,37 @@ export default function DatePicker({
     }
     const d = new Date(date);
     d.setHours(h24);
-    d.setMinutes(Number(minute));
+    d.setMinutes(Number(time.minute));
     d.setSeconds(0);
     d.setMilliseconds(0);
     return d;
   };
 
+  const getRangeValues = () => {
+    if (!range?.from || !range?.to) return null;
+    return {
+      from: effectiveShowTimePicker ? applyTime(range.from, fromTime) : new Date(range.from),
+      to: effectiveShowTimePicker ? applyTime(range.to, toTime) : new Date(range.to),
+    };
+  };
+
+  const rangeValues = getRangeValues();
+  const isRangeInvalid =
+    mode === 'range' &&
+    effectiveShowTimePicker &&
+    !!rangeValues &&
+    rangeValues.from > rangeValues.to;
+
   const handleApply = () => {
     if (mode === 'single' && single) {
       onApply({
         type: 'single',
-        date: showTimePicker ? applyTime(single) : single,
+        date: effectiveShowTimePicker ? applyTime(single, time) : single,
       });
     }
 
-    if (mode === 'range' && range?.from && range?.to) {
-      onApply({
-        type: 'range',
-        from: new Date(range.from),
-        to: new Date(range.to),
-      });
+    if (mode === 'range' && rangeValues && !isRangeInvalid) {
+      onApply({ type: 'range', from: rangeValues.from, to: rangeValues.to });
     }
   };
 
@@ -224,34 +291,26 @@ export default function DatePicker({
       </div>
 
       {/* Time picker */}
-      {mode === 'single' && showTimePicker && (
+      {mode === 'single' && effectiveShowTimePicker && (
         <div className="px-3 pb-3 flex justify-center">
+          <TimeOfDaySelect value={time} onChange={setTime} />
+        </div>
+      )}
+      {mode === 'range' && effectiveShowTimePicker && (
+        <div className="px-3 pb-3 flex flex-col items-center gap-y-2">
           <div className="flex items-center gap-x-2">
-            <select value={hour} onChange={(e) => setHour(e.target.value)} className={timeClass}>
-              {HOURS.map((h) => (
-                <option key={h}>{h}</option>
-              ))}
-            </select>
-            <span className="text-gray-500 font-semibold">:</span>
-            <select
-              value={minute}
-              onChange={(e) => setMinute(e.target.value)}
-              className={timeClass}
-            >
-              {MINUTES.map((m) => (
-                <option key={m}>{m}</option>
-              ))}
-            </select>
-            <select
-              value={period}
-              onChange={(e) => setPeriod(e.target.value as 'AM' | 'PM')}
-              className={timeClass}
-            >
-              {PERIODS.map((p) => (
-                <option key={p}>{p}</option>
-              ))}
-            </select>
+            <span className="text-xs font-semibold text-gray-500 w-10">{t('From')}</span>
+            <TimeOfDaySelect value={fromTime} onChange={setFromTime} />
           </div>
+          <div className="flex items-center gap-x-2">
+            <span className="text-xs font-semibold text-gray-500 w-10">{t('To')}</span>
+            <TimeOfDaySelect value={toTime} onChange={setToTime} />
+          </div>
+          {isRangeInvalid && (
+            <p className="text-xs font-semibold text-red-500">
+              {t('End time must be after start time')}
+            </p>
+          )}
         </div>
       )}
       {/* Footer */}
@@ -276,7 +335,7 @@ export default function DatePicker({
           </Button>
           <Button
             onClick={handleApply}
-            disabled={mode === 'single' ? !single : !range?.from || !range?.to}
+            disabled={mode === 'single' ? !single : !range?.from || !range?.to || isRangeInvalid}
           >
             {t('Apply')}
           </Button>

@@ -21,7 +21,6 @@
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
-import type { AxiosError } from 'axios';
 
 import type { ApplicationFilterInput } from '../ApplicationsConfig';
 
@@ -82,9 +81,5 @@ export const useApplicationData = ({
 
     placeholderData: keepPreviousData,
     staleTime: 1000 * 60,
-
-    throwOnError: (error: AxiosError) => {
-      return error.response?.status ? error.response.status >= 500 : false;
-    },
   });
 };

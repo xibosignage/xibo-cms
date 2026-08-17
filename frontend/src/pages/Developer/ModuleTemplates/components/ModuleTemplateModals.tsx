@@ -28,6 +28,7 @@ import { Trans, useTranslation } from 'react-i18next';
 import type { ModalType } from '../ModuleTemplatesConfig';
 import { getShowInOptions } from '../ModuleTemplatesConfig';
 
+import { notify } from '@/components/ui/Notification';
 import type { SelectOption } from '@/components/ui/forms/SelectDropdown';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import TextInput from '@/components/ui/forms/TextInput';
@@ -295,6 +296,7 @@ function DeleteModal({
         );
         return;
       }
+      notify.success(t('{{count}} template(s) deleted successfully.', { count: templates.length }));
       onSuccess();
     } finally {
       setIsPending(false);
