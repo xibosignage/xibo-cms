@@ -98,6 +98,9 @@ export function useLayoutActions({
         return;
       }
 
+      notify.success(
+        t('{{count}} layout(s) deleted successfully.', { count: itemsToDelete.length }),
+      );
       setRowSelection({});
       handleRefresh();
       closeModal();
