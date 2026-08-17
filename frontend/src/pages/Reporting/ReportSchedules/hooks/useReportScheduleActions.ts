@@ -80,6 +80,9 @@ export function useReportScheduleActions({
         return;
       }
 
+      notify.success(
+        t('{{count}} report schedule(s) deleted successfully.', { count: itemsToDelete.length }),
+      );
       setRowSelection({});
       handleRefresh();
       closeModal();
