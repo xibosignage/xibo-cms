@@ -181,6 +181,7 @@ export default function ScheduleEventModal({
 
   const [alwaysDayPartId, setAlwaysDayPartId] = useState<string>('');
   const [customDayPartId, setCustomDayPartId] = useState<string>('');
+  const [shareOfVoicePercentInput, setShareOfVoicePercentInput] = useState<string | null>(null);
 
   // Sync group per-display layout state
   const [syncDisplays, setSyncDisplays] = useState<SyncGroupDisplay[]>([]);
@@ -1141,6 +1142,7 @@ export default function ScheduleEventModal({
     setSyncLayoutOptions([]);
     setFormErrors({});
     setApiError(undefined);
+    setShareOfVoicePercentInput(null);
     onClose();
   };
 
@@ -1566,7 +1568,10 @@ export default function ScheduleEventModal({
                         name="shareOfVoice"
                         label={t('Share of Voice')}
                         value={draft.shareOfVoice}
-                        onChange={(num) => updateDraft('shareOfVoice', num)}
+                        onChange={(num) => {
+                          updateDraft('shareOfVoice', num);
+                          setShareOfVoicePercentInput(null);
+                        }}
                         helpText={t(
                           'The amount of time this Layout should be shown, in seconds per hour.',
                         )}
@@ -1578,9 +1583,26 @@ export default function ScheduleEventModal({
                         </label>
                         <input
                           type="text"
-                          readOnly
-                          value={((draft.shareOfVoice / 3600) * 100).toFixed(2)}
-                          className="h-11.25 rounded-lg border border-gray-200 px-3 text-sm bg-gray-50 text-gray-500"
+                          inputMode="decimal"
+                          value={
+                            shareOfVoicePercentInput ??
+                            ((draft.shareOfVoice / 3600) * 100).toFixed(2)
+                          }
+                          onChange={(e) => {
+                            const raw = e.target.value;
+                            setShareOfVoicePercentInput(raw);
+
+                            const percent = Number(raw);
+                            if (raw.trim() !== '' && Number.isFinite(percent)) {
+                              const clampedPercent = Math.min(100, Math.max(0, percent));
+                              updateDraft(
+                                'shareOfVoice',
+                                Math.round((3600 * clampedPercent) / 100),
+                              );
+                            }
+                          }}
+                          onBlur={() => setShareOfVoicePercentInput(null)}
+                          className="h-11.25 rounded-lg border border-gray-200 px-3 text-sm font-normal text-gray-800 hover:border-gray-400 focus:border-xibo-blue-600 focus:ring-1 focus:ring-xibo-blue-600/25"
                         />
                       </div>
                     </div>

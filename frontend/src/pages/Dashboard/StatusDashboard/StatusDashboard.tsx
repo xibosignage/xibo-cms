@@ -145,7 +145,8 @@ function getDisplayColumns(t: TFunction): ColumnDef<Display>[] {
 
 export default function Dashboard() {
   const { t } = useTranslation();
-  const { data, isLoading } = useDashboardStats();
+  const { data, isLoading, isError, error: queryError } = useDashboardStats();
+  const error = isError && queryError instanceof Error ? queryError.message : '';
 
   // Display table state
   const [displayPagination, setDisplayPagination] = useState<PaginationState>({
@@ -187,6 +188,12 @@ export default function Dashboard() {
 
   return (
     <section className="flex flex-col space-y-5 p-5">
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
+          {error}
+        </div>
+      )}
+
       {/* Top Stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
         <StatCard icon={display} value={displayCount} label={t('Active Displays')} />

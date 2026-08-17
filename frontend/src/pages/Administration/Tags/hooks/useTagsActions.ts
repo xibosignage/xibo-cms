@@ -25,6 +25,7 @@ import type { TFunction } from 'i18next';
 import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
 
+import { notify } from '@/components/ui/Notification';
 import { deleteTag } from '@/services/tagApi';
 import type { Tag } from '@/types/tag';
 
@@ -67,6 +68,7 @@ export function useTagsActions({
         return;
       }
 
+      notify.success(t('{{count}} tag(s) deleted successfully.', { count: itemsToDelete.length }));
       setRowSelection({});
       handleRefresh();
       closeModal();

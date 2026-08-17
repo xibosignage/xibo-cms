@@ -96,6 +96,9 @@ export function useTemplateActions({
         return;
       }
 
+      notify.success(
+        t('{{count}} template(s) deleted successfully.', { count: itemsToDelete.length }),
+      );
       setRowSelection({});
       handleRefresh();
       closeModal();
