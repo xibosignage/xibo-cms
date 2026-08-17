@@ -54,7 +54,7 @@ export default function InfoBanner({
         STYLE_VARIANTS[type],
         className,
       )}
-      role="status"
+      role={type === 'danger' ? 'alert' : 'status'}
     >
       {!hideInfoIcon && <Info size={18} className="shrink-0 mt-0.5" />}
       <div className="flex-1">{children}</div>
