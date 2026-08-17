@@ -22,6 +22,7 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
 use OpenApi\Attributes as OA;
@@ -541,10 +542,19 @@ class Library extends Base
 
         $recordsTotal = $this->mediaFactory->countLast();
 
-        return $response
-            ->withStatus(200)
-            ->withHeader('X-Total-Count', $recordsTotal)
-            ->withJson($mediaList);
+        if ($this->isApi($request) || $this->isJson($request)) {
+            return $response
+                ->withStatus(200)
+                ->withHeader('X-Total-Count', $recordsTotal)
+                ->withJson($mediaList);
+        }
+
+        // TODO: Remove this once the legacy media picker (toolbar.js) is retired
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = $recordsTotal;
+        $this->getState()->setData($mediaList);
+
+        return $this->render($request, $response);
     }
 
     #[OA\Get(
@@ -2667,9 +2677,20 @@ class Library extends Base
         $media->setUnmatchedProperty('fileSizeFormatted', ByteFormatter::format($media->fileSize));
 
         // Expiry
-        $media->setUnmatchedProperty('mediaExpiresIn', __('Expires %s'));
-        $media->setUnmatchedProperty('mediaExpiryFailed', __('Expired '));
-        $media->setUnmatchedProperty('mediaNoExpiryDate', __('Never'));
+        $expiresTimestamp = $media->expires;
+        $now = Carbon::now();
+
+        if ($expiresTimestamp == 0) {
+            $expiresFormatted = __('Never');
+        } elseif ($expiresTimestamp > $now->timestamp) {
+            $relative = DateFormatHelper::createFromTimestamp($expiresTimestamp)
+                ->diffForHumans($now, CarbonInterface::DIFF_RELATIVE_TO_NOW);
+            $expiresFormatted = str_replace('%s', $relative, __('Expires %s'));
+        } else {
+            $expiresFormatted = __('Expired ');
+        }
+        $media->setUnmatchedProperty('expiresFormatted', $expiresFormatted);
+
         $media->expires = ($media->expires == 0)
             ? 0
             : DateFormatHelper::createFromTimestamp($media->expires)->format(DateFormatHelper::getSystemFormat());

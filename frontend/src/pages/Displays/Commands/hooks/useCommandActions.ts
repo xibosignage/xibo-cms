@@ -25,6 +25,7 @@ import type { TFunction } from 'i18next';
 import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
 
+import { notify } from '@/components/ui/Notification';
 import { deleteCommand } from '@/services/commandApi';
 import type { Command } from '@/types/command';
 
@@ -69,6 +70,9 @@ export function useCommandActions({
         return;
       }
 
+      notify.success(
+        t('{{count}} command(s) deleted successfully.', { count: itemsToDelete.length }),
+      );
       setRowSelection({});
       handleRefresh();
       closeModal();

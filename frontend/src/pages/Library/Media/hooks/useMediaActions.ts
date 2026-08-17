@@ -91,6 +91,9 @@ export function useMediaActions({
         return;
       }
 
+      notify.success(
+        t('{{count}} media item(s) deleted successfully.', { count: itemsToDelete.length }),
+      );
       setRowSelection({});
       handleRefresh();
       closeModal();
@@ -135,6 +138,11 @@ export function useMediaActions({
     try {
       const results: ApiResult[] = [];
       for (const item of itemsToMove) {
+        // Already there — calling selectFolder again gets rejected by the
+        // server and shows up as a spurious partial-failure warning.
+        if (item.folderId === newFolderId) {
+          continue;
+        }
         results.push(
           await selectFolder({
             folderId: newFolderId,
