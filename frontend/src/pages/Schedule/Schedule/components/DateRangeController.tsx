@@ -161,6 +161,8 @@ export function DateRangeController({
 }: DateRangeControllerProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
+  // The CMS-wide `defaultTimezone` setting, not a personal/browser timezone
+  // - see User::myDetails() in lib/Controller/User.php.
   const timezone = user?.settings?.defaultTimezone ?? 'UTC';
 
   const [viewMode, setViewMode] = useState<ViewMode>(

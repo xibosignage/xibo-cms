@@ -106,16 +106,28 @@ export interface EditMultipleTagsPayload {
   removeTags?: string;
 }
 
-export async function editMultipleTags(payload: EditMultipleTagsPayload): Promise<void> {
+export interface EditMultipleTagsResult {
+  failedCount: number;
+  failedNames: string[];
+}
+
+export async function editMultipleTags(
+  payload: EditMultipleTagsPayload,
+): Promise<EditMultipleTagsResult> {
   const params = new URLSearchParams();
   params.append('targetType', payload.targetType);
   params.append('targetIds', payload.ids.join(','));
   params.append('addTags', payload.addTags ?? '');
   params.append('removeTags', payload.removeTags ?? '');
 
-  await http.put(`/tag/${payload.targetType}/multi`, params.toString(), {
+  const response = await http.put(`/tag/${payload.targetType}/multi`, params.toString(), {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   });
+
+  return {
+    failedCount: response.data?.failedCount ?? 0,
+    failedNames: response.data?.failedNames ?? [],
+  };
 }
 
 export async function fetchTagUsage(

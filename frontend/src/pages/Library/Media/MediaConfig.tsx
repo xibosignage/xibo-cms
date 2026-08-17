@@ -619,14 +619,10 @@ export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] =>
       },
     },
     {
-      accessorKey: 'expires',
+      accessorKey: 'expiresFormatted',
       header: t('Expires'),
       size: 180,
-      cell: (info) => {
-        const val = info.getValue() as number;
-        if (val === 0) return <span className="text-gray-400">-</span>;
-        return <TextCell>{val}</TextCell>;
-      },
+      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
     },
     {
       id: 'tableActions',
