@@ -25,6 +25,7 @@ import type { TFunction } from 'i18next';
 import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
 
+import { notify } from '@/components/ui/Notification';
 import { deleteSavedReport } from '@/services/savedReportApi';
 import type { SavedReport } from '@/types/savedReport';
 
@@ -69,6 +70,9 @@ export function useSavedReportActions({
         return;
       }
 
+      notify.success(
+        t('{{count}} saved report(s) deleted successfully.', { count: itemsToDelete.length }),
+      );
       setRowSelection({});
       handleRefresh();
       closeModal();

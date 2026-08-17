@@ -59,7 +59,7 @@ interface DisplayModalsProps {
   actions: {
     activeModal: string | null;
     closeModal: () => void;
-    handleRefresh: () => void;
+    handleRefresh: () => Promise<unknown>;
     deleteError: string | null;
     isDeleting: boolean;
     isActionPending: boolean;
@@ -650,9 +650,9 @@ export function DisplayModals({ actions, selection, handlers }: DisplayModalsPro
           ids={bulkItems.map((item) => item.displayId)}
           existingTags={mergeEntityTags(bulkItems)}
           onClose={actions.closeModal}
-          onSuccess={() => {
+          onSuccess={async () => {
+            await actions.handleRefresh();
             actions.closeModal();
-            actions.handleRefresh();
           }}
         />
       )}

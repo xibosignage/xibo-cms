@@ -203,6 +203,9 @@ export default function MenuBoardProducts() {
         return;
       }
 
+      notify.success(
+        t('{{count}} product(s) deleted successfully.', { count: itemsToDelete.length }),
+      );
       setRowSelection({});
       handleRefresh();
       closeModal();

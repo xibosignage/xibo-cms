@@ -539,6 +539,8 @@ export default function AddNotificationModal({
 }: AddNotificationModalProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
+  // The CMS-wide `defaultTimezone` setting, not a personal/browser timezone
+  // - see User::myDetails() in lib/Controller/User.php.
   const timeZone = user?.settings?.defaultTimezone;
   const [isSaving, setIsSaving] = useState(false);
   const [draft, setDraft] = useState<NotificationDraft>({ ...DEFAULT_DRAFT });
