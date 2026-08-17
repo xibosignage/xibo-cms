@@ -38,7 +38,9 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\ControllerNotImplemented;
+use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -153,8 +155,8 @@ class Tag extends Base
      * @param Request $request
      * @param Response $response
      * @return ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
      */
     public function grid(Request $request, Response $response): Response|ResponseInterface
     {
@@ -258,10 +260,10 @@ class Tag extends Base
      * @param Response $response
      * @return ResponseInterface|Response
      * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\DuplicateEntityException
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws ControllerNotImplemented
+     * @throws DuplicateEntityException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
      */
     public function add(Request $request, Response $response): Response|ResponseInterface
     {
@@ -433,10 +435,10 @@ class Tag extends Base
      * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\DuplicateEntityException
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws ControllerNotImplemented
+     * @throws DuplicateEntityException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
      */
     public function edit(Request $request, Response $response, $id): Response|ResponseInterface
     {
@@ -532,11 +534,11 @@ class Tag extends Base
      * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ConfigurationException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\DuplicateEntityException
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws ConfigurationException
+     * @throws ControllerNotImplemented
+     * @throws DuplicateEntityException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
      */
     public function delete(Request $request, Response $response, $id): Response|ResponseInterface
     {
@@ -569,8 +571,8 @@ class Tag extends Base
      * @param Request $request
      * @param Response $response
      * @return ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
      */
     public function loadTagOptions(Request $request, Response $response): Response|ResponseInterface
     {
@@ -590,17 +592,77 @@ class Tag extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/tag/{type}/multi',
+        operationId: 'tagEditMultiple',
+        description: 'Add or remove Tags on multiple items of the same type at once',
+        summary: 'Edit Tags on multiple items',
+        tags: ['tags']
+    )]
+    #[OA\Parameter(
+        name: 'type',
+        description: 'The type of item being tagged, e.g. layout, playlist, media, campaign, displayGroup, display',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'targetIds',
+                        description: 'A comma separated list of item IDs to edit',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'addTags',
+                        description: 'A comma separated list of Tags to add',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'removeTags',
+                        description: 'A comma separated list of Tags to remove',
+                        type: 'string'
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(response: 204, description: 'successful operation, all items updated')]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation, but one or more items failed to update',
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(
+                    property: 'failedCount',
+                    description: 'The number of items that failed to update',
+                    type: 'integer'
+                ),
+                new OA\Property(
+                    property: 'failedNames',
+                    description: 'The names of the items that failed to update',
+                    type: 'array',
+                    items: new OA\Items(type: 'string')
+                ),
+            ],
+            type: 'object'
+        )
+    )]
     /**
      * @param Request $request
      * @param Response $response
      * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ConfigurationException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\DuplicateEntityException
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws ConfigurationException
+     * @throws ControllerNotImplemented
+     * @throws DuplicateEntityException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
      */
     public function editMultiple(Request $request, Response $response): Response|ResponseInterface
     {
@@ -615,6 +677,8 @@ class Tag extends Base
         $targetIds = $sanitizedParams->getString('targetIds');
         $tagsToAdd = $sanitizedParams->getString('addTags');
         $tagsToRemove = $sanitizedParams->getString('removeTags');
+
+        $failed = [];
 
         // check if we need to do anything first
         if ($tagsToAdd != '' || $tagsToRemove != '') {
@@ -639,28 +703,45 @@ class Tag extends Base
             };
 
             foreach ($targetIdsArray as $id) {
-                // get the entity by provided id, for display we need different function
-                $this->getLog()->debug('editMultiple: lookup using id: ' . $id . ' for type: ' . $targetType);
-                if ($targetType === 'display') {
-                    $entity = $entityFactory->getDisplaySpecificByDisplayId($id);
-                } else {
-                    $entity = $entityFactory->getById($id);
-                }
+                $entity = null;
+                try {
+                    // get the entity by provided id, for display we need different function
+                    $this->getLog()->debug(
+                        'editMultiple: lookup using id: ' . $id . ' for type: ' . $targetType
+                    );
+                    if ($targetType === 'display') {
+                        $entity = $entityFactory->getDisplaySpecificByDisplayId($id);
+                    } else {
+                        $entity = $entityFactory->getById($id);
+                    }
 
-                if ($targetType === 'display' || $targetType === 'displaygroup') {
-                    $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($entity), DisplayGroupLoadEvent::$NAME);
-                }
+                    if ($targetType === 'display' || $targetType === 'displayGroup') {
+                        $this->getDispatcher()->dispatch(
+                            new DisplayGroupLoadEvent($entity),
+                            DisplayGroupLoadEvent::$NAME
+                        );
+                    }
 
-                foreach ($untags as $untag) {
-                    $entity->unassignTag($untag);
-                }
+                    foreach ($untags as $untag) {
+                        $entity->unassignTag($untag);
+                    }
 
-                // go through tags and adjust assignments.
-                foreach ($tags as $tag) {
-                    $entity->assignTag($tag);
-                }
+                    // go through tags and adjust assignments.
+                    foreach ($tags as $tag) {
+                        $entity->assignTag($tag);
+                    }
 
-                $entity->save(['isTagEdit' => true]);
+                    $entity->save(['isTagEdit' => true]);
+                } catch (\Exception $exception) {
+                    $this->getLog()->error(
+                        'editMultiple: failed to update tags for id ' . $id . ', type ' . $targetType
+                        . ': ' . $exception->getMessage()
+                    );
+                    $failed[] = [
+                        'id' => $id,
+                        'name' => $this->getEditMultipleTargetName($entity),
+                    ];
+                }
             }
 
             // Once we're done, and if we're a Display entity, we need to calculate the dynamic display groups
@@ -676,12 +757,47 @@ class Tag extends Base
         }
 
         // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => __('Tags Edited')
-        ]);
+        if (count($failed) > 0) {
+            $this->getState()->hydrate([
+                'httpStatus' => 200,
+                'message' => __('Tags updated with some errors'),
+                'data' => [
+                    'failedCount' => count($failed),
+                    'failedNames' => array_column($failed, 'name'),
+                ],
+            ]);
+        } else {
+            $this->getState()->hydrate([
+                'httpStatus' => 204,
+                'message' => __('Tags Edited')
+            ]);
+        }
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Resolve a human-readable name for an edit-multiple-tags target, for error reporting.
+     * Entity types touched by this endpoint don't share a common naming property.
+     * @param mixed $entity
+     * @return string
+     */
+    private function getEditMultipleTargetName($entity): string
+    {
+        if ($entity === null) {
+            return '';
+        }
+
+        foreach (['name', 'displayGroup', 'layout', 'campaign', 'display'] as $property) {
+            if (property_exists($entity, $property)
+                && !empty($entity->$property)
+                && is_string($entity->$property)
+            ) {
+                return $entity->$property;
+            }
+        }
+
+        return '';
     }
 
     /**

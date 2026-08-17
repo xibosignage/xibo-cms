@@ -69,6 +69,8 @@ interface SearchAssignPanelProps<TItem> {
   pageSizeOptions?: number[];
 
   warningMessage?: string;
+  isItemActionDisabled?: (item: TItem) => boolean;
+  disabledActionMessage?: string;
 }
 
 interface SortableChipProps {
@@ -76,9 +78,18 @@ interface SortableChipProps {
   label: string;
   onRemove: () => void;
   removeAriaLabel: string;
+  disabled?: boolean;
+  disabledTitle?: string;
 }
 
-function SortableChip({ id, label, onRemove, removeAriaLabel }: SortableChipProps) {
+function SortableChip({
+  id,
+  label,
+  onRemove,
+  removeAriaLabel,
+  disabled = false,
+  disabledTitle,
+}: SortableChipProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
   });
@@ -104,7 +115,9 @@ function SortableChip({ id, label, onRemove, removeAriaLabel }: SortableChipProp
       <button
         type="button"
         onClick={onRemove}
-        className="flex justify-center items-center size-3.75 bg-gray-200 text-gray-500 hover:text-gray-600 hover:bg-gray-300 rounded-full"
+        disabled={disabled}
+        title={disabled ? disabledTitle : undefined}
+        className="flex justify-center items-center size-3.75 bg-gray-200 text-gray-500 hover:text-gray-600 hover:bg-gray-300 rounded-full disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-gray-200 disabled:hover:text-gray-500"
         aria-label={removeAriaLabel}
       >
         <X size={10} />
@@ -143,6 +156,8 @@ export function SearchAssignPanel<TItem>({
   isSearching,
   pageSizeOptions,
   warningMessage,
+  isItemActionDisabled,
+  disabledActionMessage,
 }: SearchAssignPanelProps<TItem>) {
   const { t } = useTranslation();
 
@@ -193,6 +208,7 @@ export function SearchAssignPanel<TItem>({
 
       const assignedIndex = assignedItems.findIndex((item) => getItemId(item) === itemId);
       const isAssigned = assignedIndex !== -1;
+      const isDisabled = isItemActionDisabled?.(row.original) ?? false;
       return (
         <div className="flex justify-center">
           <button
@@ -200,12 +216,13 @@ export function SearchAssignPanel<TItem>({
             onClick={() =>
               isAssigned ? onRemoveItem(row.original, assignedIndex) : onAddItem(row.original)
             }
-            className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
+            disabled={isDisabled}
+            className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 ${
               isAssigned
                 ? 'text-red-600 hover:text-red-800 hover:bg-red-50'
                 : 'text-xibo-blue-600 hover:text-xibo-blue-80 hover:bg-xibo-blue-50'
             }`}
-            title={isAssigned ? t('Remove') : t('Add')}
+            title={isDisabled ? disabledActionMessage : isAssigned ? t('Remove') : t('Add')}
           >
             {isAssigned ? <MinusCircle size={20} /> : <PlusCircle size={20} />}
           </button>
@@ -254,6 +271,8 @@ export function SearchAssignPanel<TItem>({
                       label={getItemLabel(item)}
                       onRemove={() => onRemoveItem(item, index)}
                       removeAriaLabel={t('Remove {{name}}', { name: getItemLabel(item) })}
+                      disabled={isItemActionDisabled?.(item) ?? false}
+                      disabledTitle={disabledActionMessage}
                     />
                   ))}
                 </div>
@@ -261,22 +280,27 @@ export function SearchAssignPanel<TItem>({
             </DndContext>
           ) : (
             <div className="flex flex-wrap gap-2 flex-1">
-              {assignedItems.map((item, index) => (
-                <span
-                  key={rowKey(item, index)}
-                  className="inline-flex items-center justify-center gap-1 rounded-full border border-gray-400 p-1.5"
-                >
-                  <span className="px-1 text-[12px] text-gray-800">{getItemLabel(item)}</span>
-                  <button
-                    type="button"
-                    onClick={() => onRemoveItem(item, index)}
-                    className="flex justify-center items-center size-3.75 bg-gray-200 text-gray-500 hover:text-gray-600 hover:bg-gray-300 rounded-full"
-                    aria-label={t('Remove {{name}}', { name: getItemLabel(item) })}
+              {assignedItems.map((item, index) => {
+                const isDisabled = isItemActionDisabled?.(item) ?? false;
+                return (
+                  <span
+                    key={rowKey(item, index)}
+                    className="inline-flex items-center justify-center gap-1 rounded-full border border-gray-400 p-1.5"
                   >
-                    <X size={10} />
-                  </button>
-                </span>
-              ))}
+                    <span className="px-1 text-[12px] text-gray-800">{getItemLabel(item)}</span>
+                    <button
+                      type="button"
+                      onClick={() => onRemoveItem(item, index)}
+                      disabled={isDisabled}
+                      title={isDisabled ? disabledActionMessage : undefined}
+                      className="flex justify-center items-center size-3.75 bg-gray-200 text-gray-500 hover:text-gray-600 hover:bg-gray-300 rounded-full disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-gray-200 disabled:hover:text-gray-500"
+                      aria-label={t('Remove {{name}}', { name: getItemLabel(item) })}
+                    >
+                      <X size={10} />
+                    </button>
+                  </span>
+                );
+              })}
             </div>
           )}
           {onClearAll !== undefined && assignedItems.length > 0 && (

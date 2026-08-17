@@ -45,12 +45,16 @@ export function useProofOfPlayData({ filter, enabled }: UseProofOfPlayParams) {
         reportFilter,
         fromDt: statsFromDt,
         toDt: statsToDt,
+        fromDtTime: statsFromDtTime,
+        toDtTime: statsToDtTime,
       } = resolveReportDateRange(filter.reportFilter);
 
       const response = await fetchProofOfPlay({
         reportFilter,
         statsFromDt,
         statsToDt,
+        statsFromDtTime,
+        statsToDtTime,
         type: filter.type || undefined,
         layoutId: filter.layoutId.length > 0 ? filter.layoutId : undefined,
         mediaId: filter.mediaId.length > 0 ? filter.mediaId : undefined,

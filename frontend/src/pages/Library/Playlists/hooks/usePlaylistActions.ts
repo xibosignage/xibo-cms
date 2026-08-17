@@ -75,6 +75,9 @@ export function usePlaylistActions({
         return;
       }
 
+      notify.success(
+        t('{{count}} playlist(s) deleted successfully.', { count: itemsToDelete.length }),
+      );
       setRowSelection({});
       handleRefresh();
       closeModal();

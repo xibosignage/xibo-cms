@@ -207,6 +207,7 @@ export default function NetworkTab({
               { value: 'Nginx', label: 'Nginx' },
             ]}
             onSelect={(v) => updateField('SENDFILE_MODE', v)}
+            disabled={!isEditable('SENDFILE_MODE')}
           />
         )}
         {isVisible('CDN_URL') && (
