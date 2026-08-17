@@ -20,7 +20,6 @@
  */
 
 import { useQueryClient } from '@tanstack/react-query';
-import type { RowSelectionState } from '@tanstack/react-table';
 import { Search, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -48,6 +47,7 @@ import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useSelectionState } from '@/hooks/useSelectionState';
 import { useTableState } from '@/hooks/useTableState';
 import type { Tag } from '@/types/tag';
 import type { Template } from '@/types/templates';
@@ -101,8 +101,6 @@ export default function Templates() {
   });
 
   const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [selectionCache, setSelectionCache] = useState<Record<string, Template>>({});
   const [openFilter, setOpenFilter] = useState(false);
 
   const [showFolderSidebar, setShowFolderSidebar] = useState(false);
@@ -153,36 +151,21 @@ export default function Templates() {
     },
   });
 
-  const getRowId = (row: Template) => {
-    return row.layoutId.toString();
-  };
-
-  const handleRowSelectionChange = (
-    updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
-  ) => {
-    const newSelection =
-      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
-
-    setRowSelection(newSelection);
-
-    setSelectionCache((prev) => {
-      const next = { ...prev };
-      templateList.forEach((item) => {
-        const id = getRowId(item);
-        if (newSelection[id]) {
-          next[id] = item;
-        }
-      });
-      return next;
-    });
-  };
+  const {
+    rowSelection,
+    setRowSelection,
+    onRowSelectionChange: handleRowSelectionChange,
+    getRowId,
+    getAllSelectedItems,
+  } = useSelectionState<Template>({
+    list: templateList,
+    getRowId: (row) => row.layoutId.toString(),
+  });
 
   const selectedTemplate = templateList.find((m) => m.layoutId === selectedTemplateId) ?? null;
   const existingNames = templateList.map((m) => m.layout);
 
-  const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['template'] });
-  };
+  const handleRefresh = () => queryClient.invalidateQueries({ queryKey: ['template'] });
 
   const handleFolderChange = (folder: { id: number | null; text: string | '' }) => {
     setSelectedFolderId(folder.id);
@@ -298,12 +281,6 @@ export default function Templates() {
     discardTemplate: handleDiscardModal,
     exportTemplate: handleExportModal,
   });
-
-  const getAllSelectedItems = (): Template[] => {
-    return Object.keys(rowSelection)
-      .map((id) => selectionCache[id])
-      .filter((item): item is Template => !!item);
-  };
 
   const bulkActions = getBulkActions({
     t,

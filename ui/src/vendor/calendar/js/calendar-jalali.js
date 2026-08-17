@@ -1,3 +1,24 @@
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 /**
  * Bootstrap based calendar full view.
  *
@@ -1526,6 +1547,7 @@ if(!String.prototype.formatNum) {
         var events = [];
         var period_start = moment(start / 1000, "X");
         var period_end = moment(end / 1000, "X")
+        var hasTzPlugin = !!moment().tz;
         //console.log("X. PS: " + period_start.format() + "(" + start + "), PE:" + period_end.format() + "(" + end + ")");
 
         $.each(this.options.events, function() {
@@ -1533,9 +1555,9 @@ if(!String.prototype.formatNum) {
                 return true;
             }
             // Convert to a local date, without the timezone
-            var event_start = moment().tz ? moment(moment(this.start / 1000, "X").tz(timezone).format("YYYY-MM-DD HH:mm:ss")) : moment(moment(this.start / 1000, "X").format("YYYY-MM-DD HH:mm:ss"));
+            var event_start = hasTzPlugin ? moment(moment(this.start / 1000, "X").tz(timezone).format("YYYY-MM-DD HH:mm:ss")) : moment(moment(this.start / 1000, "X").format("YYYY-MM-DD HH:mm:ss"));
             var event_end = this.end || this.start;
-            event_end = moment().tz ? moment(moment(event_end / 1000, "X").tz(timezone).format("YYYY-MM-DD HH:mm:ss")) : moment(moment(event_end / 1000, "X").format("YYYY-MM-DD HH:mm:ss"));
+            event_end = hasTzPlugin ? moment(moment(event_end / 1000, "X").tz(timezone).format("YYYY-MM-DD HH:mm:ss")) : moment(moment(event_end / 1000, "X").format("YYYY-MM-DD HH:mm:ss"));
             //console.log("ES: " + event_start.format() + "(" + parseInt(this.start) + "), EE: " + event_end.format() + " (" + parseInt(this.end) + ")");
             if (event_start.isBefore(period_end) && event_end.isSameOrAfter(period_start)) {
 

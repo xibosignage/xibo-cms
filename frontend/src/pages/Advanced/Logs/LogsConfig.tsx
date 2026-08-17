@@ -62,7 +62,7 @@ export const INITIAL_FILTER_STATE: LogsFilterInput = {
   useRegexForName: false,
   displayGroupId: '',
   message: '',
-  excludeLog: false,
+  excludeLog: true,
 };
 
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<LogsFilterInput>[] => [
