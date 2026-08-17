@@ -75,14 +75,25 @@ export function useTableState<TFilters>(
     hasInteractedWithFolderRef.current = false;
     setIsFolderIdHydrated(false);
 
-    fetchUserPreference<number | null>(folderIdKey).then((stored) => {
-      if (isActive) {
-        if (!hasInteractedWithFolderRef.current && stored !== null && stored !== undefined) {
+    // A rejection here must not block hydration forever, so errors are
+    // swallowed and isFolderIdHydrated is always set in .finally().
+    fetchUserPreference<number | null>(folderIdKey)
+      .then((stored) => {
+        if (
+          isActive &&
+          !hasInteractedWithFolderRef.current &&
+          stored !== null &&
+          stored !== undefined
+        ) {
           setFolderIdState(stored);
         }
-        setIsFolderIdHydrated(true);
-      }
-    });
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (isActive) {
+          setIsFolderIdHydrated(true);
+        }
+      });
 
     return () => {
       isActive = false;
