@@ -103,6 +103,9 @@ export function useDatasetActions({
         return;
       }
 
+      notify.success(
+        t('{{count}} dataset(s) deleted successfully.', { count: itemsToDelete.length }),
+      );
       setRowSelection({});
       handleRefresh();
       closeModal();

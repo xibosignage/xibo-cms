@@ -20,7 +20,6 @@
  */
 
 import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query';
-import type { AxiosError } from 'axios';
 
 import type { LogsFilterInput } from '../LogsConfig';
 
@@ -93,9 +92,5 @@ export const useLogsData = ({ advancedFilters, anchorTime, enabled = true }: Use
     enabled,
     placeholderData: keepPreviousData,
     staleTime: 1000 * 60,
-
-    throwOnError: (error: AxiosError) => {
-      return error.response?.status ? error.response.status >= 500 : false;
-    },
   });
 };
