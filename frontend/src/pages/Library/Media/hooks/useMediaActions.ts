@@ -91,6 +91,9 @@ export function useMediaActions({
         return;
       }
 
+      notify.success(
+        t('{{count}} media item(s) deleted successfully.', { count: itemsToDelete.length }),
+      );
       setRowSelection({});
       handleRefresh();
       closeModal();

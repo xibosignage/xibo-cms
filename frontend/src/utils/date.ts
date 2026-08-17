@@ -57,6 +57,16 @@ export function formatDateTime(date: Date, timeZone?: string) {
   return `${get('year')}-${get('month')}-${get('day')} ${get('hour')}:${get('minute')}:${get('second')}`;
 }
 
+export function formatTime(date: Date, timeZone?: string) {
+  const get = getParts(date, {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    ...(timeZone ? { timeZone } : {}),
+  });
+  return `${get('hour')}:${get('minute')}`;
+}
+
 function daysFromNow(days: number) {
   return new Date(Date.now() + days * 24 * 60 * 60 * 1000);
 }
@@ -115,9 +125,15 @@ export function expiresToExpiryValue(expires?: string): ExpiryValue {
 
 export const DATE_KEY_REGEX = /^(\d{4})-(\d{2})-(\d{2})/;
 
-// Reads back the local Y/M/D a day-only picker produced - no timezone involved.
-export function toLocalDateKey(date: Date): string {
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+// Reads back the Y/M/D a day-only picker produced. Pass timeZone only when `date` is a
+// real instant anchored to that zone (e.g. combined with a time-of-day); omit it for
+// plain calendar-day values with no timezone semantics attached.
+export function toLocalDateKey(date: Date, timeZone?: string): string {
+  if (!timeZone) {
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  }
+  const p = extractParts(date, timeZone);
+  return `${pad(p.year, 4)}-${pad(p.month)}-${pad(p.day)}`;
 }
 
 // Expands a plain calendar-day key (as produced by toLocalDateKey) to a day boundary -
