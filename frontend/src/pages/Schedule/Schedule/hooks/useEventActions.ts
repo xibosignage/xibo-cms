@@ -73,8 +73,13 @@ export function useEventActions({
         return;
       }
 
+      const recurrenceType = itemsToDelete.length === 1 ? itemsToDelete[0]?.recurrenceType : null;
+      const isSingleRecurringSeries = !!recurrenceType && recurrenceType !== 'None';
+
       notify.success(
-        t('{{count}} event(s) deleted successfully.', { count: itemsToDelete.length }),
+        isSingleRecurringSeries
+          ? t('The entire recurring event series was deleted successfully.')
+          : t('{{count}} event(s) deleted successfully.', { count: itemsToDelete.length }),
       );
       setRowSelection({});
       handleRefresh();

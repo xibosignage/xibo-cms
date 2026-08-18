@@ -1566,7 +1566,7 @@ class Schedule implements \JsonSerializable
 
                 case 'Month':
                     // We use the difference to set the end date
-                    $difference = (int) $end->diffInSeconds($start);
+                    $difference = (int) $end->diffInSeconds($start, true);
 
                     // Are we repeating on the day of the month, or the day of the week
                     if ($this->recurrenceMonthlyRepeatsOn == 1) {
