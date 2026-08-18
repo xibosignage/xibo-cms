@@ -243,44 +243,43 @@ export default function NotificationCentre() {
 
         <QueryStatusBanner error={error} isPaused={isPaused} />
 
-        <div className="min-h-0 flex flex-col">
+        <div
+          className="flex-1 min-h-0 flex flex-col"
+          onDoubleClick={(e) => {
+            const el = (e.target as Element).closest('[data-notification-id]');
+            if (!el) return;
+            const id = Number(el.getAttribute('data-notification-id'));
+            const notif = notificationList.find((n) => n.notificationId === id);
+            if (notif) handleView(notif);
+          }}
+        >
           {!isHydrated ? (
             <div className="flex-1 flex items-center justify-center bg-gray-50 animate-pulse rounded-lg border border-gray-200">
               <span className="text-gray-400 font-medium">{t('Loading...')}</span>
             </div>
           ) : (
-            <div
-              onDoubleClick={(e) => {
-                const el = (e.target as Element).closest('[data-notification-id]');
-                if (!el) return;
-                const id = Number(el.getAttribute('data-notification-id'));
-                const notif = notificationList.find((n) => n.notificationId === id);
-                if (notif) handleView(notif);
-              }}
-            >
-              <DataTable
-                columns={columns}
-                data={notificationList}
-                pageCount={pageCount}
-                rowCount={queryData?.totalCount || 0}
-                pagination={pagination}
-                onPaginationChange={setPagination}
-                sorting={sorting}
-                onSortingChange={setSorting}
-                globalFilter=""
-                onGlobalFilterChange={() => {}}
-                loading={isFetching}
-                rowSelection={rowSelection}
-                onRowSelectionChange={handleRowSelectionChange}
-                onRefresh={handleRefresh}
-                columnPinning={{ left: ['tableSelection'], right: ['tableActions'] }}
-                columnVisibility={columnVisibility}
-                onColumnVisibilityChange={setColumnVisibility}
-                bulkActions={bulkActions}
-                viewMode={null}
-                getRowId={getRowId}
-              />
-            </div>
+            <DataTable
+              columns={columns}
+              data={notificationList}
+              pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
+              pagination={pagination}
+              onPaginationChange={setPagination}
+              sorting={sorting}
+              onSortingChange={setSorting}
+              globalFilter=""
+              onGlobalFilterChange={() => {}}
+              loading={isFetching}
+              rowSelection={rowSelection}
+              onRowSelectionChange={handleRowSelectionChange}
+              onRefresh={handleRefresh}
+              columnPinning={{ left: ['tableSelection'], right: ['tableActions'] }}
+              columnVisibility={columnVisibility}
+              onColumnVisibilityChange={setColumnVisibility}
+              bulkActions={bulkActions}
+              viewMode={null}
+              getRowId={getRowId}
+            />
           )}
         </div>
       </div>
