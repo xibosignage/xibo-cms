@@ -119,7 +119,6 @@ export const INITIAL_FILTER_STATE: MediaFilterInput = {
   retired: 0,
   layoutId: null,
   lastModified: '',
-  retired: 0,
   logicalOperatorName: 'OR',
   useRegexForName: false,
   logicalOperator: 'OR',
