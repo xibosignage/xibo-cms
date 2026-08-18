@@ -44,6 +44,7 @@ import Button from '@/components/ui/Button';
 import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import { notify } from '@/components/ui/Notification';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
@@ -124,6 +125,7 @@ export default function MenuBoardCategories() {
     data: queryData,
     isFetching,
     isError,
+    isPaused,
     error: queryError,
   } = useMenuBoardCategoriesData({
     menuId: menuId!,
@@ -367,11 +369,7 @@ export default function MenuBoardCategories() {
           onReset={handleResetFilters}
         />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
-            {error}
-          </div>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         <div className="min-h-0 flex flex-col">
           {!isHydrated ? (

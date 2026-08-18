@@ -209,9 +209,9 @@ export const getNotificationColumns = (
     {
       id: 'tableActions',
       header: '',
-      size: 110,
-      minSize: 110,
-      maxSize: 110,
+      size: 80,
+      minSize: 80,
+      maxSize: 80,
       enableHiding: false,
       enableResizing: false,
       cell: ({ row }) => (

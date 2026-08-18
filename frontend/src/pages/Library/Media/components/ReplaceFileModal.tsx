@@ -80,7 +80,7 @@ export default function ReplaceFileModal({
         oldMediaId: draft.oldMediaId,
         name: draft.name,
         folderId: data.folderId,
-        tags: serialized.split(',').filter(Boolean),
+        tags: serialized,
         updateInLayouts: draft.updateInLayouts,
         deleteOldRevisions: draft.deleteOldRevisions,
         onProgress: (p) => setUploadProgress(p),
@@ -99,7 +99,7 @@ export default function ReplaceFileModal({
     } catch (err) {
       console.error('Replace media failed:', err);
       setIsSaving(false);
-      notify.error(t('Failed to replace media'));
+      notify.error(err instanceof Error ? err.message : t('Failed to replace media'));
     }
   };
 
@@ -125,10 +125,13 @@ export default function ReplaceFileModal({
       case 'pdf':
         return 'application/pdf,.pdf';
 
-      case 'archive':
-        return '.zip,.rar,.7z,.tar,.gz';
+      case 'powerpoint':
+        return '.ppt,.pps,.pptx,.ppsx';
 
-      case 'other':
+      case 'htmlpackage':
+        return '.htz';
+
+      case 'genericfile':
       default:
         return '';
     }

@@ -287,7 +287,8 @@ class DisplayProfileFactory extends BaseFactory
                 ['name' => 'embeddedServerPort', 'default' => 9696],
                 ['name' => 'preventSleep', 'default' => 1, 'type' => 'checkbox'],
                 ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox'],
-                ['name' => 'embeddedServerAllowWan', 'default' => 0, 'type' => 'checkbox']
+                ['name' => 'embeddedServerAllowWan', 'default' => 0, 'type' => 'checkbox'],
+                ['name' => 'isRecordGeoLocationOnProofOfPlay', 'default' => 0, 'type' => 'checkbox']
             ],
             'lg' => [
                 ['name' => 'emailAddress', 'default' => ''],
@@ -392,6 +393,7 @@ class DisplayProfileFactory extends BaseFactory
                     'name' => 'screenShotSize',
                     'default' => (int)$this->config->getSetting('DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT', 200),
                 ],
+                ['name' => 'isRecordGeoLocationOnProofOfPlay', 'default' => 0, 'type' => 'checkbox'],
             ]
         ];
 

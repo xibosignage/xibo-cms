@@ -95,21 +95,24 @@ class Schedule extends Base
     #[OA\Parameter(name: 'singlePointInTime', in: 'query', required: false, schema: new OA\Schema(type: 'integer'))]
     #[OA\Parameter(
         name: 'date',
-        description: 'Date in Y-m-d H:i:s',
+        description: 'Date in Y-m-d H:i:s. Required when singlePointInTime=1, otherwise ignored. '
+            . 'One of date, or startDate/endDate must be supplied, or a 422 is returned.',
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
         name: 'startDate',
-        description: 'Date in Y-m-d H:i:s',
+        description: 'Date in Y-m-d H:i:s. Required together with endDate when singlePointInTime is not set. '
+            . 'One of date, or startDate/endDate must be supplied, or a 422 is returned.',
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
         name: 'endDate',
-        description: 'Date in Y-m-d H:i:s',
+        description: 'Date in Y-m-d H:i:s. Required together with startDate when singlePointInTime is not set. '
+            . 'One of date, or startDate/endDate must be supplied, or a 422 is returned.',
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'string')
@@ -119,14 +122,15 @@ class Schedule extends Base
      * Event List
      * @param Request $request
      * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @param int $id
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
+     * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws ControllerNotImplemented
      */
-    public function eventList(Request $request, Response $response, $id): Response|ResponseInterface
+    public function eventList(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -142,9 +146,20 @@ class Schedule extends Base
         if ($singlePointInTime == 1) {
             $startDate = $sanitizedParams->getDate('date');
             $endDate = $sanitizedParams->getDate('date');
+
+            if ($startDate === null) {
+                throw new InvalidArgumentException(__('Please enter a date'), 'date');
+            }
         } else {
             $startDate = $sanitizedParams->getDate('startDate');
             $endDate = $sanitizedParams->getDate('endDate');
+
+            if ($startDate === null) {
+                throw new InvalidArgumentException(__('Please enter a start date'), 'startDate');
+            }
+            if ($endDate === null) {
+                throw new InvalidArgumentException(__('Please enter an end date'), 'endDate');
+            }
         }
 
         // Reset the seconds
@@ -640,7 +655,7 @@ class Schedule extends Base
      *
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws NotFoundException
@@ -960,11 +975,12 @@ class Schedule extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
      * @throws ControllerNotImplemented
+     * @throws InvalidArgumentException
      */
     public function deleteRecurrence(Request $request, Response $response, $id): Response|ResponseInterface
     {
@@ -979,10 +995,61 @@ class Schedule extends Base
         // Recurring event start/end
         $eventStart = $sanitizedParams->getInt('eventStart', ['default' => 1000]);
         $eventEnd = $sanitizedParams->getInt('eventEnd', ['default' => 1000]);
-        $scheduleExclusion = $this->scheduleExclusionFactory->create($schedule->eventId, $eventStart, $eventEnd);
 
-        $this->getLog()->debug('Create a schedule exclusion record');
-        $scheduleExclusion->save();
+        // Schedule::getEvents() matches exclusions against day-part-adjusted occurrence
+        if (!$schedule->isAlwaysDayPart() && !$schedule->isCustomDayPart()) {
+            $dayPart = $this->dayPartFactory->getById($schedule->dayPartId);
+            $dayPart->adjustForDate(DateFormatHelper::createFromTimestamp($eventStart));
+            $eventStart = $dayPart->adjustedStart->format('U');
+            $eventEnd = $dayPart->adjustedEnd->format('U');
+        }
+
+        // Guard against creating a duplicate exclusion for an occurrence that's already
+        // excluded. Matched at exact fromDt/toDt (the same key Schedule::getEvents() uses),
+        // not by calendar day - a day can contain more than one distinct occurrence for
+        // Minute/Hour recurring events, so a day-level match would wrongly block deleting one
+        // occurrence because another on the same day is already excluded.
+        $existingExclusions = $this->scheduleExclusionFactory->query(null, ['eventId' => $schedule->eventId]);
+        $alreadyExcluded = array_filter(
+            $existingExclusions,
+            fn ($exclusion) => $exclusion->fromDt == $eventStart && $exclusion->toDt == $eventEnd
+        );
+
+        if (empty($alreadyExcluded)) {
+            // Guard against creating an exclusion for an eventStart/eventEnd that doesn't
+            // correspond to a real generated occurrence of this event (e.g. a crafted request).
+            // "Always" dayPart events are a single continuous block - getEvents() always
+            // returns one DATE_MIN/DATE_MAX event for them regardless of window, so there is
+            // no discrete "occurrence" to validate against.
+            if (!$schedule->isAlwaysDayPart()) {
+                $occurrenceDay = DateFormatHelper::createFromTimestamp($eventStart);
+                $generatedEvents = $schedule->getEvents(
+                    $occurrenceDay->copy()->startOfDay(),
+                    $occurrenceDay->copy()->addDay()->startOfDay()
+                );
+                $occurrenceExists = array_filter(
+                    $generatedEvents,
+                    fn ($event) => $event->fromDt == $eventStart && $event->toDt == $eventEnd
+                );
+
+                if (empty($occurrenceExists)) {
+                    throw new InvalidArgumentException(
+                        __('The requested occurrence does not exist for this event'),
+                        'eventStart'
+                    );
+                }
+            }
+
+            $scheduleExclusion = $this->scheduleExclusionFactory->create($schedule->eventId, $eventStart, $eventEnd);
+
+            $this->getLog()->debug('Create a schedule exclusion record');
+            $scheduleExclusion->save();
+
+            // Notify affected displays so a display that has already cached its schedule
+            // response for this window doesn't keep playing the now-excluded occurrence.
+            $schedule->setDisplayNotifyService($this->displayFactory->getDisplayNotifyService());
+            $schedule->notifyDisplaysOfChange();
+        }
 
         // Return
         return $response->withStatus(204);
@@ -1155,7 +1222,7 @@ class Schedule extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
@@ -1617,7 +1684,7 @@ class Schedule extends Base
      * @param Request $request
      * @param Response $response
      * @param int $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException

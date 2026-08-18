@@ -44,6 +44,7 @@ import FilterInputs from '@/components/ui/FilterInputs';
 import FolderActionModals from '@/components/ui/FolderActionModals';
 import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
 import FolderSidebar from '@/components/ui/FolderSidebar';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataMap } from '@/components/ui/table/DataMap';
 import { DataTable } from '@/components/ui/table/DataTable';
@@ -60,6 +61,7 @@ import type { Display } from '@/types/display';
 import type { Tag } from '@/types/tag';
 import { countActiveFilters } from '@/utils/filters';
 import { hasFeature } from '@/utils/permissions';
+import { isPreferenceEnabled } from '@/utils/preferences';
 import { toggleTag } from '@/utils/tags';
 
 export default function Displays() {
@@ -204,6 +206,7 @@ export default function Displays() {
     data: queryData,
     isFetching,
     isError,
+    isPaused,
     error: queryError,
   } = useDisplaysData({
     pagination,
@@ -268,6 +271,9 @@ export default function Displays() {
     handleRefresh,
     closeModal,
     setRowSelection,
+    showThumbnailColumn: isPreferenceEnabled(user?.settings?.showThumbnailColumn, true),
+    revealThumbnailColumns: () =>
+      setColumnVisibility((prev) => ({ ...prev, screenShotRequested: true, thumbnail: true })),
   });
 
   const { guard } = useAutoSubmit();
@@ -506,11 +512,7 @@ export default function Displays() {
           onReset={handleResetFilters}
         />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
-            {error}
-          </div>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         <div className={`min-h-0 flex flex-col ${viewMode === 'map' && 'flex-1'}`}>
           {!isHydrated ? (

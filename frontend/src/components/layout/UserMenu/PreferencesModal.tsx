@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { useQueryClient } from '@tanstack/react-query';
 import { useActionState, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -26,6 +27,7 @@ import Checkbox from '@/components/ui/forms/Checkbox';
 import Modal from '@/components/ui/modals/Modal';
 import { useUserContext } from '@/context/UserContext';
 import { saveUserPreferencesBulk } from '@/services/userApi';
+import { isPreferenceEnabled } from '@/utils/preferences';
 
 interface PreferencesModalProps {
   isOpen?: boolean;
@@ -35,31 +37,26 @@ interface PreferencesModalProps {
 export default function PreferencesModal({ isOpen = true, onClose }: PreferencesModalProps) {
   const { t } = useTranslation();
   const { user, updateUser } = useUserContext();
+  const queryClient = useQueryClient();
 
   const [useLibraryDuration, setUseLibraryDuration] = useState<boolean>(
-    Boolean(user?.settings?.useLibraryDuration ?? false),
+    isPreferenceEnabled(user?.settings?.useLibraryDuration, false),
   );
   const [showThumbnailColumn, setShowThumbnailColumn] = useState<boolean>(
-    Boolean(user?.settings?.showThumbnailColumn ?? true),
+    isPreferenceEnabled(user?.settings?.showThumbnailColumn, true),
   );
   const [autoSubmitClearAll, setAutoSubmitClearAll] = useState<boolean>(false);
-  const [isAlwaysUseManualAddUserForm, setIsAlwaysUseManualAddUserForm] = useState<boolean>(
-    Boolean(user?.settings?.isAlwaysUseManualAddUserForm ?? false),
-  );
   const [rememberFolderTreeGlobally, setRememberFolderTreeGlobally] = useState<boolean>(
-    Boolean(user?.settings?.rememberFolderTreeStateGlobally ?? true),
+    isPreferenceEnabled(user?.settings?.rememberFolderTreeStateGlobally, true),
   );
 
   useEffect(() => {
     if (isOpen && user) {
-      setUseLibraryDuration(Boolean(user.settings?.useLibraryDuration ?? false));
-      setShowThumbnailColumn(Boolean(user.settings?.showThumbnailColumn ?? true));
+      setUseLibraryDuration(isPreferenceEnabled(user.settings?.useLibraryDuration, false));
+      setShowThumbnailColumn(isPreferenceEnabled(user.settings?.showThumbnailColumn, true));
       setAutoSubmitClearAll(false);
-      setIsAlwaysUseManualAddUserForm(
-        Boolean(user.settings?.isAlwaysUseManualAddUserForm ?? false),
-      );
       setRememberFolderTreeGlobally(
-        Boolean(user.settings?.rememberFolderTreeStateGlobally ?? true),
+        isPreferenceEnabled(user.settings?.rememberFolderTreeStateGlobally, true),
       );
     }
   }, [isOpen, user]);
@@ -67,15 +64,22 @@ export default function PreferencesModal({ isOpen = true, onClose }: Preferences
   const [submitError, submitAction, isPending] = useActionState(async () => {
     try {
       const payload = {
-        navigationMenuPosition: 'vertical',
         useLibraryDuration: useLibraryDuration ? 'on' : 'off',
         showThumbnailColumn: showThumbnailColumn ? 'on' : 'off',
         autoSubmitClearAll: autoSubmitClearAll ? 'on' : 'off',
-        isAlwaysUseManualAddUserForm: isAlwaysUseManualAddUserForm ? 'on' : 'off',
         rememberFolderTreeStateGlobally: rememberFolderTreeGlobally ? 'on' : 'off',
       };
 
       await saveUserPreferencesBulk(payload);
+
+      if (autoSubmitClearAll) {
+        queryClient.removeQueries({
+          predicate: (query) =>
+            query.queryKey[0] === 'userPref' &&
+            typeof query.queryKey[1] === 'string' &&
+            query.queryKey[1].startsWith('autoSubmit.'),
+        });
+      }
 
       if (user) {
         updateUser({
@@ -84,7 +88,6 @@ export default function PreferencesModal({ isOpen = true, onClose }: Preferences
             useLibraryDuration: useLibraryDuration ? 1 : 0,
             showThumbnailColumn: showThumbnailColumn ? 1 : 0,
             autoSubmitClearAll: autoSubmitClearAll ? 1 : 0,
-            isAlwaysUseManualAddUserForm: isAlwaysUseManualAddUserForm ? 1 : 0,
             rememberFolderTreeStateGlobally: rememberFolderTreeGlobally ? 1 : 0,
           },
         });
@@ -149,18 +152,6 @@ export default function PreferencesModal({ isOpen = true, onClose }: Preferences
             checked={autoSubmitClearAll}
             onChange={(e) => {
               setAutoSubmitClearAll(e.target.checked);
-            }}
-          />
-
-          <Checkbox
-            id="isAlwaysUseManualAddUserForm"
-            title={t('Always use manual Add User form?')}
-            label={t(
-              'If selected the manual Add User form will always open when you click Add User, otherwise the onboarding form will open.',
-            )}
-            checked={isAlwaysUseManualAddUserForm}
-            onChange={(e) => {
-              setIsAlwaysUseManualAddUserForm(e.target.checked);
             }}
           />
 

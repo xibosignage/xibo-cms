@@ -68,25 +68,27 @@ export default function Welcome() {
   };
 
   const renderServiceCardLinks = (card: ServiceCard) => {
-    return card.links.map((link) => {
-      const variant = link.variant ?? 'primary';
+    return card.links
+      .filter((link) => !link.xiboOnly || isXiboThemed)
+      .map((link) => {
+        const variant = link.variant ?? 'primary';
 
-      if (link.isExternal) {
+        if (link.isExternal) {
+          return (
+            <a key={link.labelKey} href={link.to} target="_blank" rel="noopener noreferrer">
+              <Button variant={variant} rightIcon={variant === 'link' ? ArrowRight : undefined}>
+                {t(link.labelKey)}
+              </Button>
+            </a>
+          );
+        }
+
         return (
-          <a key={link.labelKey} href={link.to} target="_blank" rel="noopener noreferrer">
-            <Button variant={variant} rightIcon={variant === 'link' ? ArrowRight : undefined}>
-              {t(link.labelKey)}
-            </Button>
-          </a>
+          <Link key={link.to} to={link.to}>
+            <Button variant={variant}>{t(link.labelKey)}</Button>
+          </Link>
         );
-      }
-
-      return (
-        <Link key={link.to} to={link.to}>
-          <Button variant={variant}>{t(link.labelKey)}</Button>
-        </Link>
-      );
-    });
+      });
   };
 
   return (
@@ -94,20 +96,30 @@ export default function Welcome() {
       {/* Hero Section */}
       <section className="flex py-20 bg-[radial-gradient(80%_60%_at_50%_-10%,rgba(99,102,241,0.18)_0%,rgba(0,0,0,0)_100%)]">
         <div className="flex flex-col items-center max-w-234.5 mx-auto">
-          <h2 className="mb-1 text-3xl font-bold text-gray-900">{t('Welcome to the Xibo CMS')}</h2>
+          <h2 className="mb-1 text-3xl font-bold text-gray-900">
+            {t('Welcome to the {{appName}} CMS', {
+              appName: user?.branding?.appName ?? 'Xibo',
+            })}
+          </h2>
           <p className="text-gray-600">
             {t(
               'The Content Management System (CMS) allows users to create, manage and update content to be shown on Displays. Upload images and videos, create layout designs, schedule content and manage the display network.',
             )}
           </p>
           <div className="flex gap-2 mt-5">
-            <a href="https://docs.xibosignage.com" target="_blank" rel="noopener noreferrer">
-              <Button variant="primary">{t('Documentation')}</Button>
-            </a>
             {isXiboThemed && (
-              <a href="https://xibosignage.com/training" target="_blank" rel="noopener noreferrer">
-                <Button variant="secondary">{t('Training')}</Button>
-              </a>
+              <>
+                <a href="https://docs.xibosignage.com" target="_blank" rel="noopener noreferrer">
+                  <Button variant="primary">{t('Documentation')}</Button>
+                </a>
+                <a
+                  href="https://xibosignage.com/training"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button variant="secondary">{t('Training')}</Button>
+                </a>
+              </>
             )}
           </div>
         </div>

@@ -109,7 +109,7 @@ export const useLayoutData = ({
         ...(ownerId ? { userId: ownerId } : {}),
         ...(ownerUserGroupId ? { ownerUserGroupId } : {}),
         ...(orientation ? { orientation } : {}),
-        ...(retired !== '' && retired != null ? { retired } : {}),
+        ...(retired != null ? { retired } : {}),
         ...(layoutStatusId != null ? { layoutStatusId } : {}),
         ...(showDescriptionId != null ? { showDescriptionId } : {}),
         ...(mediaLike ? { mediaLike } : {}),

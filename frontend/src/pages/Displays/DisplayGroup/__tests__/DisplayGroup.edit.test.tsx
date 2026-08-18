@@ -107,7 +107,11 @@ describe('DisplayGroup page - edit', () => {
     const user = userEvent.setup();
     renderDisplayGroupPage();
 
-    const editButton = await screen.findByRole('button', { name: /edit/i });
+    // Extended timeout: under full-suite parallel load this can take longer
+    // than the default 1000ms, causing intermittent flakes.
+    await screen.findByText(mockDisplayGroup.displayGroup, {}, { timeout: 5000 });
+
+    const editButton = await screen.findByRole('button', { name: /edit/i }, { timeout: 5000 });
     await user.click(editButton);
 
     expect(await screen.findByRole('dialog', { name: /edit display group/i })).toBeInTheDocument();
@@ -122,10 +126,14 @@ describe('DisplayGroup page - edit', () => {
     const user = userEvent.setup();
     renderDisplayGroupPage();
 
-    // Wait for the original row to appear before interacting.
-    expect(await screen.findByText(mockDisplayGroup.displayGroup)).toBeInTheDocument();
+    // Wait for the original row to appear before interacting. Extended
+    // timeout: under full-suite parallel load this can take longer than the
+    // default 1000ms, causing intermittent flakes.
+    expect(
+      await screen.findByText(mockDisplayGroup.displayGroup, {}, { timeout: 5000 }),
+    ).toBeInTheDocument();
 
-    const editButton = await screen.findByRole('button', { name: /edit/i });
+    const editButton = await screen.findByRole('button', { name: /edit/i }, { timeout: 5000 });
     await user.click(editButton);
 
     // Queue the updated data so the table gets it when it re-fetches after save.
@@ -140,7 +148,9 @@ describe('DisplayGroup page - edit', () => {
     // Only then check the old name is gone, because keepPreviousData keeps the
     // old row visible during the fetch, so a synchronous negative check before
     // this point would fail.
-    expect(await screen.findByText(updatedGroup.displayGroup)).toBeInTheDocument();
+    expect(
+      await screen.findByText(updatedGroup.displayGroup, {}, { timeout: 5000 }),
+    ).toBeInTheDocument();
     expect(screen.queryByText(mockDisplayGroup.displayGroup)).not.toBeInTheDocument();
   });
 });

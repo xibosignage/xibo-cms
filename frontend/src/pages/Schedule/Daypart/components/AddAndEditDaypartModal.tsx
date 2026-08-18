@@ -39,7 +39,7 @@ interface AddAndEditDaypartModalProps {
   isOpen?: boolean;
   data?: Daypart | null;
   onClose: () => void;
-  onSave: (updated: Daypart) => void;
+  onSave: (updated: Daypart) => void | Promise<unknown>;
 }
 
 interface DaypartDraft {
@@ -183,10 +183,10 @@ export default function AddAndEditDaypartModal({
           }
 
           const updatedDaypart = await updateDaypart(data.dayPartId, payload);
-          onSave({ ...data, ...updatedDaypart });
+          await onSave({ ...data, ...updatedDaypart });
         } else {
           const newDaypart = await createDaypart(payload);
-          onSave(newDaypart);
+          await onSave(newDaypart);
         }
 
         onClose();

@@ -65,6 +65,8 @@ export interface FilterConfigItem<T> {
   showExactTags?: boolean;
   exactTagsKey?: keyof T & string;
   showTimePicker?: boolean;
+  compareToDefault?: boolean;
+  tooltip?: string;
 }
 
 type FilterValue = string | number | boolean | null | Tag[];
@@ -358,6 +360,7 @@ export default function FilterInputs<T>({
                   isJalali={filter.isJalali}
                   className={filter.className}
                   showTimePicker={filter.showTimePicker}
+                  tooltip={filter.tooltip}
                 />
               );
             }

@@ -34,6 +34,7 @@ import { useModuleFilterOptions } from './hooks/useModuleFilterOptions';
 
 import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
@@ -94,6 +95,7 @@ export default function Modules() {
     data: queryData,
     isFetching,
     isError,
+    isPaused,
     error: queryError,
   } = useModuleData({
     pagination,
@@ -204,11 +206,7 @@ export default function Modules() {
           onReset={handleResetFilters}
         />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
-            {error}
-          </div>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         <div className="min-h-0 flex flex-col">
           {!isHydrated ? (

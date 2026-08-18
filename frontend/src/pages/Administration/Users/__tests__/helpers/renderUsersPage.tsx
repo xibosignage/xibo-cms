@@ -22,19 +22,28 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { vi } from 'vitest';
 
 import Users from '../../Users';
 import { mockSuperAdmin, queryKeys } from '../fixtures/user';
 
 import { UserProvider } from '@/context/UserContext';
+import { fetchUserPreference } from '@/services/userApi';
 import { testQueryClient } from '@/setupTests';
 import type { User } from '@/types/user';
 
 // Renders the full Users page inside all required context providers.
 // Pre-seeds the userPref cache so useTableState hydrates immediately.
 // Call testQueryClient.clear() and vi.clearAllMocks() in beforeEach before using this helper.
+//
+// The seeded userPref cache above only covers useTableState's react-query-backed
+// preferences fetch. Its folder-id hydration bypasses react-query and calls
+// fetchUserPreference directly, so it needs its own default here or it hits
+// the bare `vi.mock('@/services/userApi')` auto-mock (resolves to undefined,
+// which crashes on `.then`).
 export const renderUsersPage = (user: User = mockSuperAdmin) => {
   testQueryClient.setQueryData(queryKeys.usersPage, null);
+  vi.mocked(fetchUserPreference).mockResolvedValue(null);
   return render(
     <QueryClientProvider client={testQueryClient}>
       <UserProvider initialUser={user}>

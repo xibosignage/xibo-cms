@@ -31,7 +31,7 @@ interface DaypartModalsProps {
   actions: {
     activeModal: string | null;
     closeModal: () => void;
-    handleRefresh: () => void;
+    handleRefresh: () => void | Promise<unknown>;
     deleteError: string | null;
     isDeleting: boolean;
   };
@@ -60,8 +60,8 @@ export function DaypartModals({ actions, selection, handlers }: DaypartModalsPro
           type={selection.selectedDaypartId ? 'edit' : 'add'}
           onClose={actions.closeModal}
           data={selection.selectedDaypart}
-          onSave={() => {
-            actions.handleRefresh();
+          onSave={async () => {
+            await actions.handleRefresh();
           }}
         />
       )}

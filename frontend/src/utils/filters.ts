@@ -22,9 +22,12 @@
 type FilterConfigLike<T> = {
   name: keyof T & string;
   type?: string;
+  compareToDefault?: boolean;
 };
 
 type FilterFieldRef<T> = FilterConfigLike<T> | (keyof T & string);
+
+const isEmptyValue = (value: unknown) => value === undefined || value === null || value === '';
 
 export function countActiveFilters<T extends object>(
   values: Partial<T>,
@@ -33,13 +36,19 @@ export function countActiveFilters<T extends object>(
 ): number {
   return fields.reduce((count, field) => {
     const key = typeof field === 'string' ? field : field.name;
+    const compareToDefault = typeof field !== 'string' && field.compareToDefault;
     const value = values[key];
 
     if (Array.isArray(value)) {
       return count + (value.length > 0 ? 1 : 0);
     }
 
-    const isEmpty = value === undefined || value === null || value === '';
-    return count + (!isEmpty && value !== initialState[key] ? 1 : 0);
+    if (compareToDefault) {
+      const normalized = isEmptyValue(value) ? undefined : value;
+      const normalizedDefault = isEmptyValue(initialState[key]) ? undefined : initialState[key];
+      return count + (normalized !== normalizedDefault ? 1 : 0);
+    }
+
+    return count + (!isEmptyValue(value) && value !== initialState[key] ? 1 : 0);
   }, 0);
 }

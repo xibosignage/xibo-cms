@@ -714,11 +714,11 @@ describe('Pre-populated Filter State (saved preferences)', () => {
 
   // S22
   test('retired from saved prefs is passed to useLayoutData after hydration', async () => {
-    renderWithSavedFilters({ retired: '1' });
+    renderWithSavedFilters({ retired: 1 });
 
     await waitFor(() => {
       const lastArgs = vi.mocked(useLayoutData).mock.calls.slice(-1)[0]?.[0];
-      expect(lastArgs?.advancedFilters?.retired).toBe('1');
+      expect(lastArgs?.advancedFilters?.retired).toBe(1);
     });
   });
 });

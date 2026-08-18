@@ -1566,7 +1566,7 @@ class Schedule implements \JsonSerializable
 
                 case 'Month':
                     // We use the difference to set the end date
-                    $difference = (int) $end->diffInSeconds($start);
+                    $difference = (int) $end->diffInSeconds($start, true);
 
                     // Are we repeating on the day of the month, or the day of the week
                     if ($this->recurrenceMonthlyRepeatsOn == 1) {
@@ -1684,6 +1684,32 @@ class Schedule implements \JsonSerializable
         }
 
         $this->pool->deleteItem($compKey);
+    }
+
+    /**
+     * Drop the event cache and notify affected display groups that this event has changed
+     * (e.g. after a schedule exclusion is added), mirroring the notify logic in save()/delete().
+     * setDisplayNotifyService() must have been called first, otherwise notification is skipped.
+     */
+    public function notifyDisplaysOfChange(): void
+    {
+        $this->dropEventCache();
+
+        if ($this->inScheduleLookAhead() && $this->displayNotifyService !== null) {
+            $this->getLog()->debug(
+                'Schedule changing is within the schedule look ahead, will notify '
+                . count($this->displayGroups) . ' display groups'
+            );
+            foreach ($this->displayGroups as $displayGroup) {
+                /* @var DisplayGroup $displayGroup */
+                $this
+                    ->getDisplayNotifyService()
+                    ->collectNow()
+                    ->notifyByDisplayGroupId($displayGroup->displayGroupId);
+            }
+        } else if ($this->displayNotifyService === null) {
+            $this->getLog()->info('Notify disabled, dependencies not set');
+        }
     }
 
     /**
