@@ -72,7 +72,7 @@ export interface LayoutFilterInput {
   ownerId?: string;
   ownerUserGroupId?: string;
   orientation?: string;
-  retired?: string;
+  retired?: number | null;
   layoutStatusId?: number | null;
   showDescriptionId?: number | null;
   mediaLike?: string;
@@ -93,7 +93,7 @@ export const LAYOUT_INITIAL_FILTER_STATE: LayoutFilterInput = {
   ownerId: '',
   ownerUserGroupId: '',
   orientation: '',
-  retired: '',
+  retired: 0,
   layoutStatusId: null,
   showDescriptionId: null,
   mediaLike: '',
@@ -197,6 +197,7 @@ export const getBaseFilterKeys = (
     name: 'retired',
     className: '',
     options: getCommonFormOptions(t).retired,
+    compareToDefault: true,
   },
   {
     label: t('Show'),

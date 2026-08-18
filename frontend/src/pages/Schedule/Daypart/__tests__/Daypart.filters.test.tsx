@@ -252,7 +252,7 @@ describe('Dayparting page - search and filters', () => {
     );
   });
 
-  // Reset empties the filter inputs (Name and Retired).
+  // Reset restores the filter inputs to their defaults (Name empty, Retired "No").
   test('clicking Reset clears the filter inputs', async () => {
     const user = userEvent.setup();
     renderDaypartPage();
@@ -278,7 +278,7 @@ describe('Dayparting page - search and filters', () => {
     await waitFor(() => {
       expect(screen.getByRole('textbox', { name: /^name$/i })).toHaveValue('');
     });
-    expect(screen.getByRole('combobox', { name: /^retired$/i })).toHaveValue('');
+    expect(screen.getByRole('combobox', { name: /^retired$/i })).toHaveValue('0');
   });
 
   // Reset clears the inputs but leaves the panel open.

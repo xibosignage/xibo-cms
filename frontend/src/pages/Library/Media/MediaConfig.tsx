@@ -71,7 +71,7 @@ export interface MediaFilterInput {
   ownerId?: string;
   ownerUserGroupId?: string;
   orientation?: string;
-  retired?: number;
+  retired?: number | null;
   lastModified?: string;
   exactTags?: boolean;
   folderId?: number;
@@ -121,6 +121,7 @@ export const INITIAL_FILTER_STATE: MediaFilterInput = {
   ownerId: '',
   ownerUserGroupId: '',
   orientation: '',
+  retired: 0,
   layoutId: null,
   lastModified: '',
   logicalOperatorName: 'OR',
@@ -196,6 +197,7 @@ export const getBaseFilterKeys = (
     label: t('Retired'),
     name: 'retired',
     options: getCommonFormOptions(t).retired,
+    compareToDefault: true,
   },
   {
     label: t('Layout ID'),

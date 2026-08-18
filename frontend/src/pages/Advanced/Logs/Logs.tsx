@@ -35,6 +35,7 @@ import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import InfoBanner from '@/components/ui/InfoBanner';
 import { notify } from '@/components/ui/Notification';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
@@ -100,6 +101,7 @@ export default function Logs() {
     hasNextPage,
     fetchNextPage,
     isError,
+    isPaused,
     error: queryError,
   } = useLogsData({
     advancedFilters: submittedFilter ?? INITIAL_FILTER_STATE,
@@ -196,11 +198,7 @@ export default function Logs() {
           onApply={handleApply}
         />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
-            {error}
-          </div>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         {hasNextPage && (
           <InfoBanner type="warning" className="w-full! mt-4 items-center">
