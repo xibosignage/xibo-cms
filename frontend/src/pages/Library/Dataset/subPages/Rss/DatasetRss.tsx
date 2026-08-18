@@ -32,6 +32,7 @@ import { DatasetRssModals } from './components/DatasetRssModals';
 import { useDatasetRssData } from './hooks/useDatasetRssData';
 
 import Button from '@/components/ui/Button';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
@@ -106,6 +107,7 @@ export default function DatasetRss() {
     data: queryData,
     isFetching,
     isError,
+    isPaused,
     error: queryError,
   } = useDatasetRssData({
     datasetId: datasetId!,
@@ -326,14 +328,7 @@ export default function DatasetRss() {
           </div>
         </div>
 
-        {error && (
-          <div
-            className="bg-red-50 border border-red-200 text-red-800 p-4 mb-4 rounded-lg"
-            role="alert"
-          >
-            {error}
-          </div>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         <div className="min-h-0 flex flex-col">
           {!isHydrated ? (

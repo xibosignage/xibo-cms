@@ -70,6 +70,7 @@ export const CAMPAIGN_INITIAL_FILTER_STATE: CampaignFilterInput = {
   layoutId: '',
   type: '',
   cyclePlaybackEnabled: '',
+  retired: 0,
   logicalOperatorName: 'OR',
   useRegexForName: false,
   logicalOperator: 'OR',
@@ -157,6 +158,7 @@ export const getCampaignFilterKeys = (
     label: t('Retired'),
     name: 'retired',
     options: getCommonFormOptions(t).retired,
+    compareToDefault: true,
   },
 ];
 

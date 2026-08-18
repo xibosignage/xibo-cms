@@ -247,9 +247,9 @@ function commonMeta(t: TFunction): FieldMetaMap {
         'If the geolocation of the Display is known, enable to record that location against each proof of play record.',
       ),
       inputType: 'checkbox',
-      // Legacy rendered this for Windows and Android (and Hisense, an
-      // Android-based type) — not Linux/lg/sssp/ChromeOS.
-      excludeTypes: ['linux', 'lg', 'sssp', 'chromeOS'],
+      // Legacy rendered this for Windows and Android (and Hisense, an Android-based type).
+      // For 4.5 - included Linux and ChromeOS. No support yet for lg/sssp.
+      excludeTypes: ['lg', 'sssp'],
     },
     // ---- Troubleshooting tab ----
     logLevel: {

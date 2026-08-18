@@ -74,8 +74,16 @@ export const useMediaData = ({
       const sortBy = sorting?.[0]?.id;
       const sortDir = sorting?.[0]?.desc ? 'desc' : 'asc';
 
-      const { lastModified, tags, mediaId, layoutId, exactTags, useRegexForName, ...restFilters } =
-        advancedFilters;
+      const {
+        lastModified,
+        tags,
+        mediaId,
+        layoutId,
+        exactTags,
+        useRegexForName,
+        retired,
+        ...restFilters
+      } = advancedFilters;
 
       const normalizedTags = tags && tags.length > 0 ? serializeTags(tags) : undefined;
 
@@ -89,6 +97,7 @@ export const useMediaData = ({
         ...((restFilters.media || filter) && { media: restFilters.media || filter }),
         ...(mediaId != null ? { mediaId } : {}),
         ...(layoutId != null ? { layoutId } : {}),
+        ...(retired != null ? { retired } : {}),
         ...(normalizedTags ? { tags: normalizedTags } : {}),
         ...(exactTags !== undefined ? { exactTags: exactTags ? 1 : 0 } : {}),
         ...(useRegexForName && advancedFilters.media && isValidRegex(advancedFilters.media)
