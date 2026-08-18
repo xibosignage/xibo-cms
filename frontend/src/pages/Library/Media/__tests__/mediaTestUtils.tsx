@@ -166,9 +166,9 @@ export const MEDIA_ITEMS_IN_DIFFERENT_FOLDERS = {
       },
       {
         mediaId: 2,
-        name: 'doc.pdf',
+        name: 'app-config.js',
         folderId: mockDesignFolder.id,
-        mediaType: 'generic',
+        mediaType: 'genericfile',
         userPermissions: { view: 1, edit: 1, delete: 1 },
       },
     ],

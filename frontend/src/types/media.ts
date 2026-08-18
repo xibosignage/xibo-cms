@@ -57,4 +57,11 @@ export interface Media {
   deleteOldRevisions: boolean;
 }
 
-export type MediaType = 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';
+export type MediaType =
+  | 'image'
+  | 'video'
+  | 'audio'
+  | 'pdf'
+  | 'genericfile'
+  | 'htmlpackage'
+  | 'powerpoint';
