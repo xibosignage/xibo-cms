@@ -22,7 +22,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { Plus } from 'lucide-react';
-import type { DateTime } from 'luxon';
+import { DateTime } from 'luxon';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -43,6 +43,7 @@ import { EventModals } from './components/EventModals';
 import { useEventActions } from './hooks/useEventActions';
 import { useEventData } from './hooks/useEventData';
 import { useEventFilterOptions } from './hooks/useEventFilterOptions';
+import { expandRecurringEvents } from './utils/expandRecurringEvents';
 
 import Button from '@/components/ui/Button';
 import FilterButton from '@/components/ui/FilterButton';
@@ -146,7 +147,12 @@ export default function Events() {
     };
   }, []);
 
+  const [dateRangeViewState, setDateRangeViewState] = useState<DateRangeControllerState | null>(
+    null,
+  );
+
   const handleDateRangeStateChange = (state: DateRangeControllerState) => {
+    setDateRangeViewState(state);
     pendingDateRangeState.current = state;
     if (dateRangeDebounceRef.current) {
       clearTimeout(dateRangeDebounceRef.current);
@@ -166,6 +172,7 @@ export default function Events() {
   const [agendaDayEvents, setAgendaDayEvents] = useState<Event[]>([]);
 
   const [itemsToDelete, setItemsToDelete] = useState<Event[]>([]);
+  const [isOccurrenceDeleteAllowed, setIsOccurrenceDeleteAllowed] = useState(false);
   const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
 
@@ -188,6 +195,48 @@ export default function Events() {
 
   const data = queryData?.rows ?? [];
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
+
+  // In Day view, resolve rows to their actual occurrence on the viewed day (or drop them if
+  // the recurrence doesn't land on that day, or it's been excluded). This mirrors
+  // the Calendar's own fetch-broad-then-resolve-client-side approach below.
+  const dayViewRange =
+    dateRangeViewState?.viewMode === 'day' && dateRangeViewState?.currentDate
+      ? {
+          start: DateTime.fromISO(dateRangeViewState.currentDate, { zone: timezone }).startOf(
+            'day',
+          ),
+          end: DateTime.fromISO(dateRangeViewState.currentDate, { zone: timezone }).endOf('day'),
+        }
+      : null;
+
+  const { data: dayViewQueryData, isFetching: isDayViewFetching } = useEventData({
+    pagination: { pageIndex: 0, pageSize: 500 },
+    sorting: [],
+    filter: '',
+    advancedFilters: filterInputs,
+    enabled: isHydrated && viewMode === 'table' && dayViewRange !== null,
+  });
+
+  const dayViewOccurrences = dayViewRange
+    ? expandRecurringEvents(
+        dayViewQueryData?.rows ?? [],
+        dayViewRange.start,
+        dayViewRange.end,
+        timezone,
+      )
+    : [];
+
+  const visibleData = dayViewRange
+    ? dayViewOccurrences.slice(
+        pagination.pageIndex * pagination.pageSize,
+        (pagination.pageIndex + 1) * pagination.pageSize,
+      )
+    : data;
+
+  const visibleRowCount = dayViewRange ? dayViewOccurrences.length : queryData?.totalCount || 0;
+  const visiblePageCount = dayViewRange
+    ? Math.max(1, Math.ceil(dayViewOccurrences.length / pagination.pageSize))
+    : pageCount;
 
   const { data: calendarQueryData, isFetching: isCalendarFetching } = useEventData({
     pagination: { pageIndex: 0, pageSize: 500 },
@@ -214,7 +263,8 @@ export default function Events() {
 
     setSelectionCache((prev) => {
       const next = { ...prev };
-      data.forEach((item) => {
+      // In Day view, rendered rows come from `dayViewOccurrences`, not `data`
+      (dayViewRange ? dayViewOccurrences : data).forEach((item) => {
         const id = getRowId(item);
         if (newSelection[id]) {
           next[id] = item;
@@ -224,8 +274,10 @@ export default function Events() {
     });
   };
 
+  // In Day view, a rendered row's eventId may not exist in `data` so that has to be checked too
   const selectedEvent =
     data.find((m) => m.eventId === selectedEventId) ??
+    dayViewOccurrences.find((m) => m.eventId === selectedEventId) ??
     calendarEvents.find((m) => m.eventId === selectedEventId) ??
     null;
   const existingNames = data.map((m) => m.name ?? '');
@@ -250,16 +302,23 @@ export default function Events() {
   });
 
   const handleDelete = (id: number) => {
-    const event = data.find((m) => m.eventId === id);
+    // In Day view, visibleData is already resolved to the specific occurrence on the viewed
+    // day (via expandRecurringEvents), so its fromDt/toDt are the correct delete-occurrence
+    // target. Any other view (week/month/etc.) can't identify a single occurrence, so
+    // whole-series delete only.
+    const isDayView = dateRangeViewState?.viewMode === 'day';
+    const event = (isDayView ? visibleData : data).find((m) => m.eventId === id);
     if (!event) return;
 
     setItemsToDelete([event]);
+    setIsOccurrenceDeleteAllowed(isDayView && !!event.recurringEvent);
     setDeleteError(null);
     openModal('delete');
   };
 
   const handleDeleteFromCalendar = (scheduleEvent: Event) => {
     setItemsToDelete([scheduleEvent]);
+    setIsOccurrenceDeleteAllowed(true);
     setDeleteError(null);
     openModal('delete');
   };
@@ -461,16 +520,16 @@ export default function Events() {
           ) : (
             <DataTable
               columns={columns}
-              data={data}
-              pageCount={pageCount}
-              rowCount={queryData?.totalCount || 0}
+              data={visibleData}
+              pageCount={visiblePageCount}
+              rowCount={visibleRowCount}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}
               onSortingChange={setSorting}
               globalFilter=""
               onGlobalFilterChange={() => {}}
-              loading={isFetching}
+              loading={dayViewRange ? isDayViewFetching : isFetching}
               rowSelection={rowSelection}
               onRowSelectionChange={handleRowSelectionChange}
               onRefresh={handleRefresh}
@@ -499,6 +558,7 @@ export default function Events() {
           displayGroups: agendaDisplayGroups,
           displaySpecificGroupIds: filterInputs.displaySpecificGroupIds ?? [],
           displayGroupIds: filterInputs.displayGroupIds ?? [],
+          isOccurrenceDeleteAllowed,
         }}
         selection={{
           selectedEvent,

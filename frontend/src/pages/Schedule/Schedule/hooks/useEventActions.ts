@@ -26,6 +26,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
 
 import { notify } from '@/components/ui/Notification';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { cloneEvent, deleteEvent, deleteEventOccurrence } from '@/services/eventApi';
 import type { Event } from '@/types/event';
 
@@ -42,6 +43,7 @@ export function useEventActions({
   closeModal,
   setRowSelection,
 }: UseEventActionsProps) {
+  const { formatDate } = useDateFormatter();
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isCloning, setIsCloning] = useState(false);
@@ -71,8 +73,13 @@ export function useEventActions({
         return;
       }
 
+      const recurrenceType = itemsToDelete.length === 1 ? itemsToDelete[0]?.recurrenceType : null;
+      const isSingleRecurringSeries = !!recurrenceType && recurrenceType !== 'None';
+
       notify.success(
-        t('{{count}} event(s) deleted successfully.', { count: itemsToDelete.length }),
+        isSingleRecurringSeries
+          ? t('The entire recurring event series was deleted successfully.')
+          : t('{{count}} event(s) deleted successfully.', { count: itemsToDelete.length }),
       );
       setRowSelection({});
       handleRefresh();
@@ -86,6 +93,11 @@ export function useEventActions({
     try {
       setIsDeleting(true);
       await deleteEventOccurrence(scheduleEvent.eventId, scheduleEvent.fromDt, scheduleEvent.toDt);
+      notify.success(
+        t('Occurrence on {{date}} removed', {
+          date: formatDate(new Date(scheduleEvent.fromDt * 1000)),
+        }),
+      );
       handleRefresh();
       closeModal();
     } catch (error) {
