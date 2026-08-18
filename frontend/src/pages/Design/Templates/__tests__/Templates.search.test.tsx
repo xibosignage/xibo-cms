@@ -104,6 +104,18 @@ const mockTemplatesData = (rawData: { rows: unknown[]; totalCount: number }) => 
 // Tests
 // =============================================================================
 
+// useTableState disables the Filters button until it has hydrated (page prefs
+// AND the folder-id preference). findByRole matches the disabled button too,
+// so clicking as soon as it's found — before it's enabled — is a no-op.
+const openFilters = async () => {
+  const filtersButton = await screen.findByRole('button', { name: 'Filters' });
+  await waitFor(() => expect(filtersButton).toBeEnabled());
+
+  await act(async () => {
+    fireEvent.click(filtersButton);
+  });
+};
+
 describe('Templates page - search and pagination', () => {
   beforeEach(() => {
     testQueryClient.clear();
@@ -194,9 +206,7 @@ describe('Templates page - search and pagination', () => {
     // Open the filter panel, then pick "Published" from the Published Status dropdown.
     renderTemplatesPage();
 
-    await act(async () => {
-      fireEvent.click(await screen.findByRole('button', { name: 'Filters' }));
-    });
+    await openFilters();
 
     const statusLabel = screen.getByText('Published Status');
     const statusContainer = statusLabel.closest('div')!;
@@ -221,9 +231,7 @@ describe('Templates page - search and pagination', () => {
     // Open the filter panel, select a filter value, then click Reset.
     renderTemplatesPage();
 
-    await act(async () => {
-      fireEvent.click(await screen.findByRole('button', { name: 'Filters' }));
-    });
+    await openFilters();
 
     // Select Published Status = Published to set a non-default filter value.
     const statusLabel = screen.getByText('Published Status');

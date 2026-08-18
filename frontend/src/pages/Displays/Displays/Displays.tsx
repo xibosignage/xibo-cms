@@ -61,6 +61,7 @@ import type { Display } from '@/types/display';
 import type { Tag } from '@/types/tag';
 import { countActiveFilters } from '@/utils/filters';
 import { hasFeature } from '@/utils/permissions';
+import { isPreferenceEnabled } from '@/utils/preferences';
 import { toggleTag } from '@/utils/tags';
 
 export default function Displays() {
@@ -270,6 +271,9 @@ export default function Displays() {
     handleRefresh,
     closeModal,
     setRowSelection,
+    showThumbnailColumn: isPreferenceEnabled(user?.settings?.showThumbnailColumn, true),
+    revealThumbnailColumns: () =>
+      setColumnVisibility((prev) => ({ ...prev, screenShotRequested: true, thumbnail: true })),
   });
 
   const { guard } = useAutoSubmit();

@@ -151,12 +151,19 @@ describe('Users page - render', () => {
   // Loading pulse
   // ---------------------------------------------------------------------------
   test('shows "Loading your preferences..." when the page is not yet hydrated', async () => {
+    // useTableState fetches two independent keys on mount: the page prefs
+    // ('users_page') and the folder-id ('globalSelectedFolderId'). Only the
+    // page-prefs fetch should stay pending here — the folder-id fetch must
+    // resolve immediately or it never reaches its own hydrated state.
     let resolvePref!: (v: null) => void;
-    vi.mocked(fetchUserPreference).mockReturnValueOnce(
-      new Promise<null>((res) => {
-        resolvePref = res;
-      }),
-    );
+    vi.mocked(fetchUserPreference).mockImplementation((key: string) => {
+      if (key === 'users_page') {
+        return new Promise<null>((res) => {
+          resolvePref = res;
+        });
+      }
+      return Promise.resolve(null);
+    });
 
     renderWithPendingPrefs();
 
