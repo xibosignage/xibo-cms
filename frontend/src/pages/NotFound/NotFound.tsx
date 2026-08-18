@@ -19,12 +19,15 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { Trans, useTranslation } from 'react-i18next';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { ArrowLeft, SearchX } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+
+import Button from '@/components/ui/Button';
+import { BrandingProvider } from '@/context/BrandingContext';
 
 export default function NotFound() {
   const { t } = useTranslation();
-  const { pathname } = useLocation();
   const navigate = useNavigate();
 
   const handleBack = () => {
@@ -33,30 +36,28 @@ export default function NotFound() {
   };
 
   return (
-    <section className="flex min-h-[60vh] flex-col items-center justify-center gap-6 text-center">
-      <div>
-        <p className="text-sm uppercase tracking-widest text-gray-500">{t('Error 404')}</p>
-        <h1 className="mt-1 text-3xl font-semibold">{t('Page not found')}</h1>
-        <p className="mt-2 text-gray-600">
-          <Trans
-            i18nKey="We couldn’t find <path>{{path}}</path>."
-            values={{ path: pathname }}
-            components={{ path: <span className="font-mono text-gray-800" /> }}
-          />
-        </p>
-      </div>
+    <BrandingProvider>
+      <section className="flex min-h-screen flex-col items-center justify-center gap-3 text-center">
+        <div className="inline-flex justify-center items-center size-15.5 rounded-full bg-xibo-blue-100 text-xibo-blue-800 border-7 border-xibo-blue-50">
+          <SearchX className="shrink-0 size-6" />
+        </div>
 
-      <div className="flex flex-wrap items-center justify-center gap-3">
-        <button
-          onClick={handleBack}
-          className="rounded-md cursor-pointer hover:text-sky-900 border px-4 py-2"
-        >
-          {t('Go back')}
-        </button>
-        <Link to="/" className="rounded-md bg-gray-900 hover:bg-gray-700 px-4 py-2 text-white">
-          {t('Go home')}
-        </Link>
-      </div>
-    </section>
+        <div>
+          <h1 className="text-4xl font-bold text-gray-800">{t('Page not found')}</h1>
+          <p className="mt-3 text-gray-500">
+            {t('Sorry, the page you are looking for could not be found.')}
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <Button variant="secondary" leftIcon={ArrowLeft} onClick={handleBack}>
+            {t('Go back')}
+          </Button>
+          <Button variant="primary" onClick={() => navigate('/')}>
+            {t('Go to Dashboard')}
+          </Button>
+        </div>
+      </section>
+    </BrandingProvider>
   );
 }
