@@ -160,8 +160,8 @@ class PermissionFactory extends BaseFactory
      * @param User $user
      * @param string $entity
      * @param int $objectId
-     * @param array[string] $sortOrder
-     * @param array[mixed] $filterBy
+     * @param array $sortOrder [string] $sortOrder
+     * @param array $filterBy [mixed] $filterBy
      * @return Permission[]
      * @throws NotFoundException
      */
@@ -280,8 +280,7 @@ class PermissionFactory extends BaseFactory
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             [],
-            $customColumns,
-            ['resolution ASC']
+            $customColumns
         );
 
         $order = !empty($sortOrder)

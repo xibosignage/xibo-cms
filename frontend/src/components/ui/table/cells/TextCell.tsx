@@ -19,7 +19,19 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
+import {
+  useFloating,
+  autoUpdate,
+  offset,
+  flip,
+  shift,
+  useHover,
+  useDismiss,
+  useInteractions,
+  FloatingPortal,
+  safePolygon,
+} from '@floating-ui/react';
+import React, { useRef, useState } from 'react';
 
 interface TextProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
@@ -39,14 +51,61 @@ export function TextCell({
   wrap = false,
   ...props
 }: TextProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const textRef = useRef<HTMLSpanElement>(null);
+
+  const { refs, floatingStyles, context } = useFloating({
+    open: isOpen,
+    onOpenChange: (open) => {
+      if (open && textRef.current) {
+        if (textRef.current.scrollWidth <= textRef.current.clientWidth) {
+          return;
+        }
+      }
+      setIsOpen(open);
+    },
+    placement: 'bottom-start',
+    whileElementsMounted: autoUpdate,
+    middleware: [offset(4), flip(), shift()],
+  });
+
+  const hover = useHover(context, {
+    delay: { open: 300, close: 0 },
+    handleClose: safePolygon(),
+  });
+  const dismiss = useDismiss(context);
+  const { getReferenceProps, getFloatingProps } = useInteractions([hover, dismiss]);
+
+  const showTooltip = truncate && typeof children === 'string';
+
   return (
-    <div className={`flex items-center w-full min-w-0 gap-2 ${className}`} {...props}>
+    <div
+      className={`flex items-center w-full min-w-0 gap-2 ${className}`}
+      ref={showTooltip ? refs.setReference : undefined}
+      {...(showTooltip ? getReferenceProps() : {})}
+      {...props}
+    >
       <span
+        ref={textRef}
         className={`text-gray-800 text-sm ${truncate ? 'truncate' : ''} ${wrap ? 'min-w-0 break-words whitespace-normal' : ''} ${weight === 'bold' ? 'font-semibold' : ''}`}
       >
         {children}
       </span>
       {subtext && <span className="text-gray-500 text-sm">{subtext}</span>}
+      {showTooltip && (
+        <FloatingPortal>
+          {isOpen && (
+            <div
+              ref={refs.setFloating}
+              style={floatingStyles}
+              {...getFloatingProps()}
+              className="z-9999 max-w-80 p-2 bg-white shadow-xl rounded-lg border border-gray-100 dark:bg-neutral-800 dark:border-neutral-700"
+            >
+              <p className="text-sm text-gray-800 whitespace-normal wrap-break-word">{children}</p>
+            </div>
+          )}
+        </FloatingPortal>
+      )}
     </div>
   );
 }

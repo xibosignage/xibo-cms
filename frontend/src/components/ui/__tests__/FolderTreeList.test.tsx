@@ -21,7 +21,7 @@
 
 // =============================================================================
 // Test type: Component unit test
-// Mocks: folderApi, UserContext
+// Mocks: folderApi, userApi, UserContext
 // Tests: tab visibility, home folder icon, search debounce, context menu share
 // =============================================================================
 
@@ -37,6 +37,14 @@ vi.mock('@/services/folderApi', () => ({
   fetchFolderTree: vi.fn(),
   searchFolders: vi.fn(),
   fetchContextButtons: vi.fn(),
+}));
+
+// FolderTreeList hydrates its expanded-folder state on mount via
+// fetchUserPreference, independently of folderApi — without this mock the
+// real implementation fires a real (failing) network request in jsdom.
+vi.mock('@/services/userApi', () => ({
+  fetchUserPreference: vi.fn().mockResolvedValue(null),
+  saveUserPreference: vi.fn().mockResolvedValue(undefined),
 }));
 
 import FolderTreeList from '../FolderTreeList';
