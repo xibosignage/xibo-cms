@@ -97,8 +97,8 @@ export default function Welcome() {
       <section className="flex py-20 bg-[radial-gradient(80%_60%_at_50%_-10%,rgba(99,102,241,0.18)_0%,rgba(0,0,0,0)_100%)]">
         <div className="flex flex-col items-center max-w-234.5 mx-auto">
           <h2 className="mb-1 text-3xl font-bold text-gray-900">
-            {t('Welcome to the {{productName}} CMS', {
-              productName: user?.branding?.productName ?? 'Xibo',
+            {t('Welcome to the {{appName}} CMS', {
+              appName: user?.branding?.appName ?? 'Xibo',
             })}
           </h2>
           <p className="text-gray-600">
