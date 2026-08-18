@@ -569,7 +569,10 @@ export default function ScheduleEventModal({
 
     fetchEventById(event.eventId)
       .then((enriched) => {
-        setDraft(createDraftFromEvent(enriched));
+        setDraft((prev) => ({
+          ...createDraftFromEvent(enriched),
+          syncDisplayLayouts: prev.syncDisplayLayouts,
+        }));
       })
       .catch(() => {});
   }, [isOpen, isEditMode, event]);
