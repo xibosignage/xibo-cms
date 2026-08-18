@@ -34,7 +34,7 @@ interface SyncGroupModalsProps {
     handleRefresh: () => void;
     setSyncGroupList: React.Dispatch<React.SetStateAction<SyncGroup[]>>;
     openMembersForSyncGroup: (syncGroup: SyncGroup) => void;
-    openEditForSyncGroup: () => void;
+    openEditForSyncGroup: (syncGroup: SyncGroup) => void;
     deleteError: string | null;
     isDeleting: boolean;
   };
@@ -86,7 +86,16 @@ export function SyncGroupModals({ actions, selection, handlers }: SyncGroupModal
           syncGroup={selection.selectedSyncGroup}
           onClose={actions.closeModal}
           onSuccess={actions.handleRefresh}
-          onNeedsLeadDisplay={actions.openEditForSyncGroup}
+          onNeedsLeadDisplay={() => {
+            if (selection.selectedSyncGroup) {
+              actions.openEditForSyncGroup(selection.selectedSyncGroup);
+            }
+          }}
+          onAfterSave={
+            selection.selectedSyncGroup && !selection.selectedSyncGroup.leadDisplayId
+              ? () => actions.openEditForSyncGroup(selection.selectedSyncGroup!)
+              : undefined
+          }
         />
       )}
 

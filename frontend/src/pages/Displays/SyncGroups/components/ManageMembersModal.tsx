@@ -39,6 +39,7 @@ interface ManageMembersModalProps {
   syncGroup: SyncGroup | null;
   onClose: () => void;
   onSuccess: () => void;
+  onAfterSave?: () => void;
   onNeedsLeadDisplay?: () => void;
 }
 
@@ -47,6 +48,7 @@ export default function ManageMembersModal({
   syncGroup,
   onClose,
   onSuccess,
+  onAfterSave,
   onNeedsLeadDisplay,
 }: ManageMembersModalProps) {
   const { t } = useTranslation();
@@ -154,7 +156,11 @@ export default function ManageMembersModal({
     if (!syncGroupId) return;
 
     if (displaysToAdd.length === 0 && displaysToRemove.length === 0) {
-      onClose();
+      if (onAfterSave) {
+        onAfterSave();
+      } else {
+        onClose();
+      }
       return;
     }
 

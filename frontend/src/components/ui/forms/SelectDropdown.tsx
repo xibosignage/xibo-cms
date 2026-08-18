@@ -196,7 +196,7 @@ export default function SelectDropdown({
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [isOpen, hasMore]);
+  }, [isOpen, hasMore, isLoadingMore]);
 
   for (const o of options) {
     labelCache.current.set(o.value, o.label);
@@ -320,7 +320,7 @@ export default function SelectDropdown({
               id={`${id}-listbox`}
               role="listbox"
               ref={scrollContainerRef}
-              className="flex flex-col p-2 text-sm overflow-y-auto flex-1 min-h-0"
+              className="flex flex-col p-2 text-sm overflow-y-auto flex-1 min-h-0 max-h-80"
             >
               {clearable && (
                 <button

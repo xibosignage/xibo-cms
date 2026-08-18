@@ -464,7 +464,11 @@ export const getEventColumns = (props: EventActionsProps): ColumnDef<Event>[] =>
       header: t('Event'),
       size: 200,
       cell: ({ row }) => (
-        <TextCell truncate>{row.original.campaign ?? row.original.command ?? '—'}</TextCell>
+        <TextCell truncate>
+          {row.original.eventTypeId === EventTypeId.Sync
+            ? (row.original.syncGroupName ?? '—')
+            : (row.original.campaign ?? row.original.command ?? '—')}
+        </TextCell>
       ),
     },
     {
@@ -479,7 +483,9 @@ export const getEventColumns = (props: EventActionsProps): ColumnDef<Event>[] =>
       size: 200,
       cell: ({ row }) => (
         <TextCell>
-          {row.original.displayGroups.map((dg) => dg.displayGroup).join(', ') || '—'}
+          {row.original.eventTypeId === EventTypeId.Sync
+            ? (row.original.syncGroupName ?? '—')
+            : row.original.displayGroups.map((dg) => dg.displayGroup).join(', ') || '—'}
         </TextCell>
       ),
     },
