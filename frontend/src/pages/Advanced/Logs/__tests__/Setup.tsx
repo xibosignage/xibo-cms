@@ -19,12 +19,14 @@ vi.mock('@/hooks/useFilteredTabs', () => ({
   useFilteredTabs: vi.fn(() => [{ name: 'Log', path: '/advanced/log' }]),
 }));
 
-// Mock ResizeObserver used by DataTable column resizing
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+// Mock ResizeObserver used by DataTable column resizing. Must be a real class (not an
+// arrow-function-backed vi.fn()) so `new ResizeObserver(...)` works when Preline's
+// floating-ui autoUpdate (used by the DateFilter tooltip) constructs one.
+global.ResizeObserver = class {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+};
 
 // --- Mock Data ---
 
