@@ -31,7 +31,7 @@ import {
   useInteractions,
   FloatingPortal,
 } from '@floating-ui/react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Info } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
@@ -49,6 +49,7 @@ type DateFilterProps = {
   isJalali?: boolean;
   className?: string;
   showTimePicker?: boolean;
+  tooltip?: string;
 };
 
 export default function DateFilter({
@@ -59,6 +60,7 @@ export default function DateFilter({
   isJalali = false,
   className,
   showTimePicker = true,
+  tooltip,
 }: DateFilterProps) {
   const { t } = useTranslation();
   const { formatDate, dateFormat } = useDateFormatter();
@@ -107,7 +109,26 @@ export default function DateFilter({
         className,
       )}
     >
-      <label className="text-sm font-semibold text-gray-500 leading-5">{label}</label>
+      <div className="flex items-center gap-1">
+        <label className="text-sm font-semibold text-gray-500 leading-5">{label}</label>
+        {tooltip && (
+          <div className="hs-tooltip inline-block">
+            <button
+              type="button"
+              className="hs-tooltip-toggle block text-gray-400 hover:text-gray-600"
+            >
+              <Info className="size-3.5" />
+
+              <span
+                className="hs-tooltip-content hs-tooltip-shown:opacity-80 hs-tooltip-shown:visible opacity-0 transition-opacity inline-block absolute invisible z-10 p-2 bg-gray-900 text-xs font-medium text-white rounded shadow-sm"
+                role="tooltip"
+              >
+                {tooltip}
+              </span>
+            </button>
+          </div>
+        )}
+      </div>
       <button
         ref={refs.setReference}
         {...getReferenceProps()}

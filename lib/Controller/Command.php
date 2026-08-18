@@ -116,7 +116,15 @@ class Command extends Base
         required: false,
         schema: new OA\Schema(
             type: 'string',
-            enum: ['commandId', 'command', 'code', 'description', 'groupsWithPermissions']
+            enum: [
+                'commandId',
+                'command',
+                'code',
+                'description',
+                'availableOn',
+                'createAlertOn',
+                'groupsWithPermissions',
+            ]
         )
     )]
     #[OA\Parameter(

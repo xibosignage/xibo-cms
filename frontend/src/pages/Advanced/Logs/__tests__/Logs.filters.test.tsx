@@ -76,10 +76,10 @@ describe('Logs Page - Filters', () => {
     expect(screen.getByRole('button', { name: /apply filter/i })).toBeInTheDocument();
   });
 
-  it('shows the From Date label when the page loads', () => {
+  it('shows the Date label when the page loads', () => {
     renderWithProviders(<Logs />);
 
-    expect(screen.getByText('From Date')).toBeInTheDocument();
+    expect(screen.getByText('Date')).toBeInTheDocument();
   });
 
   it('shows the Duration Back label when the page loads', () => {
@@ -94,10 +94,10 @@ describe('Logs Page - Filters', () => {
     expect(screen.getByText('Level')).toBeInTheDocument();
   });
 
-  it('shows the Run No label when the page loads', () => {
+  it('shows the Run label when the page loads', () => {
     renderWithProviders(<Logs />);
 
-    expect(screen.getByText('Run No')).toBeInTheDocument();
+    expect(screen.getByText('Run')).toBeInTheDocument();
   });
 
   it('shows the Display label when the page loads', () => {

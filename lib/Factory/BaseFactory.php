@@ -542,26 +542,39 @@ class BaseFactory
             $columnMapping[$col] = $name;
         }
 
-        $order = [];
+        $mapSort = function (array $sortList) use ($columnMapping): array {
+            $mapped = [];
 
-        foreach ($sortOrder ?? $defaultSort as $sort) {
-            // Separate sort by and sort order
-            $sortArr = explode(' ', trim($sort), 2);
+            foreach ($sortList as $sort) {
+                // Separate sort by and sort order
+                $sortArr = explode(' ', trim($sort), 2);
 
-            // Trim and sanitize sort by and normalize (remove table name if existing)
-            $columnParts = explode('.', str_replace('`', '', trim($sortArr[0])));
-            $column = end($columnParts);
+                // Trim and sanitize sort by and normalize (remove table name if existing)
+                $columnParts = explode('.', str_replace('`', '', trim($sortArr[0])));
+                $column = end($columnParts);
 
-            // Check against the allowed columns
-            if (!isset($columnMapping[$column])) {
-                continue;
+                // Check against the allowed columns
+                if (!isset($columnMapping[$column])) {
+                    continue;
+                }
+
+                $dir = (isset($sortArr[1]) && strtoupper(trim($sortArr[1])) === 'DESC')
+                    ? ' DESC'
+                    : ' ASC';
+
+                $mapped[] = $columnMapping[$column] . $dir;
             }
 
-            $dir = (isset($sortArr[1]) && strtoupper(trim($sortArr[1])) === 'DESC')
-                ? ' DESC'
-                : ' ASC';
+            return $mapped;
+        };
 
-            $order[] = $columnMapping[$column] . $dir;
+        $order = $mapSort($sortOrder ?? $defaultSort);
+
+        // If a sort was explicitly requested but none of its columns were valid (e.g. an
+        // unsupported sortBy), fall back to the default sort rather than leaving the result
+        // set effectively unordered (aside from the tiebreaker below).
+        if ($sortOrder !== null && empty($order)) {
+            $order = $mapSort($defaultSort);
         }
 
         // Append the unique column as a tiebreaker so rows sharing the same value in the

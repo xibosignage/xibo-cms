@@ -58,6 +58,7 @@ describe('useDisplaysActions - handleConfirmMove', () => {
   const mockHandleRefresh = vi.fn();
   const mockCloseModal = vi.fn();
   const mockSetRowSelection = vi.fn();
+  const mockRevealThumbnailColumns = vi.fn();
 
   const renderActions = () =>
     renderHook(
@@ -67,6 +68,8 @@ describe('useDisplaysActions - handleConfirmMove', () => {
           handleRefresh: mockHandleRefresh,
           closeModal: mockCloseModal,
           setRowSelection: mockSetRowSelection,
+          showThumbnailColumn: false,
+          revealThumbnailColumns: mockRevealThumbnailColumns,
         }),
       { wrapper: ({ children }) => <MemoryRouter>{children}</MemoryRouter> },
     );
