@@ -116,6 +116,7 @@ interface SyncDisplayTableMeta {
   ) => void;
   onSyncLayoutSearch: (displayId: number, term: string) => void;
   onSyncLayoutLoadMore: (displayId: number) => void;
+  resolveSyncLayoutLabel: (value: string) => Promise<string>;
 }
 
 interface ScheduleEventModalProps {
@@ -1332,6 +1333,11 @@ export default function ScheduleEventModal({
     onClose();
   };
 
+  const resolveSyncLayoutLabel = async (value: string): Promise<string> => {
+    const { rows } = await fetchLayouts({ start: 0, length: 1, layoutId: Number(value) });
+    return rows[0]?.layout ?? '';
+  };
+
   const setSyncDisplayLayout = (displayId: number, layoutId: number, isLead: boolean) => {
     if (!isLead && syncMirror) {
       setSyncMirror(false);
@@ -1428,6 +1434,7 @@ export default function ScheduleEventModal({
                   onLoadMore={() => meta.onSyncLayoutLoadMore(row.original.displayId)}
                   hasMore={rowHasMore}
                   isLoadingMore={rowIsLoadingMore}
+                  resolveLabel={meta.resolveSyncLayoutLabel}
                 />
               </div>
               {isLead && (
@@ -1704,6 +1711,7 @@ export default function ScheduleEventModal({
                         setSyncMirrorForLead,
                         onSyncLayoutSearch: handleSyncLayoutSearch,
                         onSyncLayoutLoadMore: loadMoreSyncLayoutsForDisplay,
+                        resolveSyncLayoutLabel,
                       } satisfies SyncDisplayTableMeta
                     }
                   />
