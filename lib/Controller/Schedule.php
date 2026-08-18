@@ -95,21 +95,24 @@ class Schedule extends Base
     #[OA\Parameter(name: 'singlePointInTime', in: 'query', required: false, schema: new OA\Schema(type: 'integer'))]
     #[OA\Parameter(
         name: 'date',
-        description: 'Date in Y-m-d H:i:s',
+        description: 'Date in Y-m-d H:i:s. Required when singlePointInTime=1, otherwise ignored. '
+            . 'One of date, or startDate/endDate must be supplied, or a 422 is returned.',
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
         name: 'startDate',
-        description: 'Date in Y-m-d H:i:s',
+        description: 'Date in Y-m-d H:i:s. Required together with endDate when singlePointInTime is not set. '
+            . 'One of date, or startDate/endDate must be supplied, or a 422 is returned.',
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
         name: 'endDate',
-        description: 'Date in Y-m-d H:i:s',
+        description: 'Date in Y-m-d H:i:s. Required together with startDate when singlePointInTime is not set. '
+            . 'One of date, or startDate/endDate must be supplied, or a 422 is returned.',
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'string')
@@ -119,14 +122,15 @@ class Schedule extends Base
      * Event List
      * @param Request $request
      * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @param int $id
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
+     * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws ControllerNotImplemented
      */
-    public function eventList(Request $request, Response $response, $id): Response|ResponseInterface
+    public function eventList(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -142,9 +146,20 @@ class Schedule extends Base
         if ($singlePointInTime == 1) {
             $startDate = $sanitizedParams->getDate('date');
             $endDate = $sanitizedParams->getDate('date');
+
+            if ($startDate === null) {
+                throw new InvalidArgumentException(__('Please enter a date'), 'date');
+            }
         } else {
             $startDate = $sanitizedParams->getDate('startDate');
             $endDate = $sanitizedParams->getDate('endDate');
+
+            if ($startDate === null) {
+                throw new InvalidArgumentException(__('Please enter a start date'), 'startDate');
+            }
+            if ($endDate === null) {
+                throw new InvalidArgumentException(__('Please enter an end date'), 'endDate');
+            }
         }
 
         // Reset the seconds
@@ -640,7 +655,7 @@ class Schedule extends Base
      *
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws NotFoundException
@@ -960,7 +975,7 @@ class Schedule extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
@@ -1155,7 +1170,7 @@ class Schedule extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
@@ -1617,7 +1632,7 @@ class Schedule extends Base
      * @param Request $request
      * @param Response $response
      * @param int $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
