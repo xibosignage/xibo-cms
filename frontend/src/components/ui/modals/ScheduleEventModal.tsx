@@ -301,8 +301,8 @@ export default function ScheduleEventModal({
   const canFinish = (currentStep >= 1 || isEditMode) && (hasDisplays || isSyncType);
 
   const isCommandEvent = draft.eventTypeId === EventTypeId.Command;
-  const isAlwaysDaypart = draft.dayPartId === alwaysDayPartId;
-  const isCustomDaypart = draft.dayPartId === customDayPartId;
+  const isAlwaysDaypart = !!alwaysDayPartId && draft.dayPartId === alwaysDayPartId;
+  const isCustomDaypart = !!customDayPartId && draft.dayPartId === customDayPartId;
   const isNamedDaypart = draft.dayPartId !== '' && !isAlwaysDaypart && !isCustomDaypart;
   const showRepeatReminder = !isAlwaysDaypart && draft.dayPartId !== '';
 
@@ -315,6 +315,9 @@ export default function ScheduleEventModal({
     }
     if (isCustomDaypart && !draft.useRelativeTime) {
       return !!draft.fromDt && !!draft.toDt;
+    }
+    if (isNamedDaypart) {
+      return !!draft.fromDt;
     }
     return true;
   })();
@@ -889,6 +892,17 @@ export default function ScheduleEventModal({
     setDraft((prev) => ({ ...prev, [key]: value }));
   };
 
+  const clearDaypartTimeErrors = () => {
+    const rest = { ...formErrors };
+    delete rest.dayPartId;
+    delete rest.fromDt;
+    delete rest.toDt;
+    delete rest.relativeHours;
+    setFormErrors(rest);
+    const remaining = Object.values(rest).filter(Boolean) as string[];
+    setApiError(remaining.length > 0 ? remaining.join(' · ') : undefined);
+  };
+
   const updateCriterion = (index: number, field: keyof DraftCriterion, value: string) => {
     setDraft((prev) => {
       const criteria = prev.criteria.map((c, i) =>
@@ -955,7 +969,7 @@ export default function ScheduleEventModal({
     setApiError(undefined);
     setFormErrors({});
 
-    const schema = getScheduleEventSchema(t);
+    const schema = getScheduleEventSchema(t, customDayPartId, alwaysDayPartId);
     const result = schema.safeParse(draft);
 
     if (!result.success) {
@@ -1341,25 +1355,40 @@ export default function ScheduleEventModal({
                 })}
                 onSelect={(value) => {
                   const newType = Number(value) as EventTypeId;
-                  setDraft((prev) => ({
-                    ...prev,
-                    eventTypeId: newType,
-                    campaignId: null,
-                    commandId: null,
-                    mediaId: null,
-                    playlistId: null,
-                    syncGroupId: null,
-                    dataSetId: null,
-                    dataSetParams: '',
-                    syncDisplayLayouts: {},
-                    actionType: '',
-                    actionTriggerCode: '',
-                    actionLayoutCode: '',
-                    shareOfVoice: 0,
-                  }));
+                  setDraft((prev) => {
+                    const wasCommandEvent = prev.eventTypeId === EventTypeId.Command;
+                    return {
+                      ...prev,
+                      eventTypeId: newType,
+                      campaignId: null,
+                      commandId: null,
+                      mediaId: null,
+                      playlistId: null,
+                      syncGroupId: null,
+                      dataSetId: null,
+                      dataSetParams: '',
+                      syncDisplayLayouts: {},
+                      actionType: '',
+                      actionTriggerCode: '',
+                      actionLayoutCode: '',
+                      shareOfVoice: 0,
+                      ...(wasCommandEvent && newType !== EventTypeId.Command
+                        ? {
+                            dayPartId: '',
+                            fromDt: '',
+                            toDt: '',
+                            useRelativeTime: false,
+                            relativeHours: 0,
+                            relativeMinutes: 0,
+                            relativeSeconds: 0,
+                          }
+                        : {}),
+                    };
+                  });
                   clearTimeout(contentSearchTimerRef.current);
                   setContentDebouncedSearch('');
                   setContentOptions([]);
+                  clearDaypartTimeErrors();
                 }}
                 placeholder={t('Select Event Type')}
                 error={formErrors.eventTypeId}
@@ -1592,7 +1621,10 @@ export default function ScheduleEventModal({
                   label={t('Dayparting')}
                   value={draft.dayPartId}
                   options={daypartOptions}
-                  onSelect={(value) => updateDraft('dayPartId', value)}
+                  onSelect={(value) => {
+                    updateDraft('dayPartId', value);
+                    clearDaypartTimeErrors();
+                  }}
                   placeholder={t('Select Daypart')}
                   helpText={t(
                     'Select how this event recurs. Choose Always for continuous playback or Custom to define specific times.',
@@ -1664,6 +1696,7 @@ export default function ScheduleEventModal({
                       onChange={(value) => updateDraft('fromDt', value)}
                       helpText={t('Select the start time for this event.')}
                       showTimePicker={false}
+                      error={formErrors.fromDt}
                     />
                   )}
 
