@@ -134,6 +134,10 @@
     "flatted": "^3.4.2",
     "brace-expansion": "^1.1.18",
     "picomatch": "^2.3.2",
-    "fast-uri": "^3.1.5"
+    "fast-uri": "^3.1.5",
+    "nanoid": "3.3.18",
+    "@xibosignage/xibo-layout-renderer": {
+      "nanoid": "5.1.16"
+    }
   }
 }
