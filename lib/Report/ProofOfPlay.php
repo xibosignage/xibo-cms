@@ -273,7 +273,7 @@ class ProofOfPlay implements ReportInterface
         $mediaIds = $sanitizedParams->getIntArray('mediaId', ['default' => []]);
         $type = strtolower($sanitizedParams->getString('type') ?? '');
         $tags = $sanitizedParams->getString('tags');
-        $tagsType = $sanitizedParams->getString('tagsType');
+        $tagsType = $sanitizedParams->getString('tagsType', ['default' => 'dg']);
         $exactTags = $sanitizedParams->getCheckbox('exactTags');
         $operator = $sanitizedParams->getString('logicalOperator', ['default' => 'OR']);
         $parentCampaignId = $sanitizedParams->getInt('parentCampaignId');
