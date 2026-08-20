@@ -52,6 +52,7 @@ import {
   ActionsCell,
   MediaCell,
   TagsCell,
+  toDisplayTags,
   DescriptionCell,
   getSharingColumn,
 } from '@/components/ui/table/cells';
@@ -61,6 +62,7 @@ import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
 import type { DateLike } from '@/utils/date';
 import { formatDuration } from '@/utils/formatters';
+import { formatTagsForExport } from '@/utils/tags';
 
 export interface LayoutFilterInput {
   campaignId?: number | null;
@@ -70,7 +72,7 @@ export interface LayoutFilterInput {
   ownerId?: string;
   ownerUserGroupId?: string;
   orientation?: string;
-  retired?: string;
+  retired?: number | null;
   layoutStatusId?: number | null;
   showDescriptionId?: number | null;
   mediaLike?: string;
@@ -91,7 +93,7 @@ export const LAYOUT_INITIAL_FILTER_STATE: LayoutFilterInput = {
   ownerId: '',
   ownerUserGroupId: '',
   orientation: '',
-  retired: '',
+  retired: 0,
   layoutStatusId: null,
   showDescriptionId: null,
   mediaLike: '',
@@ -195,6 +197,7 @@ export const getBaseFilterKeys = (
     name: 'retired',
     className: '',
     options: getCommonFormOptions(t).retired,
+    compareToDefault: true,
   },
   {
     label: t('Show'),
@@ -210,6 +213,7 @@ export const getBaseFilterKeys = (
     name: 'showDescriptionId',
     className: '',
     options: [
+      { label: t('Markdown'), value: 1 },
       { label: t('1st line'), value: 2 },
       { label: t('Widget List'), value: 3 },
     ],
@@ -272,6 +276,8 @@ export interface LayoutActionsProps {
   openEnableStatsModal?: (layout: Layout) => void;
   openScheduleModal?: (layout: Layout) => void;
   showDescriptionId?: number | null;
+  onTagClick?: (tag: Tag) => void;
+  selectedTagIds?: (string | number)[];
 }
 
 export const getLayoutItemActions = ({
@@ -503,7 +509,14 @@ export const getLayoutItemActions = ({
 };
 
 export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[] => {
-  const { t, showDescriptionId, formatDateTime, canTag = false } = props;
+  const {
+    t,
+    showDescriptionId,
+    formatDateTime,
+    canTag = false,
+    onTagClick,
+    selectedTagIds,
+  } = props;
   const getActions = getLayoutItemActions(props);
 
   return [
@@ -518,6 +531,9 @@ export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[]
       header: t('Thumbnail'),
       size: 140,
       enableSorting: false,
+      meta: {
+        excludeFromExport: true,
+      },
       cell: (info) => {
         const row = info.row.original;
 
@@ -552,11 +568,16 @@ export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[]
             size: 150,
             cell: (info) => {
               const tags = info.getValue<Tag[]>() || [];
-              const formattedTags = tags.map((tag) => ({
-                id: tag.tagId,
-                label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
-              }));
-              return <TagsCell tags={formattedTags} />;
+              return (
+                <TagsCell
+                  tags={toDisplayTags(tags)}
+                  onTagClick={onTagClick}
+                  selectedTagIds={selectedTagIds}
+                />
+              );
+            },
+            meta: {
+              getExportValue: (row) => formatTagsForExport(row.tags),
             },
           },
         ] as ColumnDef<Layout>[])
@@ -568,7 +589,9 @@ export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[]
       cell: (info) => {
         const row = info.row.original;
         const value = row.descriptionFormatted ?? info.getValue<string>();
-        return <DescriptionCell value={value} isHtml={showDescriptionId === 3} />;
+        const mode =
+          showDescriptionId === 3 ? 'html' : showDescriptionId === 1 ? 'markdown' : 'text';
+        return <DescriptionCell value={value} mode={mode} />;
       },
       enableSorting: false,
     },
@@ -588,6 +611,9 @@ export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[]
       cell: (info) => {
         const value = info.getValue<number>();
         return <TextCell>{formatDuration(value)}</TextCell>;
+      },
+      meta: {
+        getExportValue: (row) => formatDuration(row.duration),
       },
     },
 
@@ -620,6 +646,9 @@ export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[]
       header: t('Modified'),
       size: 160,
       cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatDateTime(row.modifiedDt),
+      },
     },
     {
       accessorKey: 'layoutId',

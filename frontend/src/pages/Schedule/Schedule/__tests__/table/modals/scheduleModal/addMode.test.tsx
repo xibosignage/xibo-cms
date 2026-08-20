@@ -27,20 +27,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import { mockUser } from '../../../fixtures/user';
-import {
-  ALWAYS_ONLY,
-  mockDaypartRows,
-  setupCampaignMocks,
-  setupCommandMocks,
-  setupDatasetMocks,
-  setupDaypartMocks,
-  setupEventMocks,
-  setupLayoutsMocks,
-  setupMediaMocks,
-  setupPlaylistMocks,
-  setupResolutionMocks,
-  setupSyncGroupMocks,
-} from '../../../mocks/api';
+import { ALWAYS_ONLY, mockDaypartRows, setupScheduleModalMocks } from '../../../mocks/api';
 
 import { renderScheduleModal } from './helpers/renderScheduleModal';
 
@@ -65,6 +52,7 @@ vi.mock('@/services/mediaApi');
 vi.mock('@/services/playlistApi');
 vi.mock('@/services/syncGroupApi');
 vi.mock('@/services/datasetApi');
+vi.mock('@/services/scheduleCriteriaApi');
 
 vi.mock('@/components/ui/forms/DatePickerInput', () => ({
   default: ({ label }: { label?: string }) => <input aria-label={label} readOnly />,
@@ -117,16 +105,7 @@ describe('ScheduleEventModal - add mode (save & cancel)', () => {
     testQueryClient.clear();
     vi.clearAllMocks();
 
-    setupEventMocks();
-    setupDaypartMocks();
-    setupResolutionMocks();
-    setupLayoutsMocks();
-    setupCampaignMocks();
-    setupCommandMocks();
-    setupMediaMocks();
-    setupPlaylistMocks();
-    setupSyncGroupMocks();
-    setupDatasetMocks();
+    setupScheduleModalMocks();
 
     mockDaypartRows(ALWAYS_ONLY);
   });

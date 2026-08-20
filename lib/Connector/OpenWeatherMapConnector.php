@@ -30,6 +30,7 @@ use Xibo\Event\ScheduleCriteriaRequestEvent;
 use Xibo\Event\ScheduleCriteriaRequestInterface;
 use Xibo\Event\WidgetDataRequestEvent;
 use Xibo\Event\XmdsWeatherRequestEvent;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
@@ -254,7 +255,7 @@ class OpenWeatherMapConnector implements ConnectorInterface
             . '&appid=[API_KEY]';
 
         // Cache expiry date
-        $cacheExpire = Carbon::now()->addSeconds($this->getSetting('cachePeriod'));
+        $cacheExpire = Carbon::now()->addSeconds((int) $this->getSetting('cachePeriod'));
 
         $this->getLogger()->debug(
             'getWeatherData: plan=' . (($this->getSetting('owmIsPaidPlan') ?? 0 == 1) ? 'paid' : 'free')
@@ -341,14 +342,14 @@ class OpenWeatherMapConnector implements ConnectorInterface
         $this->processItemIntoDay($this->currentDay, $data['current'], $units, true);
 
         $locationTz = new \DateTimeZone($this->timezone);
-        $currentDayDate = Carbon::createFromTimestamp($this->currentDay->time)
+        $currentDayDate = DateFormatHelper::createFromTimestamp($this->currentDay->time)
             ->setTimezone($locationTz)
             ->format('Y-m-d');
         $this->getLogger()->debug('getWeatherData: currentDay date=' . $currentDayDate);
         // Process each day into a forecast
         foreach ($data['daily'] as $dayItem) {
             // Skip any item that falls on the same date as currentDay
-            $dayDate = Carbon::createFromTimestamp($dayItem['dt'])->setTimezone($locationTz)->format('Y-m-d');
+            $dayDate = DateFormatHelper::createFromTimestamp($dayItem['dt'])->setTimezone($locationTz)->format('Y-m-d');
             if ($dayDate === $currentDayDate) {
                 continue;
             }
@@ -996,7 +997,7 @@ class OpenWeatherMapConnector implements ConnectorInterface
         $longitude = $event->getLongitude();
 
         // Cache expiry date
-        $cacheExpire = Carbon::now()->addHours($this->getSetting('xmdsCachePeriod'));
+        $cacheExpire = Carbon::now()->addHours((int) $this->getSetting('xmdsCachePeriod'));
 
         // use imperial as the default units, so we can get the right value when converting to metric
         $units = 'imperial';

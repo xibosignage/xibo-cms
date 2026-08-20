@@ -20,7 +20,6 @@
  */
 
 import { useQueryClient } from '@tanstack/react-query';
-import type { RowSelectionState } from '@tanstack/react-table';
 import { Search, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -41,6 +40,7 @@ import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
 import FolderSidebar from '@/components/ui/FolderSidebar';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useUserContext } from '@/context/UserContext';
@@ -48,10 +48,13 @@ import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useSelectionState } from '@/hooks/useSelectionState';
 import { useTableState } from '@/hooks/useTableState';
+import type { Tag } from '@/types/tag';
 import type { Template } from '@/types/templates';
 import { countActiveFilters } from '@/utils/filters';
 import { canSaveInFolder, hasFeature } from '@/utils/permissions';
+import { toggleTag } from '@/utils/tags';
 
 export default function Templates() {
   const { t } = useTranslation();
@@ -99,8 +102,6 @@ export default function Templates() {
   });
 
   const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [selectionCache, setSelectionCache] = useState<Record<string, Template>>({});
   const [openFilter, setOpenFilter] = useState(false);
 
   const [showFolderSidebar, setShowFolderSidebar] = useState(false);
@@ -119,6 +120,7 @@ export default function Templates() {
     data: queryData,
     isFetching,
     isError,
+    isPaused,
     error: queryError,
   } = useTemplateData({
     pagination,
@@ -151,36 +153,21 @@ export default function Templates() {
     },
   });
 
-  const getRowId = (row: Template) => {
-    return row.layoutId.toString();
-  };
-
-  const handleRowSelectionChange = (
-    updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
-  ) => {
-    const newSelection =
-      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
-
-    setRowSelection(newSelection);
-
-    setSelectionCache((prev) => {
-      const next = { ...prev };
-      templateList.forEach((item) => {
-        const id = getRowId(item);
-        if (newSelection[id]) {
-          next[id] = item;
-        }
-      });
-      return next;
-    });
-  };
+  const {
+    rowSelection,
+    setRowSelection,
+    onRowSelectionChange: handleRowSelectionChange,
+    getRowId,
+    getAllSelectedItems,
+  } = useSelectionState<Template>({
+    list: templateList,
+    getRowId: (row) => row.layoutId.toString(),
+  });
 
   const selectedTemplate = templateList.find((m) => m.layoutId === selectedTemplateId) ?? null;
   const existingNames = templateList.map((m) => m.layout);
 
-  const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['template'] });
-  };
+  const handleRefresh = () => queryClient.invalidateQueries({ queryKey: ['template'] });
 
   const handleFolderChange = (folder: { id: number | null; text: string | '' }) => {
     setSelectedFolderId(folder.id);
@@ -236,6 +223,11 @@ export default function Templates() {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
+  const handleTagClick = (tag: Tag) => {
+    setFilterInputs((prev) => ({ ...prev, tags: toggleTag(prev.tags, tag) }));
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
+
   const alterTemplate = (layoutId: number) => {
     handleAlterTemplate(layoutId);
   };
@@ -273,6 +265,8 @@ export default function Templates() {
     canExport: hasFeature(user, 'layout.export'),
     canViewFolders: hasFeature(user, 'folder.view'),
     canTag,
+    onTagClick: handleTagClick,
+    selectedTagIds: (filterInputs.tags ?? []).map((tag) => tag.tagId),
     formatDateTime,
     onDelete: handleDelete,
     openAddEditModal,
@@ -289,12 +283,6 @@ export default function Templates() {
     discardTemplate: handleDiscardModal,
     exportTemplate: handleExportModal,
   });
-
-  const getAllSelectedItems = (): Template[] => {
-    return Object.keys(rowSelection)
-      .map((id) => selectionCache[id])
-      .filter((item): item is Template => !!item);
-  };
 
   const bulkActions = getBulkActions({
     t,
@@ -416,11 +404,7 @@ export default function Templates() {
           onReset={handleResetFilters}
         />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
-            {error}
-          </div>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         <div className="min-h-0 flex flex-col">
           {!isHydrated ? (

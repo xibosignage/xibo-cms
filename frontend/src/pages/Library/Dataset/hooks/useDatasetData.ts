@@ -21,10 +21,10 @@
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
-import type { AxiosError } from 'axios';
 
 import type { DatasetFilterInput } from '../DatasetConfig';
 
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import type { FetchDatasetRequest } from '@/services/datasetApi';
 import { fetchDataset } from '@/services/datasetApi';
 import { resolveLastModified } from '@/utils/date';
@@ -52,6 +52,8 @@ export const useDatasetData = ({
   advancedFilters,
   enabled = true,
 }: UseDatasetParams) => {
+  const { timeZone } = useDateFormatter();
+
   const queryParams = {
     pageIndex: pagination.pageIndex,
     pageSize: pagination.pageSize,
@@ -81,7 +83,7 @@ export const useDatasetData = ({
         signal,
         ...restFilters,
         ...((restFilters.dataSet || filter) && { dataSet: restFilters.dataSet || filter }),
-        ...resolveLastModified(lastModified),
+        ...resolveLastModified(lastModified, timeZone),
         ...(useRegexForName && advancedFilters.dataSet && isValidRegex(advancedFilters.dataSet)
           ? { useRegexForName: 1 }
           : {}),
@@ -99,9 +101,5 @@ export const useDatasetData = ({
 
     placeholderData: keepPreviousData,
     staleTime: 1000 * 60 * 1,
-
-    throwOnError: (error: AxiosError) => {
-      return error.response?.status ? error.response.status >= 500 : false;
-    },
   });
 };

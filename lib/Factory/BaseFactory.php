@@ -29,6 +29,7 @@ use Xibo\Service\BaseDependenciesService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class BaseFactory
@@ -394,24 +395,33 @@ class BaseFactory
                 return;
             }
 
+            $isNegated = str_starts_with($searchName, '-');
+            $pattern = $isNegated ? ltrim($searchName, '-') : $searchName;
+
+            // MySQL throws a raw SQL error for an invalid REGEXP pattern, which would
+            // otherwise surface as an unhandled 500 - validate up-front instead.
+            if ($useRegex && @preg_match('/' . str_replace('/', '\/', $pattern) . '/', '') === false) {
+                throw new InvalidArgumentException(__('Invalid regular expression'), $tableColumn);
+            }
+
             // increase here, after we expect additional sql to be added.
             $i++;
 
             // Not like, or like?
-            if (str_starts_with($searchName, '-')) {
+            if ($isNegated) {
                 if ($i === 1) {
                     $body .= ' AND ( '.$tableAndColumn.' NOT RLIKE (:search'.$i.') ';
                 } else {
                     $body .= ' ' . $logicalOperator . ' '.$tableAndColumn.' NOT RLIKE (:search'.$i.') ';
                 }
-                $params['search' . $i] = $useRegex ? ltrim(($searchName), '-') : preg_quote(ltrim(($searchName), '-'));
+                $params['search' . $i] = $useRegex ? $pattern : preg_quote($pattern);
             } else {
                 if ($i === 1) {
                     $body .= ' AND ( '.$tableAndColumn.' RLIKE (:search'.$i.') ';
                 } else {
                     $body .= ' ' . $logicalOperator . ' '.$tableAndColumn.' RLIKE (:search'.$i.') ';
                 }
-                $params['search' . $i] = $useRegex ? $searchName : preg_quote($searchName);
+                $params['search' . $i] = $useRegex ? $pattern : preg_quote($pattern);
             }
         }
 
@@ -509,13 +519,17 @@ class BaseFactory
      * @param array $allowedColumns - sortable columns in datatable
      * @param array $customColumns - computed or formatted columns in datatable
      * @param array $defaultSort - default sorting
+     * @param string|null $uniqueColumn - a column guaranteed unique per row (e.g. the primary key),
+     *   appended as a tiebreaker so rows sharing the same value in the requested sort column
+     *   return in a consistent order
      * @return array
      */
     public function buildSortQuery(
         ?array $sortOrder,
         array $allowedColumns,
         array $customColumns = [],
-        array $defaultSort = []
+        array $defaultSort = [],
+        ?string $uniqueColumn = null
     ): array {
         $columnMapping = [];
 
@@ -528,26 +542,45 @@ class BaseFactory
             $columnMapping[$col] = $name;
         }
 
-        $order = [];
+        $mapSort = function (array $sortList) use ($columnMapping): array {
+            $mapped = [];
 
-        foreach ($sortOrder ?? $defaultSort as $sort) {
-            // Separate sort by and sort order
-            $sortArr = explode(' ', trim($sort), 2);
+            foreach ($sortList as $sort) {
+                // Separate sort by and sort order
+                $sortArr = explode(' ', trim($sort), 2);
 
-            // Trim and sanitize sort by and normalize (remove table name if existing)
-            $columnParts = explode('.', str_replace('`', '', trim($sortArr[0])));
-            $column = end($columnParts);
+                // Trim and sanitize sort by and normalize (remove table name if existing)
+                $columnParts = explode('.', str_replace('`', '', trim($sortArr[0])));
+                $column = end($columnParts);
 
-            // Check against the allowed columns
-            if (!isset($columnMapping[$column])) {
-                continue;
+                // Check against the allowed columns
+                if (!isset($columnMapping[$column])) {
+                    continue;
+                }
+
+                $dir = (isset($sortArr[1]) && strtoupper(trim($sortArr[1])) === 'DESC')
+                    ? ' DESC'
+                    : ' ASC';
+
+                $mapped[] = $columnMapping[$column] . $dir;
             }
 
-            $dir = (isset($sortArr[1]) && strtoupper(trim($sortArr[1])) === 'DESC')
-                ? ' DESC'
-                : ' ASC';
+            return $mapped;
+        };
 
-            $order[] = $columnMapping[$column] . $dir;
+        $order = $mapSort($sortOrder ?? $defaultSort);
+
+        // If a sort was explicitly requested but none of its columns were valid (e.g. an
+        // unsupported sortBy), fall back to the default sort rather than leaving the result
+        // set effectively unordered (aside from the tiebreaker below).
+        if ($sortOrder !== null && empty($order)) {
+            $order = $mapSort($defaultSort);
+        }
+
+        // Append the unique column as a tiebreaker so rows sharing the same value in the
+        // requested sort column return in a consistent order, unless it's already part of the sort.
+        if ($uniqueColumn !== null && !str_contains(implode(', ', $order), '`' . $uniqueColumn . '`')) {
+            $order[] = '`' . $uniqueColumn . '` ASC';
         }
 
         return $order;

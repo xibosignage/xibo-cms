@@ -241,7 +241,7 @@ export default function DashboardConnectorForm({
           </InfoBanner>
         ) : servicesLoading ? (
           <div className="flex items-center gap-2 py-2">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-xibo-blue-600 border-t-transparent" />
             <span className="text-sm text-gray-500">{t('Loading services…')}</span>
           </div>
         ) : servicesIsError || servicesError ? (
@@ -362,7 +362,7 @@ export default function DashboardConnectorForm({
                                 existing
                                   ? draft.remove
                                     ? 'text-gray-400 line-through'
-                                    : 'text-blue-600 hover:text-blue-800'
+                                    : 'text-xibo-blue-600 hover:text-xibo-blue-800'
                                   : 'text-gray-300 cursor-default'
                               }`}
                             >

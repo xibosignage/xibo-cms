@@ -21,10 +21,10 @@
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
-import type { AxiosError } from 'axios';
 
 import type { MenuBoardFilterInput } from '../MenuBoardConfig';
 
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import type { FetchMenuBoardRequest } from '@/services/menuBoardApi';
 import { fetchMenuBoard } from '@/services/menuBoardApi';
 import { resolveLastModified } from '@/utils/date';
@@ -52,6 +52,8 @@ export const useMenuBoardData = ({
   advancedFilters,
   enabled = true,
 }: UseMenuBoardDataParams) => {
+  const { timeZone } = useDateFormatter();
+
   const queryParams = {
     pageIndex: pagination.pageIndex,
     pageSize: pagination.pageSize,
@@ -83,7 +85,7 @@ export const useMenuBoardData = ({
         menuId: menuId ? Number(menuId) : undefined,
         userId: userId ? Number(userId) : undefined,
         code: code || undefined,
-        ...resolveLastModified(lastModified),
+        ...resolveLastModified(lastModified, timeZone),
         ...(useRegexForName && name && isValidRegex(name) ? { useRegexForName: 1 } : {}),
         ...(logicalOperatorName ? { logicalOperatorName } : {}),
       };
@@ -99,9 +101,5 @@ export const useMenuBoardData = ({
 
     placeholderData: keepPreviousData,
     staleTime: 1000 * 60,
-
-    throwOnError: (error: AxiosError) => {
-      return error.response?.status ? error.response.status >= 500 : false;
-    },
   });
 };

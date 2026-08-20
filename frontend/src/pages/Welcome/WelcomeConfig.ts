@@ -43,6 +43,7 @@ export interface ServiceCard {
     to: string;
     isExternal?: boolean;
     variant?: 'primary' | 'secondary' | 'link';
+    xiboOnly?: boolean;
   }[];
   videoLinks: VideoLink[];
 }
@@ -76,6 +77,7 @@ export const SERVICE_CARDS: ServiceCard[] = [
         to: 'https://xibosignage.com/manual/en/displays',
         isExternal: true,
         variant: 'link',
+        xiboOnly: true,
       },
     ],
     videoLinks: [{ id: 'ZFpgArKZgU8', title: 'What is a Display?' }],
@@ -95,6 +97,7 @@ export const SERVICE_CARDS: ServiceCard[] = [
         to: 'https://xibosignage.com/manual/en/getting_started_showing_an_image',
         isExternal: true,
         variant: 'link',
+        xiboOnly: true,
       },
     ],
     videoLinks: [
@@ -122,6 +125,7 @@ export const SERVICE_CARDS: ServiceCard[] = [
         to: 'https://xibosignage.com/manual/en/getting_started_showing_a_playlist',
         isExternal: true,
         variant: 'link',
+        xiboOnly: true,
       },
     ],
     videoLinks: [{ id: '2yLj4C1-zhA', title: 'How to create a Playlist and show on Displays' }],
@@ -140,6 +144,7 @@ export const SERVICE_CARDS: ServiceCard[] = [
         to: 'https://xibosignage.com/manual/en/layouts_editor',
         isExternal: true,
         variant: 'link',
+        xiboOnly: true,
       },
     ],
     videoLinks: [{ id: '4cB0YpLqYtc', title: 'Layout Editor Overview' }],
@@ -158,6 +163,7 @@ export const SERVICE_CARDS: ServiceCard[] = [
         to: 'https://xibosignage.com/manual/en/simple_scheduling',
         isExternal: true,
         variant: 'link',
+        xiboOnly: true,
       },
     ],
     videoLinks: [
@@ -174,6 +180,7 @@ export const RESOURCE_CARDS: ResourceCard[] = [
       "Our documentation is there to help you at every turn. It's updated regularly to reflect changes and additions to the platform, and so it's a valuable reference tool for all users.",
     iconName: 'documentation',
     icon: BookOpen,
+    xiboOnly: true,
     links: [
       { labelKey: 'User Manual', url: 'https://xibosignage.com/docs' },
       { labelKey: 'Admin', url: 'https://docs.xibosignage.com/', superAdminOnly: true },

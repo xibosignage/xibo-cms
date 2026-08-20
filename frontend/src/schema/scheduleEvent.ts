@@ -24,7 +24,11 @@ import { z } from 'zod';
 
 import { EventTypeId } from '@/types/event';
 
-export const getScheduleEventSchema = (t: TFunction) =>
+export const getScheduleEventSchema = (
+  t: TFunction,
+  customDayPartId?: string,
+  alwaysDayPartId?: string,
+) =>
   z
     .object({
       eventTypeId: z.nativeEnum(EventTypeId, {
@@ -206,7 +210,19 @@ export const getScheduleEventSchema = (t: TFunction) =>
         });
       }
 
-      if (data.useRelativeTime) {
+      const isCustomDaypart = !!customDayPartId && data.dayPartId === customDayPartId;
+      const isAlwaysDaypart = !!alwaysDayPartId && data.dayPartId === alwaysDayPartId;
+      const isNamedDaypart = data.dayPartId !== '' && !isCustomDaypart && !isAlwaysDaypart;
+
+      if (isNamedDaypart && !data.fromDt) {
+        ctx.addIssue({
+          path: ['fromDt'],
+          code: z.ZodIssueCode.custom,
+          message: t('Start Time is required'),
+        });
+      }
+
+      if (isCustomDaypart && data.useRelativeTime) {
         if (data.relativeHours === 0 && data.relativeMinutes === 0 && data.relativeSeconds === 0) {
           ctx.addIssue({
             path: ['relativeHours'],
@@ -214,7 +230,12 @@ export const getScheduleEventSchema = (t: TFunction) =>
             message: t('Please set a duration greater than 0'),
           });
         }
-      } else if (data.eventTypeId !== EventTypeId.Command && data.fromDt && data.toDt) {
+      } else if (
+        isCustomDaypart &&
+        data.eventTypeId !== EventTypeId.Command &&
+        data.fromDt &&
+        data.toDt
+      ) {
         if (new Date(data.toDt) <= new Date(data.fromDt)) {
           ctx.addIssue({
             path: ['toDt'],

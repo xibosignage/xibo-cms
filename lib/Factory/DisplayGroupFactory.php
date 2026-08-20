@@ -275,9 +275,8 @@ class DisplayGroupFactory extends BaseFactory
      * Set Bandwidth limit
      * @param int $bandwidthLimit
      * @param array $displayGroupIds
-     * @return DisplayGroup[]
      */
-    public function setBandwidth(int $bandwidthLimit, array $displayGroupIds): array
+    public function setBandwidth(int $bandwidthLimit, array $displayGroupIds): void
     {
         $sql = 'UPDATE `displaygroup` SET bandwidthLimit = :bandwidthLimit WHERE displayGroupId IN (0';
         $params['bandwidthLimit'] = $bandwidthLimit;
@@ -592,7 +591,8 @@ class DisplayGroupFactory extends BaseFactory
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            defaultSort: ['displayGroupId ASC']
+            defaultSort: ['displayGroupId ASC'],
+            uniqueColumn: 'displayGroupId'
         );
 
         $orderParts = [];

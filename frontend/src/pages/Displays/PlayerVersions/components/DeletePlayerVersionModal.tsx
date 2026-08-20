@@ -82,7 +82,8 @@ export default function DeletePlayerVersionModal({
               values={{ name: playerVersionName }}
               components={{ strong: <strong /> }}
             >
-              Are you sure you want to delete &quot;<strong>{playerVersionName}</strong>&quot;?
+              Are you sure you want to delete &quot;
+              <strong>{String(playerVersionName ?? '')}</strong>&quot;?
             </Trans>
           ) : (
             <Trans
@@ -90,7 +91,7 @@ export default function DeletePlayerVersionModal({
               values={{ count: itemCount }}
               components={{ strong: <strong /> }}
             >
-              Are you sure you want to delete <strong>{itemCount}</strong> player versions?
+              Are you sure you want to delete <strong>{String(itemCount)}</strong> player versions?
             </Trans>
           )}
         </p>

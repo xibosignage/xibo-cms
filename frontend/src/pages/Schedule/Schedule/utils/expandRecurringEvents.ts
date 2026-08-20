@@ -23,6 +23,19 @@ import { DateTime } from 'luxon';
 
 import type { Event } from '@/types/event';
 
+// Check the exclusion on day view via grid or the calendar
+export function isDayExcluded(
+  exclusions: { fromDt: number; toDt: number }[] | undefined,
+  targetDaySeconds: number,
+  timezone: string,
+): boolean {
+  if (!exclusions || exclusions.length === 0) return false;
+  const targetDay = DateTime.fromSeconds(targetDaySeconds, { zone: timezone }).toISODate();
+  return exclusions.some(
+    (ex) => DateTime.fromSeconds(Number(ex.fromDt), { zone: timezone }).toISODate() === targetDay,
+  );
+}
+
 export function expandRecurringEvents(
   events: Event[],
   viewStart: DateTime,
@@ -91,16 +104,18 @@ export function expandRecurringEvents(
       return generated;
     }
 
-    let currentMoment = originalStart;
+    const isWeekly = sourceEv.recurrenceType === 'Week' && !!sourceEv.recurrenceRepeatsOn;
 
-    while (currentMoment < viewEnd && currentMoment < rangeEnd) {
-      const isWeekly = sourceEv.recurrenceType === 'Week' && !!sourceEv.recurrenceRepeatsOn;
+    if (isWeekly) {
+      const days = sourceEv.recurrenceRepeatsOn!.split(',').map(Number);
+      // Luxon startOf('week') = Monday, weekday 1–7 (Mon=1, Sun=7) — matches ISO weekday.
+      // Driven by weekStart (not the original start's weekday) so a week is considered
+      // whenever any day in it could fall in [viewStart, viewEnd] — a view window that
+      // ends before the original start's weekday (e.g. a single Monday, for an event that
+      // started on a Wednesday) must still see that week's earlier days.
+      let weekStart = originalStart.startOf('week');
 
-      if (isWeekly) {
-        const days = sourceEv.recurrenceRepeatsOn!.split(',').map(Number);
-        // Luxon startOf('week') = Monday, weekday 1–7 (Mon=1, Sun=7) — matches ISO weekday
-        const weekStart = currentMoment.startOf('week');
-
+      while (weekStart < viewEnd && weekStart < rangeEnd) {
         for (let i = 0; i < 7; i++) {
           const dayInWeek = weekStart.plus({ days: i });
           if (!days.includes(dayInWeek.weekday)) {
@@ -122,10 +137,15 @@ export function expandRecurringEvents(
           }
         }
 
-        currentMoment = currentMoment.plus({ weeks: interval });
-        continue;
+        weekStart = weekStart.plus({ weeks: interval });
       }
 
+      return generated;
+    }
+
+    let currentMoment = originalStart;
+
+    while (currentMoment < viewEnd && currentMoment < rangeEnd) {
       let nextMoment: DateTime;
       let eventMoment: DateTime;
       let isValidOccurrence = true;
@@ -150,10 +170,25 @@ export function expandRecurringEvents(
           });
 
           if (eventMoment.month !== nextMonthBase.month) {
-            // nth weekday spilled into the next month — skip this occurrence
-            isValidOccurrence = false;
-            const maxDay = nextMonthBase.daysInMonth!;
-            nextMoment = nextMonthBase.set({ day: Math.min(originalStart.day, maxDay) });
+            if (weekNumber === 5) {
+              // "Last <weekday> of the month" — clamp to the true final occurrence
+              // instead of dropping months with only 4, mirroring the backend's
+              // `modify('last <weekday> of <month>')` semantics
+              // (lib/Entity/Schedule.php:1572-1588).
+              const lastDayOfMonth = nextMonthBase.endOf('month').startOf('day');
+              const daysBackToWeekday = (lastDayOfMonth.weekday - originalWeekday + 7) % 7;
+              eventMoment = lastDayOfMonth.minus({ days: daysBackToWeekday }).set({
+                hour: originalStart.hour,
+                minute: originalStart.minute,
+                second: originalStart.second,
+              });
+              nextMoment = eventMoment;
+            } else {
+              // nth weekday spilled into the next month — skip this occurrence
+              isValidOccurrence = false;
+              const maxDay = nextMonthBase.daysInMonth!;
+              nextMoment = nextMonthBase.set({ day: Math.min(originalStart.day, maxDay) });
+            }
           } else {
             nextMoment = eventMoment;
           }
@@ -193,18 +228,17 @@ export function expandRecurringEvents(
   };
 
   events.forEach((sourceEv) => {
-    const exclusions = sourceEv.scheduleExclusions ?? [];
+    const exclusions = sourceEv.scheduleExclusions;
 
-    const isExcluded = (fromDt: number, toDt: number) =>
-      exclusions.some((ex) => Number(ex.fromDt) === fromDt && Number(ex.toDt) === toDt);
-
-    if (!isExcluded(Number(sourceEv.fromDt), Number(sourceEv.toDt))) {
+    if (!isDayExcluded(exclusions, Number(sourceEv.fromDt), timezone)) {
       allOccurrences.push(sourceEv);
     }
 
     if (sourceEv.recurringEvent) {
       const recurrences = generateRecurrences(sourceEv);
-      allOccurrences.push(...recurrences.filter((ev) => !isExcluded(ev.fromDt, ev.toDt)));
+      allOccurrences.push(
+        ...recurrences.filter((ev) => !isDayExcluded(exclusions, ev.fromDt, timezone)),
+      );
     }
   });
 

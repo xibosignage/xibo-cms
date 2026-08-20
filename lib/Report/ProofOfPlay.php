@@ -254,7 +254,7 @@ class ProofOfPlay implements ReportInterface
         // Get Meta data
         $metadata['periodStart'] = $json['metadata']['periodStart'];
         $metadata['periodEnd'] = $json['metadata']['periodEnd'];
-        $metadata['generatedOn'] = Carbon::createFromTimestamp($savedReport->generatedOn)
+        $metadata['generatedOn'] = DateFormatHelper::createFromTimestamp($savedReport->generatedOn)
             ->format(DateFormatHelper::getSystemFormat());
         $metadata['title'] = $savedReport->saveAs;
 
@@ -273,7 +273,7 @@ class ProofOfPlay implements ReportInterface
         $mediaIds = $sanitizedParams->getIntArray('mediaId', ['default' => []]);
         $type = strtolower($sanitizedParams->getString('type') ?? '');
         $tags = $sanitizedParams->getString('tags');
-        $tagsType = $sanitizedParams->getString('tagsType');
+        $tagsType = $sanitizedParams->getString('tagsType', ['default' => 'dg']);
         $exactTags = $sanitizedParams->getCheckbox('exactTags');
         $operator = $sanitizedParams->getString('logicalOperator', ['default' => 'OR']);
         $parentCampaignId = $sanitizedParams->getInt('parentCampaignId');
@@ -464,9 +464,9 @@ class ProofOfPlay implements ReportInterface
             $entry['tag'] = $sanitizedRow->getString('tag');
             $entry['numberPlays'] = $sanitizedRow->getInt('numberPlays');
             $entry['duration'] = $sanitizedRow->getInt('duration');
-            $entry['minStart'] = Carbon::createFromTimestamp($row['minStart'])
+            $entry['minStart'] = DateFormatHelper::createFromTimestamp($row['minStart'])
                 ->format(DateFormatHelper::getSystemFormat());
-            $entry['maxEnd'] = Carbon::createFromTimestamp($row['maxEnd'])
+            $entry['maxEnd'] = DateFormatHelper::createFromTimestamp($row['maxEnd'])
                 ->format(DateFormatHelper::getSystemFormat());
             $entry['mediaId'] = $sanitizedRow->getInt('mediaId');
             $entry['displayGroup'] = $sanitizedRow->getString('displayGroup');
@@ -558,10 +558,8 @@ class ProofOfPlay implements ReportInterface
               stat.widgetId
         ';
 
-        // We get the ID and name - either by display, display group or tag
-        if ($groupBy === 'display') {
-            $select .= ', display.Display, stat.displayId ';
-        } elseif ($groupBy === 'displayGroup') {
+        // We get the ID and name - either by display (including no grouping), display group or tag
+        if ($groupBy === 'displayGroup') {
             $select .= ', displaydg.displayGroup, displaydg.displayGroupId ';
         } elseif ($groupBy === 'tag') {
             if ($tagsType === 'dg' || $tagsType === 'media') {
@@ -570,6 +568,8 @@ class ProofOfPlay implements ReportInterface
                 // For layouts, we need to manually select taglink.tag
                 $select .= ', taglink.tag AS value, taglink.tagId ';
             }
+        } else {
+            $select .= ', display.Display, stat.displayId ';
         }
 
         $body = '
@@ -821,12 +821,12 @@ class ProofOfPlay implements ReportInterface
         ';
 
         // Then add the optional groupings
-        if ($groupBy === 'display') {
-            $body .= ', display.Display, stat.displayId';
-        } elseif ($groupBy === 'displayGroup') {
-            $body .= ', displaydg.displayGroupId, displaydg.displayGroup';
+        if ($groupBy === 'displayGroup') {
+            $body .= ', displaydg.displayGroupId, displaydg.displayGroup ';
         } elseif ($groupBy === 'tag') {
-            $body .= ', value, taglink.tagId';
+            $body .= ', value, taglink.tagId ';
+        } else {
+            $body .= ', display.Display, stat.displayId ';
         }
 
         $order = '';
@@ -864,8 +864,9 @@ class ProofOfPlay implements ReportInterface
         }
 
         return [
-            'periodStart' => Carbon::createFromTimestamp($fromDt)->format(DateFormatHelper::getSystemFormat()),
-            'periodEnd' => Carbon::createFromTimestamp($toDt)->format(DateFormatHelper::getSystemFormat()),
+            'periodStart' => DateFormatHelper::createFromTimestamp($fromDt)
+                ->format(DateFormatHelper::getSystemFormat()),
+            'periodEnd' => DateFormatHelper::createFromTimestamp($toDt)->format(DateFormatHelper::getSystemFormat()),
             'result' => $rows,
             'count' => count($rows)
         ];

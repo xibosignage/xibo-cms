@@ -98,7 +98,7 @@ export default function ConnectorConfigModal({
     >
       {isLoading ? (
         <div className="flex items-center justify-center px-8 py-12">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-xibo-blue-600 border-t-transparent" />
         </div>
       ) : isError ? (
         <div className="px-8 py-4 flex flex-col gap-4">

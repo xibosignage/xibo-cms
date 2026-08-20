@@ -24,20 +24,7 @@ import userEvent, { type UserEvent } from '@testing-library/user-event';
 import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
-import {
-  ALWAYS_AND_CUSTOM,
-  mockDaypartRows,
-  setupCampaignMocks,
-  setupCommandMocks,
-  setupDatasetMocks,
-  setupDaypartMocks,
-  setupEventMocks,
-  setupLayoutsMocks,
-  setupMediaMocks,
-  setupPlaylistMocks,
-  setupResolutionMocks,
-  setupSyncGroupMocks,
-} from '../../../../mocks/api';
+import { ALWAYS_AND_CUSTOM, mockDaypartRows, setupScheduleModalMocks } from '../../../../mocks/api';
 import { renderScheduleModal } from '../helpers/renderScheduleModal';
 
 import { testQueryClient } from '@/setupTests';
@@ -82,6 +69,7 @@ vi.mock('@/services/mediaApi');
 vi.mock('@/services/playlistApi');
 vi.mock('@/services/syncGroupApi');
 vi.mock('@/services/datasetApi');
+vi.mock('@/services/scheduleCriteriaApi');
 
 vi.mock('@/components/ui/forms/DatePickerInput', () => ({
   default: ({ label }: { label?: string }) => <input aria-label={label} readOnly />,
@@ -139,16 +127,7 @@ describe('ScheduleEventModal - Step 2 (Time)', () => {
     testQueryClient.clear();
     vi.clearAllMocks();
 
-    setupEventMocks();
-    setupDaypartMocks();
-    setupResolutionMocks();
-    setupLayoutsMocks();
-    setupCampaignMocks();
-    setupCommandMocks();
-    setupMediaMocks();
-    setupPlaylistMocks();
-    setupSyncGroupMocks();
-    setupDatasetMocks();
+    setupScheduleModalMocks();
 
     // Realistic daypart list: Always + Custom + a regular named daypart.
     mockDaypartRows(ALWAYS_AND_CUSTOM);

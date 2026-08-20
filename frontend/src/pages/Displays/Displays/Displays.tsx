@@ -20,7 +20,6 @@
  */
 
 import { useQueryClient } from '@tanstack/react-query';
-import type { RowSelectionState } from '@tanstack/react-table';
 import { Search, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -45,6 +44,7 @@ import FilterInputs from '@/components/ui/FilterInputs';
 import FolderActionModals from '@/components/ui/FolderActionModals';
 import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
 import FolderSidebar from '@/components/ui/FolderSidebar';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataMap } from '@/components/ui/table/DataMap';
 import { DataTable } from '@/components/ui/table/DataTable';
@@ -55,10 +55,14 @@ import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useSelectionState } from '@/hooks/useSelectionState';
 import { useTableState } from '@/hooks/useTableState';
 import type { Display } from '@/types/display';
+import type { Tag } from '@/types/tag';
 import { countActiveFilters } from '@/utils/filters';
 import { hasFeature } from '@/utils/permissions';
+import { isPreferenceEnabled } from '@/utils/preferences';
+import { toggleTag } from '@/utils/tags';
 
 export default function Displays() {
   const { t } = useTranslation();
@@ -164,8 +168,6 @@ export default function Displays() {
 
   const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
   const [showFolderSidebar, setShowFolderSidebar] = useState(false);
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [selectionCache, setSelectionCache] = useState<Record<string, Display>>({});
   const [openFilter, setOpenFilter] = useState(false);
 
   const [activeModal, setActiveModal] = useState<ModalType | null>(null);
@@ -204,6 +206,7 @@ export default function Displays() {
     data: queryData,
     isFetching,
     isError,
+    isPaused,
     error: queryError,
   } = useDisplaysData({
     pagination,
@@ -219,33 +222,20 @@ export default function Displays() {
   const error = isError && queryError instanceof Error ? queryError.message : '';
   const displayList = data ?? [];
 
-  const getRowId = (row: Display) => row.displayId.toString();
-
-  const handleRowSelectionChange = (
-    updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
-  ) => {
-    const newSelection =
-      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
-
-    setRowSelection(newSelection);
-
-    setSelectionCache((prev) => {
-      const next = { ...prev };
-      displayList.forEach((item) => {
-        const id = getRowId(item);
-        if (newSelection[id]) {
-          next[id] = item;
-        }
-      });
-      return next;
-    });
-  };
+  const {
+    rowSelection,
+    setRowSelection,
+    onRowSelectionChange: handleRowSelectionChange,
+    getRowId,
+    getAllSelectedItems,
+  } = useSelectionState<Display>({
+    list: displayList,
+    getRowId: (row) => row.displayId.toString(),
+  });
 
   const selectedDisplay = displayList.find((d) => d.displayId === selectedDisplayId) ?? null;
 
-  const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['display'] });
-  };
+  const handleRefresh = () => queryClient.invalidateQueries({ queryKey: ['display'] });
 
   const {
     isDeleting,
@@ -281,6 +271,9 @@ export default function Displays() {
     handleRefresh,
     closeModal,
     setRowSelection,
+    showThumbnailColumn: isPreferenceEnabled(user?.settings?.showThumbnailColumn, true),
+    revealThumbnailColumns: () =>
+      setColumnVisibility((prev) => ({ ...prev, screenShotRequested: true, thumbnail: true })),
   });
 
   const { guard } = useAutoSubmit();
@@ -313,6 +306,11 @@ export default function Displays() {
 
   const handleResetFilters = () => {
     setFilterInputs(INITIAL_FILTER_STATE);
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
+
+  const handleTagClick = (tag: Tag) => {
+    setFilterInputs((prev) => ({ ...prev, tags: toggleTag(prev.tags, tag) }));
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
@@ -375,13 +373,9 @@ export default function Displays() {
     onSchedule: canSchedule ? (display) => openActionModal(display, 'schedule') : undefined,
     onPreviewScreenshot: (display) => setPreviewDisplay(display),
     formatDateTime,
+    onTagClick: handleTagClick,
+    selectedTagIds: (filterInputs.tags ?? []).map((tag) => tag.tagId),
   });
-
-  const getAllSelectedItems = (): Display[] => {
-    return Object.keys(rowSelection)
-      .map((id) => selectionCache[id])
-      .filter((item): item is Display => !!item);
-  };
 
   const openBulkModal = (modal: ModalType) => {
     const allItems = getAllSelectedItems();
@@ -518,11 +512,7 @@ export default function Displays() {
           onReset={handleResetFilters}
         />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
-            {error}
-          </div>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         <div className={`min-h-0 flex flex-col ${viewMode === 'map' && 'flex-1'}`}>
           {!isHydrated ? (

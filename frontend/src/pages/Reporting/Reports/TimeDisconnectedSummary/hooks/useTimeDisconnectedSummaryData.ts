@@ -23,8 +23,8 @@ import { useQuery } from '@tanstack/react-query';
 
 import type { TimeDisconnectedSummaryFilter } from '../TimeDisconnectedSummaryConfig';
 
+import { resolveReportDateRange } from '@/pages/Reporting/Reports/shared/utils/resolveReportDateRange';
 import { fetchTimeDisconnectedSummary } from '@/services/timeDisconnectedSummaryApi';
-import { formatDateTime } from '@/utils/date';
 
 export const timeDisconnectedSummaryQueryKeys = {
   all: ['timeDisconnectedSummary'] as const,
@@ -45,21 +45,7 @@ export function useTimeDisconnectedSummaryData({
     queryKey: timeDisconnectedSummaryQueryKeys.report(filter as unknown as Record<string, unknown>),
 
     queryFn: async ({ signal }) => {
-      let reportFilter: string | undefined;
-      let fromDt: string | undefined;
-      let toDt: string | undefined;
-
-      if (filter.reportFilter.startsWith('range:')) {
-        const [from, to] = filter.reportFilter.replace('range:', '').split('|');
-        if (from) {
-          fromDt = formatDateTime(new Date(from));
-        }
-        if (to) {
-          toDt = formatDateTime(new Date(to));
-        }
-      } else if (filter.reportFilter) {
-        reportFilter = filter.reportFilter;
-      }
+      const { reportFilter, fromDt, toDt } = resolveReportDateRange(filter.reportFilter);
 
       const response = await fetchTimeDisconnectedSummary({
         reportFilter,

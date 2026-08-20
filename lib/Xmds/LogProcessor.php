@@ -24,6 +24,7 @@
 namespace Xibo\Xmds;
 
 use Monolog\Logger;
+use Monolog\LogRecord;
 use Xibo\Helper\DatabaseLogHandler;
 
 /**
@@ -87,7 +88,7 @@ class LogProcessor
 
         foreach ($this->log->getHandlers() as $handler) {
             if ($handler instanceof DatabaseLogHandler) {
-                $level = $handler->getLevel();
+                $level = $handler->getLevel()->value;
             } else {
                 $this->log->error('Log level not set in DatabaseLogHandler');
             }
@@ -105,11 +106,7 @@ class LogProcessor
         return $this->uid;
     }
 
-    /**
-     * @param array $record
-     * @return array
-     */
-    public function __invoke(array $record)
+    public function __invoke(LogRecord $record): LogRecord
     {
         $record['extra']['displayId'] = $this->displayId;
         $record['extra']['route'] = $this->route;

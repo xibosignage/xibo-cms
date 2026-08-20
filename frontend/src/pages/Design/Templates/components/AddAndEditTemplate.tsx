@@ -113,6 +113,15 @@ export default function AddAndEditTemplateModal({
         });
 
         setResolutions(res.rows);
+
+        const [firstResolution] = res.rows;
+        if (type === 'add' && firstResolution) {
+          setDraft((prev) =>
+            prev.resolutionId === null
+              ? { ...prev, resolutionId: firstResolution.resolutionId }
+              : prev,
+          );
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -121,7 +130,7 @@ export default function AddAndEditTemplateModal({
     };
 
     loadResolutions();
-  }, [isOpen]);
+  }, [isOpen, type]);
 
   useEffect(() => {
     setPendingTagInput('');
@@ -161,6 +170,11 @@ export default function AddAndEditTemplateModal({
         });
 
         setFormErrors(mappedErrors);
+        return;
+      }
+
+      if (type === 'add' && !draft.resolutionId) {
+        setFormErrors({ resolutionId: t('Resolution is required') });
         return;
       }
 

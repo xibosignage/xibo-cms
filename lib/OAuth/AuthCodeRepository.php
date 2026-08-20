@@ -38,7 +38,7 @@ class AuthCodeRepository implements AuthCodeRepositoryInterface
     /**
      * {@inheritdoc}
      */
-    public function persistNewAuthCode(AuthCodeEntityInterface $authCodeEntity)
+    public function persistNewAuthCode(AuthCodeEntityInterface $authCodeEntity): void
     {
         // Stash truncates expiresAt by up to 15% to add variance, so pad the cache lifetime
         // to ensure the cache entry outlives the auth code's own validity window.
@@ -54,7 +54,7 @@ class AuthCodeRepository implements AuthCodeRepositoryInterface
     /**
      * {@inheritdoc}
      */
-    public function revokeAuthCode($codeId)
+    public function revokeAuthCode(string $codeId): void
     {
         // Marking as used rather than clearing the cache entry — we still want
         // isAuthCodeRevoked() to return true for the remainder of the original
@@ -67,7 +67,7 @@ class AuthCodeRepository implements AuthCodeRepositoryInterface
     /**
      * {@inheritdoc}
      */
-    public function isAuthCodeRevoked($codeId)
+    public function isAuthCodeRevoked(string $codeId): bool
     {
         $cache = $this->pool->getItem('A_' . $codeId);
         $data = $cache->get();
@@ -85,7 +85,7 @@ class AuthCodeRepository implements AuthCodeRepositoryInterface
     /**
      * {@inheritdoc}
      */
-    public function getNewAuthCode()
+    public function getNewAuthCode(): AuthCodeEntity
     {
         return new AuthCodeEntity();
     }

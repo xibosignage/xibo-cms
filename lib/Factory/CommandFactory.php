@@ -195,8 +195,16 @@ class CommandFactory extends BaseFactory
             $filterBy
         );
 
-        $allowedColumns = ['commandId', 'command', 'code', 'description', 'groupsWithPermissions'];
-        $sortOrder = $this->buildSortQuery($sortOrder, $allowedColumns, [], ['command ASC']);
+        $allowedColumns = [
+            'commandId',
+            'command',
+            'code',
+            'description',
+            'availableOn',
+            'createAlertOn',
+            'groupsWithPermissions',
+        ];
+        $sortOrder = $this->buildSortQuery($sortOrder, $allowedColumns, [], ['command ASC'], 'commandId');
         $order = empty($sortOrder) ? '' : ' ORDER BY ' . implode(', ', $sortOrder);
 
         $limit = '';

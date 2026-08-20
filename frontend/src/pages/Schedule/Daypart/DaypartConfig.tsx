@@ -44,6 +44,7 @@ export type ModalType = BaseModalType | null;
 export const INITIAL_FILTER_STATE: DaypartFilterInput = {
   logicalOperatorName: 'OR',
   useRegexForName: false,
+  retired: 0,
 };
 
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DaypartFilterInput>[] => [
@@ -62,6 +63,7 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DaypartFilterI
     label: t('Retired'),
     name: 'retired',
     options: getCommonFormOptions(t).retired,
+    compareToDefault: true,
   },
 ];
 
@@ -162,9 +164,9 @@ export const getDaypartColumns = (props: DaypartActionsProps): ColumnDef<Daypart
     {
       id: 'tableActions',
       header: '',
-      size: 80,
-      minSize: 80,
-      maxSize: 80,
+      size: 110,
+      minSize: 110,
+      maxSize: 110,
       enableHiding: false,
       enableResizing: false,
       cell: ({ row }) => (

@@ -20,7 +20,6 @@
  */
 
 import { useQueryClient } from '@tanstack/react-query';
-import type { RowSelectionState } from '@tanstack/react-table';
 import { Search, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -38,6 +37,7 @@ import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
 import FolderSidebar from '@/components/ui/FolderSidebar';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useUserContext } from '@/context/UserContext';
@@ -45,10 +45,13 @@ import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useSelectionState } from '@/hooks/useSelectionState';
 import { useTableState } from '@/hooks/useTableState';
 import type { Campaign } from '@/types/campaign';
+import type { Tag } from '@/types/tag';
 import { countActiveFilters } from '@/utils/filters';
 import { canSaveInFolder, hasFeature } from '@/utils/permissions';
+import { toggleTag } from '@/utils/tags';
 
 export default function Campaigns() {
   const { t } = useTranslation();
@@ -127,8 +130,6 @@ export default function Campaigns() {
   }, [locationLayoutId, isHydrated, setFilterInputs, setPagination]);
 
   const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [selectionCache, setSelectionCache] = useState<Record<string, Campaign>>({});
   const [openFilter, setOpenFilter] = useState(false);
 
   const [showFolderSidebar, setShowFolderSidebar] = useState(false);
@@ -138,7 +139,7 @@ export default function Campaigns() {
   const [itemsToMove, setItemsToMove] = useState<Campaign[]>([]);
   const [bulkItems, setBulkItems] = useState<Campaign[]>([]);
   const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
-  const [selectedCampaignId, setSelectedCampaignId] = useState<number | null>(null);
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
 
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
@@ -148,6 +149,7 @@ export default function Campaigns() {
     data: queryData,
     isFetching,
     isError,
+    isPaused,
     error: queryError,
   } = useCampaignData({
     pagination,
@@ -180,31 +182,24 @@ export default function Campaigns() {
     },
   });
 
-  const selectedCampaign = campaignList.find((m) => m.campaignId === selectedCampaignId) ?? null;
   const existingNames = campaignList.map((m) => m.campaign);
 
-  const getRowId = (row: Campaign) => row.campaignId.toString();
+  const {
+    rowSelection,
+    setRowSelection,
+    onRowSelectionChange: handleRowSelectionChange,
+    getRowId,
+    getAllSelectedItems,
+  } = useSelectionState<Campaign>({
+    list: campaignList,
+    getRowId: (row) => row.campaignId.toString(),
+  });
 
-  const handleRowSelectionChange = (
-    updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
-  ) => {
-    const newSelection =
-      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
-    setRowSelection(newSelection);
-    setSelectionCache((prev) => {
-      const next = { ...prev };
-      campaignList.forEach((item) => {
-        const id = getRowId(item);
-        if (newSelection[id]) next[id] = item;
-      });
-      return next;
-    });
-  };
-
-  const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['campaign'] });
-    queryClient.invalidateQueries({ queryKey: ['layouts', 'campaign'] });
-  };
+  const handleRefresh = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['campaign'] }),
+      queryClient.invalidateQueries({ queryKey: ['layouts', 'campaign'] }),
+    ]);
 
   const handleFolderChange = (folder: { id: number | null; text: string | '' }) => {
     setSelectedFolderId(folder.id);
@@ -239,7 +234,7 @@ export default function Campaigns() {
   };
 
   const openEditModal = (campaign: Campaign) => {
-    setSelectedCampaignId(campaign.campaignId);
+    setSelectedCampaign(campaign);
     openModal('edit');
   };
 
@@ -248,7 +243,7 @@ export default function Campaigns() {
   };
 
   const openCopyModal = (campaign: Campaign) => {
-    setSelectedCampaignId(campaign.campaignId);
+    setSelectedCampaign(campaign);
     openModal('copy');
   };
 
@@ -264,7 +259,7 @@ export default function Campaigns() {
   };
 
   const openScheduleModal = (campaign: Campaign) => {
-    setSelectedCampaignId(campaign.campaignId);
+    setSelectedCampaign(campaign);
     openModal('schedule');
   };
 
@@ -272,8 +267,23 @@ export default function Campaigns() {
     openModal('add');
   };
 
+  const handleAddSuccess = (campaign: Campaign) => {
+    handleRefresh();
+
+    if (campaign.type === 'ad') {
+      openAdEditor(campaign);
+    } else {
+      openEditModal(campaign);
+    }
+  };
+
   const handleResetFilters = () => {
     setFilterInputs(CAMPAIGN_INITIAL_FILTER_STATE);
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
+
+  const handleTagClick = (tag: Tag) => {
+    setFilterInputs((prev) => ({ ...prev, tags: toggleTag(prev.tags, tag) }));
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
@@ -286,6 +296,8 @@ export default function Campaigns() {
     canPreview: hasFeature(user, 'layout.view') || hasFeature(user, 'campaign.view'),
     canViewFolders: hasFeature(user, 'folder.view'),
     canTag,
+    onTagClick: handleTagClick,
+    selectedTagIds: (filterInputs.tags ?? []).map((tag) => tag.tagId),
     onDelete: handleDelete,
     openEditModal,
     openAdEditor,
@@ -295,12 +307,6 @@ export default function Campaigns() {
     onSchedule: canSchedule ? openScheduleModal : undefined,
     onPreview: handlePreview,
   });
-
-  const getAllSelectedItems = (): Campaign[] => {
-    return Object.keys(rowSelection)
-      .map((id) => selectionCache[id])
-      .filter((item): item is Campaign => !!item);
-  };
 
   const bulkActions = getBulkActions({
     t,
@@ -413,11 +419,7 @@ export default function Campaigns() {
           onReset={handleResetFilters}
         />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
-            {error}
-          </div>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         <div className="min-h-0 flex flex-col">
           {!isHydrated ? (
@@ -475,6 +477,7 @@ export default function Campaigns() {
           confirmDelete,
           handleConfirmMove: (folderId) => handleConfirmMove(itemsToMove, folderId),
           handleConfirmClone,
+          handleAddSuccess,
         }}
         folderActions={folderActions}
       />

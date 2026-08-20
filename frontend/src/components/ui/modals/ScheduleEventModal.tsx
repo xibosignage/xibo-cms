@@ -21,9 +21,10 @@
 
 import type { ColumnDef } from '@tanstack/react-table';
 import { ArrowLeft, ArrowRight, CalendarClock, Minus, Plus, Tablet } from 'lucide-react';
-import { useEffect, useRef, useState, useTransition } from 'react';
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 
+import Badge from '../Badge';
 import Button from '../Button';
 import GeoScheduleMap from '../GeoScheduleMap';
 import InfoBanner from '../InfoBanner';
@@ -33,6 +34,7 @@ import Checkbox from '../forms/Checkbox';
 import DatePickerInput from '../forms/DatePickerInput';
 import NumberInput from '../forms/NumberInput';
 import SelectDropdown from '../forms/SelectDropdown';
+import Switch from '../forms/Switch';
 import TextInput from '../forms/TextInput';
 import { DataTable } from '../table/DataTable';
 import { TextCell } from '../table/cells';
@@ -42,6 +44,7 @@ import Modal, { type ModalAction } from './Modal';
 import { withPublicPath } from '@/config/publicPath';
 import { useUserContext } from '@/context/UserContext';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
+import MediaPreviewer from '@/pages/Library/Media/components/MediaPreviewer';
 import { DisplayGroupMultiSelect } from '@/pages/Schedule/Schedule/components/DisplayGroupMultiSelect';
 import {
   type DraftCriterion,
@@ -87,12 +90,36 @@ import {
 import { fetchSyncGroups, fetchSyncGroupDisplays } from '@/services/syncGroupApi';
 import type { Daypart } from '@/types/daypart';
 import { EventTypeId, type Event } from '@/types/event';
+import type { Media } from '@/types/media';
 import type { SyncGroupDisplay } from '@/types/syncGroup';
 import { hasFeature } from '@/utils/permissions';
 
 const DROPDOWN_PAGE_SIZE = 10;
 
 type ScheduleModalMode = 'add' | 'schedule' | 'edit';
+
+interface SyncDisplayTableMeta {
+  syncDisplayLayouts: Record<number, number | null>;
+  syncMirror: boolean;
+  syncLayoutOptions: SelectOption[];
+  syncLayoutSearchByDisplay: Record<number, string>;
+  syncLayoutOverrideByDisplay: Record<
+    number,
+    { options: SelectOption[]; totalCount: number; isLoading: boolean; isLoadingMore: boolean }
+  >;
+  syncLayoutIsLoading: boolean;
+  syncLayoutIsLoadingMore: boolean;
+  hasMoreSyncLayouts: boolean;
+  setSyncDisplayLayout: (displayId: number, layoutId: number, isLead: boolean) => void;
+  setSyncMirrorForLead: (
+    checked: boolean,
+    leadDisplayId: number,
+    leadLayoutId: number | null,
+  ) => void;
+  onSyncLayoutSearch: (displayId: number, term: string) => void;
+  onSyncLayoutLoadMore: (displayId: number) => void;
+  resolveSyncLayoutLabel: (value: string) => Promise<string>;
+}
 
 interface ScheduleEventModalProps {
   isOpen: boolean;
@@ -122,6 +149,12 @@ export default function ScheduleEventModal({
   const { t } = useTranslation();
   const { user } = useUserContext();
   const { formatDateTime } = useDateFormatter();
+  // The CMS-wide `defaultTimezone` setting, not a personal/browser timezone
+  // - see User::myDetails() in lib/Controller/User.php. Distinct from the
+  // `syncTimezone` ("Run at CMS Time?") field below: that one controls
+  // *playback* time (CMS time vs. display-local time) and is resolved
+  // server-side against the per-display Display.timeZone column in
+  // lib/Xmds/Soap.php - it never feeds into this `timezone` value.
   const timezone = user?.settings?.defaultTimezone ?? 'UTC';
 
   const canGeoSchedule = hasFeature(user, 'schedule.geoLocation');
@@ -155,6 +188,8 @@ export default function ScheduleEventModal({
 
   const [contentOptions, setContentOptions] = useState<SelectOption[]>([]);
   const [isLoadingContent, setIsLoadingContent] = useState(false);
+  const [previewMedia, setPreviewMedia] = useState<Media | null>(null);
+  const [isLoadingMediaPreview, setIsLoadingMediaPreview] = useState(false);
   const [showDisplayBanner, setShowDisplayBanner] = useState(false);
   const [daypartOptions, setDaypartOptions] = useState<SelectOption[]>([]);
   const [resolutionOptions, setResolutionOptions] = useState<SelectOption[]>([]);
@@ -167,17 +202,34 @@ export default function ScheduleEventModal({
     daypart: { totalCount: 0, isLoading: false, isLoadingMore: false },
     command: { totalCount: 0, isLoading: false, isLoadingMore: false },
     layoutCode: { totalCount: 0, isLoading: false, isLoadingMore: false },
+    resolution: { totalCount: 0, isLoading: false, isLoadingMore: false },
+    syncLayout: { totalCount: 0, isLoading: false, isLoadingMore: false },
   });
 
   const loadingMoreRef = useRef<Record<string, boolean>>({});
+  // Backend row cursor for the content dropdown - distinct from contentOptions.length,
+  // which can be smaller (e.g. Media's released-only filter drops rows client-side).
+  const contentFetchedCountRef = useRef(0);
 
   const [alwaysDayPartId, setAlwaysDayPartId] = useState<string>('');
   const [customDayPartId, setCustomDayPartId] = useState<string>('');
+  const [shareOfVoicePercentInput, setShareOfVoicePercentInput] = useState<string | null>(null);
 
-  // Sync group per-display layout state
   const [syncDisplays, setSyncDisplays] = useState<SyncGroupDisplay[]>([]);
   const [syncLayoutOptions, setSyncLayoutOptions] = useState<SelectOption[]>([]);
+  const [syncLayoutSearchByDisplay, setSyncLayoutSearchByDisplay] = useState<
+    Record<number, string>
+  >({});
+  const [syncLayoutOverrideByDisplay, setSyncLayoutOverrideByDisplay] = useState<
+    Record<
+      number,
+      { options: SelectOption[]; totalCount: number; isLoading: boolean; isLoadingMore: boolean }
+    >
+  >({});
+  const syncLayoutSearchTimersRef = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
+  const syncLayoutSearchTokenRef = useRef<Record<number, number>>({});
   const [isLoadingSyncDisplays, setIsLoadingSyncDisplays] = useState(false);
+  const [syncMirror, setSyncMirror] = useState(false);
 
   const [isPending, startTransition] = useTransition();
   const [apiError, setApiError] = useState<string | undefined>();
@@ -211,6 +263,143 @@ export default function ScheduleEventModal({
     daypartSearchTimerRef.current = setTimeout(() => {
       setDaypartDebouncedSearch(term);
     }, 300);
+  };
+
+  const [layoutCodeDebouncedSearch, setLayoutCodeDebouncedSearch] = useState('');
+  const layoutCodeSearchTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  const handleLayoutCodeSearch = (term: string) => {
+    clearTimeout(layoutCodeSearchTimerRef.current);
+    layoutCodeSearchTimerRef.current = setTimeout(() => {
+      setLayoutCodeDebouncedSearch(term);
+    }, 300);
+  };
+
+  const [resolutionDebouncedSearch, setResolutionDebouncedSearch] = useState('');
+  const resolutionSearchTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  const handleResolutionSearch = (term: string) => {
+    clearTimeout(resolutionSearchTimerRef.current);
+    resolutionSearchTimerRef.current = setTimeout(() => {
+      setResolutionDebouncedSearch(term);
+    }, 300);
+  };
+
+  const handleSyncLayoutSearch = (displayId: number, term: string) => {
+    clearTimeout(syncLayoutSearchTimersRef.current[displayId]);
+    syncLayoutSearchTimersRef.current[displayId] = setTimeout(() => {
+      setSyncLayoutSearchByDisplay((prev) => {
+        if (prev[displayId] === term) {
+          return prev;
+        }
+        return { ...prev, [displayId]: term };
+      });
+
+      if (!term) {
+        syncLayoutSearchTokenRef.current[displayId] =
+          (syncLayoutSearchTokenRef.current[displayId] ?? 0) + 1;
+        setSyncLayoutOverrideByDisplay((prev) => {
+          if (!(displayId in prev)) {
+            return prev;
+          }
+          const updated = { ...prev };
+          delete updated[displayId];
+          return updated;
+        });
+        return;
+      }
+
+      const token = (syncLayoutSearchTokenRef.current[displayId] ?? 0) + 1;
+      syncLayoutSearchTokenRef.current[displayId] = token;
+
+      setSyncLayoutOverrideByDisplay((prev) => ({
+        ...prev,
+        [displayId]: {
+          options: prev[displayId]?.options ?? [],
+          totalCount: prev[displayId]?.totalCount ?? 0,
+          isLoading: true,
+          isLoadingMore: false,
+        },
+      }));
+
+      fetchLayouts({ start: 0, length: DROPDOWN_PAGE_SIZE, layout: term })
+        .then(({ rows, totalCount }) => {
+          if (syncLayoutSearchTokenRef.current[displayId] !== token) {
+            return;
+          }
+          setSyncLayoutOverrideByDisplay((prev) => ({
+            ...prev,
+            [displayId]: {
+              options: rows.map((l) => ({ value: String(l.layoutId), label: l.layout })),
+              totalCount,
+              isLoading: false,
+              isLoadingMore: false,
+            },
+          }));
+        })
+        .catch(() => {
+          if (syncLayoutSearchTokenRef.current[displayId] !== token) {
+            return;
+          }
+          setSyncLayoutOverrideByDisplay((prev) => ({
+            ...prev,
+            [displayId]: { options: [], totalCount: 0, isLoading: false, isLoadingMore: false },
+          }));
+        });
+    }, 300);
+  };
+
+  const loadMoreSyncLayoutsForDisplay = (displayId: number) => {
+    const search = syncLayoutSearchByDisplay[displayId];
+    if (!search) {
+      loadMoreSyncLayouts();
+      return;
+    }
+
+    const current = syncLayoutOverrideByDisplay[displayId];
+    if (!current || current.isLoadingMore) {
+      return;
+    }
+
+    const token = syncLayoutSearchTokenRef.current[displayId] ?? 0;
+
+    setSyncLayoutOverrideByDisplay((prev) => ({
+      ...prev,
+      [displayId]: { ...current, isLoadingMore: true },
+    }));
+
+    fetchLayouts({ start: current.options.length, length: DROPDOWN_PAGE_SIZE, layout: search })
+      .then(({ rows }) => {
+        if (syncLayoutSearchTokenRef.current[displayId] !== token) {
+          return;
+        }
+        setSyncLayoutOverrideByDisplay((prev) => {
+          const existing = prev[displayId];
+          if (!existing) {
+            return prev;
+          }
+          const seen = new Set(existing.options.map((o) => o.value));
+          const newOptions = rows
+            .map((l) => ({ value: String(l.layoutId), label: l.layout }))
+            .filter((o) => !seen.has(o.value));
+          return {
+            ...prev,
+            [displayId]: { ...existing, options: [...existing.options, ...newOptions] },
+          };
+        });
+      })
+      .finally(() => {
+        if (syncLayoutSearchTokenRef.current[displayId] !== token) {
+          return;
+        }
+        setSyncLayoutOverrideByDisplay((prev) => {
+          const existing = prev[displayId];
+          if (!existing) {
+            return prev;
+          }
+          return { ...prev, [displayId]: { ...existing, isLoadingMore: false } };
+        });
+      });
   };
 
   const isMediaType = draft.eventTypeId === EventTypeId.Media;
@@ -258,8 +447,8 @@ export default function ScheduleEventModal({
   const canFinish = (currentStep >= 1 || isEditMode) && (hasDisplays || isSyncType);
 
   const isCommandEvent = draft.eventTypeId === EventTypeId.Command;
-  const isAlwaysDaypart = draft.dayPartId === alwaysDayPartId;
-  const isCustomDaypart = draft.dayPartId === customDayPartId;
+  const isAlwaysDaypart = !!alwaysDayPartId && draft.dayPartId === alwaysDayPartId;
+  const isCustomDaypart = !!customDayPartId && draft.dayPartId === customDayPartId;
   const isNamedDaypart = draft.dayPartId !== '' && !isAlwaysDaypart && !isCustomDaypart;
   const showRepeatReminder = !isAlwaysDaypart && draft.dayPartId !== '';
 
@@ -272,6 +461,9 @@ export default function ScheduleEventModal({
     }
     if (isCustomDaypart && !draft.useRelativeTime) {
       return !!draft.fromDt && !!draft.toDt;
+    }
+    if (isNamedDaypart) {
+      return !!draft.fromDt;
     }
     return true;
   })();
@@ -292,17 +484,44 @@ export default function ScheduleEventModal({
   }, [isOpen]);
 
   useEffect(() => {
+    loadVersionRef.current.resolution += 1;
     if (!isOpen) {
       return;
     }
-    fetchResolution({ start: 0, length: 100 }).then(({ rows }) => {
-      setResolutionOptions(
-        rows.map((r) => ({ value: String(r.resolutionId), label: r.resolution })),
-      );
-    });
-  }, [isOpen]);
+
+    let cancelled = false;
+    setPagination((prev) => ({ ...prev, resolution: { ...prev.resolution, isLoading: true } }));
+
+    fetchResolution({
+      start: 0,
+      length: DROPDOWN_PAGE_SIZE,
+      resolution: resolutionDebouncedSearch || undefined,
+    })
+      .then(({ rows, totalCount }) => {
+        if (cancelled) {
+          return;
+        }
+        setResolutionOptions(
+          rows.map((r) => ({ value: String(r.resolutionId), label: r.resolution })),
+        );
+        setPagination((prev) => ({ ...prev, resolution: { ...prev.resolution, totalCount } }));
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setPagination((prev) => ({
+            ...prev,
+            resolution: { ...prev.resolution, isLoading: false },
+          }));
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, resolutionDebouncedSearch]);
 
   useEffect(() => {
+    loadVersionRef.current.daypart += 1;
     if (!isOpen) return;
 
     let cancelled = false;
@@ -357,7 +576,10 @@ export default function ScheduleEventModal({
 
     fetchEventById(event.eventId)
       .then((enriched) => {
-        setDraft(createDraftFromEvent(enriched));
+        setDraft((prev) => ({
+          ...createDraftFromEvent(enriched),
+          syncDisplayLayouts: prev.syncDisplayLayouts,
+        }));
       })
       .catch(() => {});
   }, [isOpen, isEditMode, event]);
@@ -388,7 +610,7 @@ export default function ScheduleEventModal({
     eventType: EventTypeId,
     start: number,
     search?: string,
-  ): Promise<{ options: SelectOption[]; totalCount: number }> => {
+  ): Promise<{ options: SelectOption[]; totalCount: number; rawCount: number }> => {
     switch (eventType) {
       case EventTypeId.Layout:
       case EventTypeId.Overlay:
@@ -401,6 +623,7 @@ export default function ScheduleEventModal({
         return {
           options: rows.map((l) => ({ value: String(l.campaignId), label: l.layout })),
           totalCount,
+          rawCount: rows.length,
         };
       }
       case EventTypeId.Command: {
@@ -412,6 +635,7 @@ export default function ScheduleEventModal({
         return {
           options: rows.map((c) => ({ value: String(c.commandId), label: c.command })),
           totalCount,
+          rawCount: rows.length,
         };
       }
       case EventTypeId.Campaign: {
@@ -423,6 +647,7 @@ export default function ScheduleEventModal({
         return {
           options: rows.map((c) => ({ value: String(c.campaignId), label: c.campaign })),
           totalCount,
+          rawCount: rows.length,
         };
       }
       case EventTypeId.Media: {
@@ -436,6 +661,7 @@ export default function ScheduleEventModal({
             .filter((m) => m.released === 1)
             .map((m) => ({ value: String(m.mediaId), label: m.name })),
           totalCount,
+          rawCount: rows.length,
         };
       }
       case EventTypeId.Playlist: {
@@ -447,6 +673,7 @@ export default function ScheduleEventModal({
         return {
           options: rows.map((p) => ({ value: String(p.playlistId), label: p.name })),
           totalCount,
+          rawCount: rows.length,
         };
       }
       case EventTypeId.Sync: {
@@ -458,6 +685,7 @@ export default function ScheduleEventModal({
         return {
           options: rows.map((sg) => ({ value: String(sg.syncGroupId), label: sg.name })),
           totalCount,
+          rawCount: rows.length,
         };
       }
       case EventTypeId.DataConnector: {
@@ -470,16 +698,19 @@ export default function ScheduleEventModal({
         return {
           options: rows.map((ds) => ({ value: String(ds.dataSetId), label: ds.dataSet })),
           totalCount,
+          rawCount: rows.length,
         };
       }
       default:
-        return { options: [], totalCount: 0 };
+        return { options: [], totalCount: 0, rawCount: 0 };
     }
   };
 
   useEffect(() => {
+    loadVersionRef.current.content += 1;
     if (!isOpen || !draft.eventTypeId) {
       setContentOptions([]);
+      contentFetchedCountRef.current = 0;
       setPagination((prev) => ({
         ...prev,
         content: { totalCount: 0, isLoading: false, isLoadingMore: false },
@@ -490,6 +721,7 @@ export default function ScheduleEventModal({
 
     let cancelled = false;
     setIsLoadingContent(true);
+    contentFetchedCountRef.current = 0;
     // Keep stale options visible during refetch to avoid a blank-state flicker.
     setPagination((prev) => ({
       ...prev,
@@ -497,9 +729,10 @@ export default function ScheduleEventModal({
     }));
 
     fetchContentPage(draft.eventTypeId, 0, contentDebouncedSearch || undefined)
-      .then(({ options, totalCount }) => {
+      .then(({ options, totalCount, rawCount }) => {
         if (!cancelled) {
           setContentOptions(options);
+          contentFetchedCountRef.current = rawCount;
           setPagination((prev) => ({ ...prev, content: { ...prev.content, totalCount } }));
         }
       })
@@ -516,6 +749,19 @@ export default function ScheduleEventModal({
 
   type PaginationKey = keyof typeof pagination;
 
+  // Bumped by each list's own reset effect whenever its context changes (event type,
+  // search term, sync group, open/close). Lets loadMore() below detect and discard a
+  // load-more response that resolves after the user has already moved on to a
+  // different list, instead of merging stale rows into the new one.
+  const loadVersionRef = useRef<Record<PaginationKey, number>>({
+    content: 0,
+    daypart: 0,
+    command: 0,
+    layoutCode: 0,
+    resolution: 0,
+    syncLayout: 0,
+  });
+
   const loadMore = (
     key: PaginationKey,
     fetchFn: () => Promise<SelectOption[]>,
@@ -525,9 +771,13 @@ export default function ScheduleEventModal({
       return;
     }
     loadingMoreRef.current[key] = true;
+    const version = loadVersionRef.current[key];
     setPagination((prev) => ({ ...prev, [key]: { ...prev[key], isLoadingMore: true } }));
     fetchFn()
       .then((newOptions) => {
+        if (loadVersionRef.current[key] !== version) {
+          return;
+        }
         setOptions((prev) => {
           const seen = new Set(prev.map((o) => o.value));
           return [...prev, ...newOptions.filter((o) => !seen.has(o.value))];
@@ -539,9 +789,12 @@ export default function ScheduleEventModal({
       });
   };
 
-  const hasMoreContent = contentOptions.length < pagination.content.totalCount;
+  const hasMoreContent = contentFetchedCountRef.current < pagination.content.totalCount;
   const hasMoreDayparts = daypartOptions.length < pagination.daypart.totalCount;
   const hasMoreCommands = commandOptions.length < pagination.command.totalCount;
+  const hasMoreLayoutCodes = layoutCodeOptions.length < pagination.layoutCode.totalCount;
+  const hasMoreResolutions = resolutionOptions.length < pagination.resolution.totalCount;
+  const hasMoreSyncLayouts = syncLayoutOptions.length < pagination.syncLayout.totalCount;
 
   const loadMoreContent = () => {
     if (!draft.eventTypeId || isLoadingContent) return;
@@ -550,9 +803,12 @@ export default function ScheduleEventModal({
       () =>
         fetchContentPage(
           draft.eventTypeId!,
-          contentOptions.length,
+          contentFetchedCountRef.current,
           contentDebouncedSearch || undefined,
-        ).then(({ options }) => options),
+        ).then(({ options, rawCount }) => {
+          contentFetchedCountRef.current += rawCount;
+          return options;
+        }),
       setContentOptions,
     );
   };
@@ -583,40 +839,125 @@ export default function ScheduleEventModal({
     );
   };
 
+  const loadMoreLayoutCodes = () => {
+    loadMore(
+      'layoutCode',
+      () =>
+        fetchLayoutCodes({
+          start: layoutCodeOptions.length,
+          length: DROPDOWN_PAGE_SIZE,
+          code: layoutCodeDebouncedSearch || undefined,
+        }).then(({ rows }) =>
+          rows.map((c) => ({ value: c.code, label: `${c.layout} (${c.code})` })),
+        ),
+      setLayoutCodeOptions,
+    );
+  };
+
+  const loadMoreResolutions = () => {
+    loadMore(
+      'resolution',
+      () =>
+        fetchResolution({
+          start: resolutionOptions.length,
+          length: DROPDOWN_PAGE_SIZE,
+          resolution: resolutionDebouncedSearch || undefined,
+        }).then(({ rows }) =>
+          rows.map((r) => ({ value: String(r.resolutionId), label: r.resolution })),
+        ),
+      setResolutionOptions,
+    );
+  };
+
+  const loadMoreSyncLayouts = () => {
+    loadMore(
+      'syncLayout',
+      () =>
+        fetchLayouts({
+          start: syncLayoutOptions.length,
+          length: DROPDOWN_PAGE_SIZE,
+        }).then(({ rows }) => rows.map((l) => ({ value: String(l.layoutId), label: l.layout }))),
+      setSyncLayoutOptions,
+    );
+  };
+
+  const handlePreviewMedia = () => {
+    const requestedId = draft.mediaId;
+    if (!requestedId) {
+      return;
+    }
+
+    setIsLoadingMediaPreview(true);
+    fetchMedia({ start: 0, length: 1, mediaId: requestedId })
+      .then(({ rows }) => {
+        if (draft.mediaId !== requestedId) {
+          return;
+        }
+        const [media] = rows;
+        if (!media) {
+          notify.error(t('Failed to load media preview.'));
+          return;
+        }
+        setPreviewMedia(media);
+      })
+      .catch(() => {
+        notify.error(t('Failed to load media preview.'));
+      })
+      .finally(() => {
+        setIsLoadingMediaPreview(false);
+      });
+  };
+
   useEffect(() => {
+    loadVersionRef.current.layoutCode += 1;
     if (!isOpen || draft.eventTypeId !== EventTypeId.Action) {
       setLayoutCodeOptions([]);
       setCommandOptions([]);
       return;
     }
 
+    let cancelled = false;
     setPagination((prev) => ({
       ...prev,
       layoutCode: { ...prev.layoutCode, isLoading: true },
     }));
 
-    fetchLayoutCodes()
-      .then((codes) => {
+    fetchLayoutCodes({
+      start: 0,
+      length: DROPDOWN_PAGE_SIZE,
+      code: layoutCodeDebouncedSearch || undefined,
+    })
+      .then(({ rows: codes, totalCount }) => {
+        if (cancelled) {
+          return;
+        }
         setLayoutCodeOptions(
           codes.map((c) => ({ value: c.code, label: `${c.layout} (${c.code})` })),
         );
         setPagination((prev) => ({
           ...prev,
-          layoutCode: { ...prev.layoutCode, totalCount: codes.length },
+          layoutCode: { ...prev.layoutCode, totalCount },
         }));
       })
       .catch((err) => {
         console.error('fetchLayoutCodes failed:', err);
       })
       .finally(() => {
-        setPagination((prev) => ({
-          ...prev,
-          layoutCode: { ...prev.layoutCode, isLoading: false },
-        }));
+        if (!cancelled) {
+          setPagination((prev) => ({
+            ...prev,
+            layoutCode: { ...prev.layoutCode, isLoading: false },
+          }));
+        }
       });
-  }, [isOpen, draft.eventTypeId]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, draft.eventTypeId, layoutCodeDebouncedSearch]);
 
   useEffect(() => {
+    loadVersionRef.current.command += 1;
     if (!isOpen || draft.eventTypeId !== EventTypeId.Action) {
       return;
     }
@@ -658,20 +999,19 @@ export default function ScheduleEventModal({
     if (!isOpen || !isSyncType || !draft.syncGroupId) {
       setSyncDisplays([]);
       setSyncLayoutOptions([]);
+      setSyncLayoutSearchByDisplay({});
+      setSyncLayoutOverrideByDisplay({});
+      setSyncMirror(false);
       return;
     }
 
     let cancelled = false;
     setIsLoadingSyncDisplays(true);
 
-    Promise.all([
-      fetchSyncGroupDisplays(draft.syncGroupId, isEditMode ? event?.eventId : undefined),
-      fetchLayouts({ start: 0, length: 100 }),
-    ])
-      .then(([displays, { rows: layouts }]) => {
+    fetchSyncGroupDisplays(draft.syncGroupId, isEditMode ? event?.eventId : undefined)
+      .then((displays) => {
         if (cancelled) return;
         setSyncDisplays(displays);
-        setSyncLayoutOptions(layouts.map((l) => ({ value: String(l.layoutId), label: l.layout })));
         // Pre-populate syncDisplayLayouts from fetched data (edit mode)
         const layoutMap: Record<number, number | null> = {};
         displays.forEach((d) => {
@@ -698,11 +1038,56 @@ export default function ScheduleEventModal({
     };
   }, [isOpen, isSyncType, draft.syncGroupId]);
 
+  // Fetch layout options for the sync group per-display layout dropdowns
+  useEffect(() => {
+    loadVersionRef.current.syncLayout += 1;
+    if (!isOpen || !isSyncType || !draft.syncGroupId) {
+      setSyncLayoutOptions([]);
+      return;
+    }
+
+    let cancelled = false;
+    setPagination((prev) => ({ ...prev, syncLayout: { ...prev.syncLayout, isLoading: true } }));
+
+    fetchLayouts({
+      start: 0,
+      length: DROPDOWN_PAGE_SIZE,
+    })
+      .then(({ rows: layouts, totalCount }) => {
+        if (cancelled) return;
+        setSyncLayoutOptions(layouts.map((l) => ({ value: String(l.layoutId), label: l.layout })));
+        setPagination((prev) => ({ ...prev, syncLayout: { ...prev.syncLayout, totalCount } }));
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setPagination((prev) => ({
+            ...prev,
+            syncLayout: { ...prev.syncLayout, isLoading: false },
+          }));
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, isSyncType, draft.syncGroupId]);
+
   const updateDraft = <K extends keyof ScheduleEventDraft>(
     key: K,
     value: ScheduleEventDraft[K],
   ) => {
     setDraft((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const clearDaypartTimeErrors = () => {
+    const rest = { ...formErrors };
+    delete rest.dayPartId;
+    delete rest.fromDt;
+    delete rest.toDt;
+    delete rest.relativeHours;
+    setFormErrors(rest);
+    const remaining = Object.values(rest).filter(Boolean) as string[];
+    setApiError(remaining.length > 0 ? remaining.join(' · ') : undefined);
   };
 
   const updateCriterion = (index: number, field: keyof DraftCriterion, value: string) => {
@@ -771,7 +1156,7 @@ export default function ScheduleEventModal({
     setApiError(undefined);
     setFormErrors({});
 
-    const schema = getScheduleEventSchema(t);
+    const schema = getScheduleEventSchema(t, customDayPartId, alwaysDayPartId);
     const result = schema.safeParse(draft);
 
     if (!result.success) {
@@ -987,43 +1372,145 @@ export default function ScheduleEventModal({
     setShowDisplayBanner(false);
     setSyncDisplays([]);
     setSyncLayoutOptions([]);
+    setSyncLayoutSearchByDisplay({});
+    setSyncLayoutOverrideByDisplay({});
+    setSyncMirror(false);
     setFormErrors({});
     setApiError(undefined);
+    setShareOfVoicePercentInput(null);
     onClose();
   };
 
-  const syncDisplayColumns: ColumnDef<SyncGroupDisplay>[] = [
-    {
-      accessorKey: 'display',
-      header: t('Display'),
-      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
-    },
-    {
-      id: 'layout',
-      header: t('Layout'),
-      cell: ({ row }) => (
-        <SelectDropdown
-          value={
-            draft.syncDisplayLayouts[row.original.displayId]
-              ? String(draft.syncDisplayLayouts[row.original.displayId])
-              : ''
+  const resolveSyncLayoutLabel = async (value: string): Promise<string> => {
+    const { rows } = await fetchLayouts({ start: 0, length: 1, layoutId: Number(value) });
+    return rows[0]?.layout ?? '';
+  };
+
+  const setSyncDisplayLayout = (displayId: number, layoutId: number, isLead: boolean) => {
+    if (!isLead && syncMirror) {
+      setSyncMirror(false);
+    }
+    setDraft((prev) => {
+      const updated = { ...prev.syncDisplayLayouts, [displayId]: layoutId };
+      if (isLead && syncMirror) {
+        for (const display of syncDisplays) {
+          if (display.displayId !== displayId) {
+            updated[display.displayId] = layoutId;
           }
-          options={syncLayoutOptions}
-          onSelect={(value) => {
-            setDraft((prev) => ({
-              ...prev,
-              syncDisplayLayouts: {
-                ...prev.syncDisplayLayouts,
-                [row.original.displayId]: Number(value),
-              },
-            }));
-          }}
-          placeholder={t('Select Layout')}
-          searchable
-        />
-      ),
-    },
-  ];
+        }
+      }
+      return { ...prev, syncDisplayLayouts: updated };
+    });
+  };
+
+  const setSyncMirrorForLead = (
+    checked: boolean,
+    leadDisplayId: number,
+    leadLayoutId: number | null,
+  ) => {
+    setSyncMirror(checked);
+    const shouldMirror = checked && !!leadLayoutId;
+    setDraft((prev) => {
+      const updated = { ...prev.syncDisplayLayouts };
+      for (const display of syncDisplays) {
+        if (display.displayId === leadDisplayId) {
+          continue;
+        }
+        if (shouldMirror) {
+          updated[display.displayId] = leadLayoutId!;
+        } else {
+          delete updated[display.displayId];
+        }
+      }
+      return { ...prev, syncDisplayLayouts: updated };
+    });
+  };
+
+  const syncDisplayColumns: ColumnDef<SyncGroupDisplay>[] = useMemo(
+    () => [
+      {
+        accessorKey: 'displayId',
+        header: t('ID'),
+        size: 50,
+        cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
+      },
+      {
+        accessorKey: 'display',
+        header: t('Display'),
+        size: 150,
+        cell: ({ row }) => (
+          <div className="flex items-center w-full min-w-0 gap-2">
+            <span className="text-gray-800 text-sm truncate min-w-0">{row.original.display}</span>
+            {row.original.displayId === row.original.leadDisplayId && (
+              <Badge type="success" className="shrink-0">
+                {t('Lead')}
+              </Badge>
+            )}
+          </div>
+        ),
+      },
+      {
+        id: 'layout',
+        header: t('Layout'),
+        cell: ({ row, table }) => {
+          const meta = table.options.meta as SyncDisplayTableMeta;
+          const isLead = row.original.displayId === row.original.leadDisplayId;
+          const leadLayoutId = meta.syncDisplayLayouts[row.original.displayId];
+          const rowSearch = meta.syncLayoutSearchByDisplay[row.original.displayId];
+          const rowOverride = meta.syncLayoutOverrideByDisplay[row.original.displayId];
+          const rowOptions = rowSearch ? (rowOverride?.options ?? []) : meta.syncLayoutOptions;
+          const rowIsLoading = rowSearch ? !!rowOverride?.isLoading : meta.syncLayoutIsLoading;
+          const rowHasMore = rowSearch
+            ? rowOptions.length < (rowOverride?.totalCount ?? 0)
+            : meta.hasMoreSyncLayouts;
+          const rowIsLoadingMore = rowSearch
+            ? !!rowOverride?.isLoadingMore
+            : meta.syncLayoutIsLoadingMore;
+          return (
+            <div className="flex items-center gap-2">
+              <div className="w-52">
+                <SelectDropdown
+                  value={leadLayoutId ? String(leadLayoutId) : ''}
+                  options={rowOptions}
+                  onSelect={(value) =>
+                    meta.setSyncDisplayLayout(row.original.displayId, Number(value), isLead)
+                  }
+                  placeholder={t('Select Layout')}
+                  searchable
+                  onSearch={(term) => meta.onSyncLayoutSearch(row.original.displayId, term)}
+                  isLoading={rowIsLoading}
+                  onLoadMore={() => meta.onSyncLayoutLoadMore(row.original.displayId)}
+                  hasMore={rowHasMore}
+                  isLoadingMore={rowIsLoadingMore}
+                  resolveLabel={meta.resolveSyncLayoutLabel}
+                />
+              </div>
+              {isLead && (
+                <div className="flex items-center gap-2 shrink-0">
+                  <Switch
+                    ariaLabel={t('Mirror layout to all displays')}
+                    checked={meta.syncMirror}
+                    hideOnOff
+                    size="sm"
+                    disabled={!leadLayoutId}
+                    onChange={(checked) =>
+                      meta.setSyncMirrorForLead(
+                        checked,
+                        row.original.displayId,
+                        leadLayoutId ?? null,
+                      )
+                    }
+                  />
+                  <span className="text-sm text-gray-600">{t('Mirror')}</span>
+                </div>
+              )}
+            </div>
+          );
+        },
+      },
+    ],
+    [t],
+  );
 
   const actions: ModalAction[] = (() => {
     const result: ModalAction[] = [
@@ -1151,25 +1638,40 @@ export default function ScheduleEventModal({
                 })}
                 onSelect={(value) => {
                   const newType = Number(value) as EventTypeId;
-                  setDraft((prev) => ({
-                    ...prev,
-                    eventTypeId: newType,
-                    campaignId: null,
-                    commandId: null,
-                    mediaId: null,
-                    playlistId: null,
-                    syncGroupId: null,
-                    dataSetId: null,
-                    dataSetParams: '',
-                    syncDisplayLayouts: {},
-                    actionType: '',
-                    actionTriggerCode: '',
-                    actionLayoutCode: '',
-                    shareOfVoice: 0,
-                  }));
+                  setDraft((prev) => {
+                    const wasCommandEvent = prev.eventTypeId === EventTypeId.Command;
+                    return {
+                      ...prev,
+                      eventTypeId: newType,
+                      campaignId: null,
+                      commandId: null,
+                      mediaId: null,
+                      playlistId: null,
+                      syncGroupId: null,
+                      dataSetId: null,
+                      dataSetParams: '',
+                      syncDisplayLayouts: {},
+                      actionType: '',
+                      actionTriggerCode: '',
+                      actionLayoutCode: '',
+                      shareOfVoice: 0,
+                      ...(wasCommandEvent && newType !== EventTypeId.Command
+                        ? {
+                            dayPartId: '',
+                            fromDt: '',
+                            toDt: '',
+                            useRelativeTime: false,
+                            relativeHours: 0,
+                            relativeMinutes: 0,
+                            relativeSeconds: 0,
+                          }
+                        : {}),
+                    };
+                  });
                   clearTimeout(contentSearchTimerRef.current);
                   setContentDebouncedSearch('');
                   setContentOptions([]);
+                  clearDaypartTimeErrors();
                 }}
                 placeholder={t('Select Event Type')}
                 error={formErrors.eventTypeId}
@@ -1239,6 +1741,23 @@ export default function ScheduleEventModal({
                   </div>
                 )}
 
+              {isMediaType && !!draft.mediaId && hasFeature(user, 'library.view') && (
+                <div className="inline-flex flex-col gap-1 items-start">
+                  <Button
+                    variant="secondary"
+                    className="mb-0"
+                    rightIcon={Tablet}
+                    disabled={isLoadingMediaPreview}
+                    onClick={handlePreviewMedia}
+                  >
+                    {isLoadingMediaPreview ? t('Loading...') : t('Preview')}
+                  </Button>
+                  <span className="text-xs text-gray-400 mt-1 whitespace-pre-line">
+                    {t('Preview the selected media')}
+                  </span>
+                </div>
+              )}
+
               {/* Sync Group: per-display layout selection table */}
               {isSyncType && draft.syncGroupId && (
                 <div className="space-y-2">
@@ -1258,6 +1777,23 @@ export default function ScheduleEventModal({
                     loading={isLoadingSyncDisplays}
                     enableSelection={false}
                     hideToolbar
+                    meta={
+                      {
+                        syncDisplayLayouts: draft.syncDisplayLayouts,
+                        syncMirror,
+                        syncLayoutOptions,
+                        syncLayoutSearchByDisplay,
+                        syncLayoutOverrideByDisplay,
+                        syncLayoutIsLoading: pagination.syncLayout.isLoading,
+                        syncLayoutIsLoadingMore: pagination.syncLayout.isLoadingMore,
+                        hasMoreSyncLayouts,
+                        setSyncDisplayLayout,
+                        setSyncMirrorForLead,
+                        onSyncLayoutSearch: handleSyncLayoutSearch,
+                        onSyncLayoutLoadMore: loadMoreSyncLayoutsForDisplay,
+                        resolveSyncLayoutLabel,
+                      } satisfies SyncDisplayTableMeta
+                    }
                   />
                   {formErrors.syncDisplayLayouts && (
                     <p className="text-xs text-red-600 ml-2">{formErrors.syncDisplayLayouts}</p>
@@ -1313,7 +1849,11 @@ export default function ScheduleEventModal({
                         'Please select the Code identifier for the Layout that Player should navigate to when this Action is triggered.',
                       )}
                       searchable
+                      onSearch={handleLayoutCodeSearch}
                       isLoading={pagination.layoutCode.isLoading}
+                      onLoadMore={loadMoreLayoutCodes}
+                      hasMore={hasMoreLayoutCodes}
+                      isLoadingMore={pagination.layoutCode.isLoadingMore}
                       error={formErrors.actionLayoutCode}
                     />
                   )}
@@ -1381,7 +1921,10 @@ export default function ScheduleEventModal({
                   label={t('Dayparting')}
                   value={draft.dayPartId}
                   options={daypartOptions}
-                  onSelect={(value) => updateDraft('dayPartId', value)}
+                  onSelect={(value) => {
+                    updateDraft('dayPartId', value);
+                    clearDaypartTimeErrors();
+                  }}
                   placeholder={t('Select Daypart')}
                   helpText={t(
                     'Select how this event recurs. Choose Always for continuous playback or Custom to define specific times.',
@@ -1405,7 +1948,10 @@ export default function ScheduleEventModal({
                         name="shareOfVoice"
                         label={t('Share of Voice')}
                         value={draft.shareOfVoice}
-                        onChange={(num) => updateDraft('shareOfVoice', num)}
+                        onChange={(num) => {
+                          updateDraft('shareOfVoice', num);
+                          setShareOfVoicePercentInput(null);
+                        }}
                         helpText={t(
                           'The amount of time this Layout should be shown, in seconds per hour.',
                         )}
@@ -1417,9 +1963,26 @@ export default function ScheduleEventModal({
                         </label>
                         <input
                           type="text"
-                          readOnly
-                          value={((draft.shareOfVoice / 3600) * 100).toFixed(2)}
-                          className="h-11.25 rounded-lg border border-gray-200 px-3 text-sm bg-gray-50 text-gray-500"
+                          inputMode="decimal"
+                          value={
+                            shareOfVoicePercentInput ??
+                            ((draft.shareOfVoice / 3600) * 100).toFixed(2)
+                          }
+                          onChange={(e) => {
+                            const raw = e.target.value;
+                            setShareOfVoicePercentInput(raw);
+
+                            const percent = Number(raw);
+                            if (raw.trim() !== '' && Number.isFinite(percent)) {
+                              const clampedPercent = Math.min(100, Math.max(0, percent));
+                              updateDraft(
+                                'shareOfVoice',
+                                Math.round((3600 * clampedPercent) / 100),
+                              );
+                            }
+                          }}
+                          onBlur={() => setShareOfVoicePercentInput(null)}
+                          className="h-11.25 rounded-lg border border-gray-200 px-3 text-sm font-normal text-gray-800 hover:border-gray-400 focus:border-xibo-blue-600 focus:ring-1 focus:ring-xibo-blue-600/25"
                         />
                       </div>
                     </div>
@@ -1433,6 +1996,7 @@ export default function ScheduleEventModal({
                       onChange={(value) => updateDraft('fromDt', value)}
                       helpText={t('Select the start time for this event.')}
                       showTimePicker={false}
+                      error={formErrors.fromDt}
                     />
                   )}
 
@@ -1618,6 +2182,12 @@ export default function ScheduleEventModal({
                           'Optionally select a Resolution to use for the selected Media. Leave blank to match with an existing Resolution closest in size to the selected media.',
                         )}
                         clearable
+                        searchable
+                        onSearch={handleResolutionSearch}
+                        isLoading={pagination.resolution.isLoading}
+                        onLoadMore={loadMoreResolutions}
+                        hasMore={hasMoreResolutions}
+                        isLoadingMore={pagination.resolution.isLoadingMore}
                       />
                       <div className="flex flex-col gap-1.5">
                         <label className="text-sm font-semibold text-gray-500">
@@ -2042,6 +2612,16 @@ export default function ScheduleEventModal({
           )}
         </div>
       </div>
+
+      {previewMedia && (
+        <MediaPreviewer
+          mediaId={previewMedia.mediaId}
+          mediaType={previewMedia.mediaType}
+          fileName={previewMedia.name}
+          mediaData={previewMedia}
+          onClose={() => setPreviewMedia(null)}
+        />
+      )}
     </Modal>
   );
 }

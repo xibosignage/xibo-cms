@@ -36,6 +36,7 @@ import { useDatasetData } from './hooks/useDatasetData';
 import Button from '@/components/ui/Button';
 import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useUserContext } from '@/context/UserContext';
@@ -116,6 +117,7 @@ export default function DatasetData() {
     data: queryData,
     isFetching: isFetchingData,
     isError,
+    isPaused,
     error: queryError,
   } = useDatasetData({
     datasetId: datasetId!,
@@ -387,14 +389,7 @@ export default function DatasetData() {
           onReset={handleResetFilters}
         />
 
-        {error && (
-          <div
-            className="bg-red-50 border border-red-200 text-red-800 p-4 mb-4 rounded-lg"
-            role="alert"
-          >
-            {error}
-          </div>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         <div className="min-h-0 flex flex-col">
           {isLoading ? (

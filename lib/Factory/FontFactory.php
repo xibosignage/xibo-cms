@@ -204,6 +204,7 @@ class FontFactory extends BaseFactory
             'id',
             'name',
             'fileName',
+            'familyName',
             'createdAt',
             'modifiedAt',
             'modifiedBy',
@@ -213,7 +214,8 @@ class FontFactory extends BaseFactory
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            defaultSort: ['name ASC']
+            defaultSort: ['name ASC'],
+            uniqueColumn: 'id'
         );
 
         $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';

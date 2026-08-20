@@ -28,7 +28,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { notify } from '@/components/ui/Notification';
 import type { PublishValue } from '@/components/ui/forms/PublishDateSelect';
-import { selectFolder } from '@/services/folderApi';
+import { selectFolder, type ApiResult } from '@/services/folderApi';
 import {
   copyLayout,
   deleteLayout,
@@ -96,6 +96,9 @@ export function useTemplateActions({
         return;
       }
 
+      notify.success(
+        t('{{count}} template(s) deleted successfully.', { count: itemsToDelete.length }),
+      );
       setRowSelection({});
       handleRefresh();
       closeModal();
@@ -138,16 +141,17 @@ export function useTemplateActions({
       return;
     }
 
-    const movePromises = itemsToMove.map((item) =>
-      selectFolder({
-        folderId: newFolderId,
-        targetId: item.campaignId,
-        targetType: 'campaign',
-      }),
-    );
-
     try {
-      const results = await Promise.all(movePromises);
+      const results: ApiResult[] = [];
+      for (const item of itemsToMove) {
+        results.push(
+          await selectFolder({
+            folderId: newFolderId,
+            targetId: item.campaignId,
+            targetType: 'campaign',
+          }),
+        );
+      }
       const failures = results.filter((res) => !res.success);
 
       if (failures.length === 0) {

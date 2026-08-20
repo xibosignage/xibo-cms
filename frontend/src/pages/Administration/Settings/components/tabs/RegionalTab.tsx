@@ -139,6 +139,7 @@ export default function RegionalTab({
               }))}
               onSelect={(v) => updateField('DEFAULT_LANGUAGE', v)}
               searchable
+              disabled={!isEditable('DEFAULT_LANGUAGE')}
               className="w-full"
             />
           )}
@@ -153,6 +154,7 @@ export default function RegionalTab({
               }))}
               onSelect={(v) => updateField('defaultTimezone', v)}
               searchable
+              disabled={!isEditable('defaultTimezone')}
               className="w-full"
             />
           )}
@@ -192,6 +194,8 @@ export default function RegionalTab({
               { value: 'Jalali', label: t('Jalali') },
             ]}
             onSelect={(v) => updateField('CALENDAR_TYPE', v)}
+            helpText={t('Which Calendar Type should the CMS use?')}
+            disabled={!isEditable('CALENDAR_TYPE')}
           />
         )}
       </SettingsSection>

@@ -29,6 +29,7 @@ use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\ReportSchedule;
 use Xibo\Factory\ReportScheduleFactory;
 use Xibo\Factory\SavedReportFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\ReportServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
@@ -387,7 +388,7 @@ class ScheduleReport extends Base
         if ($reportSchedule->lastRunDt == 0) {
             $nextRunDt = Carbon::now()->format('U');
         } else {
-            $nextRunDt = $cron->getNextRunDate(Carbon::createFromTimestamp($reportSchedule->lastRunDt))
+            $nextRunDt = $cron->getNextRunDate(DateFormatHelper::createFromTimestamp($reportSchedule->lastRunDt))
                 ->format('U');
         }
 

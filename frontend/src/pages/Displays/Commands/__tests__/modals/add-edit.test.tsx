@@ -30,6 +30,7 @@ import { renderAddEditCommandModal } from './helpers/renderAddEditCommandModal';
 
 import { createCommand, updateCommand } from '@/services/commandApi';
 import { testQueryClient } from '@/setupTests';
+import { waitForClose } from '@/testUtils/rtl';
 
 // =============================================================================
 // Module mocks
@@ -194,13 +195,14 @@ describe('AddEditCommandModal', () => {
 
     test('Save button shows "Saving…" while the request is in progress', async () => {
       const user = userEvent.setup();
+      const onClose = vi.fn();
       let resolveCreate: (value: ReturnType<typeof buildCommand>) => void = () => {};
       vi.mocked(createCommand).mockReturnValueOnce(
         new Promise((resolve) => {
           resolveCreate = resolve;
         }),
       );
-      renderAddEditCommandModal({ mode: 'add' });
+      renderAddEditCommandModal({ mode: 'add', onClose });
 
       await user.type(screen.getByRole('textbox', { name: /^name$/i }), 'My Command');
       await user.type(screen.getByRole('textbox', { name: /^code$/i }), 'MY_CODE');
@@ -208,7 +210,9 @@ describe('AddEditCommandModal', () => {
 
       expect(await screen.findByRole('button', { name: /saving/i })).toBeDisabled();
 
+      // Wait for the resulting close so the update isn't left outside act().
       resolveCreate(buildCommand());
+      await waitForClose(onClose);
     });
 
     test('an API error is displayed in the modal', async () => {

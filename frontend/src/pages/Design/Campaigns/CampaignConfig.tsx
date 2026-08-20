@@ -35,12 +35,19 @@ import type { ComponentProps } from 'react';
 
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
 import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkActions';
-import { TextCell, TagsCell, StatusCell, ActionsCell } from '@/components/ui/table/cells';
+import {
+  TextCell,
+  TagsCell,
+  toDisplayTags,
+  StatusCell,
+  ActionsCell,
+} from '@/components/ui/table/cells';
 import { getCommonFormOptions } from '@/config/commonForms';
 import type { Campaign } from '@/types/campaign';
 import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
 import type { DateLike } from '@/utils/date';
+import { formatTagsForExport } from '@/utils/tags';
 
 export interface CampaignFilterInput {
   name?: string;
@@ -63,6 +70,7 @@ export const CAMPAIGN_INITIAL_FILTER_STATE: CampaignFilterInput = {
   layoutId: '',
   type: '',
   cyclePlaybackEnabled: '',
+  retired: 0,
   logicalOperatorName: 'OR',
   useRegexForName: false,
   logicalOperator: 'OR',
@@ -150,6 +158,7 @@ export const getCampaignFilterKeys = (
     label: t('Retired'),
     name: 'retired',
     options: getCommonFormOptions(t).retired,
+    compareToDefault: true,
   },
 ];
 
@@ -172,10 +181,19 @@ interface CampaignActionsProps {
   openCopyModal?: (campaign: Campaign) => void;
   onSchedule?: (campaign: Campaign) => void;
   onPreview?: (campaign: Campaign) => void;
+  onTagClick?: (tag: Tag) => void;
+  selectedTagIds?: (string | number)[];
 }
 
 export const getCampaignColumn = (props: CampaignActionsProps): ColumnDef<Campaign>[] => {
-  const { t, formatDateTime, canAccessAdCampaign, canTag = false } = props;
+  const {
+    t,
+    formatDateTime,
+    canAccessAdCampaign,
+    canTag = false,
+    onTagClick,
+    selectedTagIds,
+  } = props;
   const getActions = getCampaignItemActions(props);
 
   return [
@@ -213,6 +231,10 @@ export const getCampaignColumn = (props: CampaignActionsProps): ColumnDef<Campai
               const value = info.getValue<number>();
               return <TextCell>{value ? formatDateTime(new Date(value * 1000)) : '-'}</TextCell>;
             },
+            meta: {
+              getExportValue: (row) =>
+                row.startDt ? formatDateTime(new Date(row.startDt * 1000)) : '',
+            },
           },
           {
             accessorKey: 'endDt',
@@ -222,6 +244,10 @@ export const getCampaignColumn = (props: CampaignActionsProps): ColumnDef<Campai
             cell: (info) => {
               const value = info.getValue<number>();
               return <TextCell>{value ? formatDateTime(new Date(value * 1000)) : '-'}</TextCell>;
+            },
+            meta: {
+              getExportValue: (row) =>
+                row.endDt ? formatDateTime(new Date(row.endDt * 1000)) : '',
             },
           },
         ] as ColumnDef<Campaign>[])
@@ -244,11 +270,16 @@ export const getCampaignColumn = (props: CampaignActionsProps): ColumnDef<Campai
             enableSorting: false,
             cell: (info) => {
               const tags = info.getValue<Tag[]>() || [];
-              const formattedTags = tags.map((tag) => ({
-                id: tag.tagId,
-                label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
-              }));
-              return <TagsCell tags={formattedTags} />;
+              return (
+                <TagsCell
+                  tags={toDisplayTags(tags)}
+                  onTagClick={onTagClick}
+                  selectedTagIds={selectedTagIds}
+                />
+              );
+            },
+            meta: {
+              getExportValue: (row) => formatTagsForExport(row.tags),
             },
           },
         ] as ColumnDef<Campaign>[])
@@ -275,6 +306,9 @@ export const getCampaignColumn = (props: CampaignActionsProps): ColumnDef<Campai
             type={value ? 'success' : 'neutral'}
           />
         );
+      },
+      meta: {
+        getExportValue: (row) => (row.cyclePlaybackEnabled ? t('Enabled') : t('Disabled')),
       },
     },
 

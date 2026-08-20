@@ -42,6 +42,7 @@ import {
   StatusCell,
   ActionsCell,
   TagsCell,
+  toDisplayTags,
   CheckMarkCell,
   getSharingColumn,
 } from '@/components/ui/table/cells';
@@ -51,6 +52,7 @@ import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
 import type { DateLike } from '@/utils/date';
 import { formatDuration } from '@/utils/formatters';
+import { formatTagsForExport } from '@/utils/tags';
 
 export interface PlaylistFilterInput {
   playlistId?: number | null;
@@ -168,6 +170,8 @@ export interface PlaylistActionsProps {
   openTimeline?: (id: number) => void;
   openEnableStatsModal?: (id: number) => void;
   openUsageReportModal?: (id: number) => void;
+  onTagClick?: (tag: Tag) => void;
+  selectedTagIds?: (string | number)[];
 }
 
 export const getPlaylistItemActions = ({
@@ -294,7 +298,7 @@ export const getPlaylistItemActions = ({
 };
 
 export const getPlaylistColumns = (props: PlaylistActionsProps): ColumnDef<Playlist>[] => {
-  const { t, formatDateTime, canTag = false } = props;
+  const { t, formatDateTime, canTag = false, onTagClick, selectedTagIds } = props;
   const getActions = getPlaylistItemActions(props);
   return [
     {
@@ -320,11 +324,16 @@ export const getPlaylistColumns = (props: PlaylistActionsProps): ColumnDef<Playl
             size: 150,
             cell: (info) => {
               const tags = info.getValue<Tag[]>() || [];
-              const formattedTags = tags.map((tag) => ({
-                id: tag.tagId,
-                label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
-              }));
-              return <TagsCell tags={formattedTags} />;
+              return (
+                <TagsCell
+                  tags={toDisplayTags(tags)}
+                  onTagClick={onTagClick}
+                  selectedTagIds={selectedTagIds}
+                />
+              );
+            },
+            meta: {
+              getExportValue: (row) => formatTagsForExport(row.tags),
             },
           },
         ] as ColumnDef<Playlist>[])
@@ -368,6 +377,12 @@ export const getPlaylistColumns = (props: PlaylistActionsProps): ColumnDef<Playl
 
         return <TextCell>{formatDuration(duration)}</TextCell>;
       },
+      meta: {
+        getExportValue: (row) =>
+          row.requiresDurationUpdate === 1
+            ? t('Changes have been made and we are recalculating this Playlist’s duration')
+            : formatDuration(row.duration),
+      },
     },
     {
       accessorKey: 'owner',
@@ -400,12 +415,18 @@ export const getPlaylistColumns = (props: PlaylistActionsProps): ColumnDef<Playl
       header: t('Created'),
       size: 160,
       cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatDateTime(row.createdDt),
+      },
     },
     {
       accessorKey: 'modifiedDt',
       header: t('Modified'),
       size: 160,
       cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatDateTime(row.modifiedDt),
+      },
     },
     {
       id: 'tableActions',

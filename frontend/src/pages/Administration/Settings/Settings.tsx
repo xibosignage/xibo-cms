@@ -42,6 +42,7 @@ import { useSettingsForm } from './hooks/useSettingsForm';
 
 import Button from '@/components/ui/Button';
 import { notify } from '@/components/ui/Notification';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import type { TabNavItem } from '@/components/ui/TabNav';
 import { useUserContext } from '@/context/UserContext';
@@ -56,9 +57,14 @@ export default function Settings() {
   const adminTabs = useFilteredTabs('administration');
   const { updateUser } = useUserContext();
 
-  const { data, isLoading, isError, error: queryError } = useSettingsData();
+  const { data, isLoading, isError, isPaused, error: queryError } = useSettingsData();
   const { formValues, updateField, isVisible, isEditable, isDirty, resetForm } =
     useSettingsForm(data);
+  const error = isError
+    ? queryError instanceof Error
+      ? queryError.message
+      : t('Failed to load settings')
+    : '';
 
   const [activeTab, setActiveTab] = useState('Configuration');
   const [isPending, startTransition] = useTransition();
@@ -140,14 +146,7 @@ export default function Settings() {
             ))}
           </div>
 
-          {isError && (
-            <div
-              className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-lg"
-              role="alert"
-            >
-              {queryError instanceof Error ? queryError.message : t('Failed to load settings')}
-            </div>
-          )}
+          <QueryStatusBanner error={error} isPaused={isPaused} />
           <div className="flex-1 overflow-y-auto flex flex-col">
             {isLoading && (
               <div className="flex-1 flex items-center justify-center p-5 space-y-5 bg-gray-50 ">

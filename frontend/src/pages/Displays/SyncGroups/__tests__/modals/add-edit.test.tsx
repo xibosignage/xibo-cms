@@ -30,6 +30,7 @@ import { renderAddEditModal } from './helpers/renderAddEditModal';
 
 import { createSyncGroup, fetchSyncGroupDisplays, updateSyncGroup } from '@/services/syncGroupApi';
 import { testQueryClient } from '@/setupTests';
+import { waitForClose } from '@/testUtils/rtl';
 
 // =============================================================================
 // Module mocks
@@ -235,7 +236,7 @@ describe('AddAndEditSyncGroupModal', () => {
           resolveCreate = resolve;
         }),
       );
-      renderAddEditModal({ mode: 'add' });
+      const { onClose } = renderAddEditModal({ mode: 'add' });
 
       await user.type(screen.getByRole('textbox', { name: /^name$/i }), 'Lobby Sync');
       await user.click(screen.getByRole('button', { name: /^save$/i }));
@@ -243,8 +244,9 @@ describe('AddAndEditSyncGroupModal', () => {
       // While the promise is unresolved the button label flips to "Saving…".
       expect(await screen.findByRole('button', { name: /saving/i })).toBeDisabled();
 
-      // Resolve so the test doesn't leak a pending promise.
+      // Wait for the resulting close so the update isn't left outside act().
       resolveCreate(mockSyncGroup);
+      await waitForClose(onClose);
     });
 
     // -------------------------------------------------------------------------
@@ -373,12 +375,21 @@ describe('AddAndEditSyncGroupModal', () => {
     // -------------------------------------------------------------------------
     test('a successful save sends the updated values to the API', async () => {
       const user = userEvent.setup();
+      vi.mocked(fetchSyncGroupDisplays).mockResolvedValueOnce([
+        buildSyncGroupDisplay({ displayId: 100, display: 'Lobby Screen 1' }),
+      ]);
       vi.mocked(updateSyncGroup).mockResolvedValue(mockSyncGroup);
       renderAddEditModal({ mode: 'edit', syncGroup: mockSyncGroup });
 
       const nameInput = screen.getByRole('textbox', { name: /^name$/i });
       await user.clear(nameInput);
       await user.type(nameInput, 'Renamed Group');
+
+      const leadDisplay = await screen.findByRole('combobox', { name: /lead display/i });
+      await waitFor(() => {
+        expect(within(leadDisplay).getAllByRole('option').length).toBeGreaterThanOrEqual(1);
+      });
+      await user.selectOptions(leadDisplay, '100');
 
       await user.click(screen.getByRole('button', { name: /^save$/i }));
 
@@ -395,8 +406,17 @@ describe('AddAndEditSyncGroupModal', () => {
     // -------------------------------------------------------------------------
     test('an API error is displayed in the modal', async () => {
       const user = userEvent.setup();
+      vi.mocked(fetchSyncGroupDisplays).mockResolvedValueOnce([
+        buildSyncGroupDisplay({ displayId: 100, display: 'Lobby Screen 1' }),
+      ]);
       vi.mocked(updateSyncGroup).mockRejectedValueOnce(new Error('Update failed.'));
       renderAddEditModal({ mode: 'edit', syncGroup: mockSyncGroup });
+
+      const leadDisplay = await screen.findByRole('combobox', { name: /lead display/i });
+      await waitFor(() => {
+        expect(within(leadDisplay).getAllByRole('option').length).toBeGreaterThanOrEqual(1);
+      });
+      await user.selectOptions(leadDisplay, '100');
 
       await user.click(screen.getByRole('button', { name: /^save$/i }));
 

@@ -38,6 +38,8 @@ vi.mock('@/services/taskApi');
 vi.mock('@/services/userApi', () => ({
   fetchUserPreference: vi.fn().mockResolvedValue(null),
   saveUserPreference: vi.fn().mockResolvedValue(undefined),
+  autoSubmitPrefQueryKey: (formId: string) => ['userPref', `autoSubmit.${formId}`],
+  fetchAutoSubmitPreference: vi.fn().mockResolvedValue(true),
 }));
 vi.mock('@/components/ui/modals/Modal');
 vi.mock('../hooks/useTaskFilterOptions', () => ({
@@ -242,15 +244,12 @@ describe('Tasks page — bulk actions', () => {
     expect(await screen.findByRole('button', { name: /delete selected/i })).toBeEnabled();
   });
 
-  test('Delete Selected never appears when config-locked, even with rows selected', async () => {
-    const user = userEvent.setup();
+  test('row selection checkboxes are absent when config-locked, so Delete Selected can never appear', async () => {
     mockFetchTasks(TWO_LOCKED_TASKS);
     renderTasksPage();
     await screen.findByText('Task Alpha');
 
-    const checkboxes = screen.getAllByRole('checkbox', { name: /select row/i });
-    await user.click(checkboxes[0]!);
-
+    expect(screen.queryAllByRole('checkbox', { name: /select row/i })).toHaveLength(0);
     expect(screen.queryByRole('button', { name: /delete selected/i })).not.toBeInTheDocument();
   });
 });

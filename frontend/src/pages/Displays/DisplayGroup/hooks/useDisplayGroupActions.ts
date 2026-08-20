@@ -28,7 +28,7 @@ import { useState } from 'react';
 import { notify } from '@/components/ui/Notification';
 import { collectNow, copyDisplayGroup, deleteDisplayGroup } from '@/services/displayGroupApi';
 import { sendCommand, triggerWebhook } from '@/services/displaysApi';
-import { selectFolder } from '@/services/folderApi';
+import { selectFolder, type ApiResult } from '@/services/folderApi';
 import type { DisplayGroup } from '@/types/displayGroup';
 
 export interface CopyDisplayGroupFormData {
@@ -148,15 +148,16 @@ export function useDisplayGroupActions({
 
     setIsMoving(true);
     try {
-      const results = await Promise.all(
-        itemsToMove.map((item) =>
-          selectFolder({
+      const results: ApiResult[] = [];
+      for (const item of itemsToMove) {
+        results.push(
+          await selectFolder({
             folderId: newFolderId,
             targetId: item.displayGroupId,
             targetType: 'displaygroup',
           }),
-        ),
-      );
+        );
+      }
 
       const failures = results.filter((res) => !res.success);
 
@@ -184,7 +185,11 @@ export function useDisplayGroupActions({
     }
   };
 
-  const runBulkAction = async (promises: (() => Promise<unknown>)[], errorMessage: string) => {
+  const runBulkAction = async (
+    promises: (() => Promise<unknown>)[],
+    errorMessage: string,
+    successMessage?: string,
+  ) => {
     try {
       setIsActionPending(true);
       setActionError(null);
@@ -200,6 +205,9 @@ export function useDisplayGroupActions({
         setActionError(message);
         handleRefresh();
       } else {
+        if (successMessage) {
+          notify.success(successMessage);
+        }
         handleRefresh();
         closeModal();
       }
@@ -221,12 +229,14 @@ export function useDisplayGroupActions({
     runBulkAction(
       items.map((dg) => () => sendCommand(dg.displayGroupId, commandId)),
       t('Failed to send command to one or more display groups.'),
+      t('Command sent to {{count}} display group(s).', { count: items.length }),
     );
 
   const confirmBulkTriggerWebhook = (items: DisplayGroup[], triggerCode: string) =>
     runBulkAction(
       items.map((dg) => () => triggerWebhook(dg.displayGroupId, triggerCode)),
       t('Failed to trigger webhook for one or more display groups.'),
+      t('Webhook triggered for {{count}} display group(s).', { count: items.length }),
     );
 
   return {

@@ -69,6 +69,7 @@ interface BandwidthInputProps {
   onChange: (kb: number | null) => void;
   label?: string;
   helpText?: string;
+  error?: string;
   optional?: boolean;
 }
 
@@ -77,6 +78,7 @@ export default function BandwidthInput({
   onChange,
   label,
   helpText,
+  error,
   optional = false,
 }: BandwidthInputProps) {
   const { t } = useTranslation();
@@ -103,7 +105,13 @@ export default function BandwidthInput({
       </label>
       <div className="flex gap-2">
         <div className="flex-1">
-          <NumberInput name="bandwidthLimit" value={displayValue} onChange={handleValueChange} />
+          <NumberInput
+            name="bandwidthLimit"
+            value={displayValue}
+            onChange={handleValueChange}
+            min={0}
+            className={error ? 'border-red-500!' : undefined}
+          />
         </div>
         <SelectDropdown
           value={unit}
@@ -124,7 +132,11 @@ export default function BandwidthInput({
           ]}
         ></SelectDropdown>
       </div>
-      {helpText && <span className="text-xs text-gray-400">{helpText}</span>}
+      {error ? (
+        <p className="text-xs text-red-600 mt-1">{error}</p>
+      ) : (
+        helpText && <span className="text-xs text-gray-400">{helpText}</span>
+      )}
     </div>
   );
 }

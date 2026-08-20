@@ -19,9 +19,11 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { ArrowLeft, Lock } from 'lucide-react';
 import { Trans, useTranslation } from 'react-i18next';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
+import Button from '@/components/ui/Button';
 import { DEFAULT_INTERNAL_ROUTE } from '@/config/appRoutes';
 
 export default function Unauthorized() {
@@ -35,32 +37,30 @@ export default function Unauthorized() {
   };
 
   return (
-    <section className="flex min-h-[60vh] flex-col items-center justify-center gap-6 text-center">
+    <section className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
+      <div className="inline-flex justify-center items-center size-15.5 rounded-full bg-xibo-blue-100 text-xibo-blue-800 border-7 border-xibo-blue-50">
+        <Lock className="shrink-0 size-6" />
+      </div>
+
       <div>
-        <p className="text-sm uppercase tracking-widest text-gray-500">{t('Error 403')}</p>
-        <h1 className="mt-1 text-3xl font-semibold">{t('Access denied')}</h1>
-        <p className="mt-2 text-gray-600">
+        <h1 className="text-4xl font-bold text-gray-800">{t('Access Denied')}</h1>
+        <p className="mt-3 text-gray-500">
           <Trans
-            i18nKey="You do not have permission to view <path>{{path}}</path>."
+            i18nKey="You don’t have permission to view <path>{{path}}</path>."
             values={{ path: pathname }}
             components={{ path: <span className="font-mono text-gray-800" /> }}
           />
         </p>
+        <p className="text-gray-500">{t('Please contact your administrator for access.')}</p>
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-3">
-        <button
-          onClick={handleBack}
-          className="rounded-md cursor-pointer hover:text-sky-900 border px-4 py-2"
-        >
+        <Button variant="secondary" leftIcon={ArrowLeft} onClick={handleBack}>
           {t('Go back')}
-        </button>
-        <Link
-          to={DEFAULT_INTERNAL_ROUTE}
-          className="rounded-md bg-gray-900 hover:bg-gray-700 px-4 py-2 text-white"
-        >
-          {t('Go home')}
-        </Link>
+        </Button>
+        <Button variant="primary" onClick={() => navigate(DEFAULT_INTERNAL_ROUTE)}>
+          {t('Go to Dashboard')}
+        </Button>
       </div>
     </section>
   );

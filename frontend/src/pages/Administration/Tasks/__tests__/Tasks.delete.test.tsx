@@ -29,6 +29,7 @@ import { mockFetchTasks } from './mocks/taskApi';
 
 import { deleteTask, fetchTasks } from '@/services/taskApi';
 import { testQueryClient } from '@/setupTests';
+import { waitForDialogToClose } from '@/testUtils/rtl';
 
 // =============================================================================
 // Module mocks
@@ -107,9 +108,7 @@ describe('Tasks page - single delete', () => {
     await waitFor(() => {
       expect(deleteTask).toHaveBeenCalledWith(mockTask.taskId);
     });
-    await waitFor(() => {
-      expect(screen.queryByText('Delete Task?')).not.toBeInTheDocument();
-    });
+    await waitForDialogToClose('Delete Task?');
   });
 
   test('Delete button shows "Deleting…" while the request is in progress', async () => {
@@ -127,8 +126,9 @@ describe('Tasks page - single delete', () => {
 
     expect(await screen.findByRole('button', { name: /deleting/i })).toBeDisabled();
 
-    // Resolve so the test doesn't leak a pending promise.
+    // Wait for the resulting close so the update isn't left outside act().
     resolveDelete();
+    await waitForDialogToClose('Delete Task?');
   });
 
   test('a failed delete keeps the modal open and shows the error', async () => {

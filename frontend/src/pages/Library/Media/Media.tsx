@@ -20,7 +20,6 @@
  */
 
 import { useQueryClient } from '@tanstack/react-query';
-import type { RowSelectionState } from '@tanstack/react-table';
 import { Search, Folder, Plus, Upload, Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -48,6 +47,7 @@ import FilterInputs from '@/components/ui/FilterInputs';
 import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
 import FolderSidebar from '@/components/ui/FolderSidebar';
 import { notify } from '@/components/ui/Notification';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataGrid } from '@/components/ui/table/DataGrid';
 import { DataTable } from '@/components/ui/table/DataTable';
@@ -57,12 +57,15 @@ import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { useOwner } from '@/hooks/useOwner';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useSelectionState } from '@/hooks/useSelectionState';
 import { useTableState } from '@/hooks/useTableState';
 import { useMediaFilterOptions } from '@/pages/Library/Media/hooks/useMediaFilterOptions';
 import { downloadMedia, downloadMediaAsZip } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
+import type { Tag } from '@/types/tag';
 import { countActiveFilters } from '@/utils/filters';
 import { canSaveInFolder, hasFeature } from '@/utils/permissions';
+import { toggleTag } from '@/utils/tags';
 
 export default function Media() {
   const { t } = useTranslation();
@@ -110,7 +113,7 @@ export default function Media() {
       revised: false,
       released: false,
       fileName: false,
-      expires: false,
+      expiresFormatted: false,
       enableStat: false,
       ownerId: false,
     },
@@ -134,8 +137,6 @@ export default function Media() {
   }, [layoutId, isHydrated, setFilterInputs, setPagination]);
 
   const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [selectionCache, setSelectionCache] = useState<Record<string, Media>>({});
   const [openFilter, setOpenFilter] = useState(false);
   const [previewItem, setPreviewItem] = useState<Media | null>(null);
   const [showInfoPanel, setShowInfoPanel] = useState(false);
@@ -159,9 +160,7 @@ export default function Media() {
     canAddMedia && canSaveInFolder(user, !!canViewFolders, targetUploadFolderId, homeFolderId);
   const targetUploadFolderName = selectedFolderId === null ? t('Root Folder') : selectedFolderName;
 
-  const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['media'] });
-  };
+  const handleRefresh = () => queryClient.invalidateQueries({ queryKey: ['media'] });
 
   const {
     isAddModalOpen,
@@ -191,6 +190,7 @@ export default function Media() {
     data: queryData,
     isFetching,
     isError,
+    isPaused,
     error: queryError,
   } = useMediaData({
     pagination,
@@ -206,27 +206,16 @@ export default function Media() {
   const error = isError && queryError instanceof Error ? queryError.message : '';
   const mediaList = data ?? [];
 
-  const getRowId = (row: Media) => row.mediaId.toString();
-
-  const handleRowSelectionChange = (
-    updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
-  ) => {
-    const newSelection =
-      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
-
-    setRowSelection(newSelection);
-
-    setSelectionCache((prev) => {
-      const next = { ...prev };
-      mediaList.forEach((item) => {
-        const id = getRowId(item);
-        if (newSelection[id]) {
-          next[id] = item;
-        }
-      });
-      return next;
-    });
-  };
+  const {
+    rowSelection,
+    setRowSelection,
+    onRowSelectionChange: handleRowSelectionChange,
+    getRowId,
+    getAllSelectedItems,
+  } = useSelectionState<Media>({
+    list: mediaList,
+    getRowId: (row) => row.mediaId.toString(),
+  });
 
   const folderActions = useFolderActions({
     onSuccess: (targetFolder) => {
@@ -276,6 +265,7 @@ export default function Media() {
     closeModal,
     setRowSelection,
     setItemsToMove,
+    setItemsToDelete,
   });
 
   const handleDelete = (id: number) => {
@@ -322,6 +312,11 @@ export default function Media() {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
+  const handleTagClick = (tag: Tag) => {
+    setFilterInputs((prev) => ({ ...prev, tags: toggleTag(prev.tags, tag) }));
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
+
   const openCopyModal = (mediaId: number) => {
     setSelectedMediaId(mediaId);
     openModal('copy');
@@ -342,6 +337,8 @@ export default function Media() {
     canTag,
     canUserShare: hasFeature(user, 'user.sharing'),
     formatDateTime,
+    onTagClick: handleTagClick,
+    selectedTagIds: (filterInputs.tags ?? []).map((tag) => tag.tagId),
     onPreview: handlePreviewClick,
     onDelete: handleDelete,
     onDownload: handleDownload,
@@ -368,12 +365,6 @@ export default function Media() {
     scheduleWithView,
     canModify: canModifyLibrary,
   });
-
-  const getAllSelectedItems = (): Media[] => {
-    return Object.keys(rowSelection)
-      .map((id) => selectionCache[id])
-      .filter((item): item is Media => !!item);
-  };
 
   const bulkActions = getBulkActions({
     t,
@@ -657,13 +648,9 @@ export default function Media() {
           onReset={handleResetFilters}
         />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
-            {error}
-          </div>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
-        <div className="min-h-0 flex flex-col">
+        <div className="flex-1 min-h-0 flex flex-col">
           {!isHydrated ? (
             <div className="flex-1 flex items-center justify-center bg-gray-50 animate-pulse rounded-lg border border-gray-200">
               <span className="text-gray-400 font-medium">

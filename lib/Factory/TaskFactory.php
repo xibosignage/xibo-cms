@@ -111,8 +111,17 @@ class TaskFactory extends BaseFactory
            WHERE 1 = 1 ';
 
         if ($sanitizedFilter->getString('name') != null) {
-            $params['name'] = $sanitizedFilter->getString('name');
-            $body .= ' AND `name` = :name ';
+            $terms = explode(',', $sanitizedFilter->getString('name'));
+            $logicalOperator = $sanitizedFilter->getString('logicalOperatorName', ['default' => 'OR']);
+            $this->nameFilter(
+                'task',
+                'name',
+                $terms,
+                $body,
+                $params,
+                ($sanitizedFilter->getCheckbox('useRegexForName') == 1),
+                $logicalOperator
+            );
         }
 
         if ($sanitizedFilter->getString('class') != null) {
@@ -140,7 +149,8 @@ class TaskFactory extends BaseFactory
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            defaultSort: ['name ASC']
+            defaultSort: ['name ASC'],
+            uniqueColumn: 'taskId'
         );
 
         $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';

@@ -21,13 +21,12 @@
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
-import type { AxiosError } from 'axios';
 
 import type { AuditTrailFilterInput } from '../AuditTrailConfig';
 
 import type { FetchAuditTrailRequest } from '@/services/auditTrailApi';
 import { fetchAuditTrail } from '@/services/auditTrailApi';
-import { formatDateTime } from '@/utils/date';
+import { dateKeyToDayBoundary } from '@/utils/date';
 
 export const auditTrailQueryKeys = {
   all: ['auditTrail'] as const,
@@ -64,23 +63,8 @@ export const useAuditTrailData = ({
 
       const { fromDt, toDt, ...restFilters } = advancedFilters;
 
-      let normalizedFromDt: string | undefined;
-      if (fromDt) {
-        const d = new Date(fromDt.replace(' ', 'T'));
-        if (!isNaN(d.getTime())) {
-          d.setHours(0, 0, 0, 0);
-          normalizedFromDt = formatDateTime(d);
-        }
-      }
-
-      let normalizedToDt: string | undefined;
-      if (toDt) {
-        const d = new Date(toDt.replace(' ', 'T'));
-        if (!isNaN(d.getTime())) {
-          d.setHours(23, 59, 59, 0);
-          normalizedToDt = formatDateTime(d);
-        }
-      }
+      const normalizedFromDt = dateKeyToDayBoundary(fromDt, 'start');
+      const normalizedToDt = dateKeyToDayBoundary(toDt, 'end');
 
       const request: FetchAuditTrailRequest = {
         start: startOffset,
@@ -99,9 +83,5 @@ export const useAuditTrailData = ({
     enabled,
     placeholderData: keepPreviousData,
     staleTime: 1000 * 60 * 1,
-
-    throwOnError: (error: AxiosError) => {
-      return error.response?.status ? error.response.status >= 500 : false;
-    },
   });
 };

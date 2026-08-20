@@ -106,7 +106,7 @@ export default function UserMenu() {
         ref={refs.setReference}
         {...getReferenceProps()}
         type="button"
-        className="flex h-6.5 w-6.5 items-center justify-center cursor-pointer rounded-full bg-blue-100 text-[12px] font-semibold text-xibo-blue-800 transition hover:ring-2 hover:ring-xibo-blue-600 focus:outline-none"
+        className="flex h-6.5 w-6.5 items-center justify-center cursor-pointer rounded-full bg-xibo-blue-100 text-[12px] font-semibold text-xibo-blue-800 transition hover:ring-2 hover:ring-xibo-blue-600 focus:outline-none"
       >
         {initials}
       </button>
@@ -122,7 +122,7 @@ export default function UserMenu() {
           >
             {/* User Info Header */}
             <div className="flex items-center justify-between bg-gray-100 py-2 px-5 relative group gap-2.5">
-              <div className="flex h-9.5 w-9.5 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-800">
+              <div className="flex h-9.5 w-9.5 items-center justify-center rounded-full bg-xibo-blue-100 font-semibold text-xibo-blue-800">
                 {initials}
               </div>
               <div className="flex flex-col">
@@ -164,7 +164,9 @@ export default function UserMenu() {
 
               <MenuItem
                 icon={<Lightbulb size={18} />}
-                label={t('Introduction to Xibo')}
+                label={t('Introduction to {{appName}}', {
+                  appName: user?.branding?.appName ?? 'Xibo',
+                })}
                 onClick={handleNavigateToWelcome}
               />
               <MenuItem

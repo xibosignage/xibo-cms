@@ -28,7 +28,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { notify } from '@/components/ui/Notification';
 import { copyCampaign, deleteCampaign } from '@/services/campaignApi';
-import { selectFolder } from '@/services/folderApi';
+import { selectFolder, type ApiResult } from '@/services/folderApi';
 import type { Campaign } from '@/types/campaign';
 
 interface UseCampaignActionsProps {
@@ -119,16 +119,17 @@ export function useCampaignActions({
   const handleConfirmMove = async (itemsToMove: Campaign[], newFolderId: number) => {
     if (!itemsToMove || itemsToMove.length === 0) return;
 
-    const movePromises = itemsToMove.map((item) =>
-      selectFolder({
-        folderId: newFolderId,
-        targetId: item.campaignId,
-        targetType: 'campaign',
-      }),
-    );
-
     try {
-      const results = await Promise.all(movePromises);
+      const results: ApiResult[] = [];
+      for (const item of itemsToMove) {
+        results.push(
+          await selectFolder({
+            folderId: newFolderId,
+            targetId: item.campaignId,
+            targetType: 'campaign',
+          }),
+        );
+      }
       const failures = results.filter((res) => !res.success);
 
       if (failures.length === 0) {

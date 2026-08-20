@@ -45,16 +45,18 @@ function SpotThumbnail({
   widget,
   blobUrl,
   onPreview,
+  hidden = false,
 }: {
   widget?: SpotWidget;
   blobUrl?: string;
   onPreview?: () => void;
+  hidden?: boolean;
 }) {
   const [loaded, setLoaded] = useState(false);
 
   const thumbnailSrc =
     blobUrl ??
-    (widget?.regionSpecific === 0 && widget?.type === 'image' && widget?.mediaIds[0]
+    (!hidden && widget?.regionSpecific === 0 && widget?.type === 'image' && widget?.mediaIds[0]
       ? withPublicPath(`library/thumbnail/${widget.mediaIds[0]}`)
       : null);
 
@@ -129,10 +131,16 @@ export default function SpotRow({
   const [isDragOver, setIsDragOver] = useState(false);
 
   const isUploading = uploadState?.status === 'uploading';
-  const isLocked = widget?.type === 'subplaylist';
+  const isSubPlaylist = widget?.type === 'subplaylist';
+  // Mirrors release 4.4: a widget the user can't edit (e.g. View-only on its media) is locked,
+  // regardless of whether they can see its content.
+  const isPermissionLocked = !!widget && !isSubPlaylist && !widget.editable;
+  const isLocked = isSubPlaylist || isPermissionLocked;
 
   const previewHandler =
-    onPreview && widget && widget.mediaIds.length > 0 ? () => onPreview(widget) : undefined;
+    onPreview && widget && widget.viewable && widget.mediaIds.length > 0
+      ? () => onPreview(widget)
+      : undefined;
 
   const acceptType = (() => {
     if (!widget) return undefined;
@@ -177,8 +185,8 @@ export default function SpotRow({
   };
 
   const renderContent = () => {
-    // Locked spot
-    if (isLocked && widget) {
+    // Sub-playlist spot: never editable from here regardless of permission
+    if (isSubPlaylist && widget) {
       return (
         <>
           <div className="shrink-0">
@@ -193,6 +201,37 @@ export default function SpotRow({
             </span>
           </div>
           <Lock className="h-4 w-4 shrink-0 text-gray-400" />
+        </>
+      );
+    }
+
+    // Permission-locked spot: user can't edit this widget's media (e.g. View-only)
+    if (isPermissionLocked && widget) {
+      return (
+        <>
+          <div className="shrink-0">
+            <SpotThumbnail widget={widget} onPreview={previewHandler} hidden={!widget.viewable} />
+          </div>
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <span className="truncate text-sm font-semibold text-gray-600" aria-label={widget.name}>
+              {widget.name}
+            </span>
+            <span className="w-fit rounded-full bg-gray-100 px-1.5 py-0.5 text-[11px] font-medium text-gray-500">
+              {t('Locked')}
+            </span>
+          </div>
+          <Lock className="h-4 w-4 shrink-0 text-gray-400" />
+          {widget.deletable && (
+            <button
+              type="button"
+              onClick={() => onDeleteWidget(widget.widgetId)}
+              disabled={isUploading}
+              className="shrink-0 text-red-400 hover:text-red-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              title={t('Delete')}
+            >
+              <CircleMinus className="h-5 w-5" />
+            </button>
+          )}
         </>
       );
     }
@@ -288,7 +327,7 @@ export default function SpotRow({
       <div className="flex flex-1">
         <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} />
         <div
-          className={`w-full h-16 flex justify-center items-center border space-x-2 border-dashed rounded-lg transition-colors ${isDragOver ? 'border-xibo-blue-600 bg-blue-100' : 'border-xibo-blue-600'}`}
+          className={`w-full h-16 flex justify-center items-center border space-x-2 border-dashed rounded-lg transition-colors ${isDragOver ? 'border-xibo-blue-600 bg-xibo-blue-100' : 'border-xibo-blue-600'}`}
         >
           <Upload className="h-3.5 w-3.5 text-xibo-blue-600" />
           <span className="text-sm text-gray-500">
@@ -314,7 +353,7 @@ export default function SpotRow({
     <div
       className={twMerge(
         `flex relative justify-stretch items-center gap-4 rounded-lg border bg-white p-4 transition-colors `,
-        isDragOver ? 'border-xibo-blue-600 bg-blue-50' : 'border-gray-200',
+        isDragOver ? 'border-xibo-blue-600 bg-xibo-blue-50' : 'border-gray-200',
       )}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}

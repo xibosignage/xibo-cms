@@ -20,7 +20,6 @@
  */
 
 import { useQueryClient } from '@tanstack/react-query';
-import type { RowSelectionState } from '@tanstack/react-table';
 import { Plus, Search, Upload } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -40,6 +39,7 @@ import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
 import FolderSidebar from '@/components/ui/FolderSidebar';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
@@ -50,10 +50,13 @@ import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { useOwner } from '@/hooks/useOwner';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useSelectionState } from '@/hooks/useSelectionState';
 import { useTableState } from '@/hooks/useTableState';
 import type { Layout } from '@/types/layout';
+import type { Tag } from '@/types/tag';
 import { countActiveFilters } from '@/utils/filters';
 import { canSaveInFolder, hasFeature } from '@/utils/permissions';
+import { toggleTag } from '@/utils/tags';
 
 export default function Layouts() {
   const { t } = useTranslation();
@@ -124,8 +127,6 @@ export default function Layouts() {
   }, [activeDisplayGroupId, isHydrated, setFilterInputs, setPagination]);
 
   const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [selectionCache, setSelectionCache] = useState<Record<string, Layout>>({});
   const [openFilter, setOpenFilter] = useState(false);
   const [showInfoPanel, setShowInfoPanel] = useState(false);
 
@@ -149,6 +150,7 @@ export default function Layouts() {
     data: queryData,
     isFetching,
     isError,
+    isPaused,
     error: queryError,
   } = useLayoutData({
     pagination,
@@ -180,38 +182,23 @@ export default function Layouts() {
     },
   });
 
-  const getRowId = (row: Layout) => {
-    return row.layoutId.toString();
-  };
-
-  const handleRowSelectionChange = (
-    updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
-  ) => {
-    const newSelection =
-      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
-
-    setRowSelection(newSelection);
-
-    setSelectionCache((prev) => {
-      const next = { ...prev };
-      layoutList.forEach((item) => {
-        const id = getRowId(item);
-        if (newSelection[id]) {
-          next[id] = item;
-        }
-      });
-      return next;
-    });
-  };
+  const {
+    rowSelection,
+    setRowSelection,
+    onRowSelectionChange: handleRowSelectionChange,
+    getRowId,
+    getAllSelectedItems,
+  } = useSelectionState<Layout>({
+    list: layoutList,
+    getRowId: (row) => row.layoutId.toString(),
+  });
 
   const selectedLayout = layoutList.find((m) => m.layoutId === selectedLayoutId) ?? null;
   const existingNames = layoutList.map((m) => m.layout).filter(Boolean);
   const ownerId = selectedLayout?.ownerId ? Number(selectedLayout.ownerId) : null;
   const { owner, loading } = useOwner({ ownerId });
 
-  const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['layout'] });
-  };
+  const handleRefresh = () => queryClient.invalidateQueries({ queryKey: ['layout'] });
 
   const handleFolderChange = (folder: { id: number | null; text: string | '' }) => {
     setSelectedFolderId(folder.id);
@@ -252,6 +239,7 @@ export default function Layouts() {
     setRowSelection,
     setItemsToMove,
     timezone: user?.settings?.defaultTimezone ?? 'UTC',
+    folderId: effectiveFolderId,
   });
 
   const { guard } = useAutoSubmit();
@@ -340,6 +328,11 @@ export default function Layouts() {
     openModal('schedule');
   };
 
+  const handleTagClick = (tag: Tag) => {
+    setFilterInputs((prev) => ({ ...prev, tags: toggleTag(prev.tags, tag) }));
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
+
   const columns = getLayoutColumns({
     t,
     canModify: hasFeature(user, 'layout.modify'),
@@ -396,13 +389,9 @@ export default function Layouts() {
     openEnableStatsModal,
     openScheduleModal: canSchedule ? openScheduleModal : undefined,
     showDescriptionId: filterInputs.showDescriptionId,
+    onTagClick: handleTagClick,
+    selectedTagIds: (filterInputs.tags ?? []).map((tag) => tag.tagId),
   });
-
-  const getAllSelectedItems = (): Layout[] => {
-    return Object.keys(rowSelection)
-      .map((id) => selectionCache[id])
-      .filter((item): item is Layout => !!item);
-  };
 
   const bulkActions = getBulkActions({
     t,
@@ -532,11 +521,7 @@ export default function Layouts() {
           onReset={handleResetFilters}
         />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
-            {error}
-          </div>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         <div className="min-h-0 flex flex-col">
           {!isHydrated ? (

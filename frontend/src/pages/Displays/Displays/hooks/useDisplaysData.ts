@@ -21,10 +21,10 @@
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
-import type { AxiosError } from 'axios';
 
 import type { DisplayFilterInput } from '../DisplaysConfig';
 
+import { serializeTags } from '@/components/ui/forms/TagInput';
 import type { FetchDisplaysRequest } from '@/services/displaysApi';
 import { fetchDisplays } from '@/services/displaysApi';
 import { resolveLastAccessed } from '@/utils/date';
@@ -72,7 +72,7 @@ export const useDisplaysData = ({
 
       const normalizedTags =
         advancedFilters.tags && advancedFilters.tags.length > 0
-          ? advancedFilters.tags.map((tag) => tag.tag).join(',')
+          ? serializeTags(advancedFilters.tags)
           : undefined;
 
       const request: FetchDisplaysRequest = {
@@ -141,9 +141,5 @@ export const useDisplaysData = ({
 
     placeholderData: keepPreviousData,
     staleTime: 1000 * 60 * 1,
-
-    throwOnError: (error: AxiosError) => {
-      return error.response?.status ? error.response.status >= 500 : false;
-    },
   });
 };

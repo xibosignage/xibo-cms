@@ -25,6 +25,7 @@ import type { TFunction } from 'i18next';
 import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
 
+import { notify } from '@/components/ui/Notification';
 import { deleteUserGroup } from '@/services/userGroupApi';
 import type { UserGroup } from '@/types/userGroup';
 
@@ -69,6 +70,9 @@ export function useUserGroupActions({
         return;
       }
 
+      notify.success(
+        t('{{count}} user group(s) deleted successfully.', { count: itemsToDelete.length }),
+      );
       setRowSelection({});
       handleRefresh();
       closeModal();

@@ -27,7 +27,7 @@ import { useState } from 'react';
 
 import { notify } from '@/components/ui/Notification';
 import { clearDatasetCache, cloneDataset, deleteDataset } from '@/services/datasetApi';
-import { selectFolder } from '@/services/folderApi';
+import { selectFolder, type ApiResult } from '@/services/folderApi';
 import type { Dataset } from '@/types/dataset';
 
 interface UseDatasetActionsProps {
@@ -103,6 +103,9 @@ export function useDatasetActions({
         return;
       }
 
+      notify.success(
+        t('{{count}} dataset(s) deleted successfully.', { count: itemsToDelete.length }),
+      );
       setRowSelection({});
       handleRefresh();
       closeModal();
@@ -148,16 +151,17 @@ export function useDatasetActions({
       return;
     }
 
-    const movePromises = itemsToMove.map((item) =>
-      selectFolder({
-        folderId: newFolderId,
-        targetId: item.dataSetId,
-        targetType: 'dataset',
-      }),
-    );
-
     try {
-      const results = await Promise.all(movePromises);
+      const results: ApiResult[] = [];
+      for (const item of itemsToMove) {
+        results.push(
+          await selectFolder({
+            folderId: newFolderId,
+            targetId: item.dataSetId,
+            targetType: 'dataset',
+          }),
+        );
+      }
       const failures = results.filter((res) => !res.success);
 
       if (failures.length === 0) {

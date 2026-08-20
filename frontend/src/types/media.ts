@@ -48,13 +48,20 @@ export interface Media {
   tags: Tag[];
   fileSize: number;
   duration: number;
-  mediaNoExpiryDate: string;
   enableStat: string;
   retired: boolean;
   expires: string;
+  expiresFormatted: string;
   updateInLayouts: boolean;
   userPermissions: MediaPermissions;
   deleteOldRevisions: boolean;
 }
 
-export type MediaType = 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';
+export type MediaType =
+  | 'image'
+  | 'video'
+  | 'audio'
+  | 'pdf'
+  | 'genericfile'
+  | 'htmlpackage'
+  | 'powerpoint';

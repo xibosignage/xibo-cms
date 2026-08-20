@@ -38,6 +38,7 @@ use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 use Xibo\XTR\TaskInterface;
 
 /**
@@ -96,7 +97,7 @@ class Task extends Base
 
         $tasks = $this->taskFactory->query(
             $taskSortQuery,
-            $this->gridRenderFilter([], $sanitizedParams)
+            $this->getTaskFilters($sanitizedParams)
         );
 
         foreach ($tasks as $task) {
@@ -549,5 +550,18 @@ class Task extends Base
             $this->getConfig()->getSetting('TASK_CONFIG_LOCKED_CHECKB') == 1 ||
             $this->getConfig()->getSetting('TASK_CONFIG_LOCKED_CHECKB') == 'Checked'
         ));
+    }
+
+    /**
+     * @param SanitizerInterface $sanitizedParams
+     * @return array
+     */
+    private function getTaskFilters(SanitizerInterface $sanitizedParams): array
+    {
+        return $this->gridRenderFilter([
+            'name'                => $sanitizedParams->getString('name'),
+            'useRegexForName'     => $sanitizedParams->getCheckbox('useRegexForName'),
+            'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
+        ], $sanitizedParams);
     }
 }

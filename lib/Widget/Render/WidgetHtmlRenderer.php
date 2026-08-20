@@ -241,8 +241,8 @@ class WidgetHtmlRenderer
         }
 
         // Have we changed since we last cached this widget
-        $modifiedDt = max(Carbon::createFromTimestamp($widgetModifiedDt), $playlistModifiedDt);
-        $cachedDt = Carbon::createFromTimestamp(file_exists($cachePath) ? filemtime($cachePath) : 0);
+        $modifiedDt = max(DateFormatHelper::createFromTimestamp($widgetModifiedDt), $playlistModifiedDt);
+        $cachedDt = DateFormatHelper::createFromTimestamp(file_exists($cachePath) ? filemtime($cachePath) : 0);
 
         $this->getLog()->debug(
             'renderOrCache: Cache details - modifiedDt: '

@@ -31,7 +31,7 @@ import {
   useInteractions,
   FloatingPortal,
 } from '@floating-ui/react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Info } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
@@ -39,7 +39,7 @@ import { twMerge } from 'tailwind-merge';
 import DatePicker from './DatePicker';
 
 import { useDateFormatter } from '@/hooks/useDateFormatter';
-import { formatDateTime } from '@/utils/date';
+import { formatCmsDate, formatDateTime, toLocalDateKey } from '@/utils/date';
 
 type DateFilterProps = {
   label: string;
@@ -48,6 +48,8 @@ type DateFilterProps = {
   onChange: (name: string, value: string | null) => void;
   isJalali?: boolean;
   className?: string;
+  showTimePicker?: boolean;
+  tooltip?: string;
 };
 
 export default function DateFilter({
@@ -57,9 +59,11 @@ export default function DateFilter({
   onChange,
   isJalali = false,
   className,
+  showTimePicker = true,
+  tooltip,
 }: DateFilterProps) {
   const { t } = useTranslation();
-  const { formatDate } = useDateFormatter();
+  const { formatDate, dateFormat } = useDateFormatter();
   const [open, setOpen] = useState(false);
 
   const { refs, floatingStyles, context } = useFloating({
@@ -88,6 +92,11 @@ export default function DateFilter({
 
   const getDisplayLabel = () => {
     if (!value) return t('Any time');
+
+    if (!showTimePicker) {
+      return formatCmsDate(value, { format: dateFormat, timeZone: 'UTC' });
+    }
+
     const date = new Date(value.replace(' ', 'T'));
     if (isNaN(date.getTime())) return value;
     return formatDate(date);
@@ -100,7 +109,26 @@ export default function DateFilter({
         className,
       )}
     >
-      <label className="text-sm font-semibold text-gray-500 leading-5">{label}</label>
+      <div className="flex items-center gap-1">
+        <label className="text-sm font-semibold text-gray-500 leading-5">{label}</label>
+        {tooltip && (
+          <div className="hs-tooltip inline-block">
+            <button
+              type="button"
+              className="hs-tooltip-toggle block text-gray-400 hover:text-gray-600"
+            >
+              <Info className="size-3.5" />
+
+              <span
+                className="hs-tooltip-content hs-tooltip-shown:opacity-80 hs-tooltip-shown:visible opacity-0 transition-opacity inline-block absolute invisible z-10 p-2 bg-gray-900 text-xs font-medium text-white rounded shadow-sm"
+                role="tooltip"
+              >
+                {tooltip}
+              </span>
+            </button>
+          </div>
+        )}
+      </div>
       <button
         ref={refs.setReference}
         {...getReferenceProps()}
@@ -130,10 +158,14 @@ export default function DateFilter({
                 mode="single"
                 disableFutureDates
                 isJalali={isJalali}
+                showTimePicker={showTimePicker}
                 onCancel={() => setOpen(false)}
                 onApply={(v) => {
                   if (v.type === 'single') {
-                    onChange(name, formatDateTime(v.date));
+                    onChange(
+                      name,
+                      showTimePicker ? formatDateTime(v.date) : toLocalDateKey(v.date),
+                    );
                   }
                   setOpen(false);
                 }}
