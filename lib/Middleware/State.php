@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -215,7 +215,10 @@ class State implements Middleware
                 || $container->get('name') == 'auth'
                 || $container->get('name') == 'json'
             ) {
-                return new Session($container->get('logService'));
+                return new Session(
+                    $container->get('logService'),
+                    $container->get('configService')->getTrustedProxyIpList(true)
+                );
             } else {
                 return new NullSession();
             }
