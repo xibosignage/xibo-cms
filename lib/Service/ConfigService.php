@@ -217,21 +217,12 @@ class ConfigService implements ConfigServiceInterface
     /**
      * @inheritDoc
      */
-    public function getTrustedProxyIpList(bool $exactIpsOnly = false): array
+    public function getTrustedProxyIpList(): array
     {
-        $ips = array_values(array_unique(array_merge(
+        return array_values(array_unique(array_merge(
             array_filter(array_map('trim', explode(',', $this->getTrustedProxyIps()))),
             array_filter(array_map('trim', explode(',', $this->getSetting('WHITELIST_LOAD_BALANCERS', ''))))
         )));
-
-        if ($exactIpsOnly) {
-            // Some consumers (HSTS trust, session/display IP audit logging) only ever compare a single
-            // REMOTE_ADDR value with in_array(), so CIDR/wildcard entries (meaningful only to
-            // RKA\Middleware\IpAddress's richer matcher) can never match and are dropped here.
-            $ips = array_values(array_filter($ips, fn ($ip) => !str_contains($ip, '/') && !str_contains($ip, '*')));
-        }
-
-        return $ips;
     }
 
     /**

@@ -199,7 +199,7 @@ class HttpsDetect
         $forwardedProtoHttps = (
             strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https'
             && $originIp != ''
-            && in_array($originIp, $config->getTrustedProxyIpList(true), true)
+            && IpTrust::isTrusted($originIp, $config->getTrustedProxyIpList())
         );
 
         return (

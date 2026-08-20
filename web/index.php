@@ -103,7 +103,7 @@ $app->add($authentication->setDependencies($app)->addRoutes());
 $configService = $container->get('configService');
 $configService->setDependencies($container->get('store'), $container->get('rootUri'));
 $trustedProxyIps = $configService->getTrustedProxyIpList();
-$app->add(new RKA\Middleware\IpAddress(!empty($trustedProxyIps), $trustedProxyIps));
+$app->add(new \Xibo\Middleware\TrustedProxyIpAddress($trustedProxyIps));
 // Handle additional Middleware
 \Xibo\Middleware\State::setMiddleWare($app);
 

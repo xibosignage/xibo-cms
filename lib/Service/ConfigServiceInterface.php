@@ -226,12 +226,11 @@ interface ConfigServiceInterface
     public function getTrustedProxyIps(): string;
 
     /**
-     * Get the combined, deduped list of trusted reverse-proxy IPs/CIDRs — the union of the
-     * settings.php-only getTrustedProxyIps() and the admin-editable WHITELIST_LOAD_BALANCERS
-     * DB setting. Requires setDependencies() to have already been called.
-     * @param bool $exactIpsOnly When true, drop CIDR/wildcard entries — for consumers that only
-     *                           ever do a plain in_array() match against a single REMOTE_ADDR.
+     * Get the combined, deduped list of trusted reverse-proxy IPs/CIDRs/wildcards — the union of
+     * the settings.php-only getTrustedProxyIps() and the admin-editable WHITELIST_LOAD_BALANCERS
+     * DB setting. Requires setDependencies() to have already been called. Match entries against
+     * an address with Xibo\Helper\IpTrust::isTrusted().
      * @return string[]
      */
-    public function getTrustedProxyIpList(bool $exactIpsOnly = false): array;
+    public function getTrustedProxyIpList(): array;
 }

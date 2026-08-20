@@ -96,7 +96,7 @@ $app->add(new \Xibo\Middleware\Csp($container));
 $configService = $container->get('configService');
 $configService->setDependencies($container->get('store'), $container->get('rootUri'));
 $trustedProxyIps = $configService->getTrustedProxyIpList();
-$app->add(new RKA\Middleware\IpAddress(!empty($trustedProxyIps), $trustedProxyIps));
+$app->add(new \Xibo\Middleware\TrustedProxyIpAddress($trustedProxyIps));
 
 // Authentication
 $authentication = ($container->get('configService')->authentication != null)

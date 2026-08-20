@@ -571,7 +571,7 @@ class Session implements \SessionHandlerInterface
 
         // Only consult forwarded-for style headers when REMOTE_ADDR (the immediate TCP peer) is on
         // the operator's trusted-proxy list — otherwise they're fully client-controlled and unreliable.
-        if ($remoteAddr !== '' && in_array($remoteAddr, $this->trustedProxyIps, true)) {
+        if ($remoteAddr !== '' && IpTrust::isTrusted($remoteAddr, $this->trustedProxyIps)) {
             $ipHeaderKeys = ['X_FORWARDED_FOR', 'HTTP_X_FORWARDED_FOR', 'CLIENT_IP'];
             foreach ($ipHeaderKeys as $ipHeaderKey) {
                 if (isset($_SERVER[$ipHeaderKey])

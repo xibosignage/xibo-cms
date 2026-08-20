@@ -73,9 +73,10 @@ matches the officially-supported Docker deployment, which has no reverse proxy
 in front of the app.
 
 If you put your own TLS-terminating reverse proxy, load balancer, or CDN in
-front of the CMS, set `$trustedProxyIps` in or `web/settings-custom.php` to
-the exact IP address(es)/CIDR range(s) of that proxy — the only hop(s)
-whose `X-Forwarded-For` header you want the CMS to trust:
+front of the CMS, set `$trustedProxyIps` in `web/settings.php` (or
+`web/settings-custom.php`) to the exact IP address(es)/CIDR range(s) of that
+proxy — the only hop(s) whose `X-Forwarded-For` header you want the CMS to
+trust:
 
 ```php
 $trustedProxyIps = '10.0.0.5,172.18.0.0/16';
@@ -97,6 +98,12 @@ which serves the same purpose — the IPs from both are trusted together. If
 you already set that field (e.g. so HSTS headers are issued correctly behind
 your proxy), it now also covers client-IP resolution for rate limiting with
 no extra action.
+
+Exact IPs, CIDR ranges, and wildcard entries all work consistently wherever
+this trust list is consulted — rate limiting, HSTS issuance, and the client
+IP recorded in session/display audit logs (`Xibo\Helper\IpTrust`) — so a
+CIDR range set for one purpose (e.g. HSTS) automatically covers the others
+too.
 
 **Upgrading an existing install that sits behind a reverse proxy?** If you
 haven't set either of these, every user behind that proxy will share a

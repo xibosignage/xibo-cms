@@ -217,7 +217,7 @@ class State implements Middleware
             ) {
                 return new Session(
                     $container->get('logService'),
-                    $container->get('configService')->getTrustedProxyIpList(true)
+                    $container->get('configService')->getTrustedProxyIpList()
                 );
             } else {
                 return new NullSession();

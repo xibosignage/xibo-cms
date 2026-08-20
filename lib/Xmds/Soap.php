@@ -54,6 +54,7 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\IpTrust;
 use Xibo\Helper\LibraryFile;
 use Xibo\Helper\LinkSigner;
 use Xibo\Helper\SanitizerService;
@@ -2766,7 +2767,7 @@ class Soap
         // Only consult forwarded-for style headers when REMOTE_ADDR (the immediate TCP peer) is on
         // the operator's trusted-proxy list — otherwise they're fully client-controlled and unreliable.
         if ($remoteAddr !== ''
-            && in_array($remoteAddr, $this->getConfig()->getTrustedProxyIpList(true), true)
+            && IpTrust::isTrusted($remoteAddr, $this->getConfig()->getTrustedProxyIpList())
         ) {
             $keys = array('X_FORWARDED_FOR', 'HTTP_X_FORWARDED_FOR', 'CLIENT_IP');
             foreach ($keys as $key) {
