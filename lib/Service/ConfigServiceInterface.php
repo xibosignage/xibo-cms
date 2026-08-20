@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -217,21 +217,4 @@ interface ConfigServiceInterface
      * @return string
      */
     public function getWhitelistHosts(): string;
-
-    /**
-     * Get the operator-supplied trusted reverse-proxy IP/CIDR list (comma-separated).
-     * Empty when unset. Deployment-time only — sourced from web/settings.php, not the DB.
-     * @return string
-     */
-    public function getTrustedProxyIps(): string;
-
-    /**
-     * Get the combined, deduped list of trusted reverse-proxy IPs/CIDRs — the union of the
-     * settings.php-only getTrustedProxyIps() and the admin-editable WHITELIST_LOAD_BALANCERS
-     * DB setting. Requires setDependencies() to have already been called.
-     * @param bool $exactIpsOnly When true, drop CIDR/wildcard entries — for consumers that only
-     *                           ever do a plain in_array() match against a single REMOTE_ADDR.
-     * @return string[]
-     */
-    public function getTrustedProxyIpList(bool $exactIpsOnly = false): array;
 }

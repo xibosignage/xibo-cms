@@ -192,14 +192,15 @@ class HttpsDetect
      */
     public static function isShouldIssueSts($config, $request): bool
     {
-        // We might need to issue STS headers. Only trust a forwarded proto claim from a REMOTE_ADDR
-        // that's on the operator's trusted-proxy list — an empty list means nothing is trusted,
-        // not "trust everything" (see $trustedProxyIps / WHITELIST_LOAD_BALANCERS in SECURITY.md).
+        // We might need to issue STS headers
+        $whiteListLoadBalancers = $config->getSetting('WHITELIST_LOAD_BALANCERS');
         $originIp = $_SERVER['REMOTE_ADDR'] ?? '';
         $forwardedProtoHttps = (
             strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https'
             && $originIp != ''
-            && in_array($originIp, $config->getTrustedProxyIpList(true), true)
+            && (
+                $whiteListLoadBalancers === '' || in_array($originIp, explode(',', $whiteListLoadBalancers))
+            )
         );
 
         return (
