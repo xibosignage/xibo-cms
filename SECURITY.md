@@ -62,3 +62,47 @@ injection, so production deployments should treat this as a required setting.
 Like `$allowLocalNetworkRequests`, this setting is deployment-time only and is
 not exposed via any CMS admin UI — an attacker who compromises an admin account
 would otherwise simply whitelist their own host.
+
+### `$trustedProxyIps` — required if the CMS sits behind a reverse proxy
+
+The client IP address (used to key login/2FA/password-reset rate limiting, and
+recorded in audit logs) is normally just the TCP peer address. By default the
+CMS does **not** trust the `X-Forwarded-For` / `Forwarded` / `X-Real-IP`-style
+headers at all, so it cannot be spoofed by a directly-connecting client — this
+matches the officially-supported Docker deployment, which has no reverse proxy
+in front of the app.
+
+If you put your own TLS-terminating reverse proxy, load balancer, or CDN in
+front of the CMS, set `$trustedProxyIps` in or `web/settings-custom.php` to
+the exact IP address(es)/CIDR range(s) of that proxy — the only hop(s)
+whose `X-Forwarded-For` header you want the CMS to trust:
+
+```php
+$trustedProxyIps = '10.0.0.5,172.18.0.0/16';
+```
+
+When set, the CMS trusts proxy headers **only** from those addresses and reads
+the real client IP from the header value they forward. **Never** set this to a
+wildcard or a public IP range — anything listed here is implicitly trusted to
+assert an arbitrary client IP, which would let an attacker who can reach that
+trusted hop (or who spoofs a source IP that matches it) bypass rate limiting
+entirely.
+
+Like `$allowLocalNetworkRequests` and `$whitelistHosts`, this setting is
+deployment-time only and is not exposed via any CMS admin UI.
+
+This is combined with (not overridden by) the admin-editable **Settings >
+Network > Whitelist Load Balancers** field (`WHITELIST_LOAD_BALANCERS`),
+which serves the same purpose — the IPs from both are trusted together. If
+you already set that field (e.g. so HSTS headers are issued correctly behind
+your proxy), it now also covers client-IP resolution for rate limiting with
+no extra action.
+
+**Upgrading an existing install that sits behind a reverse proxy?** If you
+haven't set either of these, every user behind that proxy will share a
+single resolved IP (the proxy's own address) after upgrading, which means
+they'll also share one rate-limit bucket — one user's failed logins could
+cause others behind the same proxy to see login/2FA/password-reset requests
+rate-limited. This isn't an outage and resolves itself as soon as you set
+`WHITELIST_LOAD_BALANCERS` (Settings > Network) or `$trustedProxyIps` to
+your proxy's address.
