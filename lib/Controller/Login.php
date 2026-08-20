@@ -650,11 +650,9 @@ class Login extends Base
 
             foreach (json_decode($codes) as $code) {
                 // if the provided recovery code matches one stored in the database, we want to log in the user
-                if ($code === $sanitizedParams->getString('recoveryCode')) {
+                if (hash_equals($code, $sanitizedParams->getString('recoveryCode'))) {
                     $result = true;
-                }
-
-                if ($code !== $sanitizedParams->getString('recoveryCode')) {
+                } else {
                     $updatedCodes[] = $code;
                 }
             }
