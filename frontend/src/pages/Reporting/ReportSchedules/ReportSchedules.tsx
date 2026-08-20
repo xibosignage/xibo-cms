@@ -341,6 +341,7 @@ export default function ReportSchedules() {
               bulkActions={bulkActions}
               viewMode={null}
               getRowId={getRowId}
+              exportFileName={t('Report Schedules')}
             />
           )}
         </div>

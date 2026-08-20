@@ -367,6 +367,7 @@ export default function SyncGroups() {
                 bulkActions={bulkActions}
                 viewMode="table"
                 getRowId={getRowId}
+                tableLabel={t('Sync Groups')}
               />
             )}
           </div>
