@@ -555,6 +555,7 @@ export default function Layouts() {
               bulkActions={bulkActions}
               viewMode={'table'}
               getRowId={getRowId}
+              tableLabel={t('Layouts')}
             />
           )}
         </div>

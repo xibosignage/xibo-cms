@@ -77,9 +77,12 @@ interface DataTableProps<TData, TValue> {
   onColumnVisibilityChange?: OnChangeFn<VisibilityState>;
   noResultsCustom?: React.ReactNode;
   tableLabel?: string;
+  exportFileName?: string;
   exportRows?: TData[];
   meta?: Record<string, unknown>;
 }
+
+const sanitizeFileName = (name: string): string => name.replace(/[/\\:*?"<>|]/g, '').trim();
 
 const getCommonPinningStyles = <TData, TValue>(column: Column<TData, TValue>): CSSProperties => {
   const isPinned = column.getIsPinned();
@@ -131,6 +134,7 @@ export function DataTable<TData, TValue>({
   onColumnVisibilityChange,
   noResultsCustom,
   tableLabel,
+  exportFileName,
   exportRows,
   meta,
 }: DataTableProps<TData, TValue>) {
@@ -257,7 +261,12 @@ export function DataTable<TData, TValue>({
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `export_${new Date().toISOString()}.csv`);
+    const nameSource = exportFileName ?? tableLabel;
+    const sanitizedLabel = nameSource ? sanitizeFileName(nameSource) : '';
+    const fileName = sanitizedLabel
+      ? `${sanitizedLabel}.csv`
+      : `export_${new Date().toISOString()}.csv`;
+    link.setAttribute('download', fileName);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
