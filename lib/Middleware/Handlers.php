@@ -226,57 +226,54 @@ class Handlers
                     // Decide which error page we should load
                     $exceptionClass = 'error-' . strtolower(str_replace('\\', '-', get_class($exception)));
 
-                    // Upgrade pending: serve through the React login shell for visual consistency.
-                    // Fall back to the legacy Twig page if Vite assets are not built yet.
+                    // Upgrade pending / instance suspended: serve through the React login shell for
+                    // visual consistency, falling back to the legacy Twig page if Vite assets aren't
+                    // built yet. Both exceptions get identical treatment bar their message/status, so
+                    // share one helper rather than duplicating the render/fallback logic twice.
                     if ($exception instanceof UpgradePendingException) {
-                        $rootUri = $configService->rootUri();
-                        $loginJsUrl = \Xibo\Helper\ViteManifest::getJsUrl('login.html', $rootUri);
-                        if ($loginJsUrl !== null) {
-                            $logoFile = $configService->getBrandAssetFile('logo');
-                            $logoDarkFile = $configService->getBrandLogoDarkFile();
-                            $upgradeConfig = [
-                                'upgradeInProgress' => true,
-                                'logoUrl'     => '/brand/' . $logoFile,
-                                'logoDarkUrl' => '/brand/' . $logoDarkFile,
-                                'supportUrl' => $configService->getThemeConfig('theme_url', 'https://xibosignage.com'),
-                                'version'    => Environment::$WEBSITE_VERSION_NAME,
-                                'appName'    => $configService->getThemeConfig('app_name', 'Xibo'),
-                                'i18n'       => [
-                                    'upgradeMessage' => __(
-                                        'The CMS is temporarily off-line as an upgrade is in progress.'
-                                        . ' Please check with your system administrator for updates'
-                                        . ' or refresh your page in a few minutes.'
-                                    ),
-                                    'upgradeTitle' => __('Upgrade In Progress'),
-                                ],
-                            ];
-                            $upgradeParams = array_merge($viewParams, [
-                                // This render runs outside the normal middleware stack (routing
-                                // failed before CsrfGuard could run), so unlike a normal request we
-                                // have to issue the token ourselves. State::setState() has already
-                                // started the session by the time UpgradePendingException is thrown
-                                // (State.php throws it after calling setState()), so a real token is
-                                // available here. Issuing it properly (rather than hardcoding blank)
-                                // matters because login/api.ts reads this meta tag for the login/tfa
-                                // requests fired from this exact page.
-                                'csrfToken'       => CsrfGuard::issueToken(),
-                                'loginConfigJson' => json_encode(
-                                    $upgradeConfig,
-                                    JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+                        $reactResponse = self::renderReactMessagePage(
+                            $twig,
+                            $response,
+                            $viewParams,
+                            $configService,
+                            ['upgradeInProgress' => true],
+                            [
+                                'upgradeMessage' => __(
+                                    'The CMS is temporarily off-line as an upgrade is in progress.'
+                                    . ' Please check with your system administrator for updates'
+                                    . ' or refresh your page in a few minutes.'
                                 ),
-                                'loginJsUrl'      => $loginJsUrl,
-                                'loginCssUrls'    => \Xibo\Helper\ViteManifest::getCssUrls('login.html', $rootUri),
-                                'assetBase'       => \Xibo\Helper\ViteManifest::getAssetBase($rootUri),
-                                'viteClientUrl'   => \Xibo\Helper\ViteManifest::getClientUrl(),
-                                'viteRefreshUrl'  => \Xibo\Helper\ViteManifest::getRefreshUrl(),
-                            ]);
-                            try {
-                                return $twig->render($response, 'login-spa.twig', $upgradeParams)->withStatus(503);
-                            } catch (\Exception) {
-                                // Fall through to the legacy Twig fallback below
-                            }
+                                'upgradeTitle' => __('Upgrade In Progress'),
+                            ],
+                            503,
+                        );
+                        if ($reactResponse !== null) {
+                            return $reactResponse;
                         }
                         $exceptionClass = 'upgrade-in-progress-page';
+                    }
+
+                    if ($exception instanceof InstanceSuspendedException) {
+                        $reactResponse = self::renderReactMessagePage(
+                            $twig,
+                            $response,
+                            $viewParams,
+                            $configService,
+                            ['instanceSuspended' => true],
+                            [
+                                'suspendedMessage' => __(
+                                    'This CMS instance has been suspended.'
+                                    . ' Please contact your system administrator or support'
+                                    . ' for more information.'
+                                ),
+                                'suspendedTitle' => __('Instance Suspended'),
+                            ],
+                            $statusCode,
+                        );
+                        if ($reactResponse !== null) {
+                            return $reactResponse;
+                        }
+                        $exceptionClass = 'instance-suspended-page';
                     }
 
                     if (file_exists(PROJECT_ROOT . '/views/' . $exceptionClass . '.twig')) {
@@ -295,6 +292,67 @@ class Handlers
                 }
             }
         };
+    }
+
+    /**
+     * Render a message-only page (upgrade pending / instance suspended) through the React
+     * login shell, for visual consistency with the rest of the login flow.
+     * @param \Slim\Views\Twig $twig
+     * @param Response $response
+     * @param array $viewParams
+     * @param \Xibo\Service\ConfigService $configService
+     * @param array $configFlags extra boolean flag(s) merged into the login config, e.g. ['upgradeInProgress' => true]
+     * @param array $i18n message/title strings merged into the login config's i18n block
+     * @param int $statusCode
+     * @return Response|null null if the Vite build isn't available, or rendering the React shell failed -
+     *     the caller should fall back to its own legacy Twig page in that case
+     */
+    private static function renderReactMessagePage(
+        $twig,
+        Response $response,
+        array $viewParams,
+        $configService,
+        array $configFlags,
+        array $i18n,
+        int $statusCode
+    ): ?Response {
+        $rootUri = $configService->rootUri();
+        $loginJsUrl = \Xibo\Helper\ViteManifest::getJsUrl('login.html', $rootUri);
+        if ($loginJsUrl === null) {
+            return null;
+        }
+
+        $messageConfig = array_merge($configFlags, [
+            'logoUrl'     => '/brand/' . $configService->getBrandAssetFile('logo'),
+            'logoDarkUrl' => '/brand/' . $configService->getBrandLogoDarkFile(),
+            'supportUrl'  => $configService->getThemeConfig('theme_url', 'https://xibosignage.com'),
+            'version'     => Environment::$WEBSITE_VERSION_NAME,
+            'appName'     => $configService->getThemeConfig('app_name', 'Xibo'),
+            'i18n'        => $i18n,
+        ]);
+        $messageParams = array_merge($viewParams, [
+            // This render runs outside the normal middleware stack, so unlike a normal request
+            // we have to issue the CSRF token ourselves. State::setState() has already started
+            // the session by the time these exceptions are thrown, so a real token is available
+            // here. Issuing it properly (rather than hardcoding blank) matters because
+            // login/api.ts reads this meta tag for the login/tfa requests fired from this page.
+            'csrfToken'       => CsrfGuard::issueToken(),
+            'loginConfigJson' => json_encode(
+                $messageConfig,
+                JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+            ),
+            'loginJsUrl'      => $loginJsUrl,
+            'loginCssUrls'    => \Xibo\Helper\ViteManifest::getCssUrls('login.html', $rootUri),
+            'assetBase'       => \Xibo\Helper\ViteManifest::getAssetBase($rootUri),
+            'viteClientUrl'   => \Xibo\Helper\ViteManifest::getClientUrl(),
+            'viteRefreshUrl'  => \Xibo\Helper\ViteManifest::getRefreshUrl(),
+        ]);
+
+        try {
+            return $twig->render($response, 'login-spa.twig', $messageParams)->withStatus($statusCode);
+        } catch (\Exception) {
+            return null;
+        }
     }
 
     /**
