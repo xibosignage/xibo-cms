@@ -93,7 +93,7 @@ class State implements Middleware
         // Do we need SSL/STS?
         if (HttpsDetect::isShouldIssueSts($container->get('configService'), $request)) {
             $response = HttpsDetect::decorateWithSts($container->get('configService'), $response);
-        } else if (!HttpsDetect::isHttps()) {
+        } else if (!HttpsDetect::isHttpsTrusted($container->get('configService'))) {
             // We are not HTTPS, should we redirect?
             // Get the current route pattern
             $routeContext = RouteContext::fromRequest($request);
