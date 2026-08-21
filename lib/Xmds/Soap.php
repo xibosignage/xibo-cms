@@ -377,13 +377,23 @@ class Soap
 
         $output = $cache->get();
 
-        // Required files are cached for 4 hours
+        // Required files are cached for 4 hours, but the cached document is only valid to serve as-is
+        // if it was generated under the same SENDFILE_MODE (httpDownloads) as the current request -
+        // otherwise the download="http"/"xmds" attributes it contains are stale.
+        $cachedDocument = null;
+        $cacheModeMatches = false;
         if ($cache->isHit()) {
+            $cachedDocument = new \DOMDocument('1.0');
+            $cachedDocument->loadXML($output);
+            $cacheModeMatches = $cachedDocument->documentElement->getAttribute('httpDownloads')
+                === ($httpDownloads ? '1' : '0');
+        }
+
+        if ($cacheModeMatches) {
             $this->getLog()->info('Returning required files from Cache for display ' . $this->display->display);
 
             // Resign HTTP links and extend expiry
-            $document = new \DOMDocument('1.0');
-            $document->loadXML($output);
+            $document = $cachedDocument;
 
             $cdnUrl = $this->configService->getSetting('CDN_URL');
 
@@ -436,7 +446,8 @@ class Soap
             return $output;
         }
 
-        // We need to regenerate
+        // We need to regenerate (true cache miss, or a mode mismatch against what's cached - e.g.
+        // SENDFILE_MODE was changed since this display's cache entry was generated)
         // Lock the cache
         $cache->lock(120);
 
@@ -461,6 +472,10 @@ class Soap
         $fileElements->setAttribute('generated', Carbon::now()->format(DateFormatHelper::getSystemFormat()));
         $fileElements->setAttribute('fitlerFrom', $this->fromFilter->format(DateFormatHelper::getSystemFormat()));
         $fileElements->setAttribute('fitlerTo', $this->toFilter->format(DateFormatHelper::getSystemFormat()));
+
+        // Record the mode this document was generated under, so a future cache hit can tell whether
+        // SENDFILE_MODE has changed since and needs to be regenerated rather than served stale.
+        $fileElements->setAttribute('httpDownloads', $httpDownloads ? '1' : '0');
 
         // Player dependencies
         // -------------------
