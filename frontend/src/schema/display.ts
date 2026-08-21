@@ -44,6 +44,7 @@ export const getEditDisplaySchema = (t: TFunction) =>
       .string()
       .min(1, t('Name is required'))
       .max(50, t('Name cannot exceed 50 characters')),
+    license: z.string().min(1, t('Hardware Key is required')),
     description: z.string().max(254, t('Description must be 254 characters or less')).optional(),
     latitude: z
       .number()
