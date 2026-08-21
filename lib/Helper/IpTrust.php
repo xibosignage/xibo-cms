@@ -46,7 +46,7 @@ class IpTrust
                 if (self::matchesWildcard($ip, $entry)) {
                     return true;
                 }
-            } elseif ($ip === $entry) {
+            } elseif (self::matchesExact($ip, $entry)) {
                 return true;
             }
         }
@@ -106,25 +106,102 @@ class IpTrust
     }
 
     /**
-     * Segment-by-segment match — 4 dot-separated parts for IPv4, 8 colon-separated parts for
-     * IPv6 — with '*' as a wildcard for any one segment.
+     * Exact-address match via packed binary form (inet_pton()) rather than string equality, so
+     * equivalent textual forms of the same IPv6 address (e.g. "::1" and "0:0:0:0:0:0:0:1") match
+     * — a plain string comparison would treat those as different addresses.
+     */
+    private static function matchesExact(string $ip, string $entry): bool
+    {
+        $packedIp = @inet_pton($ip);
+
+        return $packedIp !== false && $packedIp === @inet_pton($entry);
+    }
+
+    /**
+     * Segment-by-segment match — 4 dot-separated parts for IPv4, or 8 colon-separated hex groups
+     * for IPv6 — with '*' as a wildcard for any one segment. Both the address and the pattern's
+     * "::" shorthand are expanded to the full 8 groups first (via inet_pton() for the address,
+     * which is always a real, syntactically-valid IP; via expandIpv6WithWildcards() for the
+     * pattern, which may contain '*'), so e.g. "2001:db8::*" matches the same addresses as the
+     * fully-expanded "2001:0db8:0000:0000:0000:0000:0000:*".
      */
     private static function matchesWildcard(string $ip, string $pattern): bool
     {
-        $delimiter = str_contains($ip, ':') ? ':' : '.';
-        $ipParts = explode($delimiter, $ip);
-        $patternParts = explode($delimiter, $pattern);
+        if (str_contains($pattern, ':')) {
+            $ipGroups = self::expandIpv6($ip);
+            $patternGroups = self::expandIpv6WithWildcards($pattern);
+        } else {
+            $ipGroups = explode('.', $ip);
+            $patternGroups = explode('.', $pattern);
+        }
 
-        if (count($ipParts) !== count($patternParts)) {
+        if ($ipGroups === null || $patternGroups === null || count($ipGroups) !== count($patternGroups)) {
             return false;
         }
 
-        foreach ($patternParts as $i => $part) {
-            if ($part !== '*' && $part !== $ipParts[$i]) {
+        foreach ($patternGroups as $i => $part) {
+            if ($part !== '*' && $part !== $ipGroups[$i]) {
                 return false;
             }
         }
 
         return true;
+    }
+
+    /**
+     * Fully expand a real IPv6 address into 8 zero-padded, lowercase hex groups. Delegates
+     * "::" compression / IPv4-mapped-form handling to inet_pton() (PHP's own well-tested parser)
+     * rather than re-implementing IPv6 address syntax. Returns null if not a valid IPv6 address.
+     * @return string[]|null
+     */
+    private static function expandIpv6(string $ip): ?array
+    {
+        $packed = @inet_pton($ip);
+        if ($packed === false || strlen($packed) !== 16) {
+            return null;
+        }
+
+        return str_split(bin2hex($packed), 4);
+    }
+
+    /**
+     * Expand an admin-authored IPv6 wildcard pattern's "::" shorthand (at most one occurrence,
+     * per RFC 4291) into 8 groups, zero-padding each hex group so it lines up with expandIpv6()'s
+     * output. '*' groups pass through unchanged. Returns null if the pattern isn't well-formed.
+     * @return string[]|null
+     */
+    private static function expandIpv6WithWildcards(string $pattern): ?array
+    {
+        $sides = explode('::', $pattern, 2);
+        if (count($sides) === 2) {
+            if (str_contains($sides[1], '::')) {
+                return null; // "::" may only appear once.
+            }
+            $left = $sides[0] === '' ? [] : explode(':', $sides[0]);
+            $right = $sides[1] === '' ? [] : explode(':', $sides[1]);
+            $fillCount = 8 - count($left) - count($right);
+            if ($fillCount < 0) {
+                return null;
+            }
+            $groups = array_merge($left, array_fill(0, $fillCount, '0'), $right);
+        } else {
+            $groups = explode(':', $pattern);
+        }
+
+        if (count($groups) !== 8) {
+            return null;
+        }
+
+        foreach ($groups as &$group) {
+            if ($group === '*') {
+                continue;
+            }
+            if (!preg_match('/^[0-9a-fA-F]{1,4}$/', $group)) {
+                return null;
+            }
+            $group = str_pad(strtolower($group), 4, '0', STR_PAD_LEFT);
+        }
+
+        return $groups;
     }
 }
