@@ -137,18 +137,20 @@ export default function CommandsTab({
               <div className="border-t border-gray-200 px-4 py-3 space-y-3">
                 {cmd.description && <p className="text-sm text-gray-400">{cmd.description}</p>}
                 {cmd.baseCommandString && (
-                  <p className="text-sm text-gray-400">
-                    {t('This Command has a default Command String.')}
-                  </p>
+                  <div className="text-sm text-gray-400">
+                    <p>{t('This Command has a default Command String.')}</p>
+                    <p className="mt-1">{cmd.baseCommandString}</p>
+                  </div>
                 )}
                 <CommandBuilder
                   value={cmd.commandString}
                   onChange={(val) => updateDraft(cmd.commandId, 'commandString', val)}
                 />
                 {cmd.baseValidationString && (
-                  <p className="text-sm text-gray-400">
-                    {t('This Command has a default Validation String.')}
-                  </p>
+                  <div className="text-sm text-gray-400">
+                    <p>{t('This Command has a default Validation String.')}</p>
+                    <p className="mt-1">{cmd.baseValidationString}</p>
+                  </div>
                 )}
                 <TextInput
                   name={`validationString_${cmd.commandId}`}
