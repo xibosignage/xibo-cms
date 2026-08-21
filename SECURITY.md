@@ -62,3 +62,94 @@ injection, so production deployments should treat this as a required setting.
 Like `$allowLocalNetworkRequests`, this setting is deployment-time only and is
 not exposed via any CMS admin UI — an attacker who compromises an admin account
 would otherwise simply whitelist their own host.
+
+### `$trustedProxyIps` — required if the CMS sits behind a reverse proxy
+
+The client IP address (used to key login/2FA/password-reset rate limiting, and
+recorded in audit logs) is normally just the TCP peer address. By default the
+CMS does **not** trust the `X-Forwarded-For` / `Forwarded` / `X-Real-IP`-style
+headers at all, so it cannot be spoofed by a directly-connecting client — this
+matches the officially-supported Docker deployment, which has no reverse proxy
+in front of the app.
+
+If you put your own TLS-terminating reverse proxy, load balancer, or CDN in
+front of the CMS, set `$trustedProxyIps` in `web/settings.php` (or
+`web/settings-custom.php`) to the exact IP address(es)/CIDR range(s) of that
+proxy — the only hop(s) whose `X-Forwarded-For` header you want the CMS to
+trust:
+
+```php
+$trustedProxyIps = '10.0.0.5,172.18.0.0/16';
+```
+
+When set, the CMS trusts proxy headers **only** from those addresses and reads
+the real client IP from the header value they forward. **Never** set this to a
+wildcard or a public IP range — anything listed here is implicitly trusted to
+assert an arbitrary client IP, which would let an attacker who can reach that
+trusted hop (or who spoofs a source IP that matches it) bypass rate limiting
+entirely.
+
+Like `$allowLocalNetworkRequests` and `$whitelistHosts`, this setting is
+deployment-time only and is not exposed via any CMS admin UI.
+
+This is combined with (not overridden by) the admin-editable **Settings >
+Network > Whitelist Load Balancers** field (`WHITELIST_LOAD_BALANCERS`),
+which serves the same purpose — the IPs from both are trusted together. If
+you already set that field (e.g. so HSTS headers are issued correctly behind
+your proxy), it now also covers client-IP resolution for rate limiting with
+no extra action.
+
+Exact IPs, CIDR ranges, and wildcard entries all work consistently wherever
+this trust list is consulted — rate limiting, HSTS issuance, and the client
+IP recorded in session/display audit logs (`Xibo\Helper\IpTrust`) — so a
+CIDR range set for one purpose (e.g. HSTS) automatically covers the others
+too.
+
+**Upgrading an existing install that sits behind a reverse proxy?** If you
+haven't set either of these, every user behind that proxy will share a
+single resolved IP (the proxy's own address) after upgrading, which means
+they'll also share one rate-limit bucket — one user's failed logins could
+cause others behind the same proxy to see login/2FA/password-reset requests
+rate-limited. This isn't an outage and resolves itself as soon as you set
+`WHITELIST_LOAD_BALANCERS` (Settings > Network) or `$trustedProxyIps` to
+your proxy's address.
+
+### How `X-Forwarded-Proto` (HTTPS detection) is trusted
+
+`Xibo\Helper\HttpsDetect::isHttpsTrusted()` decides the CSRF cookie's
+`Secure` flag (`CsrfGuard::issueToken()`), off-system URL generation
+(`getScheme()`/`getPort()`/`getRootUrl()`/`getBaseUrl()`, e.g. the
+password-reset link), HSTS issuance (`isShouldIssueSts()`), and
+`State.php`'s `FORCE_HTTPS` redirect. A real `$_SERVER['HTTPS']` always wins
+outright — that's not client-controlled. Otherwise, an `X-Forwarded-Proto:
+https` claim is honoured **only if the connecting address is on the same
+trusted-proxy list as above** (`$trustedProxyIps`/`WHITELIST_LOAD_BALANCERS`,
+matched via `Xibo\Helper\IpTrust`). Once you configure either setting, a
+source that isn't on it can no longer assert "https" here at all — the same
+hardening as the `X-Forwarded-For` case above.
+
+**The one deliberate exception:** when neither setting is configured yet —
+there's nothing to verify a claim against — this falls back to trusting
+`X-Forwarded-Proto` from any address (`HttpsDetect::isHttps()`), rather than
+treating an unconfigured install as plain HTTP. That fallback is safe
+specifically because every caller of it fails safe when a spoofed claim
+pushes detection *towards* "https" on a connection that's really plain
+HTTP:
+
+- **CSRF cookie's `Secure` flag**: a browser refuses to store a cookie
+  marked `Secure` over a connection it knows isn't TLS. Spoofing can only
+  make the cookie fail to be set — never cause it to be sent insecurely.
+- **URL generation**: an `https://` link is never a weaker choice than an
+  `http://` one. Spoofing can only make a generated link *more* secure than
+  it needed to be.
+- **HSTS issuance**: browsers ignore a `Strict-Transport-Security` header
+  received over a connection they know isn't TLS, so a spoofed claim over a
+  genuinely-plain-HTTP connection has no effect on that connection.
+- **`FORCE_HTTPS` redirect**: an attacker can only spoof this on their own
+  request, skipping the redirect for themselves.
+
+Self-hosted instances running <=4.5.1 without trustedProxyIps configured are
+either behind a reverse proxy (usually for TLS termination) and will fail safe
+(no HTTP downgrade allowed). Instances running without a reverse proxy are
+already running non-recommended and allow HTTP, so no additional vulnerability
+remains.

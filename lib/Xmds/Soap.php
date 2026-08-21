@@ -54,6 +54,7 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\IpTrust;
 use Xibo\Helper\LibraryFile;
 use Xibo\Helper\LinkSigner;
 use Xibo\Helper\SanitizerService;
@@ -2761,17 +2762,22 @@ class Soap
      */
     protected function getIp()
     {
-        $clientIp = '';
+        $remoteAddr = $_SERVER['REMOTE_ADDR'] ?? '';
 
-        $keys = array('X_FORWARDED_FOR', 'HTTP_X_FORWARDED_FOR', 'CLIENT_IP', 'REMOTE_ADDR');
-        foreach ($keys as $key) {
-            if (isset($_SERVER[$key]) && filter_var($_SERVER[$key], FILTER_VALIDATE_IP) !== false) {
-                $clientIp = $_SERVER[$key];
-                break;
+        // Only consult forwarded-for style headers when REMOTE_ADDR (the immediate TCP peer) is on
+        // the operator's trusted-proxy list — otherwise they're fully client-controlled and unreliable.
+        if ($remoteAddr !== ''
+            && IpTrust::isTrusted($remoteAddr, $this->getConfig()->getTrustedProxyIpList())
+        ) {
+            $keys = array('X_FORWARDED_FOR', 'HTTP_X_FORWARDED_FOR', 'CLIENT_IP');
+            foreach ($keys as $key) {
+                if (isset($_SERVER[$key]) && filter_var($_SERVER[$key], FILTER_VALIDATE_IP) !== false) {
+                    return $_SERVER[$key];
+                }
             }
         }
 
-        return $clientIp;
+        return filter_var($remoteAddr, FILTER_VALIDATE_IP) !== false ? $remoteAddr : '';
     }
 
     /**

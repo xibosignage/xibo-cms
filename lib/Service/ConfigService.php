@@ -83,6 +83,7 @@ class ConfigService implements ConfigServiceInterface
     private $connectorSettings = null;
     private $allowLocalNetworkRequests = false;
     private string $whitelistHosts = '';
+    private string $trustedProxyIps = '';
 
     /**
      * Theme Specific Config
@@ -206,6 +207,25 @@ class ConfigService implements ConfigServiceInterface
     }
 
     /**
+     * @inheritDoc
+     */
+    public function getTrustedProxyIps(): string
+    {
+        return $this->trustedProxyIps;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getTrustedProxyIpList(): array
+    {
+        return array_values(array_unique(array_merge(
+            array_filter(array_map('trim', explode(',', $this->getTrustedProxyIps()))),
+            array_filter(array_map('trim', explode(',', $this->getSetting('WHITELIST_LOAD_BALANCERS', ''))))
+        )));
+    }
+
+    /**
      * Loads the settings from file.
      *  DO NOT CALL ANY STORE() METHODS IN HERE
      * @param \Psr\Container\ContainerInterface $container DI container which may be used in settings.php
@@ -292,6 +312,14 @@ class ConfigService implements ConfigServiceInterface
         // Host-header allow-list (comma-separated). Operator-set; deployment-time only.
         if (isset($whitelistHosts)) {
             $config->whitelistHosts = (string)$whitelistHosts;
+        }
+
+        // Trusted reverse-proxy IP/CIDR allow-list (comma-separated). Operator-set; deployment-time only.
+        // Only set this to the exact address(es) of a reverse proxy you control and that sits directly in
+        // front of this application — never a wildcard or public range. Anything listed here is implicitly
+        // trusted to assert an arbitrary client IP via X-Forwarded-For, which is used for rate limiting.
+        if (isset($trustedProxyIps)) {
+            $config->trustedProxyIps = (string)$trustedProxyIps;
         }
 
         // Set this as the global config
