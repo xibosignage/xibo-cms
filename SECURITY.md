@@ -113,3 +113,43 @@ cause others behind the same proxy to see login/2FA/password-reset requests
 rate-limited. This isn't an outage and resolves itself as soon as you set
 `WHITELIST_LOAD_BALANCERS` (Settings > Network) or `$trustedProxyIps` to
 your proxy's address.
+
+### How `X-Forwarded-Proto` (HTTPS detection) is trusted
+
+`Xibo\Helper\HttpsDetect::isHttpsTrusted()` decides the CSRF cookie's
+`Secure` flag (`CsrfGuard::issueToken()`), off-system URL generation
+(`getScheme()`/`getPort()`/`getRootUrl()`/`getBaseUrl()`, e.g. the
+password-reset link), HSTS issuance (`isShouldIssueSts()`), and
+`State.php`'s `FORCE_HTTPS` redirect. A real `$_SERVER['HTTPS']` always wins
+outright — that's not client-controlled. Otherwise, an `X-Forwarded-Proto:
+https` claim is honoured **only if the connecting address is on the same
+trusted-proxy list as above** (`$trustedProxyIps`/`WHITELIST_LOAD_BALANCERS`,
+matched via `Xibo\Helper\IpTrust`). Once you configure either setting, a
+source that isn't on it can no longer assert "https" here at all — the same
+hardening as the `X-Forwarded-For` case above.
+
+**The one deliberate exception:** when neither setting is configured yet —
+there's nothing to verify a claim against — this falls back to trusting
+`X-Forwarded-Proto` from any address (`HttpsDetect::isHttps()`), rather than
+treating an unconfigured install as plain HTTP. That fallback is safe
+specifically because every caller of it fails safe when a spoofed claim
+pushes detection *towards* "https" on a connection that's really plain
+HTTP:
+
+- **CSRF cookie's `Secure` flag**: a browser refuses to store a cookie
+  marked `Secure` over a connection it knows isn't TLS. Spoofing can only
+  make the cookie fail to be set — never cause it to be sent insecurely.
+- **URL generation**: an `https://` link is never a weaker choice than an
+  `http://` one. Spoofing can only make a generated link *more* secure than
+  it needed to be.
+- **HSTS issuance**: browsers ignore a `Strict-Transport-Security` header
+  received over a connection they know isn't TLS, so a spoofed claim over a
+  genuinely-plain-HTTP connection has no effect on that connection.
+- **`FORCE_HTTPS` redirect**: an attacker can only spoof this on their own
+  request, skipping the redirect for themselves.
+
+Self-hosted instances running <=4.5.1 without trustedProxyIps configured are
+either behind a reverse proxy (usually for TLS termination) and will fail safe
+(no HTTP downgrade allowed). Instances running without a reverse proxy are
+already running non-recommended and allow HTTP, so no additional vulnerability
+remains.
