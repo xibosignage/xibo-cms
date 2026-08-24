@@ -45,6 +45,7 @@ import { DataTablePagination } from './DataTablePagination';
 import type { ViewMode } from './types';
 
 import { CheckboxCell } from '@/components/ui/table/cells';
+import { sanitizeFileName } from '@/utils/stringUtils';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -81,8 +82,6 @@ interface DataTableProps<TData, TValue> {
   exportRows?: TData[];
   meta?: Record<string, unknown>;
 }
-
-const sanitizeFileName = (name: string): string => name.replace(/[/\\:*?"<>|]/g, '').trim();
 
 const getCommonPinningStyles = <TData, TValue>(column: Column<TData, TValue>): CSSProperties => {
   const isPinned = column.getIsPinned();
