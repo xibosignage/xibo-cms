@@ -33,6 +33,7 @@ import type {
   DisplayManageData,
   PlayerFault,
 } from '@/types/displayManage';
+import { formatDateTime } from '@/utils/date';
 
 export function useDisplayManageData(displayId: number | null) {
   const manageQuery = useQuery<DisplayManageData>({
@@ -66,18 +67,35 @@ export function useBandwidthData(
   });
 }
 
+/**
+ * Takes a duration rather than two dates, so the current time stays out of the query key and it
+ * does not refetch in a loop.
+ */
 export function useDisconnectionEvents(
   displayId: number | null,
-  fromDt: string,
-  toDt: string,
+  windowMinutes: number,
+  timeZone: string,
   eventTypeIds: number[],
   enabled: boolean,
 ) {
   return useQuery<DisconnectionEvent[]>({
-    queryKey: ['display', 'disconnections', displayId, fromDt, toDt, eventTypeIds],
-    queryFn: ({ signal }) =>
-      fetchDisconnectionEvents({ displayId: displayId!, fromDt, toDt, eventTypeIds }, signal),
+    queryKey: ['display', 'disconnections', displayId, windowMinutes, timeZone, eventTypeIds],
+    queryFn: ({ signal }) => {
+      // The endpoint reads these in the CMS timezone, so they have to be written in it.
+      const now = Date.now();
+
+      return fetchDisconnectionEvents(
+        {
+          displayId: displayId!,
+          fromDt: formatDateTime(new Date(now - windowMinutes * 60 * 1000), timeZone),
+          toDt: formatDateTime(new Date(now), timeZone),
+          eventTypeIds,
+        },
+        signal,
+      );
+    },
     enabled: enabled && !!displayId,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 15,
+    refetchInterval: 1000 * 30,
   });
 }

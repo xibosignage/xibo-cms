@@ -67,7 +67,12 @@ use Xibo\Support\Exception\NotFoundException;
         new OA\Property(property: 'displayId', type: 'integer'),
         new OA\Property(property: 'duration', type: 'integer'),
         new OA\Property(property: 'start', type: 'string'),
-        new OA\Property(property: 'end', type: 'string'),
+        new OA\Property(
+            property: 'end',
+            description: 'Null while the event is still running.',
+            type: 'string',
+            nullable: true
+        ),
         new OA\Property(property: 'isFinished', type: 'boolean')
     ]
 )]
@@ -805,14 +810,17 @@ class Stats extends Base
         // CMS timezone
         $defaultTimezone = $this->getConfig()->getSetting('defaultTimezone');
 
-        $params = $this->getSanitizer($request->getParams());
-        $fromDt = $params->getDate('fromDt');
-        $toDt = $params->getDate('toDt');
-        $displayId = $params->getInt('displayId');
-        $displays = $params->getIntArray('displayIds');
-        $eventTypeIds = $params->getIntArray('eventTypeIds');
-        $returnDisplayLocalTime = $params->getCheckbox('returnDisplayLocalTime');
-        $returnDateFormat = $params->getString('returnDateFormat', 'Y-m-d H:i:s');
+        // $params is reused for the SQL binds below, so the sanitizer needs its own name.
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $fromDt = $sanitizedParams->getDate('fromDt');
+        $toDt = $sanitizedParams->getDate('toDt');
+        $displayId = $sanitizedParams->getInt('displayId');
+        // Defaults must be given as options arrays. Left off, the sanitizer returns null, which
+        // then breaks the array_merge() and count() calls below.
+        $displays = $sanitizedParams->getIntArray('displayIds', ['default' => []]);
+        $eventTypeIds = $sanitizedParams->getIntArray('eventTypeIds', ['default' => []]);
+        $returnDisplayLocalTime = $sanitizedParams->getCheckbox('returnDisplayLocalTime');
+        $returnDateFormat = $sanitizedParams->getString('returnDateFormat', ['default' => 'Y-m-d H:i:s']);
 
         // Merge displayId and displayIds
         if ($displayId != 0) {
@@ -828,8 +836,7 @@ class Stats extends Base
                     display.displayId,
                     display.display,
                     displayevent.start,
-                    displayevent.end,
-                    displayevent.eventTypeId
+                    displayevent.end
         ';
         $body = '
               FROM displayevent
@@ -856,13 +863,14 @@ class Stats extends Base
         }
 
         if ($toDt != null) {
-            $body .= ' AND displayevent.end < :end ';
+            // A NULL end means the event is still running, so keep those in range too.
+            $body .= ' AND (displayevent.end < :end OR displayevent.end IS NULL) ';
             $params['end'] = $toDt->format('U');
         }
 
         // Sorting?
-        $filterBy = $this->gridRenderFilter([], $params);
-        $sortOrder = $this->gridRenderSort($params);
+        $filterBy = $this->gridRenderFilter([], $sanitizedParams);
+        $sortOrder = $this->gridRenderSort($sanitizedParams);
 
         $order = '';
         if (is_array($sortOrder)) {
@@ -889,12 +897,14 @@ class Stats extends Base
             $entry = [];
             $entry['displayId'] = $sanitizedRow->getInt('displayId');
             $entry['display'] = $sanitizedRow->getString('display');
-            $entry['eventTypeId'] = $sanitizedRow->getInt('eventTypeId');
             $entry['isFinished'] = $row['end'] !== null;
 
             // Get the start/end date
             $start = DateFormatHelper::createFromTimestamp($row['start']);
-            $end = DateFormatHelper::createFromTimestamp($row['end']);
+            // An unfinished event has no end, so measure it up to now.
+            $end = $entry['isFinished']
+                ? DateFormatHelper::createFromTimestamp($row['end'])
+                : Carbon::now();
 
             if ($returnDisplayLocalTime) {
                 // Convert the dates to the display timezone.
@@ -912,7 +922,7 @@ class Stats extends Base
                 $end = $end->tz($timeZoneCache[$entry['displayId']]);
             }
             $entry['start'] = $start->format($returnDateFormat);
-            $entry['end'] = $end->format($returnDateFormat);
+            $entry['end'] = $entry['isFinished'] ? $end->format($returnDateFormat) : null;
             $entry['duration'] = (int) $end->diffInSeconds($start);
             $rows[] = $entry;
         }

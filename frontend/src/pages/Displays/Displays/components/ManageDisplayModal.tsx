@@ -28,6 +28,9 @@ import {
   BarChart,
   CartesianGrid,
   Legend,
+  Line,
+  LineChart,
+  ReferenceArea,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -43,7 +46,7 @@ import {
 import Modal from '@/components/ui/modals/Modal';
 import { useUserContext } from '@/context/UserContext';
 import DisplayChart from '@/pages/Dashboard/StatusDashboard/components/DisplayChart';
-import { BRAND_ACCENT, BRAND_PRIMARY } from '@/styles/brandColors';
+import { BRAND_PRIMARY, STATUS_DOWN, STATUS_UP } from '@/styles/brandColors';
 import type { Display } from '@/types/display';
 import type {
   DisconnectionEvent,
@@ -62,12 +65,33 @@ interface ManageDisplayModalProps {
   onClose: () => void;
 }
 
-/** One day of the connectivity chart, split by which side of the link noticed the outage. */
-interface DowntimeBucket {
-  date: string;
-  label: string;
-  player: number;
-  cms: number;
+/** How far back the chart looks. Passed down as an argument, never read directly below. */
+const CONNECTIVITY_WINDOW_MINUTES = 1440;
+
+/**
+ * Roughly how many evenly spaced points to lay across the window. These carry the flat stretches
+ * and give the tooltip something to hit; outage edges are added on top exactly.
+ */
+const BASELINE_SAMPLE_COUNT = 100;
+
+/** The two heights the line sits at. The axis relabels them, so the 0 and 1 never show. */
+const LEVEL_UP = 1;
+const LEVEL_DOWN = 0;
+
+/** One point on the line. */
+interface ConnectivitySample {
+  t: number;
+  level: number;
+}
+
+/**
+ * A stretch of time the display was unreachable, clipped to the chart window. `ongoing` means it
+ * has no end yet and is drawn up to the present.
+ */
+interface Outage {
+  from: number;
+  to: number;
+  ongoing: boolean;
 }
 
 function CompletionIcon({ complete }: { complete: number }) {
@@ -390,234 +414,288 @@ function BandwidthSection({
   );
 }
 
+/** Parses the API's 'YYYY-MM-DD HH:mm:ss'. ISO wants a T separator. */
+function parseCmsDate(value: string, timeZone: string): DateTime {
+  return DateTime.fromISO(value.replace(' ', 'T'), { zone: timeZone });
+}
+
 /**
- * Splits outages into per-day totals so they can be charted as a series.
+ * Reduces the event rows to the outages overlapping the chart window.
  *
- * An outage that runs over midnight is apportioned to each day it touches rather than being
- * credited entirely to the day it started, otherwise an overnight outage reads as a single
- * enormous spike. Every day in the range is seeded at zero so the axis stays continuous and the
- * gaps between outages are visible.
+ * These are inferred from a display going quiet, so the edges are only as sharp as the collect
+ * interval, and anything shorter than one interval never appears at all.
  */
-function bucketDowntimeByDay(
+function collectOutages(
   events: DisconnectionEvent[],
-  fromDate: string,
-  toDate: string,
-): DowntimeBucket[] {
-  const rangeStart = DateTime.fromISO(fromDate).startOf('day');
-  const rangeEnd = DateTime.fromISO(toDate).startOf('day');
-
-  if (!rangeStart.isValid || !rangeEnd.isValid || rangeEnd < rangeStart) {
-    return [];
-  }
-
-  const buckets = new Map<string, DowntimeBucket>();
-  // The date pickers allow an arbitrarily wide range, so cap the seeding loop.
-  const maxDays = 366;
-  let day = rangeStart;
-
-  while (day <= rangeEnd && buckets.size < maxDays) {
-    const key = day.toFormat('yyyy-MM-dd');
-    buckets.set(key, { date: key, label: day.toFormat('dd LLL'), player: 0, cms: 0 });
-    day = day.plus({ days: 1 });
-  }
+  windowStart: number,
+  windowEnd: number,
+  timeZone: string,
+): Outage[] {
+  const outages: Outage[] = [];
 
   for (const event of events) {
-    // The API returns 'YYYY-MM-DD HH:mm:ss'; ISO wants the T separator.
-    const start = DateTime.fromISO(event.start.replace(' ', 'T'));
-    const end = DateTime.fromISO(event.end.replace(' ', 'T'));
+    const startedAt = parseCmsDate(event.start, timeZone);
 
-    if (!start.isValid || !end.isValid || end <= start) {
+    if (!startedAt.isValid) {
       continue;
     }
 
-    const series = event.eventTypeId === DISPLAY_EVENT_TYPE.networkCycle ? 'player' : 'cms';
-    let cursor = start;
+    // No end yet, so it runs to the present.
+    const endedAt = event.end ? parseCmsDate(event.end, timeZone) : null;
+    const hasEnd = endedAt !== null && endedAt.isValid;
+    const rawEnd = hasEnd ? Number(endedAt) : windowEnd;
 
-    while (cursor < end) {
-      const dayEnd = cursor.endOf('day');
-      const sliceEnd = end < dayEnd ? end : dayEnd;
-      const bucket = buckets.get(cursor.toFormat('yyyy-MM-dd'));
+    // Clipped, so one that began earlier still draws from the left edge.
+    const from = Math.max(Number(startedAt), windowStart);
+    const to = Math.min(rawEnd, windowEnd);
 
-      if (bucket) {
-        bucket[series] += sliceEnd.diff(cursor, 'minutes').minutes;
-      }
-
-      cursor = dayEnd.plus({ milliseconds: 1 });
+    if (to > from) {
+      outages.push({ from, to, ongoing: !event.isFinished });
     }
   }
 
-  return [...buckets.values()].map((bucket) => ({
-    ...bucket,
-    player: Math.round(bucket.player * 10) / 10,
-    cms: Math.round(bucket.cms * 10) / 10,
-  }));
+  return outages.sort((a, b) => a.from - b.from);
+}
+
+/**
+ * Builds the points the line is drawn through. Outage edges are added to the even samples so a
+ * dip lands on the second it happened. An outage covers its start up to but not including its
+ * end, so the point at the end is already back up.
+ */
+function buildConnectivitySamples(
+  outages: Outage[],
+  windowStart: number,
+  windowEnd: number,
+): ConnectivitySample[] {
+  const span = windowEnd - windowStart;
+  // Floored at a minute so a narrow window cannot ask for thousands of points.
+  const step = Math.max(60 * 1000, Math.floor(span / BASELINE_SAMPLE_COUNT));
+  const timestamps = new Set<number>();
+
+  for (let t = windowStart; t < windowEnd; t += step) {
+    timestamps.add(t);
+  }
+
+  timestamps.add(windowEnd);
+
+  for (const outage of outages) {
+    timestamps.add(outage.from);
+    timestamps.add(outage.to);
+  }
+
+  return [...timestamps]
+    .filter((t) => t >= windowStart && t <= windowEnd)
+    .sort((a, b) => a - b)
+    .map((t) => ({
+      t,
+      level: outages.some((outage) => t >= outage.from && t < outage.to) ? LEVEL_DOWN : LEVEL_UP,
+    }));
+}
+
+/**
+ * Human label for the window, for example "Last 24 hours". Each case is a whole string so
+ * translators get something that declines properly.
+ */
+function windowLabel(t: (key: string) => string, windowMinutes: number): string {
+  if (windowMinutes % 1440 === 0) {
+    const days = windowMinutes / 1440;
+    return days === 1 ? t('Last 24 hours') : `${t('Last')} ${days} ${t('days')}`;
+  }
+
+  if (windowMinutes % 60 === 0) {
+    const hours = windowMinutes / 60;
+    return hours === 1 ? t('Last hour') : `${t('Last')} ${hours} ${t('hours')}`;
+  }
+
+  return `${t('Last')} ${windowMinutes} ${t('minutes')}`;
 }
 
 function formatMinutes(minutes: number): string {
   if (minutes < 1) {
-    return `${Math.round(minutes * 60)}s`;
+    return Math.round(minutes * 60) + 's';
   }
 
   // Rounded before splitting into hours, otherwise 119.7 minutes renders as "1h 60m".
   const total = Math.round(minutes);
 
   if (total < 60) {
-    return `${total}m`;
+    return total + 'm';
   }
 
-  return `${Math.floor(total / 60)}h ${String(total % 60).padStart(2, '0')}m`;
+  return Math.floor(total / 60) + 'h ' + String(total % 60).padStart(2, '0') + 'm';
 }
 
-function ConnectivitySection({
-  display,
-  defaults,
-}: {
-  display: Display;
-  defaults: { fromDate: string; toDate: string };
-}) {
+function ConnectivitySection({ display }: { display: Display }) {
   const { t } = useTranslation();
-  const [fromDt, setFromDt] = useState(defaults.fromDate);
-  const [toDt, setToDt] = useState(defaults.toDate);
+  const windowMinutes = CONNECTIVITY_WINDOW_MINUTES;
 
-  const { data: events, isFetching } = useDisconnectionEvents(
+  // The CMS-wide timezone, not the viewer's. Everything here is sent, read and labelled in it.
+  const { user } = useUserContext();
+  const cmsTimeZone = user?.settings?.defaultTimezone ?? 'UTC';
+
+  const {
+    data: events,
+    isPending,
+    error,
+  } = useDisconnectionEvents(
     display.displayId,
-    fromDt,
-    toDt,
-    [DISPLAY_EVENT_TYPE.displayUpDown, DISPLAY_EVENT_TYPE.networkCycle],
+    windowMinutes,
+    cmsTimeZone,
+    // Narrowed, because the table also holds command and app start events.
+    [DISPLAY_EVENT_TYPE.displayUpDown],
     true,
   );
 
-  const rows = events ?? [];
-  const chartData = bucketDowntimeByDay(rows, fromDt.split(' ')[0], toDt.split(' ')[0]);
-  const hasDowntime = chartData.some((bucket) => bucket.player > 0 || bucket.cms > 0);
+  // Read once per render so the axis, samples and bands share one instant.
+  const windowEnd = Date.now();
+  const windowStart = windowEnd - windowMinutes * 60 * 1000;
 
-  const playerReported = rows.filter(
-    (event) => event.eventTypeId === DISPLAY_EVENT_TYPE.networkCycle,
-  );
-  const totalPlayerMinutes = chartData.reduce((sum, bucket) => sum + bucket.player, 0);
-  const longestOutage = playerReported.reduce(
-    (longest, event) => Math.max(longest, event.duration),
+  const outages = collectOutages(events ?? [], windowStart, windowEnd, cmsTimeZone);
+  const samples = buildConnectivitySamples(outages, windowStart, windowEnd);
+
+  // Includes an ongoing outage; its length so far is real downtime.
+  const totalDownMs = outages.reduce((sum, outage) => sum + (outage.to - outage.from), 0);
+  const longestDownMs = outages.reduce(
+    (longest, outage) => Math.max(longest, outage.to - outage.from),
     0,
   );
+
+  const isDownNow = outages.some((outage) => outage.ongoing);
 
   return (
     <SectionCard title={t('Connectivity')}>
       <div className="p-4">
         <div className="flex items-center gap-4 mb-4">
-          <label className="text-sm text-gray-600">
-            {t('From')}
-            <input
-              type="date"
-              className="ml-2 rounded border border-gray-300 px-2 py-1 text-sm"
-              value={fromDt.split(' ')[0] || fromDt}
-              onChange={(e) => setFromDt(e.target.value || defaults.fromDate)}
-            />
-          </label>
-          <label className="text-sm text-gray-600">
-            {t('To')}
-            <input
-              type="date"
-              className="ml-2 rounded border border-gray-300 px-2 py-1 text-sm"
-              value={toDt.split(' ')[0] || toDt}
-              onChange={(e) => setToDt(e.target.value || defaults.toDate)}
-            />
-          </label>
+          <p className="text-sm text-gray-600">{windowLabel(t, windowMinutes)}</p>
           <span
-            className={`ml-auto inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
-              display.loggedIn === 1
-                ? 'bg-green-50 text-green-700'
-                : 'bg-red-50 text-red-700'
-            }`}
+            className={
+              'ml-auto inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ' +
+              (isDownNow ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700')
+            }
           >
             <span
-              className={`h-1.5 w-1.5 rounded-full ${
-                display.loggedIn === 1 ? 'bg-green-500' : 'bg-red-500'
-              }`}
+              className={'h-1.5 w-1.5 rounded-full ' + (isDownNow ? 'bg-red-500' : 'bg-green-500')}
             />
-            {display.loggedIn === 1 ? t('Connected now') : t('Disconnected now')}
+            {isDownNow ? t('Disconnected now') : t('Connected now')}
           </span>
         </div>
 
-        {isFetching && (
+        {isPending && (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
           </div>
         )}
 
-        {!isFetching && hasDowntime && (
+        {!isPending && error && (
+          <p className="px-4 py-3 text-sm text-red-600">
+            {error instanceof Error ? error.message : t('Could not load connectivity')}
+          </p>
+        )}
+
+        {!isPending && !error && (
           <>
             <div className="grid grid-cols-3 gap-4 mb-4">
               <div>
-                <p className="text-xs text-gray-500">{t('Outages reported by player')}</p>
-                <p className="text-lg font-semibold text-gray-800">{playerReported.length}</p>
+                <p className="text-xs text-gray-500">{t('Outages')}</p>
+                <p className="text-lg font-semibold text-gray-800">{outages.length}</p>
               </div>
               <div>
                 <p className="text-xs text-gray-500">{t('Total downtime')}</p>
                 <p className="text-lg font-semibold text-gray-800">
-                  {formatMinutes(totalPlayerMinutes)}
+                  {formatMinutes(totalDownMs / 60000)}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-gray-500">{t('Longest outage')}</p>
                 <p className="text-lg font-semibold text-gray-800">
-                  {formatMinutes(longestOutage / 60)}
+                  {formatMinutes(longestDownMs / 60000)}
                 </p>
               </div>
             </div>
 
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={chartData} accessibilityLayer={false}>
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={samples} margin={{ top: 8, right: 16, bottom: 8, left: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                {/* Shaded, because across a day a short dip is only a few pixels of travel. */}
+                {outages.map((outage) => (
+                  <ReferenceArea
+                    key={outage.from + '-' + outage.ongoing}
+                    x1={outage.from}
+                    x2={outage.to}
+                    y1={LEVEL_DOWN}
+                    y2={LEVEL_UP}
+                    fill={STATUS_DOWN}
+                    fillOpacity={outage.ongoing ? 0.07 : 0.16}
+                    stroke={outage.ongoing ? STATUS_DOWN : 'none'}
+                    strokeDasharray="3 3"
+                    strokeOpacity={0.5}
+                    ifOverflow="hidden"
+                  />
+                ))}
                 <XAxis
-                  dataKey="label"
+                  dataKey="t"
+                  type="number"
+                  scale="time"
+                  // Fixed to the window so the line spans the full width and the bands line up.
+                  domain={[windowStart, windowEnd]}
                   axisLine={false}
                   tickLine={false}
                   tick={{ fontSize: 12, fill: '#9CA3AF' }}
+                  minTickGap={32}
+                  tickFormatter={(value: number) =>
+                    DateTime.fromMillis(value).setZone(cmsTimeZone).toFormat('HH:mm')
+                  }
                 />
                 <YAxis
+                  type="number"
+                  domain={[LEVEL_DOWN, LEVEL_UP]}
+                  ticks={[LEVEL_DOWN, LEVEL_UP]}
                   axisLine={false}
                   tickLine={false}
                   tick={{ fontSize: 12, fill: '#9CA3AF' }}
-                  label={{
-                    value: t('Minutes'),
-                    position: 'insideLeft',
-                    angle: -90,
-                    style: { fontSize: 12, fill: '#9CA3AF', textAnchor: 'middle' },
-                  }}
+                  width={56}
+                  tickFormatter={(value: number) => (value === LEVEL_UP ? t('Up') : t('Down'))}
                 />
                 <Tooltip
-                  cursor={{ fill: 'rgba(0,0,0,0.04)' }}
-                  formatter={(value) => formatMinutes(Number(value))}
+                  labelFormatter={(value) =>
+                    DateTime.fromMillis(Number(value)).setZone(cmsTimeZone).toFormat('dd LLL HH:mm')
+                  }
+                  formatter={(value) => [Number(value) === LEVEL_UP ? t('Up') : t('Down'), '']}
                 />
-                <Legend
-                  iconType="circle"
-                  iconSize={8}
-                  formatter={(value: string) => (
-                    <span className="text-xs text-gray-600">{value}</span>
-                  )}
-                  wrapperStyle={{ paddingTop: 8 }}
+                <Line
+                  // Held flat until the next reading; the link was either up or down, never between.
+                  type="stepAfter"
+                  dataKey="level"
+                  stroke={STATUS_UP}
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={{ r: 3 }}
+                  isAnimationActive={false}
                 />
-                <Bar
-                  dataKey="player"
-                  name={t('Reported by player')}
-                  fill={BRAND_ACCENT}
-                  radius={[4, 4, 0, 0]}
-                  maxBarSize={48}
-                />
-                <Bar
-                  dataKey="cms"
-                  name={t('Detected by CMS')}
-                  fill={BRAND_PRIMARY}
-                  radius={[4, 4, 0, 0]}
-                  maxBarSize={48}
-                />
-              </BarChart>
+              </LineChart>
             </ResponsiveContainer>
-          </>
-        )}
 
-        {!isFetching && !hasDowntime && (
-          <EmptyState message={t('No disconnections recorded for the selected period')} />
+            <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-gray-500">
+              <span className="inline-flex items-center gap-1.5">
+                <span
+                  className="h-2.5 w-2.5 rounded-sm"
+                  style={{ backgroundColor: STATUS_DOWN, opacity: 0.32 }}
+                />
+                {t('Outage')}
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span
+                  className="h-2.5 w-2.5 rounded-sm border border-dashed"
+                  style={{
+                    borderColor: STATUS_DOWN,
+                    backgroundColor: STATUS_DOWN,
+                    opacity: 0.16,
+                  }}
+                />
+                {t('Still down')}
+              </span>
+            </div>
+          </>
         )}
       </div>
     </SectionCard>
@@ -644,12 +722,12 @@ export default function ManageDisplayModal({ display, onClose }: ManageDisplayMo
         {
           name: t('Downloaded'),
           value: status.countComplete,
-          color: '#4ADE80',
+          color: STATUS_UP,
         },
         {
           name: t('Pending'),
           value: status.countRemaining,
-          color: '#F87171',
+          color: STATUS_DOWN,
         },
       ]
     : [];
@@ -659,12 +737,12 @@ export default function ManageDisplayModal({ display, onClose }: ManageDisplayMo
         {
           name: `${t('Downloaded')} (${status.units})`,
           value: status.sizeComplete,
-          color: '#4ADE80',
+          color: STATUS_UP,
         },
         {
           name: `${t('Pending')} (${status.units})`,
           value: status.sizeRemaining,
-          color: '#F87171',
+          color: STATUS_DOWN,
         },
       ]
     : [];
@@ -751,7 +829,7 @@ export default function ManageDisplayModal({ display, onClose }: ManageDisplayMo
             )}
 
             {/* Connectivity */}
-            {showBandwidth && <ConnectivitySection display={display} defaults={data.defaults} />}
+            {showBandwidth && <ConnectivitySection display={display} />}
 
             {/* Bandwidth */}
             {showBandwidth && (
