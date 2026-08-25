@@ -317,11 +317,60 @@ export async function fetchDisplayLocales(): Promise<{ id: string; value: string
   return response.data;
 }
 
+/**
+ * Submit an activation code. The CMS relays it to the authentication service; the Player picks the
+ * CMS details up moments later and registers itself, which is what actually creates the display.
+ *
+ * Nothing about the display is set here - see useNewDisplayDetector and useApplyDisplaySettings.
+ */
 export async function addDisplayViaCode(userCode: string): Promise<void> {
   const params = new URLSearchParams({ user_code: userCode });
   await http.post('/display/addViaCode', params.toString(), {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   });
+}
+
+/**
+ * The highest displayId this user can currently see.
+ *
+ * Captured before an activation code is submitted so that whatever registers afterwards can be
+ * recognised as new. Returns 0 when the user can see no displays at all.
+ */
+export async function fetchHighestDisplayId(): Promise<number> {
+  const response = await http.get('/display', {
+    params: { start: 0, length: 1, sortBy: 'displayId', sortDir: 'desc' },
+  });
+
+  const rows: Display[] = response.data ?? [];
+  return rows[0]?.displayId ?? 0;
+}
+
+/**
+ * Displays with an id above the given watermark, newest first.
+ *
+ * Used to spot the Player that has just connected. More than one result means something else
+ * registered at the same moment, and the operator is asked which display is theirs.
+ */
+export async function fetchDisplaysNewerThan(highestSeenId: number, limit = 5): Promise<Display[]> {
+  const response = await http.get('/display', {
+    params: { start: 0, length: limit, sortBy: 'displayId', sortDir: 'desc' },
+  });
+
+  const rows: Display[] = response.data ?? [];
+  return rows.filter((row) => row.displayId > highestSeenId);
+}
+
+export interface LicenceUsage {
+  /** 0 means unlimited. */
+  maxLicensed: number;
+  currentlyLicensed: number;
+  /** null means unlimited. */
+  available: number | null;
+}
+
+export async function fetchLicenceUsage(): Promise<LicenceUsage> {
+  const response = await http.get('/display/licence/usage');
+  return response.data.data;
 }
 
 export async function checkLicence(displayId: number | string): Promise<void> {

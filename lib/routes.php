@@ -331,6 +331,8 @@ $app->group('', function (RouteCollectorProxy $group) {
         ->setName('display.statusWindow');
     $group->get('/display/faults[/{displayId}]', ['\Xibo\Controller\PlayerFault','grid'])
         ->setName('display.faults.search');
+    $group->get('/display/licence/usage', ['\Xibo\Controller\Display','licenceUsage'])
+        ->setName('display.licence.usage');
     $group->get('/display/{id}', ['\Xibo\Controller\Display', 'searchById'])->setName('display.search.id');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['displays.view']));
 

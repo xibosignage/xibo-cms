@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import AddDisplayModal from './AddDisplayModal';
+import AddDisplayModal, { type AddDisplayPrefill } from './AddDisplayModal';
 import AssignLayoutModal from './AssignLayoutModal';
 import AssignMediaModal from './AssignMediaModal';
 import CollectNowModal from './CollectNowModal';
@@ -93,6 +93,10 @@ interface DisplayModalsProps {
     confirmBulkSetDefaultLayout: (items: Display[], layoutId: number) => void;
     confirmSendCommand: (items: DisplayCommandTarget[], commandId: number) => void;
     confirmBulkMoveCms: (items: Display[], data: MoveCmsData) => void;
+    /** Set when the customer arrived from a deep link, e.g. a scanned QR code. */
+    addDisplayPrefill?: AddDisplayPrefill | null;
+    /** Open the newly connected display straight from the Add Display success panel. */
+    manageNewDisplay?: (display: Display) => void;
   };
 }
 
@@ -117,7 +121,12 @@ export function DisplayModals({ actions, selection, handlers }: DisplayModalsPro
   return (
     <>
       {isModalOpen('add') && (
-        <AddDisplayModal onClose={actions.closeModal} onAdded={actions.handleRefresh} />
+        <AddDisplayModal
+          onClose={actions.closeModal}
+          onAdded={actions.handleRefresh}
+          prefill={handlers.addDisplayPrefill}
+          onManage={handlers.manageNewDisplay}
+        />
       )}
 
       {isModalOpen('manage') && display && (

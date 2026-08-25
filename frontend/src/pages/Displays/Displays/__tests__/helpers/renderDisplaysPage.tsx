@@ -28,15 +28,19 @@ import { mockUser, queryKeys } from '../fixtures/display';
 
 import { UserProvider } from '@/context/UserContext';
 import { testQueryClient } from '@/setupTests';
+import type { User } from '@/types/user';
 
 // Renders the full Displays page inside all required context providers.
 // Call testQueryClient.clear() and vi.clearAllMocks() in beforeEach to
 // guarantee test isolation before using this helper.
-export const renderDisplaysPage = () => {
+//
+// Pass `user` to exercise behaviour that depends on features the default mock user does not hold,
+// for example naming a display while adding it, which needs displays.modify.
+export const renderDisplaysPage = (user: User = mockUser) => {
   testQueryClient.setQueryData(queryKeys.displaysPage, null);
   return render(
     <QueryClientProvider client={testQueryClient}>
-      <UserProvider initialUser={mockUser}>
+      <UserProvider initialUser={user}>
         <MemoryRouter>
           <DisplaysPage />
         </MemoryRouter>

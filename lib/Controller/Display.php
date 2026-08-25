@@ -1818,6 +1818,51 @@ class Display extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(
+        path: '/display/licence/usage',
+        operationId: 'displayLicenceUsage',
+        description: 'How many display licences are in use, and how many remain',
+        summary: 'Display Licence Usage',
+        tags: ['display']
+    )]
+    #[OA\Response(response: 200, description: 'successful operation')]
+    /**
+     * Report display licence usage, so the Add Display form can show the operator where they stand
+     * before they commit to authorising another display.
+     *
+     * Deliberately available to anyone who can view displays: the count is a system-wide total and
+     * is not scoped to the displays this user happens to have permission to see, because a partial
+     * count measured against a system-wide cap would be misleading.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return ResponseInterface|Response
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function licenceUsage(Request $request, Response $response): Response|ResponseInterface
+    {
+        $maxLicensed = intval($this->getConfig()->getSetting('MAX_LICENSED_DISPLAYS'));
+
+        $results = $this->store->select(
+            'SELECT COUNT(DisplayID) AS CountLicensed FROM `display` WHERE licensed = 1',
+            []
+        );
+        $currentlyLicensed = intval($results[0]['CountLicensed'] ?? 0);
+
+        $this->getState()->hydrate([
+            'data' => [
+                // 0 means unlimited
+                'maxLicensed' => $maxLicensed,
+                'currentlyLicensed' => $currentlyLicensed,
+                // null means unlimited
+                'available' => $maxLicensed > 0 ? max(0, $maxLicensed - $currentlyLicensed) : null,
+            ]
+        ]);
+
+        return $this->render($request, $response);
+    }
+
     #[OA\Put(
         path: '/display/licenceCheck/{displayId}',
         operationId: 'displayLicenceCheck',
