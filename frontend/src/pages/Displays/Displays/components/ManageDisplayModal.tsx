@@ -20,18 +20,33 @@
  */
 
 import { Check, Loader2, X } from 'lucide-react';
+import { DateTime } from 'luxon';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 
-import { useBandwidthData, useDisplayManageData } from '../hooks/useDisplayManageData';
+import {
+  useBandwidthData,
+  useDisconnectionEvents,
+  useDisplayManageData,
+} from '../hooks/useDisplayManageData';
 
 import Modal from '@/components/ui/modals/Modal';
 import { useUserContext } from '@/context/UserContext';
 import DisplayChart from '@/pages/Dashboard/StatusDashboard/components/DisplayChart';
-import { BRAND_PRIMARY } from '@/styles/brandColors';
+import { BRAND_ACCENT, BRAND_PRIMARY } from '@/styles/brandColors';
 import type { Display } from '@/types/display';
 import type {
+  DisconnectionEvent,
   ManageDependency,
   ManageLayout,
   ManageMedia,
@@ -39,11 +54,20 @@ import type {
   ManageWidgetData,
   PlayerFault,
 } from '@/types/displayManage';
+import { DISPLAY_EVENT_TYPE } from '@/types/displayManage';
 import { hasFeature } from '@/utils/permissions';
 
 interface ManageDisplayModalProps {
   display: Display;
   onClose: () => void;
+}
+
+/** One day of the connectivity chart, split by which side of the link noticed the outage. */
+interface DowntimeBucket {
+  date: string;
+  label: string;
+  player: number;
+  cms: number;
 }
 
 function CompletionIcon({ complete }: { complete: number }) {
@@ -366,6 +390,240 @@ function BandwidthSection({
   );
 }
 
+/**
+ * Splits outages into per-day totals so they can be charted as a series.
+ *
+ * An outage that runs over midnight is apportioned to each day it touches rather than being
+ * credited entirely to the day it started, otherwise an overnight outage reads as a single
+ * enormous spike. Every day in the range is seeded at zero so the axis stays continuous and the
+ * gaps between outages are visible.
+ */
+function bucketDowntimeByDay(
+  events: DisconnectionEvent[],
+  fromDate: string,
+  toDate: string,
+): DowntimeBucket[] {
+  const rangeStart = DateTime.fromISO(fromDate).startOf('day');
+  const rangeEnd = DateTime.fromISO(toDate).startOf('day');
+
+  if (!rangeStart.isValid || !rangeEnd.isValid || rangeEnd < rangeStart) {
+    return [];
+  }
+
+  const buckets = new Map<string, DowntimeBucket>();
+  // The date pickers allow an arbitrarily wide range, so cap the seeding loop.
+  const maxDays = 366;
+  let day = rangeStart;
+
+  while (day <= rangeEnd && buckets.size < maxDays) {
+    const key = day.toFormat('yyyy-MM-dd');
+    buckets.set(key, { date: key, label: day.toFormat('dd LLL'), player: 0, cms: 0 });
+    day = day.plus({ days: 1 });
+  }
+
+  for (const event of events) {
+    // The API returns 'YYYY-MM-DD HH:mm:ss'; ISO wants the T separator.
+    const start = DateTime.fromISO(event.start.replace(' ', 'T'));
+    const end = DateTime.fromISO(event.end.replace(' ', 'T'));
+
+    if (!start.isValid || !end.isValid || end <= start) {
+      continue;
+    }
+
+    const series = event.eventTypeId === DISPLAY_EVENT_TYPE.networkCycle ? 'player' : 'cms';
+    let cursor = start;
+
+    while (cursor < end) {
+      const dayEnd = cursor.endOf('day');
+      const sliceEnd = end < dayEnd ? end : dayEnd;
+      const bucket = buckets.get(cursor.toFormat('yyyy-MM-dd'));
+
+      if (bucket) {
+        bucket[series] += sliceEnd.diff(cursor, 'minutes').minutes;
+      }
+
+      cursor = dayEnd.plus({ milliseconds: 1 });
+    }
+  }
+
+  return [...buckets.values()].map((bucket) => ({
+    ...bucket,
+    player: Math.round(bucket.player * 10) / 10,
+    cms: Math.round(bucket.cms * 10) / 10,
+  }));
+}
+
+function formatMinutes(minutes: number): string {
+  if (minutes < 1) {
+    return `${Math.round(minutes * 60)}s`;
+  }
+
+  // Rounded before splitting into hours, otherwise 119.7 minutes renders as "1h 60m".
+  const total = Math.round(minutes);
+
+  if (total < 60) {
+    return `${total}m`;
+  }
+
+  return `${Math.floor(total / 60)}h ${String(total % 60).padStart(2, '0')}m`;
+}
+
+function ConnectivitySection({
+  display,
+  defaults,
+}: {
+  display: Display;
+  defaults: { fromDate: string; toDate: string };
+}) {
+  const { t } = useTranslation();
+  const [fromDt, setFromDt] = useState(defaults.fromDate);
+  const [toDt, setToDt] = useState(defaults.toDate);
+
+  const { data: events, isFetching } = useDisconnectionEvents(
+    display.displayId,
+    fromDt,
+    toDt,
+    [DISPLAY_EVENT_TYPE.displayUpDown, DISPLAY_EVENT_TYPE.networkCycle],
+    true,
+  );
+
+  const rows = events ?? [];
+  const chartData = bucketDowntimeByDay(rows, fromDt.split(' ')[0], toDt.split(' ')[0]);
+  const hasDowntime = chartData.some((bucket) => bucket.player > 0 || bucket.cms > 0);
+
+  const playerReported = rows.filter(
+    (event) => event.eventTypeId === DISPLAY_EVENT_TYPE.networkCycle,
+  );
+  const totalPlayerMinutes = chartData.reduce((sum, bucket) => sum + bucket.player, 0);
+  const longestOutage = playerReported.reduce(
+    (longest, event) => Math.max(longest, event.duration),
+    0,
+  );
+
+  return (
+    <SectionCard title={t('Connectivity')}>
+      <div className="p-4">
+        <div className="flex items-center gap-4 mb-4">
+          <label className="text-sm text-gray-600">
+            {t('From')}
+            <input
+              type="date"
+              className="ml-2 rounded border border-gray-300 px-2 py-1 text-sm"
+              value={fromDt.split(' ')[0] || fromDt}
+              onChange={(e) => setFromDt(e.target.value || defaults.fromDate)}
+            />
+          </label>
+          <label className="text-sm text-gray-600">
+            {t('To')}
+            <input
+              type="date"
+              className="ml-2 rounded border border-gray-300 px-2 py-1 text-sm"
+              value={toDt.split(' ')[0] || toDt}
+              onChange={(e) => setToDt(e.target.value || defaults.toDate)}
+            />
+          </label>
+          <span
+            className={`ml-auto inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
+              display.loggedIn === 1
+                ? 'bg-green-50 text-green-700'
+                : 'bg-red-50 text-red-700'
+            }`}
+          >
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                display.loggedIn === 1 ? 'bg-green-500' : 'bg-red-500'
+              }`}
+            />
+            {display.loggedIn === 1 ? t('Connected now') : t('Disconnected now')}
+          </span>
+        </div>
+
+        {isFetching && (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+          </div>
+        )}
+
+        {!isFetching && hasDowntime && (
+          <>
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              <div>
+                <p className="text-xs text-gray-500">{t('Outages reported by player')}</p>
+                <p className="text-lg font-semibold text-gray-800">{playerReported.length}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">{t('Total downtime')}</p>
+                <p className="text-lg font-semibold text-gray-800">
+                  {formatMinutes(totalPlayerMinutes)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">{t('Longest outage')}</p>
+                <p className="text-lg font-semibold text-gray-800">
+                  {formatMinutes(longestOutage / 60)}
+                </p>
+              </div>
+            </div>
+
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={chartData} accessibilityLayer={false}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                <XAxis
+                  dataKey="label"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: '#9CA3AF' }}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: '#9CA3AF' }}
+                  label={{
+                    value: t('Minutes'),
+                    position: 'insideLeft',
+                    angle: -90,
+                    style: { fontSize: 12, fill: '#9CA3AF', textAnchor: 'middle' },
+                  }}
+                />
+                <Tooltip
+                  cursor={{ fill: 'rgba(0,0,0,0.04)' }}
+                  formatter={(value) => formatMinutes(Number(value))}
+                />
+                <Legend
+                  iconType="circle"
+                  iconSize={8}
+                  formatter={(value: string) => (
+                    <span className="text-xs text-gray-600">{value}</span>
+                  )}
+                  wrapperStyle={{ paddingTop: 8 }}
+                />
+                <Bar
+                  dataKey="player"
+                  name={t('Reported by player')}
+                  fill={BRAND_ACCENT}
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={48}
+                />
+                <Bar
+                  dataKey="cms"
+                  name={t('Detected by CMS')}
+                  fill={BRAND_PRIMARY}
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={48}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </>
+        )}
+
+        {!isFetching && !hasDowntime && (
+          <EmptyState message={t('No disconnections recorded for the selected period')} />
+        )}
+      </div>
+    </SectionCard>
+  );
+}
+
 export default function ManageDisplayModal({ display, onClose }: ManageDisplayModalProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
@@ -491,6 +749,9 @@ export default function ManageDisplayModal({ display, onClose }: ManageDisplayMo
                 <WidgetDataTable data={data.inventory?.widgetData ?? []} />
               </SectionCard>
             )}
+
+            {/* Connectivity */}
+            {showBandwidth && <ConnectivitySection display={display} defaults={data.defaults} />}
 
             {/* Bandwidth */}
             {showBandwidth && (

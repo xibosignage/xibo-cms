@@ -127,3 +127,27 @@ export interface BandwidthResponse {
   backgroundColor: string[];
   postUnits: string;
 }
+
+/**
+ * Display event types relevant to connectivity, as mapped by
+ * DisplayEvent::getEventIdFromString.
+ *
+ * DisplayUpDown rows are raised by the CMS itself when a display's lastAccessed goes stale.
+ * NetworkCycle rows are reported by the player, which knows the moment it lost the CMS rather
+ * than inferring it from silence.
+ */
+export const DISPLAY_EVENT_TYPE = {
+  displayUpDown: 1,
+  networkCycle: 4,
+} as const;
+
+/** One row from /stats/timeDisconnected. Dates are 'YYYY-MM-DD HH:mm:ss' in CMS time. */
+export interface DisconnectionEvent {
+  displayId: number;
+  display: string;
+  eventTypeId: number;
+  isFinished: boolean;
+  start: string;
+  end: string;
+  duration: number;
+}
