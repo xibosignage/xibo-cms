@@ -48,6 +48,7 @@ import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagI
 import TextInput from '@/components/ui/forms/TextInput';
 import TimezoneSelect from '@/components/ui/forms/TimezoneSelect';
 import Modal from '@/components/ui/modals/Modal';
+import { useUserContext } from '@/context/UserContext';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useDebounce } from '@/hooks/useDebounce';
 import { DynamicSettingField } from '@/pages/Displays/DisplayProfile/components/fields/DynamicSettingField';
@@ -77,6 +78,7 @@ import type {
 import type { Layout } from '@/types/layout';
 import type { Tag } from '@/types/tag';
 import type { DateLike } from '@/utils/date';
+import { hasFeature } from '@/utils/permissions';
 
 type ActiveTab =
   | 'general'
@@ -91,7 +93,9 @@ type ActiveTab =
 function tabClass(activeTab: ActiveTab, tab: ActiveTab): string {
   const isActive = activeTab === tab;
   return `py-2 px-3 inline-flex items-center gap-2 border-b-2 text-sm font-semibold whitespace-nowrap focus:outline-none transition-all ${
-    isActive ? 'border-blue-600 text-blue-500' : 'border-gray-200 text-gray-500 hover:text-blue-600'
+    isActive
+      ? 'border-xibo-blue-600 text-xibo-blue-500'
+      : 'border-gray-200 text-gray-500 hover:text-xibo-blue-600'
   }`;
 }
 
@@ -516,8 +520,10 @@ export default function EditDisplayModal({
   onSave,
 }: EditDisplayModalProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
   const { formatDateTime } = useDateFormatter();
   const [isPending, startTransition] = useTransition();
+  const isDisplayNameLocked = Number(user?.settings?.DISPLAY_LOCK_NAME_TO_DEVICENAME) === 1;
 
   const displayTypes: SelectOption[] = [
     { value: '', label: '' },
@@ -536,6 +542,7 @@ export default function EditDisplayModal({
   const [apiError, setApiError] = useState<string | undefined>();
   const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({});
   const [pendingTagInput, setPendingTagInput] = useState('');
+  const [hasTagPendingValue, setHasTagPendingValue] = useState(false);
 
   const [draft, setDraft] = useState<EditDraft>({
     display: '',
@@ -668,10 +675,12 @@ export default function EditDisplayModal({
         if (!val) {
           return '';
         }
-        if (typeof val === 'number') {
-          return val > 0 ? new Date(val * 1000).toISOString() : '';
+        const date =
+          typeof val === 'number' ? (val > 0 ? new Date(val * 1000) : null) : new Date(val);
+        if (!date || Number.isNaN(date.getTime()) || date.getTime() < Date.now()) {
+          return '';
         }
-        return new Date(val).toISOString();
+        return date.toISOString();
       })(),
       bandwidthLimit: data.bandwidthLimit ?? null,
       clearCachedData: 1,
@@ -1074,7 +1083,7 @@ export default function EditDisplayModal({
         {
           label: isPending ? t('Saving…') : t('Save'),
           onClick: handleSave,
-          disabled: isPending,
+          disabled: isPending || hasTagPendingValue,
         },
       ]}
     >
@@ -1191,12 +1200,19 @@ export default function EditDisplayModal({
               <TextInput
                 name="display"
                 label={t('Display')}
-                helpText={t('The Name of the Display - (1 - 50 characters).')}
+                helpText={
+                  isDisplayNameLocked
+                    ? t(
+                        'The Name of the Display - your administrator has locked this to the device name',
+                      )
+                    : t('The Name of the Display - (1 - 50 characters).')
+                }
                 placeholder={t('Enter name')}
                 value={draft.display}
                 onChange={(v) => set('display', v)}
                 error={fieldErrors.display}
                 maxLength={50}
+                disabled={isDisplayNameLocked}
               />
               <TextInput
                 name="license"
@@ -1216,17 +1232,21 @@ export default function EditDisplayModal({
                 error={fieldErrors.description}
                 maxLength={254}
               />
-              <TagInput
-                label={t('Tags')}
-                helpText={t(
-                  'Tags for this Display - Comma separated string of Tags or Tag|Value format. If you choose a Tag that has associated values, they will be shown for selection below.',
-                )}
-                placeholder=" "
-                value={draft.tags}
-                onChange={(tags) => set('tags', tags)}
-                inputValue={pendingTagInput}
-                onInputChange={setPendingTagInput}
-              />
+              {(hasFeature(user, 'tag.tagging') || (draft.tags?.length ?? 0) > 0) && (
+                <TagInput
+                  label={t('Tags')}
+                  helpText={t(
+                    'Tags for this Display - Comma separated string of Tags or Tag|Value format. If you choose a Tag that has associated values, they will be shown for selection below.',
+                  )}
+                  placeholder=" "
+                  value={draft.tags}
+                  onChange={(tags) => set('tags', tags)}
+                  inputValue={pendingTagInput}
+                  onInputChange={setPendingTagInput}
+                  onPendingValueChange={setHasTagPendingValue}
+                  disabled={!hasFeature(user, 'tag.tagging')}
+                />
+              )}
               <SelectDropdown
                 label={t('Default Layout')}
                 helpText={t(
@@ -1625,11 +1645,13 @@ export default function EditDisplayModal({
                 )}
                 value={draft.auditingUntil}
                 onChange={(iso) => set('auditingUntil', iso)}
+                disablePastDates
               />
               <BandwidthInput
                 valueKb={draft.bandwidthLimit}
                 onChange={(kb) => set('bandwidthLimit', kb)}
                 helpText={t('The bandwidth limit that should be applied. Enter 0 for no limit.')}
+                error={fieldErrors.bandwidthLimit}
               />
               <Checkbox
                 id="clearCachedData"

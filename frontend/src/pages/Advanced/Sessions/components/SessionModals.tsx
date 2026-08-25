@@ -48,7 +48,6 @@ export function SessionModals({ actions, selection, handlers }: SessionModalsPro
         <LogoutSessionModal
           onClose={actions.closeModal}
           onLogout={() => handlers.confirmLogout(selection.sessionToLogout)}
-          userName={selection.sessionToLogout[0]?.userName}
           itemCount={selection.sessionToLogout.length}
           error={actions.logoutError}
           isLoading={actions.isLoggingOut}

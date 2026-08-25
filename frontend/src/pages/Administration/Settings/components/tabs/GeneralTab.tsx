@@ -43,8 +43,11 @@ export default function GeneralTab({
         {isVisible('HELP_BASE') && (
           <TextInput
             name="HELP_BASE"
-            label={t('User manual URL')}
-            helpText={t('Used as the base URL for all in-app help links.')}
+            label={t('Location of the Manual')}
+            required
+            helpText={t(
+              'The address of the user manual, which will be used as a prefix for all help links.',
+            )}
             value={formValues.HELP_BASE ?? ''}
             onChange={(v) => updateField('HELP_BASE', v)}
             disabled={!isEditable('HELP_BASE')}
@@ -55,6 +58,7 @@ export default function GeneralTab({
           <TextInput
             name="QUICK_CHART_URL"
             label={t('Quick Chart URL')}
+            required
             helpText={t(
               'Enter the URL to a Quick Chart service. This is used to draw charts in emailed reports and for showing a QR code during two factor authentication.',
             )}
@@ -66,22 +70,13 @@ export default function GeneralTab({
 
         {isVisible('PHONE_HOME') && (
           <SwitchRow
-            title={t('Send anonymous statistics to help us improve')}
+            title={t('Should the CMS send anonymous statistics to help improve the software?')}
             description={t(
-              'Help us improve Xibo by automatically sending diagnostic and usage statistics.',
+              'When this is enabled the CMS will periodically send usage information to the software authors so that improvements can be made to the product.',
             )}
             checked={formValues.PHONE_HOME === '1'}
             onChange={(v) => updateField('PHONE_HOME', v ? '1' : '0')}
             disabled={!isEditable('PHONE_HOME')}
-          />
-        )}
-        {isVisible('SCHEDULE_LOOKAHEAD') && (
-          <SwitchRow
-            title={t('Pre-send future Schedule to Players')}
-            description={t('Send future Schedule information to Players.')}
-            checked={formValues.SCHEDULE_LOOKAHEAD === '1'}
-            onChange={(v) => updateField('SCHEDULE_LOOKAHEAD', v ? '1' : '0')}
-            disabled={!isEditable('SCHEDULE_LOOKAHEAD')}
           />
         )}
         {isVisible('PHONE_HOME_KEY') && (
@@ -106,31 +101,33 @@ export default function GeneralTab({
             disabled={!isEditable('PHONE_HOME_DATE')}
           />
         )}
+        {isVisible('SCHEDULE_LOOKAHEAD') && (
+          <SwitchRow
+            title={t('Send Schedule in advance?')}
+            description={t('Should the CMS send future schedule information to Players?')}
+            checked={formValues.SCHEDULE_LOOKAHEAD === '1'}
+            onChange={(v) => updateField('SCHEDULE_LOOKAHEAD', v ? '1' : '0')}
+            disabled={!isEditable('SCHEDULE_LOOKAHEAD')}
+          />
+        )}
       </SettingsSection>
       <SettingsSection title={t('Content')}>
         {isVisible('REQUIRED_FILES_LOOKAHEAD') && (
           <NumberInput
             name="REQUIRED_FILES_LOOKAHEAD"
-            label={t('Duration (seconds)')}
+            label={t('Send files in advance?')}
+            helpText={t(
+              'How many seconds in to the future should the calls to RequiredFiles look?',
+            )}
             value={Number(formValues.REQUIRED_FILES_LOOKAHEAD) || 0}
             onChange={(v) => updateField('REQUIRED_FILES_LOOKAHEAD', String(v))}
             disabled={!isEditable('REQUIRED_FILES_LOOKAHEAD')}
           />
         )}
 
-        {isVisible('SETTING_IMPORT_ENABLED') && (
-          <SwitchRow
-            title={t('Allow Library imports')}
-            description={t('Enable importing content packages into the Library.')}
-            checked={formValues.SETTING_IMPORT_ENABLED === '1'}
-            onChange={(v) => updateField('SETTING_IMPORT_ENABLED', v ? '1' : '0')}
-            disabled={!isEditable('SETTING_IMPORT_ENABLED')}
-          />
-        )}
         {isVisible('SETTING_LIBRARY_TIDY_ENABLED') && (
           <SwitchRow
-            title={t('Enable Library Tidy')}
-            description={t('Show the Tidy Library button to remove unused media.')}
+            title={t('Enable Library Tidy?')}
             checked={formValues.SETTING_LIBRARY_TIDY_ENABLED === '1'}
             onChange={(v) => updateField('SETTING_LIBRARY_TIDY_ENABLED', v ? '1' : '0')}
             disabled={!isEditable('SETTING_LIBRARY_TIDY_ENABLED')}
@@ -138,34 +135,34 @@ export default function GeneralTab({
         )}
       </SettingsSection>
       <SettingsSection title={t('Other Features')}>
-        {isVisible('REPORTS_EXPORT_SHOW_LOGO') && (
-          <SwitchRow
-            title={t('Show logo on PDF Report exports')}
-            description={t('Include the CMS logo when exporting saved reports to PDF.')}
-            checked={formValues.REPORTS_EXPORT_SHOW_LOGO === '1'}
-            onChange={(v) => updateField('REPORTS_EXPORT_SHOW_LOGO', v ? '1' : '0')}
-            disabled={!isEditable('REPORTS_EXPORT_SHOW_LOGO')}
-          />
-        )}
-
-        {isVisible('DASHBOARD_LATEST_NEWS_ENABLED') && (
-          <SwitchRow
-            title={t('Show latest news on Dashboard')}
-            description={t("Display the theme provider's news feed on the status dashboard.")}
-            checked={formValues.DASHBOARD_LATEST_NEWS_ENABLED === '1'}
-            onChange={(v) => updateField('DASHBOARD_LATEST_NEWS_ENABLED', v ? '1' : '0')}
-            disabled={!isEditable('DASHBOARD_LATEST_NEWS_ENABLED')}
+        {isVisible('EMBEDDED_STATUS_WIDGET') && (
+          <TextInput
+            name="EMBEDDED_STATUS_WIDGET"
+            label={t('Status Dashboard Widget')}
+            helpText={t('HTML to embed in an iframe on the Status Dashboard')}
+            value={formValues.EMBEDDED_STATUS_WIDGET ?? ''}
+            onChange={(v) => updateField('EMBEDDED_STATUS_WIDGET', v)}
+            disabled={!isEditable('EMBEDDED_STATUS_WIDGET')}
           />
         )}
         {isVisible('DEFAULTS_IMPORTED') && (
           <SwitchRow
-            title={t('Send anonymous usage statistics')}
-            description={t(
-              'Share anonymised data to help improve Xibo. No personal data is included.',
-            )}
+            title={t('Defaults Imported?')}
+            description={t('Has the default layout been imported?')}
             checked={formValues.DEFAULTS_IMPORTED === '1'}
             onChange={(v) => updateField('DEFAULTS_IMPORTED', v ? '1' : '0')}
             disabled={!isEditable('DEFAULTS_IMPORTED')}
+          />
+        )}
+        {isVisible('DASHBOARD_LATEST_NEWS_ENABLED') && (
+          <SwitchRow
+            title={t('Enable Latest News?')}
+            description={t(
+              'Should the Dashboard show latest news? The address is provided by the theme.',
+            )}
+            checked={formValues.DASHBOARD_LATEST_NEWS_ENABLED === '1'}
+            onChange={(v) => updateField('DASHBOARD_LATEST_NEWS_ENABLED', v ? '1' : '0')}
+            disabled={!isEditable('DASHBOARD_LATEST_NEWS_ENABLED')}
           />
         )}
         {isVisible('INSTANCE_SUSPENDED') && (
@@ -181,6 +178,7 @@ export default function GeneralTab({
               { value: 'yes', label: t('Yes') },
             ]}
             onSelect={(v) => updateField('INSTANCE_SUSPENDED', v)}
+            disabled={!isEditable('INSTANCE_SUSPENDED')}
           />
         )}
         {isVisible('LATEST_NEWS_URL') && (
@@ -191,6 +189,17 @@ export default function GeneralTab({
             value={formValues.LATEST_NEWS_URL ?? ''}
             onChange={(v) => updateField('LATEST_NEWS_URL', v)}
             disabled={!isEditable('LATEST_NEWS_URL')}
+          />
+        )}
+        {isVisible('REPORTS_EXPORT_SHOW_LOGO') && (
+          <SwitchRow
+            title={t('Show the Logo on report exports?')}
+            description={t(
+              'When exporting a saved report to PDF, should the logo be shown on the PDF?',
+            )}
+            checked={formValues.REPORTS_EXPORT_SHOW_LOGO === '1'}
+            onChange={(v) => updateField('REPORTS_EXPORT_SHOW_LOGO', v ? '1' : '0')}
+            disabled={!isEditable('REPORTS_EXPORT_SHOW_LOGO')}
           />
         )}
       </SettingsSection>

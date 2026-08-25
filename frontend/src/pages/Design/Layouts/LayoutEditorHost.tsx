@@ -24,6 +24,7 @@ import { Navigate, useLoaderData, useLocation, useParams, useSearchParams } from
 
 import EditorHost from '@/components/editor/EditorHost';
 import HelpPane from '@/components/help/HelpPane';
+import { withPublicPath } from '@/config/publicPath';
 import { BrandingProvider } from '@/context/BrandingContext';
 import { UserProvider } from '@/context/UserContext';
 import type { User } from '@/types/user';
@@ -43,6 +44,14 @@ export default function LayoutEditorHost() {
     return <Navigate to="/design/layout" replace />;
   }
 
+  const handleEditorNavigate = (newId: string) => {
+    if (newId === id) {
+      return;
+    }
+    const newPath = withPublicPath(`/design/layout/${newId}/editor`);
+    window.history.replaceState(window.history.state, '', newPath + window.location.search);
+  };
+
   return (
     <BrandingProvider branding={user?.branding}>
       <UserProvider initialUser={user}>
@@ -51,6 +60,7 @@ export default function LayoutEditorHost() {
           editorBasePath="/layout/designer"
           stayPathPrefix="/layout/designer"
           returnPath={returnPath}
+          onEditorNavigate={handleEditorNavigate}
           forwardQuery={isTemplateEditor ? 'isTemplateEditor=1' : undefined}
           title={isTemplateEditor ? t('Template Editor') : t('Layout Editor')}
           readySelector="#layout-editor"

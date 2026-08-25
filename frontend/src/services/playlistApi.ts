@@ -25,7 +25,6 @@ import type { Playlist } from '@/types/playlist';
 export interface FetchPlaylistRequest {
   start: number;
   length: number;
-  keyword?: string;
   sortBy?: string;
   sortDir?: string;
   signal?: AbortSignal;
@@ -232,6 +231,18 @@ export async function clonePlaylist({
   });
 
   return response.data;
+}
+
+export async function setPlaylistEnableStat(
+  playlistId: number | string,
+  enableStat: string,
+): Promise<void> {
+  const params = new URLSearchParams();
+  params.append('enableStat', enableStat);
+
+  await http.put(`/playlist/setenablestat/${playlistId}`, params.toString(), {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
 }
 
 export async function deletePlaylist(playlistId: number | string): Promise<void> {

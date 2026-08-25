@@ -78,7 +78,7 @@ export function AndroidFields({
   // Filter fields so we only render the ones that belong on the current active tab and
   // whose gating CMS setting (if any) is enabled
   const fieldsForTab = Object.entries(metaMap).filter(
-    ([, meta]) => meta.tab === tab && isFieldMetaEnabled(meta, settings),
+    ([, meta]) => meta.tab === tab && isFieldMetaEnabled(meta, settings, bool),
   );
 
   if (fieldsForTab.length === 0) {
@@ -171,12 +171,14 @@ export function AndroidFields({
                   label={t('Width')}
                   value={dims[2]}
                   onChange={setDim(2)}
+                  min={0}
                 />
                 <NumberInput
                   name="screenDimHeight"
                   label={t('Height')}
                   value={dims[3]}
                   onChange={setDim(3)}
+                  min={0}
                 />
               </div>
               <span className="text-xs text-gray-400 leading-snug flex mt-1 whitespace-pre-line">

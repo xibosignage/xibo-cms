@@ -115,6 +115,7 @@ export type FieldInputType =
   | 'datepicker'
   | 'daypart'
   | 'dropdown'
+  | 'email'
   | 'hisense-picture-options'
   | 'hisense-timers'
   | 'number'
@@ -143,30 +144,42 @@ export interface FieldMeta {
   options?: Array<{ value: string; label: string }>;
   /** CMS setting key that must be truthy (default: enabled) for this field to be shown at all. */
   requiresSetting?: string;
+  /** Another field's key that must currently be truthy for this field to be shown. */
+  requiresField?: string;
   /** Minimum allowed value for number inputs. */
   min?: number;
+  /** Player types this field should NOT render for, even though it's defined here. */
+  excludeTypes?: DisplayProfileType[];
 }
 
 export type FieldMetaMap = Record<string, FieldMeta>;
 
 /**
  * Whether a field should be shown, based on its `requiresSetting` gate (if any) and the
- * CMS-wide settings from the current user's bootstrap payload. Missing/undefined settings
+ * CMS-wide settings from the current user's bootstrap payload, plus its `requiresField`
+ * gate (if any) against another field's current live value. Missing/undefined settings
  * default to enabled, matching the settings' own DB default of '1'.
  */
 export function isFieldMetaEnabled(
   meta: FieldMeta,
   settings?: Record<string, unknown> | null,
+  getBool?: (key: string) => boolean,
 ): boolean {
-  if (!meta.requiresSetting) {
-    return true;
+  if (meta.requiresSetting) {
+    const value = settings?.[meta.requiresSetting];
+    if (!(value === undefined || value === null || Number(value) !== 0)) {
+      return false;
+    }
   }
-  const value = settings?.[meta.requiresSetting];
-  return value === undefined || value === null || Number(value) !== 0;
+  if (meta.requiresField && getBool && !getBool(meta.requiresField)) {
+    return false;
+  }
+  return true;
 }
 
 function commonMeta(t: TFunction): FieldMetaMap {
   return {
+    // ---- General tab ----
     collectInterval: {
       label: t('Collect interval'),
       tab: 'general',
@@ -195,6 +208,24 @@ function commonMeta(t: TFunction): FieldMetaMap {
         { value: '86400', label: t('24 hours') },
       ],
     },
+    xmrWebSocketAddress: {
+      label: t('XMR WebSocket Address'),
+      tab: 'general',
+      helpText: t('Override the CMS WebSocket address for XMR.'),
+      inputType: 'text',
+    },
+    xmrNetworkAddress: {
+      label: t('XMR Public Address'),
+      tab: 'general',
+      helpText: t('Override the CMS public address for XMR.'),
+      inputType: 'text',
+    },
+    statsEnabled: {
+      label: t('Enable stats reporting?'),
+      tab: 'general',
+      helpText: t('Should the application send proof of play stats to the CMS.'),
+      inputType: 'checkbox',
+    },
     aggregationLevel: {
       label: t('Aggregation level'),
       tab: 'general',
@@ -207,12 +238,7 @@ function commonMeta(t: TFunction): FieldMetaMap {
         { value: 'Hourly', label: t('Hourly') },
         { value: 'Daily', label: t('Daily') },
       ],
-    },
-    statsEnabled: {
-      label: t('Enable stats reporting?'),
-      tab: 'general',
-      helpText: t('Should the application send proof of play stats to the CMS.'),
-      inputType: 'checkbox',
+      requiresField: 'statsEnabled',
     },
     isRecordGeoLocationOnProofOfPlay: {
       label: t('Record geolocation on each Proof of Play?'),
@@ -221,7 +247,11 @@ function commonMeta(t: TFunction): FieldMetaMap {
         'If the geolocation of the Display is known, enable to record that location against each proof of play record.',
       ),
       inputType: 'checkbox',
+      // Legacy rendered this for Windows and Android (and Hisense, an Android-based type).
+      // For 4.5 - included Linux and ChromeOS. No support yet for lg/sssp.
+      excludeTypes: ['lg', 'sssp'],
     },
+    // ---- Troubleshooting tab ----
     logLevel: {
       label: t('Log Level'),
       tab: 'troubleshooting',
@@ -243,12 +273,7 @@ function commonMeta(t: TFunction): FieldMetaMap {
       ),
       inputType: 'datepicker',
     },
-    forceHttps: {
-      label: t('Force HTTPS?'),
-      tab: 'network',
-      helpText: t('Should Displays be forced to use HTTPS connection to the CMS?'),
-      inputType: 'checkbox',
-    },
+    // ---- Network tab ----
     downloadStartWindow: {
       label: t('Download Window Start Time'),
       tab: 'network',
@@ -261,17 +286,44 @@ function commonMeta(t: TFunction): FieldMetaMap {
       helpText: t('The end of the time window to connect to the CMS and download updates.'),
       inputType: 'time',
     },
-    xmrWebSocketAddress: {
-      label: t('XMR WebSocket Address'),
-      tab: 'general',
-      helpText: t('Override the CMS WebSocket address for XMR.'),
-      inputType: 'text',
+    updateStartWindow: {
+      label: t('Update Window Start Time'),
+      tab: 'network',
+      helpText: t('The start of the time window to install application updates.'),
+      inputType: 'time',
+      // Legacy doc marks these "Android-only" (also legitimately used by lg/sssp,
+      // which relocates them to its own General tab below).
+      excludeTypes: ['windows', 'linux', 'chromeOS'],
     },
-    xmrNetworkAddress: {
-      label: t('XMR Public Address'),
-      tab: 'general',
-      helpText: t('Override the CMS public address for XMR.'),
-      inputType: 'text',
+    updateEndWindow: {
+      label: t('Update Window End Time'),
+      tab: 'network',
+      helpText: t('The end of the time window to install application updates.'),
+      inputType: 'time',
+      excludeTypes: ['windows', 'linux', 'chromeOS'],
+    },
+    forceHttps: {
+      label: t('Force HTTPS?'),
+      tab: 'network',
+      helpText: t('Should Displays be forced to use HTTPS connection to the CMS?'),
+      inputType: 'checkbox',
+    },
+    dayPartId: {
+      label: t('Operating Hours'),
+      tab: 'network',
+      helpText: t(
+        'Select a day part that should act as operating hours for this display - email alerts will not be sent outside of operating hours',
+      ),
+      inputType: 'daypart',
+    },
+    // ---- Advanced tab ----
+    enableShellCommands: {
+      label: t('Enable Shell Commands'),
+      tab: 'advanced',
+      helpText: t('Enable the Shell Command module.'),
+      inputType: 'checkbox',
+      // Legacy only ever had this for Windows/Linux.
+      excludeTypes: ['android', 'lg', 'sssp', 'chromeOS', 'hisense'],
     },
     sendCurrentLayoutAsStatusUpdate: {
       label: t('Notify current layout'),
@@ -289,6 +341,23 @@ function commonMeta(t: TFunction): FieldMetaMap {
         'Expire Modified Layouts immediately on change. This means a layout can be cut during playback if it receives an update from the CMS',
       ),
       inputType: 'checkbox',
+      // Legacy never had this for lg/sssp/ChromeOS.
+      excludeTypes: ['lg', 'sssp', 'chromeOS'],
+    },
+    maxConcurrentDownloads: {
+      label: t('Maximum concurrent downloads'),
+      tab: 'advanced',
+      helpText: t('The maximum number of concurrent downloads the Player will attempt.'),
+      inputType: 'number',
+      min: 0,
+      excludeTypes: ['android', 'lg', 'sssp', 'chromeOS', 'hisense'],
+    },
+    shellCommandAllowList: {
+      label: t('Shell Command Allow List'),
+      tab: 'advanced',
+      helpText: t('Which shell commands should the Player execute?'),
+      inputType: 'text',
+      excludeTypes: ['android', 'lg', 'sssp', 'chromeOS', 'hisense'],
     },
     screenShotRequestInterval: {
       label: t('Screen shot interval'),
@@ -307,45 +376,15 @@ function commonMeta(t: TFunction): FieldMetaMap {
       inputType: 'number',
       min: 0,
     },
-    dayPartId: {
-      label: t('Operating Hours'),
-      tab: 'network',
-      helpText: t(
-        'Select a day part that should act as operating hours for this display - email alerts will not be sent outside of operating hours',
-      ),
-      inputType: 'daypart',
-    },
-    embeddedServerAllowWan: {
-      label: t('Embedded Web Server allow WAN?'),
-      tab: 'advanced',
-      helpText: t(
-        'Should we allow access to the Player Embedded Web Server from WAN? You may need to adjust the device firewall to allow external traffic',
-      ),
-      inputType: 'checkbox',
-    },
-    enableShellCommands: {
-      label: t('Enable Shell Commands'),
-      tab: 'advanced',
-      helpText: t('Enable the Shell Command module for this Display Profile.'),
-      inputType: 'checkbox',
-    },
-    maxConcurrentDownloads: {
-      label: t('Max Concurrent Downloads'),
-      tab: 'advanced',
-      helpText: t('Set the maximum number of concurrent downloads on the Player.'),
-      inputType: 'number',
-    },
-    shellCommandAllowList: {
-      label: t('Shell Command Allow List'),
-      tab: 'advanced',
-      helpText: t('A comma separated list of Shell Commands to allow.'),
-      inputType: 'text',
-    },
     maxLogFileUploads: {
-      label: t('Maximum Log File Uploads'),
+      label: t('Limit the number of log files uploaded concurrently'),
       tab: 'advanced',
-      helpText: t('Limit the number of log files that can be uploaded concurrently.'),
+      helpText: t(
+        'The number of log files to upload concurrently. The lower the number the longer it will take, but the better for memory usage.',
+      ),
       inputType: 'number',
+      min: 0,
+      excludeTypes: ['android', 'lg', 'sssp', 'chromeOS', 'hisense'],
     },
     embeddedServerPort: {
       label: t('Embedded Web Server Port'),
@@ -354,29 +393,32 @@ function commonMeta(t: TFunction): FieldMetaMap {
         'The port number to use for the embedded web server on the Player. Only change this if there is a port conflict reported on the status screen.',
       ),
       inputType: 'number',
+      min: 0,
+      // Android and lg/sssp each define their own, correctly-scoped `serverPort` field —
+      // this generic one leaking in caused a literal duplicate "Embedded Web Server Port".
+      excludeTypes: ['android', 'lg', 'sssp', 'chromeOS', 'hisense'],
+    },
+    embeddedServerAllowWan: {
+      label: t('Embedded Web Server allow WAN?'),
+      tab: 'advanced',
+      helpText: t(
+        'Should we allow access to the Player Embedded Web Server from WAN? You may need to adjust the device firewall to allow external traffic',
+      ),
+      inputType: 'checkbox',
+      // Legacy ChromeOS Advanced never had this.
+      excludeTypes: ['chromeOS'],
     },
     preventSleep: {
       label: t('Prevent Sleep?'),
       tab: 'advanced',
-      helpText: t('Stop the device from going to sleep while the player is active.'),
+      helpText: t('Stop the player PC power management from Sleeping the PC'),
       inputType: 'checkbox',
-    },
-    updateStartWindow: {
-      label: t('Update Window Start Time'),
-      tab: 'network',
-      helpText: t('The start of the time window to install application updates.'),
-      inputType: 'time',
-    },
-    updateEndWindow: {
-      label: t('Update Window End Time'),
-      tab: 'network',
-      helpText: t('The end of the time window to install application updates.'),
-      inputType: 'time',
+      excludeTypes: ['android', 'lg', 'sssp', 'chromeOS', 'hisense'],
     },
   };
 }
 
-function androidMeta(t: TFunction): FieldMetaMap {
+function androidMeta(t: TFunction, common: FieldMetaMap): FieldMetaMap {
   return {
     emailAddress: {
       label: t('Licence Code'),
@@ -384,7 +426,7 @@ function androidMeta(t: TFunction): FieldMetaMap {
       helpText: t(
         'Provide the Licence Code (formerly Licence email address) to license Players using this Display Profile.',
       ),
-      inputType: 'text',
+      inputType: 'email',
     },
     settingsPassword: {
       label: t('Password Protect Settings'),
@@ -392,6 +434,15 @@ function androidMeta(t: TFunction): FieldMetaMap {
       helpText: t('Provide a Password which will be required to access settings'),
       inputType: 'text',
     },
+    // Legacy interleaves these common General fields between the two above and
+    // versionMediaId below — referenced (not copied) from commonMeta so label/
+    // helpText changes there still apply here automatically.
+    collectInterval: common.collectInterval!,
+    xmrWebSocketAddress: common.xmrWebSocketAddress!,
+    xmrNetworkAddress: common.xmrNetworkAddress!,
+    statsEnabled: common.statsEnabled!,
+    aggregationLevel: common.aggregationLevel!,
+    isRecordGeoLocationOnProofOfPlay: common.isRecordGeoLocationOnProofOfPlay!,
     versionMediaId: {
       label: t('Player Version'),
       tab: 'general',
@@ -445,6 +496,9 @@ function androidMeta(t: TFunction): FieldMetaMap {
       ),
       inputType: 'checkbox',
     },
+    // Legacy has these two common Troubleshooting fields last, after the three above.
+    logLevel: common.logLevel!,
+    elevateLogsUntil: common.elevateLogsUntil!,
     startOnBoot: {
       label: t('Start during device start up?'),
       tab: 'advanced',
@@ -494,6 +548,11 @@ function androidMeta(t: TFunction): FieldMetaMap {
       inputType: 'number',
       min: 10,
     },
+    // Legacy interleaves these three common Advanced fields here, before
+    // Screen Shot Intent.
+    sendCurrentLayoutAsStatusUpdate: common.sendCurrentLayoutAsStatusUpdate!,
+    expireModifiedLayouts: common.expireModifiedLayouts!,
+    screenShotRequestInterval: common.screenShotRequestInterval!,
     screenShotIntent: {
       label: t('Action for Screen Shot Intent'),
       tab: 'advanced',
@@ -502,6 +561,8 @@ function androidMeta(t: TFunction): FieldMetaMap {
       ),
       inputType: 'text',
     },
+    // Legacy has Screen Shot Size directly after Screen Shot Intent.
+    screenShotSize: common.screenShotSize!,
     webViewPluginState: {
       label: t('WebView Plugin State'),
       tab: 'advanced',
@@ -548,6 +609,8 @@ function androidMeta(t: TFunction): FieldMetaMap {
       ),
       inputType: 'number',
     },
+    // Legacy has this common Advanced field directly after Embedded Web Server Port.
+    embeddedServerAllowWan: common.embeddedServerAllowWan!,
     installWithLoadedLinkLibraries: {
       label: t('Load Link Libraries for APK Update'),
       tab: 'advanced',
@@ -595,7 +658,7 @@ function androidMeta(t: TFunction): FieldMetaMap {
       label: t('Enable touch capabilities on the device?'),
       tab: 'advanced',
       helpText: t(
-        'If this device will be used as a touch screen check this option. Available from v3 R300.',
+        'If this device will be used as a touch screen check this option. Checking this option will cause a message to appear on the player which needs to be manually dismissed once. If this option is disabled, touching the screen will show the action bar according to the Action Bar Mode option. Available from v3 R300.',
       ),
       inputType: 'checkbox',
     },
@@ -610,66 +673,79 @@ function androidMeta(t: TFunction): FieldMetaMap {
   };
 }
 
-function windowsMeta(t: TFunction): FieldMetaMap {
+function windowsMeta(t: TFunction, common: FieldMetaMap): FieldMetaMap {
   return {
     powerpointEnabled: {
       label: t('Enable PowerPoint?'),
-      tab: 'advanced',
-      helpText: t('Should Microsoft PowerPoint be enabled for this Display Profile?'),
+      // Legacy has this as the last field on General, not Advanced.
+      tab: 'general',
+      helpText: t(
+        'Should Microsoft PowerPoint be Enabled? The Player will need PowerPoint installed to Display PowerPoint files.',
+      ),
       inputType: 'checkbox',
     },
     sizeX: {
       label: t('Width'),
       tab: 'location',
-      helpText: t('The Width of the Player window. 0 means full width.'),
+      helpText: t('The Width of the Display Window. 0 means full width.'),
       inputType: 'number',
+      min: 0,
     },
     sizeY: {
       label: t('Height'),
       tab: 'location',
-      helpText: t('The Height of the Player window. 0 means full height.'),
+      helpText: t('The Height of the Display Window. 0 means full height.'),
       inputType: 'number',
+      min: 0,
     },
     offsetX: {
-      label: t('Offset - Left'),
+      label: t('Left Coordinate'),
       tab: 'location',
-      helpText: t('The left pixel position of the Player window.'),
+      helpText: t('The left pixel position the display window should be sized from.'),
       inputType: 'number',
     },
     offsetY: {
-      label: t('Offset - Top'),
+      label: t('Top Coordinate'),
       tab: 'location',
-      helpText: t('The top pixel position of the Player window.'),
+      helpText: t('The top pixel position the display window should be sized from.'),
       inputType: 'number',
     },
     clientInfomationCtrlKey: {
-      label: t('Show status window using Ctrl+I?'),
-      tab: 'advanced',
-      helpText: t('Show the Player status window using Ctrl+I keyboard shortcut.'),
+      label: t('CTRL Key required to access Player Information Screen?'),
+      // Legacy has this first on Troubleshooting, not Advanced.
+      tab: 'troubleshooting',
+      helpText: t('Should the Player information screen require the CTRL key?'),
       inputType: 'checkbox',
     },
     clientInformationKeyCode: {
-      label: t('Status window key'),
-      tab: 'advanced',
-      helpText: t('The key to use in combination with Ctrl to show the status window.'),
+      label: t('Key for Player Information Screen'),
+      tab: 'troubleshooting',
+      helpText: t('Which key should activate the Player information screen? A single character.'),
       inputType: 'text',
     },
+    // Legacy has these two common Troubleshooting fields between the key code
+    // field above and Log to disk below.
+    logLevel: common.logLevel!,
+    elevateLogsUntil: common.elevateLogsUntil!,
     logToDiskLocation: {
-      label: t('Log to disk'),
+      label: t('Log file path name'),
       tab: 'troubleshooting',
-      helpText: t('The full file path for log output. Leave empty to disable.'),
+      helpText: t(
+        'Create a log file on disk in this location. Please enter a fully qualified path.',
+      ),
       inputType: 'text',
     },
     showInTaskbar: {
-      label: t('Show in taskbar?'),
+      label: t('Show the icon in the task bar?'),
       tab: 'advanced',
-      helpText: t('Should the Player show in the Windows taskbar?'),
+      helpText: t('Should the application icon be shown in the task bar?'),
       inputType: 'checkbox',
     },
     cursorStartPosition: {
       label: t('Cursor Start Position'),
-      tab: 'location',
-      helpText: t('The position of the cursor when the Player starts.'),
+      // Legacy has this on Advanced (right after "Show in taskbar?"), not Location.
+      tab: 'advanced',
+      helpText: t('The position of the cursor when the Player starts up.'),
       inputType: 'dropdown',
       options: [
         { value: 'Unchanged', label: t('Unchanged') },
@@ -680,48 +756,76 @@ function windowsMeta(t: TFunction): FieldMetaMap {
       ],
     },
     doubleBuffering: {
-      label: t('Double Buffering'),
+      label: t('Enable Double Buffering'),
       tab: 'advanced',
       helpText: t(
-        'Enable double buffering on the Player. Disable if you experience glitching on transitions.',
+        'Double buffering helps smooth the playback but should be disabled if graphics errors occur',
       ),
       inputType: 'checkbox',
     },
     emptyLayoutDuration: {
-      label: t('Empty Layout Duration'),
+      label: t('Duration for Empty Layouts'),
       tab: 'advanced',
-      helpText: t('The duration to show an empty layout in seconds.'),
+      helpText: t(
+        'If an empty layout is detected how long (in seconds) should it remain on screen? Must be greater than 1.',
+      ),
       inputType: 'number',
+      min: 2,
     },
     enableMouse: {
-      label: t('Enable Mouse?'),
+      label: t('Enable Mouse'),
       tab: 'advanced',
-      helpText: t('Should the mouse cursor be shown on the display?'),
+      helpText: t('Enable the mouse.'),
       inputType: 'checkbox',
     },
+    // Legacy has these common Advanced fields directly after Enable Mouse.
+    enableShellCommands: common.enableShellCommands!,
+    sendCurrentLayoutAsStatusUpdate: common.sendCurrentLayoutAsStatusUpdate!,
+    expireModifiedLayouts: common.expireModifiedLayouts!,
+    maxConcurrentDownloads: common.maxConcurrentDownloads!,
+    shellCommandAllowList: common.shellCommandAllowList!,
+    screenShotRequestInterval: common.screenShotRequestInterval!,
+    screenShotSize: common.screenShotSize!,
+    maxLogFileUploads: common.maxLogFileUploads!,
+    embeddedServerPort: common.embeddedServerPort!,
+    embeddedServerAllowWan: common.embeddedServerAllowWan!,
+    preventSleep: common.preventSleep!,
     authServerWhitelist: {
-      label: t('Whitelist for Auth Server'),
+      label: t('Authentication Whitelist'),
       tab: 'network',
-      helpText: t('A comma separated list of URLs to whitelist for the auth server.'),
+      helpText: t(
+        'A comma separated list of domains which should be allowed to perform NTML/Negotiate authentication.',
+      ),
       inputType: 'text',
     },
     edgeBrowserWhitelist: {
-      label: t('Whitelist for Edge Browser'),
+      label: t('Edge Browser Whitelist'),
       tab: 'network',
-      helpText: t('A comma separated list of URLs to whitelist for the Edge browser.'),
+      helpText: t(
+        'A comma separated list of website urls which should be rendered by the Edge Browser instead of Chromium.',
+      ),
       inputType: 'text',
     },
   };
 }
 
-function lgSsspMeta(t: TFunction): FieldMetaMap {
+function lgSsspMeta(t: TFunction, clientType: 'lg' | 'sssp', common: FieldMetaMap): FieldMetaMap {
   return {
     emailAddress: {
       label: t('Licence Code'),
       tab: 'general',
-      helpText: t('Provide the Licence Code to license Players using this Display Profile.'),
-      inputType: 'text',
+      helpText: t(
+        'Provide the Licence Code (formerly Licence email address) to license Players using this Display Profile.',
+      ),
+      inputType: 'email',
     },
+    // Legacy has these common General fields between Licence Code and Player
+    // Version.
+    collectInterval: common.collectInterval!,
+    xmrWebSocketAddress: common.xmrWebSocketAddress!,
+    xmrNetworkAddress: common.xmrNetworkAddress!,
+    statsEnabled: common.statsEnabled!,
+    aggregationLevel: common.aggregationLevel!,
     versionMediaId: {
       label: t('Player Version'),
       tab: 'general',
@@ -730,14 +834,23 @@ function lgSsspMeta(t: TFunction): FieldMetaMap {
       ),
       inputType: 'player-version',
     },
+    // Legacy has Orientation directly after Player Version.
+    orientation: {
+      label: t('Orientation'),
+      tab: 'general',
+      helpText: t(
+        'Set the orientation of the device (portrait mode will only work if supported by the hardware) Application Restart Required.',
+      ),
+      inputType: 'dropdown',
+      options: [
+        { value: '0', label: t('Landscape') },
+        { value: '1', label: t('Portrait') },
+        { value: '8', label: t('Reverse Landscape') },
+        { value: '9', label: t('Reverse Portrait') },
+      ],
+    },
     // LG/SSSP profiles have no Network or Location tabs — surface these common
     // fields on the General tab so they remain accessible.
-    forceHttps: {
-      label: t('Force HTTPS?'),
-      tab: 'general',
-      helpText: t('Should Displays be forced to use HTTPS connection to the CMS?'),
-      inputType: 'checkbox',
-    },
     downloadStartWindow: {
       label: t('Download Window Start Time'),
       tab: 'general',
@@ -762,6 +875,14 @@ function lgSsspMeta(t: TFunction): FieldMetaMap {
       helpText: t('The end of the time window to install application updates.'),
       inputType: 'time',
     },
+    // Legacy has Force HTTPS directly after the update window, before
+    // Operating Hours.
+    forceHttps: {
+      label: t('Force HTTPS?'),
+      tab: 'general',
+      helpText: t('Should Displays be forced to use HTTPS connection to the CMS?'),
+      inputType: 'checkbox',
+    },
     dayPartId: {
       label: t('Operating Hours'),
       tab: 'general',
@@ -770,17 +891,28 @@ function lgSsspMeta(t: TFunction): FieldMetaMap {
       ),
       inputType: 'daypart',
     },
-    orientation: {
-      label: t('Orientation'),
-      tab: 'general',
-      helpText: t('Set the orientation of the device.'),
+    // LG/SSSP has no Troubleshooting tab — these live on Advanced instead
+    // (matches the pattern already used by chromeOsMeta for the same fields).
+    logLevel: {
+      label: t('Log Level'),
+      tab: 'advanced',
+      helpText: t('The resting logging level that should be recorded by the Player.'),
       inputType: 'dropdown',
       options: [
-        { value: '0', label: t('Landscape') },
-        { value: '1', label: t('Portrait') },
-        { value: '8', label: t('Reverse Landscape') },
-        { value: '9', label: t('Reverse Portrait') },
+        { value: 'emergency', label: t('Emergency') },
+        { value: 'alert', label: t('Alert') },
+        { value: 'critical', label: t('Critical') },
+        { value: 'error', label: t('Error') },
+        { value: 'off', label: t('Off') },
       ],
+    },
+    elevateLogsUntil: {
+      label: t('Elevate Logging until'),
+      tab: 'advanced',
+      helpText: t(
+        'Elevate log level for the specified time. Should only be used if there is a problem with the display.',
+      ),
+      inputType: 'datepicker',
     },
     actionBarMode: {
       label: t('Action Bar Mode'),
@@ -799,18 +931,48 @@ function lgSsspMeta(t: TFunction): FieldMetaMap {
       inputType: 'number',
       min: 0,
     },
-    mediaInventoryTimer: {
-      label: t('Media Inventory Timer'),
+    // Legacy has these two common Advanced fields between Action Bar Display
+    // Duration and Screen Shot Size below.
+    sendCurrentLayoutAsStatusUpdate: common.sendCurrentLayoutAsStatusUpdate!,
+    screenShotRequestInterval: common.screenShotRequestInterval!,
+    screenShotSize: {
+      label: t('Screen Shot Size'),
       tab: 'advanced',
-      helpText: t('The number of minutes between Media Inventory runs. 0 to disable.'),
+      helpText: t('The size of the screenshot to return when requested.'),
+      inputType: 'dropdown',
+      options:
+        clientType === 'lg'
+          ? [
+              { value: '1', label: t('Thumbnail') },
+              { value: '2', label: t('HD') },
+              { value: '3', label: t('FHD') },
+            ]
+          : [
+              { value: '1', label: t('Thumbnail') },
+              { value: '2', label: t('Standard') },
+            ],
+    },
+    // Legacy has Send progress while downloading directly after Screen Shot
+    // Size, before Embedded Web Server Port.
+    mediaInventoryTimer: {
+      label: t('Send progress while downloading'),
+      tab: 'advanced',
+      helpText: t(
+        'How often, in minutes, should the Display send its download progress while it is downloading new content?',
+      ),
       inputType: 'number',
     },
     serverPort: {
       label: t('Embedded Web Server Port'),
       tab: 'advanced',
-      helpText: t('The port number to use for the embedded web server on the Player.'),
+      helpText: t(
+        'The port number to use for the embedded web server on the Player. Only change this if there is a port conflict reported on the status screen.',
+      ),
       inputType: 'number',
     },
+    // Legacy has this common Advanced field directly after Embedded Web
+    // Server Port.
+    embeddedServerAllowWan: common.embeddedServerAllowWan!,
     isUseMultipleVideoDecoders: {
       label: t('Use Multiple Video Decoders'),
       tab: 'advanced',
@@ -824,7 +986,7 @@ function lgSsspMeta(t: TFunction): FieldMetaMap {
       ],
     },
     disableTimerManagement: {
-      label: t('Disable managing on/off timer'),
+      label: t('Disable managing on/off timers'),
       tab: 'timers',
       helpText: t(
         'When disabled on/off timers can be controlled on the screen and will not be modified by the CMS',
@@ -852,14 +1014,21 @@ function lgSsspMeta(t: TFunction): FieldMetaMap {
   };
 }
 
-function chromeOsMeta(t: TFunction): FieldMetaMap {
+function chromeOsMeta(t: TFunction, common: FieldMetaMap): FieldMetaMap {
   return {
     licenceCode: {
       label: t('Licence Code'),
       tab: 'general',
       helpText: t('Provide the Licence Code to license Players using this Display Profile.'),
-      inputType: 'text',
+      inputType: 'email',
     },
+    // Legacy has these common General fields between Licence Code and Player
+    // Version.
+    collectInterval: common.collectInterval!,
+    xmrWebSocketAddress: common.xmrWebSocketAddress!,
+    xmrNetworkAddress: common.xmrNetworkAddress!,
+    statsEnabled: common.statsEnabled!,
+    aggregationLevel: common.aggregationLevel!,
     playerVersionId: {
       label: t('Player Version'),
       tab: 'general',
@@ -868,43 +1037,101 @@ function chromeOsMeta(t: TFunction): FieldMetaMap {
       ),
       inputType: 'player-version',
     },
+    // ChromeOS has no Network tab — surface Operating Hours on the General tab
+    // so it remains accessible, same pattern as lgSsspMeta's dayPartId override.
+    dayPartId: {
+      label: t('Operating Hours'),
+      tab: 'general',
+      helpText: t(
+        'Select a day part that should act as operating hours for this display - email alerts will not be sent outside of operating hours',
+      ),
+      inputType: 'daypart',
+    },
+    // ChromeOS has no Troubleshooting tab — these live on Advanced instead.
+    logLevel: {
+      label: t('Log Level'),
+      tab: 'advanced',
+      helpText: t('The resting logging level that should be recorded by the Player.'),
+      inputType: 'dropdown',
+      options: [
+        { value: 'emergency', label: t('Emergency') },
+        { value: 'alert', label: t('Alert') },
+        { value: 'critical', label: t('Critical') },
+        { value: 'error', label: t('Error') },
+        { value: 'off', label: t('Off') },
+      ],
+    },
+    elevateLogsUntil: {
+      label: t('Elevate Logging until'),
+      tab: 'advanced',
+      helpText: t(
+        'Elevate log level for the specified time. Should only be used if there is a problem with the display.',
+      ),
+      inputType: 'datepicker',
+    },
+    // The backend default for ChromeOS (DisplayProfileFactory::loadForType())
+    // comes from the DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT CMS setting
+    // (typically 200, a pixel value), which doesn't match either option value
+    // below ('1'/'2') — deliberately left alone to avoid backend changes.
+    // ChromeOsFields.tsx's getValue() normalizes any unmatched value to '1'
+    // (the first option) so the dropdown doesn't look unselected.
     screenShotSize: {
       label: t('Screen Shot Size'),
       tab: 'advanced',
-      helpText: t('The size of the screen shot to take.'),
+      helpText: t('The size of the screenshot to return when requested.'),
       inputType: 'dropdown',
       options: [
-        { value: '1', label: t('Small') },
-        { value: '2', label: t('Medium') },
+        { value: '1', label: t('Thumbnail') },
+        { value: '2', label: t('Standard') },
       ],
     },
   };
 }
 
-function linuxMeta(t: TFunction): FieldMetaMap {
+function linuxMeta(t: TFunction, common: FieldMetaMap): FieldMetaMap {
   return {
+    // ---- General tab ----
+    // Re-declared (not just overridden) alongside the two XMR fields below so
+    // mergeWithOwnOrder positions all 5 in commonMeta's existing relative
+    // order — see fieldMetadata.ts's linuxMeta doc comment in the parity plan.
+    collectInterval: common.collectInterval!,
+    // Legacy Linux uses different wording for these two than every other
+    // type ("Please enter..." instead of "Override the CMS...").
+    xmrWebSocketAddress: {
+      ...common.xmrWebSocketAddress!,
+      helpText: t('Please enter the WebSocket address for XMR.'),
+    },
+    xmrNetworkAddress: {
+      ...common.xmrNetworkAddress!,
+      helpText: t('Please enter the public address for XMR.'),
+    },
+    statsEnabled: common.statsEnabled!,
+    aggregationLevel: common.aggregationLevel!,
+    // ---- Location tab ----
     sizeX: {
       label: t('Width'),
       tab: 'location',
-      helpText: t('The Width of the Player window. 0 means full width.'),
+      helpText: t('The Width of the Display Window. 0 means full width.'),
       inputType: 'number',
+      min: 0,
     },
     sizeY: {
       label: t('Height'),
       tab: 'location',
-      helpText: t('The Height of the Player window. 0 means full height.'),
+      helpText: t('The Height of the Display Window. 0 means full height.'),
       inputType: 'number',
+      min: 0,
     },
     offsetX: {
-      label: t('Offset - Left'),
+      label: t('Left Coordinate'),
       tab: 'location',
-      helpText: t('The left pixel position of the Player window.'),
+      helpText: t('The left pixel position the display window should be sized from.'),
       inputType: 'number',
     },
     offsetY: {
-      label: t('Offset - Top'),
+      label: t('Top Coordinate'),
       tab: 'location',
-      helpText: t('The top pixel position of the Player window.'),
+      helpText: t('The top pixel position the display window should be sized from.'),
       inputType: 'number',
     },
   };
@@ -977,27 +1204,60 @@ function hisenseMeta(t: TFunction): FieldMetaMap {
   };
 }
 
+function excludeForType(map: FieldMetaMap, clientType: DisplayProfileType): FieldMetaMap {
+  return Object.fromEntries(
+    Object.entries(map).filter(([, meta]) => !meta.excludeTypes?.includes(clientType)),
+  );
+}
+
+/**
+ * Merges `own` on top of `common`, but drops any key from `common` that `own`
+ * also defines *before* merging — so a field a type redefines is treated as a
+ * brand-new key, positioned by `own`'s insertion order instead of `common`'s.
+ * Plain `{...common, ...own}` only overrides the *value* for a shared key;
+ * its position always stays wherever `common` first inserted it (JS object
+ * spread never moves an existing key). This is what actually lets a type
+ * interleave a shared field between two of its own fields.
+ *
+ * A type that doesn't redefine a given key is completely unaffected — for it,
+ * `filtered` is identical to `common`, so this behaves exactly like the plain
+ * spread it replaces.
+ */
+function mergeWithOwnOrder(common: FieldMetaMap, own: FieldMetaMap): FieldMetaMap {
+  const filtered = Object.fromEntries(Object.entries(common).filter(([key]) => !(key in own)));
+  return { ...filtered, ...own };
+}
+
 export function getFieldMetaForType(
   clientType: string | null | undefined,
   t: TFunction,
 ): FieldMetaMap {
   const common = commonMeta(t);
 
+  let merged: FieldMetaMap;
   switch (clientType) {
     case 'android':
-      return { ...common, ...androidMeta(t) };
+      merged = mergeWithOwnOrder(common, androidMeta(t, common));
+      break;
     case 'hisense':
-      return { ...common, ...androidMeta(t), ...hisenseMeta(t) };
+      merged = mergeWithOwnOrder(mergeWithOwnOrder(common, androidMeta(t, common)), hisenseMeta(t));
+      break;
     case 'windows':
-      return { ...common, ...windowsMeta(t) };
+      merged = mergeWithOwnOrder(common, windowsMeta(t, common));
+      break;
     case 'linux':
-      return { ...common, ...linuxMeta(t) };
+      merged = mergeWithOwnOrder(common, linuxMeta(t, common));
+      break;
     case 'lg':
     case 'sssp':
-      return { ...common, ...lgSsspMeta(t) };
+      merged = mergeWithOwnOrder(common, lgSsspMeta(t, clientType, common));
+      break;
     case 'chromeOS':
-      return { ...common, ...chromeOsMeta(t) };
+      merged = mergeWithOwnOrder(common, chromeOsMeta(t, common));
+      break;
     default:
       return common;
   }
+
+  return excludeForType(merged, clientType as DisplayProfileType);
 }

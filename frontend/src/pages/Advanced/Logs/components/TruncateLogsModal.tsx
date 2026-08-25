@@ -25,6 +25,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Modal from '@/components/ui/modals/Modal';
+import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
 import { truncateLogs } from '@/services/logApi';
 
 interface TruncateLogsModalProps {
@@ -64,7 +65,7 @@ export default function TruncateLogsModal({ onClose, onSuccess }: TruncateLogsMo
       onClose={onClose}
       size="sm"
       variant="confirmation"
-      scrollable={false}
+      autoSubmitFormId={AUTO_SUBMIT_FORMS.logTruncate}
       isPending={isTruncating}
       error={error ?? undefined}
       actions={[

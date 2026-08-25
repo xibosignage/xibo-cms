@@ -220,15 +220,6 @@ class MenuBoardFactory extends BaseFactory
             $params['code'] = '%' . $sanitizedFilter->getString('code') . '%';
         }
 
-        if ($sanitizedFilter->getString('keyword') != null) {
-            $body .= $this->buildSearchQuery(
-                $sanitizedFilter->getString('keyword'),
-                $params,
-                ['menu_board.name'],
-                ['menu_board.menuId']
-            );
-        }
-
         if ($sanitizedFilter->getDate('modifiedDateFrom') !== null) {
             $body .= ' AND `menu_board`.modifiedDt >= :modifiedDateFrom ';
             $params['modifiedDateFrom'] = strtotime($sanitizedFilter->getDate('modifiedDateFrom'));
@@ -239,8 +230,8 @@ class MenuBoardFactory extends BaseFactory
             $params['modifiedDateTo'] = strtotime($sanitizedFilter->getDate('modifiedDateTo'));
         }
 
-        $allowedColumns = ['menuId', 'name', 'code', 'modifiedDt', 'owner', 'folderName'];
-        $sortOrder = $this->buildSortQuery($sortOrder, $allowedColumns, [], ['name ASC']);
+        $allowedColumns = ['menuId', 'name', 'code', 'modifiedDt', 'owner', 'folderName', 'groupsWithPermissions'];
+        $sortOrder = $this->buildSortQuery($sortOrder, $allowedColumns, [], ['name ASC'], 'menuId');
         $order = empty($sortOrder) ? '' : ' ORDER BY ' . implode(', ', $sortOrder);
 
         $limit = '';

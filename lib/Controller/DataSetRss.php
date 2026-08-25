@@ -24,7 +24,6 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
-use Carbon\Exceptions\InvalidDateException;
 use OpenApi\Attributes as OA;
 use PicoFeed\Syndication\Rss20FeedBuilder;
 use PicoFeed\Syndication\Rss20ItemBuilder;
@@ -92,8 +91,8 @@ class DataSetRss extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\Parameter(
-        name: 'keyword',
-        description: 'Filter by RSS title, ID, or author',
+        name: 'title',
+        description: 'Filter by RSS title',
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'string')
@@ -589,7 +588,7 @@ class DataSetRss extends Base
             // What is the edit date of this data set
             $dataSetEditDate = ($dataSet->lastDataEdit == 0)
                 ? Carbon::now()->subMonths(2)
-                : Carbon::createFromTimestamp($dataSet->lastDataEdit);
+                : DateFormatHelper::createFromTimestamp($dataSet->lastDataEdit);
 
             // Do we have this feed in the cache?
             $cache = $this->pool->getItem('/dataset/rss/' . $feed->id);
@@ -798,8 +797,12 @@ class DataSetRss extends Base
                         $item->withContent($value);
                     } else if ($mappings[$key]['dataSetColumnId'] === $feed->publishedDateColumnId) {
                         try {
-                            $date = Carbon::createFromTimestamp($value);
-                        } catch (InvalidDateException) {
+                            // Dataset date columns are stored as system-format strings (Y-m-d H:i:s);
+                            // treat purely numeric values as Unix timestamps for backwards-compat.
+                            $date = is_numeric($value)
+                                ? DateFormatHelper::createFromTimestamp($value)
+                                : Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $value);
+                        } catch (\Exception) {
                             $date = $dataSetEditDate;
                         }
 
@@ -834,8 +837,8 @@ class DataSetRss extends Base
     {
         return $this->gridRenderFilter([
             'dataSetId' => $id,
+            'title' => $sanitizedParams->getString('title'),
             'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
-            'keyword' => $sanitizedParams->getString('keyword'),
         ], $sanitizedParams);
     }
 }

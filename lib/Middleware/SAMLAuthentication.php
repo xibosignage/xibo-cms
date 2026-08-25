@@ -29,10 +29,12 @@ use OneLogin\Saml2\Settings;
 use OneLogin\Saml2\Utils;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Entity\User;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\LogoutTrait;
 use Xibo\Helper\Random;
 use Xibo\Helper\SafeRedirect;
+use Xibo\Helper\SsoLoginTrait;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\NotFoundException;
@@ -46,6 +48,8 @@ use Xibo\Support\Exception\NotFoundException;
 class SAMLAuthentication extends AuthenticationBase
 {
     use LogoutTrait;
+    use SsoLoginTrait;
+
     /**
      * @return $this
      */
@@ -102,284 +106,98 @@ class SAMLAuthentication extends AuthenticationBase
                     . '. Last Reason: ' . $auth->getLastErrorReason());
 
                 throw new AccessDeniedException(__('Your authentication provider could not log you in.'));
-            } else {
-                // Pull out the SAML attributes
-                $samlAttrs = $auth->getAttributes();
-
-                $this->getLog()->debug('SAML attributes: ' . json_encode($samlAttrs));
-
-                // How should we look up the user?
-                $identityField = (isset($samlSettings['workflow']['field_to_identify']))
-                    ? $samlSettings['workflow']['field_to_identify']
-                    : 'UserName';
-
-                if ($identityField !== 'nameId' && empty($samlAttrs)) {
-                    // We will need some attributes
-                    throw new AccessDeniedException(__('No attributes retrieved from the IdP'));
-                }
-
-                // If appropriate convert the SAML Attributes into userData mapped against the workflow mappings.
-                $userData = [];
-                if (isset($samlSettings['workflow']) && isset($samlSettings['workflow']['mapping'])) {
-                    foreach ($samlSettings['workflow']['mapping'] as $key => $value) {
-                        if (!empty($value) && isset($samlAttrs[$value])) {
-                            $userData[$key] = $samlAttrs[$value];
-                        }
-                    }
-
-                    // If we can't map anything, then we better throw an error
-                    if (empty($userData)) {
-                        throw new AccessDeniedException(__('No attributes could be mapped'));
-                    }
-                }
-
-                // If we're using the nameId as the identity, then we should populate our userData with that value
-                if ($identityField === 'nameId') {
-                    $userData[$identityField] = $auth->getNameId();
-                } else {
-                    // Check to ensure that our identity has been populated from attributes successfully
-                    if (!isset($userData[$identityField]) || empty($userData[$identityField])) {
-                        throw new AccessDeniedException(sprintf(__('%s not retrieved from the IdP and required since is the field to identify the user'), $identityField));
-                    }
-                }
-
-                // Are we going to try and match our Xibo groups to our Idp groups?
-                $isMatchGroupFromIdp = ($samlSettings['workflow']['matchGroups']['enabled'] ?? false) === true
-                    && ($samlSettings['workflow']['matchGroups']['attribute'] ?? null) !== null;
-
-                // Try and get the user record.
-                $user = null;
-
-                try {
-                    switch ($identityField) {
-                        case 'nameId':
-                            $user = $this->getUserFactory()->getByName($userData[$identityField]);
-                            break;
-
-                        case 'UserID':
-                            $user = $this->getUserFactory()->getById($userData[$identityField][0]);
-                            break;
-
-                        case 'UserName':
-                            $user = $this->getUserFactory()->getByName($userData[$identityField][0]);
-                            break;
-
-                        case 'email':
-                            $user = $this->getUserFactory()->getByEmail($userData[$identityField][0]);
-                            break;
-
-                        default:
-                            throw new AccessDeniedException(__('Invalid field_to_identify value. Review settings.'));
-                    }
-                } catch (NotFoundException $e) {
-                    // User does not exist - this is valid as we might create them JIT.
-                }
-
-                if (!isset($user)) {
-                    if (!isset($samlSettings['workflow']['jit']) || $samlSettings['workflow']['jit'] == false) {
-                        throw new AccessDeniedException(__('User logged at the IdP but the account does not exist in the CMS and Just-In-Time provisioning is disabled'));
-                    } else {
-                        // Provision the user
-                        $user = $this->getEmptyUser();
-                        $user->homeFolderId = 1;
-
-                        if (isset($userData["UserName"])) {
-                            $user->userName = $userData["UserName"][0];
-                        }
-
-                        if (isset($userData["email"])) {
-                            $user->email = $userData["email"][0];
-                        }
-
-                        if (isset($userData["usertypeid"])) {
-                            $user->userTypeId = $userData["usertypeid"][0];
-                        } else {
-                            $user->userTypeId = 3;
-                        }
-
-                        // Xibo requires a password, generate a random one (it won't ever be used by SAML)
-                        $password = Random::generateString(20);
-                        $user->setNewPassword($password);
-
-                        // Home page
-                        if (isset($samlSettings['workflow']['homePage'])) {
-                            try {
-                                $user->homePageId = $this->getUserGroupFactory()->getHomepageByName(
-                                    $samlSettings['workflow']['homePage']
-                                )->homepage;
-                            } catch (NotFoundException $exception) {
-                                $this->getLog()->info(
-                                    sprintf(
-                                        'Provided homepage %s, does not exist,
-                                         setting the icondashboard.view as homepage',
-                                        $samlSettings['workflow']['homePage']
-                                    )
-                                );
-                                $user->homePageId = 'icondashboard.view';
-                            }
-                        } else {
-                            $user->homePageId = 'icondashboard.view';
-                        }
-
-                        // Library Quota
-                        if (isset($samlSettings['workflow']['libraryQuota'])) {
-                            $user->libraryQuota = $samlSettings['workflow']['libraryQuota'];
-                        } else {
-                            $user->libraryQuota = 0;
-                        }
-
-                        // Match references
-                        if (isset($samlSettings['workflow']['ref1']) && isset($userData['ref1'])) {
-                            $user->ref1 = $userData['ref1'];
-                        }
-
-                        if (isset($samlSettings['workflow']['ref2']) && isset($userData['ref2'])) {
-                            $user->ref2 = $userData['ref2'];
-                        }
-
-                        if (isset($samlSettings['workflow']['ref3']) && isset($userData['ref3'])) {
-                            $user->ref3 = $userData['ref3'];
-                        }
-
-                        if (isset($samlSettings['workflow']['ref4']) && isset($userData['ref4'])) {
-                            $user->ref4 = $userData['ref4'];
-                        }
-
-                        if (isset($samlSettings['workflow']['ref5']) && isset($userData['ref5'])) {
-                            $user->ref5 = $userData['ref5'];
-                        }
-
-                        // Save the user
-                        $user->save();
-
-                        // Assign the initial group
-                        if (isset($samlSettings['workflow']['group']) && !$isMatchGroupFromIdp) {
-                            $group = $this->getUserGroupFactory()->getByName($samlSettings['workflow']['group']);
-                        } else {
-                            $group = $this->getUserGroupFactory()->getByName('Users');
-                        }
-
-                        $group->assignUser($user);
-                        $group->save(['validate' => false]);
-                        $this->getLog()->setIpAddress($request->getAttribute('ip_address'));
-
-                        // Audit Log
-                        $this->getLog()->audit('User', $user->userId, 'User created with SAML workflow', [
-                            'UserName' => $user->userName,
-                            'UserAgent' => $request->getHeader('User-Agent')
-                        ]);
-                    }
-                }
-
-                if (isset($user) && $user->userId > 0) {
-                    // Load User
-                    $user = $this->getUser(
-                        $user->userId,
-                        $request->getAttribute('ip_address'),
-                        $this->getSession()->get('sessionHistoryId')
-                    );
-
-                    // Overwrite our stored user with this new object.
-                    $this->setUserForRequest($user);
-
-                    // Switch Session ID's
-                    $this->getSession()->setIsExpired(0);
-                    $this->getSession()->regenerateSessionId();
-                    $this->getSession()->setUser($user->userId);
-
-                    $user->touch();
-
-                    // Audit Log
-                    $this->getLog()->audit('User', $user->userId, 'Login Granted via SAML', [
-                        'UserAgent' => $request->getHeader('User-Agent')
-                    ]);
-                }
-
-                // Match groups from IdP?
-                if ($isMatchGroupFromIdp) {
-                    $this->getLog()->debug('group matching enabled');
-
-                    // Match groups is enabled, and we have an attribute to get groups from.
-                    $idpGroups = [];
-                    $extractionRegEx = $samlSettings['workflow']['matchGroups']['extractionRegEx'] ?? null;
-
-                    // Get groups.
-                    foreach ($samlAttrs[$samlSettings['workflow']['matchGroups']['attribute']] as $groupAttr) {
-                        // Regex?
-                        if (!empty($extractionRegEx)) {
-                            $matches = [];
-                            preg_match_all($extractionRegEx, $groupAttr, $matches);
-
-                            if (count($matches[1]) > 0) {
-                                $groupAttr = $matches[1][0];
-                            }
-                        }
-
-                        $this->getLog()->debug('checking for group ' . $groupAttr);
-
-                        // Does this group exist?
-                        try {
-                            $idpGroups[$groupAttr] = $this->getUserGroupFactory()->getByName($groupAttr);
-                        } catch (NotFoundException) {
-                            $this->getLog()->debug('group ' . $groupAttr . ' does not exist');
-                        }
-                    }
-
-                    // Go through the users groups
-                    $usersGroups = [];
-                    foreach ($user->groups as $userGroup) {
-                        $usersGroups[$userGroup->group] = $userGroup;
-                    }
-
-                    foreach ($user->groups as $userGroup) {
-                        // Does this group exist in the Idp? If not, remove.
-                        if (!array_key_exists($userGroup->group, $idpGroups)) {
-                            // Group exists in Xibo, does not exist in the response, so remove.
-                            $userGroup->unassignUser($user);
-                            $userGroup->save(['validate' => false]);
-
-                            $this->getLog()->debug($userGroup->group
-                                . ' not matched to any IdP groups linked, removing');
-
-                            unset($usersGroups[$userGroup->group]);
-                        } else {
-                            // Matched, so remove from idpGroups
-                            unset($idpGroups[$userGroup->group]);
-
-                            $this->getLog()->debug($userGroup->group . ' already linked.');
-                        }
-                    }
-
-                    // Go through remaining groups and assign the user to them.
-                    foreach ($idpGroups as $idpGroup) {
-                        $this->getLog()->debug($idpGroup->group . ' already linked.');
-
-                        $idpGroup->assignUser($user);
-                        $idpGroup->save(['validate' => false]);
-                    }
-
-                    // Does this user still not have any groups?
-                    if (count($usersGroups) <= 0) {
-                        $group = $this->getUserGroupFactory()->getByName($samlSettings['workflow']['group'] ?? 'Users');
-                        $group->assignUser($user);
-                        $group->save(['validate' => false]);
-                    }
-                }
-
-                // Redirect back to the originally-requested url, if provided.
-                // Sanitize RelayState to prevent open redirect, and to guard against a
-                // logout loop when RelayState resolves to a /login* route.
-                $params     = $request->getParams();
-                $relayState = SafeRedirect::sanitizeRoute($params['RelayState'] ?? null, ['/login', '/saml/login']);
-
-                $redirect = empty($relayState)
-                    ? $this->getRouteParser()->urlFor('home')
-                    : $relayState;
-
-                $this->getLog()->debug('redirecting to ' . $redirect);
-
-                return $response->withRedirect($redirect);
             }
+
+            // Pull out the SAML attributes
+            $samlAttrs = $auth->getAttributes();
+
+            $this->getLog()->debug('SAML attributes: ' . json_encode($samlAttrs));
+
+            // How should we look up the user?
+            $identityField = (isset($samlSettings['workflow']['field_to_identify']))
+                ? $samlSettings['workflow']['field_to_identify']
+                : 'UserName';
+
+            if ($identityField !== 'nameId' && empty($samlAttrs)) {
+                // We will need some attributes
+                throw new AccessDeniedException(__('No attributes retrieved from the IdP'));
+            }
+
+            // If appropriate convert the SAML Attributes into userData mapped against the workflow mappings.
+            $userData = [];
+            if (isset($samlSettings['workflow']) && isset($samlSettings['workflow']['mapping'])) {
+                foreach ($samlSettings['workflow']['mapping'] as $key => $value) {
+                    if (!empty($value) && isset($samlAttrs[$value])) {
+                        $userData[$key] = $samlAttrs[$value];
+                    }
+                }
+
+                // If we can't map anything, then we better throw an error
+                if (empty($userData)) {
+                    throw new AccessDeniedException(__('No attributes could be mapped'));
+                }
+            }
+
+            // If we're using the nameId as the identity, then we should populate our userData with that value
+            if ($identityField === 'nameId') {
+                $userData[$identityField] = $auth->getNameId();
+            } else {
+                // Check to ensure that our identity has been populated from attributes successfully
+                if (!isset($userData[$identityField]) || empty($userData[$identityField])) {
+                    throw new AccessDeniedException(sprintf(
+                        __('%s not retrieved from the IdP and required since is the field to identify the user'),
+                        $identityField
+                    ));
+                }
+            }
+
+            // Try and get the user record.
+            $user = null;
+
+            try {
+                $user = match ($identityField) {
+                    'nameId' => $this->getUserFactory()->getByName($userData[$identityField]),
+                    'UserID' => $this->getUserFactory()->getById($userData[$identityField][0]),
+                    'UserName' => $this->getUserFactory()->getByName($userData[$identityField][0]),
+                    'email' => $this->getUserFactory()->getByEmail($userData[$identityField][0]),
+                    default => throw new AccessDeniedException(
+                        __('Invalid field_to_identify value. Review settings.')
+                    ),
+                };
+            } catch (NotFoundException $e) {
+                // User does not exist - this is valid as we might create them JIT.
+            }
+
+            if (!isset($user)) {
+                if (!isset($samlSettings['workflow']['jit']) || $samlSettings['workflow']['jit'] == false) {
+                    throw new AccessDeniedException(
+                        __('User logged at the IdP but the account does not exist in the CMS and Just-In-Time provisioning is disabled')
+                    );
+                }
+
+                $user = $this->provisionUserFromSaml($samlSettings, $userData, $request);
+            }
+
+            if (isset($user) && $user->userId > 0) {
+                $user = $this->completeSsoLogin($user, $request, 'SAML');
+            }
+
+            // Match groups from IdP?
+            $this->matchGroupsFromIdp($user, $samlAttrs, $samlSettings);
+
+            // Redirect back to the originally-requested url, if provided.
+            // Sanitize RelayState to prevent open redirect, and to guard against a
+            // logout loop when RelayState resolves to a /login* route.
+            $params     = $request->getParams();
+            $relayState = SafeRedirect::sanitizeRoute($params['RelayState'] ?? null, ['/login', '/saml/login']);
+
+            $redirect = empty($relayState)
+                ? $this->getRouteParser()->urlFor('home')
+                : $relayState;
+
+            $this->getLog()->debug('redirecting to ' . $redirect);
+
+            return $response->withRedirect($redirect);
         });
 
         // Single Logout Service
@@ -409,6 +227,199 @@ class SAMLAuthentication extends AuthenticationBase
         });
 
         return $this;
+    }
+
+    /**
+     * Are we going to try and match our Xibo groups to our Idp groups?
+     *
+     * @param array $samlSettings
+     * @return bool
+     */
+    private function isMatchGroupFromIdp(array $samlSettings): bool
+    {
+        return ($samlSettings['workflow']['matchGroups']['enabled'] ?? false) === true
+            && ($samlSettings['workflow']['matchGroups']['attribute'] ?? null) !== null;
+    }
+
+    /**
+     * Just-in-time provision a new Xibo User from SAML attributes, per the workflow settings.
+     *
+     * @param array $samlSettings
+     * @param array $userData
+     * @param Request $request
+     * @return User
+     */
+    private function provisionUserFromSaml(array $samlSettings, array $userData, Request $request): User
+    {
+        $user = $this->getEmptyUser();
+        $user->homeFolderId = 1;
+
+        if (isset($userData['UserName'])) {
+            $user->userName = $userData['UserName'][0];
+        }
+
+        if (isset($userData['email'])) {
+            $user->email = $userData['email'][0];
+        }
+
+        if (isset($userData['usertypeid'])) {
+            $user->userTypeId = $userData['usertypeid'][0];
+        } else {
+            $user->userTypeId = 3;
+        }
+
+        // Xibo requires a password, generate a random one (it won't ever be used by SAML)
+        $password = Random::generateString(20);
+        $user->setNewPassword($password);
+
+        // Home page
+        if (isset($samlSettings['workflow']['homePage'])) {
+            try {
+                $user->homePageId = $this->getUserGroupFactory()->getHomepageByName(
+                    $samlSettings['workflow']['homePage']
+                )->homepage;
+            } catch (NotFoundException $exception) {
+                $this->getLog()->info(sprintf(
+                    'Provided homepage %s, does not exist, setting the icondashboard.view as homepage',
+                    $samlSettings['workflow']['homePage']
+                ));
+                $user->homePageId = 'icondashboard.view';
+            }
+        } else {
+            $user->homePageId = 'icondashboard.view';
+        }
+
+        // Library Quota
+        if (isset($samlSettings['workflow']['libraryQuota'])) {
+            $user->libraryQuota = $samlSettings['workflow']['libraryQuota'];
+        } else {
+            $user->libraryQuota = 0;
+        }
+
+        // Match references
+        if (isset($samlSettings['workflow']['ref1']) && isset($userData['ref1'])) {
+            $user->ref1 = $userData['ref1'];
+        }
+
+        if (isset($samlSettings['workflow']['ref2']) && isset($userData['ref2'])) {
+            $user->ref2 = $userData['ref2'];
+        }
+
+        if (isset($samlSettings['workflow']['ref3']) && isset($userData['ref3'])) {
+            $user->ref3 = $userData['ref3'];
+        }
+
+        if (isset($samlSettings['workflow']['ref4']) && isset($userData['ref4'])) {
+            $user->ref4 = $userData['ref4'];
+        }
+
+        if (isset($samlSettings['workflow']['ref5']) && isset($userData['ref5'])) {
+            $user->ref5 = $userData['ref5'];
+        }
+
+        // Save the user
+        $user->save();
+
+        // Assign the initial group
+        if (isset($samlSettings['workflow']['group']) && !$this->isMatchGroupFromIdp($samlSettings)) {
+            $group = $this->getUserGroupFactory()->getByName($samlSettings['workflow']['group']);
+        } else {
+            $group = $this->getUserGroupFactory()->getByName('Users');
+        }
+
+        $group->assignUser($user);
+        $group->save(['validate' => false]);
+        $this->getLog()->setIpAddress($request->getAttribute('ip_address'));
+
+        // Audit Log
+        $this->getLog()->audit('User', $user->userId, 'User created with SAML workflow', [
+            'UserName' => $user->userName,
+            'UserAgent' => $request->getHeader('User-Agent')
+        ]);
+
+        return $user;
+    }
+
+    /**
+     * Match Xibo user groups to the groups provided by the IdP, per the workflow settings.
+     *
+     * @param User $user
+     * @param array $samlAttrs
+     * @param array $samlSettings
+     */
+    private function matchGroupsFromIdp(User $user, array $samlAttrs, array $samlSettings): void
+    {
+        if (!$this->isMatchGroupFromIdp($samlSettings)) {
+            return;
+        }
+
+        $this->getLog()->debug('group matching enabled');
+
+        // Match groups is enabled, and we have an attribute to get groups from.
+        $idpGroups = [];
+        $extractionRegEx = $samlSettings['workflow']['matchGroups']['extractionRegEx'] ?? null;
+
+        // Get groups.
+        foreach ($samlAttrs[$samlSettings['workflow']['matchGroups']['attribute']] as $groupAttr) {
+            // Regex?
+            if (!empty($extractionRegEx)) {
+                $matches = [];
+                preg_match_all($extractionRegEx, $groupAttr, $matches);
+
+                if (count($matches[1]) > 0) {
+                    $groupAttr = $matches[1][0];
+                }
+            }
+
+            $this->getLog()->debug('checking for group ' . $groupAttr);
+
+            // Does this group exist?
+            try {
+                $idpGroups[$groupAttr] = $this->getUserGroupFactory()->getByName($groupAttr);
+            } catch (NotFoundException) {
+                $this->getLog()->debug('group ' . $groupAttr . ' does not exist');
+            }
+        }
+
+        // Go through the users groups
+        $usersGroups = [];
+        foreach ($user->groups as $userGroup) {
+            $usersGroups[$userGroup->group] = $userGroup;
+        }
+
+        foreach ($user->groups as $userGroup) {
+            // Does this group exist in the Idp? If not, remove.
+            if (!array_key_exists($userGroup->group, $idpGroups)) {
+                // Group exists in Xibo, does not exist in the response, so remove.
+                $userGroup->unassignUser($user);
+                $userGroup->save(['validate' => false]);
+
+                $this->getLog()->debug($userGroup->group
+                    . ' not matched to any IdP groups linked, removing');
+
+                unset($usersGroups[$userGroup->group]);
+            } else {
+                // Matched, so remove from idpGroups
+                unset($idpGroups[$userGroup->group]);
+
+                $this->getLog()->debug($userGroup->group . ' already linked.');
+            }
+        }
+
+        // Go through remaining groups and assign the user to them.
+        foreach ($idpGroups as $idpGroup) {
+            $this->getLog()->debug($idpGroup->group . ' already linked.');
+
+            $idpGroup->assignUser($user);
+            $idpGroup->save(['validate' => false]);
+        }
+
+        // Does this user still not have any groups?
+        if (count($usersGroups) <= 0) {
+            $group = $this->getUserGroupFactory()->getByName($samlSettings['workflow']['group'] ?? 'Users');
+            $group->assignUser($user);
+            $group->save(['validate' => false]);
+        }
     }
 
     /**

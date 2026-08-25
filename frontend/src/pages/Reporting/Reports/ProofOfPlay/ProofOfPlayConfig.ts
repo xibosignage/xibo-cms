@@ -53,6 +53,17 @@ export const INITIAL_FILTER_STATE: ProofOfPlayFilter = {
   sortBy: 'widgetId',
 };
 
+export const ACTIVE_FILTER_KEYS: (keyof ProofOfPlayFilter)[] = [
+  'reportFilter',
+  'type',
+  'layoutId',
+  'mediaId',
+  'displayId',
+  'displayGroupId',
+  'parentCampaignId',
+  'tags',
+];
+
 export const DATE_RANGE_OPTIONS = [
   { value: 'today', label: 'Today' },
   { value: 'yesterday', label: 'Yesterday' },

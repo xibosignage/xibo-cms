@@ -54,7 +54,7 @@ use Xibo\Support\Exception\InvalidArgumentException;
  *
  */
 #[OA\Info(
-    version: '4.0',
+    version: '4.5',
     description: "Xibo CMS API.\n       Using HTTP formData requests.\n       All PUT requests require Content-Type:application/x-www-form-urlencoded header.", // phpcs:ignore
     title: 'Xibo API',
     termsOfService: 'https://xibosignage.com/legal',

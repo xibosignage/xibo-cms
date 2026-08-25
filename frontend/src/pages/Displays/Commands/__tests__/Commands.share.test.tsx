@@ -63,13 +63,14 @@ vi.mock('@/components/ui/modals/ShareModal', () => ({
 // =============================================================================
 
 const openMoreActions = async (user: UserEvent) => {
-  await screen.findByText(mockCommand.command);
+  // Extended timeout: under full-suite parallel load this can take longer
+  // than the default 1000ms, causing intermittent flakes.
+  await screen.findByText(mockCommand.command, {}, { timeout: 5000 });
   await user.click(screen.getByRole('button', { name: /more actions/i }));
 };
 
 const selectAllRows = async (user: UserEvent) => {
-  const checkboxes = screen.getAllByRole('checkbox', { name: /select row/i });
-  await user.click(checkboxes[0]!);
+  await user.click(screen.getByRole('checkbox', { name: /select all rows/i }));
 };
 
 // =============================================================================

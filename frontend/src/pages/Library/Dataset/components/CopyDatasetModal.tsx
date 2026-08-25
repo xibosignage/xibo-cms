@@ -57,7 +57,7 @@ export default function CopyDatasetModal({
       if (dataset) {
         setNewName(incrementName(dataset.dataSet));
         setNewDescription(dataset.description || '');
-        setNewCode(dataset.code || '');
+        setNewCode('');
         setCopyRows(false);
       } else {
         setNewName('');

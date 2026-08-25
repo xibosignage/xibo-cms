@@ -99,7 +99,12 @@ vi.mock('@/components/ui/DateRangeFilter', () => ({
 // -----------------------------------------------------------------------------
 
 // Returns the real static filter options using an identity t-function.
-const realFilterOptions = () => getBaseFilterKeys(((k: string) => k) as unknown as TFunction);
+// We pass `true` for canTag because mockUser is a Super Admin, and Super
+// Admins always pass every feature check — so the real page always shows
+// the Tags filter for this user. If we left canTag out here, it would
+// default to false and this "expected" list would be missing the Tags
+// filter, even though the actual page shows it — causing a false mismatch.
+const realFilterOptions = () => getBaseFilterKeys(((k: string) => k) as unknown as TFunction, true);
 
 // Renders Layouts with saved preferences pre-loaded in React Query cache.
 const renderWithSavedFilters = (filterInputs: Partial<LayoutFilterInput>) => {
@@ -709,11 +714,11 @@ describe('Pre-populated Filter State (saved preferences)', () => {
 
   // S22
   test('retired from saved prefs is passed to useLayoutData after hydration', async () => {
-    renderWithSavedFilters({ retired: '1' });
+    renderWithSavedFilters({ retired: 1 });
 
     await waitFor(() => {
       const lastArgs = vi.mocked(useLayoutData).mock.calls.slice(-1)[0]?.[0];
-      expect(lastArgs?.advancedFilters?.retired).toBe('1');
+      expect(lastArgs?.advancedFilters?.retired).toBe(1);
     });
   });
 });

@@ -27,7 +27,6 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import MediaTypeChart, { buildChartItems } from './components/MediaTypeChart';
-import TidyLibraryModal from './components/TidyLibraryModal';
 import { useMediaDashboardStats } from './hooks/useMediaDashboardStats';
 import { useUnreleasedMedia, useUnusedMedia } from './hooks/useUnusedMedia';
 
@@ -35,10 +34,15 @@ import list from '@/assets/dashboard/list.svg';
 import server from '@/assets/dashboard/server.svg';
 import trash from '@/assets/dashboard/trash-can.svg';
 import Button from '@/components/ui/Button';
+import { notify } from '@/components/ui/Notification';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { StatusCell, TextCell } from '@/components/ui/table/cells';
+import { useUserContext } from '@/context/UserContext';
 import { getStatusTypeFromMediaType } from '@/pages/Library/Media/MediaConfig';
+import TidyLibraryModal from '@/pages/Library/Media/components/TidyLibraryModal';
+import { tidyLibrary } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
+import { hasFeature } from '@/utils/permissions';
 
 function getUnusedColumns(t: TFunction): ColumnDef<Media>[] {
   return [
@@ -113,8 +117,34 @@ function StatCard({ icon, value, label }: StatCardProps) {
 
 export default function MediaDashboard() {
   const { t } = useTranslation();
+  const { user } = useUserContext();
   const { data, isLoading, refetch: refetchStats } = useMediaDashboardStats();
   const [showTidyModal, setShowTidyModal] = useState(false);
+  const [isTidying, setIsTidying] = useState(false);
+  const [tidyError, setTidyError] = useState<string | null>(null);
+
+  const canTidyLibrary =
+    user?.settings?.SETTING_LIBRARY_TIDY_ENABLED === '1' && hasFeature(user, 'library.modify');
+
+  const handleConfirmTidy = async (options: { tidyGenericFiles: boolean }) => {
+    if (isTidying) {
+      return;
+    }
+    try {
+      setIsTidying(true);
+      setTidyError(null);
+      const { countDeleted } = await tidyLibrary(options.tidyGenericFiles);
+      notify.success(
+        t('Library tidy complete. {{count}} item(s) removed.', { count: countDeleted }),
+      );
+      setShowTidyModal(false);
+      refetchStats();
+    } catch {
+      setTidyError(t('Failed to tidy the library.'));
+    } finally {
+      setIsTidying(false);
+    }
+  };
 
   // Unused media table state
   const [unusedPagination, setUnusedPagination] = useState<PaginationState>({
@@ -156,7 +186,9 @@ export default function MediaDashboard() {
   return (
     <section className="flex flex-col gap-5 p-5 min-h-screen h-screen max-h-max">
       {/* Top Stats */}
-      <div className="grid grid-cols-3 gap-5">
+      <div
+        className={`grid grid-cols-1 ${canTidyLibrary ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-5`}
+      >
         <StatCard
           icon={list}
           value={isLoading ? Loading : (library?.countOf?.toLocaleString() ?? '—')}
@@ -167,25 +199,26 @@ export default function MediaDashboard() {
           value={isLoading ? Loading : (library?.size ?? '—')}
           label={t('Library Size')}
         />
-
-        <StatCard
-          icon={trash}
-          value={t('Library')}
-          label={
-            <Button
-              variant="tertiary"
-              rightIcon={ArrowRight}
-              className="p-0"
-              onClick={() => setShowTidyModal(true)}
-            >
-              {t('Tidy Library')}
-            </Button>
-          }
-        />
+        {canTidyLibrary && (
+          <StatCard
+            icon={trash}
+            value={t('Library')}
+            label={
+              <Button
+                variant="tertiary"
+                rightIcon={ArrowRight}
+                className="p-0"
+                onClick={() => setShowTidyModal(true)}
+              >
+                {t('Tidy Library')}
+              </Button>
+            }
+          />
+        )}
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <MediaTypeChart
           title={t('No. of Media Items')}
           items={countItems}
@@ -203,7 +236,7 @@ export default function MediaDashboard() {
       </div>
 
       {/* Tables */}
-      <div className="flex-1 grid grid-cols-2 gap-5">
+      <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-5">
         <div className="rounded-lg border border-gray-200 bg-white p-5 min-h-full">
           <h3 className="mb-4 text-sm font-semibold uppercase text-gray-800">
             {t('Unused Media')}
@@ -212,6 +245,7 @@ export default function MediaDashboard() {
             columns={unusedColumns}
             data={unusedRows}
             pageCount={unusedPageCount}
+            rowCount={unusedData?.totalCount ?? 0}
             pagination={unusedPagination}
             onPaginationChange={setUnusedPagination}
             sorting={unusedSorting}
@@ -236,6 +270,7 @@ export default function MediaDashboard() {
             columns={unreleasedColumns}
             data={unreleasedRows}
             pageCount={unreleasedPageCount}
+            rowCount={unreleasedData?.totalCount ?? 0}
             pagination={unreleasedPagination}
             onPaginationChange={setUnreleasedPagination}
             sorting={unreleasedSorting}
@@ -256,11 +291,9 @@ export default function MediaDashboard() {
       {showTidyModal && (
         <TidyLibraryModal
           onClose={() => setShowTidyModal(false)}
-          onSuccess={() => {
-            setShowTidyModal(false);
-            refetchStats();
-          }}
-          unusedCount={unusedData?.totalCount ?? 0}
+          onConfirm={handleConfirmTidy}
+          isLoading={isTidying}
+          error={tidyError}
         />
       )}
     </section>

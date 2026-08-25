@@ -264,8 +264,7 @@ class SavedReport extends Base
 
         if ($rowCount > 5000) {
             throw new GeneralException(
-                __('This report contains %d rows and is too large to export as PDF. Maximum is 5,000 rows. 
-                Please narrow the date range and try again.', $rowCount)
+                __('This report contains %d rows and is too large to export as PDF. Maximum is 5,000 rows. Please narrow the date range and try again.', $rowCount)//phpcs:ignore
             );
         }
 
@@ -282,7 +281,10 @@ class SavedReport extends Base
                 $emailTemplate,
                 [
                     'header' => $report->description,
-                    'logo' => ($showLogo) ? rtrim($this->getConfig()->getSetting('LIBRARY_LOCATION'), '/') . '/brand/xibologo.png' : null,
+                    'logo' => ($showLogo)
+                        ? rtrim($this->getConfig()->getSetting('LIBRARY_LOCATION'), '/')
+                            . '/brand/' . $this->getConfig()->getBrandLogoDarkFile()
+                        : null,
                     'title' => $savedReport->saveAs,
                     'metadata' => $results->metadata,
                     'tableData' => $tableData ?? null,
@@ -394,7 +396,6 @@ class SavedReport extends Base
             'reportName' => $sanitizedQueryParams->getString('reportName'),
             'onlyMyReport' => $sanitizedQueryParams->getCheckbox('onlyMyReport'),
             'logicalOperatorName' => $sanitizedQueryParams->getString('logicalOperatorName'),
-            'keyword' => $sanitizedQueryParams->getString('keyword'),
         ], $sanitizedQueryParams);
     }
 

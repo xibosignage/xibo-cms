@@ -152,7 +152,7 @@ class Folder implements \JsonSerializable
 
     public function getChildren(): array
     {
-        return explode(',', $this->children);
+        return explode(',', $this->children ?? '');
     }
 
     /**
@@ -263,8 +263,12 @@ class Folder implements \JsonSerializable
 
     public function touch(): void
     {
+        // touch() commonly runs in the same transaction as a preceding write (e.g. selectFolder's
+        // entity save) - a deadlock here means InnoDB has already rolled back that whole transaction,
+        // so we must let it propagate rather than swallow it, or the caller's earlier write would be
+        // silently lost while the request still reports success.
         $this->modifiedDt = Carbon::now()->format(DateFormatHelper::getSystemFormat());
-        $this->getStore()->update(
+        $this->getStore()->updateWithDeadlockLoop(
             'UPDATE `folder` SET modifiedDt = :modifiedDt WHERE folderId = :folderId',
             ['modifiedDt' => $this->modifiedDt, 'folderId' => $this->id]
         );
@@ -478,7 +482,7 @@ class Folder implements \JsonSerializable
         $newParentFolder = $this->folderFactory->getById($newParentFolderId, 0);
 
         // new parent folder that adopted this folder, adjust children
-        $newParentChildren = array_filter(explode(',', $newParentFolder->children));
+        $newParentChildren = array_filter(explode(',', $newParentFolder->children ?? ''));
         $newParentChildren[] = $this->id;
         $newParentUpdatedChildren = implode(',', array_filter($newParentChildren));
         $this->getStore()->update('UPDATE `folder` SET children = :children WHERE folderId = :folderId', [
@@ -487,7 +491,7 @@ class Folder implements \JsonSerializable
         ]);
 
         // old parent that gave this folder for adoption, adjust children
-        $oldParentChildren = array_filter(explode(',', $oldParentFolder->children));
+        $oldParentChildren = array_filter(explode(',', $oldParentFolder->children ?? ''));
         foreach ($oldParentChildren as $index => $child) {
             if ((int)$child === $this->id) {
                 unset($oldParentChildren[$index]);

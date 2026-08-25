@@ -26,6 +26,7 @@ namespace Xibo\Factory;
 use Carbon\Carbon;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\User;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -93,12 +94,10 @@ class PlaylistFactory extends BaseFactory
 
         if (count($playlists) <= 0) {
             $this->getLog()->error(
-                'Region ' . $regionId . ' does not have a Playlist associated,
-                 please try to set a new owner in Permissions.'
+                'Region ' . $regionId . ' does not have a Playlist associated, please try to set a new owner in Permissions.'//phpcs:ignore
             );
             throw new NotFoundException(
-                __('One of the Regions on this Layout does not have a Playlist,
-                 please contact your administrator.')
+                __('One of the Regions on this Layout does not have a Playlist, please contact your administrator.')//phpcs:ignore
             );
         }
 
@@ -186,13 +185,15 @@ class PlaylistFactory extends BaseFactory
     {
         $parsedFilter = $this->getSanitizer($filterBy);
         $allowedColumns = [
-            'playlistId', 'name', 'duration', 'owner', 'isDynamic', 'enableStat', 'createdDt', 'modifiedDt'
+            'playlistId', 'name', 'duration', 'owner', 'isDynamic', 'enableStat', 'createdDt', 'modifiedDt',
+            'groupsWithPermissions'
         ];
 
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            defaultSort: ['name ASC']
+            defaultSort: ['name ASC'],
+            uniqueColumn: 'playlistId'
         );
 
         $entries = [];
@@ -374,16 +375,6 @@ class PlaylistFactory extends BaseFactory
             $params['exact'] = $parsedFilter->getString('playlistExact');
         }
 
-        if ($parsedFilter->getString('keyword') != null) {
-            // Fulltext search
-            $body .= $this->buildSearchQuery(
-                $parsedFilter->getString('keyword'),
-                $params,
-                ['playlist.name'],
-                ['playlist.playlistId']
-            );
-        }
-
         // Not PlaylistId
         if ($parsedFilter->getInt('notPlaylistId', ['default' => 0]) != 0) {
             $body .= ' AND playlist.playlistId <> :notPlaylistId ';
@@ -501,6 +492,19 @@ class PlaylistFactory extends BaseFactory
         if ($parsedFilter->getInt('folderId') !== null) {
             $body .= ' AND `playlist`.folderId = :folderId ';
             $params['folderId'] = $parsedFilter->getInt('folderId');
+        }
+
+        // Modified Date range
+        if ($parsedFilter->getDate('modifiedDateFrom') != null) {
+            $body .= ' AND `playlist`.modifiedDt >= :modifiedDateFrom ';
+            $params['modifiedDateFrom'] = $parsedFilter->getDate('modifiedDateFrom')
+                ->format(DateFormatHelper::getSystemFormat());
+        }
+
+        if ($parsedFilter->getDate('modifiedDateTo') != null) {
+            $body .= ' AND `playlist`.modifiedDt <= :modifiedDateTo ';
+            $params['modifiedDateTo'] = $parsedFilter->getDate('modifiedDateTo')
+                ->format(DateFormatHelper::getSystemFormat());
         }
 
         // Logged in user view permissions

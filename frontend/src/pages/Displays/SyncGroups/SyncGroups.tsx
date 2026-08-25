@@ -21,7 +21,7 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
-import { Search, Filter, FilterX, Plus } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -38,10 +38,12 @@ import { useSyncGroupFilterOptions } from './hooks/useSyncGroupFilterOptions';
 import { useSyncGroupData } from './hooks/useSyncGroupsData';
 
 import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import FolderActionModals from '@/components/ui/FolderActionModals';
 import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
 import FolderSidebar from '@/components/ui/FolderSidebar';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useUserContext } from '@/context/UserContext';
@@ -51,6 +53,8 @@ import { useFolderActions } from '@/hooks/useFolderActions';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
 import type { SyncGroup } from '@/types/syncGroup';
+import { countActiveFilters } from '@/utils/filters';
+import { hasFeature } from '@/utils/permissions';
 
 export default function SyncGroups() {
   const { t } = useTranslation();
@@ -129,6 +133,7 @@ export default function SyncGroups() {
     data: queryData,
     isFetching,
     isError,
+    isPaused,
     error: queryError,
   } = useSyncGroupData({
     pagination,
@@ -216,6 +221,7 @@ export default function SyncGroups() {
 
   const columns = getSyncGroupColumns({
     t,
+    canModify: hasFeature(user, 'display.syncModify'),
     onDelete: handleDelete,
     openEditModal,
     openMembersModal,
@@ -243,6 +249,8 @@ export default function SyncGroups() {
 
   const libraryTabs = useFilteredTabs('displays');
 
+  const activeFilterCount = countActiveFilters(filterInputs, INITIAL_FILTER_STATE, filterOptions);
+
   return (
     <>
       <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
@@ -261,15 +269,17 @@ export default function SyncGroups() {
           <div className="flex flex-row justify-between py-4 items-center gap-4">
             <TabNav activeTab="Sync Groups" navigation={libraryTabs} />
             <div className="flex items-center gap-2 md:mb-0">
-              <Button
-                variant="primary"
-                className="font-semibold"
-                disabled={!isHydrated}
-                onClick={openAddModal}
-                leftIcon={Plus}
-              >
-                {t('Add Sync Group')}
-              </Button>
+              {hasFeature(user, 'display.syncAdd') && (
+                <Button
+                  variant="primary"
+                  className="font-semibold"
+                  disabled={!isHydrated}
+                  onClick={openAddModal}
+                  leftIcon={Plus}
+                >
+                  {t('Add Sync Group')}
+                </Button>
+              )}
             </div>
           </div>
 
@@ -303,15 +313,12 @@ export default function SyncGroups() {
                   className="py-2 px-3 pl-10 block h-11.25 bg-gray-100 rounded-lg w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none disabled:bg-gray-200"
                 />
               </div>
-              <Button
-                leftIcon={!openFilter ? Filter : FilterX}
-                variant="secondary"
+              <FilterButton
+                isOpen={openFilter}
+                onToggle={() => setOpenFilter((prev) => !prev)}
+                activeCount={activeFilterCount}
                 disabled={!isHydrated}
-                onClick={() => setOpenFilter((prev) => !prev)}
-                removeTextOnMobile
-              >
-                {t('Filters')}
-              </Button>
+              />
             </div>
           </div>
 
@@ -331,11 +338,7 @@ export default function SyncGroups() {
             onReset={handleResetFilters}
           />
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
-              {error}
-            </div>
-          )}
+          <QueryStatusBanner error={error} isPaused={isPaused} />
 
           <div className="min-h-0 flex flex-col">
             {!isHydrated ? (
@@ -347,6 +350,7 @@ export default function SyncGroups() {
                 columns={columns}
                 data={syncGroupList}
                 pageCount={pageCount}
+                rowCount={queryData?.totalCount || 0}
                 pagination={pagination}
                 onPaginationChange={setPagination}
                 sorting={sorting}
@@ -378,6 +382,10 @@ export default function SyncGroups() {
           openMembersForSyncGroup: (syncGroup: SyncGroup) => {
             setSelectedSyncGroupId(syncGroup.syncGroupId);
             openModal('members');
+          },
+          openEditForSyncGroup: (syncGroup: SyncGroup) => {
+            setSelectedSyncGroupId(syncGroup.syncGroupId);
+            openModal('edit');
           },
           deleteError,
           isDeleting,

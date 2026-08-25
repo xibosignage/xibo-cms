@@ -128,7 +128,7 @@ describe('Tags page - search and filters', () => {
 
     await waitFor(
       () => {
-        expect(fetchTags).toHaveBeenCalledWith(expect.objectContaining({ keyword: 'location' }));
+        expect(fetchTags).toHaveBeenCalledWith(expect.objectContaining({ tag: 'location' }));
       },
       { timeout: 2000 },
     );
@@ -144,7 +144,7 @@ describe('Tags page - search and filters', () => {
     await waitFor(
       () => {
         expect(fetchTags).toHaveBeenCalledWith(
-          expect.objectContaining({ keyword: 'location', start: 0 }),
+          expect.objectContaining({ tag: 'location', start: 0 }),
         );
       },
       { timeout: 2000 },
@@ -215,7 +215,7 @@ describe('Tags page - search and filters', () => {
     await user.type(search, 'location');
     await waitFor(
       () => {
-        expect(fetchTags).toHaveBeenCalledWith(expect.objectContaining({ keyword: 'location' }));
+        expect(fetchTags).toHaveBeenCalledWith(expect.objectContaining({ tag: 'location' }));
       },
       { timeout: 2000 },
     );
@@ -223,7 +223,7 @@ describe('Tags page - search and filters', () => {
     await user.clear(search);
     await waitFor(
       () => {
-        expect(fetchTags).toHaveBeenCalledWith(expect.objectContaining({ keyword: undefined }));
+        expect(fetchTags).toHaveBeenCalledWith(expect.objectContaining({ tag: undefined }));
       },
       { timeout: 2000 },
     );

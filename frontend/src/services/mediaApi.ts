@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { withPublicPath } from '@/config/publicPath';
 import http from '@/lib/api';
 import type { Media } from '@/types/media';
 import ZipWorker from '@/workers/zipWorker?worker';
@@ -26,7 +27,6 @@ import ZipWorker from '@/workers/zipWorker?worker';
 export interface FetchMediaRequest {
   start: number;
   length: number;
-  keyword?: string;
   media?: string;
   sortBy?: string;
   sortDir?: string;
@@ -269,6 +269,22 @@ export async function updateMedia(
   return response.data;
 }
 
+export async function setMediaEnableStat(
+  mediaId: number | string,
+  enableStat: string,
+): Promise<void> {
+  const params = new URLSearchParams();
+  params.append('enableStat', enableStat);
+
+  await http.put(`/library/setenablestat/${mediaId}`, params.toString(), {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
+}
+
+export function getMediaStreamUrl(mediaId: number | string): string {
+  return withPublicPath(`json/library/download/${mediaId}?stream=1`);
+}
+
 export async function fetchMediaBlob(mediaId: number | string): Promise<Blob> {
   const response = await http.get(`/library/download/${mediaId}`, {
     responseType: 'blob',
@@ -386,12 +402,27 @@ export async function deleteMedia(
   });
 }
 
+export async function tidyLibrary(tidyGenericFiles = false): Promise<{ countDeleted: number }> {
+  const body = new URLSearchParams();
+  body.append('tidyGenericFiles', tidyGenericFiles ? '1' : '0');
+
+  const response = await http.delete('/library/tidy', {
+    data: body,
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+  });
+
+  return response.data;
+}
+
 export interface ReplaceMediaRequest {
   file: File;
   oldMediaId: number;
   name?: string;
   folderId?: number | string;
-  tags?: string[];
+  tags?: string;
   updateInLayouts?: boolean;
   deleteOldRevisions?: boolean;
   onProgress?: (progress: number) => void;
@@ -403,7 +434,7 @@ export async function replaceMedia({
   oldMediaId,
   name,
   folderId = 1,
-  tags = [],
+  tags = '',
   updateInLayouts = false,
   deleteOldRevisions = false,
   onProgress,
@@ -422,11 +453,8 @@ export async function replaceMedia({
     formData.append('folderId', folderId.toString());
   }
 
-  if (tags.length > 0) {
-    tags.forEach((tag) => formData.append('tags[]', tag));
-  } else {
-    formData.append('tags[]', '');
-  }
+  formData.append('tags[]', tags);
+  formData.append('tagsReplaceMode', 'replace');
 
   const response = await http.post<UploadMediaResponse>('/library', formData, {
     headers: {

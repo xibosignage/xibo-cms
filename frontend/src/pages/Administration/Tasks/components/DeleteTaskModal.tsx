@@ -51,7 +51,7 @@ export default function DeleteTaskModal({
       isOpen={isOpen}
       isPending={isLoading}
       onClose={onClose}
-      error={error ? t(error) : undefined}
+      error={error}
       actions={[
         {
           label: t('Cancel'),

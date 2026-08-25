@@ -21,7 +21,7 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
-import { Filter, FilterX, Plus, Search } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -38,13 +38,17 @@ import { useUsersData } from './hooks/useUsersData';
 import { useUsersFilterOptions } from './hooks/useUsersFilterOptions';
 
 import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useUserContext } from '@/context/UserContext';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
-import type { User } from '@/types/user';
+import { UserType, type User } from '@/types/user';
+import { countActiveFilters } from '@/utils/filters';
+import { hasFeature } from '@/utils/permissions';
 
 export default function Users() {
   const { t } = useTranslation();
@@ -71,17 +75,17 @@ export default function Users() {
       userId: true,
       userName: true,
       userTypeId: true,
-      email: true,
       homePage: true,
+      homeFolder: false,
+      email: true,
       libraryQuotaFormatted: true,
+      lastAccessed: false,
       loggedIn: true,
       retired: true,
       twoFactorDescription: true,
       firstName: false,
       lastName: false,
       phone: false,
-      homeFolder: false,
-      lastAccessed: false,
       ref1: false,
       ref2: false,
       ref3: false,
@@ -119,6 +123,7 @@ export default function Users() {
     data: queryData,
     isFetching,
     isError,
+    isPaused,
     error: queryError,
   } = useUsersData({
     pagination,
@@ -171,9 +176,20 @@ export default function Users() {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
+  const canSetHomeFolder = hasFeature(currentUser, 'folder.userHome');
+  const isSuperAdmin = currentUser?.userTypeId === UserType.SuperAdmin;
+  const systemUserId =
+    currentUser?.settings?.SYSTEM_USER != null
+      ? Number(currentUser.settings.SYSTEM_USER)
+      : undefined;
+
   const columns = getUserColumns({
     t,
     currentUserId: currentUser?.userId,
+    canModify: hasFeature(currentUser, 'users.modify'),
+    canSetHomeFolder,
+    isSuperAdmin,
+    systemUserId,
     onEdit: (user) => openModal('edit', user),
     onSetHomeFolder: (user) => openModal('setHomeFolder', user),
     onUserGroups: (user) => openModal('userGroups', user),
@@ -183,6 +199,7 @@ export default function Users() {
 
   const bulkActions = getBulkActions({
     t,
+    canSetHomeFolder,
     onSetHomeFolder: () => {
       const allItems = getAllSelectedItems();
       setItemsToSetHomeFolder(allItems);
@@ -194,20 +211,24 @@ export default function Users() {
 
   const administrationTabs = useFilteredTabs('administration');
 
+  const activeFilterCount = countActiveFilters(filterInputs, INITIAL_FILTER_STATE, filterOptions);
+
   return (
     <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="Users" navigation={administrationTabs} />
           <div className="flex items-center gap-2 md:mb-0">
-            <Button
-              variant="primary"
-              className="font-semibold"
-              onClick={() => openModal('add')}
-              leftIcon={Plus}
-            >
-              {t('Add User')}
-            </Button>
+            {hasFeature(currentUser, 'users.add') && (
+              <Button
+                variant="primary"
+                className="font-semibold"
+                onClick={() => openModal('add')}
+                leftIcon={Plus}
+              >
+                {t('Add User')}
+              </Button>
+            )}
           </div>
         </div>
 
@@ -228,14 +249,11 @@ export default function Users() {
                 className="py-2 px-3 pl-10 block h-11.25 bg-gray-100 rounded-lg w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none"
               />
             </div>
-            <Button
-              leftIcon={!openFilter ? Filter : FilterX}
-              variant="secondary"
-              onClick={() => setOpenFilter((prev) => !prev)}
-              removeTextOnMobile
-            >
-              {t('Filters')}
-            </Button>
+            <FilterButton
+              isOpen={openFilter}
+              onToggle={() => setOpenFilter((prev) => !prev)}
+              activeCount={activeFilterCount}
+            />
           </div>
         </div>
 
@@ -253,11 +271,7 @@ export default function Users() {
           onReset={handleResetFilters}
         />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
-            {error}
-          </div>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         <div className="min-h-0 flex flex-col">
           {!isHydrated ? (
@@ -269,6 +283,7 @@ export default function Users() {
               columns={columns}
               data={userList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

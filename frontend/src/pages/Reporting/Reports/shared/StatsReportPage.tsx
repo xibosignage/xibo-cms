@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { ArrowLeft, Filter, FilterX, Loader2, Plus } from 'lucide-react';
+import { ArrowLeft, Loader2, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -32,9 +32,21 @@ import { useStatsReportData } from './hooks/useStatsReportData';
 import type { StatsFilter, StatsReportConfig } from './types';
 
 import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import TabNav from '@/components/ui/TabNav';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
+import { countActiveFilters } from '@/utils/filters';
+
+const STATS_FILTER_KEYS: (keyof StatsFilter)[] = [
+  'reportFilter',
+  'type',
+  'layoutId',
+  'mediaId',
+  'eventTag',
+  'displayId',
+  'displayGroupId',
+];
 
 interface StatsReportPageProps {
   config: StatsReportConfig;
@@ -69,6 +81,12 @@ export default function StatsReportPage({ config }: StatsReportPageProps) {
   });
 
   const filter: StatsFilter = { ...config.initialFilter, ...filterInputs };
+
+  const activeFilterCount = countActiveFilters(
+    filterInputs,
+    config.initialFilter,
+    STATS_FILTER_KEYS,
+  );
 
   const { data, isFetching, isError, refetch } = useStatsReportData({
     reportName: config.reportName,
@@ -114,15 +132,12 @@ export default function StatsReportPage({ config }: StatsReportPageProps) {
             >
               {t('Schedule')}
             </Button>
-            <Button
-              leftIcon={filtersOpen ? FilterX : Filter}
-              variant="secondary"
+            <FilterButton
+              isOpen={filtersOpen}
+              onToggle={() => setFiltersOpen((prev) => !prev)}
+              activeCount={activeFilterCount}
               disabled={!isHydrated}
-              onClick={() => setFiltersOpen((prev) => !prev)}
-              removeTextOnMobile
-            >
-              {t('Filters')}
-            </Button>
+            />
           </div>
         </div>
 

@@ -73,7 +73,7 @@ export function ChromeOsFields({
 }: ChromeOsFieldProps) {
   const metaMap = getFieldMetaForType('chromeOS', t);
   const fieldsForTab = Object.entries(metaMap).filter(
-    ([, meta]) => meta.tab === tab && isFieldMetaEnabled(meta, settings),
+    ([, meta]) => meta.tab === tab && isFieldMetaEnabled(meta, settings, bool),
   );
 
   if (fieldsForTab.length === 0) {
@@ -86,6 +86,10 @@ export function ChromeOsFields({
     }
     if (inputType === 'checkbox') {
       return bool(key) ? 1 : 0;
+    }
+    if (key === 'screenShotSize') {
+      const raw = str(key);
+      return raw === '1' || raw === '2' ? raw : '1';
     }
     return str(key);
   };

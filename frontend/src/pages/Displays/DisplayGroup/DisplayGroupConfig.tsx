@@ -25,8 +25,9 @@ import {
   Calendar,
   Copy,
   Edit,
-  Folder,
+  FolderInput,
   Terminal,
+  Tags,
   Trash2,
   UserPlus2,
   Users,
@@ -36,11 +37,19 @@ import { type ComponentProps } from 'react';
 
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
 import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkActions';
-import { ActionsCell, CheckMarkCell, TagsCell, TextCell } from '@/components/ui/table/cells';
+import {
+  ActionsCell,
+  CheckMarkCell,
+  getSharingColumn,
+  TagsCell,
+  toDisplayTags,
+  TextCell,
+} from '@/components/ui/table/cells';
 import type { DisplayGroup } from '@/types/displayGroup';
 import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
 import type { DateLike } from '@/utils/date';
+import { formatTagsForExport } from '@/utils/tags';
 
 export type ModalType =
   | BaseModalType
@@ -54,6 +63,7 @@ export type ModalType =
   | 'triggerWebhook'
   | 'bulkSendCommand'
   | 'bulkTriggerWebhook'
+  | 'editTagsMultiple'
   | null;
 
 export interface DisplayGroupFilterInput {
@@ -82,7 +92,10 @@ export const INITIAL_FILTER_STATE: DisplayGroupFilterInput = {
   exactTags: false,
 };
 
-export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DisplayGroupFilterInput>[] => [
+export const getBaseFilterKeys = (
+  t: TFunction,
+  canTag = false,
+): FilterConfigItem<DisplayGroupFilterInput>[] => [
   {
     label: t('ID'),
     name: 'displayGroupId',
@@ -118,21 +131,31 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DisplayGroupFi
     type: 'text',
     placeholder: ' ',
   },
-  {
-    label: t('Tags'),
-    name: 'tags',
-    type: 'tags',
-    placeholder: ' ',
-    className: '',
-    showAndOr: true,
-    andOrKey: 'logicalOperator',
-    showExactTags: true,
-    exactTagsKey: 'exactTags',
-  },
+  ...(canTag
+    ? ([
+        {
+          label: t('Tags'),
+          name: 'tags',
+          type: 'tags',
+          placeholder: ' ',
+          className: '',
+          showAndOr: true,
+          andOrKey: 'logicalOperator',
+          showExactTags: true,
+          exactTagsKey: 'exactTags',
+        },
+      ] as FilterConfigItem<DisplayGroupFilterInput>[])
+    : []),
 ];
 
 export interface DisplayGroupActionsProps {
   t: TFunction;
+  canModify?: boolean;
+  canTag?: boolean;
+  canUserShare?: boolean;
+  canLimitedView?: boolean;
+  canCommandView?: boolean;
+  scheduleWithView?: boolean;
   onDelete: (displayGroup: DisplayGroup) => void;
   openEditModal: (displayGroup: DisplayGroup) => void;
   openCopyModal: (displayGroup: DisplayGroup) => void;
@@ -146,10 +169,17 @@ export interface DisplayGroupActionsProps {
   collectNow: (displayGroup: DisplayGroup) => void;
   triggerWebhook: (displayGroup: DisplayGroup) => void;
   formatDateTime: (value: DateLike) => string;
+  onTagClick?: (tag: Tag) => void;
+  selectedTagIds?: (string | number)[];
 }
 
 export const getDisplayGroupItemActions = ({
   t,
+  canModify = false,
+  canUserShare = false,
+  canLimitedView = false,
+  canCommandView = false,
+  scheduleWithView = false,
   onDelete,
   openEditModal,
   openCopyModal,
@@ -163,143 +193,210 @@ export const getDisplayGroupItemActions = ({
   collectNow,
   triggerWebhook,
 }: DisplayGroupActionsProps): ((displayGroup: DisplayGroup) => ActionItem[]) => {
-  return (displayGroup: DisplayGroup) => [
-    // Quick action
-    {
-      label: t('Edit'),
-      icon: Edit,
-      onClick: () => openEditModal(displayGroup),
-      isQuickAction: true,
-      variant: 'primary' as const,
-    },
+  return (displayGroup: DisplayGroup) => {
+    const canEdit = !!displayGroup.userPermissions?.edit;
+    const canDelete = !!displayGroup.userPermissions?.delete;
+    const canShare = !!displayGroup.userPermissions?.modifyPermissions;
 
-    // Dropdown
-    ...(displayGroup.isDynamic === 0
-      ? [
-          {
-            label: t('Members'),
-            icon: Users,
-            onClick: () => openMembersModal(displayGroup),
-          },
-          { isSeparator: true as const },
-        ]
-      : []),
-    {
-      label: t('Edit'),
-      icon: Edit,
-      onClick: () => openEditModal(displayGroup),
-    },
-    {
-      label: t('Copy'),
-      icon: Copy,
-      onClick: () => openCopyModal(displayGroup),
-    },
-    ...(openMoveModal
-      ? [
-          {
-            label: t('Move'),
-            icon: Folder,
-            onClick: () => openMoveModal(displayGroup),
-          },
-        ]
-      : []),
-    {
-      label: t('Share'),
-      icon: UserPlus2,
-      onClick: () => openShareModal(displayGroup),
-    },
-    ...(openScheduleModal
-      ? [
-          { isSeparator: true as const },
-          {
-            label: t('Schedule'),
-            icon: Calendar,
-            onClick: () => openScheduleModal(displayGroup),
-          },
-        ]
-      : []),
-    { isSeparator: true },
-    {
-      label: t('Assign Files'),
-      onClick: () => openAssignFilesModal(displayGroup),
-    },
-    {
-      label: t('Assign Layouts'),
-      onClick: () => openAssignLayoutsModal(displayGroup),
-    },
+    const actions: ActionItem[] = [];
 
-    { isSeparator: true },
-    {
-      label: t('Send Command'),
-      onClick: () => openSendCommandModal(displayGroup),
-    },
-    {
-      label: t('Collect Now'),
-      onClick: () => collectNow(displayGroup),
-    },
-    {
-      label: t('Trigger a web hook'),
-      onClick: () => triggerWebhook(displayGroup),
-    },
-    { isSeparator: true },
+    const addSeparator = () => {
+      if (actions.length > 0 && !actions[actions.length - 1]?.isSeparator) {
+        actions.push({ isSeparator: true });
+      }
+    };
 
-    {
-      label: t('Delete'),
-      icon: Trash2,
-      onClick: () => onDelete(displayGroup),
-      variant: 'danger' as const,
-    },
-  ];
+    if (canModify && canEdit) {
+      actions.push({
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => openEditModal(displayGroup),
+        isQuickAction: true,
+        variant: 'primary' as const,
+      });
+    }
+
+    if (canModify && canEdit && Number(displayGroup.isDynamic) === 0) {
+      actions.push({
+        label: t('Members'),
+        icon: Users,
+        onClick: () => openMembersModal(displayGroup),
+      });
+      actions.push({ isSeparator: true });
+    }
+
+    if (canModify && canEdit) {
+      actions.push({
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => openEditModal(displayGroup),
+      });
+    }
+
+    if (canModify && canEdit) {
+      actions.push({
+        label: t('Copy'),
+        icon: Copy,
+        onClick: () => openCopyModal(displayGroup),
+      });
+    }
+
+    if (canModify && canEdit && openMoveModal) {
+      actions.push({
+        label: t('Move'),
+        icon: FolderInput,
+        onClick: () => openMoveModal(displayGroup),
+      });
+    }
+
+    if (canModify && canShare && canUserShare) {
+      actions.push({
+        label: t('Share'),
+        icon: UserPlus2,
+        onClick: () => openShareModal(displayGroup),
+      });
+    }
+
+    if (openScheduleModal && (canEdit || scheduleWithView)) {
+      actions.push({ isSeparator: true });
+      actions.push({
+        label: t('Schedule'),
+        icon: Calendar,
+        onClick: () => openScheduleModal(displayGroup),
+      });
+    }
+
+    if (canModify && canEdit) {
+      actions.push({ isSeparator: true });
+      actions.push({
+        label: t('Assign Files'),
+        onClick: () => openAssignFilesModal(displayGroup),
+      });
+      actions.push({
+        label: t('Assign Layouts'),
+        onClick: () => openAssignLayoutsModal(displayGroup),
+      });
+    }
+
+    const canSendCommand = canModify || canCommandView;
+    const canCollectNow = (canModify && canEdit) || canLimitedView;
+
+    if (canSendCommand || canCollectNow) {
+      addSeparator();
+    }
+
+    if (canSendCommand) {
+      actions.push({
+        label: t('Send Command'),
+        onClick: () => openSendCommandModal(displayGroup),
+      });
+    }
+
+    if (canCollectNow) {
+      actions.push({
+        label: t('Collect Now'),
+        onClick: () => collectNow(displayGroup),
+      });
+    }
+
+    if (canModify && canEdit) {
+      actions.push({
+        label: t('Trigger a web hook'),
+        onClick: () => triggerWebhook(displayGroup),
+      });
+    }
+
+    if (canModify && canDelete) {
+      actions.push({ isSeparator: true });
+      actions.push({
+        label: t('Delete'),
+        icon: Trash2,
+        onClick: () => onDelete(displayGroup),
+        variant: 'danger' as const,
+      });
+    }
+
+    return actions;
+  };
 };
 
 interface GetBulkActionsProps {
   t: TFunction;
+  canModify?: boolean;
+  canLimitedView?: boolean;
   onDelete: () => void;
   onMove: () => void;
   onBulkSendCommand: () => void;
   onBulkTriggerWebhook: () => void;
   onBulkShare: () => void;
+  onEditTags?: () => void;
 }
 
 export const getBulkActions = ({
   t,
+  canModify = false,
+  canLimitedView = false,
   onDelete,
   onMove,
   onBulkSendCommand,
   onBulkTriggerWebhook,
   onBulkShare,
-}: GetBulkActionsProps): DataTableBulkAction<DisplayGroup>[] => [
-  {
-    label: t('Move'),
-    icon: Folder,
-    onClick: onMove,
-  },
-  {
-    label: t('Send Command'),
-    icon: Terminal,
-    onClick: onBulkSendCommand,
-  },
-  {
-    label: t('Trigger a web hook'),
-    icon: Webhook,
-    onClick: onBulkTriggerWebhook,
-  },
-  {
-    label: t('Share'),
-    icon: UserPlus2,
-    onClick: onBulkShare,
-  },
-  {
-    label: t('Delete Selected'),
-    icon: Trash2,
-    onClick: onDelete,
-  },
-];
+  onEditTags,
+}: GetBulkActionsProps): DataTableBulkAction<DisplayGroup>[] => {
+  const actions: DataTableBulkAction<DisplayGroup>[] = [];
+
+  if (canModify) {
+    actions.push({
+      label: t('Move'),
+      icon: FolderInput,
+      onClick: onMove,
+    });
+  }
+
+  if (canModify || canLimitedView) {
+    actions.push({
+      label: t('Send Command'),
+      icon: Terminal,
+      onClick: onBulkSendCommand,
+    });
+    actions.push({
+      label: t('Trigger a web hook'),
+      icon: Webhook,
+      onClick: onBulkTriggerWebhook,
+    });
+  }
+
+  if (canModify) {
+    actions.push({
+      label: t('Share'),
+      icon: UserPlus2,
+      onClick: onBulkShare,
+    });
+  }
+
+  if (canModify && onEditTags) {
+    actions.push({
+      label: t('Edit Tags'),
+      icon: Tags,
+      onClick: onEditTags,
+    });
+  }
+
+  if (canModify) {
+    actions.push({
+      label: t('Delete Selected'),
+      icon: Trash2,
+      onClick: onDelete,
+    });
+  }
+
+  return actions;
+};
 
 export const getDisplayGroupColumns = (
   props: DisplayGroupActionsProps,
 ): ColumnDef<DisplayGroup>[] => {
-  const { t, formatDateTime } = props;
+  const { t, formatDateTime, canTag = false, onTagClick, selectedTagIds } = props;
   const getActions = getDisplayGroupItemActions(props);
   return [
     {
@@ -339,25 +436,26 @@ export const getDisplayGroupColumns = (
       size: 160,
       cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
     },
-    {
-      accessorKey: 'tags',
-      header: t('Tags'),
-      size: 160,
-      cell: ({ row }) => (
-        <TagsCell
-          tags={(row.original.tags ?? []).map((tag) => ({
-            id: tag.tagId,
-            label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
-          }))}
-        />
-      ),
-    },
-    {
-      accessorKey: 'groupsWithPermissions',
-      header: t('Sharing'),
-      size: 160,
-      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
-    },
+    ...(canTag
+      ? ([
+          {
+            accessorKey: 'tags',
+            header: t('Tags'),
+            size: 160,
+            cell: ({ row }) => (
+              <TagsCell
+                tags={toDisplayTags(row.original.tags)}
+                onTagClick={onTagClick}
+                selectedTagIds={selectedTagIds}
+              />
+            ),
+            meta: {
+              getExportValue: (row) => formatTagsForExport(row.tags),
+            },
+          },
+        ] as ColumnDef<DisplayGroup>[])
+      : []),
+    getSharingColumn<DisplayGroup>(t),
     {
       accessorKey: 'ref1',
       header: t('Reference 1'),
@@ -393,12 +491,18 @@ export const getDisplayGroupColumns = (
       header: t('Created Date'),
       size: 160,
       cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatDateTime(row.createdDt),
+      },
     },
     {
       accessorKey: 'modifiedDt',
       header: t('Modified Date'),
       size: 160,
       cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatDateTime(row.modifiedDt),
+      },
     },
     {
       id: 'tableActions',

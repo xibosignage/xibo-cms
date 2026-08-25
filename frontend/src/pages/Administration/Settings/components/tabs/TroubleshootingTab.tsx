@@ -32,18 +32,19 @@ export default function TroubleshootingTab({
   formValues,
   updateField,
   isVisible,
+  isEditable,
 }: SettingsTabProps) {
   const { t } = useTranslation();
 
   return (
     <div className="flex flex-col gap-3">
-      <SettingsSection title={t('Widget Colour Coding in Playlist Editor')}>
+      <SettingsSection title={t('Logging')}>
         <div className="flex items-start justify-between space-x-4">
           {isVisible('RESTING_LOG_LEVEL') && (
             <SelectDropdown
               label={t('Resting Log Level')}
               helpText={t(
-                'Set the level of the resting log level. The CMS will revert to this log level after an elevated period ends. In production systems Error is recommended.',
+                'Set the level of the resting log level. The CMS will revert to this log level after an elevated period ends. In production systems "error" is recommended.',
               )}
               value={formValues.RESTING_LOG_LEVEL ?? ''}
               options={[
@@ -53,6 +54,7 @@ export default function TroubleshootingTab({
                 { value: 'error', label: t('Error') },
               ]}
               onSelect={(v) => updateField('RESTING_LOG_LEVEL', v)}
+              disabled={!isEditable('RESTING_LOG_LEVEL')}
               className="w-full"
             />
           )}
@@ -60,7 +62,7 @@ export default function TroubleshootingTab({
             <SelectDropdown
               label={t('Log Level')}
               helpText={t(
-                'Set the level of logging the CMS should record. In production systems Error is recommended.',
+                'Set the level of logging the CMS should record. In production systems "error" is recommended.',
               )}
               value={formValues.audit ?? ''}
               options={[
@@ -74,6 +76,7 @@ export default function TroubleshootingTab({
                 { value: 'debug', label: t('Debug') },
               ]}
               onSelect={(v) => updateField('audit', v)}
+              disabled={!isEditable('audit')}
               className="w-full"
             />
           )}
@@ -83,6 +86,7 @@ export default function TroubleshootingTab({
             label={t('Elevate Log Until')}
             helpText={t('Elevate the log level until this date.')}
             value={formValues.ELEVATE_LOG_UNTIL || undefined}
+            disabled={!isEditable('ELEVATE_LOG_UNTIL')}
             onChange={(isoString) => {
               if (!isoString) {
                 updateField('ELEVATE_LOG_UNTIL', '');
@@ -98,7 +102,7 @@ export default function TroubleshootingTab({
           <SelectDropdown
             label={t('Server Mode')}
             helpText={t(
-              'This should only be set if you want to display the maximum allowed error messaging through the user interface. Useful for capturing critical php errors and environment issues.',
+              'This should only be set if you want to display the maximum allowed error messaging through the user interface.\nUseful for capturing critical php errors and environment issues.',
             )}
             value={formValues.SERVER_MODE ?? ''}
             options={[
@@ -106,6 +110,7 @@ export default function TroubleshootingTab({
               { value: 'Test', label: t('Test') },
             ]}
             onSelect={(v) => updateField('SERVER_MODE', v)}
+            disabled={!isEditable('SERVER_MODE')}
           />
         )}
       </SettingsSection>

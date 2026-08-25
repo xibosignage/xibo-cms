@@ -22,7 +22,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { isAxiosError } from 'axios';
-import { Filter, FilterX, Plus, Search, ChevronRight } from 'lucide-react';
+import { Plus, Search, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -34,6 +34,7 @@ import {
   INITIAL_PRODUCT_FILTER_STATE,
   type MenuBoardProductFilterInput,
 } from './MenuBoardProductsConfig';
+import MenuBoardCategoryTabs from './components/MenuBoardCategoryTabs';
 import { MenuBoardProductModals } from './components/MenuBoardProductModals';
 import {
   MenuBoardProductQueryKeys,
@@ -41,8 +42,10 @@ import {
 } from './hooks/useMenuBoardProductsData';
 
 import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import { notify } from '@/components/ui/Notification';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
@@ -55,6 +58,7 @@ import {
   getMenuBoardById,
 } from '@/services/menuBoardApi';
 import type { MenuBoardProduct } from '@/types/menuBoardProduct';
+import { countActiveFilters } from '@/utils/filters';
 
 type ProductModalType = 'edit' | 'copy' | 'delete' | null;
 
@@ -124,6 +128,7 @@ export default function MenuBoardProducts() {
     data: queryData,
     isFetching,
     isError,
+    isPaused,
     error: queryError,
   } = useMenuBoardProductsData({
     menuCategoryId: categoryId!,
@@ -200,6 +205,9 @@ export default function MenuBoardProducts() {
         return;
       }
 
+      notify.success(
+        t('{{count}} product(s) deleted successfully.', { count: itemsToDelete.length }),
+      );
       setRowSelection({});
       handleRefresh();
       closeModal();
@@ -275,6 +283,12 @@ export default function MenuBoardProducts() {
   const filterOptions = getProductFilterKeys(t);
   const libraryTabs = useFilteredTabs('library');
 
+  const activeFilterCount = countActiveFilters(
+    filterInputs,
+    INITIAL_PRODUCT_FILTER_STATE,
+    filterOptions,
+  );
+
   const handleResetFilters = () => {
     setFilterInputs(INITIAL_PRODUCT_FILTER_STATE);
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
@@ -341,15 +355,12 @@ export default function MenuBoardProducts() {
                 className="py-2 px-3 pl-10 block h-11.25 bg-gray-100 rounded-lg w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none disabled:bg-gray-200"
               />
             </div>
-            <Button
-              leftIcon={!openFilter ? Filter : FilterX}
-              variant="secondary"
+            <FilterButton
+              isOpen={openFilter}
+              onToggle={() => setOpenFilter((prev) => !prev)}
+              activeCount={activeFilterCount}
               disabled={!isHydrated}
-              onClick={() => setOpenFilter((prev) => !prev)}
-              removeTextOnMobile
-            >
-              {t('Filters')}
-            </Button>
+            />
           </div>
         </div>
 
@@ -364,11 +375,9 @@ export default function MenuBoardProducts() {
           onReset={handleResetFilters}
         />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
-            {error}
-          </div>
-        )}
+        <MenuBoardCategoryTabs menuId={menuId!} activeCategoryId={categoryId!} />
+
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         <div className="min-h-0 flex flex-col">
           {!isHydrated ? (
@@ -380,6 +389,7 @@ export default function MenuBoardProducts() {
               columns={columns}
               data={productList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

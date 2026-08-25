@@ -19,12 +19,14 @@ vi.mock('@/hooks/useFilteredTabs', () => ({
   useFilteredTabs: vi.fn(() => [{ name: 'Log', path: '/advanced/log' }]),
 }));
 
-// Mock ResizeObserver used by DataTable column resizing
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+// Mock ResizeObserver used by DataTable column resizing. Must be a real class (not an
+// arrow-function-backed vi.fn()) so `new ResizeObserver(...)` works when Preline's
+// floating-ui autoUpdate (used by the DateFilter tooltip) constructs one.
+global.ResizeObserver = class {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+};
 
 // --- Mock Data ---
 
@@ -54,6 +56,28 @@ export const mockLogsList: LogEntry[] = [
     display: 'Screen 1',
   }),
 ];
+
+export interface MockLogsPage {
+  rows: LogEntry[];
+  totalCount: number;
+}
+
+// useLogsData is an infinite query, so its result carries `data.pages`, not a flat row list.
+// Every test that mocks the hook builds its return value here, so a future change to the hook's
+// shape is a one-line fix rather than a hunt through each spec.
+export const createMockLogsQuery = (
+  pages: MockLogsPage[] = [{ rows: mockLogsList, totalCount: mockLogsList.length }],
+  overrides: Record<string, unknown> = {},
+) => ({
+  data: { pages, pageParams: pages.map((_, index) => index) },
+  isFetching: false,
+  isFetchingNextPage: false,
+  hasNextPage: false,
+  fetchNextPage: vi.fn(),
+  isError: false,
+  error: null,
+  ...overrides,
+});
 
 // --- Render Helpers ---
 

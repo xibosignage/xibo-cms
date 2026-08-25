@@ -120,7 +120,7 @@ describe('Button', () => {
 
     const span = container.querySelector('span');
     expect(span).toHaveClass('hidden');
-    expect(span).toHaveClass('sm:inline');
+    expect(span).toHaveClass('sm:inline-flex');
   });
 
   // When removeTextOnMobile is off (the default), the text must always be

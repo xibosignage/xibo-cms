@@ -66,6 +66,12 @@ then
   then
     echo "ssl_mode = VERIFY_IDENTITY" >> /root/.my.cnf
   fi
+else
+  # No CA configured, so we can't verify the server's certificate - don't try to.
+  # Without this, the mysql CLI (MariaDB client 11.x, bundled since the debian:trixie-slim
+  # base image update) refuses to connect at all to MySQL's self-signed default cert, whereas
+  # older client versions connected (encrypted, just unverified) the same way this does.
+  echo "ssl_verify_server_cert = 0" >> /root/.my.cnf
 fi
 
 # Set permissions on the new cnf file.
@@ -81,7 +87,7 @@ then
 
   # We won't have a settings.php in place, so we'll need to copy one in
   cp /tmp/settings.php-template /var/www/cms/web/settings.php
-  chown www-data.www-data /var/www/cms/web/settings.php
+  chown www-data:www-data /var/www/cms/web/settings.php
 
   SECRET_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 8)
   /bin/sed -i "s/define('SECRET_KEY','');/define('SECRET_KEY','$SECRET_KEY');/" /var/www/cms/web/settings.php
@@ -103,7 +109,7 @@ fi
 # Set the correct permissions on the public/private key
 chmod 600 /var/www/cms/library/certs/private.key
 chmod 660 /var/www/cms/library/certs/public.key
-chown -R www-data.www-data /var/www/cms/library/certs
+chown -R www-data:www-data /var/www/cms/library/certs
 
 # Populate default brand assets (runs in both dev and prod mode).
 # Source is /brand/ — ADD docker/ / in the Dockerfile maps docker/ to the container root.
@@ -180,7 +186,7 @@ if [ "$main_logo_customised" = false ]; then
 fi
 
 # Single-file brand images: safe to auto-refresh via the same stock-hash check.
-for f in favicon.ico xibologo.png 192x192.png 512x512.png; do
+for f in favicon.ico 192x192.png 512x512.png; do
   refresh_stock_file "/var/www/cms/library/brand/$f" "/brand/$f" "$STOCK_HASH_DIR/$f.sha256"
 done
 
@@ -198,8 +204,8 @@ if [ ! -f "/var/www/cms/library/brand/config.json" ]; then
     fi
   done
 fi
-chown -R www-data.www-data /var/www/cms/library/brand
-chown -R www-data.www-data "$STOCK_HASH_DIR"
+chown -R www-data:www-data /var/www/cms/library/brand
+chown -R www-data:www-data "$STOCK_HASH_DIR"
 
 # Check if there's a database file to import
 if [ -f "/var/www/backup/import.sql" ] && [ "$CMS_DEV_MODE" == "false" ]

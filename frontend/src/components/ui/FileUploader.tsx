@@ -59,12 +59,14 @@ interface FileUploaderProps {
   maxSize?: number;
   onUrlUpload: (url: string) => void;
   disabled?: boolean;
+  canTag?: boolean;
 }
 
 interface RowProps {
   item: UploadItem;
   onRemove: () => void;
   onUpdate: (data: { name?: string; tags?: string; thumbnailBlob?: Blob }) => void;
+  canTag?: boolean;
 }
 
 const parseTagsFromString = (str: string | undefined): Tag[] => {
@@ -98,11 +100,11 @@ function formatBytes(bytes: number, t: TFunction): string {
   }
 
   const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const sizeLabels = [t('Bytes'), t('KB'), t('MB'), t('GB'), t('TB')];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  const unit = sizes[i] ?? 'TB';
+  const unit = sizeLabels[i] ?? t('TB');
 
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + t(unit);
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + unit;
 }
 
 function formatFileSize(item: UploadItem, t: TFunction): string {
@@ -117,7 +119,7 @@ function formatFileSize(item: UploadItem, t: TFunction): string {
   return formatBytes(item.file.size, t);
 }
 
-function UploadItemRow({ item, onRemove, onUpdate }: RowProps) {
+function UploadItemRow({ item, onRemove, onUpdate, canTag = true }: RowProps) {
   const { t } = useTranslation();
   const [preview, setPreview] = useState<string | null>(null);
   const [localName, setLocalName] = useState(item.displayName ?? '');
@@ -278,14 +280,20 @@ function UploadItemRow({ item, onRemove, onUpdate }: RowProps) {
                 disabled={isUploading}
                 value={localName}
                 onChange={(e) => setLocalName(e.target.value)}
-                className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none"
+                className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-xibo-blue-500 focus:ring-xibo-blue-500 disabled:opacity-50 disabled:pointer-events-none"
                 placeholder={t('File Name')}
               />
             </div>
 
-            <div className="flex flex-col w-full md:w-70">
-              <TagInput value={tagObjects} onChange={handleTagsChange} disabled={isUploading} />
-            </div>
+            {canTag && (
+              <div className="flex flex-col w-full md:w-70">
+                <TagInput
+                  value={tagObjects}
+                  onChange={handleTagsChange}
+                  disabled={isUploading || !canTag}
+                />
+              </div>
+            )}
           </div>
         </div>
 
@@ -388,6 +396,7 @@ export function FileUploader({
   maxSize = 2 * 1024 * 1024 * 1024,
   onUrlUpload,
   disabled = false,
+  canTag = true,
 }: FileUploaderProps) {
   const { t } = useTranslation();
   const [urlInput, setUrlInput] = useState('');
@@ -403,6 +412,16 @@ export function FileUploader({
     if (event && 'stopPropagation' in event) {
       event.stopPropagation();
     }
+
+    fileRejections.forEach((rejection) => {
+      const isTooLarge = rejection.errors.some((error) => error.code === 'file-too-large');
+      notify.error(
+        isTooLarge
+          ? t('{{name}} is too large to upload', { name: rejection.file.name })
+          : t('{{name}} is not a supported file type', { name: rejection.file.name }),
+      );
+    });
+
     addFiles(acceptedFiles);
   };
 
@@ -444,7 +463,7 @@ export function FileUploader({
       <div
         {...getRootProps()}
         className={`p-5 border-2 border-dashed flex flex-col rounded-xl items-center justify-center transition-colors
-          ${isDragActive ? 'border-xibo-blue-600 text-xibo-blue-600 bg-blue-50' : 'border-gray-200 text-gray-800 bg-gray-50'}
+          ${isDragActive ? 'border-xibo-blue-600 text-xibo-blue-600 bg-xibo-blue-50' : 'border-gray-200 text-gray-800 bg-gray-50'}
           cursor-pointer hover:shadow-4 hover:shadow-blue-500/25
         `}
       >
@@ -518,7 +537,7 @@ export function FileUploader({
               />
               <button
                 type="button"
-                className="p-3 justify-center text-blue-600 hover:text-blue-800 hover:bg-xibo-blue-50/25 items-center text-sm rounded-e-md border border-gray-200 border-l-0 disabled:text-blue-600/50 disabled:pointer-events-none"
+                className="p-3 justify-center text-xibo-blue-600 hover:text-xibo-blue-800 hover:bg-xibo-blue-50/25 items-center text-sm rounded-e-md border border-gray-200 border-l-0 disabled:text-xibo-blue-600/50 disabled:pointer-events-none"
                 onClick={handleUrlUpload}
                 disabled={!urlInput || disabled}
               >
@@ -569,6 +588,7 @@ export function FileUploader({
               item={item}
               onRemove={() => removeFile(item.id)}
               onUpdate={(data) => updateFileData(item.id, data)}
+              canTag={canTag}
             />
           ))}
         </div>

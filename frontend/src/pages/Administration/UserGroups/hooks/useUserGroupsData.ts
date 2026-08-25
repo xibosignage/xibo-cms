@@ -21,7 +21,6 @@
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
-import type { AxiosError } from 'axios';
 
 import type { UserGroupFilterInput } from '../UserGroupsConfig';
 
@@ -68,13 +67,15 @@ export const useUserGroupsData = ({
       const request: FetchUserGroupsRequest = {
         start: startOffset,
         length: pagination.pageSize,
-        keyword: filter || undefined,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,
         ...Object.fromEntries(
           Object.entries(advancedFilters).filter(([, v]) => v !== null && v !== ''),
         ),
+        ...((advancedFilters.userGroup || filter) && {
+          userGroup: advancedFilters.userGroup || filter,
+        }),
       };
 
       return fetchUserGroups(request);
@@ -84,9 +85,5 @@ export const useUserGroupsData = ({
 
     placeholderData: keepPreviousData,
     staleTime: 1000 * 60 * 1,
-
-    throwOnError: (error: AxiosError) => {
-      return error.response?.status ? error.response.status >= 500 : false;
-    },
   });
 };

@@ -156,6 +156,7 @@ export default function ProofOfPlayResults({
             columns={columns}
             data={pageRows}
             pageCount={pageCount}
+            rowCount={rows.length}
             pagination={pagination}
             onPaginationChange={onPaginationChange}
             sorting={sorting}

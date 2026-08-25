@@ -21,7 +21,7 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
-import { Search, Filter, FilterX } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -32,17 +32,22 @@ import { useModuleActions } from './hooks/useModuleActions';
 import { useModuleData } from './hooks/useModuleData';
 import { useModuleFilterOptions } from './hooks/useModuleFilterOptions';
 
-import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
+import { useAutoSubmit } from '@/hooks/useAutoSubmit';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import type { Module } from '@/types/module';
+import { countActiveFilters } from '@/utils/filters';
 
 export default function Modules() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { guard } = useAutoSubmit();
 
   const {
     pagination,
@@ -90,6 +95,7 @@ export default function Modules() {
     data: queryData,
     isFetching,
     isError,
+    isPaused,
     error: queryError,
   } = useModuleData({
     pagination,
@@ -125,11 +131,16 @@ export default function Modules() {
     openModal('configure');
   };
 
-  const handleClearCache = (module: Module) => {
-    setSelectedModule(module);
-    setClearError(null);
-    openModal('clearCache');
-  };
+  const handleClearCache = (module: Module) =>
+    guard(
+      AUTO_SUBMIT_FORMS.moduleClearCache,
+      () => confirmClearCache(module.moduleId, { notifyOnError: true }),
+      () => {
+        setSelectedModule(module);
+        setClearError(null);
+        openModal('clearCache');
+      },
+    );
 
   const handleResetFilters = () => {
     setFilterInputs(INITIAL_FILTER_STATE);
@@ -144,6 +155,8 @@ export default function Modules() {
 
   const { filterOptions } = useModuleFilterOptions();
   const administrationTabs = useFilteredTabs('administration');
+
+  const activeFilterCount = countActiveFilters(filterInputs, INITIAL_FILTER_STATE, filterOptions);
 
   return (
     <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
@@ -170,15 +183,12 @@ export default function Modules() {
                 className="py-2 px-3 pl-10 block h-11.25 bg-gray-100 rounded-lg w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none disabled:bg-gray-200"
               />
             </div>
-            <Button
-              leftIcon={!openFilter ? Filter : FilterX}
-              variant="secondary"
+            <FilterButton
+              isOpen={openFilter}
+              onToggle={() => setOpenFilter((prev) => !prev)}
+              activeCount={activeFilterCount}
               disabled={!isHydrated}
-              onClick={() => setOpenFilter((prev) => !prev)}
-              removeTextOnMobile
-            >
-              {t('Filters')}
-            </Button>
+            />
           </div>
         </div>
 
@@ -196,11 +206,7 @@ export default function Modules() {
           onReset={handleResetFilters}
         />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
-            {error}
-          </div>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         <div className="min-h-0 flex flex-col">
           {!isHydrated ? (
@@ -212,6 +218,7 @@ export default function Modules() {
               columns={columns}
               data={moduleList}
               pageCount={pageCount}
+              rowCount={totalCount}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

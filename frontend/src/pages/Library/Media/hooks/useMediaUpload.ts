@@ -20,7 +20,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { useDropzone } from 'react-dropzone';
+import { useDropzone, type FileRejection } from 'react-dropzone';
 import { useTranslation } from 'react-i18next';
 
 import { ACCEPTED_MIME_TYPES } from '../MediaConfig';
@@ -53,8 +53,17 @@ export function useMediaUpload({
     uploadStateRef.current = { targetId: targetUploadFolderId, canCreate: canAddToFolder };
   }, [targetUploadFolderId, canAddToFolder]);
 
-  const onGlobalDrop = (acceptedFiles: File[]) => {
+  const onGlobalDrop = (acceptedFiles: File[], fileRejections: FileRejection[]) => {
     const { targetId, canCreate } = uploadStateRef.current;
+
+    fileRejections.forEach((rejection) => {
+      const isTooLarge = rejection.errors.some((error) => error.code === 'file-too-large');
+      notify.error(
+        isTooLarge
+          ? t('{{name}} is too large to upload', { name: rejection.file.name })
+          : t('{{name}} is not a supported file type', { name: rejection.file.name }),
+      );
+    });
 
     if (acceptedFiles.length > 0 && canCreate) {
       setAddModalOpen(true);

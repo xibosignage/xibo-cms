@@ -165,13 +165,6 @@ class Playlist extends Base
         schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
-        name: 'keyword',
-        description: 'Filter by Playlist name or ID',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
-    )]
-    #[OA\Parameter(
         name: 'userId',
         description: 'Filter by user Id',
         in: 'query',
@@ -221,6 +214,20 @@ class Playlist extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\Parameter(
+        name: 'modifiedDateFrom',
+        description: 'Filter by modified date, greater than or equal',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'modifiedDateTo',
+        description: 'Filter by modified date, less than or equal',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
         name: 'sortBy',
         description: 'Specifies which field the results are sorted by. Used together with sortDir',
         in: 'query',
@@ -236,6 +243,7 @@ class Playlist extends Base
                 'enableStat',
                 'createdDt',
                 'modifiedDt',
+                'groupsWithPermissions',
             ]
         )
     )]
@@ -953,6 +961,7 @@ class Playlist extends Base
             'playlist'  => $playlist,
             'timeZones' => $timeZones,
             'modules'   => $this->moduleFactory->getAssignableModules(),
+            'brandLogoFile' => $this->getConfig()->getBrandAssetFile('logo'),
         ]);
 
         return $this->render($request, $response);
@@ -1750,7 +1759,6 @@ class Playlist extends Base
         return $this->gridRenderFilter([
             'name' => $sanitizedParams->getString('name'),
             'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
-            'keyword' => $sanitizedParams->getString('keyword'),
             'userId' => $sanitizedParams->getInt('userId'),
             'tags' => $sanitizedParams->getString('tags'),
             'exactTags' => $sanitizedParams->getCheckbox('exactTags'),
@@ -1763,6 +1771,8 @@ class Playlist extends Base
             'layoutId' => $sanitizedParams->getInt('layoutId'),
             'logicalOperator' => $sanitizedParams->getString('logicalOperator'),
             'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
+            'modifiedDateFrom' => $sanitizedParams->getDate('modifiedDateFrom'),
+            'modifiedDateTo' => $sanitizedParams->getDate('modifiedDateTo'),
         ], $sanitizedParams);
     }
 

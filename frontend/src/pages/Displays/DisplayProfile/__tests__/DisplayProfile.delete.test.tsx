@@ -32,6 +32,7 @@ import { mockFetchDisplayProfile } from './mocks/displayProfileApi';
 
 import { deleteDisplayProfile, fetchDisplayProfile } from '@/services/displayProfileApi';
 import { testQueryClient } from '@/setupTests';
+import { waitForDialogToClose } from '@/testUtils/rtl';
 
 // =============================================================================
 // Module mocks
@@ -62,11 +63,14 @@ const openDeleteModal = async () => {
 };
 
 // Selects the first `rowCount` rows and opens the bulk confirmation modal.
+// Re-queries the checkboxes on every iteration rather than reusing one
+// snapshot array — clicking a row checkbox re-renders the table, and a
+// stale reference to an earlier render's node can end up clicking nothing.
 const openBulkDeleteModal = async (rowCount: number) => {
   await screen.findByText(mockDisplayProfile.name);
 
-  const checkboxes = screen.getAllByRole('checkbox', { name: /Select row/i });
   for (let i = 0; i < rowCount; i++) {
+    const checkboxes = screen.getAllByRole('checkbox', { name: /Select row/i });
     fireEvent.click(checkboxes[i]!);
   }
 
@@ -119,9 +123,7 @@ describe('DisplayProfile page - delete', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
-    await waitFor(() => {
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    });
+    await waitForDialogToClose('Delete Display Profile?');
     expect(deleteDisplayProfile).not.toHaveBeenCalled();
   });
 
@@ -137,9 +139,7 @@ describe('DisplayProfile page - delete', () => {
     const fetchCountBefore = vi.mocked(fetchDisplayProfile).mock.calls.length;
     fireEvent.click(screen.getByRole('button', { name: 'Yes, Delete' }));
 
-    await waitFor(() => {
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    });
+    await waitForDialogToClose('Delete Display Profile?');
     expect(deleteDisplayProfile).toHaveBeenCalledTimes(1);
     expect(deleteDisplayProfile).toHaveBeenCalledWith(mockDisplayProfile.displayProfileId);
     // Success triggers handleRefresh → query invalidation → a refetch.
@@ -198,7 +198,9 @@ describe('DisplayProfile page - delete', () => {
 
     expect(await screen.findByRole('button', { name: /deleting/i })).toBeDisabled();
 
+    // Wait for the resulting close so the update isn't left outside act().
     resolveDelete();
+    await waitForDialogToClose('Delete Display Profile?');
   });
 
   // ---------------------------------------------------------------------------

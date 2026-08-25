@@ -2681,6 +2681,13 @@ Viewer.prototype.toggleFullscreen = function() {
     $('body').removeAttr('layout-editor-fs');
   }
 
+  if (window.parent !== window) {
+    window.parent.postMessage(
+      {type: 'xibo:editor-fullscreen', fullscreen: this.fullscreenMode},
+      window.location.origin,
+    );
+  }
+
   this.update();
 
   // Is preview playing? Restart

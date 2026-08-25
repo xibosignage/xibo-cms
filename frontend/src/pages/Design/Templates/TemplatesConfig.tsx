@@ -26,8 +26,8 @@ import {
   CopyCheck,
   FolderInput,
   UserPlus2,
-  CalendarClock,
   Trash2,
+  Tags,
   CloudUpload,
   PenTool,
 } from 'lucide-react';
@@ -41,12 +41,14 @@ import {
   ActionsCell,
   MediaCell,
   TagsCell,
+  toDisplayTags,
+  getSharingColumn,
 } from '@/components/ui/table/cells';
-import { withPublicPath } from '@/config/publicPath';
 import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
 import type { Template } from '@/types/templates';
 import type { DateLike } from '@/utils/date';
+import { formatTagsForExport } from '@/utils/tags';
 
 export interface TemplatesFilterInput {
   template?: string;
@@ -66,9 +68,18 @@ export const TEMPLATE_INITIAL_FILTER_STATE: TemplatesFilterInput = {
   exactTags: false,
 };
 
-export type ModalType = BaseModalType | 'schedule' | 'publish' | 'discard' | 'export' | null;
+export type ModalType =
+  | BaseModalType
+  | 'publish'
+  | 'discard'
+  | 'export'
+  | 'editTagsMultiple'
+  | null;
 
-export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<TemplatesFilterInput>[] => [
+export const getBaseFilterKeys = (
+  t: TFunction,
+  canTag = false,
+): FilterConfigItem<TemplatesFilterInput>[] => [
   {
     label: t('Name'),
     name: 'template',
@@ -80,21 +91,31 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<TemplatesFilte
     showRegex: true,
     regexKey: 'useRegexForName',
   },
-  {
-    label: t('Tags'),
-    name: 'tags',
-    type: 'tags',
-    placeholder: ' ',
-    className: '',
-    showAndOr: true,
-    andOrKey: 'logicalOperator',
-    showExactTags: true,
-    exactTagsKey: 'exactTags',
-  },
+  ...(canTag
+    ? ([
+        {
+          label: t('Tags'),
+          name: 'tags',
+          type: 'tags',
+          placeholder: ' ',
+          className: '',
+          showAndOr: true,
+          andOrKey: 'logicalOperator',
+          showExactTags: true,
+          exactTagsKey: 'exactTags',
+        },
+      ] as FilterConfigItem<TemplatesFilterInput>[])
+    : []),
 ];
 
 export interface TemplatesActionsProps {
   t: TFunction;
+  canModify?: boolean;
+  canMoveToCampaignFolder?: boolean;
+  canUserShare?: boolean;
+  canExport?: boolean;
+  canViewFolders?: boolean;
+  canTag?: boolean;
   formatDateTime: (value: DateLike) => string;
   onPreview?: (row: Template) => void;
   onDelete: (id: number) => void;
@@ -108,11 +129,12 @@ export interface TemplatesActionsProps {
   exportTemplate?: (id: number) => void;
   openDetails?: (id: number) => void;
   openTemplate?: (id: number) => void;
-  onSchedule?: (template: Template) => void;
+  onTagClick?: (tag: Tag) => void;
+  selectedTagIds?: (string | number)[];
 }
 
 export const getTemplateColumn = (props: TemplatesActionsProps): ColumnDef<Template>[] => {
-  const { t, formatDateTime } = props;
+  const { t, formatDateTime, canTag = false, onTagClick, selectedTagIds } = props;
   const getActions = getTemplateItemActions(props);
 
   return [
@@ -133,12 +155,15 @@ export const getTemplateColumn = (props: TemplatesActionsProps): ColumnDef<Templ
       header: t('Thumbnail'),
       size: 140,
       enableSorting: false,
+      meta: {
+        excludeFromExport: true,
+      },
       cell: (info) => {
         const row = info.row.original;
 
         return (
           <MediaCell
-            thumb={row?.layoutId ? withPublicPath(`layout/thumbnail/${row.layoutId}`) : undefined}
+            thumb={row?.thumbnail || undefined}
             alt={row?.layout}
             mediaType="image"
             onPreview={() => props.onPreview && props.onPreview(row)}
@@ -155,20 +180,29 @@ export const getTemplateColumn = (props: TemplatesActionsProps): ColumnDef<Templ
       enableSorting: true,
     },
 
-    {
-      accessorKey: 'tags',
-      header: t('Tags'),
-      enableSorting: false,
-      size: 150,
-      cell: (info) => {
-        const tags = info.getValue<Tag[]>() || [];
-        const formattedTags = tags.map((tag) => ({
-          id: tag.tagId,
-          label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
-        }));
-        return <TagsCell tags={formattedTags} />;
-      },
-    },
+    ...(canTag
+      ? ([
+          {
+            accessorKey: 'tags',
+            header: t('Tags'),
+            enableSorting: false,
+            size: 150,
+            cell: (info) => {
+              const tags = info.getValue<Tag[]>() || [];
+              return (
+                <TagsCell
+                  tags={toDisplayTags(tags)}
+                  onTagClick={onTagClick}
+                  selectedTagIds={selectedTagIds}
+                />
+              );
+            },
+            meta: {
+              getExportValue: (row) => formatTagsForExport(row.tags),
+            },
+          },
+        ] as ColumnDef<Template>[])
+      : []),
 
     {
       accessorKey: 'description',
@@ -193,16 +227,7 @@ export const getTemplateColumn = (props: TemplatesActionsProps): ColumnDef<Templ
       enableSorting: true,
     },
 
-    {
-      accessorKey: 'groupsWithPermissions',
-      header: t('Sharing'),
-      enableSorting: false,
-      size: 80,
-      cell: (info) => {
-        const groups = info.getValue<string>();
-        return <TextCell className="italic text-gray-500">{groups || t('Private')}</TextCell>;
-      },
-    },
+    getSharingColumn<Template>(t),
 
     {
       accessorKey: 'modifiedDt',
@@ -210,6 +235,9 @@ export const getTemplateColumn = (props: TemplatesActionsProps): ColumnDef<Templ
       size: 160,
       cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
       enableSorting: true,
+      meta: {
+        getExportValue: (row) => formatDateTime(row.modifiedDt),
+      },
     },
 
     {
@@ -247,6 +275,7 @@ interface GetBulkActionsProps {
   onDelete: () => void;
   onMove?: () => void;
   onShare: () => void;
+  onEditTags?: () => void;
 }
 
 export const getBulkActions = ({
@@ -254,6 +283,7 @@ export const getBulkActions = ({
   onDelete,
   onMove,
   onShare,
+  onEditTags,
 }: GetBulkActionsProps): DataTableBulkAction<Template>[] => {
   return [
     ...(onMove
@@ -270,6 +300,15 @@ export const getBulkActions = ({
       icon: UserPlus2,
       onClick: onShare,
     },
+    ...(onEditTags
+      ? [
+          {
+            label: t('Edit Tags'),
+            icon: Tags,
+            onClick: onEditTags,
+          },
+        ]
+      : []),
     {
       label: t('Delete Selected'),
       icon: Trash2,
@@ -280,6 +319,11 @@ export const getBulkActions = ({
 
 export const getTemplateItemActions = ({
   t,
+  canModify = false,
+  canMoveToCampaignFolder = false,
+  canUserShare = false,
+  canExport = false,
+  canViewFolders = false,
   onDelete,
   openAddEditModal,
   openShareModal,
@@ -289,68 +333,96 @@ export const getTemplateItemActions = ({
   alterTemplate,
   discardTemplate,
   exportTemplate,
-  onSchedule,
 }: TemplatesActionsProps): ((template: Template) => ActionItem[]) => {
-  return (template: Template) => [
-    {
-      label: t('Edit'),
-      icon: Edit,
-      onClick: () => openAddEditModal(template),
-      isQuickAction: true,
-      variant: 'primary' as const,
-    },
+  return (template: Template) => {
+    const canEdit = !!template.userPermissions?.edit;
+    const canDelete = !!template.userPermissions?.delete;
+    const canShare = !!template.userPermissions?.modifyPermissions;
 
-    {
-      label: t('Alter Template'),
-      icon: PenTool,
-      onClick: () => alterTemplate && alterTemplate(template.layoutId),
-    },
-    {
-      label: t('Publish'),
-      icon: CloudUpload,
-      onClick: () => openPublishModal && openPublishModal(template.layoutId),
-    },
-    { isSeparator: true },
-    {
-      label: t('Edit'),
-      icon: Edit,
-      onClick: () => openAddEditModal(template),
-    },
-    {
-      label: t('Make a Copy'),
-      icon: CopyCheck,
-      onClick: () => openCopyModal && openCopyModal(template.layoutId),
-    },
-    {
-      label: t('Move'),
-      icon: FolderInput,
-      onClick: () => openMoveModal && openMoveModal(template),
-    },
-    {
-      label: t('Share'),
-      icon: UserPlus2,
-      onClick: () => openShareModal && openShareModal(template.campaignId),
-    },
-    {
-      label: t('Schedule'),
-      icon: CalendarClock,
-      onClick: () => onSchedule && onSchedule(template),
-    },
-    { isSeparator: true },
-    {
-      label: t('Discard'),
-      onClick: () => discardTemplate && discardTemplate(template.layoutId),
-    },
-    {
-      label: t('Export'),
-      onClick: () => exportTemplate && exportTemplate(template.layoutId),
-    },
-    { isSeparator: true },
-    {
-      label: t('Delete'),
-      icon: Trash2,
-      onClick: () => onDelete(template.layoutId),
-      variant: 'danger' as const,
-    },
-  ];
+    const actions: ActionItem[] = [];
+
+    const addSeparator = () => {
+      if (actions.length > 0 && !actions[actions.length - 1]?.isSeparator) {
+        actions.push({ isSeparator: true });
+      }
+    };
+
+    if (canModify && canEdit) {
+      actions.push({
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => openAddEditModal(template),
+        isQuickAction: true,
+        variant: 'primary' as const,
+      });
+      actions.push({
+        label: t('Alter Template'),
+        icon: PenTool,
+        onClick: () => alterTemplate && alterTemplate(template.layoutId),
+      });
+    }
+
+    if (canModify && canEdit && template.publishedStatus !== 'Published') {
+      actions.push({
+        label: t('Publish'),
+        icon: CloudUpload,
+        onClick: () => openPublishModal && openPublishModal(template.layoutId),
+      });
+      actions.push({
+        label: t('Discard'),
+        onClick: () => discardTemplate && discardTemplate(template.layoutId),
+      });
+    }
+
+    if (canModify && canEdit) {
+      addSeparator();
+      actions.push({
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => openAddEditModal(template),
+      });
+      actions.push({
+        label: t('Make a Copy'),
+        icon: CopyCheck,
+        onClick: () => openCopyModal && openCopyModal(template.layoutId),
+      });
+    }
+
+    if (canMoveToCampaignFolder && canEdit && canViewFolders) {
+      addSeparator();
+      actions.push({
+        label: t('Move'),
+        icon: FolderInput,
+        onClick: () => openMoveModal && openMoveModal(template),
+      });
+    }
+
+    if (canModify && canShare && canUserShare) {
+      actions.push({
+        label: t('Share'),
+        icon: UserPlus2,
+        onClick: () => openShareModal && openShareModal(template.campaignId),
+      });
+    }
+
+    if (canExport) {
+      addSeparator();
+      actions.push({
+        label: t('Export'),
+        onClick: () => exportTemplate && exportTemplate(template.layoutId),
+      });
+    }
+
+    if (canModify && canDelete) {
+      addSeparator();
+      actions.push({
+        label: t('Delete'),
+        icon: Trash2,
+        onClick: () => onDelete(template.layoutId),
+        variant: 'danger' as const,
+      });
+    }
+
+    return actions;
+  };
 };

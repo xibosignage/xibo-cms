@@ -20,8 +20,7 @@
  */
 
 import { useQueryClient } from '@tanstack/react-query';
-import type { RowSelectionState } from '@tanstack/react-table';
-import { Filter, FilterX, Plus, Search } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -38,20 +37,28 @@ import { useDisplayGroupData } from './hooks/useDisplayGroupData';
 import { useDisplayGroupFilterOptions } from './hooks/useDisplayGroupFilterOptions';
 
 import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import FolderActionModals from '@/components/ui/FolderActionModals';
 import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
 import FolderSidebar from '@/components/ui/FolderSidebar';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
 import { useUserContext } from '@/context/UserContext';
+import { useAutoSubmit } from '@/hooks/useAutoSubmit';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useSelectionState } from '@/hooks/useSelectionState';
 import { useTableState } from '@/hooks/useTableState';
 import type { DisplayGroup } from '@/types/displayGroup';
+import type { Tag } from '@/types/tag';
+import { countActiveFilters } from '@/utils/filters';
 import { hasFeature } from '@/utils/permissions';
+import { toggleTag } from '@/utils/tags';
 
 export default function DisplayGroupPage() {
   const { t } = useTranslation();
@@ -60,6 +67,11 @@ export default function DisplayGroupPage() {
   const { user } = useUserContext();
   const canViewFolders = usePermissions()?.canViewFolders;
   const canSchedule = hasFeature(user, 'schedule.add');
+  const canModify = hasFeature(user, 'displaygroup.modify');
+  const canTag = hasFeature(user, 'tag.tagging');
+  const canLimitedView = hasFeature(user, 'displaygroup.limitedView');
+  const canCommandView = hasFeature(user, 'command.view');
+  const scheduleWithView = Number(user?.settings?.SCHEDULE_WITH_VIEW_PERMISSION) === 1;
   const homeFolderId = user?.homeFolderId ?? 1;
 
   const {
@@ -106,8 +118,6 @@ export default function DisplayGroupPage() {
   const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
   const [openFilter, setOpenFilter] = useState(false);
   const [showFolderSidebar, setShowFolderSidebar] = useState(false);
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [selectionCache, setSelectionCache] = useState<Record<string, DisplayGroup>>({});
   const [activeModal, setActiveModal] = useState<ModalType | null>(null);
   const [itemsToDelete, setItemsToDelete] = useState<DisplayGroup[]>([]);
   const [itemsToMove, setItemsToMove] = useState<DisplayGroup[]>([]);
@@ -121,6 +131,7 @@ export default function DisplayGroupPage() {
     data: queryData,
     isFetching,
     isError,
+    isPaused,
     error: queryError,
   } = useDisplayGroupData({
     pagination,
@@ -136,9 +147,18 @@ export default function DisplayGroupPage() {
   const error = isError && queryError instanceof Error ? queryError.message : '';
   const displayGroupList = data ?? [];
 
-  const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['displayGroup'] });
-  };
+  const {
+    rowSelection,
+    setRowSelection,
+    onRowSelectionChange: handleRowSelectionChange,
+    getRowId,
+    getAllSelectedItems,
+  } = useSelectionState<DisplayGroup>({
+    list: displayGroupList,
+    getRowId: (row) => row.displayGroupId.toString(),
+  });
+
+  const handleRefresh = () => queryClient.invalidateQueries({ queryKey: ['displayGroup'] });
 
   const handleFolderChange = (folder: { id: number | null; text: string | '' }) => {
     setSelectedFolderId(folder.id);
@@ -159,6 +179,11 @@ export default function DisplayGroupPage() {
 
   const handleResetFilters = () => {
     setFilterInputs(INITIAL_FILTER_STATE);
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
+
+  const handleTagClick = (tag: Tag) => {
+    setFilterInputs((prev) => ({ ...prev, tags: toggleTag(prev.tags, tag) }));
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
@@ -186,37 +211,20 @@ export default function DisplayGroupPage() {
     setRowSelection,
   });
 
-  const getRowId = (row: DisplayGroup) => row.displayGroupId.toString();
-
-  const handleRowSelectionChange = (
-    updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
-  ) => {
-    const newSelection =
-      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
-
-    setRowSelection(newSelection);
-
-    setSelectionCache((prev) => {
-      const next = { ...prev };
-      displayGroupList.forEach((item) => {
-        const id = getRowId(item);
-        if (newSelection[id]) {
-          next[id] = item;
-        }
-      });
-      return next;
-    });
-  };
+  const { guard } = useAutoSubmit();
 
   const existingNames = displayGroupList.map((g) => g.displayGroup).filter(Boolean);
 
-  const getAllSelectedItems = (): DisplayGroup[] =>
-    Object.keys(rowSelection)
-      .map((id) => selectionCache[id])
-      .filter((item): item is DisplayGroup => !!item);
-
   const columns = getDisplayGroupColumns({
     t,
+    canModify,
+    canTag,
+    onTagClick: handleTagClick,
+    selectedTagIds: (filterInputs.tags ?? []).map((tag) => tag.tagId),
+    canUserShare: hasFeature(user, 'user.sharing'),
+    canLimitedView,
+    canCommandView,
+    scheduleWithView,
     onDelete: (displayGroup) => {
       setItemsToDelete([displayGroup]);
       setDeleteError(null);
@@ -266,7 +274,11 @@ export default function DisplayGroupPage() {
     collectNow: (displayGroup) => {
       setSelectedDisplayGroup(displayGroup);
       setActionError(null);
-      openModal('collectNow');
+      guard(
+        AUTO_SUBMIT_FORMS.displayGroupCollectNow,
+        () => confirmCollectNow(displayGroup.displayGroupId, { notifyOnError: true }),
+        () => openModal('collectNow'),
+      );
     },
     triggerWebhook: (displayGroup) => {
       setSelectedDisplayGroup(displayGroup);
@@ -276,11 +288,15 @@ export default function DisplayGroupPage() {
     formatDateTime,
   });
 
-  const { filterOptions } = useDisplayGroupFilterOptions(t);
+  const { filterOptions } = useDisplayGroupFilterOptions(t, canTag);
   const libraryTabs = useFilteredTabs('displays');
+
+  const activeFilterCount = countActiveFilters(filterInputs, INITIAL_FILTER_STATE, filterOptions);
 
   const bulkActions = getBulkActions({
     t,
+    canModify,
+    canLimitedView,
     onDelete: () => {
       const allItems = getAllSelectedItems();
       setItemsToDelete(allItems);
@@ -306,6 +322,11 @@ export default function DisplayGroupPage() {
       setShareEntityIds(ids);
       openModal('share');
     },
+    onEditTags: canTag
+      ? () => {
+          openModal('editTagsMultiple');
+        }
+      : undefined,
   });
 
   return (
@@ -321,14 +342,16 @@ export default function DisplayGroupPage() {
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="Display Groups" navigation={libraryTabs} />
-          <Button
-            leftIcon={Plus}
-            disabled={!isHydrated}
-            onClick={() => openModal('add')}
-            removeTextOnMobile
-          >
-            {t('Add Display Group')}
-          </Button>
+          {hasFeature(user, 'displaygroup.add') && (
+            <Button
+              leftIcon={Plus}
+              disabled={!isHydrated}
+              onClick={() => openModal('add')}
+              removeTextOnMobile
+            >
+              {t('Add Display Group')}
+            </Button>
+          )}
         </div>
 
         <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
@@ -360,15 +383,12 @@ export default function DisplayGroupPage() {
                 className="py-2 px-3 pl-10 block h-11.25 bg-gray-100 rounded-lg w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none disabled:bg-gray-200"
               />
             </div>
-            <Button
-              leftIcon={!openFilter ? Filter : FilterX}
-              variant="secondary"
+            <FilterButton
+              isOpen={openFilter}
+              onToggle={() => setOpenFilter((prev) => !prev)}
+              activeCount={activeFilterCount}
               disabled={!isHydrated}
-              onClick={() => setOpenFilter((prev) => !prev)}
-              removeTextOnMobile
-            >
-              {t('Filters')}
-            </Button>
+            />
           </div>
         </div>
 
@@ -389,11 +409,7 @@ export default function DisplayGroupPage() {
           onReset={handleResetFilters}
         />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
-            {error}
-          </div>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         <div className="min-h-0 flex flex-col">
           {!isHydrated ? (
@@ -405,6 +421,7 @@ export default function DisplayGroupPage() {
               columns={columns}
               data={displayGroupList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

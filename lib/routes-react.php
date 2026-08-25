@@ -32,6 +32,11 @@ use Xibo\Middleware\FeatureAuth;
 use Xibo\Middleware\SuperAdminAuth;
 
 //
+// Schedule
+//
+$app->get('/schedule/criteria', ['\Xibo\Controller\Schedule','getCriteria'])->setName('schedule.criteria');
+
+//
 // Applications
 //
 $app->get('/application/authorize', ['\Xibo\Controller\Applications','authorizeRequest'])

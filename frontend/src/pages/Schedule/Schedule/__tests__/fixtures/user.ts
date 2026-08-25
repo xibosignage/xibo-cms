@@ -19,22 +19,20 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { buildCurrentUser, PERSONAS } from '@/testUtils/personas';
 import type { User } from '@/types/user';
-import { UserType } from '@/types/user';
 
 // -----------------------------------------------------------------------------
 // The default logged-in user for most Events page tests.
 // -----------------------------------------------------------------------------
-export const mockUser: User = {
+export const mockUser: User = buildCurrentUser(PERSONAS.superAdmin, {
   userId: 1,
   userName: 'TestUser',
-  userTypeId: UserType.SuperAdmin,
   groupId: 1,
-  features: {},
   settings: {
     defaultTimezone: 'UTC',
     defaultLanguage: 'en',
     DATE_FORMAT_JS: 'DD/MM/YYYY',
     TIME_FORMAT_JS: 'HH:mm',
   },
-};
+});

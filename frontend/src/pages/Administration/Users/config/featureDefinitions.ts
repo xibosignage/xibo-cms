@@ -394,6 +394,8 @@ export const getFeatureDefinitions = (t: TFunction): FeatureDefinition[] => [
     title: t('Page to view/manage Player Software Versions'),
   },
   { feature: 'command.view', group: 'displays', title: t('Page to view/manage Commands') },
+  { feature: 'command.add', group: 'displays', title: t('Allow creation of Commands') },
+  { feature: 'command.modify', group: 'displays', title: t('Allow edits of Commands') },
   { feature: 'display.syncView', group: 'displays', title: t('Page which shows all Sync Groups') },
   {
     feature: 'display.syncAdd',

@@ -166,9 +166,13 @@ class Sessions extends Base
             // Normalise the date
             $session->lastAccessed =
                 Carbon::createFromTimeString($session->lastAccessed)?->format(DateFormatHelper::getSystemFormat());
-            $session->expiresAt =
-                Carbon::createFromTimestamp($session->expiresAt)?->format(DateFormatHelper::getSystemFormat());
+            $session->expiresAt = DateFormatHelper::createFromTimestamp($session->expiresAt)
+                ?->format(DateFormatHelper::getSystemFormat());
             $session->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($session));
+            $session->setUnmatchedProperty(
+                'isCurrentSession',
+                $session->userId === $this->getUser()->userId && session_id() === $session->sessionId
+            );
         }
 
         $recordsTotal = $this->sessionFactory->countLast();
@@ -182,7 +186,9 @@ class Sessions extends Base
     #[OA\Delete(
         path: '/sessions/logout/{id}',
         operationId: 'sessionLogout',
-        description: 'Logs out all sessions for the given user',
+        description: 'Logs out sessions for the given user. If the caller is acting on ' .
+            'their own account, every session other than the one making this request is ' .
+            'ended; otherwise every session belonging to the given user is ended.',
         summary: 'Session Logout',
         tags: ['session']
     )]
@@ -213,7 +219,6 @@ class Sessions extends Base
      * @throws AccessDeniedException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function logout(Request $request, Response $response, $id)
     {
@@ -221,8 +226,16 @@ class Sessions extends Base
             throw new AccessDeniedException();
         }
 
-        // We log out all of this user's sessions.
-        $this->sessionFactory->expireByUserId($id);
+        $userId = (int) $id;
+
+        if ($userId === $this->getUser()->userId) {
+            // Matches the legacy design, where logging out of another session ends all other sessions except the
+            // current one, which is handled separately via the frontend /logout redirect.
+            $this->sessionFactory->expireByUserIdExceptSessionId($userId, session_id());
+        } else {
+            // Logging out someone else ends all of their sessions.
+            $this->sessionFactory->expireByUserId($userId);
+        }
 
         return $response->withJson([
             'success' => true,

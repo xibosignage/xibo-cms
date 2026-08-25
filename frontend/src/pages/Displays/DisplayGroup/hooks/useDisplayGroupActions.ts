@@ -28,7 +28,7 @@ import { useState } from 'react';
 import { notify } from '@/components/ui/Notification';
 import { collectNow, copyDisplayGroup, deleteDisplayGroup } from '@/services/displayGroupApi';
 import { sendCommand, triggerWebhook } from '@/services/displaysApi';
-import { selectFolder } from '@/services/folderApi';
+import { selectFolder, type ApiResult } from '@/services/folderApi';
 import type { DisplayGroup } from '@/types/displayGroup';
 
 export interface CopyDisplayGroupFormData {
@@ -59,7 +59,11 @@ export function useDisplayGroupActions({
   const [isActionPending, setIsActionPending] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const runAction = async (fn: () => Promise<unknown>, errorMessage: string) => {
+  const runAction = async (
+    fn: () => Promise<unknown>,
+    errorMessage: string,
+    options?: { notifyOnError?: boolean },
+  ) => {
     try {
       setIsActionPending(true);
       setActionError(null);
@@ -72,7 +76,13 @@ export function useDisplayGroupActions({
         isAxiosError(error) && error.response?.data?.message
           ? error.response.data.message
           : errorMessage;
-      setActionError(message);
+
+      // On the auto-submit path there is no dialog to host the inline error, so surface a toast.
+      if (options?.notifyOnError) {
+        notify.error(message);
+      } else {
+        setActionError(message);
+      }
     } finally {
       setIsActionPending(false);
     }
@@ -138,15 +148,16 @@ export function useDisplayGroupActions({
 
     setIsMoving(true);
     try {
-      const results = await Promise.all(
-        itemsToMove.map((item) =>
-          selectFolder({
+      const results: ApiResult[] = [];
+      for (const item of itemsToMove) {
+        results.push(
+          await selectFolder({
             folderId: newFolderId,
             targetId: item.displayGroupId,
             targetType: 'displaygroup',
           }),
-        ),
-      );
+        );
+      }
 
       const failures = results.filter((res) => !res.success);
 
@@ -174,7 +185,11 @@ export function useDisplayGroupActions({
     }
   };
 
-  const runBulkAction = async (promises: (() => Promise<unknown>)[], errorMessage: string) => {
+  const runBulkAction = async (
+    promises: (() => Promise<unknown>)[],
+    errorMessage: string,
+    successMessage?: string,
+  ) => {
     try {
       setIsActionPending(true);
       setActionError(null);
@@ -190,6 +205,9 @@ export function useDisplayGroupActions({
         setActionError(message);
         handleRefresh();
       } else {
+        if (successMessage) {
+          notify.success(successMessage);
+        }
         handleRefresh();
         closeModal();
       }
@@ -198,8 +216,8 @@ export function useDisplayGroupActions({
     }
   };
 
-  const confirmCollectNow = (displayGroupId: number) =>
-    runAction(() => collectNow(displayGroupId), t('Failed to send collection request.'));
+  const confirmCollectNow = (displayGroupId: number, options?: { notifyOnError?: boolean }) =>
+    runAction(() => collectNow(displayGroupId), t('Failed to send collection request.'), options);
 
   const confirmSendCommand = (displayGroupId: number, commandId: number) =>
     runAction(() => sendCommand(displayGroupId, commandId), t('Failed to send command.'));
@@ -211,12 +229,14 @@ export function useDisplayGroupActions({
     runBulkAction(
       items.map((dg) => () => sendCommand(dg.displayGroupId, commandId)),
       t('Failed to send command to one or more display groups.'),
+      t('Command sent to {{count}} display group(s).', { count: items.length }),
     );
 
   const confirmBulkTriggerWebhook = (items: DisplayGroup[], triggerCode: string) =>
     runBulkAction(
       items.map((dg) => () => triggerWebhook(dg.displayGroupId, triggerCode)),
       t('Failed to trigger webhook for one or more display groups.'),
+      t('Webhook triggered for {{count}} display group(s).', { count: items.length }),
     );
 
   return {

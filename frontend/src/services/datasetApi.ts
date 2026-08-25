@@ -39,7 +39,6 @@ export type DynamicRowData = Record<string | number, DatasetRowValue>;
 export interface FetchDatasetRequest {
   start: number;
   length: number;
-  keyword?: string;
   dataSet?: string;
   sortBy?: string;
   sortDir?: string;
@@ -226,6 +225,14 @@ export async function cloneDataset({
   return response.data;
 }
 
+export async function clearDatasetCache(datasetId: number): Promise<void> {
+  await http.post(`/dataset/clearcache/${datasetId}`, null, {
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+  });
+}
+
 export type DeleteDatasetOptions = {
   deleteData?: boolean;
 };
@@ -336,7 +343,7 @@ export async function testRemoteDataset(payload: UpdateDatasetRequest) {
 export interface FetchDatasetColumnsRequest {
   start: number;
   length: number;
-  keyword?: string;
+  heading?: string;
   sortBy?: string;
   sortDir?: string;
   signal?: AbortSignal;
@@ -538,7 +545,7 @@ export async function deleteDatasetRow(
 export interface FetchDatasetRssRequest {
   start?: number;
   length?: number;
-  keyword?: string;
+  title?: string;
   sortBy?: string;
   sortDir?: string;
   useRegexForName?: boolean;

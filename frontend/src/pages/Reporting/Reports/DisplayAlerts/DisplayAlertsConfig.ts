@@ -43,6 +43,15 @@ export const INITIAL_FILTER_STATE: DisplayAlertsFilter = {
   onlyLoggedIn: false,
 };
 
+export const ACTIVE_FILTER_KEYS: (keyof DisplayAlertsFilter)[] = [
+  'reportFilter',
+  'eventType',
+  'displayId',
+  'displayGroupId',
+  'tags',
+  'onlyLoggedIn',
+];
+
 export const EVENT_TYPE_OPTIONS = [
   { value: '1', label: 'Display Up/down' },
   { value: '2', label: 'App Start' },

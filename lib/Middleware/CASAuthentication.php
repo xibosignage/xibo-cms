@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -28,6 +28,7 @@ use Slim\Http\Response;
 use Slim\Http\ServerRequest;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\LogoutTrait;
+use Xibo\Helper\SsoLoginTrait;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -36,12 +37,11 @@ use Xibo\Support\Exception\NotFoundException;
  * @package Xibo\Middleware
  *
  * Provide CAS authentication to Xibo configured via settings.php.
- *
- * This class was originally contributed by Emmanuel Blindauer
  */
 class CASAuthentication extends AuthenticationBase
 {
     use LogoutTrait;
+    use SsoLoginTrait;
 
     /**
      * @return $this
@@ -54,7 +54,6 @@ class CASAuthentication extends AuthenticationBase
         $app->map(['GET', 'POST'], '/cas/login', function (ServerRequest $request, Response $response) {
             // Initiate CAS SSO
             $this->initCasClient();
-            \phpCAS::setNoCasServerValidation();
 
             // Login happens here
             \phpCAS::forceAuthentication();
@@ -72,28 +71,7 @@ class CASAuthentication extends AuthenticationBase
             }
 
             if (isset($user) && $user->userId > 0) {
-                // Load User
-                $this->getUser(
-                    $user->userId,
-                    $request->getAttribute('ip_address'),
-                    $this->getSession()->get('sessionHistoryId')
-                );
-
-                // Overwrite our stored user with this new object.
-                $this->setUserForRequest($user);
-
-                // Switch Session ID's
-                $this->getSession()->setIsExpired(0);
-                $this->getSession()->regenerateSessionId();
-                $this->getSession()->setUser($user->userId);
-
-                $user->touch();
-
-                // Audit Log
-                // Set the userId on the log object
-                $this->getLog()->audit('User', $user->userId, 'Login Granted via CAS', [
-                    'UserAgent' => $request->getHeader('User-Agent')
-                ]);
+                $user = $this->completeSsoLogin($user, $request, 'CAS');
             }
 
             return $response->withRedirect($this->getRouteParser()->urlFor('home'));
@@ -135,6 +113,14 @@ class CASAuthentication extends AuthenticationBase
             $settings['uri'],
             $settings['service_base_url']
         );
+
+        if (!empty($settings['insecure_skip_verify'])) {
+            // Explicit opt-in only — bypasses CAS server certificate validation.
+            // Intended for local development/testing, never production.
+            \phpCAS::setNoCasServerValidation();
+        } else {
+            \phpCAS::setCasServerCACert($settings['ca_cert'] ?? '/etc/ssl/certs/ca-certificates.crt');
+        }
     }
 
     /** @inheritDoc */

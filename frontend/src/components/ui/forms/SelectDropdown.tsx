@@ -63,6 +63,7 @@ interface BaseSelectDropdownProps {
   isLoading?: boolean;
   clearable?: boolean;
   optional?: boolean;
+  disabled?: boolean;
 }
 
 /** Static list: search is optional and runs client-side. */
@@ -107,6 +108,7 @@ export default function SelectDropdown({
   isLoadingMore,
   clearable,
   optional = false,
+  disabled = false,
 }: SelectDropdownProps) {
   const { t } = useTranslation();
   const id = useId();
@@ -147,6 +149,7 @@ export default function SelectDropdown({
   }, [value, resolveLabel]);
 
   const handleOpenChange = (open: boolean) => {
+    if (disabled) return;
     setIsOpen(open);
     if (open) {
       onSearch?.('');
@@ -174,18 +177,26 @@ export default function SelectDropdown({
     }
 
     const el = sentinelRef.current;
+    let requested = false;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting && !isLoadingMoreRef.current) {
-          onLoadMoreRef.current?.();
+        if (!entries[0]?.isIntersecting || isLoadingMoreRef.current) {
+          requested = false;
+          return;
         }
+
+        if (requested) {
+          return;
+        }
+        requested = true;
+        onLoadMoreRef.current?.();
       },
       { threshold: 0.1, root: scrollContainerRef.current },
     );
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [isOpen, hasMore]);
+  }, [isOpen, hasMore, isLoadingMore]);
 
   for (const o of options) {
     labelCache.current.set(o.value, o.label);
@@ -215,7 +226,7 @@ export default function SelectDropdown({
     ],
   });
 
-  const click = useClick(context);
+  const click = useClick(context, { enabled: !disabled });
   const dismiss = useDismiss(context);
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
 
@@ -239,8 +250,12 @@ export default function SelectDropdown({
         aria-haspopup="listbox"
         aria-labelledby={label ? `${id}-label` : undefined}
         aria-controls={`${id}-listbox`}
-        tabIndex={0}
-        className="w-full border bg-white border-gray-200 rounded-lg flex items-center cursor-pointer h-11.25 hover:border-gray-400 focus-within:border-xibo-blue-600 focus-within:ring-1 focus-within:ring-xibo-blue-600/25 focus:outline-none transition-colors"
+        tabIndex={disabled ? -1 : 0}
+        aria-disabled={disabled || undefined}
+        className={twMerge(
+          'w-full border bg-white border-gray-200 rounded-lg flex items-center cursor-pointer h-11.25 hover:border-gray-400 focus-within:border-xibo-blue-600 focus-within:ring-1 focus-within:ring-xibo-blue-600/25 focus:outline-none transition-colors',
+          disabled && 'bg-gray-50 cursor-not-allowed pointer-events-none',
+        )}
       >
         {addLeftLabel && leftLabelContent && (
           <div className="py-2 px-3 border-r text-sm border-gray-200 text-gray-500">
@@ -250,7 +265,13 @@ export default function SelectDropdown({
         <span
           className={twMerge(
             'py-2 px-3 flex-1 text-sm truncate min-w-0',
-            isLoading ? 'text-gray-400 italic' : selectedLabel ? 'text-gray-800' : 'text-gray-500',
+            disabled
+              ? 'text-gray-400'
+              : isLoading
+                ? 'text-gray-400 italic'
+                : selectedLabel
+                  ? 'text-gray-800'
+                  : 'text-gray-500',
           )}
         >
           {isLoading ? t('Loading...') : selectedLabel || t(placeholder)}
@@ -299,7 +320,7 @@ export default function SelectDropdown({
               id={`${id}-listbox`}
               role="listbox"
               ref={scrollContainerRef}
-              className="flex flex-col p-2 text-sm overflow-y-auto flex-1 min-h-0"
+              className="flex flex-col p-2 text-sm overflow-y-auto flex-1 min-h-0 max-h-80"
             >
               {clearable && (
                 <button

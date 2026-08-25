@@ -24,7 +24,6 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Modal from '../../../../components/ui/modals/Modal';
-import { MEDIA_FORM_OPTIONS } from '../MediaConfig';
 
 import Checkbox from '@/components/ui/forms/Checkbox';
 import DurationInput from '@/components/ui/forms/DurationInput';
@@ -34,12 +33,14 @@ import SelectFolder from '@/components/ui/forms/SelectFolder';
 import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
 import { getCommonFormOptions } from '@/config/commonForms';
+import { useUserContext } from '@/context/UserContext';
 import { getMediaSchema } from '@/schema/media';
 import { updateMedia } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
 import type { Tag } from '@/types/tag';
 import type { ExpiryValue } from '@/utils/date';
 import { expiresToExpiryValue, expiryToDateTime } from '@/utils/date';
+import { hasFeature } from '@/utils/permissions';
 
 interface EditMediaModalProps {
   isOpen?: boolean;
@@ -70,11 +71,16 @@ export default function EditMediaModal({
   onSave,
 }: EditMediaModalProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
+  const defaultUpdateInLayouts =
+    user?.settings?.LIBRARY_MEDIA_UPDATEINALL_CHECKB === '1' ||
+    user?.settings?.LIBRARY_MEDIA_UPDATEINALL_CHECKB === 'Checked';
   const [expiry, setExpiry] = useState<ExpiryValue>(expiresToExpiryValue(data.expires));
   const [apiError, setApiError] = useState<string | undefined>();
   const [formErrors, setFormErrors] = useState<MediaFormErrors>({});
   const [isSaving, setIsSaving] = useState(false);
   const [pendingTagInput, setPendingTagInput] = useState('');
+  const [hasTagPendingValue, setHasTagPendingValue] = useState(false);
 
   const clearError = (field: keyof MediaDraft) => {
     setFormErrors((prev) => ({
@@ -93,7 +99,7 @@ export default function EditMediaModal({
     mediaNoExpiryDate: expiresToExpiryValue(data.expires),
     enableStat: data.enableStat,
     retired: data.retired,
-    updateInLayouts: data.updateInLayouts,
+    updateInLayouts: defaultUpdateInLayouts,
   }));
 
   useEffect(() => {
@@ -112,9 +118,9 @@ export default function EditMediaModal({
       mediaNoExpiryDate: initialExpiry,
       enableStat: data.enableStat,
       retired: data.retired,
-      updateInLayouts: data.updateInLayouts,
+      updateInLayouts: defaultUpdateInLayouts,
     });
-  }, [data]);
+  }, [data, defaultUpdateInLayouts]);
 
   const handleSave = async () => {
     if (isSaving) return;
@@ -201,7 +207,7 @@ export default function EditMediaModal({
         {
           label: isSaving ? t('Saving…') : t('Save'),
           onClick: handleSave,
-          disabled: isSaving,
+          disabled: isSaving || hasTagPendingValue,
         },
       ]}
     >
@@ -236,13 +242,17 @@ export default function EditMediaModal({
           />
 
           {/* Tags */}
-          <TagInput
-            value={draft.tags}
-            helpText={t('Tags separated by commas. Use Tag|Value for tagged attributes.')}
-            onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
-            inputValue={pendingTagInput}
-            onInputChange={setPendingTagInput}
-          />
+          {(hasFeature(user, 'tag.tagging') || (draft.tags?.length ?? 0) > 0) && (
+            <TagInput
+              value={draft.tags}
+              helpText={t('Tags separated by commas. Use Tag|Value for tagged attributes.')}
+              onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
+              inputValue={pendingTagInput}
+              onInputChange={setPendingTagInput}
+              onPendingValueChange={setHasTagPendingValue}
+              disabled={!hasFeature(user, 'tag.tagging')}
+            />
+          )}
 
           <div className="grid grid-cols-2 gap-2">
             {/* Orientation */}
@@ -273,7 +283,12 @@ export default function EditMediaModal({
           {/* Expiry Date */}
           <ExpiryDateSelect
             value={expiry}
-            options={MEDIA_FORM_OPTIONS.expiryDates}
+            options={[
+              { value: 'end_of_today', label: t('End of Today') },
+              { value: 'in_7_days', label: t('In 7 Days') },
+              { value: 'in_14_days', label: t('In 14 Days') },
+              { value: 'in_30_days', label: t('In 30 Days') },
+            ]}
             onSelect={(value) => {
               setExpiry(value);
             }}

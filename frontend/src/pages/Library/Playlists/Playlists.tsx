@@ -19,9 +19,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import type { RowSelectionState } from '@tanstack/react-table';
-import { Search, Filter, FilterX, Plus } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { Search, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
@@ -40,9 +39,11 @@ import { usePlaylistData } from './hooks/usePlaylistData';
 import { usePlaylistFilterOptions } from './hooks/usePlaylistFilterOptions';
 
 import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
 import FolderSidebar from '@/components/ui/FolderSidebar';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useUserContext } from '@/context/UserContext';
@@ -50,10 +51,13 @@ import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useSelectionState } from '@/hooks/useSelectionState';
 import { useTableState } from '@/hooks/useTableState';
-import { fetchContextButtons } from '@/services/folderApi';
 import type { Playlist } from '@/types/playlist';
-import { hasFeature } from '@/utils/permissions';
+import type { Tag } from '@/types/tag';
+import { countActiveFilters } from '@/utils/filters';
+import { canSaveInFolder, hasFeature } from '@/utils/permissions';
+import { toggleTag } from '@/utils/tags';
 
 export default function Playlist() {
   const { t } = useTranslation();
@@ -62,6 +66,9 @@ export default function Playlist() {
   const queryClient = useQueryClient();
   const canViewFolders = usePermissions()?.canViewFolders;
   const canSchedule = hasFeature(user, 'schedule.add');
+  const canModify = hasFeature(user, 'playlist.modify');
+  const canTag = hasFeature(user, 'tag.tagging');
+  const canViewUsageReport = hasFeature(user, 'schedule.view') || hasFeature(user, 'layout.view');
   const homeFolderId = user?.homeFolderId ?? 1;
   const location = useLocation();
   const layoutId = location.state?.layoutId;
@@ -118,8 +125,6 @@ export default function Playlist() {
   }, [layoutId, isHydrated, setFilterInputs, setPagination]);
 
   const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [selectionCache, setSelectionCache] = useState<Record<string, Playlist>>({});
   const [openFilter, setOpenFilter] = useState(false);
 
   const [showFolderSidebar, setShowFolderSidebar] = useState(false);
@@ -127,6 +132,7 @@ export default function Playlist() {
 
   const [itemsToDelete, setItemsToDelete] = useState<Playlist[]>([]);
   const [itemsToMove, setItemsToMove] = useState<Playlist[]>([]);
+  const [bulkItems, setBulkItems] = useState<Playlist[]>([]);
   const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<number | null>(null);
   const [timelinePlaylistId, setTimelinePlaylistId] = useState<number | null>(null);
@@ -138,6 +144,7 @@ export default function Playlist() {
     data: queryData,
     isFetching,
     isError,
+    isPaused,
     error: queryError,
   } = usePlaylistData({
     pagination,
@@ -149,17 +156,14 @@ export default function Playlist() {
   });
 
   const effectiveFolderId = selectedFolderId ?? homeFolderId;
-  const { data: folderPerms } = useQuery({
-    queryKey: ['folderPermissions', effectiveFolderId],
-    queryFn: () => fetchContextButtons(effectiveFolderId),
-    staleTime: 1000 * 60 * 5,
-  });
 
   const data = queryData?.rows;
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
   const playlistList = data ?? [];
-  const canAddToFolder = folderPerms?.create || false;
+  const canAddToFolder =
+    hasFeature(user, 'playlist.add') &&
+    canSaveInFolder(user, !!canViewFolders, effectiveFolderId, homeFolderId);
 
   const folderActions = useFolderActions({
     onSuccess: (targetFolder) => {
@@ -173,36 +177,21 @@ export default function Playlist() {
     },
   });
 
-  const getRowId = (row: Playlist) => {
-    return row.playlistId.toString();
-  };
-
-  const handleRowSelectionChange = (
-    updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
-  ) => {
-    const newSelection =
-      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
-
-    setRowSelection(newSelection);
-
-    setSelectionCache((prev) => {
-      const next = { ...prev };
-      playlistList.forEach((item) => {
-        const id = getRowId(item);
-        if (newSelection[id]) {
-          next[id] = item;
-        }
-      });
-      return next;
-    });
-  };
+  const {
+    rowSelection,
+    setRowSelection,
+    onRowSelectionChange: handleRowSelectionChange,
+    getRowId,
+    getAllSelectedItems,
+  } = useSelectionState<Playlist>({
+    list: playlistList,
+    getRowId: (row) => row.playlistId.toString(),
+  });
 
   const selectedPlaylist = playlistList.find((m) => m.playlistId === selectedPlaylistId) ?? null;
   const existingNames = playlistList.map((m) => m.name);
 
-  const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['playlist'] });
-  };
+  const handleRefresh = () => queryClient.invalidateQueries({ queryKey: ['playlist'] });
 
   const handleFolderChange = (folder: { id: number | null; text: string | '' }) => {
     setSelectedFolderId(folder.id);
@@ -256,6 +245,11 @@ export default function Playlist() {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
+  const handleTagClick = (tag: Tag) => {
+    setFilterInputs((prev) => ({ ...prev, tags: toggleTag(prev.tags, tag) }));
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
+
   const openCopyModal = (playlistId: number) => {
     setSelectedPlaylistId(playlistId);
     openModal('copy');
@@ -268,6 +262,12 @@ export default function Playlist() {
 
   const columns = getPlaylistColumns({
     t,
+    canModify,
+    canTag,
+    onTagClick: handleTagClick,
+    selectedTagIds: (filterInputs.tags ?? []).map((tag) => tag.tagId),
+    canUserShare: hasFeature(user, 'user.sharing'),
+    scheduleWithView: Number(user?.settings?.SCHEDULE_WITH_VIEW_PERMISSION) === 1,
     formatDateTime,
     onDelete: handleDelete,
     openAddEditModal,
@@ -286,20 +286,17 @@ export default function Playlist() {
       setSelectedPlaylistId(playlistId);
       openModal('enableStats');
     },
-    openUsageReportModal: (playlistId) => {
-      setSelectedPlaylistId(playlistId);
-      openModal('usageReport');
-    },
+    openUsageReportModal: canViewUsageReport
+      ? (playlistId) => {
+          setSelectedPlaylistId(playlistId);
+          openModal('usageReport');
+        }
+      : undefined,
   });
-
-  const getAllSelectedItems = (): Playlist[] => {
-    return Object.keys(rowSelection)
-      .map((id) => selectionCache[id])
-      .filter((item): item is Playlist => !!item);
-  };
 
   const bulkActions = getBulkActions({
     t,
+    canModify,
     onDelete: () => {
       const allItems = getAllSelectedItems();
       setItemsToDelete(allItems);
@@ -319,11 +316,23 @@ export default function Playlist() {
       setShareEntityIds(ids);
       openModal('share');
     },
+    onEditTags: canTag
+      ? () => {
+          setBulkItems(getAllSelectedItems());
+          openModal('editTagsMultiple');
+        }
+      : undefined,
+    onEnableStats: () => {
+      setBulkItems(getAllSelectedItems());
+      openModal('enableStatsMultiple');
+    },
   });
 
-  const { filterOptions } = usePlaylistFilterOptions(t);
+  const { filterOptions } = usePlaylistFilterOptions(t, canTag);
 
   const libraryTabs = useFilteredTabs('library');
+
+  const activeFilterCount = countActiveFilters(filterInputs, INITIAL_FILTER_STATE, filterOptions);
 
   return (
     <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
@@ -380,15 +389,12 @@ export default function Playlist() {
                 className="py-2 px-3 pl-10 block h-11.25 bg-gray-100 rounded-lg w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none disabled:bg-gray-200"
               />
             </div>
-            <Button
-              leftIcon={!openFilter ? Filter : FilterX}
-              variant="secondary"
+            <FilterButton
+              isOpen={openFilter}
+              onToggle={() => setOpenFilter((prev) => !prev)}
+              activeCount={activeFilterCount}
               disabled={!isHydrated}
-              onClick={() => setOpenFilter((prev) => !prev)}
-              removeTextOnMobile
-            >
-              {t('Filters')}
-            </Button>
+            />
           </div>
         </div>
 
@@ -403,11 +409,7 @@ export default function Playlist() {
           onReset={handleResetFilters}
         />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
-            {error}
-          </div>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         <div className="min-h-0 flex flex-col">
           {!isHydrated ? (
@@ -421,6 +423,7 @@ export default function Playlist() {
               columns={columns}
               data={playlistList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}
@@ -458,6 +461,7 @@ export default function Playlist() {
           defaultFolderId: effectiveFolderId,
           itemsToDelete,
           itemsToMove,
+          bulkItems,
           existingNames,
           shareEntityIds,
           setShareEntityIds,

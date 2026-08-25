@@ -58,6 +58,7 @@ export default function DeleteEventModal({
   }, [isOpen]);
 
   const showRadio = isRecurring && itemCount === 1 && onDeleteOccurrence;
+  const warnEntireSeries = isRecurring && itemCount === 1 && !onDeleteOccurrence;
 
   const handleConfirm = () => {
     if (showRadio && deleteScope === 'occurrence') {
@@ -153,6 +154,14 @@ export default function DeleteEventModal({
                 values={{ count: itemCount }}
                 components={{ strong: <strong /> }}
               />
+            )}
+          </p>
+        )}
+
+        {warnEntireSeries && (
+          <p className="text-center text-sm font-semibold text-red-600">
+            {t(
+              'This is a recurring event. Deleting it here will remove the entire series, not just this occurrence.',
             )}
           </p>
         )}

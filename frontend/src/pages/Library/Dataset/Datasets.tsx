@@ -19,9 +19,9 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
-import { Search, Filter, FilterX, Plus } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -39,20 +39,25 @@ import { useDatasetData } from './hooks/useDatasetData';
 import { useDatasetFilterOptions } from './hooks/useDatasetFilterOptions';
 
 import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
 import FolderSidebar from '@/components/ui/FolderSidebar';
 import { notify } from '@/components/ui/Notification';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
 import { useUserContext } from '@/context/UserContext';
+import { useAutoSubmit } from '@/hooks/useAutoSubmit';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
 import { exportDatasetCsv } from '@/services/datasetApi';
-import { fetchContextButtons } from '@/services/folderApi';
 import type { Dataset } from '@/types/dataset';
+import { countActiveFilters } from '@/utils/filters';
+import { canSaveInFolder, filterByPermission, hasFeature } from '@/utils/permissions';
 
 export default function Dataset() {
   const { t } = useTranslation();
@@ -117,6 +122,7 @@ export default function Dataset() {
     data: queryData,
     isFetching,
     isError,
+    isPaused,
     error: queryError,
   } = useDatasetData({
     pagination,
@@ -128,11 +134,6 @@ export default function Dataset() {
   });
 
   const effectiveFolderId = selectedFolderId ?? homeFolderId;
-  const { data: folderPerms } = useQuery({
-    queryKey: ['folderPermissions', effectiveFolderId],
-    queryFn: () => fetchContextButtons(effectiveFolderId),
-    staleTime: 1000 * 60 * 5,
-  });
 
   const exportCsvMutation = useMutation({
     mutationFn: (datasetId: number) => exportDatasetCsv(datasetId),
@@ -151,7 +152,12 @@ export default function Dataset() {
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
   const datasetList = data ?? [];
-  const canAddToFolder = folderPerms?.create || false;
+  const canAddDataset = hasFeature(user, 'dataset.add');
+  const canModify = hasFeature(user, 'dataset.modify');
+  const canRealTime = hasFeature(user, 'dataset.realtime');
+  const canViewData = hasFeature(user, 'dataset.data');
+  const canAddToFolder =
+    canAddDataset && canSaveInFolder(user, !!canViewFolders, effectiveFolderId, homeFolderId);
 
   const folderActions = useFolderActions({
     onSuccess: (targetFolder) => {
@@ -207,7 +213,9 @@ export default function Dataset() {
     deleteError,
     setDeleteError,
     isCloning,
+    isClearingCache,
     confirmDelete,
+    confirmClearCache,
     handleConfirmClone,
     handleConfirmMove,
   } = useDatasetActions({
@@ -217,6 +225,8 @@ export default function Dataset() {
     setRowSelection,
     setItemsToMove,
   });
+
+  const { guard } = useAutoSubmit();
 
   const handleDelete = (id: number) => {
     const dataset = datasetList.find((m) => m.dataSetId === id);
@@ -251,6 +261,10 @@ export default function Dataset() {
 
   const columns = getDatasetColumns({
     t,
+    canModify,
+    canViewData,
+    canRealTime,
+    canUserShare: hasFeature(user, 'user.sharing'),
     onDelete: handleDelete,
     openAddEditModal,
     openMoveModal: (dataset) => {
@@ -266,6 +280,18 @@ export default function Dataset() {
       navigate(path);
     },
     onExportCsv: (datasetId) => exportCsvMutation.mutate(datasetId),
+    onImportCsv: (datasetId) => {
+      setSelectedDatasetId(datasetId);
+      openModal('import');
+    },
+    onClearCache: (dataset) => {
+      setSelectedDatasetId(dataset.dataSetId);
+      guard(
+        AUTO_SUBMIT_FORMS.dataSetClearCache,
+        () => confirmClearCache(dataset),
+        () => openModal('clearCache'),
+      );
+    },
   });
 
   const getAllSelectedItems = (): Dataset[] => {
@@ -276,21 +302,46 @@ export default function Dataset() {
 
   const bulkActions = getBulkActions({
     t,
+    canModify,
     onDelete: () => {
-      const allItems = getAllSelectedItems();
+      const allItems = filterByPermission(
+        getAllSelectedItems(),
+        (d) => d.userPermissions?.delete,
+        t,
+        t('delete'),
+      );
+      if (allItems.length === 0) {
+        return;
+      }
       setItemsToDelete(allItems);
       setDeleteError(null);
       openModal('delete');
     },
     onMove: canViewFolders
       ? () => {
-          const allItems = getAllSelectedItems();
+          const allItems = filterByPermission(
+            getAllSelectedItems(),
+            (d) => d.userPermissions?.edit,
+            t,
+            t('move'),
+          );
+          if (allItems.length === 0) {
+            return;
+          }
           setItemsToMove(allItems);
           openModal('move');
         }
       : undefined,
     onShare: () => {
-      const allItems = getAllSelectedItems();
+      const allItems = filterByPermission(
+        getAllSelectedItems(),
+        (d) => d.userPermissions?.modifyPermissions,
+        t,
+        t('share'),
+      );
+      if (allItems.length === 0) {
+        return;
+      }
       const ids = allItems.map((i) => i.dataSetId);
       setShareEntityIds(ids);
       openModal('share');
@@ -300,6 +351,8 @@ export default function Dataset() {
   const { filterOptions } = useDatasetFilterOptions(t);
 
   const libraryTabs = useFilteredTabs('library');
+
+  const activeFilterCount = countActiveFilters(filterInputs, INITIAL_FILTER_STATE, filterOptions);
 
   return (
     <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
@@ -320,15 +373,17 @@ export default function Dataset() {
                 {t('Generating CSV...')}
               </span>
             )}
-            <Button
-              variant="primary"
-              className="font-semibold"
-              disabled={!canAddToFolder || !isHydrated}
-              onClick={() => openAddEditModal(null)}
-              leftIcon={Plus}
-            >
-              {t('Add Dataset')}
-            </Button>
+            {canAddDataset && (
+              <Button
+                variant="primary"
+                className="font-semibold"
+                disabled={!canAddToFolder || !isHydrated}
+                onClick={() => openAddEditModal(null)}
+                leftIcon={Plus}
+              >
+                {t('Add Dataset')}
+              </Button>
+            )}
           </div>
         </div>
 
@@ -361,15 +416,12 @@ export default function Dataset() {
                 className="py-2 px-3 pl-10 block h-11.25 bg-gray-100 rounded-lg w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none disabled:bg-gray-200"
               />
             </div>
-            <Button
-              leftIcon={!openFilter ? Filter : FilterX}
-              variant="secondary"
+            <FilterButton
+              isOpen={openFilter}
+              onToggle={() => setOpenFilter((prev) => !prev)}
+              activeCount={activeFilterCount}
               disabled={!isHydrated}
-              onClick={() => setOpenFilter((prev) => !prev)}
-              removeTextOnMobile
-            >
-              {t('Filters')}
-            </Button>
+            />
           </div>
         </div>
 
@@ -384,11 +436,7 @@ export default function Dataset() {
           onReset={handleResetFilters}
         />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
-            {error}
-          </div>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         <div className="min-h-0 flex flex-col">
           {!isHydrated ? (
@@ -402,6 +450,7 @@ export default function Dataset() {
               columns={columns}
               data={datasetList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}
@@ -431,6 +480,7 @@ export default function Dataset() {
           deleteError,
           isDeleting,
           isCloning,
+          isClearingCache,
         }}
         selection={{
           selectedDataset,
@@ -449,8 +499,10 @@ export default function Dataset() {
           handleConfirmMove: (folderId) => {
             handleConfirmMove(itemsToMove, folderId);
           },
+          confirmClearCache: () => confirmClearCache(selectedDataset),
         }}
         folderActions={folderActions}
+        canUseRealTime={canRealTime}
       />
     </section>
   );

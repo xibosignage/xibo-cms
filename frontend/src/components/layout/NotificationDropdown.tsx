@@ -73,10 +73,10 @@ function NotificationItem({
       type="button"
       onClick={() => onClick(notification)}
       className={`w-full text-left px-3 flex items-start gap-3 mb-1 rounded-lg cursor-pointer transition-colors ${
-        isUnread ? 'py-3 bg-blue-50 hover:bg-blue-100' : 'py-2 hover:bg-gray-100'
+        isUnread ? 'py-3 bg-xibo-blue-50 hover:bg-xibo-blue-100' : 'py-2 hover:bg-gray-100'
       }`}
     >
-      <div className="flex-shrink-0 mt-1.5">
+      <div className="shrink-0 mt-1.5">
         {isUnread ? (
           <div className="w-2 h-2 rounded-full bg-xibo-blue-600" />
         ) : (
@@ -106,7 +106,7 @@ function SectionLabel({ label }: { label: string }) {
 function SystemNotificationItem({ notification }: { notification: Notification }) {
   return (
     <div className="w-full px-3 py-2 flex items-start gap-2 mb-1 rounded-lg bg-amber-50 border border-amber-200">
-      <div className="flex-shrink-0 mt-0.5">
+      <div className="shrink-0 mt-0.5">
         <AlertTriangle size={14} className="text-amber-600" />
       </div>
       <p className="text-xs text-amber-800 leading-snug mt-0.5">{notification.subject}</p>
@@ -144,7 +144,9 @@ export default function NotificationDropdown() {
 
   const { data, isFetching } = useNotificationInbox();
 
-  if (!hasFeature(user, 'notification.centre')) return null;
+  if (!hasFeature(user, 'drawer')) {
+    return null;
+  }
 
   const notifications = data?.rows ?? [];
   const unreadCount = data?.unreadCount ?? 0;
@@ -232,7 +234,7 @@ export default function NotificationDropdown() {
       <button
         ref={refs.setReference}
         type="button"
-        className="cursor-pointer flex items-center justify-center relative h-9.5 w-9.5"
+        className="cursor-pointer flex items-center justify-center relative h-9.5 w-9.5 rounded-lg transition hover:bg-blue-100"
         {...getReferenceProps()}
         aria-label={t('Notifications')}
         title={t('Notifications')}
@@ -258,7 +260,7 @@ export default function NotificationDropdown() {
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-semibold text-gray-900">{t('Notifications')}</h3>
                 {unreadCount > 0 && (
-                  <span className="inline-flex items-center justify-center p-1 text-[10px] font-bold bg-xibo-blue-600 text-white rounded-full min-w-[18px] leading-none">
+                  <span className="inline-flex items-center justify-center p-1 text-[10px] font-bold bg-xibo-blue-600 text-white rounded-full min-w-4.5 leading-none">
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}

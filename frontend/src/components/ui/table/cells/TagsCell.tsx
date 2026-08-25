@@ -31,21 +31,43 @@ import {
   FloatingPortal,
 } from '@floating-ui/react';
 import { useState } from 'react';
+import { twMerge } from 'tailwind-merge';
 
 import Badge from '../../Badge';
 
-interface Tag {
+import type { Tag } from '@/types/tag';
+
+export interface DisplayTag {
   id: string | number;
   label: string;
+  tag: Tag;
+}
+
+// Shared by every page's Tags column - centralizes the "tagId + tag|value" label
+// formatting so it isn't duplicated identically across every ColumnDef.
+export function toDisplayTags(tags?: Tag[] | null): DisplayTag[] {
+  return (tags ?? []).map((tag) => ({
+    id: tag.tagId,
+    label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
+    tag,
+  }));
 }
 
 interface TagsProps {
-  tags: Tag[];
+  tags: DisplayTag[];
   limit?: number;
   noTagsPlaceholder?: string;
+  onTagClick?: (tag: Tag) => void;
+  selectedTagIds?: (string | number)[];
 }
 
-export function TagsCell({ tags, limit = 2, noTagsPlaceholder = '' }: TagsProps) {
+export function TagsCell({
+  tags,
+  limit = 2,
+  noTagsPlaceholder = '',
+  onTagClick,
+  selectedTagIds,
+}: TagsProps) {
   const safeTags = tags || [];
   const visibleTags = safeTags.slice(0, limit);
   const remainingTags = safeTags.slice(limit);
@@ -69,13 +91,58 @@ export function TagsCell({ tags, limit = 2, noTagsPlaceholder = '' }: TagsProps)
     return <span className="text-gray-800">{noTagsPlaceholder}</span>;
   }
 
+  const renderTag = (displayTag: DisplayTag, closePopoverOnClick: boolean) => {
+    const isSelected = selectedTagIds?.includes(displayTag.id);
+    const badge = (
+      <Badge
+        type="info"
+        variation={isSelected ? 'soft' : 'outline'}
+        className={twMerge(
+          'min-w-0 max-w-full',
+          onTagClick
+            ? twMerge(
+                'transition-colors',
+                isSelected
+                  ? 'bg-xibo-blue-600 text-white border-transparent hover:bg-xibo-blue-700'
+                  : 'hover:bg-xibo-blue-50',
+              )
+            : undefined,
+        )}
+      >
+        <span className="block min-w-0 max-w-32 truncate" title={displayTag.label}>
+          {displayTag.label}
+        </span>
+      </Badge>
+    );
+
+    if (!onTagClick) {
+      return (
+        <span key={displayTag.id} className="min-w-0 max-w-full">
+          {badge}
+        </span>
+      );
+    }
+
+    return (
+      <button
+        key={displayTag.id}
+        type="button"
+        className="cursor-pointer min-w-0 max-w-full"
+        onClick={() => {
+          onTagClick(displayTag.tag);
+          if (closePopoverOnClick) {
+            setIsOpen(false);
+          }
+        }}
+      >
+        {badge}
+      </button>
+    );
+  };
+
   return (
     <div className="relative flex flex-wrap gap-1 items-center">
-      {visibleTags.map((tag) => (
-        <Badge key={tag.id} type="info" variation="outline">
-          {tag.label}
-        </Badge>
-      ))}
+      {visibleTags.map((tag) => renderTag(tag, false))}
 
       {remainingCount > 0 && (
         <>
@@ -104,11 +171,7 @@ export function TagsCell({ tags, limit = 2, noTagsPlaceholder = '' }: TagsProps)
                 role="menu"
               >
                 <div className="flex flex-wrap gap-1">
-                  {remainingTags.map((tag) => (
-                    <Badge key={tag.id} type="info" variation="outline">
-                      {tag.label}
-                    </Badge>
-                  ))}
+                  {remainingTags.map((tag) => renderTag(tag, true))}
                 </div>
               </div>
             )}

@@ -26,6 +26,10 @@ import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { useEventActions } from '../../../hooks/useEventActions';
 import { mockEvent } from '../../fixtures/event';
 
+import { useUserContext } from '@/context/UserContext';
+
+const mockUseUserContext = useUserContext as ReturnType<typeof vi.fn>;
+
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
 // Replace the real API calls with fakes we can spy on.
@@ -48,6 +52,12 @@ vi.mock('@/components/ui/Notification', () => ({
     info: vi.fn(),
     warning: vi.fn(),
   },
+}));
+
+// useDateFormatter (used to format the occurrence-delete success toast) reads
+// from UserContext, so stub it out rather than wrapping every test in a provider.
+vi.mock('@/context/UserContext', () => ({
+  useUserContext: vi.fn(),
 }));
 
 // =============================================================================
@@ -74,6 +84,7 @@ describe('useEventActions', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseUserContext.mockReturnValue({ user: { settings: { defaultTimezone: undefined } } });
   });
 
   // ---------------------------------------------------------------------------
@@ -301,6 +312,7 @@ describe('useEventActions', () => {
         mockEvent.fromDt,
         mockEvent.toDt,
       );
+      expect(mockNotifySuccess).toHaveBeenCalledTimes(1);
       expect(mockHandleRefresh).toHaveBeenCalledTimes(1);
       expect(mockCloseModal).toHaveBeenCalledTimes(1);
       expect(result.current.deleteError).toBeNull();

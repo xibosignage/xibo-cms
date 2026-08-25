@@ -226,15 +226,6 @@ class SavedReportFactory extends BaseFactory
             $params['currentUserId'] = $this->getUser()->userId;
         }
 
-        if ($sanitizedFilter->getString('keyword') != null) {
-            $body .= $this->buildSearchQuery(
-                $sanitizedFilter->getString('keyword'),
-                $params,
-                ['saved_report.saveAs'],
-                ['saved_report.savedReportId']
-            );
-        }
-
         // View Permissions
         $this->viewPermissionSql(
             'Xibo\Entity\SavedReport',
@@ -257,7 +248,8 @@ class SavedReportFactory extends BaseFactory
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            defaultSort: ['generatedOn DESC']
+            defaultSort: ['generatedOn DESC'],
+            uniqueColumn: 'savedReportId'
         );
 
         $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';

@@ -69,6 +69,7 @@ import type {
   FetchAgendaEventsResponse,
 } from '@/services/eventApi';
 import type { Event } from '@/types/event';
+import { hasFeature } from '@/utils/permissions';
 
 interface AgendaModalProps {
   date: DateTimeType;
@@ -523,10 +524,11 @@ interface BreadcrumbPanelProps {
   row: SelectedRow;
   data: FetchAgendaEventsResponse;
   selectedGroupId: number;
+  canEdit: boolean;
   onEdit: (eventId: number) => void;
 }
 
-function BreadcrumbPanel({ row, data, selectedGroupId, onEdit }: BreadcrumbPanelProps) {
+function BreadcrumbPanel({ row, data, selectedGroupId, canEdit, onEdit }: BreadcrumbPanelProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -588,13 +590,17 @@ function BreadcrumbPanel({ row, data, selectedGroupId, onEdit }: BreadcrumbPanel
         </>
       )}
       {sep}
-      <button
-        type="button"
-        className="px-3 py-2 text-xibo-blue-600 cursor-pointer hover:underline"
-        onClick={() => onEdit(event.eventId)}
-      >
-        {t('Schedule')}
-      </button>
+      {canEdit && event.isEditable !== false ? (
+        <button
+          type="button"
+          className="px-3 py-2 text-xibo-blue-600 cursor-pointer hover:underline"
+          onClick={() => onEdit(event.eventId)}
+        >
+          {t('Schedule')}
+        </button>
+      ) : (
+        <span className="px-3 py-2">{t('Schedule')}</span>
+      )}
       {dgChain.map((name, i) => (
         <span key={`${i}-${name}`} className="flex items-center gap-0.5">
           {sep}
@@ -694,7 +700,7 @@ function AgendaTablePagination({
                 )}
               >
                 {size}
-                {pageSize === size && <Check className="size-3.5 text-blue-600" />}
+                {pageSize === size && <Check className="size-3.5 text-xibo-blue-600" />}
               </button>
             ))}
           </div>
@@ -925,7 +931,17 @@ function EventTypeTable({
   onPreview,
 }: EventTypeTableProps) {
   const { t } = useTranslation();
-  const label = EVENT_TYPE_LABELS[typeId];
+  // EVENT_TYPE_LABELS values are computed via record index, invisible to the extractor — seed them here.
+  const eventTypeLabels: Record<number, string> = {
+    1: t('Layouts'),
+    3: t('Overlay Layouts'),
+    4: t('Interrupt Layouts'),
+    5: t('Campaign Layouts'),
+    7: t('Fullscreen Video / Image'),
+    8: t('Fullscreen Playlist'),
+    9: t('Synchronised'),
+  };
+  const label = eventTypeLabels[typeId] ?? EVENT_TYPE_LABELS[typeId];
   const [sortCol, setSortCol] = useState<SortCol>('fromDt');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [pageIndex, setPageIndex] = useState(0);
@@ -953,7 +969,7 @@ function EventTypeTable({
   return (
     <section>
       <div className="flex items-center gap-2 mb-2">
-        <h3 className="font-semibold text-gray-700">{t(label ?? '')}</h3>
+        <h3 className="font-semibold text-gray-700">{label ?? ''}</h3>
         <span className="text-xs text-gray-500 bg-gray-100 rounded-full px-2 py-0.5">
           {events.length}
         </span>
@@ -1037,7 +1053,11 @@ function EventTypeTable({
                   key={`${event.eventId}-${i}`}
                   className={twMerge(
                     'cursor-pointer transition-colors',
-                    isSelected ? 'bg-blue-100' : isLinked ? 'bg-blue-50' : 'hover:bg-gray-50',
+                    isSelected
+                      ? 'bg-xibo-blue-100'
+                      : isLinked
+                        ? 'bg-xibo-blue-50'
+                        : 'hover:bg-gray-50',
                   )}
                   onClick={() =>
                     onRowClick({ type: 'layout', layoutId: event.layoutId, eventId: event.eventId })
@@ -1126,9 +1146,9 @@ function SidebarList({ title, items, isSelected, isLinked, onRowClick }: Sidebar
             className={twMerge(
               'flex items-center gap-2.5 px-5 py-1.5 cursor-pointer text-xs transition-colors',
               isSelected(item.id)
-                ? 'bg-blue-100'
+                ? 'bg-xibo-blue-100'
                 : isLinked(item.id)
-                  ? 'bg-blue-50'
+                  ? 'bg-xibo-blue-50'
                   : 'hover:bg-gray-50',
             )}
             onClick={() => onRowClick(item.id)}
@@ -1200,6 +1220,7 @@ export function AgendaModal({ date, displayGroups, onClose }: AgendaModalProps) 
   const { formatDateTime } = useDateFormatter();
   const defaultLat = Number(user?.settings?.DEFAULT_LAT ?? DEFAULT_LAT_FALLBACK);
   const defaultLng = Number(user?.settings?.DEFAULT_LONG ?? DEFAULT_LNG_FALLBACK);
+  const canModifySchedule = hasFeature(user, 'schedule.modify');
 
   const queryClient = useQueryClient();
 
@@ -1353,6 +1374,7 @@ export function AgendaModal({ date, displayGroups, onClose }: AgendaModalProps) 
             row={selectedRow}
             data={data}
             selectedGroupId={selectedGroupId}
+            canEdit={canModifySchedule}
             onEdit={setEditEventId}
           />
         )}

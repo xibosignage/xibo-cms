@@ -228,13 +228,6 @@ class DisplayGroup extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\Parameter(
-        name: 'keyword',
-        description: 'Filter by Display Group name or ID',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
-    )]
-    #[OA\Parameter(
         name: 'sortBy',
         description: 'Specifies which field the results are sorted by. Used together with sortDir',
         in: 'query',
@@ -255,6 +248,7 @@ class DisplayGroup extends Base
                 'ref5',
                 'createdDt',
                 'modifiedDt',
+                'groupsWithPermissions',
             ]
         )
     )]
@@ -1280,8 +1274,7 @@ class DisplayGroup extends Base
             $media = $this->mediaFactory->getById($mediaId);
 
             if (!$this->getUser()->checkViewable($media)) {
-                throw new AccessDeniedException(__('You have selected media that you no longer have 
-                    permission to use. Please reload the form.'));
+                throw new AccessDeniedException(__('You have selected media that you no longer have permission to use. Please reload the form.'));//phpcs:ignore
             }
 
             $displayGroup->assignMedia($media);
@@ -1295,8 +1288,7 @@ class DisplayGroup extends Base
             $media = $this->mediaFactory->getById($mediaId);
 
             if (!$this->getUser()->checkViewable($media)) {
-                throw new AccessDeniedException(__('You have selected media that you no longer have 
-                    permission to use. Please reload the form.'));
+                throw new AccessDeniedException(__('You have selected media that you no longer have permission to use. Please reload the form.'));//phpcs:ignore
             }
 
             $displayGroup->unassignMedia($media);
@@ -1461,8 +1453,7 @@ class DisplayGroup extends Base
             $layout = $this->layoutFactory->getById($layoutId);
 
             if (!$this->getUser()->checkViewable($layout)) {
-                throw new AccessDeniedException(__('You have selected a layout that you no longer 
-                    have permission to use. Please reload the form.'));
+                throw new AccessDeniedException(__('You have selected a layout that you no longer have permission to use. Please reload the form.'));//phpcs:ignore
             }
 
             $displayGroup->assignLayout($layout);
@@ -1474,8 +1465,7 @@ class DisplayGroup extends Base
             $layout = $this->layoutFactory->getById($layoutId);
 
             if (!$this->getUser()->checkViewable($layout)) {
-                throw new AccessDeniedException(__('You have selected a layout that you no longer 
-                    have permission to use. Please reload the form.'));
+                throw new AccessDeniedException(__('You have selected a layout that you no longer have permission to use. Please reload the form.'));//phpcs:ignore
             }
 
             $displayGroup->unassignLayout($layout);
@@ -2217,7 +2207,9 @@ class DisplayGroup extends Base
             $new->updateTagLinks($displayGroup->tags);
         }
 
-        $new->save();
+        $new->save([
+            'manageDynamicDisplayLinks' => $copyMembers,
+        ]);
 
         // Return
         $this->getState()->hydrate([
@@ -2651,7 +2643,6 @@ class DisplayGroup extends Base
             'logicalOperator' => $parsedQueryParams->getString('logicalOperator'),
             'logicalOperatorName' => $parsedQueryParams->getString('logicalOperatorName'),
             'displayIdMember' => $parsedQueryParams->getInt('displayIdMember'),
-            'keyword' => $parsedQueryParams->getString('keyword'),
         ], $parsedQueryParams);
     }
 

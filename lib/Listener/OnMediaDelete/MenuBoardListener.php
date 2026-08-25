@@ -24,8 +24,10 @@ namespace Xibo\Listener\OnMediaDelete;
 
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Factory\MenuBoardCategoryFactory;
+use Xibo\Factory\MenuBoardFactory;
 use Xibo\Listener\ListenerLoggerTrait;
 use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 class MenuBoardListener
 {
@@ -34,9 +36,13 @@ class MenuBoardListener
     /** @var MenuBoardCategoryFactory */
     private $menuBoardCategoryFactory;
 
-    public function __construct($menuBoardCategoryFactory)
+    /** @var MenuBoardFactory */
+    private $menuBoardFactory;
+
+    public function __construct($menuBoardCategoryFactory, $menuBoardFactory)
     {
         $this->menuBoardCategoryFactory = $menuBoardCategoryFactory;
+        $this->menuBoardFactory = $menuBoardFactory;
     }
 
     /**
@@ -46,15 +52,26 @@ class MenuBoardListener
     public function __invoke(MediaDeleteEvent $event)
     {
         $media = $event->getMedia();
+        $affectedMenuIds = [];
 
         foreach ($this->menuBoardCategoryFactory->query(null, ['mediaId' => $media->mediaId]) as $category) {
             $category->mediaId = null;
             $category->save();
+            $affectedMenuIds[$category->menuId] = true;
         }
 
         foreach ($this->menuBoardCategoryFactory->getProductData(null, ['mediaId' => $media->mediaId]) as $product) {
             $product->mediaId = null;
             $product->save();
+            $affectedMenuIds[$product->menuId] = true;
+        }
+
+        foreach (array_keys($affectedMenuIds) as $menuId) {
+            try {
+                $this->menuBoardFactory->getById($menuId)->touch();
+            } catch (NotFoundException) {
+                $this->getLogger()->error('MenuBoardListener: menu board ' . $menuId . ' not found while touching');
+            }
         }
     }
 }

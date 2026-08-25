@@ -33,6 +33,7 @@ import type { ActionItem } from '@/types/table';
 
 export interface DatasetDataActionsProps {
   t: TFunction;
+  canEdit?: boolean;
   onEdit: (row: DynamicRowData) => void;
   onDelete: (rowId: string | number) => void;
   onCopy?: (row: DynamicRowData) => void;
@@ -43,7 +44,7 @@ export const getDynamicDataColumns = (
   columnsSchema: DatasetColumn[],
   props: DatasetDataActionsProps,
 ): ColumnDef<DynamicRowData>[] => {
-  const { t, onEdit, onDelete, rowIdKey = 'id' } = props;
+  const { t, canEdit = false, onEdit, onDelete, rowIdKey = 'id' } = props;
 
   const selectionColumn: ColumnDef<DynamicRowData> = {
     id: 'tableSelection',
@@ -84,7 +85,7 @@ export const getDynamicDataColumns = (
         }
 
         if (col.dataTypeId === 6) {
-          return <TextCell className="italic text-gray-500">{t('<HTML Content>')}</TextCell>;
+          return <TextCell className="italic text-gray-500">{t('HTML Content')}</TextCell>;
         }
 
         return <TextCell>{String(value)}</TextCell>;
@@ -134,6 +135,11 @@ export const getDynamicDataColumns = (
       );
     },
   };
+
+  // Data editing (add/edit/delete rows) is gated behind the dataset.data feature
+  if (!canEdit) {
+    return dynamicColumns;
+  }
 
   return [selectionColumn, ...dynamicColumns, actionColumn];
 };

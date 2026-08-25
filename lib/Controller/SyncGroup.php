@@ -68,13 +68,6 @@ class SyncGroup extends Base
         schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
-        name: 'keyword',
-        description: 'Filter by Sync Group name or ID',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
-    )]
-    #[OA\Parameter(
         name: 'ownerId',
         description: 'Filter by Owner ID',
         in: 'query',
@@ -602,7 +595,6 @@ class SyncGroup extends Base
         return $this->gridRenderFilter([
             'syncGroupId'         => $sanitizedParams->getInt('syncGroupId'),
             'name'                => $sanitizedParams->getString('name'),
-            'keyword'             => $sanitizedParams->getString('keyword'),
             'folderId'            => $sanitizedParams->getInt('folderId'),
             'ownerId'             => $sanitizedParams->getInt('ownerId'),
             'leadDisplayId'       => $sanitizedParams->getInt('leadDisplayId'),

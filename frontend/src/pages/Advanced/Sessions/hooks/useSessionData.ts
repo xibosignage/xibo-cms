@@ -21,10 +21,10 @@
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
-import type { AxiosError } from 'axios';
 
 import type { SessionFilterInput } from '../SessionsConfig';
 
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import type { FetchSessionRequest } from '@/services/sessionApi';
 import { fetchSession } from '@/services/sessionApi';
 import { resolveLastModified } from '@/utils/date';
@@ -47,6 +47,8 @@ export const useSessionData = ({
   advancedFilters,
   enabled = true,
 }: UseSessionParams) => {
+  const { timeZone } = useDateFormatter();
+
   // Combine settings into one object to create a unique cache key
   const queryParams = {
     pageIndex: pagination.pageIndex,
@@ -65,8 +67,8 @@ export const useSessionData = ({
       const sortDir = sorting?.[0]?.desc ? 'desc' : 'asc';
 
       const { lastModified, ...restFilters } = advancedFilters;
-      const lastAccessedDateFrom = resolveLastModified(lastModified).modifiedDateFrom;
-      const lastAccessedDateTo = resolveLastModified(lastModified).modifiedDateTo;
+      const { modifiedDateFrom: lastAccessedDateFrom, modifiedDateTo: lastAccessedDateTo } =
+        resolveLastModified(lastModified, timeZone);
 
       const request: FetchSessionRequest = {
         start: startOffset,
@@ -86,9 +88,5 @@ export const useSessionData = ({
 
     placeholderData: keepPreviousData, // Keep showing previous page's data while the new page loads
     staleTime: 1000 * 60 * 1, // Cache for 1 minute
-
-    throwOnError: (error: AxiosError) => {
-      return error.response?.status ? error.response.status >= 500 : false;
-    },
   });
 };

@@ -29,10 +29,12 @@ import Checkbox from '@/components/ui/forms/Checkbox';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
 import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
+import { useUserContext } from '@/context/UserContext';
 import { getLayoutSchema } from '@/schema/layout';
 import { updateLayout } from '@/services/layoutsApi';
 import type { Layout } from '@/types/layout';
 import type { Tag } from '@/types/tag';
+import { hasFeature } from '@/utils/permissions';
 
 interface EditLayoutModalProps {
   isOpen?: boolean;
@@ -59,11 +61,13 @@ type LayoutDraft = {
 
 export default function EditLayout({ isOpen = true, onClose, data, onSave }: EditLayoutModalProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
 
   const [isSaving, setIsSaving] = useState(false);
   const [formErrors, setFormErrors] = useState<LayoutFormErrors>({});
   const [apiError, setApiError] = useState<string | undefined>();
   const [pendingTagInput, setPendingTagInput] = useState('');
+  const [hasTagPendingValue, setHasTagPendingValue] = useState(false);
 
   const [draft, setDraft] = useState<LayoutDraft>(() => ({
     name: data.layout,
@@ -96,7 +100,7 @@ export default function EditLayout({ isOpen = true, onClose, data, onSave }: Edi
   };
 
   const handleSave = async () => {
-    if (isSaving) return;
+    if (isSaving || hasTagPendingValue) return;
 
     const layoutSchema = getLayoutSchema(t);
     const result = layoutSchema.safeParse(draft);
@@ -165,7 +169,7 @@ export default function EditLayout({ isOpen = true, onClose, data, onSave }: Edi
         {
           label: isSaving ? t('Saving…') : t('Save'),
           onClick: handleSave,
-          disabled: isSaving,
+          disabled: isSaving || hasTagPendingValue,
         },
       ]}
     >
@@ -199,13 +203,17 @@ export default function EditLayout({ isOpen = true, onClose, data, onSave }: Edi
           />
 
           {/* Tags */}
-          <TagInput
-            value={draft.tags}
-            helpText={t('Tags separated by commas. Use Tag|Value for tagged attributes.')}
-            onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
-            inputValue={pendingTagInput}
-            onInputChange={setPendingTagInput}
-          />
+          {(hasFeature(user, 'tag.tagging') || (draft.tags?.length ?? 0) > 0) && (
+            <TagInput
+              value={draft.tags}
+              helpText={t('Tags separated by commas. Use Tag|Value for tagged attributes.')}
+              onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
+              inputValue={pendingTagInput}
+              onInputChange={setPendingTagInput}
+              onPendingValueChange={setHasTagPendingValue}
+              disabled={!hasFeature(user, 'tag.tagging')}
+            />
+          )}
 
           <TextInput
             name="code"

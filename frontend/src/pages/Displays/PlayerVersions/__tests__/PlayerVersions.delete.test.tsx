@@ -33,6 +33,7 @@ import { mockFetchPlayerVersions } from './mocks/playerVersionApi';
 
 import { deletePlayerVersion, fetchPlayerVersions } from '@/services/playerVersionApi';
 import { testQueryClient } from '@/setupTests';
+import { waitForDialogToClose } from '@/testUtils/rtl';
 
 // =============================================================================
 // Module mocks
@@ -67,9 +68,7 @@ const openRowDeleteModal = async (user: UserEvent) => {
 };
 
 const selectAllRows = async (user: UserEvent) => {
-  // The first checkbox is the column header's "select all" toggle.
-  const checkboxes = screen.getAllByRole('checkbox', { name: /select row/i });
-  await user.click(checkboxes[0]!);
+  await user.click(screen.getByRole('checkbox', { name: /select all rows/i }));
 };
 
 // =============================================================================
@@ -119,9 +118,7 @@ describe('Player Versions page - single delete', () => {
     await waitFor(() => {
       expect(deletePlayerVersion).toHaveBeenCalledWith(mockPlayerVersion.versionId);
     });
-    await waitFor(() => {
-      expect(screen.queryByText('Delete Player Version?')).not.toBeInTheDocument();
-    });
+    await waitForDialogToClose('Delete Player Version?');
   });
 
   test('the table refreshes after a successful delete', async () => {
@@ -155,7 +152,9 @@ describe('Player Versions page - single delete', () => {
 
     expect(await screen.findByRole('button', { name: /deleting/i })).toBeDisabled();
 
+    // Wait for the resulting close so the update isn't left outside act().
     resolveDelete();
+    await waitForDialogToClose('Delete Player Version?');
   });
 
   test('a failed delete keeps the modal open and shows the error', async () => {

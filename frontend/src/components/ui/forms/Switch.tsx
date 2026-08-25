@@ -25,6 +25,7 @@ import { twMerge } from 'tailwind-merge';
 
 interface SwitchProps {
   label?: string;
+  ariaLabel?: string;
   checked: boolean;
   helpText?: string;
   optional?: boolean;
@@ -36,6 +37,7 @@ interface SwitchProps {
 
 export default function Switch({
   label,
+  ariaLabel,
   checked,
   helpText,
   optional = false,
@@ -75,12 +77,13 @@ export default function Switch({
           type="button"
           role="switch"
           aria-checked={checked}
+          aria-label={label ? undefined : ariaLabel}
           disabled={disabled}
           onClick={() => onChange(!checked)}
           className={twMerge(
-            'relative inline-flex border p-0.5 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+            'relative inline-flex border p-0.5 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-xibo-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
             size === 'sm' ? 'h-6.5 w-10' : 'h-9.5 w-15.5',
-            checked ? 'bg-blue-100 border-blue-300' : 'bg-gray-100 border-gray-300',
+            checked ? 'bg-xibo-blue-100 border-xibo-blue-300' : 'bg-gray-100 border-gray-300',
           )}
         >
           <span
@@ -121,7 +124,10 @@ export default function Switch({
         </button>
         {!hideOnOff && (
           <span
-            className={twMerge('text-sm font-medium', checked ? 'text-blue-600' : 'text-gray-400')}
+            className={twMerge(
+              'text-sm font-medium',
+              checked ? 'text-xibo-blue-600' : 'text-gray-400',
+            )}
           >
             {t('On')}
           </span>

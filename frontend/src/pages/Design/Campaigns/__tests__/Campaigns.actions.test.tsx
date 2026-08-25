@@ -30,7 +30,7 @@ import {
   defaultCampaignActions,
   mockCampaign,
   mockCampaignData,
-  mockUserNoSchedule,
+  mockContentManager,
   renderCampaignsPage,
 } from './campaignTestUtils';
 
@@ -334,19 +334,23 @@ describe('Campaigns page - row actions', () => {
       expect(dialog).toBeInTheDocument();
     });
 
-    test('clicking Schedule when canSchedule is false does not open a modal', async () => {
+    // Content Manager has campaign.modify/campaign.view (so Edit, Preview,
+    // Make a Copy, Move, and Delete still render) but lacks schedule.add, so
+    // onSchedule is undefined and getCampaignItemActions never pushes the
+    // Schedule item — it's the only thing missing from an otherwise normal
+    // "More actions" menu. See bugs-found/campaigns-schedule-action-hidden-not-disabled.md.
+    test('Schedule action is absent from "More actions" for a user lacking schedule.add', async () => {
       await act(async () => {
-        renderCampaignsPage(mockUserNoSchedule);
+        renderCampaignsPage(mockContentManager);
       });
 
       await screen.findByText(mockCampaign.campaign);
       fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
 
-      const scheduleBtn = await screen.findByRole('button', { name: 'Schedule' });
-      fireEvent.click(scheduleBtn);
-
-      // No dialog should appear.
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      // Anchor on an action Content Manager does have, to confirm the
+      // dropdown is fully open before asserting Schedule's absence.
+      await screen.findByRole('button', { name: 'Move' });
+      expect(screen.queryByRole('button', { name: 'Schedule' })).not.toBeInTheDocument();
     });
   });
 });

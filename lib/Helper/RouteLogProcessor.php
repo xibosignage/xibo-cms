@@ -23,6 +23,8 @@
 
 namespace Xibo\Helper;
 
+use Monolog\LogRecord;
+
 /**
  * Class RouteLogProcessor
  *  a process to add route/method information to the log record
@@ -41,11 +43,7 @@ class RouteLogProcessor
     ) {
     }
 
-    /**
-     * @param array $record
-     * @return array
-     */
-    public function __invoke(array $record): array
+    public function __invoke(LogRecord $record): LogRecord
     {
         $record['extra']['method'] = $this->method;
         $record['extra']['route'] = $this->route;

@@ -19,15 +19,19 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { useQueryClient } from '@tanstack/react-query';
 import { CircleX, type LucideIcon, X } from 'lucide-react';
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
 import type { ButtonProps } from '../Button';
 import Button from '../Button';
+import Checkbox from '../forms/Checkbox';
 
 import { useKeydown } from '@/hooks/useKeydown';
+import { autoSubmitPrefQueryKey, saveAutoSubmitPreference } from '@/services/userApi';
 
 export interface ModalAction {
   label: string;
@@ -53,9 +57,10 @@ interface ModalProps {
   contentClassName?: string;
   scrollable?: boolean;
   isPending?: boolean;
-  error?: string;
+  error?: React.ReactNode;
   variant?: 'standard' | 'tabbed' | 'confirmation';
   showCloseButton?: boolean;
+  autoSubmitFormId?: string;
 }
 
 export default function Modal({
@@ -73,8 +78,11 @@ export default function Modal({
   error,
   variant = 'standard',
   showCloseButton = false,
+  autoSubmitFormId,
 }: ModalProps) {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const [autoSubmit, setAutoSubmit] = useState(false);
   useKeydown('Escape', onClose, isOpen);
 
   const titleId = title ? `modal-title-${title.replace(/\s+/g, '-').toLowerCase()}` : undefined;
@@ -82,6 +90,17 @@ export default function Modal({
   if (!isOpen) {
     return null;
   }
+
+  const persistAutoSubmit = () => {
+    if (!autoSubmitFormId || !autoSubmit) {
+      return;
+    }
+
+    queryClient.setQueryData(autoSubmitPrefQueryKey(autoSubmitFormId), true);
+    void saveAutoSubmitPreference(autoSubmitFormId, true).catch((error) => {
+      console.error('Failed to save auto-submit preference:', error);
+    });
+  };
 
   const sizeClasses = {
     sm: 'max-w-lg',
@@ -171,32 +190,51 @@ export default function Modal({
 
         {/* Footer */}
         {actions && actions.length > 0 && (
-          <div className="shrink-0 flex flex-row justify-end bg-gray-50 gap-3 px-8 py-4 border-t border-gray-100">
-            {actions.map((action, idx) => (
-              <Button
-                key={idx}
-                type={action.isSubmit ? 'submit' : 'button'}
-                form={action.formId}
-                variant={action.variant}
-                disabled={action.disabled}
-                className={action.className}
-                leftIcon={action.leftIcon}
-                rightIcon={action.rightIcon}
-                onClick={() => {
-                  if (action.disabled) {
-                    return;
-                  }
+          <div
+            className={twMerge(
+              'shrink-0 flex flex-row items-center bg-gray-50 gap-3 px-8 py-4 border-t border-gray-100',
+              autoSubmitFormId ? 'justify-between' : 'justify-end',
+            )}
+          >
+            {autoSubmitFormId && (
+              <Checkbox
+                id={`auto-submit-${autoSubmitFormId}`}
+                title={t('Automatically submit this form?')}
+                checked={autoSubmit}
+                onChange={(event) => setAutoSubmit(event.target.checked)}
+              />
+            )}
+            <div className="flex flex-row justify-end gap-3">
+              {actions.map((action, idx) => (
+                <Button
+                  key={idx}
+                  type={action.isSubmit ? 'submit' : 'button'}
+                  form={action.formId}
+                  variant={action.variant}
+                  disabled={action.disabled}
+                  className={action.className}
+                  leftIcon={action.leftIcon}
+                  rightIcon={action.rightIcon}
+                  onClick={() => {
+                    if (action.disabled) {
+                      return;
+                    }
 
-                  if (action.onClick) {
-                    action.onClick();
-                  } else if (!action.isSubmit) {
-                    onClose();
-                  }
-                }}
-              >
-                {action.label}
-              </Button>
-            ))}
+                    if (action.variant !== 'secondary') {
+                      persistAutoSubmit();
+                    }
+
+                    if (action.onClick) {
+                      action.onClick();
+                    } else if (!action.isSubmit) {
+                      onClose();
+                    }
+                  }}
+                >
+                  {action.label}
+                </Button>
+              ))}
+            </div>
           </div>
         )}
       </dialog>

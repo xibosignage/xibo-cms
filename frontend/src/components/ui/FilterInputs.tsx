@@ -28,8 +28,8 @@ import Button from './Button';
 import DateFilter from './DateFilter';
 import DateRangeFilter from './DateRangeFilter';
 import InputFilter from './InputFilter';
-import Checkbox from './forms/Checkbox';
 import AndOrButton from './forms/AndOrButton';
+import Checkbox from './forms/Checkbox';
 import SelectDropdown from './forms/SelectDropdown';
 import type { SelectOption } from './forms/SelectDropdown';
 import TagInput from './forms/TagInput';
@@ -37,6 +37,7 @@ import TextInput from './forms/TextInput';
 
 import type { FilterOption } from '@/types/filter';
 import type { Tag } from '@/types/tag';
+import { isValidRegex } from '@/utils/regex';
 
 export type { FilterOption };
 
@@ -63,6 +64,9 @@ export interface FilterConfigItem<T> {
   regexKey?: keyof T & string;
   showExactTags?: boolean;
   exactTagsKey?: keyof T & string;
+  showTimePicker?: boolean;
+  compareToDefault?: boolean;
+  tooltip?: string;
 }
 
 type FilterValue = string | number | boolean | null | Tag[];
@@ -143,20 +147,14 @@ function DebouncedTextWithControls({
   const handleChange = (val: string) => {
     setLocalValue(val);
 
-    if (isRegex && val) {
-      try {
-        new RegExp(val);
-        setRegexError('');
-      } catch {
-        setRegexError(t('Invalid regular expression'));
-        if (debounceRef.current) {
-          clearTimeout(debounceRef.current);
-        }
-        return;
+    if (isRegex && val && !isValidRegex(val)) {
+      setRegexError(t('Invalid regular expression'));
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
       }
-    } else {
-      setRegexError('');
+      return;
     }
+    setRegexError('');
 
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
@@ -173,7 +171,13 @@ function DebouncedTextWithControls({
   const suffix = showRegex ? (
     <div
       className="px-3 py-2 flex items-center cursor-pointer justify-center"
-      onClick={() => onRegexChange && onRegexChange(!isRegex)}
+      onClick={() => {
+        if (!isRegex && localValue && !isValidRegex(localValue)) {
+          setRegexError(t('Invalid regular expression'));
+          return;
+        }
+        onRegexChange?.(!isRegex);
+      }}
       title={t('Use RegEx pattern matching')}
     >
       <Button
@@ -225,10 +229,10 @@ export default function FilterInputs<T>({
     <div
       aria-hidden={!isOpen}
       className={`
-        transition-all duration-300 ease-in-out w-full
+        transition-all duration-300 ease-in-out w-full relative
         ${
           isOpen
-            ? 'max-h-150 opacity-100 visible mt-4 overflow-visible'
+            ? 'opacity-100 visible mt-4 shrink-0 max-h-[min(37.5rem,50vh)] overflow-auto'
             : 'max-h-0 opacity-0 invisible mt-0 overflow-hidden'
         }
       `}
@@ -340,6 +344,7 @@ export default function FilterInputs<T>({
                   prefix={prefix}
                   suffix={suffix}
                   allowValues={false}
+                  compact
                 />
               );
             }
@@ -354,6 +359,8 @@ export default function FilterInputs<T>({
                   onChange={(name, val) => onChange(name as keyof T & string, val)}
                   isJalali={filter.isJalali}
                   className={filter.className}
+                  showTimePicker={filter.showTimePicker}
+                  tooltip={filter.tooltip}
                 />
               );
             }
@@ -440,7 +447,7 @@ export default function FilterInputs<T>({
           })}
         </div>
         {onApply && (
-          <div className="flex justify-end">
+          <div className="flex justify-end sticky bottom-0 bg-slate-50 pt-2 pb-1">
             <Button variant="secondary" className="font-semibold h-11.25" onClick={onApply}>
               {t('Apply Filter')}
             </Button>

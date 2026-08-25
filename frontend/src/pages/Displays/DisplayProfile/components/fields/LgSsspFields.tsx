@@ -144,10 +144,6 @@ export function TimersInput({
 
   return (
     <div className="space-y-4">
-      <div
-        className="rounded-lg border border-xibo-blue-200 bg-xibo-blue-50 p-3 text-sm text-xibo-blue-700"
-        dangerouslySetInnerHTML={{ __html: t(`Use the form fields to create On/Off timings.`) }}
-      />
       {timerRows.length > 0 && (
         <div className="flex gap-2 items-center text-xs font-semibold text-gray-500 uppercase px-1">
           <span className="flex-5">{t('Day')}</span>
@@ -224,6 +220,18 @@ export function PictureOptionsInput({
     label: t(def.name),
   }));
 
+  // def.labels values are computed via array index, invisible to the extractor — seed them here.
+  const sliderWordLabels: Record<string, string> = {
+    off: t('off'),
+    low: t('low'),
+    medium: t('medium'),
+    high: t('high'),
+    auto: t('auto'),
+    normal: t('normal'),
+    extended: t('extended'),
+    high2: t('high2'),
+  };
+
   const getSliderLabels = (property: string) => {
     if (property === 'tint') {
       return { left: t('Red'), right: t('Green') };
@@ -236,10 +244,9 @@ export function PictureOptionsInput({
       return { left: '0', right: '0' };
     }
     if (def.labels) {
-      return {
-        left: t(def.labels[def.min] ?? String(def.min)),
-        right: t(def.labels[def.max] ?? String(def.max)),
-      };
+      const left = def.labels[def.min] ?? String(def.min);
+      const right = def.labels[def.max] ?? String(def.max);
+      return { left: sliderWordLabels[left] ?? left, right: sliderWordLabels[right] ?? right };
     }
     return { left: String(def.min), right: String(def.max) };
   };
@@ -250,7 +257,8 @@ export function PictureOptionsInput({
       return String(value);
     }
     if (def.labels) {
-      return t(def.labels[value] ?? String(value));
+      const label = def.labels[value] ?? String(value);
+      return sliderWordLabels[label] ?? label;
     }
     return String(value);
   };
@@ -337,6 +345,9 @@ export function LockOptionsInput({
           value={state.usblock}
           options={boolOptions}
           onSelect={(v) => updateLock('usblock', v)}
+          helpText={t(
+            'Set access to any device that uses the monitors USB port. Set to ‘False’ the monitor will not accept input or read from USB ports.',
+          )}
         />
       )}
       <SelectDropdown
@@ -344,18 +355,23 @@ export function LockOptionsInput({
         value={state.osdlock}
         options={boolOptions}
         onSelect={(v) => updateLock('osdlock', v)}
+        helpText={t(
+          'Set access to the monitor settings via the remote control. Set To ‘False’ the remote control will not change the volume, brightness etc of the monitor.',
+        )}
       />
       <SelectDropdown
         label={t('Keylock (local)')}
         value={state.keylockLocal}
         options={keylockOptions}
         onSelect={(v) => updateLock('keylockLocal', v)}
+        helpText={t('Set the allowed key input for the monitor.')}
       />
       <SelectDropdown
         label={t('Keylock (remote)')}
         value={state.keylockRemote}
         options={keylockOptions}
         onSelect={(v) => updateLock('keylockRemote', v)}
+        helpText={t('Set the allowed key input for the monitor.')}
       />
     </div>
   );
@@ -421,6 +437,11 @@ export function LgSsspFields({
   if (tab === 'timers' && onTimerRowsChange) {
     return (
       <div className="flex flex-col gap-4">
+        <div className="rounded-lg border border-xibo-blue-200 bg-xibo-blue-50 p-3 text-sm text-xibo-blue-700">
+          {t(
+            "Use the form fields to create On/Off timings for the monitor for specific days of the week as required. Please note: When the monitor is 'Off' it will not be able to receive content updates. With the next timed 'On' the monitor will connect to the CMS and get content/schedule updates.",
+          )}
+        </div>
         <Checkbox
           id="disableTimerManagement"
           title={t('Disable managing on/off timers')}
@@ -437,11 +458,18 @@ export function LgSsspFields({
 
   if (tab === 'pictureOptions' && onPictureOptionRowsChange) {
     return (
-      <PictureOptionsInput
-        pictureOptionRows={pictureOptionRows}
-        onChange={onPictureOptionRowsChange}
-        t={t}
-      />
+      <div className="flex flex-col gap-4">
+        <div className="rounded-lg border border-xibo-blue-200 bg-xibo-blue-50 p-3 text-sm text-xibo-blue-700">
+          {t(
+            'Control picture settings using the fields below. Use the sliders to set the required range for each setting.',
+          )}
+        </div>
+        <PictureOptionsInput
+          pictureOptionRows={pictureOptionRows}
+          onChange={onPictureOptionRowsChange}
+          t={t}
+        />
+      </div>
     );
   }
 
@@ -461,7 +489,7 @@ export function LgSsspFields({
     ([, meta]) =>
       meta.tab === tab &&
       !['timers', 'pictureOptions', 'lockOptions'].includes(meta.inputType) &&
-      isFieldMetaEnabled(meta, settings),
+      isFieldMetaEnabled(meta, settings, bool),
   );
 
   if (fieldsForTab.length === 0) {

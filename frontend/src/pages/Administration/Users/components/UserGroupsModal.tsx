@@ -178,6 +178,7 @@ export default function UserGroupsModal({ user, onClose, onSuccess }: UserGroups
           columns={columns}
           searchRows={searchRows}
           pageCount={pageCount}
+          rowCount={searchData?.totalCount ?? 0}
           pagination={pagination}
           onPaginationChange={setPagination}
           sorting={sorting}

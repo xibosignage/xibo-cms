@@ -82,7 +82,8 @@ export default function DeleteCommandModal({
               values={{ name: commandName }}
               components={{ strong: <strong /> }}
             >
-              Are you sure you want to delete &quot;<strong>{commandName}</strong>&quot;?
+              Are you sure you want to delete &quot;<strong>{String(commandName ?? '')}</strong>
+              &quot;?
             </Trans>
           ) : (
             <Trans
@@ -90,7 +91,7 @@ export default function DeleteCommandModal({
               values={{ count: itemCount }}
               components={{ strong: <strong /> }}
             >
-              Are you sure you want to delete <strong>{itemCount}</strong> commands?
+              Are you sure you want to delete <strong>{String(itemCount)}</strong> commands?
             </Trans>
           )}
         </p>

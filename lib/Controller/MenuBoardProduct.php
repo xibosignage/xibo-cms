@@ -80,13 +80,6 @@ class MenuBoardProduct extends Base
         schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
-        name: 'keyword',
-        description: 'Filter by keyword (searches name)',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
-    )]
-    #[OA\Parameter(
         name: 'sortBy',
         description: 'Specifies which field the results are sorted by. Used together with sortDir',
         in: 'query',
@@ -146,8 +139,8 @@ class MenuBoardProduct extends Base
             'menuProductId'  => $params->getInt('menuProductId'),
             'menuCategoryId' => $categoryId,
             'name'           => $params->getString('name'),
+            'useRegexForName' => $params->getCheckbox('useRegexForName'),
             'code'           => $params->getString('code'),
-            'keyword'        => $params->getString('keyword'),
             'availability'   => $params->getInt('availability'),
         ], $params);
     }
@@ -355,7 +348,7 @@ class MenuBoardProduct extends Base
             }
         }
         $menuBoardProduct->productOptions = $menuBoardProduct->getOptions();
-        $menuBoard->save();
+        $menuBoard->touch();
 
         return $response
             ->withStatus(201)
@@ -472,7 +465,7 @@ class MenuBoardProduct extends Base
         }
         $menuBoardProduct->productOptions = $menuBoardProduct->getOptions();
         $menuBoardProduct->save();
-        $menuBoard->save();
+        $menuBoard->touch();
 
         return $response
             ->withStatus(200)
@@ -504,6 +497,7 @@ class MenuBoardProduct extends Base
         }
 
         $menuBoardProduct->delete();
+        $menuBoard->touch();
 
         return $response->withStatus(204);
     }

@@ -19,17 +19,27 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { ChevronDown } from 'lucide-react';
-import { useRef, useState } from 'react';
+import {
+  useFloating,
+  autoUpdate,
+  offset,
+  flip,
+  shift,
+  size,
+  useClick,
+  useDismiss,
+  useInteractions,
+  FloatingPortal,
+} from '@floating-ui/react';
+import { ChevronDown, Info } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
 import DatePicker from './DatePicker';
 
-import { useClickOutside } from '@/hooks/useClickOutside';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
-import { useKeydown } from '@/hooks/useKeydown';
-import { formatDateTime } from '@/utils/date';
+import { formatCmsDate, formatDateTime, toLocalDateKey } from '@/utils/date';
 
 type DateFilterProps = {
   label: string;
@@ -38,6 +48,8 @@ type DateFilterProps = {
   onChange: (name: string, value: string | null) => void;
   isJalali?: boolean;
   className?: string;
+  showTimePicker?: boolean;
+  tooltip?: string;
 };
 
 export default function DateFilter({
@@ -47,17 +59,44 @@ export default function DateFilter({
   onChange,
   isJalali = false,
   className,
+  showTimePicker = true,
+  tooltip,
 }: DateFilterProps) {
   const { t } = useTranslation();
-  const { formatDate } = useDateFormatter();
+  const { formatDate, dateFormat } = useDateFormatter();
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
 
-  useKeydown('Escape', () => setOpen(false), !!open);
-  useClickOutside(ref, () => setOpen(false));
+  const { refs, floatingStyles, context } = useFloating({
+    open,
+    onOpenChange: setOpen,
+    placement: 'bottom-start',
+    whileElementsMounted: autoUpdate,
+    middleware: [
+      offset(4),
+      flip(),
+      shift(),
+      size({
+        apply({ rects, elements }) {
+          Object.assign(elements.floating.style, {
+            minWidth: `${rects.reference.width}px`,
+          });
+        },
+        padding: 8,
+      }),
+    ],
+  });
+
+  const click = useClick(context);
+  const dismiss = useDismiss(context);
+  const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
 
   const getDisplayLabel = () => {
     if (!value) return t('Any time');
+
+    if (!showTimePicker) {
+      return formatCmsDate(value, { format: dateFormat, timeZone: 'UTC' });
+    }
+
     const date = new Date(value.replace(' ', 'T'));
     if (isNaN(date.getTime())) return value;
     return formatDate(date);
@@ -66,15 +105,34 @@ export default function DateFilter({
   return (
     <div
       className={twMerge(
-        'flex flex-col gap-1 text-gray-500 w-full md:w-auto md:flex-1 min-w-0 relative',
+        'flex flex-col gap-1 text-gray-500 w-full md:w-auto md:flex-1 min-w-0',
         className,
       )}
-      ref={ref}
     >
-      <label className="text-sm font-semibold text-gray-500 leading-5">{label}</label>
+      <div className="flex items-center gap-1">
+        <label className="text-sm font-semibold text-gray-500 leading-5">{label}</label>
+        {tooltip && (
+          <div className="hs-tooltip inline-block">
+            <button
+              type="button"
+              className="hs-tooltip-toggle block text-gray-400 hover:text-gray-600"
+            >
+              <Info className="size-3.5" />
+
+              <span
+                className="hs-tooltip-content hs-tooltip-shown:opacity-80 hs-tooltip-shown:visible opacity-0 transition-opacity inline-block absolute invisible z-10 p-2 bg-gray-900 text-xs font-medium text-white rounded shadow-sm"
+                role="tooltip"
+              >
+                {tooltip}
+              </span>
+            </button>
+          </div>
+        )}
+      </div>
       <button
+        ref={refs.setReference}
+        {...getReferenceProps()}
         type="button"
-        onClick={() => setOpen((p) => !p)}
         className="w-full h-11.25 flex items-center justify-between bg-white rounded-lg border border-gray-200 pl-4 text-left"
       >
         <span className="text-sm">{getDisplayLabel()}</span>
@@ -87,43 +145,49 @@ export default function DateFilter({
           <ChevronDown size={14} />
         </div>
       </button>
-      <div
-        className={twMerge(
-          'absolute z-50 mt-1 transition-all duration-200 ease-linear bg-xibo-white overflow-hidden rounded-lg border border-gray-200 shadow-lg',
-          open
-            ? 'max-h-175 opacity-100 top-17 left-0'
-            : 'max-h-0 opacity-0 top-15 pointer-events-none',
-        )}
-      >
-        <div className="pb-4 box-border">
-          <DatePicker
-            mode="single"
-            disableFutureDates
-            isJalali={isJalali}
-            onCancel={() => setOpen(false)}
-            onApply={(v) => {
-              if (v.type === 'single') {
-                onChange(name, formatDateTime(v.date));
-              }
-              setOpen(false);
-            }}
-          />
-          {value && (
-            <div className="px-4 pt-2">
-              <button
-                type="button"
-                onClick={() => {
-                  onChange(name, null);
+      <FloatingPortal>
+        {open && (
+          <div
+            ref={refs.setFloating}
+            style={floatingStyles}
+            {...getFloatingProps()}
+            className="z-9999 bg-white overflow-hidden rounded-lg border border-gray-200 shadow-lg"
+          >
+            <div className="pb-4 box-border">
+              <DatePicker
+                mode="single"
+                disableFutureDates
+                isJalali={isJalali}
+                showTimePicker={showTimePicker}
+                onCancel={() => setOpen(false)}
+                onApply={(v) => {
+                  if (v.type === 'single') {
+                    onChange(
+                      name,
+                      showTimePicker ? formatDateTime(v.date) : toLocalDateKey(v.date),
+                    );
+                  }
                   setOpen(false);
                 }}
-                className="w-full text-sm text-gray-500 hover:text-gray-700 text-left"
-              >
-                {t('Clear')}
-              </button>
+              />
+              {value && (
+                <div className="px-4 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onChange(name, null);
+                      setOpen(false);
+                    }}
+                    className="w-full text-sm text-gray-500 hover:text-gray-700 text-left"
+                  >
+                    {t('Clear')}
+                  </button>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
+          </div>
+        )}
+      </FloatingPortal>
     </div>
   );
 }

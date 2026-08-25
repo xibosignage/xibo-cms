@@ -212,13 +212,10 @@ describe('Campaigns page - delete modal', () => {
       renderCampaignsPage();
     });
 
-    // Select both rows individually (the DataTable has no "Select all" aria-label).
-    const checkboxes = await screen.findAllByRole('checkbox', { name: /Select row/i });
-    for (const cb of checkboxes) {
-      await act(async () => {
-        fireEvent.click(cb);
-      });
-    }
+    const selectAllCheckbox = await screen.findByRole('checkbox', { name: /select all rows/i });
+    await act(async () => {
+      fireEvent.click(selectAllCheckbox);
+    });
 
     await act(async () => {
       fireEvent.click(await screen.findByRole('button', { name: 'Delete Selected' }));

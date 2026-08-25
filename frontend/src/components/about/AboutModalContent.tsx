@@ -53,7 +53,7 @@ export function AboutModalContent() {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="animate-spin h-8 w-8 rounded-full border-4 border-blue-200 border-t-blue-600" />
+        <div className="animate-spin h-8 w-8 rounded-full border-4 border-xibo-blue-200 border-t-xibo-blue-600" />
       </div>
     );
   }
@@ -66,22 +66,30 @@ export function AboutModalContent() {
     <>
       <section>
         <h2 className="text-xl font-semibold text-gray-900 mb-2">
-          Xibo{' '}
-          <span className="text-base font-semibold text-gray-500">
-            - Simple. Intuitive. Impactful. Secure.
-          </span>
+          {appName}
+          {appName === 'Xibo' && (
+            <span className="text-base font-semibold text-gray-500">
+              {' '}
+              - Simple. Intuitive. Impactful. Secure.
+            </span>
+          )}
         </h2>
         <p>
-          Xibo Digital Signage -{' '}
-          <a
-            target="_blank"
-            rel="noreferrer"
-            href="https://xibosignage.com"
-            className="text-blue-600 hover:underline"
-          >
-            xibosignage.com
-          </a>
-          .<br />
+          {appName === 'Xibo' && (
+            <>
+              Xibo Digital Signage -{' '}
+              <a
+                target="_blank"
+                rel="noreferrer"
+                href="https://xibosignage.com"
+                className="text-blue-600 hover:underline"
+              >
+                xibosignage.com
+              </a>
+              .<br />
+            </>
+          )}
+          {/* Copyright notice is retained regardless of branding — required by the AGPL. */}
           Copyright &copy; 2006-{currentYear} Xibo Signage Ltd and the{' '}
           <a
             target="_blank"
@@ -291,21 +299,23 @@ export function AboutModalContent() {
         </section>
       )}
 
-      <section>
-        <h2 className="text-lg font-semibold text-gray-900 mb-2">Commercial</h2>
-        <p>
-          Xibo is supported and maintained by{' '}
-          <a
-            target="_blank"
-            rel="noreferrer"
-            href="https://xibosignage.com"
-            className="text-blue-600 hover:underline"
-          >
-            Xibo Signage Ltd
-          </a>
-          .
-        </p>
-      </section>
+      {appName === 'Xibo' && (
+        <section>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">Commercial</h2>
+          <p>
+            Xibo is supported and maintained by{' '}
+            <a
+              target="_blank"
+              rel="noreferrer"
+              href="https://xibosignage.com"
+              className="text-blue-600 hover:underline"
+            >
+              Xibo Signage Ltd
+            </a>
+            .
+          </p>
+        </section>
+      )}
     </>
   );
 }

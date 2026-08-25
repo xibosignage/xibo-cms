@@ -26,7 +26,7 @@ import { type ComponentProps } from 'react';
 
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
 import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkActions';
-import { TextCell, ActionsCell } from '@/components/ui/table/cells';
+import { TextCell, ActionsCell, getSharingColumn } from '@/components/ui/table/cells';
 import type { Command } from '@/types/command';
 import type { ActionItem, BaseModalType } from '@/types/table';
 
@@ -75,6 +75,8 @@ export const getFilterKeys = (t: TFunction): FilterConfigItem<CommandsFilterInpu
 
 export interface CommandActionsProps {
   t: TFunction;
+  canModify?: boolean;
+  canUserShare?: boolean;
   onDelete: (id: number) => void;
   openEditModal: (row: Command) => void;
   openShareModal: (row: Command) => void;
@@ -82,39 +84,54 @@ export interface CommandActionsProps {
 
 export const getCommandItemActions = ({
   t,
+  canModify = false,
+  canUserShare = false,
   onDelete,
   openEditModal,
   openShareModal,
 }: CommandActionsProps): ((command: Command) => ActionItem[]) => {
-  return (command: Command) => [
-    // Quick actions
-    {
-      label: t('Edit'),
-      icon: Edit,
-      onClick: () => openEditModal(command),
-      isQuickAction: true,
-      variant: 'primary' as const,
-    },
+  return (command: Command) => {
+    const canEdit = !!command.userPermissions?.edit;
+    const canDelete = !!command.userPermissions?.delete;
+    const canShare = !!command.userPermissions?.modifyPermissions;
 
-    // Dropdown menu actions
-    {
-      label: t('Edit'),
-      icon: Edit,
-      onClick: () => openEditModal(command),
-    },
-    {
-      label: t('Share'),
-      icon: UserPlus2,
-      onClick: () => openShareModal(command),
-    },
-    { isSeparator: true },
-    {
-      label: t('Delete'),
-      icon: Trash2,
-      onClick: () => onDelete(command.commandId),
-      variant: 'danger' as const,
-    },
-  ];
+    const actions: ActionItem[] = [];
+
+    if (canModify && canEdit) {
+      actions.push({
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => openEditModal(command),
+        isQuickAction: true,
+        variant: 'primary' as const,
+      });
+      actions.push({
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => openEditModal(command),
+      });
+    }
+
+    if (canModify && canShare && canUserShare) {
+      actions.push({
+        label: t('Share'),
+        icon: UserPlus2,
+        onClick: () => openShareModal(command),
+      });
+    }
+
+    if (canModify && canDelete) {
+      actions.push({ isSeparator: true });
+      actions.push({
+        label: t('Delete'),
+        icon: Trash2,
+        onClick: () => onDelete(command.commandId),
+        variant: 'danger' as const,
+      });
+    }
+
+    return actions;
+  };
 };
 
 export const getCommandColumns = (props: CommandActionsProps): ColumnDef<Command>[] => {
@@ -158,12 +175,7 @@ export const getCommandColumns = (props: CommandActionsProps): ColumnDef<Command
       size: 140,
       cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
     },
-    {
-      accessorKey: 'groupsWithPermissions',
-      header: t('Sharing'),
-      size: 160,
-      cell: (info) => <TextCell>{info.getValue<string>() ?? ''}</TextCell>,
-    },
+    getSharingColumn<Command>(t),
     {
       id: 'tableActions',
       header: '',

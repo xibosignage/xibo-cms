@@ -4,7 +4,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import Logs from '../Logs';
 import { INITIAL_FILTER_STATE } from '../LogsConfig';
 
-import { mockLogsList, renderWithProviders } from './Setup';
+import { createMockLogsQuery, renderWithProviders } from './Setup';
 
 import { useTableState } from '@/hooks/useTableState';
 
@@ -45,12 +45,7 @@ describe('Logs Page - Filters', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(useTableState).mockReturnValue(defaultTableState as never);
-    mockUseLogsData.mockReturnValue({
-      data: { rows: mockLogsList, totalCount: 3 },
-      isFetching: false,
-      isError: false,
-      error: null,
-    });
+    mockUseLogsData.mockReturnValue(createMockLogsQuery());
   });
 
   // FilterInputs renders its children in the DOM at all times but hides them with
@@ -81,10 +76,10 @@ describe('Logs Page - Filters', () => {
     expect(screen.getByRole('button', { name: /apply filter/i })).toBeInTheDocument();
   });
 
-  it('shows the From Date label when the page loads', () => {
+  it('shows the Date label when the page loads', () => {
     renderWithProviders(<Logs />);
 
-    expect(screen.getByText('From Date')).toBeInTheDocument();
+    expect(screen.getByText('Date')).toBeInTheDocument();
   });
 
   it('shows the Duration Back label when the page loads', () => {
@@ -99,10 +94,10 @@ describe('Logs Page - Filters', () => {
     expect(screen.getByText('Level')).toBeInTheDocument();
   });
 
-  it('shows the Run No label when the page loads', () => {
+  it('shows the Run label when the page loads', () => {
     renderWithProviders(<Logs />);
 
-    expect(screen.getByText('Run No')).toBeInTheDocument();
+    expect(screen.getByText('Run')).toBeInTheDocument();
   });
 
   it('shows the Display label when the page loads', () => {

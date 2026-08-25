@@ -78,6 +78,7 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<NotificationFi
 
 export interface NotificationActionsProps {
   t: TFunction;
+  canModify?: boolean;
   onDelete: (id: number) => void;
   onView: (row: Notification) => void;
   onEdit: (row: Notification) => void;
@@ -86,13 +87,14 @@ export interface NotificationActionsProps {
 
 export const getNotificationItemActions = ({
   t,
+  canModify = false,
   onDelete,
   onView,
   onEdit,
 }: NotificationActionsProps): ((notification: Notification) => ActionItem[]) => {
   return (notification: Notification) => {
-    const canEdit = notification.canEdit ?? false;
-    const canDelete = notification.canDelete ?? false;
+    const canEdit = canModify && (notification.canEdit ?? false);
+    const canDelete = canModify && (notification.canDelete ?? false);
     const actions: ActionItem[] = [];
 
     if (canEdit) {
@@ -194,6 +196,9 @@ export const getNotificationColumns = (
       size: 140,
       enableSorting: true,
       cell: (info) => <TextCell>{formatReleaseDt(info.getValue<number | string>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatReleaseDt(row.releaseDt),
+      },
     },
     {
       accessorKey: 'isInterrupt',
@@ -204,9 +209,9 @@ export const getNotificationColumns = (
     {
       id: 'tableActions',
       header: '',
-      size: 110,
-      minSize: 110,
-      maxSize: 110,
+      size: 80,
+      minSize: 80,
+      maxSize: 80,
       enableHiding: false,
       enableResizing: false,
       cell: ({ row }) => (

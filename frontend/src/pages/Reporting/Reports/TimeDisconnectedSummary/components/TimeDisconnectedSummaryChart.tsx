@@ -36,9 +36,10 @@ import {
 import type { GroupBy } from '../TimeDisconnectedSummaryConfig';
 
 import type { TimeDisconnectedSummaryRow } from '@/services/timeDisconnectedSummaryApi';
+import { BRAND_ACCENT, BRAND_PRIMARY } from '@/styles/brandColors';
 
-const UPTIME_COLOR = '#0e70f6';
-const DOWNTIME_COLOR = '#eb7857';
+const UPTIME_COLOR = BRAND_PRIMARY;
+const DOWNTIME_COLOR = BRAND_ACCENT;
 
 interface TimeDisconnectedSummaryChartProps {
   rows: TimeDisconnectedSummaryRow[];

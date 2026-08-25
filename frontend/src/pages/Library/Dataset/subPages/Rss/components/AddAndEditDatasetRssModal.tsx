@@ -140,6 +140,16 @@ export function AddAndEditDatasetRssModal({
     })) || []),
   ];
 
+  const dateColumnOptions = [
+    { value: '', label: t('Select Column') },
+    ...(columnsResponse?.rows
+      .filter((c) => c.dataTypeId === 3)
+      .map((c) => ({
+        value: String(c.dataSetColumnId),
+        label: c.heading,
+      })) || []),
+  ];
+
   useEffect(() => {
     if (isOpen) {
       setActiveTab('general');
@@ -277,7 +287,7 @@ export function AddAndEditDatasetRssModal({
     const isActive = activeTab === tabName;
     return `py-2 px-3 inline-flex items-center gap-2 border-b-2 text-sm font-semibold whitespace-nowrap focus:outline-none transition-all ${
       isActive
-        ? 'border-blue-600 text-blue-500'
+        ? 'border-xibo-blue-600 text-xibo-blue-500'
         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
     }`;
   };
@@ -369,7 +379,7 @@ export function AddAndEditDatasetRssModal({
                 />
                 <SelectDropdown
                   label={t('Published Date Column')}
-                  options={columnOptions}
+                  options={dateColumnOptions}
                   value={String(draft.publishedDateColumnId || '')}
                   onSelect={(val: string) => {
                     updateDraft('publishedDateColumnId', val ? Number(val) : undefined);

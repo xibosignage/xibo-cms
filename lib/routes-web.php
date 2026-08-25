@@ -104,11 +104,13 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
         ->setName('playlist.edit.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['playlist.modify']));
 
-$app->get('/playlist/form/timeline/{id}', ['\Xibo\Controller\Playlist','timelineForm'])
-    ->setName('playlist.timeline.form');
+$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
+    $group->get('/playlist/form/timeline/{id}', ['\Xibo\Controller\Playlist','timelineForm'])
+        ->setName('playlist.timeline.form');
 
-$app->get('/playlist/designer/{id}', ['\Xibo\Controller\Playlist', 'displayDesigner'])
-    ->setName('playlist.designer');
+    $group->get('/playlist/designer/{id}', ['\Xibo\Controller\Playlist', 'displayDesigner'])
+        ->setName('playlist.designer');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['playlist.modify']));
 
 //
 // library

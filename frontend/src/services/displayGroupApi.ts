@@ -37,7 +37,6 @@ export interface FetchDisplayGroupRequest {
   sortBy?: string;
   sortDir?: string;
   signal?: AbortSignal;
-  keyword?: string;
   isDisplaySpecific?: number;
   useRegexForName?: number;
   logicalOperatorName?: 'OR' | 'AND';
@@ -78,7 +77,6 @@ export interface CreateDisplayGroupRequest {
   exactTags?: number;
   logicalOperator?: 'OR' | 'AND';
   folderId?: number | null;
-  keyword?: string;
 }
 
 export async function createDisplayGroup(data: CreateDisplayGroupRequest): Promise<DisplayGroup> {

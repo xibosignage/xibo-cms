@@ -23,15 +23,18 @@ import { isAxiosError } from 'axios';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { notify } from '@/components/ui/Notification';
 import Checkbox from '@/components/ui/forms/Checkbox';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
 import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
 import Modal from '@/components/ui/modals/Modal';
+import { useUserContext } from '@/context/UserContext';
 import { getTemplateSchema } from '@/schema/templates';
 import { saveLayoutAsTemplate } from '@/services/layoutsApi';
 import type { Layout } from '@/types/layout';
 import type { Tag } from '@/types/tag';
+import { hasFeature } from '@/utils/permissions';
 
 interface SaveAsTemplateModalProps {
   isOpen?: boolean;
@@ -45,12 +48,14 @@ export default function SaveAsTemplateModal({
   onClose,
 }: SaveAsTemplateModalProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState(layout?.description ?? '');
   const [tags, setTags] = useState<Tag[]>(layout?.tags?.map((t) => ({ ...t })) ?? []);
   const [includeWidgets, setIncludeWidgets] = useState(false);
   const [pendingTagInput, setPendingTagInput] = useState('');
+  const [hasTagPendingValue, setHasTagPendingValue] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formErrors, setFormErrors] = useState<{ name?: string }>({});
   const [apiError, setApiError] = useState<string | undefined>();
@@ -73,7 +78,7 @@ export default function SaveAsTemplateModal({
   }, [layout]);
 
   const handleSave = async () => {
-    if (!layout || isSaving) return;
+    if (!layout || isSaving || hasTagPendingValue) return;
 
     const schema = getTemplateSchema(t);
 
@@ -111,6 +116,7 @@ export default function SaveAsTemplateModal({
         folderId,
       });
 
+      notify.success(t('Template saved successfully'));
       onClose();
     } catch (err) {
       console.error(err);
@@ -146,7 +152,7 @@ export default function SaveAsTemplateModal({
         {
           label: isSaving ? t('Saving…') : t('Save'),
           onClick: handleSave,
-          disabled: isSaving || !name.trim(),
+          disabled: isSaving || !name.trim() || hasTagPendingValue,
         },
       ]}
     >
@@ -181,13 +187,17 @@ export default function SaveAsTemplateModal({
             rows={3}
           />
 
-          <TagInput
-            value={tags}
-            helpText={t('Tags separated by commas. Use Tag|Value for tagged attributes.')}
-            onChange={(tags) => setTags(tags)}
-            inputValue={pendingTagInput}
-            onInputChange={setPendingTagInput}
-          />
+          {(hasFeature(user, 'tag.tagging') || (tags?.length ?? 0) > 0) && (
+            <TagInput
+              value={tags}
+              helpText={t('Tags separated by commas. Use Tag|Value for tagged attributes.')}
+              onChange={(tags) => setTags(tags)}
+              inputValue={pendingTagInput}
+              onInputChange={setPendingTagInput}
+              onPendingValueChange={setHasTagPendingValue}
+              disabled={!hasFeature(user, 'tag.tagging')}
+            />
+          )}
 
           <Checkbox
             id="includeWidgets"

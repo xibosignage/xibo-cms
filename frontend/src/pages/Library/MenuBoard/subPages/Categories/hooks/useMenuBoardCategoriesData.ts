@@ -21,11 +21,11 @@
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
-import type { AxiosError } from 'axios';
 
 import type { MenuBoardCategoryFilterInput } from '../MenuBoardCategoriesConfig';
 
 import { fetchMenuBoardCategories } from '@/services/menuBoardApi';
+import { isValidRegex } from '@/utils/regex';
 
 export const MenuBoardCategoryQueryKeys = {
   all: ['menuBoardCategory'] as const,
@@ -65,16 +65,17 @@ export const useMenuBoardCategoriesData = ({
       const startOffset = pagination.pageIndex * pagination.pageSize;
       const sortBy = sorting?.[0]?.id;
       const sortDir = sorting?.[0]?.desc ? 'desc' : 'asc';
-      const { menuCategoryId, code } = advancedFilters;
+      const { menuCategoryId, name, useRegexForName, code } = advancedFilters;
 
       return fetchMenuBoardCategories(menuId, {
         start: startOffset,
         length: pagination.pageSize,
-        keyword: filter,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,
         menuCategoryId: menuCategoryId ? Number(menuCategoryId) : undefined,
+        name: name || filter || undefined,
+        ...(useRegexForName && name && isValidRegex(name) ? { useRegexForName: 1 } : {}),
         code: code || undefined,
       });
     },
@@ -82,9 +83,5 @@ export const useMenuBoardCategoriesData = ({
     enabled: enabled && !!menuId,
     placeholderData: keepPreviousData,
     staleTime: 1000 * 60,
-
-    throwOnError: (error: AxiosError) => {
-      return error.response?.status ? error.response.status >= 500 : false;
-    },
   });
 };

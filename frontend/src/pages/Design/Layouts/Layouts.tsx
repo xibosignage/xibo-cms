@@ -19,9 +19,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import type { RowSelectionState } from '@tanstack/react-table';
-import { Filter, FilterX, Plus, Search, Upload } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { Plus, Search, Upload } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
@@ -36,21 +35,28 @@ import { useLayoutData } from './hooks/useLayoutData';
 import { useLayoutFilterOptions } from './hooks/useLayoutFilterOptions';
 
 import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
 import FolderSidebar from '@/components/ui/FolderSidebar';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
 import { useUserContext } from '@/context/UserContext';
+import { useAutoSubmit } from '@/hooks/useAutoSubmit';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { useOwner } from '@/hooks/useOwner';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useSelectionState } from '@/hooks/useSelectionState';
 import { useTableState } from '@/hooks/useTableState';
-import { fetchContextButtons } from '@/services/folderApi';
 import type { Layout } from '@/types/layout';
-import { hasFeature } from '@/utils/permissions';
+import type { Tag } from '@/types/tag';
+import { countActiveFilters } from '@/utils/filters';
+import { canSaveInFolder, hasFeature } from '@/utils/permissions';
+import { toggleTag } from '@/utils/tags';
 
 export default function Layouts() {
   const { t } = useTranslation();
@@ -59,6 +65,14 @@ export default function Layouts() {
   const { user } = useUserContext();
   const canViewFolders = usePermissions()?.canViewFolders;
   const canSchedule = hasFeature(user, 'schedule.add');
+  const canViewPlaylist = hasFeature(user, 'playlist.view');
+  const canViewCampaign = hasFeature(user, 'campaign.view');
+  const canViewMedia = hasFeature(user, 'library.view');
+  const canAssignCampaign = hasFeature(user, 'campaign.modify');
+  const canMoveToCampaignFolder = hasFeature(user, 'campaign.modify');
+  const canSaveTemplate = hasFeature(user, 'template.modify');
+  const canTag = hasFeature(user, 'tag.tagging');
+  const importEnabled = hasFeature(user, 'layout.add');
   const homeFolderId = user?.homeFolderId ?? 1;
 
   const {
@@ -113,8 +127,6 @@ export default function Layouts() {
   }, [activeDisplayGroupId, isHydrated, setFilterInputs, setPagination]);
 
   const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [selectionCache, setSelectionCache] = useState<Record<string, Layout>>({});
   const [openFilter, setOpenFilter] = useState(false);
   const [showInfoPanel, setShowInfoPanel] = useState(false);
 
@@ -124,6 +136,7 @@ export default function Layouts() {
 
   const [itemsToDelete, setItemsToDelete] = useState<Layout[]>([]);
   const [itemsToMove, setItemsToMove] = useState<Layout[]>([]);
+  const [bulkItems, setBulkItems] = useState<Layout[]>([]);
   const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
   const [selectedLayoutId, setSelectedLayoutId] = useState<number | null>(null);
   const [previewItem, setPreviewItem] = useState<Layout | null>(null);
@@ -137,6 +150,7 @@ export default function Layouts() {
     data: queryData,
     isFetching,
     isError,
+    isPaused,
     error: queryError,
   } = useLayoutData({
     pagination,
@@ -148,17 +162,14 @@ export default function Layouts() {
   });
 
   const effectiveFolderId = selectedFolderId ?? homeFolderId;
-  const { data: folderPerms } = useQuery({
-    queryKey: ['folderPermissions', effectiveFolderId],
-    queryFn: () => fetchContextButtons(effectiveFolderId),
-    staleTime: 1000 * 60 * 5,
-  });
 
   const data = queryData?.rows;
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
   const layoutList = data ?? [];
-  const canAddToFolder = folderPerms?.create || false;
+  const canAddToFolder =
+    hasFeature(user, 'layout.add') &&
+    canSaveInFolder(user, !!canViewFolders, effectiveFolderId, homeFolderId);
 
   const folderActions = useFolderActions({
     onSuccess: (targetFolder) => {
@@ -171,38 +182,23 @@ export default function Layouts() {
     },
   });
 
-  const getRowId = (row: Layout) => {
-    return row.layoutId.toString();
-  };
-
-  const handleRowSelectionChange = (
-    updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
-  ) => {
-    const newSelection =
-      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
-
-    setRowSelection(newSelection);
-
-    setSelectionCache((prev) => {
-      const next = { ...prev };
-      layoutList.forEach((item) => {
-        const id = getRowId(item);
-        if (newSelection[id]) {
-          next[id] = item;
-        }
-      });
-      return next;
-    });
-  };
+  const {
+    rowSelection,
+    setRowSelection,
+    onRowSelectionChange: handleRowSelectionChange,
+    getRowId,
+    getAllSelectedItems,
+  } = useSelectionState<Layout>({
+    list: layoutList,
+    getRowId: (row) => row.layoutId.toString(),
+  });
 
   const selectedLayout = layoutList.find((m) => m.layoutId === selectedLayoutId) ?? null;
   const existingNames = layoutList.map((m) => m.layout).filter(Boolean);
   const ownerId = selectedLayout?.ownerId ? Number(selectedLayout.ownerId) : null;
   const { owner, loading } = useOwner({ ownerId });
 
-  const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['layout'] });
-  };
+  const handleRefresh = () => queryClient.invalidateQueries({ queryKey: ['layout'] });
 
   const handleFolderChange = (folder: { id: number | null; text: string | '' }) => {
     setSelectedFolderId(folder.id);
@@ -225,6 +221,9 @@ export default function Layouts() {
     handleOpenLayout,
     confirmPublish,
     handleCheckoutLayout,
+    isCheckingOut,
+    checkoutError,
+    setCheckoutError,
     isDiscarding,
     handleConfirmDiscard,
     handleConfirmAssign,
@@ -240,7 +239,10 @@ export default function Layouts() {
     setRowSelection,
     setItemsToMove,
     timezone: user?.settings?.defaultTimezone ?? 'UTC',
+    folderId: effectiveFolderId,
   });
+
+  const { guard } = useAutoSubmit();
 
   const handleResetFilters = () => {
     setFilterInputs(LAYOUT_INITIAL_FILTER_STATE);
@@ -295,6 +297,12 @@ export default function Layouts() {
     openModal('discard');
   };
 
+  const openCheckoutModal = (layoutId: number) => {
+    setSelectedLayoutId(layoutId);
+    setCheckoutError(null);
+    openModal('checkout');
+  };
+
   const handleExportModal = (layoutId: number) => {
     setSelectedLayoutId(layoutId);
     openModal('export');
@@ -320,8 +328,23 @@ export default function Layouts() {
     openModal('schedule');
   };
 
+  const handleTagClick = (tag: Tag) => {
+    setFilterInputs((prev) => ({ ...prev, tags: toggleTag(prev.tags, tag) }));
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
+
   const columns = getLayoutColumns({
     t,
+    canModify: hasFeature(user, 'layout.modify'),
+    canMoveToCampaignFolder,
+    canUserShare: hasFeature(user, 'user.sharing'),
+    canExport: hasFeature(user, 'layout.export'),
+    canViewPlaylist,
+    canViewCampaign,
+    canViewMedia,
+    canAssignCampaign,
+    canSaveTemplate,
+    canTag,
     formatDateTime,
     onDelete: handleDelete,
     openEditModal,
@@ -344,7 +367,11 @@ export default function Layouts() {
     },
     openPublish,
     checkoutLayout: (layoutId) => {
-      handleCheckoutLayout(layoutId);
+      guard(
+        AUTO_SUBMIT_FORMS.layoutCheckout,
+        () => handleCheckoutLayout(layoutId, { notifyOnError: true }),
+        () => openCheckoutModal(layoutId),
+      );
     },
     discardLayout: handleDiscardModal,
     assignModal: (layout) => {
@@ -362,13 +389,9 @@ export default function Layouts() {
     openEnableStatsModal,
     openScheduleModal: canSchedule ? openScheduleModal : undefined,
     showDescriptionId: filterInputs.showDescriptionId,
+    onTagClick: handleTagClick,
+    selectedTagIds: (filterInputs.tags ?? []).map((tag) => tag.tagId),
   });
-
-  const getAllSelectedItems = (): Layout[] => {
-    return Object.keys(rowSelection)
-      .map((id) => selectionCache[id])
-      .filter((item): item is Layout => !!item);
-  };
 
   const bulkActions = getBulkActions({
     t,
@@ -391,11 +414,29 @@ export default function Layouts() {
       setShareEntityIds(ids);
       openModal('share');
     },
+    onEditTags: canTag
+      ? () => {
+          setBulkItems(getAllSelectedItems());
+          openModal('editTagsMultiple');
+        }
+      : undefined,
+    onEnableStats: hasFeature(user, 'layout.modify')
+      ? () => {
+          setBulkItems(getAllSelectedItems());
+          openModal('enableStatsMultiple');
+        }
+      : undefined,
   });
 
-  const { filterOptions } = useLayoutFilterOptions(t);
+  const { filterOptions } = useLayoutFilterOptions(t, canTag);
 
   const libraryTabs = useFilteredTabs('design');
+
+  const activeFilterCount = countActiveFilters(
+    filterInputs,
+    LAYOUT_INITIAL_FILTER_STATE,
+    filterOptions,
+  );
 
   return (
     <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
@@ -411,14 +452,16 @@ export default function Layouts() {
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="Layouts" navigation={libraryTabs} />
           <div className="flex items-center gap-2 md:mb-0">
-            <Button
-              variant="secondary"
-              onClick={() => openModal('import')}
-              disabled={!canAddToFolder || !isHydrated}
-              leftIcon={Upload}
-            >
-              {t('Import')}
-            </Button>
+            {importEnabled && (
+              <Button
+                variant="secondary"
+                onClick={() => openModal('import')}
+                disabled={!canAddToFolder || !isHydrated}
+                leftIcon={Upload}
+              >
+                {t('Import')}
+              </Button>
+            )}
             <Button
               variant="primary"
               className="font-semibold"
@@ -459,14 +502,11 @@ export default function Layouts() {
                 className="py-2 px-3 pl-10 block h-11.25 bg-gray-100 rounded-lg w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none"
               />
             </div>
-            <Button
-              leftIcon={!openFilter ? Filter : FilterX}
-              variant="secondary"
-              onClick={() => setOpenFilter((prev) => !prev)}
-              removeTextOnMobile
-            >
-              {t('Filters')}
-            </Button>
+            <FilterButton
+              isOpen={openFilter}
+              onToggle={() => setOpenFilter((prev) => !prev)}
+              activeCount={activeFilterCount}
+            />
           </div>
         </div>
 
@@ -481,11 +521,7 @@ export default function Layouts() {
           onReset={handleResetFilters}
         />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
-            {error}
-          </div>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         <div className="min-h-0 flex flex-col">
           {!isHydrated ? (
@@ -499,6 +535,7 @@ export default function Layouts() {
               columns={columns}
               data={layoutList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}
@@ -534,6 +571,8 @@ export default function Layouts() {
           isDiscarding,
           isAssigning,
           isExporting,
+          isCheckingOut,
+          checkoutError,
         }}
         selection={{
           selectedLayout,
@@ -542,6 +581,7 @@ export default function Layouts() {
           setShareEntityIds,
           itemsToDelete,
           existingNames,
+          bulkItems,
         }}
         handlers={{
           confirmDelete,
@@ -549,6 +589,7 @@ export default function Layouts() {
             handleConfirmClone(selectedLayout, name, description, copyMedia),
           handleConfirmMove: (folderId) => handleConfirmMove(itemsToMove, folderId),
           confirmPublish,
+          confirmCheckout: handleCheckoutLayout,
           confirmDiscard: handleConfirmDiscard,
           handleConfirmAssign,
           handleExportLayout,

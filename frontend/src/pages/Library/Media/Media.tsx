@@ -20,8 +20,7 @@
  */
 
 import { useQueryClient } from '@tanstack/react-query';
-import type { RowSelectionState } from '@tanstack/react-table';
-import { Search, Filter, Folder, FilterX, Plus, Upload } from 'lucide-react';
+import { Search, Folder, Plus, Upload, Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
@@ -43,10 +42,12 @@ import { useMediaData } from './hooks/useMediaData';
 import { useMediaUpload } from './hooks/useMediaUpload';
 
 import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
 import FolderSidebar from '@/components/ui/FolderSidebar';
 import { notify } from '@/components/ui/Notification';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataGrid } from '@/components/ui/table/DataGrid';
 import { DataTable } from '@/components/ui/table/DataTable';
@@ -56,11 +57,15 @@ import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { useOwner } from '@/hooks/useOwner';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useSelectionState } from '@/hooks/useSelectionState';
 import { useTableState } from '@/hooks/useTableState';
 import { useMediaFilterOptions } from '@/pages/Library/Media/hooks/useMediaFilterOptions';
 import { downloadMedia, downloadMediaAsZip } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
-import { hasFeature } from '@/utils/permissions';
+import type { Tag } from '@/types/tag';
+import { countActiveFilters } from '@/utils/filters';
+import { canSaveInFolder, hasFeature } from '@/utils/permissions';
+import { toggleTag } from '@/utils/tags';
 
 export default function Media() {
   const { t } = useTranslation();
@@ -69,6 +74,11 @@ export default function Media() {
   const queryClient = useQueryClient();
   const canViewFolders = usePermissions()?.canViewFolders;
   const canSchedule = hasFeature(user, 'schedule.add');
+  const scheduleWithView = Number(user?.settings?.SCHEDULE_WITH_VIEW_PERMISSION) === 1;
+  const canViewUsageReport = hasFeature(user, 'schedule.view') || hasFeature(user, 'layout.view');
+  const canModifyLibrary = hasFeature(user, 'library.modify');
+  const canTag = hasFeature(user, 'tag.tagging');
+  const tidyEnabled = user?.settings?.SETTING_LIBRARY_TIDY_ENABLED === '1';
   const homeFolderId = user?.homeFolderId ?? 1;
   const location = useLocation();
   const layoutId = location.state?.layoutId;
@@ -103,7 +113,7 @@ export default function Media() {
       revised: false,
       released: false,
       fileName: false,
-      expires: false,
+      expiresFormatted: false,
       enableStat: false,
       ownerId: false,
     },
@@ -127,8 +137,6 @@ export default function Media() {
   }, [layoutId, isHydrated, setFilterInputs, setPagination]);
 
   const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [selectionCache, setSelectionCache] = useState<Record<string, Media>>({});
   const [openFilter, setOpenFilter] = useState(false);
   const [previewItem, setPreviewItem] = useState<Media | null>(null);
   const [showInfoPanel, setShowInfoPanel] = useState(false);
@@ -139,6 +147,7 @@ export default function Media() {
 
   const [itemsToDelete, setItemsToDelete] = useState<Media[]>([]);
   const [itemsToMove, setItemsToMove] = useState<Media[]>([]);
+  const [bulkItems, setBulkItems] = useState<Media[]>([]);
   const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
   const [selectedMediaId, setSelectedMediaId] = useState<number | null>(null);
 
@@ -146,12 +155,12 @@ export default function Media() {
   const closeModal = () => setActiveModal(null);
 
   const targetUploadFolderId = canViewFolders ? (selectedFolderId ?? homeFolderId) : homeFolderId;
-  const canAddToFolder = targetUploadFolderId !== null;
+  const canAddMedia = hasFeature(user, 'library.add');
+  const canAddToFolder =
+    canAddMedia && canSaveInFolder(user, !!canViewFolders, targetUploadFolderId, homeFolderId);
   const targetUploadFolderName = selectedFolderId === null ? t('Root Folder') : selectedFolderName;
 
-  const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['media'] });
-  };
+  const handleRefresh = () => queryClient.invalidateQueries({ queryKey: ['media'] });
 
   const {
     isAddModalOpen,
@@ -181,6 +190,7 @@ export default function Media() {
     data: queryData,
     isFetching,
     isError,
+    isPaused,
     error: queryError,
   } = useMediaData({
     pagination,
@@ -196,27 +206,16 @@ export default function Media() {
   const error = isError && queryError instanceof Error ? queryError.message : '';
   const mediaList = data ?? [];
 
-  const getRowId = (row: Media) => row.mediaId.toString();
-
-  const handleRowSelectionChange = (
-    updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
-  ) => {
-    const newSelection =
-      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
-
-    setRowSelection(newSelection);
-
-    setSelectionCache((prev) => {
-      const next = { ...prev };
-      mediaList.forEach((item) => {
-        const id = getRowId(item);
-        if (newSelection[id]) {
-          next[id] = item;
-        }
-      });
-      return next;
-    });
-  };
+  const {
+    rowSelection,
+    setRowSelection,
+    onRowSelectionChange: handleRowSelectionChange,
+    getRowId,
+    getAllSelectedItems,
+  } = useSelectionState<Media>({
+    list: mediaList,
+    getRowId: (row) => row.mediaId.toString(),
+  });
 
   const folderActions = useFolderActions({
     onSuccess: (targetFolder) => {
@@ -252,16 +251,21 @@ export default function Media() {
     setDeleteError,
     isCloning,
     isUpdatingStats,
+    isTidying,
+    tidyError,
+    setTidyError,
     confirmDelete,
     handleConfirmClone,
     handleConfirmMove,
     handleConfirmEnableStats,
+    handleConfirmTidy,
   } = useMediaActions({
     t,
     handleRefresh,
     closeModal,
     setRowSelection,
     setItemsToMove,
+    setItemsToDelete,
   });
 
   const handleDelete = (id: number) => {
@@ -308,6 +312,11 @@ export default function Media() {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
+  const handleTagClick = (tag: Tag) => {
+    setFilterInputs((prev) => ({ ...prev, tags: toggleTag(prev.tags, tag) }));
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
+
   const openCopyModal = (mediaId: number) => {
     setSelectedMediaId(mediaId);
     openModal('copy');
@@ -325,7 +334,11 @@ export default function Media() {
 
   const columns = getMediaColumns({
     t,
+    canTag,
+    canUserShare: hasFeature(user, 'user.sharing'),
     formatDateTime,
+    onTagClick: handleTagClick,
+    selectedTagIds: (filterInputs.tags ?? []).map((tag) => tag.tagId),
     onPreview: handlePreviewClick,
     onDelete: handleDelete,
     onDownload: handleDownload,
@@ -348,17 +361,14 @@ export default function Media() {
     openReplaceModal: openReplaceFileModal,
     openScheduleModal: canSchedule ? openScheduleModal : undefined,
     openEnableStatsModal,
-    openUsageReportModal,
+    openUsageReportModal: canViewUsageReport ? openUsageReportModal : undefined,
+    scheduleWithView,
+    canModify: canModifyLibrary,
   });
-
-  const getAllSelectedItems = (): Media[] => {
-    return Object.keys(rowSelection)
-      .map((id) => selectionCache[id])
-      .filter((item): item is Media => !!item);
-  };
 
   const bulkActions = getBulkActions({
     t,
+    canModify: canModifyLibrary,
     onDelete: () => {
       const permittedItems = filterMediaByPermission(
         getAllSelectedItems(),
@@ -458,10 +468,31 @@ export default function Media() {
         notify.error(t('An error occurred while zipping the files.'));
       }
     },
+    onEditTags: canTag
+      ? () => {
+          const permittedItems = getAllSelectedItems().filter((item) => item.userPermissions.edit);
+          if (permittedItems.length === 0) {
+            notify.warning(t('You do not have permission to edit any of the selected items.'));
+            return;
+          }
+          setBulkItems(permittedItems);
+          openModal('editTagsMultiple');
+        }
+      : undefined,
+    onEnableStats: () => {
+      const permittedItems = getAllSelectedItems().filter((item) => item.userPermissions.edit);
+      if (permittedItems.length === 0) {
+        notify.warning(t('You do not have permission to edit any of the selected items.'));
+        return;
+      }
+      setBulkItems(permittedItems);
+      openModal('enableStatsMultiple');
+    },
   });
 
   const getMediaActions = getMediaItemActions({
     t,
+    canUserShare: hasFeature(user, 'user.sharing'),
     formatDateTime,
     onDelete: handleDelete,
     onDownload: handleDownload,
@@ -485,10 +516,14 @@ export default function Media() {
     openReplaceModal: openReplaceFileModal,
     openScheduleModal: canSchedule ? openScheduleModal : undefined,
     openEnableStatsModal,
-    openUsageReportModal,
+    openUsageReportModal: canViewUsageReport ? openUsageReportModal : undefined,
+    scheduleWithView,
+    canModify: canModifyLibrary,
   } as MediaActionsProps);
 
-  const { filterOptions } = useMediaFilterOptions(t);
+  const { filterOptions } = useMediaFilterOptions(t, canTag);
+
+  const activeFilterCount = countActiveFilters(filterInputs, INITIAL_FILTER_STATE, filterOptions);
 
   const libraryTabs = useFilteredTabs('library');
 
@@ -541,7 +576,24 @@ export default function Media() {
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="Media" navigation={libraryTabs} />
           <div className="flex items-center gap-2 md:mb-0">
-            <Button variant="primary" onClick={() => setAddModalOpen(true)} leftIcon={Plus}>
+            {tidyEnabled && canModifyLibrary && (
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setTidyError(null);
+                  openModal('tidy');
+                }}
+                leftIcon={Sparkles}
+              >
+                {t('Tidy Library')}
+              </Button>
+            )}
+            <Button
+              variant="primary"
+              onClick={() => setAddModalOpen(true)}
+              leftIcon={Plus}
+              disabled={!canAddToFolder || !isHydrated}
+            >
               {t('Add Media')}
             </Button>
           </div>
@@ -577,14 +629,11 @@ export default function Media() {
                 className="py-2 px-3 pl-10 block h-11.25 bg-gray-100 rounded-lg w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none"
               />
             </div>
-            <Button
-              leftIcon={!openFilter ? Filter : FilterX}
-              variant="secondary"
-              onClick={() => setOpenFilter((prev) => !prev)}
-              removeTextOnMobile
-            >
-              {t('Filters')}
-            </Button>
+            <FilterButton
+              isOpen={openFilter}
+              onToggle={() => setOpenFilter((prev) => !prev)}
+              activeCount={activeFilterCount}
+            />
           </div>
         </div>
 
@@ -599,13 +648,9 @@ export default function Media() {
           onReset={handleResetFilters}
         />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
-            {error}
-          </div>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
-        <div className="min-h-0 flex flex-col">
+        <div className="flex-1 min-h-0 flex flex-col">
           {!isHydrated ? (
             <div className="flex-1 flex items-center justify-center bg-gray-50 animate-pulse rounded-lg border border-gray-200">
               <span className="text-gray-400 font-medium">
@@ -617,6 +662,7 @@ export default function Media() {
               columns={columns}
               data={mediaList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}
@@ -640,6 +686,7 @@ export default function Media() {
             <DataGrid
               data={mediaList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               rowSelection={rowSelection}
@@ -706,11 +753,14 @@ export default function Media() {
           isDeleting,
           isCloning,
           isUpdatingStats,
+          isTidying,
+          tidyError,
         }}
         selection={{
           selectedMedia,
           itemsToDelete,
           itemsToMove,
+          bulkItems,
           existingNames,
           shareEntityIds,
           setShareEntityIds,
@@ -721,6 +771,7 @@ export default function Media() {
           handleConfirmMove: (folderId) => handleConfirmMove(itemsToMove, folderId),
           handleConfirmEnableStats: (value) =>
             selectedMedia && handleConfirmEnableStats(selectedMedia, value),
+          handleConfirmTidy,
         }}
         upload={{
           isOpen: isAddModalOpen,
@@ -738,6 +789,11 @@ export default function Media() {
           selectedFolderId,
           setSelectedFolderId,
           canViewFolders,
+          canTag,
+          maxSize:
+            Number(user?.settings?.LIBRARY_SIZE_LIMIT_KB) > 0
+              ? Number(user?.settings?.LIBRARY_SIZE_LIMIT_KB) * 1024
+              : 2 * 1024 * 1024 * 1024,
         }}
         infoPanel={{
           isOpen: showInfoPanel,

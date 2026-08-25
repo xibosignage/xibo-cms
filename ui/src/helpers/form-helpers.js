@@ -964,7 +964,7 @@ const formHelpers = function() {
           // Get res.data fonts into the fontNames string
           res.data.forEach(function(font) {
             editorConfig.fontFamily.options
-              .push(`${font.name},${font.familyName}`);
+              .push(font.familyName);
           });
 
           // Resolve the promise and return the editorConfig

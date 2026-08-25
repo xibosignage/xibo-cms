@@ -110,13 +110,13 @@ export async function fetchProofOfPlay(req: ProofOfPlayRequest): Promise<ProofOf
   }
   if (req.tags) {
     params.append('tags', req.tags);
-    if (req.tagsType) {
-      params.append('tagsType', req.tagsType);
-    }
-    params.append('exactTags', req.exactTags ? '1' : '0');
-    if (req.logicalOperator) {
-      params.append('logicalOperator', req.logicalOperator);
-    }
+  }
+  if (req.tagsType) {
+    params.append('tagsType', req.tagsType);
+  }
+  params.append('exactTags', req.exactTags ? '1' : '0');
+  if (req.logicalOperator) {
+    params.append('logicalOperator', req.logicalOperator);
   }
   if (req.groupBy) {
     params.append('groupBy', req.groupBy);

@@ -72,7 +72,7 @@ class QuickChartQRProvider extends BaseHTTPQRCodeProvider
      * @return string
      * @throws QRException
      */
-    public function getMimeType()
+    public function getMimeType(): string
     {
         switch (strtolower($this->format)) {
             case 'png':
@@ -85,7 +85,7 @@ class QuickChartQRProvider extends BaseHTTPQRCodeProvider
         throw new QRException(sprintf('Unknown MIME-type: %s', $this->format));
     }
 
-    public function getQRCodeImage($qrText, $size)
+    public function getQRCodeImage(string $qrText, int $size): string
     {
         return $this->getContent($this->getUrl($qrText, $size));
     }

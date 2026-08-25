@@ -20,6 +20,7 @@
  */
 
 import type { FetchDaypartResponse } from '@/services/daypartApi';
+import { buildCurrentUser, PERSONAS } from '@/testUtils/personas';
 import type { Daypart, DaypartException } from '@/types/daypart';
 import type { User } from '@/types/user';
 
@@ -36,6 +37,7 @@ export const buildDaypart = (overrides: Partial<Daypart> = {}): Daypart => ({
   isCustom: 0,
   adjustedStart: null,
   adjustedEnd: null,
+  userPermissions: { view: 1, edit: 1, delete: 1, modifyPermissions: 1 },
   ...overrides,
 });
 
@@ -76,19 +78,17 @@ export const buildDaypartException = (
   ...overrides,
 });
 
-export const mockUser: User = {
+export const mockUser: User = buildCurrentUser(PERSONAS.superAdmin, {
   userId: 1,
   userName: 'TestUser',
-  userTypeId: 1,
   groupId: 1,
-  features: { 'daypart.view': true },
   settings: {
     defaultTimezone: 'UTC',
     defaultLanguage: 'en',
     DATE_FORMAT_JS: 'DD/MM/YYYY',
     TIME_FORMAT_JS: 'HH:mm',
   },
-};
+});
 
 export const queryKeys = {
   daypartPage: ['userPref', 'daypart_page'] as const,

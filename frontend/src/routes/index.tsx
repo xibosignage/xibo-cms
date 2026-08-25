@@ -29,7 +29,8 @@ import WithPageWrapper from '@/app/WithPageWrapper';
 import ProtectedRoute from '@/components/layout/ProtectedRoute';
 import { APP_ROUTES, DEFAULT_INTERNAL_ROUTE } from '@/config/appRoutes';
 import type { AppRoute } from '@/config/appRoutes';
-import { getRouterBasename, publicPath } from '@/config/publicPath';
+import { getRouterBasename, withPublicPath } from '@/config/publicPath';
+import ErrorPage from '@/pages/ErrorPage/ErrorPage';
 
 const flattenRoutes = (routes: AppRoute[], base = ''): RouteObject[] => {
   return routes.reduce((acc: RouteObject[], route: AppRoute) => {
@@ -62,6 +63,7 @@ export const router = createBrowserRouter(
     {
       path: '/',
       element: <RootLayout />,
+      errorElement: <ErrorPage />,
       loader: requireAuthLoader,
       // App loader
       hydrateFallbackElement: <></>,
@@ -84,6 +86,7 @@ export const router = createBrowserRouter(
     {
       path: 'user/force-change-password',
       loader: requireAuthOnlyLoader,
+      errorElement: <ErrorPage />,
       lazy: () =>
         import('@/pages/User/ForceChangePassword/ForceChangePassword').then((m) => ({
           Component: m.default,
@@ -92,6 +95,7 @@ export const router = createBrowserRouter(
     {
       path: 'application/authorize',
       loader: requireAuthOnlyLoader,
+      errorElement: <ErrorPage />,
       lazy: () =>
         import('@/pages/Administration/Applications/Authorize/AuthorizeApplication').then((m) => ({
           Component: m.default,
@@ -100,6 +104,7 @@ export const router = createBrowserRouter(
     {
       path: 'design/layout/:id/editor',
       loader: requireAuthLoader,
+      errorElement: <ErrorPage />,
       hydrateFallbackElement: <></>,
       lazy: () =>
         import('@/pages/Design/Layouts/LayoutEditorHost').then((m) => ({
@@ -108,9 +113,13 @@ export const router = createBrowserRouter(
     },
     {
       path: 'login',
-      loader: () => {
-        // Force to go to server login page
-        window.location.href = `${publicPath}login`;
+      loader: ({ request }) => {
+        // Force to go to server login page. React Router resolves requireAuthLoader's
+        // redirect('/login?priorRoute=...') as an internal client-side navigation to
+        // this route, so forward its query string (priorRoute) onto the real top-level
+        // navigation — otherwise it's silently dropped before ever reaching PHP.
+        const { search } = new URL(request.url);
+        window.location.href = withPublicPath('login') + search;
         return null;
       },
     },
