@@ -39,7 +39,7 @@ interface AddAndEditDaypartModalProps {
   isOpen?: boolean;
   data?: Daypart | null;
   onClose: () => void;
-  onSave: (updated: Daypart) => void;
+  onSave: (updated: Daypart) => void | Promise<unknown>;
 }
 
 interface DaypartDraft {
@@ -183,10 +183,10 @@ export default function AddAndEditDaypartModal({
           }
 
           const updatedDaypart = await updateDaypart(data.dayPartId, payload);
-          onSave({ ...data, ...updatedDaypart });
+          await onSave({ ...data, ...updatedDaypart });
         } else {
           const newDaypart = await createDaypart(payload);
-          onSave(newDaypart);
+          await onSave(newDaypart);
         }
 
         onClose();
@@ -208,8 +208,8 @@ export default function AddAndEditDaypartModal({
     const isActive = activeTab === tabName;
     return `py-2 px-3 inline-flex items-center gap-2 border-b-2 text-sm font-semibold whitespace-nowrap focus:outline-none transition-all ${
       isActive
-        ? 'border-blue-600 text-blue-500'
-        : 'border-gray-200 text-gray-500 hover:text-blue-600'
+        ? 'border-xibo-blue-600 text-xibo-blue-500'
+        : 'border-gray-200 text-gray-500 hover:text-xibo-blue-600'
     }`;
   };
 

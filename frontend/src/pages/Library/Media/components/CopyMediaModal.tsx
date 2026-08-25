@@ -25,8 +25,10 @@ import { useTranslation } from 'react-i18next';
 import TagInput, { collectTags } from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
 import Modal from '@/components/ui/modals/Modal';
+import { useUserContext } from '@/context/UserContext';
 import type { Media } from '@/types/media';
 import type { Tag } from '@/types/tag';
+import { hasFeature } from '@/utils/permissions';
 import { incrementName } from '@/utils/stringUtils';
 
 interface CopyMediaModalProps {
@@ -47,9 +49,11 @@ export default function CopyMediaModal({
   existingNames,
 }: CopyMediaModalProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
   const [newName, setNewName] = useState('');
   const [newTags, setNewTags] = useState([] as Tag[]);
   const [pendingTagInput, setPendingTagInput] = useState('');
+  const [hasTagPendingValue, setHasTagPendingValue] = useState(false);
   const [error, setError] = useState<string | undefined>();
 
   useEffect(() => {
@@ -101,7 +105,7 @@ export default function CopyMediaModal({
         {
           label: isLoading ? t('Saving…') : t('Save'),
           onClick: handleSave,
-          disabled: isLoading,
+          disabled: isLoading || hasTagPendingValue,
         },
       ]}
     >
@@ -117,12 +121,16 @@ export default function CopyMediaModal({
           }}
         />
 
-        <TagInput
-          onChange={setNewTags}
-          value={newTags}
-          inputValue={pendingTagInput}
-          onInputChange={setPendingTagInput}
-        />
+        {(hasFeature(user, 'tag.tagging') || (newTags?.length ?? 0) > 0) && (
+          <TagInput
+            onChange={setNewTags}
+            value={newTags}
+            inputValue={pendingTagInput}
+            onInputChange={setPendingTagInput}
+            onPendingValueChange={setHasTagPendingValue}
+            disabled={!hasFeature(user, 'tag.tagging')}
+          />
+        )}
       </div>
     </Modal>
   );

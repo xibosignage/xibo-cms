@@ -31,7 +31,6 @@ export interface FetchModuleTemplatesRequest {
   id?: number | null;
   templateId?: string | null;
   dataType?: string | null;
-  keyword?: string;
 }
 
 export interface FetchModuleTemplatesResponse {

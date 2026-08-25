@@ -162,6 +162,7 @@ export interface Event {
 
   parentCampaignId?: number | null;
   syncGroupId?: number | null;
+  syncGroupName?: string | null;
   dataSetId?: number | null;
   dataSetParams?: string | null;
 

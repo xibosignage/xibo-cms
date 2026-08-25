@@ -82,13 +82,6 @@ class DayPart extends Base
         schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
-        name: 'keyword',
-        description: 'Filter by dayPart name, ID, or description',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
-    )]
-    #[OA\Parameter(
         name: 'embed',
         description: 'Embed related data such as exceptions',
         in: 'query',
@@ -149,7 +142,6 @@ class DayPart extends Base
         $daypartFilterQuery = $this->gridRenderFilter([
             'dayPartId' => $sanitizedParams->getInt('dayPartId'),
             'name' => $sanitizedParams->getString('name'),
-            'keyword' => $sanitizedParams->getString('keyword'),
             'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
             'isAlways' => $sanitizedParams->getInt('isAlways'),
             'isCustom' => $sanitizedParams->getInt('isCustom'),
@@ -223,6 +215,13 @@ class DayPart extends Base
             $dayPart->excludeProperty('exceptions');
         }
         $dayPart->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($dayPart));
+
+        if (in_array('scheduleCount', $embed)) {
+            $dayPart->setUnmatchedProperty(
+                'scheduleCount',
+                count($this->scheduleFactory->getByDayPartId($id))
+            );
+        }
 
         return $response
             ->withStatus(200)

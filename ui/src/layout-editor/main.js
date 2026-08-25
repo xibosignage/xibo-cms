@@ -378,7 +378,7 @@ $(() => {
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.reload();
+        LoginBox();
       } else {
         lD.showErrorMessage();
       }
@@ -872,7 +872,7 @@ lD.reloadData = function(
       } else {
         // Login Form needed?
         if (res.login) {
-          window.location.reload();
+          LoginBox();
         } else {
           lD.showErrorMessage();
         }
@@ -1247,7 +1247,7 @@ lD.loadFormFromAPI = function(
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.reload();
+        LoginBox();
       } else {
         toastr.error(errorMessagesTrans.formLoadFailed);
 
@@ -2740,7 +2740,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
         if (!res.success) {
           // Login Form needed?
           if (res.login) {
-            window.location.reload();
+            LoginBox();
           } else {
             // Just an error we dont know about
             if (res.message == undefined) {
@@ -3507,7 +3507,7 @@ lD.checkLayoutStatus = function() {
     if (!res.success) {
       // Login Form needed?
       if (res.login) {
-        window.location.reload();
+        LoginBox();
       } else {
         // Just an error we dont know about
         if (res.message == undefined) {
@@ -4650,7 +4650,7 @@ lD.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.reload();
+        LoginBox();
       } else {
         // Just an error we dont know about
         if (res.message == undefined) {
@@ -4911,7 +4911,7 @@ lD.unlockLayout = function() {
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.reload();
+        LoginBox();
       } else {
         toastr.error(res.message);
       }
@@ -5047,7 +5047,7 @@ lD.importFromProvider = function(items) {
 
         // Login Form needed?
         if (res.login) {
-          window.location.reload();
+          LoginBox();
         } else {
           // Just an error we dont know about
           if (res.message == undefined) {
@@ -5213,7 +5213,7 @@ lD.loadPrefs = function() {
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.reload();
+        LoginBox();
       } else {
         // Just an error we dont know about
         if (res.message == undefined) {
@@ -5266,7 +5266,7 @@ lD.savePrefs = _.debounce(function(clearPrefs = false) {
     if (!res.success) {
       // Login Form needed?
       if (res.login) {
-        window.location.reload();
+        LoginBox();
       } else {
         toastr.error(errorMessagesTrans.userSavePreferencesFailed);
 
@@ -5323,7 +5323,7 @@ lD.initDrawer = function(data) {
       } else {
         // Login Form needed?
         if (res.login) {
-          window.location.reload();
+          LoginBox();
         } else {
           toastr.error(res.message);
         }

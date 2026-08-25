@@ -76,6 +76,7 @@ export const FONT_ACCEPTED_EXTENSIONS: Record<string, string[]> = {
 
 export interface FontActionsProps {
   t: TFunction;
+  canDelete?: boolean;
   onDelete: (id: number) => void;
   onDetails: (id: number) => void;
   onDownload: (font: Font) => void;
@@ -83,46 +84,52 @@ export interface FontActionsProps {
 
 export const getFontItemActions = ({
   t,
+  canDelete = false,
   onDelete,
   onDetails,
   onDownload,
 }: FontActionsProps): ((font: Font) => ActionItem[]) => {
-  return (font: Font) => [
-    // Quick actions (icon buttons in row)
-    {
-      label: t('Details'),
-      icon: Info,
-      onClick: () => onDetails(font.id),
-      isQuickAction: true,
-      variant: 'primary' as const,
-    },
-    {
-      label: t('Download'),
-      icon: Download,
-      onClick: () => onDownload(font),
-      isQuickAction: true,
-    },
-    // Dropdown menu actions
-    {
-      label: t('Details'),
-      icon: Info,
-      onClick: () => onDetails(font.id),
-    },
-    {
-      label: t('Download'),
-      icon: Download,
-      onClick: () => onDownload(font),
-    },
-    {
-      isSeparator: true,
-    },
-    {
-      label: t('Delete'),
-      icon: Trash2,
-      onClick: () => onDelete(font.id),
-      variant: 'danger' as const,
-    },
-  ];
+  return (font: Font) => {
+    const actions: ActionItem[] = [
+      // Quick actions (icon buttons in row)
+      {
+        label: t('Details'),
+        icon: Info,
+        onClick: () => onDetails(font.id),
+        isQuickAction: true,
+        variant: 'primary' as const,
+      },
+      {
+        label: t('Download'),
+        icon: Download,
+        onClick: () => onDownload(font),
+        isQuickAction: true,
+      },
+      // Dropdown menu actions
+      {
+        label: t('Details'),
+        icon: Info,
+        onClick: () => onDetails(font.id),
+      },
+      {
+        label: t('Download'),
+        icon: Download,
+        onClick: () => onDownload(font),
+      },
+    ];
+
+    if (canDelete) {
+      actions.push({ isSeparator: true });
+      actions.push({
+        label: t('Delete'),
+        icon: Trash2,
+        onClick: () => onDelete(font.id),
+        variant: 'danger' as const,
+      });
+    }
+
+    return actions;
+  };
 };
 
 export const getFontColumns = (props: FontActionsProps): ColumnDef<Font>[] => {

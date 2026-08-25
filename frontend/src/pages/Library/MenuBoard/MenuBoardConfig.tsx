@@ -26,7 +26,7 @@ import { type ComponentProps } from 'react';
 
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
 import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkActions';
-import { TextCell, ActionsCell } from '@/components/ui/table/cells';
+import { TextCell, ActionsCell, getSharingColumn } from '@/components/ui/table/cells';
 import { getCommonFormOptions } from '@/config/commonForms';
 import type { MenuBoard } from '@/types/menuBoard';
 import type { ActionItem, BaseModalType } from '@/types/table';
@@ -95,6 +95,8 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<MenuBoardFilte
 
 export interface MenuBoardActionsProps {
   t: TFunction;
+  canModify?: boolean;
+  canUserShare?: boolean;
   onDelete: (id: number) => void;
   openAddEditModal: (row: MenuBoard) => void;
   openShareModal?: (id: number) => void;
@@ -105,6 +107,8 @@ export interface MenuBoardActionsProps {
 
 export const getMenuBoardItemActions = ({
   t,
+  canModify = false,
+  canUserShare = false,
   onDelete,
   openAddEditModal,
   openShareModal,
@@ -112,53 +116,78 @@ export const getMenuBoardItemActions = ({
   copyMenuBoard,
   onNavigate,
 }: MenuBoardActionsProps): ((menuBoard: MenuBoard) => ActionItem[]) => {
-  return (menuBoard: MenuBoard) => [
-    // Quick Actions
-    {
-      label: t('Edit'),
-      icon: Edit,
-      onClick: () => openAddEditModal(menuBoard),
-      isQuickAction: true,
-      variant: 'primary' as const,
-    },
+  return (menuBoard: MenuBoard) => {
+    const canEdit = !!menuBoard.userPermissions?.edit;
+    const canDelete = !!menuBoard.userPermissions?.delete;
+    const canShare = !!menuBoard.userPermissions?.modifyPermissions;
 
-    // Dropdown Menu Actions
-    {
-      label: t('Edit'),
-      icon: Edit,
-      onClick: () => openAddEditModal(menuBoard),
-    },
-    {
-      label: t('Make a Copy'),
-      icon: CopyCheck,
-      onClick: () => copyMenuBoard && copyMenuBoard(menuBoard.menuId),
-    },
-    {
-      label: t('Move'),
-      icon: FolderInput,
-      onClick: () => openMoveModal && openMoveModal(menuBoard),
-    },
-    {
-      label: t('Share'),
-      icon: UserPlus2,
-      onClick: () => openShareModal && openShareModal(menuBoard.menuId),
-    },
-    { isSeparator: true },
-    {
-      label: t('View Categories'),
-      isNavigation: true,
-      onClick: () => {
-        onNavigate(`/library/menu-boards/${menuBoard.menuId}/categories`);
-      },
-    },
-    { isSeparator: true },
-    {
-      label: t('Delete'),
-      icon: Trash2,
-      onClick: () => onDelete(menuBoard.menuId),
-      variant: 'danger' as const,
-    },
-  ];
+    const actions: ActionItem[] = [];
+
+    if (canModify && canEdit) {
+      actions.push({
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => openAddEditModal(menuBoard),
+        isQuickAction: true,
+        variant: 'primary' as const,
+      });
+    }
+
+    if (canModify && canEdit) {
+      actions.push({
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => openAddEditModal(menuBoard),
+      });
+    }
+
+    if (canModify && canEdit && copyMenuBoard) {
+      actions.push({
+        label: t('Make a Copy'),
+        icon: CopyCheck,
+        onClick: () => copyMenuBoard(menuBoard.menuId),
+      });
+    }
+
+    if (canModify && canEdit && openMoveModal) {
+      actions.push({
+        label: t('Move'),
+        icon: FolderInput,
+        onClick: () => openMoveModal(menuBoard),
+      });
+    }
+
+    if (canModify && canShare && canUserShare && openShareModal) {
+      actions.push({
+        label: t('Share'),
+        icon: UserPlus2,
+        onClick: () => openShareModal(menuBoard.menuId),
+      });
+    }
+
+    if (canModify && canEdit) {
+      actions.push({ isSeparator: true });
+      actions.push({
+        label: t('View Categories'),
+        isNavigation: true,
+        onClick: () => {
+          onNavigate(`/library/menu-boards/${menuBoard.menuId}/categories`);
+        },
+      });
+    }
+
+    if (canModify && canDelete) {
+      actions.push({ isSeparator: true });
+      actions.push({
+        label: t('Delete'),
+        icon: Trash2,
+        onClick: () => onDelete(menuBoard.menuId),
+        variant: 'danger' as const,
+      });
+    }
+
+    return actions;
+  };
 };
 
 export const getMenuBoardColumns = (props: MenuBoardActionsProps): ColumnDef<MenuBoard>[] => {
@@ -196,16 +225,7 @@ export const getMenuBoardColumns = (props: MenuBoardActionsProps): ColumnDef<Men
       size: 150,
       cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
     },
-    {
-      accessorKey: 'groupsWithPermissions',
-      enableSorting: false,
-      header: t('Sharing'),
-      size: 120,
-      cell: (info) => {
-        const groups = info.getValue() as string;
-        return <TextCell className="italic text-gray-500">{groups || t('Private')}</TextCell>;
-      },
-    },
+    getSharingColumn<MenuBoard>(t),
     {
       accessorKey: 'modifiedDt',
       header: t('Modified'),
@@ -213,6 +233,10 @@ export const getMenuBoardColumns = (props: MenuBoardActionsProps): ColumnDef<Men
       cell: (info) => {
         const ts = info.getValue<number>();
         return <TextCell>{ts ? formatDateTime(new Date(ts * 1000)) : ''}</TextCell>;
+      },
+      meta: {
+        getExportValue: (row) =>
+          row.modifiedDt ? formatDateTime(new Date(row.modifiedDt * 1000)) : '',
       },
     },
     {
@@ -235,6 +259,7 @@ export const getMenuBoardColumns = (props: MenuBoardActionsProps): ColumnDef<Men
 
 interface GetBulkActionsProps {
   t: TFunction;
+  canModify?: boolean;
   onDelete: () => void;
   onMove?: () => void;
   onShare: () => void;
@@ -242,29 +267,34 @@ interface GetBulkActionsProps {
 
 export const getBulkActions = ({
   t,
+  canModify = false,
   onDelete,
   onMove,
   onShare,
 }: GetBulkActionsProps): DataTableBulkAction<MenuBoard>[] => {
-  return [
-    ...(onMove
-      ? [
-          {
-            label: t('Move'),
-            icon: FolderInput,
-            onClick: onMove,
-          },
-        ]
-      : []),
-    {
-      label: t('Share'),
-      icon: UserPlus2,
-      onClick: onShare,
-    },
-    {
+  const actions: DataTableBulkAction<MenuBoard>[] = [];
+
+  if (canModify && onMove) {
+    actions.push({
+      label: t('Move'),
+      icon: FolderInput,
+      onClick: onMove,
+    });
+  }
+
+  actions.push({
+    label: t('Share'),
+    icon: UserPlus2,
+    onClick: onShare,
+  });
+
+  if (canModify) {
+    actions.push({
       label: t('Delete Selected'),
       icon: Trash2,
       onClick: onDelete,
-    },
-  ];
+    });
+  }
+
+  return actions;
 };

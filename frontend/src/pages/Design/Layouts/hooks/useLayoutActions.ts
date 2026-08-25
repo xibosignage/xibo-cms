@@ -28,7 +28,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { notify } from '@/components/ui/Notification';
 import type { PublishValue } from '@/components/ui/forms/PublishDateSelect';
-import { selectFolder } from '@/services/folderApi';
+import { selectFolder, type ApiResult } from '@/services/folderApi';
 import {
   assignLayoutToCampaign,
   checkoutLayout,
@@ -49,6 +49,7 @@ interface UsePlaylistActionsProps {
   setRowSelection: Dispatch<SetStateAction<RowSelectionState>>;
   setItemsToMove: (items: Layout[]) => void;
   timezone: string;
+  folderId: number | null;
 }
 
 export function useLayoutActions({
@@ -58,6 +59,7 @@ export function useLayoutActions({
   setRowSelection,
   setItemsToMove,
   timezone,
+  folderId,
 }: UsePlaylistActionsProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -66,6 +68,8 @@ export function useLayoutActions({
   const [isDiscarding, setIsDiscarding] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   const navigate = useNavigate();
 
@@ -94,6 +98,9 @@ export function useLayoutActions({
         return;
       }
 
+      notify.success(
+        t('{{count}} layout(s) deleted successfully.', { count: itemsToDelete.length }),
+      );
       setRowSelection({});
       handleRefresh();
       closeModal();
@@ -136,16 +143,17 @@ export function useLayoutActions({
       return;
     }
 
-    const movePromises = itemsToMove.map((item) =>
-      selectFolder({
-        folderId: newFolderId,
-        targetId: item.campaignId,
-        targetType: 'campaign',
-      }),
-    );
-
     try {
-      const results = await Promise.all(movePromises);
+      const results: ApiResult[] = [];
+      for (const item of itemsToMove) {
+        results.push(
+          await selectFolder({
+            folderId: newFolderId,
+            targetId: item.campaignId,
+            targetType: 'campaign',
+          }),
+        );
+      }
       const failures = results.filter((res) => !res.success);
 
       if (failures.length === 0) {
@@ -173,12 +181,13 @@ export function useLayoutActions({
 
   const handleCreateLayout = async () => {
     try {
-      const newLayout = await createLayout();
+      const newLayout = await createLayout({ folderId });
 
       if (!newLayout?.layoutId) {
         throw new Error('Invalid layout response');
       }
 
+      handleRefresh();
       navigate(`/design/layout/${newLayout.layoutId}/editor`);
     } catch (error) {
       console.error(error);
@@ -190,18 +199,34 @@ export function useLayoutActions({
     navigate(`/design/layout/${layoutId}/editor`);
   };
 
-  const handleCheckoutLayout = async (layoutId: number) => {
+  const handleCheckoutLayout = async (layoutId: number, options?: { notifyOnError?: boolean }) => {
+    if (isCheckingOut) {
+      return;
+    }
+
     notify.info(t('Preparing layout for editing...'));
 
     try {
+      setIsCheckingOut(true);
+
       await checkoutLayout(layoutId);
 
       notify.success(t('Layout checked out successfully'));
 
+      closeModal();
       navigate(`/design/layout/${layoutId}/editor`);
     } catch (error) {
       console.error(error);
-      notify.error(t('Failed to checkout layout'));
+      const message =
+        (isAxiosError(error) && error.response?.data?.message) || t('Failed to checkout layout');
+
+      if (options?.notifyOnError) {
+        notify.error(message);
+      } else {
+        setCheckoutError(message);
+      }
+    } finally {
+      setIsCheckingOut(false);
     }
   };
 
@@ -343,6 +368,9 @@ export function useLayoutActions({
     handleOpenLayout,
     confirmPublish,
     handleCheckoutLayout,
+    isCheckingOut,
+    checkoutError,
+    setCheckoutError,
     isDiscarding,
     handleConfirmDiscard,
     handleConfirmAssign,

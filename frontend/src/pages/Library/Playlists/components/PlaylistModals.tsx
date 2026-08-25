@@ -27,19 +27,23 @@ import DeletePlaylistModal from './DeletePlaylistModal';
 import EnableStatsPlaylistModal from './EnableStatsPlaylistModal';
 
 import FolderActionModals from '@/components/ui/FolderActionModals';
+import EditTagsMultipleModal from '@/components/ui/modals/EditTagsMultipleModal';
+import EnableStatsMultipleModal from '@/components/ui/modals/EnableStatsMultipleModal';
 import MoveModal from '@/components/ui/modals/MoveModal';
 import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
 import UsageReportModal from '@/components/ui/modals/UsageReportModal';
 import type { useFolderActions } from '@/hooks/useFolderActions';
+import { setPlaylistEnableStat } from '@/services/playlistApi';
 import { EventTypeId } from '@/types/event';
 import type { Playlist } from '@/types/playlist';
+import { mergeEntityTags } from '@/utils/tags';
 
 interface PlaylistModalsProps {
   actions: {
     activeModal: string | null;
     closeModal: () => void;
-    handleRefresh: () => void;
+    handleRefresh: () => Promise<unknown>;
     deleteError: string | null;
     isDeleting: boolean;
     isCloning: boolean;
@@ -51,6 +55,7 @@ interface PlaylistModalsProps {
     defaultFolderId?: number;
     itemsToDelete: Playlist[];
     itemsToMove: Playlist[];
+    bulkItems: Playlist[];
     existingNames: string[];
     shareEntityIds: number | number[] | null;
     setShareEntityIds: React.Dispatch<React.SetStateAction<number | number[] | null>>;
@@ -105,6 +110,30 @@ export function PlaylistModals({
           }}
           entityType="playlist"
           entityId={selection.shareEntityIds ?? (selection.selectedPlaylist?.playlistId || null)}
+        />
+      )}
+
+      {isModalOpen('editTagsMultiple') && (
+        <EditTagsMultipleModal
+          targetType="playlist"
+          ids={selection.bulkItems.map((item) => item.playlistId)}
+          existingTags={mergeEntityTags(selection.bulkItems)}
+          onClose={actions.closeModal}
+          onSuccess={async () => {
+            await actions.handleRefresh();
+            actions.closeModal();
+          }}
+        />
+      )}
+
+      {isModalOpen('enableStatsMultiple') && (
+        <EnableStatsMultipleModal
+          ids={selection.bulkItems.map((item) => item.playlistId)}
+          entityLabel={t('playlists')}
+          mode="inherit"
+          setEnableStat={(id, enableStat) => setPlaylistEnableStat(id, String(enableStat))}
+          onClose={actions.closeModal}
+          onSuccess={() => actions.handleRefresh()}
         />
       )}
 

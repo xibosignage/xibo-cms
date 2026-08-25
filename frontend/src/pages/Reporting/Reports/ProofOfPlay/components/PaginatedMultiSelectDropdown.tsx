@@ -207,7 +207,7 @@ export default function PaginatedMultiSelectDropdown({
         id={`${id}-label`}
         className="flex items-center justify-between text-sm font-semibold text-gray-500 leading-5"
       >
-        <span>{t(label)}</span>
+        <span>{label}</span>
       </label>
 
       <div

@@ -26,8 +26,8 @@ import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
 
 import { notify } from '@/components/ui/Notification';
-import { selectFolder } from '@/services/folderApi';
-import { cloneMedia, deleteMedia, updateMedia } from '@/services/mediaApi';
+import { selectFolder, type ApiResult } from '@/services/folderApi';
+import { cloneMedia, deleteMedia, tidyLibrary, updateMedia } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
 import type { Tag } from '@/types/tag';
 
@@ -37,6 +37,7 @@ interface UseMediaActionsProps {
   closeModal: () => void;
   setRowSelection: Dispatch<SetStateAction<RowSelectionState>>;
   setItemsToMove: (items: Media[]) => void;
+  setItemsToDelete: (items: Media[]) => void;
 }
 
 export function useMediaActions({
@@ -45,11 +46,14 @@ export function useMediaActions({
   closeModal,
   setRowSelection,
   setItemsToMove,
+  setItemsToDelete,
 }: UseMediaActionsProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isCloning, setIsCloning] = useState(false);
   const [isUpdatingStats, setIsUpdatingStats] = useState(false);
+  const [isTidying, setIsTidying] = useState(false);
+  const [tidyError, setTidyError] = useState<string | null>(null);
 
   const confirmDelete = async (
     itemsToDelete: Media[],
@@ -71,21 +75,25 @@ export function useMediaActions({
         ),
       );
 
-      const failed = results.filter((r) => r.status === 'rejected');
+      const stillFailed = itemsToDelete.filter((_, index) => results[index]?.status === 'rejected');
 
-      if (failed.length > 0) {
-        const firstRejected = failed[0] as PromiseRejectedResult;
+      if (stillFailed.length > 0) {
+        const firstRejected = results.find((r) => r.status === 'rejected') as PromiseRejectedResult;
         const reason = firstRejected.reason;
         const message =
           isAxiosError(reason) && reason.response?.data?.message
             ? reason.response.data.message
-            : t('{{count}} item(s) could not be deleted.', { count: failed.length });
+            : t('{{count}} item(s) could not be deleted.', { count: stillFailed.length });
         setDeleteError(message);
+        setItemsToDelete(stillFailed);
         setRowSelection({});
         handleRefresh();
         return;
       }
 
+      notify.success(
+        t('{{count}} media item(s) deleted successfully.', { count: itemsToDelete.length }),
+      );
       setRowSelection({});
       handleRefresh();
       closeModal();
@@ -127,16 +135,22 @@ export function useMediaActions({
       return;
     }
 
-    const movePromises = itemsToMove.map((item) =>
-      selectFolder({
-        folderId: newFolderId,
-        targetId: item.mediaId,
-        targetType: 'library',
-      }),
-    );
-
     try {
-      const results = await Promise.all(movePromises);
+      const results: ApiResult[] = [];
+      for (const item of itemsToMove) {
+        // Already there — calling selectFolder again gets rejected by the
+        // server and shows up as a spurious partial-failure warning.
+        if (item.folderId === newFolderId) {
+          continue;
+        }
+        results.push(
+          await selectFolder({
+            folderId: newFolderId,
+            targetId: item.mediaId,
+            targetType: 'library',
+          }),
+        );
+      }
       const failures = results.filter((res) => !res.success);
 
       if (failures.length === 0) {
@@ -159,6 +173,33 @@ export function useMediaActions({
     } catch (error) {
       console.error(error);
       notify.error(t('An unexpected error occurred while moving items.'));
+    }
+  };
+
+  const handleConfirmTidy = async (options: { tidyGenericFiles: boolean }) => {
+    if (isTidying) {
+      return;
+    }
+
+    try {
+      setIsTidying(true);
+      setTidyError(null);
+
+      const { countDeleted } = await tidyLibrary(options.tidyGenericFiles);
+
+      notify.success(
+        t('Library tidy complete. {{count}} item(s) removed.', { count: countDeleted }),
+      );
+      handleRefresh();
+      closeModal();
+    } catch (error) {
+      const message =
+        isAxiosError(error) && error.response?.data?.message
+          ? error.response.data.message
+          : t('Failed to tidy the library.');
+      setTidyError(message);
+    } finally {
+      setIsTidying(false);
     }
   };
 
@@ -193,9 +234,13 @@ export function useMediaActions({
     setDeleteError,
     isCloning,
     isUpdatingStats,
+    isTidying,
+    tidyError,
+    setTidyError,
     confirmDelete,
     handleConfirmClone,
     handleConfirmMove,
     handleConfirmEnableStats,
+    handleConfirmTidy,
   };
 }

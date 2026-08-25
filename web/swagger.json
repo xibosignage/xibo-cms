@@ -9,9 +9,9 @@
         },
         "license": {
             "name": "AGPLv3 or later",
-            "url": "http://www.gnu.org/licenses/"
+            "url": "https://www.gnu.org/licenses/"
         },
-        "version": "4.0"
+        "version": "4.5"
     },
     "servers": [
         {
@@ -462,11 +462,65 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "description": "Specifies which field the results are sorted by. Used together with sortDir",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "campaignId",
+                                "campaign",
+                                "type",
+                                "startDt",
+                                "endDt",
+                                "numberLayouts",
+                                "totalDuration",
+                                "cyclePlaybackEnabled",
+                                "playCount",
+                                "targetType",
+                                "target",
+                                "plays",
+                                "spend",
+                                "impressions",
+                                "ref1",
+                                "ref2",
+                                "ref3",
+                                "ref4",
+                                "ref5",
+                                "createdAt",
+                                "modifiedAt",
+                                "modifiedByName"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortDir",
+                        "in": "query",
+                        "description": "Sort direction",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
+                        "headers": {
+                            "X-Total-Count": {
+                                "description": "The total number of records",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        },
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -565,6 +619,46 @@
             }
         },
         "/campaign/{campaignId}": {
+            "get": {
+                "tags": [
+                    "campaign"
+                ],
+                "summary": "Campaign Search by ID",
+                "description": "Get the Campaign object specified by the provided campaignId",
+                "operationId": "campaignSearchById",
+                "parameters": [
+                    {
+                        "name": "campaignId",
+                        "in": "path",
+                        "description": "Numeric ID of the Campaign to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "embed",
+                        "in": "query",
+                        "description": "Embed related data such as layouts, permissions, tags and events",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Campaign"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "put": {
                 "tags": [
                     "campaign"
@@ -966,11 +1060,59 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "Filter by player type (e.g. android, windows, linux, chromeOS, lg). Returns commands available on that type plus commands with no type restriction.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "description": "Specifies which field the results are sorted by. Used together with sortDir",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "commandId",
+                                "command",
+                                "code",
+                                "description",
+                                "availableOn",
+                                "createAlertOn",
+                                "groupsWithPermissions"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortDir",
+                        "in": "query",
+                        "description": "Sort direction",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
+                        "headers": {
+                            "X-Total-Count": {
+                                "description": "The total number of records",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        },
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1058,6 +1200,37 @@
             }
         },
         "/command/{commandId}": {
+            "get": {
+                "tags": [
+                    "command"
+                ],
+                "summary": "Search Commands by ID",
+                "description": "Get the Command object specified by the provided commandId",
+                "operationId": "commandSearchById",
+                "parameters": [
+                    {
+                        "name": "commandId",
+                        "in": "path",
+                        "description": "Numeric ID of the Command to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Command"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "put": {
                 "tags": [
                     "command"
@@ -1224,11 +1397,52 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "description": "Specifies which field the results are sorted by. Used together with sortDir",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "dataSetId",
+                                "dataSet",
+                                "code",
+                                "isRemote",
+                                "isRealTime",
+                                "owner",
+                                "lastSync",
+                                "dataLastModified",
+                                "groupsWithPermissions"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortDir",
+                        "in": "query",
+                        "description": "Sort direction",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
+                        "headers": {
+                            "X-Total-Count": {
+                                "description": "The total number of records",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        },
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1390,6 +1604,39 @@
                                 }
                             }
                         },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DataSet"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/dataset/{id}": {
+            "get": {
+                "tags": [
+                    "dataset"
+                ],
+                "summary": "DataSet Search by ID",
+                "description": "Get the DataSet object specified by the provided datasetId",
+                "operationId": "datasetSearchById",
+                "parameters": [
+                    {
+                        "name": "datasetId",
+                        "in": "path",
+                        "description": "Numeric ID of the DataSet to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1901,11 +2148,59 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "name": "heading",
+                        "in": "query",
+                        "description": "Filter by column heading",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "description": "Specifies which field the results are sorted by. Used together with sortDir",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "heading",
+                                "dataType",
+                                "dataSetColumnType",
+                                "listContent",
+                                "tooltip",
+                                "columnOrder",
+                                "isRequired"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortDir",
+                        "in": "query",
+                        "description": "Sort direction",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
+                        "headers": {
+                            "X-Total-Count": {
+                                "description": "The total number of records",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        },
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2016,6 +2311,48 @@
                                 }
                             }
                         },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DataSetColumn"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/dataset/{id}/column/{colId}": {
+            "get": {
+                "tags": [
+                    "dataset"
+                ],
+                "summary": "DataSet Column Search by ID",
+                "description": "Get the DataSet column object specified by the provided datasetId and columnId",
+                "operationId": "datasetColumnSearchById",
+                "parameters": [
+                    {
+                        "name": "datasetId",
+                        "in": "path",
+                        "description": "Numeric ID of the DataSet to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "datasetColumnId",
+                        "in": "path",
+                        "description": "Numeric ID of the DataSet column to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2195,11 +2532,50 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "name": "keyword",
+                        "in": "query",
+                        "description": "Filter by dataset data column",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "description": "Specifies which field the results are sorted by. Used together with sortDir",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sortDir",
+                        "in": "query",
+                        "description": "Sort direction",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "successful operation"
+                        "description": "successful operation",
+                        "headers": {
+                            "X-Total-Count": {
+                                "description": "The total number of records",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -2359,11 +2735,56 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "name": "title",
+                        "in": "query",
+                        "description": "Filter by RSS title",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "description": "Specifies which field the results are sorted by. Used together with sortDir",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "id",
+                                "title",
+                                "author",
+                                "psk"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortDir",
+                        "in": "query",
+                        "description": "Sort direction",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
+                        "headers": {
+                            "X-Total-Count": {
+                                "description": "The total number of records",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        },
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2445,6 +2866,48 @@
                                 }
                             }
                         },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DataSetRss"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/dataset/{id}/rss/{rssId}}": {
+            "get": {
+                "tags": [
+                    "dataset"
+                ],
+                "summary": "DataSet RSS Search by ID",
+                "description": "Get the DataSet RSS object specified by the provided datasetId and rssId",
+                "operationId": "datasetRssSearchById",
+                "parameters": [
+                    {
+                        "name": "datasetId",
+                        "in": "path",
+                        "description": "Numeric ID of the DataSet to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "datasetRssId",
+                        "in": "path",
+                        "description": "Numeric ID of the DataSet RSS to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2603,6 +3066,35 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "description": "Specifies which field the results are sorted by. Used together with sortDir",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "dayPartId",
+                                "name",
+                                "startTime",
+                                "endTime",
+                                "description"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortDir",
+                        "in": "query",
+                        "description": "Sort direction",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
                     }
                 ],
                 "responses": {
@@ -2705,6 +3197,46 @@
             }
         },
         "/daypart/{dayPartId}": {
+            "get": {
+                "tags": [
+                    "dayPart"
+                ],
+                "summary": "Daypart Search by ID",
+                "description": "Get the DayPart object specified by the provided daypartId",
+                "operationId": "dayPartSearchById",
+                "parameters": [
+                    {
+                        "name": "dayPartId",
+                        "in": "path",
+                        "description": "Numeric ID of the DayPart to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "embed",
+                        "in": "query",
+                        "description": "Embed related data such as exceptions",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DayPart"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "put": {
                 "tags": [
                     "dayPart"
@@ -2824,7 +3356,15 @@
                 "operationId": "displayVenueSearch",
                 "responses": {
                     "200": {
-                        "description": "a successful response"
+                        "description": "a successful response",
+                        "headers": {
+                            "X-Total-Count": {
+                                "description": "The total number of records",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -3017,11 +3557,94 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "description": "Specifies which field the results are sorted by. Used together with sortDir",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "displayId",
+                                "display",
+                                "clientType",
+                                "clientCode",
+                                "clientVersion",
+                                "mediaInventoryStatus",
+                                "clientAddress",
+                                "licensed",
+                                "loggedIn",
+                                "deviceName",
+                                "address",
+                                "storageAvailableSpace",
+                                "storageTotalSpace",
+                                "description",
+                                "orientation",
+                                "resolution",
+                                "defaultLayout",
+                                "incSchedule",
+                                "emailAlert",
+                                "lastAccessed",
+                                "macAddress",
+                                "timeZone",
+                                "languages",
+                                "latitude",
+                                "longitude",
+                                "screenShotRequested",
+                                "bandwidthLimit",
+                                "lastCommandSuccess",
+                                "commercialLicence",
+                                "groupsWithPermissions",
+                                "screenSize",
+                                "isMobile",
+                                "isOutdoor",
+                                "ref1",
+                                "ref2",
+                                "ref3",
+                                "ref4",
+                                "ref5",
+                                "customId",
+                                "costPerPlay",
+                                "impressionsPerPlay",
+                                "createdDt",
+                                "modifiedDt",
+                                "countFaults",
+                                "osVersion",
+                                "osSdk",
+                                "manufacturer",
+                                "brand",
+                                "model",
+                                "cmsTransfer",
+                                "xmrRegistered"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortDir",
+                        "in": "query",
+                        "description": "Sort direction",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
+                        "headers": {
+                            "X-Total-Count": {
+                                "description": "The total number of records",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        },
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3037,6 +3660,37 @@
             }
         },
         "/display/{displayId}": {
+            "get": {
+                "tags": [
+                    "display"
+                ],
+                "summary": "Display search by ID",
+                "description": "Get the Display object specified by the provided displayId",
+                "operationId": "DisplaySearchById",
+                "parameters": [
+                    {
+                        "name": "displayId",
+                        "in": "path",
+                        "description": "Numeric ID of the Display to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Display"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "put": {
                 "tags": [
                     "display"
@@ -3595,6 +4249,44 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "description": "Specifies which field the results are sorted by. Used together with sortDir",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "displayGroupId",
+                                "displayGroup",
+                                "description",
+                                "isDynamic",
+                                "dynamicCriteria",
+                                "dynamicCriteriaTags",
+                                "ref1",
+                                "ref2",
+                                "ref3",
+                                "ref4",
+                                "ref5",
+                                "createdDt",
+                                "modifiedDt",
+                                "groupsWithPermissions"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortDir",
+                        "in": "query",
+                        "description": "Sort direction",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
                     }
                 ],
                 "responses": {
@@ -3695,6 +4387,39 @@
                                 }
                             }
                         },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DisplayGroup"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/displaygroup/{id}": {
+            "get": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Display Group Search by ID",
+                "description": "Get the Display Group object specified by the provided displayGroupId",
+                "operationId": "displayGroupSearchById",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "Numeric ID of the Display Group to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4668,7 +5393,7 @@
                     "displayGroup"
                 ],
                 "summary": "Action: Push Criteria Update",
-                "description": "Send criteria updates to the specified DisplayGroup or to all displays if displayGroupId is not                  provided.",
+                "description": "Send criteria updates to the specified DisplayGroup or to all displays if displayGroupId is not provided.",
                 "operationId": "ScheduleCriteriaUpdate",
                 "parameters": [
                     {
@@ -4745,7 +5470,7 @@
                     {
                         "name": "type",
                         "in": "query",
-                        "description": "Filter by DisplayProfile Type (windows|android|lg)",
+                        "description": "Filter by DisplayProfile Type (windows|android|linux|lg|sssp|chromeOS|hisense)",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -4759,11 +5484,47 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "description": "Specifies which field the results are sorted by. Used together with sortDir",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "displayProfileId",
+                                "name",
+                                "type",
+                                "isDefault"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortDir",
+                        "in": "query",
+                        "description": "Sort direction",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
+                        "headers": {
+                            "X-Total-Count": {
+                                "description": "The total number of records",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        },
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4824,6 +5585,39 @@
                                 }
                             }
                         },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DisplayProfile"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/displayprofile/{id}": {
+            "get": {
+                "tags": [
+                    "displayprofile"
+                ],
+                "summary": "Display Profile Search by ID",
+                "description": "Get the Display Profile object specified by the provided displayProfileId",
+                "operationId": "displayProfileSearchById",
+                "parameters": [
+                    {
+                        "name": "displayProfileId",
+                        "in": "path",
+                        "description": "Numeric ID of the Display Profile to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4975,18 +5769,9 @@
                 "parameters": [
                     {
                         "name": "folderId",
-                        "in": "query",
-                        "description": "Use with gridView, Filter by Folder Id",
-                        "required": false,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "gridView",
-                        "in": "query",
-                        "description": "Flag (0, 1), Show Folders in a standard grid response",
-                        "required": false,
+                        "in": "path",
+                        "description": "The ID of the Folder to return",
+                        "required": true,
                         "schema": {
                             "type": "integer"
                         }
@@ -4994,7 +5779,7 @@
                     {
                         "name": "folderName",
                         "in": "query",
-                        "description": "Use with gridView, Filter by Folder name",
+                        "description": "Filter by Folder name",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -5003,7 +5788,16 @@
                     {
                         "name": "exactFolderName",
                         "in": "query",
-                        "description": "Use with gridView, Filter by exact Folder name match",
+                        "description": "Filter by exact Folder name match",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "homeFolderId",
+                        "in": "query",
+                        "description": "Override the home folder ID used when building the tree view",
                         "required": false,
                         "schema": {
                             "type": "integer"
@@ -5071,6 +5865,67 @@
             }
         },
         "/folders/{folderId}": {
+            "get": {
+                "tags": [
+                    "folder"
+                ],
+                "summary": "Get Folder",
+                "description": "Returns a single decorated Folder including sharing, usage and buttons",
+                "operationId": "folderSearchById",
+                "parameters": [
+                    {
+                        "name": "folderId",
+                        "in": "path",
+                        "description": "The ID of the Folder to return",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "folderName",
+                        "in": "query",
+                        "description": "Filter by Folder name",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "exactFolderName",
+                        "in": "query",
+                        "description": "Filter by exact Folder name match",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "homeFolderId",
+                        "in": "query",
+                        "description": "Override the home folder ID used when building the tree view",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Folder"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "put": {
                 "tags": [
                     "folder"
@@ -5132,7 +5987,7 @@
                     {
                         "name": "folderId",
                         "in": "path",
-                        "description": "Folder ID to edit",
+                        "description": "Folder ID to delete",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -5140,7 +5995,7 @@
                     }
                 ],
                 "responses": {
-                    "204": {
+                    "200": {
                         "description": "successful operation"
                     }
                 }
@@ -5172,11 +6027,51 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "description": "Specifies which field the results are sorted by. Used together with sortDir",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "id",
+                                "name",
+                                "fileName",
+                                "familyName",
+                                "createdAt",
+                                "modifiedAt",
+                                "modifiedBy",
+                                "size"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortDir",
+                        "in": "query",
+                        "description": "Sort direction",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
+                        "headers": {
+                            "X-Total-Count": {
+                                "description": "The total number of records",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        },
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -5224,6 +6119,39 @@
                 "responses": {
                     "200": {
                         "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/fonts/{fontId}": {
+            "get": {
+                "tags": [
+                    "font"
+                ],
+                "summary": "Font Search by ID",
+                "description": "Get the Font object specified by the provided fontId",
+                "operationId": "fontSearchById",
+                "parameters": [
+                    {
+                        "name": "fontId",
+                        "in": "path",
+                        "description": "Numeric ID of the Font to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Font"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -5324,6 +6252,32 @@
                 "responses": {
                     "204": {
                         "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/help/page-links": {
+            "get": {
+                "tags": [
+                    "misc"
+                ],
+                "summary": "Help page links",
+                "description": "Get the help landing page and any page specific help links",
+                "operationId": "helpPageLinks",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "The page name (route name) to return help links for",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful response"
                     }
                 }
             }
@@ -5461,6 +6415,39 @@
                         "required": false,
                         "schema": {
                             "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "description": "Specifies which field the results are sorted by. Used together with sortDir",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "layoutId",
+                                "layout",
+                                "publishedStatus",
+                                "enableStat",
+                                "duration",
+                                "owner",
+                                "modifiedDt",
+                                "campaignId",
+                                "groupsWithPermissions"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortDir",
+                        "in": "query",
+                        "description": "Sort direction",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
                         }
                     }
                 ],
@@ -6346,15 +7333,6 @@
                         }
                     },
                     {
-                        "name": "keyword",
-                        "in": "query",
-                        "description": "Filter by Media Name, ID, or original filename",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
                         "name": "media",
                         "in": "query",
                         "description": "Filter by Media Name",
@@ -6456,10 +7434,30 @@
                     {
                         "name": "isReturnPublicUrls",
                         "in": "query",
-                        "description": "Should the thumbail URLs be authenticated S3 style public URL, default = false",
+                        "description": "Should the thumbnail URLs be authenticated S3 style public URL, default = false",
                         "required": false,
                         "schema": {
                             "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "modifiedDateFrom",
+                        "in": "query",
+                        "description": "Start date for filtering media by modified date",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "modifiedDateTo",
+                        "in": "query",
+                        "description": "End date for filtering media by modified date",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
                         }
                     },
                     {
@@ -6488,7 +7486,8 @@
                                 "durationSeconds",
                                 "fileSizeFormatted",
                                 "mediaType",
-                                "resolution"
+                                "resolution",
+                                "groupsWithPermissions"
                             ]
                         }
                     },
@@ -6509,6 +7508,14 @@
                 "responses": {
                     "200": {
                         "description": "successful operation",
+                        "headers": {
+                            "X-Total-Count": {
+                                "description": "The total number of records",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        },
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -6604,32 +7611,38 @@
                 }
             }
         },
-        "/library/search": {
+        "/library/{mediaId}": {
             "get": {
                 "tags": [
                     "library"
                 ],
-                "summary": "Library Search All",
-                "description": "Search all library files from local and connectors",
-                "operationId": "librarySearchAll",
+                "summary": "Library search by ID",
+                "description": "Get the Media object specified by the provided mediaId",
+                "operationId": "librarySearchById",
+                "parameters": [
+                    {
+                        "name": "mediaId",
+                        "in": "path",
+                        "description": "Numeric ID of the Media to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/SearchResult"
-                                    }
+                                    "$ref": "#/components/schemas/Media"
                                 }
                             }
                         }
                     }
                 }
-            }
-        },
-        "/library/{mediaId}": {
+            },
             "put": {
                 "tags": [
                     "library"
@@ -6754,6 +7767,31 @@
                 }
             }
         },
+        "/library/search": {
+            "get": {
+                "tags": [
+                    "library"
+                ],
+                "summary": "Library Search All",
+                "description": "Search all library files from local and connectors",
+                "operationId": "librarySearchAll",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/SearchResult"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/library/tidy": {
             "delete": {
                 "tags": [
@@ -6810,6 +7848,15 @@
                         "required": true,
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    {
+                        "name": "stream",
+                        "in": "query",
+                        "description": "Serve video/audio media with its real content type for inline streaming playback, rather than as an attachment download",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
                         }
                     }
                 ],
@@ -7265,31 +8312,6 @@
                 }
             }
         },
-        "/about": {
-            "get": {
-                "tags": [
-                    "misc"
-                ],
-                "summary": "About",
-                "description": "Information about this API, such as Version code, etc",
-                "operationId": "about",
-                "responses": {
-                    "200": {
-                        "description": "successful response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "additionalProperties": {
-                                        "type": "string"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/menuboards": {
             "get": {
                 "tags": [
@@ -7343,6 +8365,99 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "modifiedDateFrom",
+                        "in": "query",
+                        "description": "Filter by modified date (from)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "modifiedDateTo",
+                        "in": "query",
+                        "description": "Filter by modified date (to)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "description": "Specifies which field the results are sorted by. Used together with sortDir",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "menuId",
+                                "name",
+                                "code",
+                                "modifiedDt",
+                                "owner",
+                                "folderName",
+                                "groupsWithPermissions"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortDir",
+                        "in": "query",
+                        "description": "Sort direction",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "headers": {
+                            "X-Total-Count": {
+                                "description": "The total number of records",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/MenuBoard"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/menuboard/{menuId}": {
+            "get": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Search Menu Board by ID",
+                "description": "Get the Menu Board object specified by the provided menuId",
+                "operationId": "menuBoardSearchById",
+                "parameters": [
+                    {
+                        "name": "menuId",
+                        "in": "path",
+                        "description": "Numeric ID of the Menu Board to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
                     }
                 ],
                 "responses": {
@@ -7351,10 +8466,154 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/MenuBoard"
+                                    "$ref": "#/components/schemas/MenuBoard"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Edit Menu Board",
+                "description": "Edit existing Menu Board",
+                "operationId": "menuBoardEdit",
+                "parameters": [
+                    {
+                        "name": "menuId",
+                        "in": "path",
+                        "description": "The Menu Board ID to Edit",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "description": "Menu Board name",
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "description": "Menu Board description",
+                                        "type": "string"
+                                    },
+                                    "code": {
+                                        "description": "Menu Board code identifier",
+                                        "type": "string"
+                                    },
+                                    "folderId": {
+                                        "description": "Menu Board Folder Id",
+                                        "type": "integer"
                                     }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Delete Menu Board",
+                "description": "Delete existing Menu Board",
+                "operationId": "menuBoardDelete",
+                "parameters": [
+                    {
+                        "name": "menuId",
+                        "in": "path",
+                        "description": "The Menu Board ID to Delete",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/menuboard/copy/{menuId}": {
+            "post": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Copy Menu Board",
+                "description": "Copy a Menu Board and all of its Categories and Products",
+                "operationId": "menuBoardCopy",
+                "parameters": [
+                    {
+                        "name": "menuId",
+                        "in": "path",
+                        "description": "The Menu Board ID to copy",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "description": "Menu Board name",
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "description": "Menu Board description",
+                                        "type": "string"
+                                    },
+                                    "code": {
+                                        "description": "Menu Board code identifier",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MenuBoard"
                                 }
                             }
                         }
@@ -7419,87 +8678,6 @@
                                 }
                             }
                         }
-                    }
-                }
-            }
-        },
-        "/menuboard/{menuId}": {
-            "put": {
-                "tags": [
-                    "menuBoard"
-                ],
-                "summary": "Edit Menu Board",
-                "description": "Edit existing Menu Board",
-                "operationId": "menuBoardEdit",
-                "parameters": [
-                    {
-                        "name": "menuId",
-                        "in": "path",
-                        "description": "The Menu Board ID to Edit",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "required": [
-                                    "name"
-                                ],
-                                "properties": {
-                                    "name": {
-                                        "description": "Menu Board name",
-                                        "type": "string"
-                                    },
-                                    "description": {
-                                        "description": "Menu Board description",
-                                        "type": "string"
-                                    },
-                                    "code": {
-                                        "description": "Menu Board code identifier",
-                                        "type": "string"
-                                    },
-                                    "folderId": {
-                                        "description": "Menu Board Folder Id",
-                                        "type": "integer"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "204": {
-                        "description": "successful operation"
-                    }
-                }
-            },
-            "delete": {
-                "tags": [
-                    "menuBoard"
-                ],
-                "summary": "Delete Menu Board",
-                "description": "Delete existing Menu Board",
-                "operationId": "menuBoardDelete",
-                "parameters": [
-                    {
-                        "name": "menuId",
-                        "in": "path",
-                        "description": "The Menu Board ID to Delete",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "successful operation"
                     }
                 }
             }
@@ -7600,11 +8778,46 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "description": "Specifies which field the results are sorted by. Used together with sortDir",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "menuCategoryId",
+                                "name",
+                                "code"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortDir",
+                        "in": "query",
+                        "description": "Sort direction",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
+                        "headers": {
+                            "X-Total-Count": {
+                                "description": "The total number of records",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        },
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -7619,12 +8832,113 @@
                 }
             }
         },
+        "/menuboard/category/{menuCategoryId}": {
+            "get": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Search Menu Board Category by ID",
+                "description": "Get the Menu Board Category object specified by the provided menuCategoryId",
+                "operationId": "menuBoardCategorySearchById",
+                "parameters": [
+                    {
+                        "name": "menuCategoryId",
+                        "in": "path",
+                        "description": "Numeric ID of the Menu Board Category to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MenuBoardCategory"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/menuboard/category/copy/{menuCategoryId}": {
+            "post": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Copy Menu Board Category",
+                "description": "Copy a Menu Board Category and all of its Products",
+                "operationId": "menuBoardCategoryCopy",
+                "parameters": [
+                    {
+                        "name": "menuCategoryId",
+                        "in": "path",
+                        "description": "The Menu Board Category ID to copy",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "description": "Menu Board Category name",
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "description": "Menu Board Category description",
+                                        "type": "string"
+                                    },
+                                    "code": {
+                                        "description": "Menu Board Category code identifier",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MenuBoardCategory"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/menuboard/{menuId}/category": {
             "post": {
                 "tags": [
                     "menuBoard"
                 ],
-                "summary": "Add Menu Board",
+                "summary": "Add Menu Board Category",
                 "description": "Add a new Menu Board Category",
                 "operationId": "menuBoardCategoryAdd",
                 "parameters": [
@@ -7756,9 +9070,9 @@
                 "operationId": "menuBoardCategoryDelete",
                 "parameters": [
                     {
-                        "name": "menuId",
+                        "name": "menuCategoryId",
                         "in": "path",
-                        "description": "The menuId to Delete",
+                        "description": "The Menu Board Category ID to Delete",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -7816,6 +9130,79 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "description": "Specifies which field the results are sorted by. Used together with sortDir",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "menuProductId",
+                                "name",
+                                "price",
+                                "displayOrder",
+                                "availability"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortDir",
+                        "in": "query",
+                        "description": "Sort direction",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "headers": {
+                            "X-Total-Count": {
+                                "description": "The total number of records",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/MenuBoard"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/menuboard/product/{menuProductId}": {
+            "get": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Search Menu Board Product by ID",
+                "description": "Get the Menu Board Product object specified by the provided menuProductId",
+                "operationId": "menuBoardProductSearchById",
+                "parameters": [
+                    {
+                        "name": "menuProductId",
+                        "in": "path",
+                        "description": "Numeric ID of the Menu Board Product to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
                     }
                 ],
                 "responses": {
@@ -7824,10 +9211,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/MenuBoard"
-                                    }
+                                    "$ref": "#/components/schemas/MenuBoardProduct"
                                 }
                             }
                         }
@@ -8028,7 +9412,7 @@
                     }
                 },
                 "responses": {
-                    "204": {
+                    "200": {
                         "description": "successful operation"
                     }
                 }
@@ -8037,7 +9421,7 @@
                 "tags": [
                     "menuBoard"
                 ],
-                "summary": "Delete Menu Board",
+                "summary": "Delete Menu Board Product",
                 "description": "Delete existing Menu Board Product",
                 "operationId": "menuBoardProductDelete",
                 "parameters": [
@@ -8066,6 +9450,126 @@
                 "summary": "Module Search",
                 "description": "Get a list of all modules available to this CMS",
                 "operationId": "moduleSearch",
+                "parameters": [
+                    {
+                        "name": "moduleId",
+                        "in": "query",
+                        "description": "Filter by module ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "description": "Filter by module name",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "keyword",
+                        "in": "query",
+                        "description": "Filter by module name, ID, or description",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "description": "Specifies which field the results are sorted by. Used together with sortDir",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "name",
+                                "description",
+                                "regionSpecific",
+                                "defaultDuration",
+                                "previewEnabled",
+                                "assignable",
+                                "enabled",
+                                "isError"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortDir",
+                        "in": "query",
+                        "description": "Sort direction",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "start",
+                        "in": "query",
+                        "description": "The offset to start results from (for pagination)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "length",
+                        "in": "query",
+                        "description": "The number of records to return (page size)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "headers": {
+                            "X-Total-Count": {
+                                "description": "The total number of records",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Module"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/module/{moduleId}": {
+            "get": {
+                "tags": [
+                    "module"
+                ],
+                "summary": "Module Search By ID",
+                "description": "Get the Module object specified by the provided moduleId",
+                "operationId": "ModuleSearchById",
+                "parameters": [
+                    {
+                        "name": "moduleId",
+                        "in": "path",
+                        "description": "ID of the Module to get",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
@@ -8235,11 +9739,47 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "description": "Column to sort by. Used together with sortDir.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "subject",
+                                "type",
+                                "releaseDt",
+                                "isInterrupt"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortDir",
+                        "in": "query",
+                        "description": "Sort direction",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
+                        "headers": {
+                            "X-Total-Count": {
+                                "description": "The total number of records",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        },
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -8331,6 +9871,37 @@
             }
         },
         "/notification/{notificationId}": {
+            "get": {
+                "tags": [
+                    "notification"
+                ],
+                "summary": "Notification Get By ID",
+                "description": "Get a single Notification by ID",
+                "operationId": "notificationGetById",
+                "parameters": [
+                    {
+                        "name": "notificationId",
+                        "in": "path",
+                        "description": "The Notification ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Notification"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "put": {
                 "tags": [
                     "notification"
@@ -8436,7 +10007,185 @@
                 }
             }
         },
+        "/playersoftware": {
+            "get": {
+                "tags": [
+                    "Player Software"
+                ],
+                "summary": "Search Player Versions",
+                "description": "Search Player Versions",
+                "operationId": "playerSoftwareSearch",
+                "parameters": [
+                    {
+                        "name": "playerType",
+                        "in": "query",
+                        "description": "Filter by player type",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "playerVersion",
+                        "in": "query",
+                        "description": "Filter by player version",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "playerCode",
+                        "in": "query",
+                        "description": "Filter by player code",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "versionId",
+                        "in": "query",
+                        "description": "Filter by version ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "playerShowVersion",
+                        "in": "query",
+                        "description": "Filter by player show version name",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "description": "Specifies which field the results are sorted by. Used together with sortDir",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "versionId",
+                                "type",
+                                "version",
+                                "code",
+                                "playerShowVersion",
+                                "fileName",
+                                "size",
+                                "createdAt",
+                                "modifiedAt",
+                                "modifiedBy"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortDir",
+                        "in": "query",
+                        "description": "Sort direction",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "ASC",
+                                "DESC"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "headers": {
+                            "X-Total-Count": {
+                                "description": "The total number of records",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/PlayerVersion"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Player Software"
+                ],
+                "summary": "Player Software Upload",
+                "description": "Upload a new Player version file",
+                "operationId": "playersoftwareUpload",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "files"
+                                ],
+                                "properties": {
+                                    "files": {
+                                        "description": "The Uploaded File",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/playersoftware/{versionId}": {
+            "get": {
+                "tags": [
+                    "Player Software"
+                ],
+                "summary": "Search Player Version by ID",
+                "description": "Get the Player Version object specified by the provided versionId",
+                "operationId": "playerSoftwareSearchById",
+                "parameters": [
+                    {
+                        "name": "versionId",
+                        "in": "path",
+                        "description": "Numeric ID of the Player Version to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PlayerVersion"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "put": {
                 "tags": [
                     "Player Software"
@@ -8485,7 +10234,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Media"
+                                    "$ref": "#/components/schemas/PlayerVersion"
                                 }
                             }
                         }
@@ -8517,34 +10266,14 @@
                 }
             }
         },
-        "/playersoftware": {
-            "post": {
+        "/playersoftware/meta": {
+            "get": {
                 "tags": [
                     "Player Software"
                 ],
-                "summary": "Player Software Upload",
-                "description": "Upload a new Player version file",
-                "operationId": "playersoftwareUpload",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "required": [
-                                    "files"
-                                ],
-                                "properties": {
-                                    "files": {
-                                        "description": "The Uploaded File",
-                                        "type": "string",
-                                        "format": "binary"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
+                "summary": "Player Software Metadata",
+                "description": "Returns distinct player types, versions and valid upload extensions for use in filter dropdowns and upload configuration",
+                "operationId": "playerSoftwareMeta",
                 "responses": {
                     "200": {
                         "description": "successful operation"
@@ -8689,11 +10418,70 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "name": "modifiedDateFrom",
+                        "in": "query",
+                        "description": "Filter by modified date, greater than or equal",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "modifiedDateTo",
+                        "in": "query",
+                        "description": "Filter by modified date, less than or equal",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "description": "Specifies which field the results are sorted by. Used together with sortDir",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "playlistId",
+                                "name",
+                                "duration",
+                                "owner",
+                                "isDynamic",
+                                "enableStat",
+                                "createdDt",
+                                "modifiedDt",
+                                "groupsWithPermissions"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortDir",
+                        "in": "query",
+                        "description": "Sort direction",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
+                        "headers": {
+                            "X-Total-Count": {
+                                "description": "The total number of records",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        },
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -8793,6 +10581,37 @@
             }
         },
         "/playlist/{playlistId}": {
+            "get": {
+                "tags": [
+                    "playlist"
+                ],
+                "summary": "Playlist search by ID",
+                "description": "Get the Playlist object specified by the provided playlistId",
+                "operationId": "PlaylistSearchById",
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "Numeric ID of the Playlist to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Playlist"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "put": {
                 "tags": [
                     "playlist"
@@ -9106,7 +10925,25 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "successful operation"
+                        "description": "successful operation",
+                        "headers": {
+                            "X-Total-Count": {
+                                "description": "The total number of records",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Display"
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -9132,7 +10969,25 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "successful operation"
+                        "description": "successful operation",
+                        "headers": {
+                            "X-Total-Count": {
+                                "description": "The total number of records",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Layout"
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -9625,9 +11480,18 @@
                         }
                     },
                     {
-                        "name": "partialResolution",
+                        "name": "useRegexForName",
                         "in": "query",
-                        "description": "Filter by Partial Resolution Name",
+                        "description": "Flag (0,1). When filtering by multiple resolutions in resolution filter, should we use regex?",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "logicalOperatorName",
+                        "in": "query",
+                        "description": "When filtering by multiple resolutions in resolution filter, which logical operator should be used? AND|OR",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -9659,11 +11523,48 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "description": "Specifies which field the results are sorted by. Used together with sortDir",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "resolutionId",
+                                "resolution",
+                                "width",
+                                "height",
+                                "enabled"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortDir",
+                        "in": "query",
+                        "description": "Sort direction",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
+                        "headers": {
+                            "X-Total-Count": {
+                                "description": "The total number of records",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        },
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -9736,6 +11637,37 @@
             }
         },
         "/resolution/{resolutionId}": {
+            "get": {
+                "tags": [
+                    "resolution"
+                ],
+                "summary": "Resolution Search by ID",
+                "description": "Get the Resolution object specified by the provided resolutionId",
+                "operationId": "resolutionSearchById",
+                "parameters": [
+                    {
+                        "name": "resolutionId",
+                        "in": "path",
+                        "description": "Numeric ID of the Resolution to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Resolution"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "put": {
                 "tags": [
                     "resolution"
@@ -9821,64 +11753,6 @@
                 }
             }
         },
-        "/schedule/data/events": {
-            "get": {
-                "tags": [
-                    "schedule"
-                ],
-                "summary": "Generates the calendar that we draw events on",
-                "description": "⚠️ This endpoint is deprecated and will be removed in v5.0.",
-                "operationId": "scheduleCalendarData",
-                "parameters": [
-                    {
-                        "name": "displayGroupIds",
-                        "in": "query",
-                        "description": "The DisplayGroupIds to return the schedule for. [-1] for All.",
-                        "required": true,
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "integer"
-                            }
-                        }
-                    },
-                    {
-                        "name": "from",
-                        "in": "query",
-                        "description": "From Date in Y-m-d H:i:s format, if not provided defaults to start of the current month",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "to",
-                        "in": "query",
-                        "description": "To Date in Y-m-d H:i:s format, if not provided defaults to start of the next month",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "successful response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/ScheduleCalendarData"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "deprecated": true
-            }
-        },
         "/schedule/{displayGroupId}/events": {
             "get": {
                 "tags": [
@@ -9908,7 +11782,7 @@
                     {
                         "name": "date",
                         "in": "query",
-                        "description": "Date in Y-m-d H:i:s",
+                        "description": "Date in Y-m-d H:i:s. Required when singlePointInTime=1, otherwise ignored. One of date, or startDate/endDate must be supplied, or a 422 is returned.",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -9917,7 +11791,7 @@
                     {
                         "name": "startDate",
                         "in": "query",
-                        "description": "Date in Y-m-d H:i:s",
+                        "description": "Date in Y-m-d H:i:s. Required together with endDate when singlePointInTime is not set. One of date, or startDate/endDate must be supplied, or a 422 is returned.",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -9926,7 +11800,7 @@
                     {
                         "name": "endDate",
                         "in": "query",
-                        "description": "Date in Y-m-d H:i:s",
+                        "description": "Date in Y-m-d H:i:s. Required together with startDate when singlePointInTime is not set. One of date, or startDate/endDate must be supplied, or a 422 is returned.",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -10013,11 +11887,63 @@
                                 "type": "integer"
                             }
                         }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "description": "Specifies which field the results are sorted by. Used together with sortDir",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "eventId",
+                                "eventTypeId",
+                                "name",
+                                "fromDt",
+                                "toDt",
+                                "campaign",
+                                "campaignId",
+                                "shareOfVoice",
+                                "maxPlaysPerHour",
+                                "isGeoAware",
+                                "recurringEvent",
+                                "recurrenceType",
+                                "recurrenceDetail",
+                                "recurrenceRepeatsOn",
+                                "recurrenceRange",
+                                "isPriority",
+                                "criteria",
+                                "createdOn",
+                                "updatedOn",
+                                "modifiedByName"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortDir",
+                        "in": "query",
+                        "description": "Sort direction",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
+                        "headers": {
+                            "X-Total-Count": {
+                                "description": "The total number of records",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        },
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -10060,7 +11986,7 @@
                                         "type": "integer"
                                     },
                                     "fullScreenCampaignId": {
-                                        "description": "For Media or Playlist event Type. The Layout specific Campaign ID to use for this Event.\r\n     * This needs to be the Layout created with layout/fullscreen function",
+                                        "description": "For Media or Playlist event Type.\r\n                         The Layout specific Campaign ID to use for this Event.\r\n     * This needs to be the Layout created with layout/fullscreen function",
                                         "type": "integer"
                                     },
                                     "commandId": {
@@ -10231,6 +12157,37 @@
             }
         },
         "/schedule/{eventId}": {
+            "get": {
+                "tags": [
+                    "schedule"
+                ],
+                "summary": "Schedule search by ID",
+                "description": "Get the Schedule object specified by the provided eventId",
+                "operationId": "ScheduleSearchById",
+                "parameters": [
+                    {
+                        "name": "eventId",
+                        "in": "path",
+                        "description": "Numeric ID of the Scheduled Event to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Schedule"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "put": {
                 "tags": [
                     "schedule"
@@ -10427,6 +12384,147 @@
                 }
             }
         },
+        "/sessions": {
+            "get": {
+                "tags": [
+                    "session"
+                ],
+                "summary": "Session Search",
+                "description": "Search Sessions this user has access to",
+                "operationId": "sessionSearch",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "Filter by type",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "all",
+                                "active",
+                                "guest",
+                                "expired"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "lastAccessedDateFrom",
+                        "in": "query",
+                        "description": "Start date for filtering sessions by last accessed date",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "lastAccessedDateTo",
+                        "in": "query",
+                        "description": "End date for filtering sessions by last accessed date",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "description": "Specifies which field the results are sorted by. Used together with sortDir",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "lastAccessed",
+                                "isExpired",
+                                "userName",
+                                "remoteAddress",
+                                "userAgent",
+                                "expiresAt"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortDir",
+                        "in": "query",
+                        "description": "Sort direction",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "headers": {
+                            "X-Total-Count": {
+                                "description": "The total number of records",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Session"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sessions/logout/{id}": {
+            "delete": {
+                "tags": [
+                    "session"
+                ],
+                "summary": "Session Logout",
+                "description": "Logs out sessions for the given user. If the caller is acting on their own account, every session other than the one making this request is ended; otherwise every session belonging to the given user is ended.",
+                "operationId": "sessionLogout",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The User ID to log out",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/stats": {
             "get": {
                 "tags": [
@@ -10588,49 +12686,6 @@
                 }
             }
         },
-        "/stats/getExportStatsCount": {
-            "get": {
-                "tags": [
-                    "statistics"
-                ],
-                "summary": "Total count of stats",
-                "operationId": "getExportStatsCount",
-                "parameters": [
-                    {
-                        "name": "fromDt",
-                        "in": "query",
-                        "description": "The start date for the filter. Default = 24 hours ago",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "toDt",
-                        "in": "query",
-                        "description": "The end date for the filter. Default = now.",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "displayId",
-                        "in": "query",
-                        "description": "An optional display Id to filter",
-                        "required": false,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "successful operation"
-                    }
-                }
-            }
-        },
         "/stats/timeDisconnected": {
             "get": {
                 "tags": [
@@ -10718,7 +12773,8 @@
                 "tags": [
                     "syncGroup"
                 ],
-                "summary": "Get Sync Groups",
+                "summary": "Search Sync Groups",
+                "description": "Search for Sync Groups viewable by this user",
                 "operationId": "syncGroupSearch",
                 "parameters": [
                     {
@@ -10733,7 +12789,7 @@
                     {
                         "name": "name",
                         "in": "query",
-                        "description": "Filter by syncGroup Name",
+                        "description": "Filter by partial Sync Group name",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -10756,11 +12812,40 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "description": "Specifies which field the results are sorted by. Used together with sortDir",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "syncGroupId",
+                                "name",
+                                "owner",
+                                "createdDt",
+                                "modifiedDt"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortDir",
+                        "in": "query",
+                        "description": "Sort direction",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "a successful response",
+                        "description": "successful operation",
                         "headers": {
                             "X-Total-Count": {
                                 "description": "The total number of records",
@@ -10776,6 +12861,39 @@
                                     "items": {
                                         "$ref": "#/components/schemas/SyncGroup"
                                     }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/syncgroup/{syncGroupId}": {
+            "get": {
+                "tags": [
+                    "syncGroup"
+                ],
+                "summary": "Search Sync Groups by ID",
+                "description": "Get the Sync Group object specified by the provided syncGroupId",
+                "operationId": "syncGroupSearchById",
+                "parameters": [
+                    {
+                        "name": "syncGroupId",
+                        "in": "path",
+                        "description": "Numeric ID of the Sync Group to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SyncGroup"
                                 }
                             }
                         }
@@ -10808,6 +12926,14 @@
                                         "description": "The publisher port number on which sync group members will communicate - default 9590",
                                         "type": "integer"
                                     },
+                                    "syncSwitchDelay": {
+                                        "description": "The delay (in ms) when displaying the changes in content - default 750",
+                                        "type": "integer"
+                                    },
+                                    "syncVideoPauseDelay": {
+                                        "description": "The delay (in ms) before unpausing the video on start - default 100",
+                                        "type": "integer"
+                                    },
                                     "folderId": {
                                         "description": "Folder ID to which this object should be assigned to",
                                         "type": "integer"
@@ -10823,7 +12949,7 @@
                         "description": "successful operation",
                         "headers": {
                             "Location": {
-                                "description": "Location of the new DisplayGroup",
+                                "description": "Location of the new SyncGroup",
                                 "schema": {
                                     "type": "string"
                                 }
@@ -10832,7 +12958,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/DisplayGroup"
+                                    "$ref": "#/components/schemas/SyncGroup"
                                 }
                             }
                         }
@@ -10907,7 +13033,7 @@
                     {
                         "name": "syncGroupId",
                         "in": "path",
-                        "description": "The Sync Group to assign to",
+                        "description": "The Sync Group to edit",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -10959,7 +13085,7 @@
                         "description": "successful operation",
                         "headers": {
                             "Location": {
-                                "description": "Location of the new DisplayGroup",
+                                "description": "Location of the new SyncGroup",
                                 "schema": {
                                     "type": "string"
                                 }
@@ -10968,7 +13094,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/DisplayGroup"
+                                    "$ref": "#/components/schemas/SyncGroup"
                                 }
                             }
                         }
@@ -11007,13 +13133,14 @@
                 "tags": [
                     "syncGroup"
                 ],
-                "summary": "Get members of this sync group",
+                "summary": "Get Sync Group members",
+                "description": "Get the Display members of the specified Sync Group",
                 "operationId": "syncGroupDisplays",
                 "parameters": [
                     {
                         "name": "syncGroupId",
                         "in": "path",
-                        "description": "The syncGroupId to delete",
+                        "description": "The ID of the Sync Group to get members for",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -11031,7 +13158,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "a successful response",
+                        "description": "successful operation",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -11103,16 +13230,53 @@
                     {
                         "name": "haveOptions",
                         "in": "query",
-                        "description": "Set to 1 to show only results that have options set",
+                        "description": "Filter by options: 1 = has options (IS NOT NULL), 0 = no options (IS NULL), omit for all",
                         "required": false,
                         "schema": {
                             "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "description": "Specifies which field the results are sorted by. Used together with sortDir",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "tagId",
+                                "tag",
+                                "isSystem",
+                                "options",
+                                "isRequired"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortDir",
+                        "in": "query",
+                        "description": "Sort direction",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
                         }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
+                        "headers": {
+                            "X-Total-Count": {
+                                "description": "The total number of records",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        },
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -11175,6 +13339,37 @@
             }
         },
         "/tag/{tagId}": {
+            "get": {
+                "tags": [
+                    "tags"
+                ],
+                "summary": "Tag search by ID",
+                "description": "Get the Tag object specified by the provided tagId",
+                "operationId": "TagSearchById",
+                "parameters": [
+                    {
+                        "name": "tagId",
+                        "in": "path",
+                        "description": "Numeric ID of the Tag to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Tag"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "put": {
                 "tags": [
                     "tags"
@@ -11258,6 +13453,141 @@
                 }
             }
         },
+        "/tag/usage/{tagId}": {
+            "get": {
+                "tags": [
+                    "tags"
+                ],
+                "summary": "Get Tag Item Usage Report",
+                "description": "Get the records for the Tag item usage report",
+                "operationId": "TagUsageReport",
+                "parameters": [
+                    {
+                        "name": "tagId",
+                        "in": "path",
+                        "description": "Numeric ID of the Tag to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "description": "Specifies which field the results are sorted by. Used together with sortDir",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "entityId",
+                                "type",
+                                "name",
+                                "value"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortDir",
+                        "in": "query",
+                        "description": "Sort direction",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "headers": {
+                            "X-Total-Count": {
+                                "description": "The total number of records",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/tag/{type}/multi": {
+            "put": {
+                "tags": [
+                    "tags"
+                ],
+                "summary": "Edit Tags on multiple items",
+                "description": "Add or remove Tags on multiple items of the same type at once",
+                "operationId": "tagEditMultiple",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "path",
+                        "description": "The type of item being tagged, e.g. layout, playlist, media, campaign, displayGroup, display",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "properties": {
+                                    "targetIds": {
+                                        "description": "A comma separated list of item IDs to edit",
+                                        "type": "string"
+                                    },
+                                    "addTags": {
+                                        "description": "A comma separated list of Tags to add",
+                                        "type": "string"
+                                    },
+                                    "removeTags": {
+                                        "description": "A comma separated list of Tags to remove",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "successful operation, all items updated"
+                    },
+                    "200": {
+                        "description": "successful operation, but one or more items failed to update",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "failedCount": {
+                                            "description": "The number of items that failed to update",
+                                            "type": "integer"
+                                        },
+                                        "failedNames": {
+                                            "description": "The names of the items that failed to update",
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/template": {
             "get": {
                 "tags": [
@@ -11266,9 +13596,58 @@
                 "summary": "Template Search",
                 "description": "Search templates this user has access to",
                 "operationId": "templateSearch",
+                "parameters": [
+                    {
+                        "name": "embed",
+                        "in": "query",
+                        "description": "Embed related data such as regions, playlists, widgets, tags, campaigns, permissions",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "description": "Specifies which field the results are sorted by. Used together with sortDir",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "layout",
+                                "owner",
+                                "publishedStatus",
+                                "modifiedDt",
+                                "orientation",
+                                "groupsWithPermissions"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortDir",
+                        "in": "query",
+                        "description": "Sort direction",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
+                        "headers": {
+                            "X-Total-Count": {
+                                "description": "The total number of records",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        },
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -11331,6 +13710,48 @@
                                 }
                             }
                         },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Layout"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/template/{templateId}": {
+            "get": {
+                "tags": [
+                    "template"
+                ],
+                "summary": "Template Search by ID",
+                "description": "Get the Template object specified by the provided templateId",
+                "operationId": "templateSearchById",
+                "parameters": [
+                    {
+                        "name": "templateId",
+                        "in": "path",
+                        "description": "Numeric ID of the Template to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "embed",
+                        "in": "query",
+                        "description": "Embed related data such as regions, playlists, widgets, tags, campaigns, permissions",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -11506,11 +13927,59 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "description": "Specifies which field the results are sorted by. Used together with sortDir",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "userId",
+                                "userName",
+                                "firstName",
+                                "lastName",
+                                "email",
+                                "homeFolder",
+                                "libraryQuotaFormatted",
+                                "lastAccessed",
+                                "retired",
+                                "twoFactorDescription",
+                                "phone",
+                                "ref1",
+                                "ref2",
+                                "ref3",
+                                "ref4",
+                                "ref5"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortDir",
+                        "in": "query",
+                        "description": "Sort direction",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
+                        "headers": {
+                            "X-Total-Count": {
+                                "description": "The total number of records",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        },
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -11653,6 +14122,37 @@
             }
         },
         "/user/{userId}": {
+            "get": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "User Search by ID",
+                "description": "Get the User object specified by the provided userId",
+                "operationId": "userSearchById",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "Numeric ID of the User to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "put": {
                 "tags": [
                     "user"
@@ -12093,13 +14593,7 @@
                     "content": {
                         "application/x-www-form-urlencoded": {
                             "schema": {
-                                "required": [
-                                    "navigationMenuPosition"
-                                ],
                                 "properties": {
-                                    "navigationMenuPosition": {
-                                        "type": "string"
-                                    },
                                     "useLibraryDuration": {
                                         "type": "integer"
                                     },
@@ -12156,6 +14650,32 @@
                 }
             }
         },
+        "/user/{id}/applications": {
+            "get": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "User Applications",
+                "description": "Get authorized applications for a specific user",
+                "operationId": "userApplicationsGrid",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The user ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/group": {
             "get": {
                 "tags": [
@@ -12182,11 +14702,56 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "sortBy",
+                        "in": "query",
+                        "description": "Specifies which field the results are sorted by. Used together with sortDir",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "groupId",
+                                "group",
+                                "description",
+                                "libraryQuota",
+                                "isSystemNotification",
+                                "isDisplayNotification",
+                                "isDataSetNotification",
+                                "isLayoutNotification",
+                                "isLibraryNotification",
+                                "isReportNotification",
+                                "isScheduleNotification",
+                                "isCustomNotification",
+                                "isShownForAddUser"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sortDir",
+                        "in": "query",
+                        "description": "Sort direction",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
+                        "headers": {
+                            "X-Total-Count": {
+                                "description": "The total number of records",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        },
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -12297,6 +14862,37 @@
             }
         },
         "/group/{userGroupId}": {
+            "get": {
+                "tags": [
+                    "usergroup"
+                ],
+                "summary": "User Group search by ID",
+                "description": "Get the User group object specified by the provided groupId",
+                "operationId": "userGroupSearchById",
+                "parameters": [
+                    {
+                        "name": "userGroupId",
+                        "in": "path",
+                        "description": "Numeric ID of the User Group to get",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserGroup"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "put": {
                 "tags": [
                     "usergroup"
@@ -13443,6 +16039,38 @@
                 },
                 "type": "object"
             },
+            "Session": {
+                "properties": {
+                    "userId": {
+                        "description": "Class Sessions",
+                        "type": "integer"
+                    },
+                    "userName": {
+                        "type": "string"
+                    },
+                    "isExpired": {
+                        "type": "integer"
+                    },
+                    "lastAccessed": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "remoteAddress": {
+                        "type": "string"
+                    },
+                    "userAgent": {
+                        "type": "string"
+                    },
+                    "expiresAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "userPermissions": {
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
             "StatisticsData": {
                 "properties": {
                     "type": {
@@ -13612,27 +16240,33 @@
                     },
                     "description": {
                         "description": "Application description",
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true
                     },
                     "logo": {
                         "description": "Path to Application logo",
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true
                     },
                     "coverImage": {
                         "description": "Path to Application Cover Image",
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true
                     },
                     "companyName": {
                         "description": "Company name associated with this Application",
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true
                     },
                     "termsUrl": {
                         "description": "URL to Application terms",
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true
                     },
                     "privacyUrl": {
                         "description": "URL to Application privacy policy",
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true
                     }
                 },
                 "type": "object"
@@ -14689,6 +17323,16 @@
                     "children": {
                         "description": "An array of children folderIds",
                         "type": "string"
+                    },
+                    "createdDt": {
+                        "description": "Date this Folder was created",
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "modifiedDt": {
+                        "description": "Date this Folder was last modified",
+                        "type": "string",
+                        "nullable": true
                     }
                 },
                 "type": "object"
@@ -15078,40 +17722,31 @@
                 "description": "Class MenuBoard",
                 "properties": {
                     "menuId": {
-                        "description": "The Menu Board Id",
-                        "type": "integer"
+                        "description": "The Menu Board Id"
                     },
                     "name": {
-                        "description": "The Menu Board name",
-                        "type": "string"
+                        "description": "The Menu Board name"
                     },
                     "description": {
-                        "description": "The Menu Board description",
-                        "type": "string"
+                        "description": "The Menu Board description"
                     },
                     "code": {
-                        "description": "The Menu Board code identifier",
-                        "type": "string"
+                        "description": "The Menu Board code identifier"
                     },
                     "userId": {
-                        "description": "The Menu Board owner Id",
-                        "type": "integer"
+                        "description": "The Menu Board owner Id"
                     },
                     "modifiedDt": {
-                        "description": "The Menu Board last modified date",
-                        "type": "integer"
+                        "description": "The Menu Board last modified date"
                     },
                     "folderId": {
-                        "description": "The Id of the Folder this Menu Board belongs to",
-                        "type": "string"
+                        "description": "The Id of the Folder this Menu Board belongs to"
                     },
                     "permissionsFolderId": {
-                        "description": "The id of the Folder responsible for providing permissions for this Menu Board",
-                        "type": "integer"
+                        "description": "The id of the Folder responsible for providing permissions for this Menu Board"
                     },
                     "groupsWithPermissions": {
-                        "description": "A comma separated list of Groups/Users that have permission to this menu Board",
-                        "type": "string"
+                        "description": "A comma separated list of Groups/Users that have permission to this menu Board"
                     }
                 },
                 "type": "object"
@@ -15120,28 +17755,22 @@
                 "description": "Class MenuBoardCategory",
                 "properties": {
                     "menuCategoryId": {
-                        "description": "The Menu Board Category Id",
-                        "type": "integer"
+                        "description": "The Menu Board Category Id"
                     },
                     "menuId": {
-                        "description": "The Menu Board Id",
-                        "type": "integer"
+                        "description": "The Menu Board Id"
                     },
                     "name": {
-                        "description": "The Menu Board Category name",
-                        "type": "string"
+                        "description": "The Menu Board Category name"
                     },
                     "description": {
-                        "description": "The Menu Board Category description",
-                        "type": "string"
+                        "description": "The Menu Board Category description"
                     },
                     "code": {
-                        "description": "The Menu Board Category code identifier",
-                        "type": "string"
+                        "description": "The Menu Board Category code identifier"
                     },
                     "mediaId": {
-                        "description": "The Menu Board Category associated mediaId",
-                        "type": "integer"
+                        "description": "The Menu Board Category associated mediaId"
                     }
                 },
                 "type": "object"
@@ -15150,53 +17779,40 @@
                 "description": "Class MenuBoardProduct",
                 "properties": {
                     "menuProductId": {
-                        "description": "The Menu Board Product Id",
-                        "type": "integer"
+                        "description": "The Menu Board Product Id"
                     },
                     "menuCategoryId": {
-                        "description": "The Menu Board Category Id",
-                        "type": "integer"
+                        "description": "The Menu Board Category Id"
                     },
                     "menuId": {
-                        "description": "The Menu Board Id",
-                        "type": "integer"
+                        "description": "The Menu Board Id"
                     },
                     "name": {
-                        "description": "The Menu Board Category name",
-                        "type": "string"
+                        "description": "The Menu Board Category name"
                     },
                     "price": {
-                        "description": "The Menu Board Product price",
-                        "type": "number",
-                        "format": "double"
+                        "description": "The Menu Board Product price"
                     },
                     "description": {
-                        "description": "The Menu Board Product description",
-                        "type": "string"
+                        "description": "The Menu Board Product description"
                     },
                     "code": {
-                        "description": "The Menu Board Product code identifier",
-                        "type": "string"
+                        "description": "The Menu Board Product code identifier"
                     },
                     "displayOrder": {
-                        "description": "The Menu Board Product display order, used for sorting",
-                        "type": "integer"
+                        "description": "The Menu Board Product display order, used for sorting"
                     },
                     "availability": {
-                        "description": "The Menu Board Product availability",
-                        "type": "integer"
+                        "description": "The Menu Board Product availability"
                     },
                     "allergyInfo": {
-                        "description": "The Menu Board Product allergy information",
-                        "type": "string"
+                        "description": "The Menu Board Product allergy information"
                     },
                     "calories": {
-                        "description": "The Menu Board Product allergy information",
-                        "type": "integer"
+                        "description": "The Menu Board Product allergy information"
                     },
                     "mediaId": {
-                        "description": "The Menu Board Product associated mediaId",
-                        "type": "integer"
+                        "description": "The Menu Board Product associated mediaId"
                     },
                     "productOptions": {
                         "description": "The Menu Board Product array of options",
@@ -15212,16 +17828,13 @@
                 "description": "Class MenuBoardProductOption",
                 "properties": {
                     "menuProductId": {
-                        "description": "The Menu Product ID that this Option belongs to",
-                        "type": "integer"
+                        "description": "The Menu Product ID that this Option belongs to"
                     },
                     "option": {
-                        "description": "The option name",
-                        "type": "string"
+                        "description": "The option name"
                     },
                     "value": {
-                        "description": "The option value",
-                        "type": "string"
+                        "description": "The option value"
                     }
                 },
                 "type": "object"
@@ -15557,6 +18170,14 @@
                         "items": {
                             "$ref": "#/components/schemas/DisplayGroup"
                         }
+                    },
+                    "canEdit": {
+                        "description": "Flag indicating whether the current user can edit this notification",
+                        "type": "boolean"
+                    },
+                    "canDelete": {
+                        "description": "Flag indicating whether the current user can delete this notification",
+                        "type": "boolean"
                     }
                 },
                 "type": "object"
@@ -15670,47 +18291,58 @@
                 "properties": {
                     "versionId": {
                         "description": "Version ID",
-                        "type": "integer"
+                        "type": "integer",
+                        "nullable": true
                     },
                     "type": {
                         "description": "Player type",
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true
                     },
                     "version": {
                         "description": "Version number",
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true
                     },
                     "code": {
                         "description": "Code number",
-                        "type": "integer"
+                        "type": "integer",
+                        "nullable": true
                     },
                     "playerShowVersion": {
                         "description": "Player version to show",
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true
                     },
                     "createdAt": {
                         "description": "The Player Version created date",
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true
                     },
                     "modifiedAt": {
                         "description": "The Player Version modified date",
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true
                     },
                     "modifiedBy": {
                         "description": "The name of the user that modified this Player Version last",
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true
                     },
                     "fileName": {
                         "description": "The Player Version file name",
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true
                     },
                     "size": {
                         "description": "The Player Version file size in bytes",
-                        "type": "integer"
+                        "type": "integer",
+                        "nullable": true
                     },
                     "md5": {
                         "description": "A MD5 checksum of the stored Player Version file",
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true
                     }
                 },
                 "type": "object"
@@ -17477,6 +20109,10 @@
         {
             "name": "font",
             "description": "font"
+        },
+        {
+            "name": "session",
+            "description": "session"
         },
         {
             "name": "syncGroup",

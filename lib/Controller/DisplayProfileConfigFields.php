@@ -1927,6 +1927,23 @@ trait DisplayProfileConfigFields
                 $config
             );
         }
+
+        if ($sanitizedParams->hasParam('isRecordGeoLocationOnProofOfPlay')) {
+            $this->handleChangedSettings(
+                'isRecordGeoLocationOnProofOfPlay',
+                ($ownConfig)
+                    ? $displayProfile->getSetting('isRecordGeoLocationOnProofOfPlay')
+                    : $display->getSetting('isRecordGeoLocationOnProofOfPlay'),
+                $sanitizedParams->getCheckbox('isRecordGeoLocationOnProofOfPlay'),
+                $changedSettings
+            );
+            $displayProfile->setSetting(
+                'isRecordGeoLocationOnProofOfPlay',
+                $sanitizedParams->getCheckbox('isRecordGeoLocationOnProofOfPlay'),
+                $ownConfig,
+                $config
+            );
+        }
     }
 
     private function applyLgConfigFields(
@@ -2865,6 +2882,23 @@ trait DisplayProfileConfigFields
             $displayProfile->setSetting(
                 'screenShotSize',
                 $sanitizedParams->getInt('screenShotSize'),
+                $ownConfig,
+                $config
+            );
+        }
+
+        if ($sanitizedParams->hasParam('isRecordGeoLocationOnProofOfPlay')) {
+            $this->handleChangedSettings(
+                'isRecordGeoLocationOnProofOfPlay',
+                ($ownConfig)
+                    ? $displayProfile->getSetting('isRecordGeoLocationOnProofOfPlay')
+                    : $display->getSetting('isRecordGeoLocationOnProofOfPlay'),
+                $sanitizedParams->getCheckbox('isRecordGeoLocationOnProofOfPlay'),
+                $changedSettings
+            );
+            $displayProfile->setSetting(
+                'isRecordGeoLocationOnProofOfPlay',
+                $sanitizedParams->getCheckbox('isRecordGeoLocationOnProofOfPlay'),
                 $ownConfig,
                 $config
             );

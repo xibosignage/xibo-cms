@@ -19,9 +19,9 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
-import { Filter, FilterX, Plus, Search } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -39,9 +39,11 @@ import { useMenuBoardData } from './hooks/useMenuBoardData';
 import { useMenuBoardFilterOptions } from './hooks/useMenuBoardFilterOptions';
 
 import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
 import FolderSidebar from '@/components/ui/FolderSidebar';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useUserContext } from '@/context/UserContext';
@@ -49,8 +51,9 @@ import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
-import { fetchContextButtons } from '@/services/folderApi';
 import type { MenuBoard } from '@/types/menuBoard';
+import { countActiveFilters } from '@/utils/filters';
+import { canSaveInFolder, hasFeature } from '@/utils/permissions';
 
 export default function MenuBoards() {
   const { t } = useTranslation();
@@ -112,6 +115,7 @@ export default function MenuBoards() {
     data: queryData,
     isFetching,
     isError,
+    isPaused,
     error: queryError,
   } = useMenuBoardData({
     pagination,
@@ -123,17 +127,14 @@ export default function MenuBoards() {
   });
 
   const effectiveFolderId = selectedFolderId ?? homeFolderId;
-  const { data: folderPerms } = useQuery({
-    queryKey: ['folderPermissions', effectiveFolderId],
-    queryFn: () => fetchContextButtons(effectiveFolderId),
-    staleTime: 1000 * 60 * 5,
-  });
 
   const data = queryData?.rows;
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
   const menuBoardList = data ?? [];
-  const canAddToFolder = folderPerms?.create || false;
+  const canAddToFolder =
+    hasFeature(user, 'menuBoard.add') &&
+    canSaveInFolder(user, !!canViewFolders, effectiveFolderId, homeFolderId);
 
   const folderActions = useFolderActions({
     onSuccess: (targetFolder) => {
@@ -224,6 +225,8 @@ export default function MenuBoards() {
 
   const columns = getMenuBoardColumns({
     t,
+    canModify: hasFeature(user, 'menuBoard.modify'),
+    canUserShare: hasFeature(user, 'user.sharing'),
     onDelete: handleDelete,
     openAddEditModal,
     openMoveModal: (menuBoard) => {
@@ -247,6 +250,7 @@ export default function MenuBoards() {
 
   const bulkActions = getBulkActions({
     t,
+    canModify: hasFeature(user, 'menuBoard.modify'),
     onDelete: () => {
       const allItems = getAllSelectedItems();
       setItemsToDelete(allItems);
@@ -270,6 +274,8 @@ export default function MenuBoards() {
 
   const { filterOptions } = useMenuBoardFilterOptions(t);
   const libraryTabs = useFilteredTabs('library');
+
+  const activeFilterCount = countActiveFilters(filterInputs, INITIAL_FILTER_STATE, filterOptions);
 
   return (
     <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
@@ -326,15 +332,12 @@ export default function MenuBoards() {
                 className="py-2 px-3 pl-10 block h-11.25 bg-gray-100 rounded-lg w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none disabled:bg-gray-200"
               />
             </div>
-            <Button
-              leftIcon={!openFilter ? Filter : FilterX}
-              variant="secondary"
+            <FilterButton
+              isOpen={openFilter}
+              onToggle={() => setOpenFilter((prev) => !prev)}
+              activeCount={activeFilterCount}
               disabled={!isHydrated}
-              onClick={() => setOpenFilter((prev) => !prev)}
-              removeTextOnMobile
-            >
-              {t('Filters')}
-            </Button>
+            />
           </div>
         </div>
 
@@ -349,11 +352,7 @@ export default function MenuBoards() {
           onReset={handleResetFilters}
         />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
-            {error}
-          </div>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         <div className="min-h-0 flex flex-col">
           {!isHydrated ? (
@@ -365,6 +364,7 @@ export default function MenuBoards() {
               columns={columns}
               data={menuBoardList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

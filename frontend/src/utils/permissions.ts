@@ -19,15 +19,71 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import type { TFunction } from 'i18next';
+
+import { notify } from '@/components/ui/Notification';
 import type { AppRoute } from '@/config/appRoutes';
-import type { User } from '@/types/user';
+import { UserType, type User } from '@/types/user';
 
 export const hasFeature = (user: User | null, featureKey: string): boolean => {
-  if (!user || !user.features) {
+  if (!user) {
+    return false;
+  }
+
+  if (user.isSuperAdmin || user.userTypeId === UserType.SuperAdmin) {
+    return true;
+  }
+
+  if (!user.features) {
     return false;
   }
 
   return user.features?.[featureKey] === true;
+};
+
+export const canSaveInFolder = (
+  user: User | null,
+  canViewFolders: boolean,
+  effectiveFolderId: number,
+  homeFolderId: number,
+): boolean => {
+  const targetFolderId = canViewFolders ? effectiveFolderId : homeFolderId;
+
+  if (targetFolderId !== 1) {
+    return true;
+  }
+
+  const isSuperAdmin = !!user?.isSuperAdmin || user?.userTypeId === UserType.SuperAdmin;
+  return isSuperAdmin || user?.settings?.FOLDERS_ALLOW_SAVE_IN_ROOT === '1';
+};
+
+export const filterByPermission = <T>(
+  items: T[],
+  checkFn: (item: T) => boolean | number | undefined | null,
+  t: TFunction,
+  actionLabel: string,
+): T[] => {
+  const permittedItems = items.filter((item) => !!checkFn(item));
+  const skippedCount = items.length - permittedItems.length;
+
+  if (permittedItems.length === 0) {
+    notify.warning(
+      t('You do not have permission to {{action}} any of the selected items.', {
+        action: actionLabel,
+      }),
+    );
+    return [];
+  }
+
+  if (skippedCount > 0) {
+    notify.info(
+      t('{{count}} items were skipped due to lack of permissions.', {
+        count: skippedCount,
+      }),
+    );
+  }
+
+  return permittedItems;
 };
 
 const isRouteAllowed = (route: AppRoute, user: User): boolean => {

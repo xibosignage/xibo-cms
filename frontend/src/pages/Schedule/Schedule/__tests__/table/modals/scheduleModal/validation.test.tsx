@@ -29,16 +29,7 @@ import {
   ALWAYS_ONLY,
   mockDaypartRows,
   mockFetchEventById,
-  setupCampaignMocks,
-  setupCommandMocks,
-  setupDatasetMocks,
-  setupDaypartMocks,
-  setupEventMocks,
-  setupLayoutsMocks,
-  setupMediaMocks,
-  setupPlaylistMocks,
-  setupResolutionMocks,
-  setupSyncGroupMocks,
+  setupScheduleModalMocks,
 } from '../../../mocks/api';
 
 import { renderScheduleModal } from './helpers/renderScheduleModal';
@@ -60,6 +51,7 @@ vi.mock('@/services/mediaApi');
 vi.mock('@/services/playlistApi');
 vi.mock('@/services/syncGroupApi');
 vi.mock('@/services/datasetApi');
+vi.mock('@/services/scheduleCriteriaApi');
 
 vi.mock('@/components/ui/forms/DatePickerInput', () => ({
   default: ({ label }: { label?: string }) => <input aria-label={label} readOnly />,
@@ -97,16 +89,7 @@ describe('ScheduleEventModal - validation', () => {
     testQueryClient.clear();
     vi.clearAllMocks();
 
-    setupEventMocks();
-    setupDaypartMocks();
-    setupResolutionMocks();
-    setupLayoutsMocks();
-    setupCampaignMocks();
-    setupCommandMocks();
-    setupMediaMocks();
-    setupPlaylistMocks();
-    setupSyncGroupMocks();
-    setupDatasetMocks();
+    setupScheduleModalMocks();
   });
 
   test('clicking Finish with missing required fields surfaces a validation error', async () => {

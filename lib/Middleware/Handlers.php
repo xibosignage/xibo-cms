@@ -168,7 +168,7 @@ class Handlers
                 'aboutUrl' => $configService->rootUri() . 'about',
                 'loginUrl' => $configService->rootUri() . 'login',
                 'version' => Environment::$WEBSITE_VERSION_NAME,
-                'brandLogoFile' => $configService->getBrandAssetFile('logo'),
+                'brandLogoFile' => $configService->getBrandLogoDarkFile(),
             ];
 
             // Handle 404's
@@ -180,45 +180,9 @@ class Handlers
                         'message' => __('Sorry we could not find that page.')
                     ], 404);
                 } else {
-                    // No server route matched. If this is a genuine navigation request, serve the
-                    // React SPA shell (HTTP 200) and let React Router resolve the route client-side.
-                    // Guard: only GET requests that accept HTML, and never asset/API paths — a missing
-                    // hashed asset or an unknown API call must still return a real 404, not the shell.
-                    $relativePath = '/' . ltrim(
-                        Str::replaceFirst($configService->rootUri(), '', $request->getUri()->getPath()),
-                        '/'
-                    );
-                    $assetOrApiPrefixes = ['/app/', '/json', '/api', '/preview', '/pwa', '/authorize'];
-                    $assetOrApiPrefixes[] = '/swagger.json';
-                    $isAssetOrApi = false;
-                    foreach ($assetOrApiPrefixes as $prefix) {
-                        if (str_starts_with($relativePath, $prefix)) {
-                            $isAssetOrApi = true;
-                            break;
-                        }
-                    }
-
-                    if ($request->getMethod() === 'GET'
-                        && str_contains($request->getHeaderLine('Accept'), 'text/html')
-                        && !$isAssetOrApi
-                    ) {
-                        try {
-                            // Throws if the manifest is present but the entry is missing (assets not built).
-                            $rootUri = $configService->rootUri();
-                            $appJsUrl = \Xibo\Helper\ViteManifest::getJsUrl('index.html', $rootUri);
-                            return $twig->render($response, 'app-spa.twig', array_merge($viewParams, [
-                                'csrfToken'      => '',
-                                'appJsUrl'       => $appJsUrl,
-                                'appCssUrls'     => \Xibo\Helper\ViteManifest::getCssUrls('index.html', $rootUri),
-                                'assetBase'      => \Xibo\Helper\ViteManifest::getAssetBase($rootUri),
-                                'viteClientUrl'  => \Xibo\Helper\ViteManifest::getClientUrl(),
-                                'viteRefreshUrl' => \Xibo\Helper\ViteManifest::getRefreshUrl(),
-                            ]))->withStatus(200);
-                        } catch (\Throwable) {
-                            // Assets not built or render failed — fall through to the not-found page.
-                        }
-                    }
-
+                    // No server route matched - a genuine 404. React SPA pages are served by
+                    // explicit routes registered in lib/routes-spa.php (Xibo\Controller\Spa),
+                    // which run through the normal middleware stack, so they never reach here.
                     try {
                         return $twig->render($response, 'not-found.twig', $viewParams)->withStatus(404);
                     } catch (\Exception) {
@@ -287,7 +251,15 @@ class Handlers
                                 ],
                             ];
                             $upgradeParams = array_merge($viewParams, [
-                                'csrfToken'       => '',
+                                // This render runs outside the normal middleware stack (routing
+                                // failed before CsrfGuard could run), so unlike a normal request we
+                                // have to issue the token ourselves. State::setState() has already
+                                // started the session by the time UpgradePendingException is thrown
+                                // (State.php throws it after calling setState()), so a real token is
+                                // available here. Issuing it properly (rather than hardcoding blank)
+                                // matters because login/api.ts reads this meta tag for the login/tfa
+                                // requests fired from this exact page.
+                                'csrfToken'       => CsrfGuard::issueToken(),
                                 'loginConfigJson' => json_encode(
                                     $upgradeConfig,
                                     JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT

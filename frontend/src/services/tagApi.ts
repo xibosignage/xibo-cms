@@ -26,7 +26,6 @@ export interface FetchTagsRequest {
   start?: number;
   length?: number;
   tagId?: number;
-  keyword?: string;
   tag?: string;
   useRegexForName?: boolean;
   logicalOperatorName?: 'AND' | 'OR';
@@ -98,6 +97,37 @@ export async function updateTag(id: number, payload: UpdateTagPayload): Promise<
 
 export async function deleteTag(id: number): Promise<void> {
   await http.delete(`/tag/${id}`);
+}
+
+export interface EditMultipleTagsPayload {
+  targetType: string;
+  ids: Array<number | string>;
+  addTags?: string;
+  removeTags?: string;
+}
+
+export interface EditMultipleTagsResult {
+  failedCount: number;
+  failedNames: string[];
+}
+
+export async function editMultipleTags(
+  payload: EditMultipleTagsPayload,
+): Promise<EditMultipleTagsResult> {
+  const params = new URLSearchParams();
+  params.append('targetType', payload.targetType);
+  params.append('targetIds', payload.ids.join(','));
+  params.append('addTags', payload.addTags ?? '');
+  params.append('removeTags', payload.removeTags ?? '');
+
+  const response = await http.put(`/tag/${payload.targetType}/multi`, params.toString(), {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
+
+  return {
+    failedCount: response.data?.failedCount ?? 0,
+    failedNames: response.data?.failedNames ?? [],
+  };
 }
 
 export async function fetchTagUsage(

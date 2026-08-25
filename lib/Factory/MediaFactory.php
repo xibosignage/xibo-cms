@@ -543,7 +543,7 @@ class MediaFactory extends BaseFactory
         $sanitizedFilter = $this->getSanitizer($filterBy);
         $allowedColumns = [
             'mediaId', 'name', 'type', 'duration', 'fileSize', 'owner', 'sharing', 'released', 'fileName',
-            'enableStat', 'createdDt', 'modifiedDt', 'expires'
+            'enableStat', 'createdDt', 'modifiedDt', 'expires', 'groupsWithPermissions'
         ];
         $customColumns = [
             'revised'           => '`parentId`',
@@ -558,7 +558,8 @@ class MediaFactory extends BaseFactory
             $sortOrder,
             $allowedColumns,
             $customColumns,
-            ['name ASC']
+            ['name ASC'],
+            'mediaId'
         );
 
         $entries = [];
@@ -705,16 +706,6 @@ class MediaFactory extends BaseFactory
             $body .= '
                 AND `media`.`mediaId` NOT IN (SELECT `mediaId` FROM `display_media`)
             ';
-        }
-
-        if ($sanitizedFilter->getString('keyword') != null) {
-            // Fulltext search
-            $body .= $this->buildSearchQuery(
-                $sanitizedFilter->getString('keyword'),
-                $params,
-                ['media.name', 'media.originalFileName', 'media.storedAs'],
-                ['media.mediaId']
-            );
         }
 
         if ($sanitizedFilter->getString('name') != null) {

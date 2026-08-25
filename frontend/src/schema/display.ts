@@ -22,6 +22,22 @@
 import type { TFunction } from 'i18next';
 import z from 'zod';
 
+const BANDWIDTH_LIMIT_MAX_KB = 2147483647;
+const BANDWIDTH_LIMIT_MAX_TIB = Math.round(BANDWIDTH_LIMIT_MAX_KB / (1024 * 1024 * 1024));
+
+export const getBandwidthLimitSchema = (t: TFunction) =>
+  z
+    .number()
+    .int()
+    .min(0, t('Bandwidth limit must be 0 or greater'))
+    .max(
+      BANDWIDTH_LIMIT_MAX_KB,
+      t('Bandwidth limit must be {{max}} KiB (~{{maxTib}} TiB) or less', {
+        max: BANDWIDTH_LIMIT_MAX_KB.toLocaleString(),
+        maxTib: BANDWIDTH_LIMIT_MAX_TIB,
+      }),
+    );
+
 export const getEditDisplaySchema = (t: TFunction) =>
   z.object({
     display: z
@@ -39,7 +55,7 @@ export const getEditDisplaySchema = (t: TFunction) =>
       .min(-180, t('Longitude must be between -180 and 180'))
       .max(180, t('Longitude must be between -180 and 180'))
       .optional(),
-    bandwidthLimit: z.number().int().min(0, t('Bandwidth limit must be 0 or greater')).optional(),
+    bandwidthLimit: getBandwidthLimitSchema(t).optional(),
     screenSize: z.number().min(0, t('Value must be greater than or equal to 0.')).optional(),
     costPerPlay: z.number().min(0, t('Value must be greater than or equal to 0.')).optional(),
     impressionsPerPlay: z

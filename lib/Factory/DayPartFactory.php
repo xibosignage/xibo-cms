@@ -181,16 +181,6 @@ class DayPartFactory extends BaseFactory
             $params['userId'] = $sanitizedFilter->getInt('userId');
         }
 
-        if ($sanitizedFilter->getString('keyword') != null) {
-            // Fulltext search
-            $body .= $this->buildSearchQuery(
-                $sanitizedFilter->getString('keyword'),
-                $params,
-                ['daypart.name', 'daypart.description'],
-                ['daypart.daypartId'],
-            );
-        }
-
         // View Permissions
         $this->viewPermissionSql('Xibo\Entity\DayPart', $body, $params, '`daypart`.dayPartId', '`daypart`.userId', $filterBy);
 
@@ -199,7 +189,8 @@ class DayPartFactory extends BaseFactory
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            defaultSort: ['name ASC']
+            defaultSort: ['name ASC'],
+            uniqueColumn: 'dayPartId'
         );
 
         $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';

@@ -62,7 +62,7 @@ export function LinuxFields({
 }: LinuxFieldProps) {
   const metaMap = getFieldMetaForType('linux', t);
   const fieldsForTab = Object.entries(metaMap).filter(
-    ([, meta]) => meta.tab === tab && isFieldMetaEnabled(meta, settings),
+    ([, meta]) => meta.tab === tab && isFieldMetaEnabled(meta, settings, bool),
   );
 
   if (fieldsForTab.length === 0) {

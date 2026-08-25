@@ -1175,6 +1175,7 @@ class Widget extends Base
 
         // Will we use fallback data if available?
         $showFallback = $widget->getOptionValue('showFallback', 'never');
+        $fallbackModifiedDt = null;
         if ($showFallback !== 'never') {
             // What data type are we dealing with?
             try {
@@ -1205,11 +1206,11 @@ class Widget extends Base
         ) {
             $this->getLog()->debug('getData: Pulling fresh data');
 
-            $dataProvider->clearData();
-            $dataProvider->clearMeta();
-            $dataProvider->addOrUpdateMeta('showFallback', $showFallback);
-
             try {
+                $dataProvider->clearData();
+                $dataProvider->clearMeta();
+                $dataProvider->addOrUpdateMeta('showFallback', $showFallback);
+
                 if ($widgetInterface !== null) {
                     $widgetInterface->fetchData($dataProvider);
                 } else {
@@ -1270,15 +1271,19 @@ class Widget extends Base
                     // Process the downloads.
                     $this->mediaFactory->processDownloads(function ($media) use ($widget) {
                         // Success
-                        // We don't need to do anything else, references to mediaId will be built when we decorate
-                        // the HTML.
+                        // We don't need to do anything else, references to mediaId will be built when we
+                        // decorate the HTML.
                         // Nothing is linked to a display when in preview mode.
                         $this->getLog()->debug('getData: Successfully downloaded ' . $media->mediaId);
                     });
                 }
 
                 // Save to cache
-                if ($dataProvider->isHandled() || $isFallback) {
+                // A widget with fallback configured has its own private cache slot (see
+                // ModuleFactory::determineCacheKey()), so there's no risk of this save overwriting what a
+                // sibling widget with identical settings is meant to see, whether this content came from a
+                // live fetch or from fallback data.
+                if ($isFallback || $dataProvider->isHandled()) {
                     $widgetDataProviderCache->saveToCache($dataProvider);
                 } else {
                     // Unhandled data provider.
@@ -1464,11 +1469,11 @@ class Widget extends Base
         // Parse out the dates
         $fromDt = $widget->fromDt === \Xibo\Entity\Widget::$DATE_MIN
             ? ''
-            : Carbon::createFromTimestamp($widget->fromDt)->format(DateFormatHelper::getSystemFormat());
+            : DateFormatHelper::createFromTimestamp($widget->fromDt)->format(DateFormatHelper::getSystemFormat());
 
         $toDt = $widget->toDt === \Xibo\Entity\Widget::$DATE_MAX
             ? ''
-            : Carbon::createFromTimestamp($widget->toDt)->format(DateFormatHelper::getSystemFormat());
+            : DateFormatHelper::createFromTimestamp($widget->toDt)->format(DateFormatHelper::getSystemFormat());
 
         // Pass to view
         $this->getState()->template = 'module-form-expiry';
@@ -1599,16 +1604,16 @@ class Widget extends Base
         ]);
 
         if ($this->isApi($request)) {
-            $widget->createdDt = Carbon::createFromTimestamp($widget->createdDt)
+            $widget->createdDt = DateFormatHelper::createFromTimestamp($widget->createdDt)
                 ->format(DateFormatHelper::getSystemFormat());
 
-            $widget->modifiedDt = Carbon::createFromTimestamp($widget->modifiedDt)
+            $widget->modifiedDt = DateFormatHelper::createFromTimestamp($widget->modifiedDt)
                 ->format(DateFormatHelper::getSystemFormat());
 
-            $widget->fromDt = Carbon::createFromTimestamp($widget->fromDt)
+            $widget->fromDt = DateFormatHelper::createFromTimestamp($widget->fromDt)
                 ->format(DateFormatHelper::getSystemFormat());
 
-            $widget->toDt = Carbon::createFromTimestamp($widget->toDt)
+            $widget->toDt = DateFormatHelper::createFromTimestamp($widget->toDt)
                 ->format(DateFormatHelper::getSystemFormat());
         }
 

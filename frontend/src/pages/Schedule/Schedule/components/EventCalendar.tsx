@@ -233,9 +233,11 @@ function DayDetailPanel({
           <p className="text-xs font-semibold text-gray-500">
             {events.length === 1 ? t('1 Event') : t('{{count}} Events', { count: events.length })}
           </p>
-          <Button variant="tertiary" onClick={() => onAgenda?.(day, events)}>
-            {t('Agenda')}
-          </Button>
+          {onAgenda && (
+            <Button variant="tertiary" onClick={() => onAgenda(day, events)}>
+              {t('Agenda')}
+            </Button>
+          )}
         </div>
         <ul className="flex flex-col gap-3 overflow-y-auto overflow-x-hidden flex-1 min-h-0">
           {events.map((event) => {
@@ -444,7 +446,25 @@ export function EventCalendar({
 }: EventCalendarProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
+  // The CMS-wide `defaultTimezone` setting, not a personal/browser timezone
+  // - see User::myDetails() in lib/Controller/User.php.
   const timezone = user?.settings?.defaultTimezone ?? 'UTC';
+
+  const handleEditEvent = onEditEvent
+    ? (event: Event) => {
+        if (event.isEditable !== false) {
+          onEditEvent(event);
+        }
+      }
+    : undefined;
+
+  const handleDeleteEvent = onDeleteEvent
+    ? (event: Event) => {
+        if (event.isEditable !== false) {
+          onDeleteEvent(event);
+        }
+      }
+    : undefined;
 
   const currentDate = date ?? new Date();
   const currentMonth = DateTime.fromJSDate(currentDate, { zone: timezone });
@@ -612,7 +632,7 @@ export function EventCalendar({
                         );
                       }
                     }}
-                    className={`relative group flex ${dayEvents.length > 0 ? 'cursor-pointer' : ''} flex-col overflow-hidden${di > 0 ? ' border-l border-gray-200' : ''} ${isSelected ? 'bg-blue-50' : isToday ? 'bg-slate-50' : 'bg-white'}`}
+                    className={`relative group flex ${dayEvents.length > 0 ? 'cursor-pointer' : ''} flex-col overflow-hidden${di > 0 ? ' border-l border-gray-200' : ''} ${isSelected ? 'bg-xibo-blue-50' : isToday ? 'bg-slate-50' : 'bg-white'}`}
                   >
                     {isToday && (
                       <div className="absolute top-0 left-0 bottom-0 w-0.5 bg-xibo-blue-500 z-1"></div>
@@ -637,7 +657,7 @@ export function EventCalendar({
                             <CalendarEventBadge
                               key={`${event.eventId}-${event.fromDt}`}
                               scheduleEvent={event}
-                              onEdit={onEditEvent}
+                              onEdit={event.isEditable !== false ? handleEditEvent : undefined}
                               onContextMenu={(ev, x, y) => setContextMenuEvent({ event: ev, x, y })}
                             />
                           ))}
@@ -674,7 +694,7 @@ export function EventCalendar({
             floatingStyles={floatingStyles}
             getFloatingProps={getFloatingProps}
             onClose={() => setSelectedCell(null)}
-            onEditEvent={onEditEvent}
+            onEditEvent={handleEditEvent}
             onContextMenu={(ev, x, y) => setContextMenuEvent({ event: ev, x, y })}
             onAgenda={onAgenda}
           />
@@ -690,7 +710,7 @@ export function EventCalendar({
             floatingStyles={ctxStyles}
             getFloatingProps={getCtxFloatingProps}
             onClose={() => setContextMenuEvent(null)}
-            onDelete={onDeleteEvent}
+            onDelete={contextMenuEvent.event.isEditable !== false ? handleDeleteEvent : undefined}
           />
         </FloatingPortal>
       )}

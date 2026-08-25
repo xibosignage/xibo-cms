@@ -21,7 +21,7 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
-import { Filter, FilterX, Plus, Search } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -38,16 +38,25 @@ import { useUserGroupFilterOptions } from './hooks/useUserGroupFilterOptions';
 import { useUserGroupsData } from './hooks/useUserGroupsData';
 
 import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { useUserContext } from '@/context/UserContext';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
+import { UserType } from '@/types/user';
 import type { UserGroup } from '@/types/userGroup';
+import { countActiveFilters } from '@/utils/filters';
+import { hasFeature } from '@/utils/permissions';
 
 export default function UserGroups() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { user } = useUserContext();
+  const isSuperAdmin = user?.userTypeId === UserType.SuperAdmin;
+  const hasUsergroupModify = hasFeature(user, 'usergroup.modify');
 
   const {
     pagination,
@@ -110,6 +119,7 @@ export default function UserGroups() {
     data: queryData,
     isFetching,
     isError,
+    isPaused,
     error: queryError,
   } = useUserGroupsData({
     pagination,
@@ -162,6 +172,8 @@ export default function UserGroups() {
 
   const columns = getUserGroupColumns({
     t,
+    isSuperAdmin,
+    hasUsergroupModify,
     onEdit: (userGroup) => openModal('edit', userGroup),
     onCopy: (userGroup) => openModal('copy', userGroup),
     onMembers: (userGroup) => openModal('members', userGroup),
@@ -187,20 +199,24 @@ export default function UserGroups() {
 
   const administrationTabs = useFilteredTabs('administration');
 
+  const activeFilterCount = countActiveFilters(filterInputs, INITIAL_FILTER_STATE, filterOptions);
+
   return (
     <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="User Groups" navigation={administrationTabs} />
           <div className="flex items-center gap-2 md:mb-0">
-            <Button
-              variant="primary"
-              className="font-semibold"
-              onClick={() => openModal('add')}
-              leftIcon={Plus}
-            >
-              {t('Add User Group')}
-            </Button>
+            {isSuperAdmin && (
+              <Button
+                variant="primary"
+                className="font-semibold"
+                onClick={() => openModal('add')}
+                leftIcon={Plus}
+              >
+                {t('Add User Group')}
+              </Button>
+            )}
           </div>
         </div>
 
@@ -221,14 +237,11 @@ export default function UserGroups() {
                 className="py-2 px-3 pl-10 block h-11.25 bg-gray-100 rounded-lg w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none"
               />
             </div>
-            <Button
-              leftIcon={!openFilter ? Filter : FilterX}
-              variant="secondary"
-              onClick={() => setOpenFilter((prev) => !prev)}
-              removeTextOnMobile
-            >
-              {t('Filters')}
-            </Button>
+            <FilterButton
+              isOpen={openFilter}
+              onToggle={() => setOpenFilter((prev) => !prev)}
+              activeCount={activeFilterCount}
+            />
           </div>
         </div>
 
@@ -246,11 +259,7 @@ export default function UserGroups() {
           onReset={handleResetFilters}
         />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
-            {error}
-          </div>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         <div className="min-h-0 flex flex-col">
           {!isHydrated ? (
@@ -262,6 +271,7 @@ export default function UserGroups() {
               columns={columns}
               data={userGroupList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

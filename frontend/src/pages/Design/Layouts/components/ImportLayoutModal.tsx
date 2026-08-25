@@ -35,6 +35,7 @@ import { useUserContext } from '@/context/UserContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { importLayout, updateLayout } from '@/services/layoutsApi';
 import type { Tag } from '@/types/tag';
+import { hasFeature } from '@/utils/permissions';
 
 interface ImportLayoutModalProps {
   onClose: () => void;
@@ -93,6 +94,7 @@ function ImportItemRow({
   onUpdate: (data: { name?: string; tags?: string }) => void;
 }) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
   const [localName, setLocalName] = useState(item.name);
   const tagObjects = parseTagsFromString(item.tags);
 
@@ -141,14 +143,20 @@ function ImportItemRow({
               disabled={isUploading}
               value={localName}
               onChange={(e) => setLocalName(e.target.value)}
-              className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none"
+              className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-xibo-blue-500 focus:ring-xibo-blue-500 disabled:opacity-50 disabled:pointer-events-none"
               placeholder={t('Layout Name')}
             />
           </div>
 
-          <div className="flex flex-col w-full md:w-70">
-            <TagInput value={tagObjects} onChange={handleTagsChange} disabled={isUploading} />
-          </div>
+          {(hasFeature(user, 'tag.tagging') || (tagObjects?.length ?? 0) > 0) && (
+            <div className="flex flex-col w-full md:w-70">
+              <TagInput
+                value={tagObjects}
+                onChange={handleTagsChange}
+                disabled={isUploading || !hasFeature(user, 'tag.tagging')}
+              />
+            </div>
+          )}
         </div>
       </div>
 
@@ -422,7 +430,7 @@ export default function ImportLayoutModal({ onClose, onSuccess }: ImportLayoutMo
         <div
           {...getRootProps()}
           className={`p-5 border-2 border-dashed flex flex-col rounded-xl items-center justify-center transition-colors
-            ${isDragActive ? 'border-xibo-blue-600 text-xibo-blue-600 bg-blue-50' : 'border-gray-200 text-gray-800 bg-gray-50'}
+            ${isDragActive ? 'border-xibo-blue-600 text-xibo-blue-600 bg-xibo-blue-50' : 'border-gray-200 text-gray-800 bg-gray-50'}
             cursor-pointer hover:shadow-4 hover:shadow-blue-500/25
           `}
         >

@@ -158,16 +158,22 @@ class MenuBoardProduct implements \JsonSerializable
             'validate' => true,
         ], $options);
 
-        $this->getLog()->debug('Saving ' . $this);
-
         if ($options['validate']) {
             $this->validate();
         }
 
         if ($this->menuProductId == null || $this->menuProductId == 0) {
             $this->add();
+            $this->audit($this->menuProductId, 'Added');
         } else {
+            $changedProperties = $this->getChangedProperties();
             $this->update();
+
+            if (count($changedProperties) > 0) {
+                $changedProperties['menuId'] = $this->menuId;
+                $changedProperties['menuCategoryId'] = $this->menuCategoryId;
+                $this->audit($this->menuProductId, 'Saved', $changedProperties);
+            }
         }
     }
 
@@ -233,7 +239,7 @@ class MenuBoardProduct implements \JsonSerializable
             'name' => $this->name,
             'price' => $this->price,
             'description' => $this->description,
-            'mediaId' => $this->mediaId,
+            'mediaId' => $this->mediaId ?: null,
             'displayOrder' => $this->displayOrder,
             'availability' => $this->availability,
             'allergyInfo' => $this->allergyInfo,
@@ -250,6 +256,12 @@ class MenuBoardProduct implements \JsonSerializable
             'DELETE FROM `menu_product` WHERE menuProductId = :menuProductId',
             ['menuProductId' => $this->menuProductId]
         );
+
+        $this->audit($this->menuProductId, 'Deleted', [
+            'menuId' => $this->menuId,
+            'menuCategoryId' => $this->menuCategoryId,
+            'name' => $this->name,
+        ]);
     }
 
     /**

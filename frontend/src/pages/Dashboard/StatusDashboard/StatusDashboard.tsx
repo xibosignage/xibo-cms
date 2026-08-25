@@ -38,7 +38,6 @@ import LibraryUsageChart from './components/LibraryUsageChart';
 import { useDashboardStats } from './hooks/useDashboardStats';
 
 import { DataTable } from '@/components/ui/table/DataTable';
-import { withPublicPath } from '@/config/publicPath';
 import { INITIAL_FILTER_STATE } from '@/pages/Displays/Displays/DisplaysConfig';
 import { useDisplaysData } from '@/pages/Displays/Displays/hooks/useDisplaysData';
 import type { Display } from '@/types/display';
@@ -146,7 +145,8 @@ function getDisplayColumns(t: TFunction): ColumnDef<Display>[] {
 
 export default function Dashboard() {
   const { t } = useTranslation();
-  const { data, isLoading } = useDashboardStats();
+  const { data, isLoading, isError, error: queryError } = useDashboardStats();
+  const error = isError && queryError instanceof Error ? queryError.message : '';
 
   // Display table state
   const [displayPagination, setDisplayPagination] = useState<PaginationState>({
@@ -188,15 +188,21 @@ export default function Dashboard() {
 
   return (
     <section className="flex flex-col space-y-5 p-5">
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
+          {error}
+        </div>
+      )}
+
       {/* Top Stats */}
-      <div className="grid grid-cols-3 gap-5">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
         <StatCard icon={display} value={displayCount} label={t('Active Displays')} />
-        <StatCard icon={server} value={librarySize} label={t('Remaining Storage')} />
+        <StatCard icon={server} value={librarySize} label={t('Library Size')} />
         <StatCard icon={users} value={userCount} label={t('Active Users')} />
       </div>
 
       {/* Charts & News */}
-      <div className="grid grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Display Activity */}
         <div className="rounded-lg flex flex-col border border-gray-200 bg-slate-50 p-5 space-y-8">
           <div className="flex items-center justify-between">
@@ -214,7 +220,7 @@ export default function Dashboard() {
               <span className="mt-2 text-gray-500">{t('Loading...')}</span>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
               <DisplayChart data={statusData} label={t('Status')} />
               <DisplayChart data={contentStatusData} label={t('Content Status')} />
             </div>
@@ -245,17 +251,17 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Bandwidth Usage */}
         <div className="rounded-lg flex flex-col border border-gray-200 bg-slate-50 p-5 space-y-8">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-semibold text-gray-800">{t('Bandwidth Usage')}</h3>
-            <a
-              href={withPublicPath('report/form/bandwidth')}
+            <Link
+              to="/reporting/bandwidth"
               className="flex items-center gap-1 text-sm text-xibo-blue-600 hover:underline"
             >
               {t('View Full Report')} <ArrowRight className="h-3.5 w-3.5" />
-            </a>
+            </Link>
           </div>
           {isLoading ? (
             <div className="flex flex-col items-center justify-center h-full">
@@ -308,6 +314,7 @@ export default function Dashboard() {
           columns={displayColumns}
           data={displays}
           pageCount={displayPageCount}
+          rowCount={displayData?.totalCount ?? 0}
           pagination={displayPagination}
           onPaginationChange={setDisplayPagination}
           sorting={displaySorting}

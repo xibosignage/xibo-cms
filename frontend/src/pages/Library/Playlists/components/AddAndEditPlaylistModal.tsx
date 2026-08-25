@@ -33,8 +33,9 @@ import SelectFolder from '@/components/ui/forms/SelectFolder';
 import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
 import { DataTable } from '@/components/ui/table/DataTable';
-import { StatusCell, TagsCell, TextCell } from '@/components/ui/table/cells';
+import { StatusCell, TagsCell, TextCell, toDisplayTags } from '@/components/ui/table/cells';
 import { getCommonFormOptions } from '@/config/commonForms';
+import { useUserContext } from '@/context/UserContext';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { MediaFilterInput } from '@/pages/Library/Media/MediaConfig';
 import {
@@ -48,6 +49,8 @@ import type { Media } from '@/types/media';
 import type { Playlist } from '@/types/playlist';
 import type { Tag } from '@/types/tag';
 import { formatDuration } from '@/utils/formatters';
+import { hasFeature } from '@/utils/permissions';
+import { toggleTag } from '@/utils/tags';
 
 interface AddAndEditPlaylistModalProps {
   type: 'add' | 'edit';
@@ -73,6 +76,8 @@ interface PlaylistDraft {
   maxNumberOfItems: number;
 }
 
+const FALLBACK_MAX_NUMBER_OF_ITEMS = 30;
+
 const DEFAULT_DRAFT: PlaylistDraft = {
   name: '',
   folderId: null,
@@ -85,7 +90,7 @@ const DEFAULT_DRAFT: PlaylistDraft = {
   exactTags: false,
   logicalOperator: 'OR',
   filterFolderId: null,
-  maxNumberOfItems: 0,
+  maxNumberOfItems: FALLBACK_MAX_NUMBER_OF_ITEMS,
 };
 
 type PlaylistFormErrors = Partial<Record<keyof PlaylistDraft, string>>;
@@ -119,7 +124,7 @@ const buildDraftFromPlaylist = (data: Playlist): PlaylistDraft => ({
   exactTags: Boolean(data.filterExactTags),
   logicalOperator: data.filterMediaTagsLogicalOperator || 'OR',
   filterFolderId: data.filterFolderId ? Number(data.filterFolderId) : null,
-  maxNumberOfItems: Number(data.maxNumberOfItems) || 0,
+  maxNumberOfItems: Number(data.maxNumberOfItems) || FALLBACK_MAX_NUMBER_OF_ITEMS,
 });
 
 export default function AddAndEditPlaylistModal({
@@ -131,16 +136,40 @@ export default function AddAndEditPlaylistModal({
   onSave,
 }: AddAndEditPlaylistModalProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
   const [isPending, startTransition] = useTransition();
   const [formErrors, setFormErrors] = useState<PlaylistFormErrors>({});
   const [apiError, setApiError] = useState<string | undefined>();
   const [pendingTagInput, setPendingTagInput] = useState('');
+  const [hasTagPendingValue, setHasTagPendingValue] = useState(false);
+
+  const dynamicMaxItemsLimitSetting = Number(
+    user?.settings?.DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT,
+  );
+  const maxNumberOfItemsLimit =
+    dynamicMaxItemsLimitSetting > 0 ? dynamicMaxItemsLimitSetting : undefined;
+
+  const buildAddDraft = (): PlaylistDraft => {
+    const addDraft: PlaylistDraft = { ...DEFAULT_DRAFT, folderId: defaultFolderId ?? null };
+
+    const maxNumberDefault = Number(user?.settings?.DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER);
+    if (maxNumberDefault > 0) {
+      addDraft.maxNumberOfItems = maxNumberDefault;
+    }
+
+    const statsDefault = user?.settings?.PLAYLIST_STATS_ENABLED_DEFAULT;
+    if (statsDefault != null && String(statsDefault) !== '') {
+      addDraft.enableStat = normalizeEnableStat(String(statsDefault));
+    }
+
+    return addDraft;
+  };
 
   const [draft, setDraft] = useState<PlaylistDraft>(() => {
     if (type === 'edit' && data) {
       return buildDraftFromPlaylist(data);
     }
-    return { ...DEFAULT_DRAFT, folderId: defaultFolderId ?? null };
+    return buildAddDraft();
   });
 
   const [previewPagination, setPreviewPagination] = useState<PaginationState>({
@@ -161,6 +190,7 @@ export default function AddAndEditPlaylistModal({
       media: debouncedFilterMediaName,
       tags: draft.filterMediaTag,
       exactTags: draft.exactTags,
+      assignable: 1,
       logicalOperator: draft.logicalOperator,
       logicalOperatorName: draft.logicalOperatorName,
     } as MediaFilterInput,
@@ -175,7 +205,7 @@ export default function AddAndEditPlaylistModal({
     if (type === 'edit' && data) {
       setDraft(buildDraftFromPlaylist(data));
     } else {
-      setDraft({ ...DEFAULT_DRAFT, folderId: defaultFolderId ?? null });
+      setDraft(buildAddDraft());
     }
 
     setApiError(undefined);
@@ -185,7 +215,7 @@ export default function AddAndEditPlaylistModal({
 
   const handleSave = () => {
     startTransition(async () => {
-      const schema = getPlaylistSchema(t);
+      const schema = getPlaylistSchema(t, maxNumberOfItemsLimit);
       const result = schema.safeParse(draft);
 
       if (!result.success) {
@@ -260,6 +290,11 @@ export default function AddAndEditPlaylistModal({
     draft.filterMediaTag.length > 0,
   );
 
+  const handlePreviewTagClick = (tag: Tag) => {
+    setDraft((prev) => ({ ...prev, filterMediaTag: toggleTag(prev.filterMediaTag, tag) }));
+    setPreviewPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
+
   const previewColumns = [
     {
       accessorKey: 'mediaId',
@@ -283,20 +318,27 @@ export default function AddAndEditPlaylistModal({
         return <StatusCell label={value} type={getStatusTypeFromMediaType(value)} />;
       },
     },
-    {
-      accessorKey: 'tags',
-      header: t('Tags'),
-      enableSorting: false,
-      size: 120,
-      cell: (info) => {
-        const tags = info.getValue<Tag[]>() || [];
-        const formattedTags = tags.map((tag) => ({
-          id: tag.tagId,
-          label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
-        }));
-        return <TagsCell tags={formattedTags} noTagsPlaceholder="-" />;
-      },
-    },
+    ...(hasFeature(user, 'tag.tagging')
+      ? ([
+          {
+            accessorKey: 'tags',
+            header: t('Tags'),
+            enableSorting: false,
+            size: 120,
+            cell: (info) => {
+              const tags = info.getValue<Tag[]>() || [];
+              return (
+                <TagsCell
+                  tags={toDisplayTags(tags)}
+                  noTagsPlaceholder="-"
+                  onTagClick={handlePreviewTagClick}
+                  selectedTagIds={draft.filterMediaTag.map((tag) => tag.tagId)}
+                />
+              );
+            },
+          },
+        ] as ColumnDef<Media>[])
+      : []),
     {
       id: 'formattedDuration',
       accessorKey: 'duration',
@@ -327,7 +369,7 @@ export default function AddAndEditPlaylistModal({
         {
           label: isPending ? t('Saving…') : t('Save'),
           onClick: handleSave,
-          disabled: isPending,
+          disabled: isPending || hasTagPendingValue,
         },
       ]}
     >
@@ -357,13 +399,17 @@ export default function AddAndEditPlaylistModal({
           />
 
           {/* Tags */}
-          <TagInput
-            value={draft.tags}
-            helpText={t('Tags (Comma-separated: Tag or Tag|Value)')}
-            onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
-            inputValue={pendingTagInput}
-            onInputChange={setPendingTagInput}
-          />
+          {(hasFeature(user, 'tag.tagging') || (draft.tags?.length ?? 0) > 0) && (
+            <TagInput
+              value={draft.tags}
+              helpText={t('Tags (Comma-separated: Tag or Tag|Value)')}
+              onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
+              inputValue={pendingTagInput}
+              onInputChange={setPendingTagInput}
+              onPendingValueChange={setHasTagPendingValue}
+              disabled={!hasFeature(user, 'tag.tagging')}
+            />
+          )}
 
           {/* Enable Stats */}
           <SelectDropdown
@@ -426,41 +472,44 @@ export default function AddAndEditPlaylistModal({
                   error={formErrors.filterMediaName}
                 />
 
-                <TagInput
-                  label={t('Tag Filter')}
-                  placeholder={t('Enter Tag Filter')}
-                  value={draft.filterMediaTag}
-                  onChange={(val) => setDraft((prev) => ({ ...prev, filterMediaTag: val }))}
-                  allowValues={false}
-                  suffix={
-                    <div className="flex items-stretch">
-                      <label className="flex items-center gap-1.5 px-3 text-sm text-gray-500 border-gray-200 cursor-pointer border-e">
-                        <input
-                          type="checkbox"
-                          title={t('Exact')}
-                          className="shrink-0 mt-0.5 border-gray-200 rounded text-blue-600 focus:ring-blue-500"
-                          checked={draft.exactTags}
+                {(hasFeature(user, 'tag.tagging') || (draft.filterMediaTag?.length ?? 0) > 0) && (
+                  <TagInput
+                    label={t('Tag Filter')}
+                    placeholder={t('Enter Tag Filter')}
+                    value={draft.filterMediaTag}
+                    onChange={(val) => setDraft((prev) => ({ ...prev, filterMediaTag: val }))}
+                    allowValues={false}
+                    disabled={!hasFeature(user, 'tag.tagging')}
+                    suffix={
+                      <div className="flex items-stretch">
+                        <label className="flex items-center gap-1.5 px-3 text-sm text-gray-500 border-gray-200 cursor-pointer border-e">
+                          <input
+                            type="checkbox"
+                            title={t('Exact')}
+                            className="shrink-0 mt-0.5 border-gray-200 rounded text-xibo-blue-600 focus:ring-xibo-blue-500"
+                            checked={draft.exactTags}
+                            onChange={(e) =>
+                              setDraft((prev) => ({ ...prev, exactTags: e.target.checked }))
+                            }
+                          />
+                        </label>
+                        <select
+                          className="bg-transparent text-sm font-semibold items-center justify-center text-gray-500 border-none focus:ring-0 cursor-pointer p-3 pr-8"
+                          value={draft.logicalOperator}
                           onChange={(e) =>
-                            setDraft((prev) => ({ ...prev, exactTags: e.target.checked }))
+                            setDraft((prev) => ({
+                              ...prev,
+                              logicalOperator: e.target.value as 'OR' | 'AND',
+                            }))
                           }
-                        />
-                      </label>
-                      <select
-                        className="bg-transparent text-sm font-semibold items-center justify-center text-gray-500 border-none focus:ring-0 cursor-pointer p-3 pr-8"
-                        value={draft.logicalOperator}
-                        onChange={(e) =>
-                          setDraft((prev) => ({
-                            ...prev,
-                            logicalOperator: e.target.value as 'OR' | 'AND',
-                          }))
-                        }
-                      >
-                        <option value="AND">AND</option>
-                        <option value="OR">OR</option>
-                      </select>
-                    </div>
-                  }
-                />
+                        >
+                          <option value="AND">AND</option>
+                          <option value="OR">OR</option>
+                        </select>
+                      </div>
+                    }
+                  />
+                )}
 
                 <NumberInput
                   name="maxNumberOfItems"
@@ -470,6 +519,8 @@ export default function AddAndEditPlaylistModal({
                   )}
                   value={draft.maxNumberOfItems}
                   onChange={(num) => setDraft((prev) => ({ ...prev, maxNumberOfItems: num }))}
+                  min={1}
+                  max={maxNumberOfItemsLimit}
                   error={formErrors.maxNumberOfItems}
                 />
 
@@ -480,6 +531,7 @@ export default function AddAndEditPlaylistModal({
                         columns={previewColumns}
                         data={previewData}
                         pageCount={previewPageCount}
+                        rowCount={previewQueryData?.totalCount || 0}
                         pagination={previewPagination}
                         onPaginationChange={setPreviewPagination}
                         sorting={previewSorting}

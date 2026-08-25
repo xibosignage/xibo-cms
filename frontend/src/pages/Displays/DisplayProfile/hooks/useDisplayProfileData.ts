@@ -21,7 +21,6 @@
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
-import type { AxiosError } from 'axios';
 
 import type { DisplayProfileFilterInput } from '../DisplayProfileConfig';
 
@@ -72,12 +71,11 @@ export const useDisplayProfileData = ({
       const request: FetchDisplayProfileRequest = {
         start: startOffset,
         length: pagination.pageSize,
-        keyword: filter,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,
-        ...(advancedFilters.displayProfile
-          ? { displayProfile: advancedFilters.displayProfile }
+        ...(advancedFilters.displayProfile || filter
+          ? { displayProfile: advancedFilters.displayProfile || filter }
           : {}),
         ...(advancedFilters.type
           ? { type: advancedFilters.type as FetchDisplayProfileRequest['type'] }
@@ -97,9 +95,5 @@ export const useDisplayProfileData = ({
 
     placeholderData: keepPreviousData,
     staleTime: 1000 * 60 * 1,
-
-    throwOnError: (error: AxiosError) => {
-      return error.response?.status ? error.response.status >= 500 : false;
-    },
   });
 };

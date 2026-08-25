@@ -23,6 +23,7 @@ import { isAxiosError } from 'axios';
 import { useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { notify } from '@/components/ui/Notification';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
 import Modal from '@/components/ui/modals/Modal';
 import { setUserHomeFolder } from '@/services/userApi';
@@ -60,6 +61,7 @@ export default function SetHomeFolderModal({ users, onClose, onSuccess }: SetHom
         return;
       }
 
+      notify.success(t('{{count}} user(s) updated successfully.', { count: users.length }));
       onSuccess();
       onClose();
     });
@@ -104,6 +106,7 @@ export default function SetHomeFolderModal({ users, onClose, onSuccess }: SetHom
         <SelectFolder
           selectedId={selectedFolderId}
           selectedText={selectedFolderText}
+          enforceViewPermission={false}
           onSelect={(folder) => {
             setSelectedFolderId(folder?.id ?? 1);
             setSelectedFolderText(folder?.text ?? null);

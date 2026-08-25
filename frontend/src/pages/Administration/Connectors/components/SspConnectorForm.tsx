@@ -190,8 +190,8 @@ export default function SspConnectorForm({
     const isActive = activeTab === id;
     return `py-2 px-3 inline-flex items-center gap-2 border-b-2 text-sm font-semibold whitespace-nowrap focus:outline-none transition-all ${
       isActive
-        ? 'border-blue-600 text-blue-500'
-        : 'border-gray-200 text-gray-500 hover:text-blue-600'
+        ? 'border-xibo-blue-600 text-xibo-blue-500'
+        : 'border-gray-200 text-gray-500 hover:text-xibo-blue-600'
     }`;
   }
 
@@ -242,7 +242,7 @@ export default function SspConnectorForm({
 
             {savedApiKey && partnersLoading && (
               <div className="flex items-center gap-2">
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-xibo-blue-600 border-t-transparent" />
                 <span className="text-sm text-gray-500">{t('Loading partners…')}</span>
               </div>
             )}

@@ -27,9 +27,10 @@ interface CodeTabProps {
   value: string;
   onChange: (value: string) => void;
   language: 'twig' | 'handlebars' | 'css' | 'html' | 'javascript';
+  label: string;
 }
 
-export default function CodeTab({ value, onChange, language }: CodeTabProps) {
+export default function CodeTab({ value, onChange, language, label }: CodeTabProps) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
@@ -45,7 +46,7 @@ export default function CodeTab({ value, onChange, language }: CodeTabProps) {
 
   return (
     <div className="flex flex-col gap-2 h-full">
-      <p className="text-xs text-gray-500 font-bold uppercase">{t(language)}</p>
+      <p className="text-xs text-gray-500 font-bold uppercase">{t(label)}</p>
       <div className="relative flex-1">
         <textarea
           value={value}

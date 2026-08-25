@@ -31,6 +31,7 @@ import { DataTable } from '@/components/ui/table/DataTable';
 import { TextCell } from '@/components/ui/table/cells/TextCell';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import type { ActionType } from '@/hooks/useFolderActions';
+import { useFolderCreatePermission } from '@/hooks/useFolderCreatePermission';
 import { fetchFolderById } from '@/services/folderApi';
 import type { Folder, FolderUsageEntry } from '@/types/folder';
 
@@ -59,6 +60,7 @@ export default function FolderInfoPanel({
 
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
   const [sorting, setSorting] = useState<SortingState>([]);
+  const canCreateFolder = useFolderCreatePermission(folderId);
 
   const usageColumns: ColumnDef<FolderUsageEntry>[] = [
     {
@@ -161,9 +163,11 @@ export default function FolderInfoPanel({
               refreshTrigger={refreshTrigger}
             />
           </div>
-          <Button variant="primary" leftIcon={Plus} onClick={onCreateFolder}>
-            {t('New Folder')}
-          </Button>
+          {canCreateFolder && (
+            <Button variant="primary" leftIcon={Plus} onClick={onCreateFolder}>
+              {t('New Folder')}
+            </Button>
+          )}
         </div>
 
         {/* Folder name + stats */}
@@ -240,6 +244,7 @@ export default function FolderInfoPanel({
           columns={usageColumns}
           data={sortedUsage}
           pageCount={Math.ceil(usage.length / pagination.pageSize)}
+          rowCount={usage.length}
           pagination={pagination}
           onPaginationChange={setPagination}
           sorting={sorting}

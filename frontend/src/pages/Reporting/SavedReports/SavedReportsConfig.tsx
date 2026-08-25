@@ -168,6 +168,9 @@ export const getSavedReportColumns = (props: SavedReportActionsProps): ColumnDef
         const internalName = info.getValue<string>();
         return <TextCell>{reportDescriptionMap[internalName] ?? internalName}</TextCell>;
       },
+      meta: {
+        getExportValue: (row) => reportDescriptionMap[row.reportName] ?? row.reportName,
+      },
     },
     {
       accessorKey: 'generatedOn',
@@ -176,6 +179,9 @@ export const getSavedReportColumns = (props: SavedReportActionsProps): ColumnDef
       cell: (info) => (
         <TextCell>{formatUnixTimestamp(info.getValue<number>(), formatDateTime)}</TextCell>
       ),
+      meta: {
+        getExportValue: (row) => formatUnixTimestamp(row.generatedOn, formatDateTime),
+      },
     },
     {
       accessorKey: 'owner',
@@ -186,9 +192,9 @@ export const getSavedReportColumns = (props: SavedReportActionsProps): ColumnDef
     {
       id: 'tableActions',
       header: '',
-      size: 120,
-      minSize: 120,
-      maxSize: 120,
+      size: 80,
+      minSize: 80,
+      maxSize: 80,
       enableHiding: false,
       enableSorting: false,
       enableResizing: false,

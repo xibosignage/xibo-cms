@@ -155,7 +155,7 @@ export default function UsersTab({
           {isVisible('SYSTEM_USER') && (
             <SelectDropdown
               label={t('System User')}
-              helpText={t('The system User for this CMS.')}
+              helpText={t('The system User for this CMS')}
               value={formValues.SYSTEM_USER ?? ''}
               initialLabel={relatedEntities.systemUser?.userName}
               options={userOptions.options}
@@ -167,13 +167,14 @@ export default function UsersTab({
               searchable
               searchPlaceholder={t('Search users...')}
               onSearch={userOptions.setSearch}
+              disabled={!isEditable('SYSTEM_USER')}
               className="flex-1"
             />
           )}
           {isVisible('DEFAULT_USERGROUP') && (
             <SelectDropdown
               label={t('Default User Group')}
-              helpText={t('The default User Group for new Users.')}
+              helpText={t('The default User Group for new Users')}
               value={formValues.DEFAULT_USERGROUP ?? ''}
               initialLabel={relatedEntities.defaultUserGroup?.group}
               options={userGroupOptions.options}
@@ -185,6 +186,7 @@ export default function UsersTab({
               searchable
               searchPlaceholder={t('Search groups...')}
               onSearch={userGroupOptions.setSearch}
+              disabled={!isEditable('DEFAULT_USERGROUP')}
               className="flex-1"
             />
           )}
@@ -202,6 +204,7 @@ export default function UsersTab({
               { value: 'Super Admin', label: t('Super Admin') },
             ]}
             onSelect={(v) => updateField('defaultUsertype', v)}
+            disabled={!isEditable('defaultUsertype')}
           />
         )}
       </SettingsSection>
@@ -241,14 +244,15 @@ export default function UsersTab({
               { value: 'On', label: t('On') },
             ]}
             onSelect={(v) => updateField('PASSWORD_REMINDER_ENABLED', v)}
+            disabled={!isEditable('PASSWORD_REMINDER_ENABLED')}
           />
         )}
         {isVisible('TWOFACTOR_ISSUER') && (
           <TextInput
             name="TWOFACTOR_ISSUER"
-            label={t('Issuer name')}
+            label={t('Two Factor Issuer')}
             helpText={t(
-              'Name that should appear as Issuer when two factor authorisation is enabled.',
+              'Name that should appear as Issuer when two factor authorisation is enabled',
             )}
             value={formValues.TWOFACTOR_ISSUER ?? ''}
             onChange={(v) => updateField('TWOFACTOR_ISSUER', v)}

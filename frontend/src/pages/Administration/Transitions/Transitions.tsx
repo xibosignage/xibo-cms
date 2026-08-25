@@ -30,6 +30,7 @@ import { TransitionModals } from './components/TransitionModals';
 import { useTransitionActions } from './hooks/useTransitionActions';
 import { useTransitionData } from './hooks/useTransitionData';
 
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
@@ -78,6 +79,7 @@ export default function Transitions() {
     data: queryData,
     isFetching,
     isError,
+    isPaused,
     error: queryError,
   } = useTransitionData({
     pagination,
@@ -117,11 +119,7 @@ export default function Transitions() {
           <TabNav activeTab="Transitions" navigation={administrationTabs} />
         </div>
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
-            {error}
-          </div>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         <div className="min-h-0 flex flex-col">
           {!isHydrated ? (
@@ -133,6 +131,7 @@ export default function Transitions() {
               columns={columns}
               data={transitionList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

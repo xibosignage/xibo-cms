@@ -54,6 +54,13 @@ export const INITIAL_FILTER_STATE: SspActivityFilter = {
   activityToDt: endOfTodayIso(),
 };
 
+export const ACTIVE_FILTER_KEYS: (keyof SspActivityFilter)[] = [
+  'displayId',
+  'partnerId',
+  'activityFromDt',
+  'activityToDt',
+];
+
 export interface SspSummaryRow {
   key: string;
   date: string;

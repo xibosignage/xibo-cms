@@ -42,6 +42,14 @@ export const INITIAL_FILTER_STATE: TimeConnectedFilter = {
   sortBy: 'uptime_desc',
 };
 
+export const ACTIVE_FILTER_KEYS: (keyof TimeConnectedFilter)[] = [
+  'reportFilter',
+  'fromDt',
+  'toDt',
+  'displaySpecificGroupIds',
+  'displayGroupIds',
+];
+
 export const DATE_RANGE_OPTIONS = [
   { value: 'today', label: 'Today' },
   { value: 'yesterday', label: 'Yesterday' },

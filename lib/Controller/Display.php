@@ -25,7 +25,7 @@ use Carbon\Carbon;
 use GeoJson\Feature\Feature;
 use GeoJson\Feature\FeatureCollection;
 use GeoJson\Geometry\Point;
-use Intervention\Image\ImageManagerStatic as Img;
+use Intervention\Image\ImageManager;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Respect\Validation\Validator as v;
@@ -345,7 +345,7 @@ class Display extends Base
         return $response->withJson([
             'requiredFiles' => [],
             'display' => $display,
-            'timeAgo' => Carbon::createFromTimestamp($display->lastAccessed)->diffForHumans(),
+            'timeAgo' => DateFormatHelper::createFromTimestamp($display->lastAccessed)->diffForHumans(),
             'errorSearch' => http_build_query([
                 'displayId' => $display->displayId,
                 'type' => 'ERROR',
@@ -383,7 +383,6 @@ class Display extends Base
     {
         return [
             'displayId' => $parsedQueryParams->getInt('displayId'),
-            'keyword' => $parsedQueryParams->getString('keyword'),
             'display' => $parsedQueryParams->getString('display'),
             'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
             'macAddress' => $parsedQueryParams->getString('macAddress'),
@@ -430,13 +429,6 @@ class Display extends Base
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'integer')
-    )]
-    #[OA\Parameter(
-        name: 'keyword',
-        description: 'Filter by Display Name, ID',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
         name: 'displayGroupId',
@@ -1136,11 +1128,12 @@ class Display extends Base
         $display->save();
 
         if ($this->isApi($request)) {
-            $display->lastAccessed = Carbon::createFromTimestamp($display->lastAccessed)
+            $display->lastAccessed = DateFormatHelper::createFromTimestamp($display->lastAccessed)
                 ->format(DateFormatHelper::getSystemFormat());
             $display->auditingUntil = ($display->auditingUntil == 0)
                 ? 0
-                : Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
+                : DateFormatHelper::createFromTimestamp($display->auditingUntil)
+                    ->format(DateFormatHelper::getSystemFormat());
         }
 
         // Return
@@ -1298,9 +1291,7 @@ class Display extends Base
             $displayGroup->load();
             $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
 
-            if (!$this->getUser()->checkEditable($displayGroup)) {
-                throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
-            }
+            $this->assertDisplayGroupManuallyAssignable($displayGroup);
 
             $displayGroup->assignDisplay($display);
             $displayGroup->save(['validate' => false]);
@@ -1312,9 +1303,7 @@ class Display extends Base
             $displayGroup->load();
             $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
 
-            if (!$this->getUser()->checkEditable($displayGroup)) {
-                throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
-            }
+            $this->assertDisplayGroupManuallyAssignable($displayGroup);
 
             $displayGroup->unassignDisplay($display);
             $displayGroup->save(['validate' => false]);
@@ -1331,6 +1320,37 @@ class Display extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Ensure a Display Group's membership can be manually changed from the Display side of the
+     * assign/unassign relationship (display-specific and Dynamic Groups manage their own membership).
+     * @param \Xibo\Entity\DisplayGroup $displayGroup
+     * @throws AccessDeniedException
+     * @throws InvalidArgumentException
+     */
+    private function assertDisplayGroupManuallyAssignable($displayGroup): void
+    {
+        if ($displayGroup->isDisplaySpecific == 1) {
+            throw new InvalidArgumentException(
+                __('This is a Display specific Display Group and its assignments cannot be modified.'),
+                'displayGroupId'
+            );
+        }
+
+        if (!$this->getUser()->checkEditable($displayGroup)) {
+            throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
+        }
+
+        if ($displayGroup->isDynamic == 1) {
+            throw new InvalidArgumentException(
+                sprintf(
+                    __('%s is a Dynamic Group and displays cannot be manually assigned or unassigned'),
+                    $displayGroup->displayGroup
+                ),
+                'isDynamic'
+            );
+        }
     }
 
     /**
@@ -1367,17 +1387,18 @@ class Display extends Base
             $fileName = $this->getConfig()->uri('forms/filenotfound.gif');
         }
 
-        Img::configure(array('driver' => 'gd'));
-        $img = Img::make($fileName);
+        $img = ImageManager::gd()->read($fileName);
 
         $date = $display->getCurrentScreenShotTime($this->pool);
 
         if ($date != '') {
             $img
-                ->rectangle(0, 0, 110, 15, function ($draw) {
+                ->drawRectangle(0, 0, function ($draw) {
+                    $draw->size(110, 15);
                     $draw->background('#ffffff');
                 })
-                ->text($date, 10, 10);
+                ->text($date, 10, 10, function ($font) {
+                });
         }
 
         // Cache headers
@@ -1391,7 +1412,7 @@ class Display extends Base
         }
 
         $response->write($img->encode());
-        $response = $response->withHeader('Content-Type', $img->mime());
+        $response = $response->withHeader('Content-Type', $img->origin()->mediaType());
         return $this->render($request, $response);
     }
 
@@ -1807,10 +1828,7 @@ class Display extends Base
         } catch (\Exception $e) {
             $this->getLog()->debug($e->getMessage());
             throw new InvalidArgumentException(
-                __(
-                    'The code provided does not match.
-                     Please double-check the code shown on the device you are trying to connect.'
-                ),
+                __('The code provided does not match. Please double-check the code shown on the device you are trying to connect.'),//phpcs:ignore
                 'user_code'
             );
         }
@@ -2099,7 +2117,7 @@ class Display extends Base
             $body = sprintf(
                 __('Display ID %d is offline since %s.'),
                 $display->displayId,
-                Carbon::createFromTimestamp($display->lastAccessed)
+                DateFormatHelper::createFromTimestamp($display->lastAccessed)
                     ->format(DateFormatHelper::getSystemFormat())
             );
 
@@ -2170,11 +2188,12 @@ class Display extends Base
         // Only format these as human-readable strings for true API (OAuth) clients.
         // the React frontend expects raw timestamps and formats them itself.
         if ($this->isApi($request)) {
-            $display->lastAccessed =
-                Carbon::createFromTimestamp($display->lastAccessed)->format(DateFormatHelper::getSystemFormat());
+            $display->lastAccessed = DateFormatHelper::createFromTimestamp($display->lastAccessed)
+                ->format(DateFormatHelper::getSystemFormat());
             $display->auditingUntil = ($display->auditingUntil == 0)
                 ? 0
-                : Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
+                : DateFormatHelper::createFromTimestamp($display->auditingUntil)
+                    ->format(DateFormatHelper::getSystemFormat());
         }
 
         // use try and catch here to cover scenario

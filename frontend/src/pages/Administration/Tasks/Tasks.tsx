@@ -21,7 +21,7 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
-import { Filter, FilterX, Plus, Search } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -34,13 +34,18 @@ import { useTasksActions } from './hooks/useTasksActions';
 import { taskQueryKeys, useTaskData } from './hooks/useTasksData';
 
 import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
+import { useAutoSubmit } from '@/hooks/useAutoSubmit';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import type { Task } from '@/types/task';
+import { countActiveFilters } from '@/utils/filters';
 
 export default function Tasks() {
   const { t } = useTranslation();
@@ -76,14 +81,18 @@ export default function Tasks() {
   const [activeModal, setActiveModal] = useState<ModalType | null>(null);
   const [itemsToDelete, setItemsToDelete] = useState<Task[]>([]);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [taskToRun, setTaskToRun] = useState<Task | null>(null);
 
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
+
+  const { guard } = useAutoSubmit();
 
   const {
     data: queryData,
     isFetching,
     isError,
+    isPaused,
     error: queryError,
   } = useTaskData({
     pagination,
@@ -124,7 +133,16 @@ export default function Tasks() {
     queryClient.invalidateQueries({ queryKey: taskQueryKeys.all });
   };
 
-  const { isDeleting, deleteError, setDeleteError, confirmDelete, runNow } = useTasksActions({
+  const {
+    isDeleting,
+    deleteError,
+    setDeleteError,
+    confirmDelete,
+    isRunning,
+    runError,
+    setRunError,
+    runNow,
+  } = useTasksActions({
     t,
     handleRefresh,
     closeModal,
@@ -148,7 +166,15 @@ export default function Tasks() {
   };
 
   const handleRunNow = (task: Task) => {
-    runNow(task);
+    guard(
+      AUTO_SUBMIT_FORMS.taskRunNow,
+      () => runNow(task, { notifyOnError: true }),
+      () => {
+        setTaskToRun(task);
+        setRunError(null);
+        openModal('runNow');
+      },
+    );
   };
 
   const handleResetFilters = () => {
@@ -183,6 +209,8 @@ export default function Tasks() {
 
   const { filterOptions } = useTaskFilterOptions();
   const adminTabs = useFilteredTabs('administration');
+
+  const activeFilterCount = countActiveFilters(filterInputs, INITIAL_FILTER_STATE, filterOptions);
 
   return (
     <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
@@ -222,15 +250,12 @@ export default function Tasks() {
                 className="py-2 px-3 pl-10 block h-11.25 bg-gray-100 rounded-lg w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none disabled:bg-gray-200"
               />
             </div>
-            <Button
-              leftIcon={!openFilter ? Filter : FilterX}
-              variant="secondary"
+            <FilterButton
+              isOpen={openFilter}
+              onToggle={() => setOpenFilter((prev) => !prev)}
+              activeCount={activeFilterCount}
               disabled={!isHydrated}
-              onClick={() => setOpenFilter((prev) => !prev)}
-              removeTextOnMobile
-            >
-              {t('Filters')}
-            </Button>
+            />
           </div>
         </div>
 
@@ -245,11 +270,7 @@ export default function Tasks() {
           onReset={handleResetFilters}
         />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
-            {error}
-          </div>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         <div className="min-h-0 flex flex-col">
           {!isHydrated ? (
@@ -261,6 +282,7 @@ export default function Tasks() {
               columns={columns}
               data={taskList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}
@@ -268,6 +290,7 @@ export default function Tasks() {
               globalFilter={globalFilter}
               onGlobalFilterChange={setGlobalFilter}
               loading={isFetching}
+              enableSelection={bulkActions.length > 0}
               rowSelection={rowSelection}
               onRowSelectionChange={handleRowSelectionChange}
               onRefresh={handleRefresh}
@@ -291,6 +314,10 @@ export default function Tasks() {
         deleteError={deleteError}
         isDeleting={isDeleting}
         confirmDelete={confirmDelete}
+        taskToRun={taskToRun}
+        runError={runError}
+        isRunning={isRunning}
+        onConfirmRunNow={() => taskToRun && runNow(taskToRun)}
       />
     </section>
   );

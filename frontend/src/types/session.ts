@@ -22,6 +22,7 @@
 export interface Session {
   expiresAt: string;
   isExpired: boolean;
+  isCurrentSession: boolean;
   lastAccessed: string;
   remoteAddress: string;
   userAgent: string;

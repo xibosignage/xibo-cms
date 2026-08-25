@@ -1,9 +1,9 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
-import type { AxiosError } from 'axios';
 
 import type { CampaignFilterInput } from '../CampaignConfig';
 
+import { serializeTags } from '@/components/ui/forms/TagInput';
 import { fetchCampaigns } from '@/services/campaignApi';
 import type { FetchCampaignRequest } from '@/services/campaignApi';
 import { isValidRegex } from '@/utils/regex';
@@ -51,19 +51,18 @@ export const useCampaignData = ({
       const { useRegexForName, logicalOperatorName, exactTags, logicalOperator } = advancedFilters;
 
       const normalizedTags = advancedFilters.tags?.length
-        ? advancedFilters.tags.map((t) => t.tag).join(',')
+        ? serializeTags(advancedFilters.tags)
         : undefined;
 
       const request: FetchCampaignRequest = {
         start: startOffset,
         length: pagination.pageSize,
-        keyword: filter || undefined,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,
         folderId: folderId ?? undefined,
 
-        ...(advancedFilters.name && { name: advancedFilters.name }),
+        ...((advancedFilters.name || filter) && { name: advancedFilters.name || filter }),
 
         ...(advancedFilters.type && { type: advancedFilters.type }),
 
@@ -101,9 +100,5 @@ export const useCampaignData = ({
 
     placeholderData: keepPreviousData,
     staleTime: 1000 * 60 * 1,
-
-    throwOnError: (error: AxiosError) => {
-      return error.response?.status ? error.response.status >= 500 : false;
-    },
   });
 };

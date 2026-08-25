@@ -9,9 +9,11 @@ import { notify } from '@/components/ui/Notification';
 import Checkbox from '@/components/ui/forms/Checkbox';
 import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagInput';
 import Modal from '@/components/ui/modals/Modal';
+import { useUserContext } from '@/context/UserContext';
 import { replaceMedia } from '@/services/mediaApi';
 import type { Media, MediaType } from '@/types/media';
 import type { Tag } from '@/types/tag';
+import { hasFeature } from '@/utils/permissions';
 
 interface ReplaceFileMedia {
   name: string;
@@ -35,20 +37,29 @@ export default function ReplaceFileModal({
   onSave,
 }: ReplaceFileModalProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
   const [isSaving, setIsSaving] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [pendingTagInput, setPendingTagInput] = useState('');
+  const [hasTagPendingValue, setHasTagPendingValue] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const Icon = getMediaIcon(data.mediaType);
 
+  const defaultDeleteOldRevisions =
+    user?.settings?.LIBRARY_MEDIA_DELETEOLDVER_CHECKB === '1' ||
+    user?.settings?.LIBRARY_MEDIA_DELETEOLDVER_CHECKB === 'Checked';
+  const defaultUpdateInLayouts =
+    user?.settings?.LIBRARY_MEDIA_UPDATEINALL_CHECKB === '1' ||
+    user?.settings?.LIBRARY_MEDIA_UPDATEINALL_CHECKB === 'Checked';
+
   const [draft, setDraft] = useState<ReplaceFileMedia>(() => ({
     name: data.name,
     tags: data.tags.map((t) => ({ ...t })),
-    deleteOldRevisions: data.deleteOldRevisions,
+    deleteOldRevisions: defaultDeleteOldRevisions,
     oldMediaId: data.mediaId,
-    updateInLayouts: data.updateInLayouts,
+    updateInLayouts: defaultUpdateInLayouts,
   }));
 
   const previewUrl = selectedFile ? URL.createObjectURL(selectedFile) : data.thumbnail;
@@ -69,7 +80,7 @@ export default function ReplaceFileModal({
         oldMediaId: draft.oldMediaId,
         name: draft.name,
         folderId: data.folderId,
-        tags: serialized.split(',').filter(Boolean),
+        tags: serialized,
         updateInLayouts: draft.updateInLayouts,
         deleteOldRevisions: draft.deleteOldRevisions,
         onProgress: (p) => setUploadProgress(p),
@@ -88,7 +99,7 @@ export default function ReplaceFileModal({
     } catch (err) {
       console.error('Replace media failed:', err);
       setIsSaving(false);
-      notify.error(t('Failed to replace media'));
+      notify.error(err instanceof Error ? err.message : t('Failed to replace media'));
     }
   };
 
@@ -114,10 +125,13 @@ export default function ReplaceFileModal({
       case 'pdf':
         return 'application/pdf,.pdf';
 
-      case 'archive':
-        return '.zip,.rar,.7z,.tar,.gz';
+      case 'powerpoint':
+        return '.ppt,.pps,.pptx,.ppsx';
 
-      case 'other':
+      case 'htmlpackage':
+        return '.htz';
+
+      case 'genericfile':
       default:
         return '';
     }
@@ -128,11 +142,11 @@ export default function ReplaceFileModal({
     setDraft({
       name: data.name,
       tags: data.tags.map((t) => ({ ...t })),
-      deleteOldRevisions: data.deleteOldRevisions,
+      deleteOldRevisions: defaultDeleteOldRevisions,
       oldMediaId: data.mediaId,
-      updateInLayouts: data.updateInLayouts,
+      updateInLayouts: defaultUpdateInLayouts,
     });
-  }, [data]);
+  }, [data, defaultDeleteOldRevisions, defaultUpdateInLayouts]);
 
   useEffect(() => {
     if (!selectedFile) return;
@@ -158,7 +172,7 @@ export default function ReplaceFileModal({
         {
           label: isSaving ? t('Saving…') : t('Save'),
           onClick: handleSave,
-          disabled: isSaving || !selectedFile,
+          disabled: isSaving || !selectedFile || hasTagPendingValue,
         },
       ]}
     >
@@ -187,18 +201,23 @@ export default function ReplaceFileModal({
                 )}
               </div>
             </div>
-            <div className="flex flex-col justify-between flex-1">
+            <div className="flex flex-col justify-between flex-1 min-w-0">
               <div>
                 <span className="text-sm text-gray-500 font-semibold flex items-center gap-1">
                   {t('FILE NAME')} <HelpCircle size={12} />
                 </span>
-                <span className="text-sm">{selectedFile?.name || t(data.fileName)}</span>
+                <span
+                  className="text-sm truncate block"
+                  title={selectedFile?.name || data.fileName}
+                >
+                  {selectedFile?.name || data.fileName}
+                </span>
               </div>
               <div>
                 <span className="text-sm text-gray-500 font-semibold flex items-center gap-1">
                   {t('FILE SIZE')} <HelpCircle size={12} />
                 </span>
-                <span className="text-sm">{t(data.fileSizeFormatted)}</span>
+                <span className="text-sm">{data.fileSizeFormatted}</span>
               </div>
               <div>
                 <span className="text-sm text-gray-500 font-semibold flex items-center gap-1">
@@ -229,13 +248,16 @@ export default function ReplaceFileModal({
           </div>
           {selectedFile && isSaving && (
             <div className="flex flex-col">
-              <span className="text-sm text-xibo-black font-semibold mt-1 block px-4">
+              <span
+                className="text-sm text-xibo-black font-semibold mt-1 block px-4 truncate"
+                title={selectedFile.name}
+              >
                 {selectedFile.name}
               </span>
               <div className="px-4 pb-3 flex items-center gap-4">
                 <div className="h-2 bg-gray-200 rounded overflow-hidden w-full">
                   <div
-                    className="h-full bg-blue-500 transition-all duration-200"
+                    className="h-full bg-xibo-blue-500 transition-all duration-200"
                     style={{ width: `${uploadProgress}%` }}
                   />
                 </div>
@@ -258,13 +280,17 @@ export default function ReplaceFileModal({
               onChange={(e) => setDraft((prev) => ({ ...prev, name: e.target.value }))}
             />
           </div>
-          <TagInput
-            value={draft.tags}
-            helpText={t('Tags (Comma-separated: Tag or Tag|Value)')}
-            onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
-            inputValue={pendingTagInput}
-            onInputChange={setPendingTagInput}
-          />
+          {(hasFeature(user, 'tag.tagging') || (draft.tags?.length ?? 0) > 0) && (
+            <TagInput
+              value={draft.tags}
+              helpText={t('Tags (Comma-separated: Tag or Tag|Value)')}
+              onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
+              inputValue={pendingTagInput}
+              onInputChange={setPendingTagInput}
+              onPendingValueChange={setHasTagPendingValue}
+              disabled={!hasFeature(user, 'tag.tagging')}
+            />
+          )}
           {/* Retired */}
           <div className="bg-gray-50 flex flex-col ">
             <Checkbox

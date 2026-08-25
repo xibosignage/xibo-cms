@@ -146,13 +146,6 @@ export async function uploadSpotMedia({
   return response.data;
 }
 
-export async function tidyLibrary(): Promise<{ countDeleted: number }> {
-  const response = await http.delete<{ countDeleted: number }>('/library/tidy', {
-    headers: { 'X-Requested-With': 'XMLHttpRequest' },
-  });
-  return response.data;
-}
-
 export async function deleteSpotWidget(widgetId: number, deleteMedia = false): Promise<void> {
   await http.delete(`/playlist/widget/${widgetId}`, {
     params: { deleteMedia: deleteMedia ? 1 : 0 },

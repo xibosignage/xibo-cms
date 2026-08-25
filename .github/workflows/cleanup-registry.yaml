@@ -1,0 +1,45 @@
+name: Cleanup Container Registry
+
+on:
+  schedule:
+    - cron: '0 3 * * 0'
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Report only, delete nothing'
+        type: boolean
+        default: true
+
+jobs:
+  cleanup:
+    name: Sweep orphaned manifests
+    runs-on: ubuntu-22.04
+
+    permissions:
+      packages: write
+
+    steps:
+      - name: Delete untagged and orphaned manifests
+        uses: dataaxiom/ghcr-cleanup-action@v1
+        with:
+          owner: xibosignage
+          package: xibo-cms
+          token: ${{ secrets.GITHUB_TOKEN }}
+          delete-untagged: true
+          delete-ghost-images: true
+          delete-partial-images: true
+          validate: true
+          dry-run: ${{ inputs.dry-run || false }}
+          exclude-tags: >-
+            latest,develop,master,release44,release33,grigg,cypress,release-*
+
+      - name: Expire stale PR containers
+        uses: dataaxiom/ghcr-cleanup-action@v1
+        with:
+          owner: xibosignage
+          package: xibo-cms
+          token: ${{ secrets.GITHUB_TOKEN }}
+          delete-tags: test-*
+          older-than: 90 days
+          validate: true
+          dry-run: ${{ inputs.dry-run || false }}

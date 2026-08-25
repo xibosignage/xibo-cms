@@ -26,7 +26,6 @@ import {
   Film,
   Music,
   FileText,
-  Archive,
   File as FileIcon,
   Edit,
   Download,
@@ -37,6 +36,8 @@ import {
   Info,
   Trash2,
   FileSymlink,
+  Tags,
+  BarChart3,
 } from 'lucide-react';
 import { type ComponentProps } from 'react';
 
@@ -50,13 +51,16 @@ import {
   StatusCell,
   ActionsCell,
   TagsCell,
+  toDisplayTags,
+  getSharingColumn,
 } from '@/components/ui/table/cells';
 import { getCommonFormOptions } from '@/config/commonForms';
-import type { Media } from '@/types/media';
+import type { Media, MediaType } from '@/types/media';
 import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
 import type { DateLike } from '@/utils/date';
 import { formatDuration } from '@/utils/formatters';
+import { formatTagsForExport } from '@/utils/tags';
 
 export interface MediaFilterInput {
   type?: string;
@@ -66,7 +70,7 @@ export interface MediaFilterInput {
   ownerId?: string;
   ownerUserGroupId?: string;
   orientation?: string;
-  retired?: number;
+  retired?: number | null;
   lastModified?: string;
   exactTags?: boolean;
   folderId?: number;
@@ -88,21 +92,20 @@ export const getMediaIcon = (mediaType: string) => {
       return Music;
     case 'pdf':
       return FileText;
-    case 'archive':
-      return Archive;
     default:
       return FileIcon;
   }
 };
-
-type MediaType = 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';
 
 export type ModalType =
   | BaseModalType
   | 'replace'
   | 'schedule'
   | 'enableStats'
+  | 'enableStatsMultiple'
+  | 'editTagsMultiple'
   | 'usageReport'
+  | 'tidy'
   | null;
 
 export const INITIAL_FILTER_STATE: MediaFilterInput = {
@@ -113,6 +116,7 @@ export const INITIAL_FILTER_STATE: MediaFilterInput = {
   ownerId: '',
   ownerUserGroupId: '',
   orientation: '',
+  retired: 0,
   layoutId: null,
   lastModified: '',
   logicalOperatorName: 'OR',
@@ -121,7 +125,10 @@ export const INITIAL_FILTER_STATE: MediaFilterInput = {
   exactTags: false,
 };
 
-export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<MediaFilterInput>[] => [
+export const getBaseFilterKeys = (
+  t: TFunction,
+  canTag = false,
+): FilterConfigItem<MediaFilterInput>[] => [
   {
     label: t('ID'),
     placeholder: ' ',
@@ -139,17 +146,21 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<MediaFilterInp
     showRegex: true,
     regexKey: 'useRegexForName',
   },
-  {
-    label: t('Tags'),
-    name: 'tags',
-    type: 'tags',
-    placeholder: ' ',
-    className: '',
-    showAndOr: true,
-    andOrKey: 'logicalOperator',
-    showExactTags: true,
-    exactTagsKey: 'exactTags',
-  },
+  ...(canTag
+    ? ([
+        {
+          label: t('Tags'),
+          name: 'tags',
+          type: 'tags',
+          placeholder: ' ',
+          className: '',
+          showAndOr: true,
+          andOrKey: 'logicalOperator',
+          showExactTags: true,
+          exactTagsKey: 'exactTags',
+        },
+      ] as FilterConfigItem<MediaFilterInput>[])
+    : []),
   {
     label: t('Owner'),
     name: 'ownerId',
@@ -164,12 +175,13 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<MediaFilterInp
     label: t('Type'),
     name: 'type',
     options: [
-      { label: t('Image'), value: 'image' },
-      { label: t('Video'), value: 'video' },
       { label: t('Audio'), value: 'audio' },
+      { label: t('Generic File'), value: 'genericfile' },
+      { label: t('HTML Package'), value: 'htmlpackage' },
+      { label: t('Image'), value: 'image' },
       { label: t('PDF'), value: 'pdf' },
-      { label: t('Archive'), value: 'archive' },
-      { label: t('Other'), value: 'other' },
+      { label: t('PowerPoint'), value: 'powerpoint' },
+      { label: t('Video'), value: 'video' },
     ],
   },
   {
@@ -181,6 +193,7 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<MediaFilterInp
     label: t('Retired'),
     name: 'retired',
     options: getCommonFormOptions(t).retired,
+    compareToDefault: true,
   },
   {
     label: t('Layout ID'),
@@ -196,11 +209,6 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<MediaFilterInp
     options: getCommonFormOptions(t).lastModifiedFilter,
   },
 ];
-
-// TODO: Needs translation
-export const MEDIA_FORM_OPTIONS = {
-  expiryDates: ['Never Expire', 'End of Today', 'In 7 Days', 'In 14 Days', 'In 30 Days'],
-};
 
 export const ACCEPTED_MIME_TYPES = {
   // Audio
@@ -253,6 +261,8 @@ export const getStatusTypeFromMediaType = (mediaType: string) => {
 
 export interface MediaActionsProps {
   t: TFunction;
+  canTag?: boolean;
+  canUserShare?: boolean;
   formatDateTime: (value: DateLike) => string;
   onPreview?: (row: Media) => void;
   onDelete: (id: number) => void;
@@ -266,10 +276,15 @@ export interface MediaActionsProps {
   openScheduleModal?: (row: Media) => void;
   openEnableStatsModal?: (id: number) => void;
   openUsageReportModal?: (id: number) => void;
+  scheduleWithView?: boolean;
+  canModify?: boolean;
+  onTagClick?: (tag: Tag) => void;
+  selectedTagIds?: (string | number)[];
 }
 
 export const getMediaItemActions = ({
   t,
+  canUserShare = false,
   onDelete,
   onDownload,
   openEditModal,
@@ -281,6 +296,8 @@ export const getMediaItemActions = ({
   openScheduleModal,
   openEnableStatsModal,
   openUsageReportModal,
+  scheduleWithView,
+  canModify = false,
 }: MediaActionsProps): ((media: Media) => ActionItem[]) => {
   return (media: Media) => {
     const actions: ActionItem[] = [];
@@ -289,7 +306,7 @@ export const getMediaItemActions = ({
     const canDelete = !!media.userPermissions?.delete;
     const canShare = !!media.userPermissions?.modifyPermissions;
 
-    if (canEdit) {
+    if (canEdit && canModify) {
       actions.push({
         label: t('Edit'),
         icon: Edit,
@@ -306,7 +323,7 @@ export const getMediaItemActions = ({
       isQuickAction: true,
     });
 
-    if (canEdit) {
+    if (canEdit && canModify) {
       actions.push({
         label: t('Edit'),
         icon: Edit,
@@ -314,7 +331,7 @@ export const getMediaItemActions = ({
       });
     }
 
-    if (canEdit) {
+    if (canEdit && canModify) {
       actions.push({
         label: t('Replace File'),
         icon: FileSymlink,
@@ -322,7 +339,7 @@ export const getMediaItemActions = ({
       });
     }
 
-    if (copyMedia) {
+    if (canEdit && canModify && copyMedia) {
       actions.push({
         label: t('Make a Copy'),
         icon: CopyCheck,
@@ -330,7 +347,7 @@ export const getMediaItemActions = ({
       });
     }
 
-    if (canEdit && openMoveModal) {
+    if (canEdit && canModify && openMoveModal) {
       actions.push({
         label: t('Move'),
         icon: FolderInput,
@@ -338,7 +355,7 @@ export const getMediaItemActions = ({
       });
     }
 
-    if (canShare && openShareModal) {
+    if (canShare && canUserShare && canModify && openShareModal) {
       actions.push({
         label: t('Share'),
         icon: UserPlus2,
@@ -352,7 +369,11 @@ export const getMediaItemActions = ({
       onClick: () => onDownload(media),
     });
 
-    if (openScheduleModal) {
+    const canScheduleMedia =
+      (media.mediaType === 'image' || media.mediaType === 'video') &&
+      (canEdit || (!!scheduleWithView && !!media.userPermissions?.view));
+
+    if (canScheduleMedia && openScheduleModal) {
       actions.push({
         label: t('Schedule'),
         icon: CalendarClock,
@@ -368,17 +389,25 @@ export const getMediaItemActions = ({
       });
     }
 
-    actions.push({ isSeparator: true });
-    actions.push({
-      label: t('Enable Stats Collection'),
-      onClick: () => openEnableStatsModal && openEnableStatsModal(media.mediaId),
-    });
-    actions.push({
-      label: t('Usage Report'),
-      onClick: () => openUsageReportModal && openUsageReportModal(media.mediaId),
-    });
+    if ((canEdit && canModify) || openUsageReportModal) {
+      actions.push({ isSeparator: true });
+    }
 
-    if (canDelete) {
+    if (canEdit && canModify) {
+      actions.push({
+        label: t('Enable Stats Collection'),
+        onClick: () => openEnableStatsModal && openEnableStatsModal(media.mediaId),
+      });
+    }
+
+    if (openUsageReportModal) {
+      actions.push({
+        label: t('Usage Report'),
+        onClick: () => openUsageReportModal(media.mediaId),
+      });
+    }
+
+    if (canDelete && canModify) {
       actions.push({ isSeparator: true });
       actions.push({
         label: t('Delete'),
@@ -422,7 +451,7 @@ export const filterMediaByPermission = <T,>(
 };
 
 export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] => {
-  const { t, onPreview, formatDateTime } = props;
+  const { t, onPreview, formatDateTime, canTag = false, onTagClick, selectedTagIds } = props;
   const getActions = getMediaItemActions(props);
   return [
     {
@@ -436,11 +465,14 @@ export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] =>
       header: t('Thumbnail'),
       size: 150,
       enableSorting: false,
+      meta: {
+        excludeFromExport: true,
+      },
       cell: (info) => (
         <MediaCell
           thumb={info.row.original.thumbnail}
           alt={info.row.original.name}
-          mediaType={(info.row.original.mediaType as MediaType) || 'other'}
+          mediaType={(info.row.original.mediaType as MediaType) || 'genericfile'}
           onPreview={() => onPreview?.(info.row.original)}
         />
       ),
@@ -461,26 +493,38 @@ export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] =>
         return <StatusCell label={value} type={getStatusTypeFromMediaType(value)} />;
       },
     },
-    {
-      accessorKey: 'tags',
-      header: t('Tags'),
-      enableSorting: false,
-      size: 150,
-      cell: (info) => {
-        const tags = info.getValue<Tag[]>() || [];
-        const formattedTags = tags.map((tag) => ({
-          id: tag.tagId,
-          label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
-        }));
-        return <TagsCell tags={formattedTags} />;
-      },
-    },
+    ...(canTag
+      ? ([
+          {
+            accessorKey: 'tags',
+            header: t('Tags'),
+            enableSorting: false,
+            size: 150,
+            cell: (info) => {
+              const tags = info.getValue<Tag[]>() || [];
+              return (
+                <TagsCell
+                  tags={toDisplayTags(tags)}
+                  onTagClick={onTagClick}
+                  selectedTagIds={selectedTagIds}
+                />
+              );
+            },
+            meta: {
+              getExportValue: (row) => formatTagsForExport(row.tags),
+            },
+          },
+        ] as ColumnDef<Media>[])
+      : []),
     {
       id: 'formattedDuration',
       accessorKey: 'duration',
       header: t('Duration'),
       size: 140,
       cell: (info) => <TextCell>{formatDuration(info.getValue<number>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatDuration(row.duration),
+      },
     },
     {
       id: 'durationSeconds',
@@ -521,16 +565,7 @@ export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] =>
       size: 150,
       cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
     },
-    {
-      accessorKey: 'groupsWithPermissions',
-      enableSorting: false,
-      header: t('Sharing'),
-      size: 150,
-      cell: (info) => {
-        const groups = info.getValue() as string;
-        return <TextCell className="italic text-gray-500">{groups || t('Private')}</TextCell>;
-      },
-    },
+    getSharingColumn<Media>(t),
     {
       accessorKey: 'revised',
       header: t('Revised'),
@@ -571,22 +606,24 @@ export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] =>
       header: t('Created'),
       size: 180,
       cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatDateTime(row.createdDt),
+      },
     },
     {
       accessorKey: 'modifiedDt',
       header: t('Modified'),
       size: 180,
       cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatDateTime(row.modifiedDt),
+      },
     },
     {
-      accessorKey: 'expires',
+      accessorKey: 'expiresFormatted',
       header: t('Expires'),
       size: 180,
-      cell: (info) => {
-        const val = info.getValue() as number;
-        if (val === 0) return <span className="text-gray-400">-</span>;
-        return <TextCell>{val}</TextCell>;
-      },
+      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
     },
     {
       id: 'tableActions',
@@ -612,6 +649,9 @@ interface GetBulkActionsProps {
   onMove?: () => void;
   onShare?: () => void;
   onDownload?: () => void;
+  onEditTags?: () => void;
+  onEnableStats?: () => void;
+  canModify?: boolean;
 }
 
 export const getBulkActions = ({
@@ -620,14 +660,33 @@ export const getBulkActions = ({
   onMove,
   onShare,
   onDownload,
+  onEditTags,
+  onEnableStats,
+  canModify = false,
 }: GetBulkActionsProps): DataTableBulkAction<Media>[] => {
   const actions: DataTableBulkAction<Media>[] = [];
 
-  if (onShare) {
+  if (onShare && canModify) {
     actions.push({
       label: t('Share'),
       icon: UserPlus2,
       onClick: onShare,
+    });
+  }
+
+  if (onEditTags && canModify) {
+    actions.push({
+      label: t('Edit Tags'),
+      icon: Tags,
+      onClick: onEditTags,
+    });
+  }
+
+  if (onEnableStats && canModify) {
+    actions.push({
+      label: t('Enable Stats Collection'),
+      icon: BarChart3,
+      onClick: onEnableStats,
     });
   }
 
@@ -639,7 +698,7 @@ export const getBulkActions = ({
     });
   }
 
-  if (onMove) {
+  if (onMove && canModify) {
     actions.push({
       label: t('Move'),
       icon: FolderInput,
@@ -647,7 +706,7 @@ export const getBulkActions = ({
     });
   }
 
-  if (onDelete) {
+  if (onDelete && canModify) {
     actions.push({
       label: t('Delete Selected'),
       icon: Trash2,

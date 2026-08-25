@@ -115,7 +115,7 @@ describe('Commands page - filters', () => {
 
     await waitFor(
       () => {
-        expect(fetchCommands).toHaveBeenCalledWith(expect.objectContaining({ keyword: 'Reboot' }));
+        expect(fetchCommands).toHaveBeenCalledWith(expect.objectContaining({ command: 'Reboot' }));
       },
       { timeout: 2000 },
     );
@@ -131,7 +131,7 @@ describe('Commands page - filters', () => {
     await waitFor(
       () => {
         expect(fetchCommands).toHaveBeenCalledWith(
-          expect.objectContaining({ start: 0, keyword: 'screen' }),
+          expect.objectContaining({ start: 0, command: 'screen' }),
         );
       },
       { timeout: 2000 },
@@ -142,7 +142,7 @@ describe('Commands page - filters', () => {
     const user = userEvent.setup();
     // Conditional mock: unfiltered returns the row, 'Alpha' returns empty.
     vi.mocked(fetchCommands).mockImplementation(async (opts) =>
-      opts?.keyword === 'Alpha' ? EMPTY_COMMAND_TABLE : SINGLE_COMMAND,
+      opts?.command === 'Alpha' ? EMPTY_COMMAND_TABLE : SINGLE_COMMAND,
     );
 
     renderCommandsPage();

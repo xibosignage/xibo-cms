@@ -35,6 +35,13 @@ export const INITIAL_FILTER_STATE: ApiRequestsHistoryFilter = {
   requestId: '',
 };
 
+export const ACTIVE_FILTER_KEYS: (keyof ApiRequestsHistoryFilter)[] = [
+  'reportFilter',
+  'type',
+  'userId',
+  'requestId',
+];
+
 export const DATE_RANGE_OPTIONS = [
   { value: 'today', label: 'Today' },
   { value: 'yesterday', label: 'Yesterday' },

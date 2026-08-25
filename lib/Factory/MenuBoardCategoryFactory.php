@@ -200,22 +200,13 @@ class MenuBoardCategoryFactory extends BaseFactory
             $params['code'] = '%' . $sanitizedFilter->getString('code') . '%';
         }
 
-        if ($sanitizedFilter->getString('keyword') != null) {
-            $body .= $this->buildSearchQuery(
-                $sanitizedFilter->getString('keyword'),
-                $params,
-                ['menu_category.name'],
-                ['menu_category.menuCategoryId']
-            );
-        }
-
         if ($sanitizedFilter->getInt('mediaId') !== null) {
             $body .= ' AND `menu_category`.mediaId = :mediaId ';
             $params['mediaId'] = $sanitizedFilter->getInt('mediaId');
         }
 
         $allowedColumns = ['menuCategoryId', 'name', 'code'];
-        $sortOrder = $this->buildSortQuery($sortOrder, $allowedColumns, [], ['name ASC']);
+        $sortOrder = $this->buildSortQuery($sortOrder, $allowedColumns, [], ['name ASC'], 'menuCategoryId');
         $order = empty($sortOrder) ? '' : ' ORDER BY ' . implode(', ', $sortOrder);
 
         $limit = '';
@@ -336,21 +327,13 @@ class MenuBoardCategoryFactory extends BaseFactory
             $params['code'] = '%' . $sanitizedFilter->getString('code') . '%';
         }
 
-        if ($sanitizedFilter->getString('keyword') != null) {
-            $body .= $this->buildSearchQuery(
-                $sanitizedFilter->getString('keyword'),
-                $params,
-                ['menu_product.name'],
-                ['menu_product.menuProductId']
-            );
-        }
-
         $allowedColumns = ['menuProductId', 'name', 'price', 'displayOrder', 'availability'];
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
             [],
-            ['displayOrder ASC', 'availability DESC', 'menuProductId ASC']
+            ['displayOrder ASC', 'availability DESC', 'menuProductId ASC'],
+            'menuProductId'
         );
         $order = empty($sortOrder) ? '' : ' ORDER BY ' . implode(', ', $sortOrder);
 

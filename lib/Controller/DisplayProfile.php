@@ -90,13 +90,6 @@ class DisplayProfile extends Base
         schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
-        name: 'keyword',
-        description: 'Filter by display profile name, ID, or type',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
-    )]
-    #[OA\Parameter(
         name: 'sortBy',
         description: 'Specifies which field the results are sorted by. Used together with sortDir',
         in: 'query',
@@ -563,7 +556,6 @@ class DisplayProfile extends Base
             'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
             'type' => $parsedQueryParams->getString('type'),
             'logicalOperatorName' => $parsedQueryParams->getString('logicalOperatorName'),
-            'keyword' => $parsedQueryParams->getString('keyword')
         ], $parsedQueryParams);
     }
 

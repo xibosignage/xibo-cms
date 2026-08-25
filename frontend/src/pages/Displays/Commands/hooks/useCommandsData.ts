@@ -21,7 +21,6 @@
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
-import type { AxiosError } from 'axios';
 
 import type { CommandsFilterInput } from '../CommandsConfig';
 
@@ -66,10 +65,9 @@ export const useCommandsData = ({
       return fetchCommands({
         start: startOffset,
         length: pagination.pageSize,
-        keyword: filter || undefined,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
-        ...(advancedFilters.name ? { command: advancedFilters.name } : {}),
+        ...(advancedFilters.name || filter ? { command: advancedFilters.name || filter } : {}),
         ...(advancedFilters.code ? { code: advancedFilters.code } : {}),
         ...(advancedFilters.logicalOperatorName
           ? { logicalOperatorName: advancedFilters.logicalOperatorName }
@@ -87,9 +85,5 @@ export const useCommandsData = ({
 
     placeholderData: keepPreviousData,
     staleTime: 1000 * 60 * 1,
-
-    throwOnError: (error: AxiosError) => {
-      return error.response?.status ? error.response.status >= 500 : false;
-    },
   });
 };

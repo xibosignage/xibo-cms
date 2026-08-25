@@ -39,6 +39,13 @@ export interface DisplayProfileConfigDefaultItem {
   type?: string;
 }
 
+export interface DisplayProfilePermissions {
+  view?: number;
+  edit?: number;
+  delete?: number;
+  modifyPermissions?: number;
+}
+
 export interface DisplayProfile {
   displayProfileId: number;
   name: string;
@@ -49,6 +56,7 @@ export interface DisplayProfile {
   configDefault?: DisplayProfileConfigDefaultItem[];
   commands?: DisplayProfileCommand[];
   userId?: number;
+  userPermissions?: DisplayProfilePermissions;
 }
 
 export interface DisplayProfileCommand {

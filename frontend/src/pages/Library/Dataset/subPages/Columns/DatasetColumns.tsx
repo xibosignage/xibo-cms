@@ -32,12 +32,15 @@ import { DatasetColumnModals } from './components/DatasetColumnsModals';
 import { useDatasetColumnsData } from './hooks/useDatasetColumnsData';
 
 import Button from '@/components/ui/Button';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { useUserContext } from '@/context/UserContext';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import { createDatasetColumn, deleteDatasetColumn, getDatasetById } from '@/services/datasetApi';
 import type { DatasetColumn } from '@/types/datasetColumn';
+import { hasFeature } from '@/utils/permissions';
 
 type ColumnModalType = 'edit' | 'delete' | 'copy' | null;
 
@@ -45,8 +48,11 @@ export default function DatasetColumns() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useUserContext();
 
   const { datasetId } = useParams<{ datasetId: string }>();
+
+  const canModify = hasFeature(user, 'dataset.modify');
 
   const {
     pagination,
@@ -106,6 +112,7 @@ export default function DatasetColumns() {
     data: queryData,
     isFetching,
     isError,
+    isPaused,
     error: queryError,
   } = useDatasetColumnsData({
     datasetId: datasetId!,
@@ -236,6 +243,7 @@ export default function DatasetColumns() {
 
   const columns = getColumnDefinitions({
     t,
+    canEdit: canModify,
     onEdit: handleEdit,
     onDelete: handleDelete,
     onCopy: handleCopyModalOpen,
@@ -247,19 +255,21 @@ export default function DatasetColumns() {
       .filter((item): item is DatasetColumn => !!item);
   };
 
-  const bulkActions = [
-    {
-      label: t('Delete'),
-      icon: Trash2,
-      onClick: () => {
-        const allItems = getAllSelectedItems();
-        setItemsToDelete(allItems);
-        setDeleteError(null);
-        setActiveModal('delete');
-      },
-      variant: 'danger' as const,
-    },
-  ];
+  const bulkActions = canModify
+    ? [
+        {
+          label: t('Delete'),
+          icon: Trash2,
+          onClick: () => {
+            const allItems = getAllSelectedItems();
+            setItemsToDelete(allItems);
+            setDeleteError(null);
+            setActiveModal('delete');
+          },
+          variant: 'danger' as const,
+        },
+      ]
+    : [];
 
   const libraryTabs = useFilteredTabs('library');
 
@@ -269,15 +279,17 @@ export default function DatasetColumns() {
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="Datasets" navigation={libraryTabs} />
           <div className="flex items-center gap-2">
-            <Button
-              variant="primary"
-              className="font-semibold"
-              disabled={!isHydrated}
-              onClick={handleAdd}
-              leftIcon={Plus}
-            >
-              {t('Add Column')}
-            </Button>
+            {canModify && (
+              <Button
+                variant="primary"
+                className="font-semibold"
+                disabled={!isHydrated}
+                onClick={handleAdd}
+                leftIcon={Plus}
+              >
+                {t('Add Column')}
+              </Button>
+            )}
             <Button
               variant="secondary"
               className="font-semibold"
@@ -331,14 +343,7 @@ export default function DatasetColumns() {
           </div>
         </div>
 
-        {error && (
-          <div
-            className="bg-red-50 border border-red-200 text-red-800 p-4 mb-4 rounded-lg"
-            role="alert"
-          >
-            {error}
-          </div>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         <div className="min-h-0 flex flex-col">
           {!isHydrated ? (
@@ -350,6 +355,7 @@ export default function DatasetColumns() {
               columns={columns}
               data={columnList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

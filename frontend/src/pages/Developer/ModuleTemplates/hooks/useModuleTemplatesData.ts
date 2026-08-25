@@ -21,7 +21,6 @@
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
-import type { AxiosError } from 'axios';
 
 import type { ModuleTemplateFilterInput } from '../ModuleTemplatesConfig';
 
@@ -68,9 +67,8 @@ export const useModuleTemplatesData = ({
 
       const request: FetchModuleTemplatesRequest = {
         id: advancedFilters.id ?? null,
-        templateId: advancedFilters.templateId || undefined,
+        templateId: advancedFilters.templateId || filter || undefined,
         dataType: advancedFilters.dataType || undefined,
-        keyword: filter || undefined,
         start,
         length: pagination.pageSize,
         sortBy,
@@ -85,9 +83,5 @@ export const useModuleTemplatesData = ({
 
     placeholderData: keepPreviousData,
     staleTime: 1000 * 60 * 5,
-
-    throwOnError: (error: AxiosError) => {
-      return error.response?.status ? error.response.status >= 500 : false;
-    },
   });
 };

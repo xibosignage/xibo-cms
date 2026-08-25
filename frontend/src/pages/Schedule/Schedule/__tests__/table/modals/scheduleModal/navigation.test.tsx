@@ -24,18 +24,7 @@ import userEvent from '@testing-library/user-event';
 import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
-import {
-  setupCampaignMocks,
-  setupCommandMocks,
-  setupDatasetMocks,
-  setupDaypartMocks,
-  setupEventMocks,
-  setupLayoutsMocks,
-  setupMediaMocks,
-  setupPlaylistMocks,
-  setupResolutionMocks,
-  setupSyncGroupMocks,
-} from '../../../mocks/api';
+import { setupScheduleModalMocks } from '../../../mocks/api';
 
 import { renderScheduleModal } from './helpers/renderScheduleModal';
 
@@ -83,6 +72,7 @@ vi.mock('@/services/mediaApi');
 vi.mock('@/services/playlistApi');
 vi.mock('@/services/syncGroupApi');
 vi.mock('@/services/datasetApi');
+vi.mock('@/services/scheduleCriteriaApi');
 
 vi.mock('@/components/ui/forms/DatePickerInput', () => ({
   default: ({ label }: { label?: string }) => <input aria-label={label} readOnly />,
@@ -120,16 +110,7 @@ describe('ScheduleEventModal - navigation', () => {
     testQueryClient.clear();
     vi.clearAllMocks();
 
-    setupEventMocks();
-    setupDaypartMocks();
-    setupResolutionMocks();
-    setupLayoutsMocks();
-    setupCampaignMocks();
-    setupCommandMocks();
-    setupMediaMocks();
-    setupPlaylistMocks();
-    setupSyncGroupMocks();
-    setupDatasetMocks();
+    setupScheduleModalMocks();
   });
 
   // ---------------------------------------------------------------------------

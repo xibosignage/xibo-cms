@@ -32,7 +32,6 @@ import type { Media } from '@/types/media';
 export interface FetchDisplaysRequest {
   start: number;
   length: number;
-  keyword?: string;
   displayId?: number;
   display?: string;
   useRegexForName?: number;

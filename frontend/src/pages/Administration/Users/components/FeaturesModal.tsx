@@ -41,7 +41,9 @@ type FeatureTab = string;
 function tabClass(activeTab: FeatureTab, tab: FeatureTab): string {
   const isActive = activeTab === tab;
   return `py-2 px-3 inline-flex items-center gap-2 border-b-2 text-sm font-semibold whitespace-nowrap focus:outline-none transition-all ${
-    isActive ? 'border-blue-600 text-blue-500' : 'border-gray-200 text-gray-500 hover:text-blue-600'
+    isActive
+      ? 'border-xibo-blue-600 text-xibo-blue-500'
+      : 'border-gray-200 text-gray-500 hover:text-xibo-blue-600'
   }`;
 }
 
@@ -79,17 +81,16 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
     Promise.all([
       // Fetch the user-specific group features (directly assigned)
       fetchUserGroupById(user.groupId),
-      // Fetch all groups to find which ones this user belongs to
-      fetchUserGroups({ start: 0, length: 1000 }),
+      // Fetch the groups this user actually belongs to
+      fetchUserGroups({ start: 0, length: 1000, userIdMember: user.userId }),
     ])
-      .then(([userGroup, allGroups]) => {
+      .then(([userGroup, memberGroups]) => {
         setEnabledFeatures(new Set(userGroup.features ?? []));
 
         // Inherited = features from non-user-specific groups the user belongs to
         const inherited = new Set<string>();
-        const memberGroupIds = new Set((user.groups ?? []).map((g) => g.groupId));
-        for (const group of allGroups.rows) {
-          if (group.isUserSpecific !== 1 && memberGroupIds.has(group.groupId) && group.features) {
+        for (const group of memberGroups.rows) {
+          if (group.isUserSpecific !== 1 && group.features) {
             group.features.forEach((f) => inherited.add(f));
           }
         }
@@ -100,7 +101,7 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
         setInheritedFeatures(new Set());
       })
       .finally(() => setIsLoading(false));
-  }, [user.groupId, user.groups]);
+  }, [user.groupId, user.userId]);
 
   const toggleFeature = (feature: string) => {
     setEnabledFeatures((prev) => {
@@ -259,6 +260,9 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
                 const allEnabled = features.every((f) => enabledFeatures.has(f.feature));
                 const someEnabled =
                   !allEnabled && features.some((f) => enabledFeatures.has(f.feature));
+                const allInherited = features.every((f) => inheritedFeatures.has(f.feature));
+                const someInherited =
+                  !allInherited && features.some((f) => inheritedFeatures.has(f.feature));
 
                 return (
                   <div key={groupKey}>
@@ -287,20 +291,25 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
                       <div className="flex justify-center">
                         <input
                           type="checkbox"
+                          aria-label={t('Enable all in {{group}}', { group: label })}
                           checked={allEnabled}
                           ref={(el) => {
                             if (el) el.indeterminate = someEnabled;
                           }}
                           onChange={() => toggleGroup(features)}
-                          className="h-4 w-4 border-gray-300 rounded cursor-pointer text-blue-600 focus:ring-blue-500"
+                          className="h-4 w-4 border-gray-300 rounded cursor-pointer text-xibo-blue-600 focus:ring-xibo-blue-500"
                         />
                       </div>
                       <div className="flex justify-center">
                         <input
                           type="checkbox"
-                          checked={features.some((f) => inheritedFeatures.has(f.feature))}
+                          aria-label={t('{{group}} inherited', { group: label })}
+                          checked={allInherited}
+                          ref={(el) => {
+                            if (el) el.indeterminate = someInherited;
+                          }}
                           disabled
-                          className="h-4 w-4 border-gray-300 rounded text-gray-400 opacity-60 disabled:bg-slate-100 disabled:cursor-not-allowed"
+                          className="h-4 w-4 border-gray-300 rounded text-gray-500 disabled:cursor-not-allowed disabled:bg-slate-100 checked:disabled:border-gray-500 checked:disabled:bg-gray-500 indeterminate:disabled:border-gray-500 indeterminate:disabled:bg-gray-500"
                         />
                       </div>
                     </div>
@@ -310,7 +319,7 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
                       features.map((feat) => (
                         <div
                           key={feat.feature}
-                          className="grid grid-cols-[1fr_100px_100px] items-center border-b border-gray-50 hover:bg-blue-50/30 transition-colors pr-3"
+                          className="grid grid-cols-[1fr_100px_100px] items-center border-b border-gray-50 hover:bg-xibo-blue-50/30 transition-colors pr-3"
                         >
                           <div className="px-4 py-2.5 pl-10">
                             <span className="text-sm text-gray-700">{feat.title}</span>
@@ -318,17 +327,19 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
                           <div className="flex justify-center">
                             <input
                               type="checkbox"
+                              aria-label={t('Enable {{feature}}', { feature: feat.title })}
                               checked={enabledFeatures.has(feat.feature)}
                               onChange={() => toggleFeature(feat.feature)}
-                              className="h-4 w-4 border-gray-300 rounded cursor-pointer text-blue-600 focus:ring-blue-500"
+                              className="h-4 w-4 border-gray-300 rounded cursor-pointer text-xibo-blue-600 focus:ring-xibo-blue-500"
                             />
                           </div>
                           <div className="flex justify-center">
                             <input
                               type="checkbox"
+                              aria-label={t('{{feature}} inherited', { feature: feat.title })}
                               checked={inheritedFeatures.has(feat.feature)}
                               disabled
-                              className="h-4 w-4 border-gray-300 rounded text-gray-400 opacity-60 disabled:bg-slate-100 disabled:cursor-not-allowed"
+                              className="h-4 w-4 border-gray-300 rounded text-gray-500 disabled:cursor-not-allowed disabled:bg-slate-100 checked:disabled:border-gray-500 checked:disabled:bg-gray-500"
                             />
                           </div>
                         </div>

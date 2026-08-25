@@ -27,7 +27,6 @@ export interface FetchCampaignRequest {
   length?: number;
 
   name?: string;
-  keyword?: string;
   sortBy?: string;
   sortDir?: string;
 
@@ -88,7 +87,7 @@ export interface CreateCampaignPayload {
   target?: number;
 }
 
-export async function createCampaign(payload: CreateCampaignPayload) {
+export async function createCampaign(payload: CreateCampaignPayload): Promise<Campaign> {
   const formData = new URLSearchParams();
 
   formData.append('name', payload.name);

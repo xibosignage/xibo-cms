@@ -39,6 +39,8 @@ interface ManageMembersModalProps {
   syncGroup: SyncGroup | null;
   onClose: () => void;
   onSuccess: () => void;
+  onAfterSave?: () => void;
+  onNeedsLeadDisplay?: () => void;
 }
 
 export default function ManageMembersModal({
@@ -46,6 +48,8 @@ export default function ManageMembersModal({
   syncGroup,
   onClose,
   onSuccess,
+  onAfterSave,
+  onNeedsLeadDisplay,
 }: ManageMembersModalProps) {
   const { t } = useTranslation();
   const syncGroupId = syncGroup?.syncGroupId;
@@ -103,7 +107,7 @@ export default function ManageMembersModal({
       fetchDisplays({
         start: displayPagination.pageIndex * displayPagination.pageSize,
         length: displayPagination.pageSize,
-        keyword: debouncedDisplayKeyword || undefined,
+        display: debouncedDisplayKeyword || undefined,
         sortBy: displaySorting[0]?.id,
         sortDir: displaySorting[0] ? (displaySorting[0].desc ? 'desc' : 'asc') : undefined,
         signal,
@@ -152,7 +156,11 @@ export default function ManageMembersModal({
     if (!syncGroupId) return;
 
     if (displaysToAdd.length === 0 && displaysToRemove.length === 0) {
-      onClose();
+      if (onAfterSave) {
+        onAfterSave();
+      } else {
+        onClose();
+      }
       return;
     }
 
@@ -163,7 +171,16 @@ export default function ManageMembersModal({
       await assignSyncGroupMembers(syncGroupId, displaysToAdd, displaysToRemove);
 
       onSuccess();
-      onClose();
+
+      const leadDisplayId = syncGroup?.leadDisplayId;
+      const leadWasRemoved = !!leadDisplayId && displaysToRemove.includes(leadDisplayId);
+      const needsLeadDisplay = !leadDisplayId || leadWasRemoved || assignedDisplays.length === 0;
+
+      if (needsLeadDisplay && onNeedsLeadDisplay) {
+        onNeedsLeadDisplay();
+      } else {
+        onClose();
+      }
     } catch (error) {
       const message =
         isAxiosError(error) && error.response?.data?.message
@@ -212,6 +229,7 @@ export default function ManageMembersModal({
           columns={displayColumns}
           searchRows={displaySearchRows}
           pageCount={displayPageCount}
+          rowCount={displaySearchData?.totalCount ?? 0}
           pagination={displayPagination}
           onPaginationChange={setDisplayPagination}
           sorting={displaySorting}

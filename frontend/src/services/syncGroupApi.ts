@@ -27,7 +27,6 @@ export type { SyncGroup, SyncGroupDisplay };
 export interface FetchSyncGroupsRequest {
   start: number;
   length: number;
-  keyword?: string;
   syncGroupId?: number | null;
   name?: string;
   leadDisplayId?: number | null;

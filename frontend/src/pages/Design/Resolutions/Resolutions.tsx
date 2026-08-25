@@ -21,7 +21,7 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
-import { Search, Filter, FilterX, Plus } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -38,16 +38,22 @@ import { useResolutionData } from './hooks/useResolutionData';
 import { useResolutionFilterOptions } from './hooks/useResolutionFilterOptions';
 
 import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { useUserContext } from '@/context/UserContext';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import type { Resolution } from '@/types/resolution';
+import { countActiveFilters } from '@/utils/filters';
+import { hasFeature } from '@/utils/permissions';
 
 export default function Resolution() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { user } = useUserContext();
 
   const {
     pagination,
@@ -102,6 +108,7 @@ export default function Resolution() {
     data: queryData,
     isFetching,
     isError,
+    isPaused,
     error: queryError,
   } = useResolutionData({
     pagination,
@@ -182,6 +189,7 @@ export default function Resolution() {
 
   const columns = getResolutionColumns({
     t,
+    canModify: hasFeature(user, 'resolution.modify'),
     onDelete: handleDelete,
     openAddEditModal,
   });
@@ -194,6 +202,7 @@ export default function Resolution() {
 
   const bulkActions = getBulkActions({
     t,
+    canModify: hasFeature(user, 'resolution.modify'),
     onDelete: () => {
       const allItems = getAllSelectedItems();
       setItemsToDelete(allItems);
@@ -206,21 +215,25 @@ export default function Resolution() {
 
   const libraryTabs = useFilteredTabs('design');
 
+  const activeFilterCount = countActiveFilters(filterInputs, INITIAL_FILTER_STATE, filterOptions);
+
   return (
     <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="Resolutions" navigation={libraryTabs} />
           <div className="flex items-center gap-2 md:mb-0">
-            <Button
-              variant="primary"
-              className="font-semibold"
-              disabled={!isHydrated}
-              onClick={() => openAddEditModal(null)}
-              leftIcon={Plus}
-            >
-              {t('Add Resolution')}
-            </Button>
+            {hasFeature(user, 'resolution.add') && (
+              <Button
+                variant="primary"
+                className="font-semibold"
+                disabled={!isHydrated}
+                onClick={() => openAddEditModal(null)}
+                leftIcon={Plus}
+              >
+                {t('Add Resolution')}
+              </Button>
+            )}
           </div>
         </div>
 
@@ -242,15 +255,12 @@ export default function Resolution() {
                 className="py-2 px-3 pl-10 block h-11.25 bg-gray-100 rounded-lg w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none disabled:bg-gray-200"
               />
             </div>
-            <Button
-              leftIcon={!openFilter ? Filter : FilterX}
-              variant="secondary"
+            <FilterButton
+              isOpen={openFilter}
+              onToggle={() => setOpenFilter((prev) => !prev)}
+              activeCount={activeFilterCount}
               disabled={!isHydrated}
-              onClick={() => setOpenFilter((prev) => !prev)}
-              removeTextOnMobile
-            >
-              {t('Filters')}
-            </Button>
+            />
           </div>
         </div>
 
@@ -272,11 +282,7 @@ export default function Resolution() {
           onReset={handleResetFilters}
         />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
-            {error}
-          </div>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         <div className="min-h-0 flex flex-col">
           {!isHydrated ? (
@@ -290,6 +296,7 @@ export default function Resolution() {
               columns={columns}
               data={resolutionList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

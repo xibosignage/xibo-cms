@@ -101,7 +101,7 @@ export default function MediaTypeChart({
           <p className="ml-2 text-gray-600">{t('Loading...')}</p>
         </div>
       ) : (
-        <div className="flex items-center gap-5">
+        <div className="flex flex-col xl:flex-row items-center gap-5">
           <div className="relative shrink-0" onMouseMove={onMouseMove} onMouseLeave={onMouseLeave}>
             <ResponsiveContainer width={200} height={200}>
               <PieChart accessibilityLayer={false}>

@@ -149,7 +149,9 @@ class Soap7 extends Soap6
                     $widgetDataProviderCache = $this->moduleFactory->createWidgetDataProviderCache();
 
                     // We do not pass a modifiedDt in here because we always expect to be cached.
-                    if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey, null, false)) {
+                    $hasData = $widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey, null, false);
+
+                    if (!$hasData) {
                         throw new NotFoundException('Cache not ready');
                     }
 

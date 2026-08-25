@@ -22,8 +22,10 @@
 import { createContext, useContext, useEffect, type ReactNode } from 'react';
 
 import type { BrandingConfig } from '@/types/user';
+import { resolveSidebarContrastMode } from '@/utils/contrastColor';
 
 const THEME_LINK_ID = 'xibo-theme-css';
+const SIDEBAR_CONTRAST_ATTR = 'data-sidebar-contrast';
 
 // Fallback used only while the /user/me API call is in-flight.
 // Once the response arrives, BrandingProvider replaces these with server values.
@@ -56,8 +58,24 @@ export function BrandingProvider({ branding, children }: Props) {
     link.rel = 'stylesheet';
     link.href = value.cssUrl;
     link.id = THEME_LINK_ID;
+
+    // Re-check contrast once theme.css applies, and once up-front for installs
+    // with no override.
+    const applyContrast = () => {
+      document.documentElement.setAttribute(SIDEBAR_CONTRAST_ATTR, resolveSidebarContrastMode());
+    };
+    link.addEventListener('load', applyContrast);
+    link.addEventListener('error', applyContrast);
     document.head.appendChild(link);
+    applyContrast();
+
+    // CSS var changes fire no DOM event, so also watch for live edits (e.g.
+    // devtools style.setProperty) via <html>'s inline style attribute.
+    const observer = new MutationObserver(applyContrast);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] });
+
     return () => {
+      observer.disconnect();
       document.getElementById(THEME_LINK_ID)?.remove();
     };
   }, [value.cssUrl]);

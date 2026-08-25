@@ -609,7 +609,6 @@ class Applications extends Base
     {
         $filter = [
             'name'    => $params->getString('name'),
-            'keyword' => $params->getString('keyword'),
         ];
 
         if (!$this->getUser()->isSuperAdmin()) {

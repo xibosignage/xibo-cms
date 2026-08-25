@@ -21,6 +21,7 @@
 
 import type { TFunction } from 'i18next';
 
+import type { ScheduleCriteriaResponse } from '@/services/scheduleCriteriaApi';
 import {
   EventTypeId,
   ReminderType,
@@ -69,7 +70,7 @@ export interface ScheduleEventDraft {
   relativeMinutes: number;
   relativeSeconds: number;
   name: string;
-  layoutDuration: number;
+  layoutDuration: number | undefined;
   resolutionId: string;
   backgroundColor: string;
   displayOrder: number;
@@ -109,36 +110,79 @@ export interface SelectOption {
 
 export const STEP_LABELS = ['Content', 'Displays', 'Time', 'Optional'] as const;
 
-export const getEventTypeOptions = (t: TFunction): SelectOption[] => [
-  { value: String(EventTypeId.Layout), label: t('Layout') },
-  { value: String(EventTypeId.Command), label: t('Command') },
-  { value: String(EventTypeId.Overlay), label: t('Overlay Layout') },
-  { value: String(EventTypeId.Interrupt), label: t('Interrupt Layout') },
-  { value: String(EventTypeId.Campaign), label: t('Campaign') },
-  { value: String(EventTypeId.Action), label: t('Action') },
-  { value: String(EventTypeId.Media), label: t('Media') },
-  { value: String(EventTypeId.Playlist), label: t('Playlist') },
-  { value: String(EventTypeId.Sync), label: t('Synchronised Event') },
-  { value: String(EventTypeId.DataConnector), label: t('Data Connector') },
+export const getEventTypeOptions = (
+  t: TFunction,
+  features: { canSync?: boolean; canDataConnector?: boolean } = {},
+): SelectOption[] => {
+  const options: SelectOption[] = [
+    { value: String(EventTypeId.Layout), label: t('Layout') },
+    { value: String(EventTypeId.Command), label: t('Command') },
+    { value: String(EventTypeId.Overlay), label: t('Overlay Layout') },
+    { value: String(EventTypeId.Interrupt), label: t('Interrupt Layout') },
+    { value: String(EventTypeId.Campaign), label: t('Campaign') },
+    { value: String(EventTypeId.Action), label: t('Action') },
+    { value: String(EventTypeId.Media), label: t('Media') },
+    { value: String(EventTypeId.Playlist), label: t('Playlist') },
+  ];
+
+  if (features.canSync) {
+    options.push({ value: String(EventTypeId.Sync), label: t('Synchronised Event') });
+  }
+
+  if (features.canDataConnector) {
+    options.push({ value: String(EventTypeId.DataConnector), label: t('Data Connector') });
+  }
+
+  return options;
+};
+
+// Fallback used only until the connector-aware /schedule/criteria fetch resolves.
+const FALLBACK_DEFAULT_CONDITIONS = [
+  { id: 'set', name: 'Is set' },
+  { id: 'lt', name: 'Less than' },
+  { id: 'lte', name: 'Less than or equal to' },
+  { id: 'eq', name: 'Equal to' },
+  { id: 'neq', name: 'Not equal to' },
+  { id: 'gte', name: 'Greater than or equal to' },
+  { id: 'gt', name: 'Greater than' },
+  { id: 'contains', name: 'Contains' },
+  { id: 'ncontains', name: 'Not contains' },
 ];
 
-export const getConditionOptions = (t: TFunction): SelectOption[] => [
-  { value: 'set', label: t('Is set') },
-  { value: 'lt', label: t('Less than') },
-  { value: 'lte', label: t('Less than or equal to') },
-  { value: 'eq', label: t('Equal to') },
-  { value: 'neq', label: t('Not equal to') },
-  { value: 'gte', label: t('Greater than or equal to') },
-  { value: 'gt', label: t('Greater than') },
-  { value: 'contains', label: t('Contains') },
-  { value: 'ncontains', label: t('Not contains') },
-];
+export const getConditionOptions = (
+  t: TFunction,
+  criteria?: ScheduleCriteriaResponse | null,
+): SelectOption[] => {
+  const conditions =
+    criteria?.defaultCondition && criteria.defaultCondition.length > 0
+      ? criteria.defaultCondition
+      : FALLBACK_DEFAULT_CONDITIONS;
 
-export const getCriteriaTypeOptions = (t: TFunction): SelectOption[] => [
-  { value: 'custom', label: t('Custom') },
-  { value: 'weather', label: t('Weather') },
-  { value: 'emergency_alert', label: t('Emergency Alerts') },
-];
+  return conditions.map((c) => ({ value: c.id, label: t(c.name) }));
+};
+
+export const getCriteriaTypeOptions = (
+  t: TFunction,
+  criteria?: ScheduleCriteriaResponse | null,
+): SelectOption[] => {
+  const custom = { value: 'custom', label: t('Custom') };
+
+  // Not yet fetched - use the fallback until the connector-aware /schedule/criteria fetch resolves.
+  if (criteria == null) {
+    return [
+      custom,
+      { value: 'weather', label: t('Weather') },
+      { value: 'emergency_alert', label: t('Emergency Alerts') },
+    ];
+  }
+
+  // Fetched: no Connectors registered any types, so only Custom is available.
+  if (criteria.types.length === 0) {
+    return [custom];
+  }
+
+  return [custom, ...criteria.types.map((type) => ({ value: type.id, label: type.name }))];
+};
 
 const getNumberConditions = (t: TFunction): SelectOption[] => [
   { value: 'lt', label: t('Less than') },
@@ -156,7 +200,7 @@ export interface CriteriaMetricConfig {
   id: string;
   label: string;
   conditions: SelectOption[];
-  inputType: 'text' | 'number' | 'dropdown';
+  inputType: 'text' | 'number' | 'dropdown' | 'date';
   values?: SelectOption[];
 }
 
@@ -164,7 +208,8 @@ export interface CriteriaTypeConfig {
   metrics: CriteriaMetricConfig[];
 }
 
-export function getCriteriaTypeMetrics(t: TFunction): Record<string, CriteriaTypeConfig> {
+// Fallback used only until the connector-aware /schedule/criteria fetch resolves.
+function getFallbackCriteriaTypeMetrics(t: TFunction): Record<string, CriteriaTypeConfig> {
   return {
     weather: {
       metrics: [
@@ -292,8 +337,42 @@ export function getCriteriaTypeMetrics(t: TFunction): Record<string, CriteriaTyp
   };
 }
 
-export function getCriteriaMetricOptions(type: string, t: TFunction): SelectOption[] {
-  const config = getCriteriaTypeMetrics(t)[type];
+export function getCriteriaTypeMetrics(
+  t: TFunction,
+  criteria?: ScheduleCriteriaResponse | null,
+): Record<string, CriteriaTypeConfig> {
+  // Not yet fetched - use the fallback until the connector-aware /schedule/criteria fetch resolves.
+  if (criteria == null) {
+    return getFallbackCriteriaTypeMetrics(t);
+  }
+
+  // Fetched: no Connectors registered any types, so there are no metrics to map.
+  if (criteria.types.length === 0) {
+    return {};
+  }
+
+  const result: Record<string, CriteriaTypeConfig> = {};
+  for (const type of criteria.types) {
+    result[type.id] = {
+      metrics: type.metrics.map((metric) => ({
+        id: metric.id,
+        label: metric.name,
+        conditions: metric.conditions.map((c) => ({ value: c.id, label: c.name })),
+        inputType: metric.values?.inputType ?? 'text',
+        values: metric.values?.values.map((v) => ({ value: v.id, label: v.title })),
+      })),
+    };
+  }
+
+  return result;
+}
+
+export function getCriteriaMetricOptions(
+  type: string,
+  t: TFunction,
+  criteria?: ScheduleCriteriaResponse | null,
+): SelectOption[] {
+  const config = getCriteriaTypeMetrics(t, criteria)[type];
   if (!config) return [];
   return config.metrics.map((m) => ({ value: m.id, label: m.label }));
 }
@@ -302,8 +381,9 @@ export function getCriteriaMetricConfig(
   type: string,
   metricId: string,
   t: TFunction,
+  criteria?: ScheduleCriteriaResponse | null,
 ): CriteriaMetricConfig | null {
-  const config = getCriteriaTypeMetrics(t)[type];
+  const config = getCriteriaTypeMetrics(t, criteria)[type];
   if (!config) return null;
   return config.metrics.find((m) => m.id === metricId) ?? null;
 }
@@ -388,7 +468,7 @@ export function createInitialDraft(
     relativeMinutes: 0,
     relativeSeconds: 0,
     name: '',
-    layoutDuration: 0,
+    layoutDuration: undefined,
     resolutionId: '',
     backgroundColor: '#000000',
     displayOrder: 0,
@@ -436,7 +516,7 @@ export function createDraftFromEvent(scheduleEvent: Event): ScheduleEventDraft {
     relativeMinutes: 0,
     relativeSeconds: 0,
     name: scheduleEvent.name ?? '',
-    layoutDuration: Number(scheduleEvent.layoutDuration ?? 0),
+    layoutDuration: scheduleEvent.layoutDuration ? Number(scheduleEvent.layoutDuration) : undefined,
     resolutionId: scheduleEvent.resolutionId ? String(scheduleEvent.resolutionId) : '',
     backgroundColor: scheduleEvent.backgroundColor ?? '#000000',
     displayOrder: Number(scheduleEvent.displayOrder ?? 0),

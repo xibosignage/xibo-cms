@@ -189,16 +189,17 @@ class PlaylistDashboard extends Base
                 $widget->setUnmatchedProperty('mediaFiles', $mediaFiles);
 
                 // Check my permissions
+                $deletable = $user->checkDeleteable($widget) && $user->featureEnabled('playlist.modify');
                 if ($module->regionSpecific == 0) {
                     $media = $mediaMap[$widget->getPrimaryMediaId()]
                         ?? $this->mediaFactory->getById($widget->getPrimaryMediaId());
                     $widget->setUnmatchedProperty('viewable', $user->checkViewable($media));
                     $widget->setUnmatchedProperty('editable', $user->checkEditable($media));
-                    $widget->setUnmatchedProperty('deletable', $user->checkDeleteable($media));
+                    $widget->setUnmatchedProperty('deletable', $deletable);
                 } else {
                     $widget->setUnmatchedProperty('viewable', $user->checkViewable($widget));
                     $widget->setUnmatchedProperty('editable', $user->checkEditable($widget));
-                    $widget->setUnmatchedProperty('deletable', $user->checkDeleteable($widget));
+                    $widget->setUnmatchedProperty('deletable', $deletable);
                 }
             }
         }

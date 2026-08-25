@@ -263,7 +263,8 @@ class DisplayFactory extends BaseFactory
             $sortOrder,
             $allowedColumns,
             $customColumns,
-            ['display ASC']
+            ['display ASC'],
+            'displayId'
         );
 
         // SQL function for ST_X/X and ST_Y/Y dependent on MySQL version
@@ -430,16 +431,6 @@ class DisplayFactory extends BaseFactory
         if ($parsedBody->getInt('displayId') !== null) {
             $body .= ' AND display.displayid = :displayId ';
             $params['displayId'] = $parsedBody->getInt('displayId');
-        }
-
-        if ($parsedBody->getString('keyword') != null) {
-            // Fulltext search
-            $body .= $this->buildSearchQuery(
-                $parsedBody->getString('keyword'),
-                $params,
-                ['display.display'],
-                ['display.displayId']
-            );
         }
 
         // Display Profile

@@ -27,7 +27,7 @@ import { MediaInfoPanel } from './MediaInfoPanel';
 
 import { useKeydown } from '@/hooks/useKeydown';
 import { useOwner } from '@/hooks/useOwner';
-import { fetchMediaBlob } from '@/services/mediaApi';
+import { fetchMediaBlob, getMediaStreamUrl } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
 
 interface MediaPreviewerProps {
@@ -83,6 +83,23 @@ export default function MediaPreviewer({
     }
 
     let isMounted = true;
+
+    // Video/audio: stream directly from the CMS instead of buffering the whole file into a
+    // blob first, so the browser can start playback (and seek) before the download finishes.
+    if (mediaType === 'video' || mediaType === 'audio') {
+      if (activeUrlRef.current) {
+        window.URL.revokeObjectURL(activeUrlRef.current);
+        activeUrlRef.current = null;
+      }
+      setResolvedType(mediaType);
+      setError(null);
+      setLoading(false);
+      setUrl(getMediaStreamUrl(mediaId));
+
+      return () => {
+        isMounted = false;
+      };
+    }
 
     const load = async () => {
       revokeUrl();
@@ -209,7 +226,13 @@ export default function MediaPreviewer({
           ) : url ? (
             <>
               {resolvedType === 'video' ? (
-                <video src={url} controls className="max-h-full max-w-full shadow-md" autoPlay />
+                <video
+                  src={url}
+                  controls
+                  className="max-h-full max-w-full shadow-md"
+                  autoPlay
+                  onError={() => setError(t('Failed to load media preview'))}
+                />
               ) : resolvedType === 'image' ? (
                 <img
                   src={url}
@@ -218,7 +241,13 @@ export default function MediaPreviewer({
                 />
               ) : resolvedType === 'audio' ? (
                 <div className="flex items-center align-middle justify-center w-2/3 max-w-xl h-full flex-col gap-4">
-                  <audio src={url} controls autoPlay className="w-full" />
+                  <audio
+                    src={url}
+                    controls
+                    autoPlay
+                    className="w-full"
+                    onError={() => setError(t('Failed to load media preview'))}
+                  />
                 </div>
               ) : resolvedType === 'pdf' ? (
                 <iframe

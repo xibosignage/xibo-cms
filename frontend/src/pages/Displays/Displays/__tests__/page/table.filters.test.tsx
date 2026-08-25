@@ -141,7 +141,7 @@ describe('Displays page - filters', () => {
 
     await waitFor(
       () => {
-        expect(fetchDisplays).toHaveBeenCalledWith(expect.objectContaining({ keyword: 'lobby' }));
+        expect(fetchDisplays).toHaveBeenCalledWith(expect.objectContaining({ display: 'lobby' }));
       },
       { timeout: 2000 },
     );
@@ -161,7 +161,7 @@ describe('Displays page - filters', () => {
     await waitFor(
       () => {
         expect(fetchDisplays).toHaveBeenCalledWith(
-          expect.objectContaining({ start: 0, keyword: 'screen' }),
+          expect.objectContaining({ start: 0, display: 'screen' }),
         );
       },
       { timeout: 2000 },

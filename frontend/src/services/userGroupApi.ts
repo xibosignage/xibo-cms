@@ -28,7 +28,6 @@ export interface FetchUserGroupsRequest {
   length: number;
   userGroupId?: number;
   userGroup?: string;
-  keyword?: string;
   isUser?: number;
   isShownForAddUser?: number;
   userIdMember?: number;

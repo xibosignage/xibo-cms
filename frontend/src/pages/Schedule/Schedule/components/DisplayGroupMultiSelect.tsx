@@ -188,7 +188,7 @@ export function DisplayGroupMultiSelect({
     setDisplayOptions([]);
     setDisplayPage(0);
     setHasMoreDisplays(false);
-    fetchDisplays({ start: 0, length: PAGE_SIZE, keyword: debouncedSearch || undefined })
+    fetchDisplays({ start: 0, length: PAGE_SIZE, display: debouncedSearch || undefined })
       .then((res) => {
         const opts = res.rows.map((d) => ({
           label: d.display,
@@ -217,7 +217,7 @@ export function DisplayGroupMultiSelect({
       start: 0,
       length: PAGE_SIZE,
       isDisplaySpecific: 0,
-      keyword: debouncedSearch || undefined,
+      displayGroup: debouncedSearch || undefined,
     })
       .then((res) => {
         const opts = res.rows.map((g) => ({
@@ -251,7 +251,7 @@ export function DisplayGroupMultiSelect({
           fetchDisplays({
             start: nextPage * PAGE_SIZE,
             length: PAGE_SIZE,
-            keyword: debouncedSearch || undefined,
+            display: debouncedSearch || undefined,
           })
             .then((res) => {
               setDisplayOptions((prev) => [
@@ -295,7 +295,7 @@ export function DisplayGroupMultiSelect({
             start: nextPage * PAGE_SIZE,
             length: PAGE_SIZE,
             isDisplaySpecific: 0,
-            keyword: debouncedSearch || undefined,
+            displayGroup: debouncedSearch || undefined,
           })
             .then((res) => {
               setGroupOptions((prev) => [

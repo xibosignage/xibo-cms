@@ -41,6 +41,7 @@ interface EventModalsProps {
     displayGroups: { id: number; name: string }[];
     displaySpecificGroupIds: number[];
     displayGroupIds: number[];
+    isOccurrenceDeleteAllowed: boolean;
   };
   selection: {
     selectedEvent: Event | null;
@@ -77,7 +78,9 @@ export function EventModals({ actions, selection, handlers }: EventModalsProps) 
           onClose={actions.closeModal}
           onDelete={() => handlers.confirmDelete(selection.itemsToDelete)}
           onDeleteOccurrence={
-            singleEvent ? () => handlers.confirmDeleteOccurrence(singleEvent) : undefined
+            singleEvent && actions.isOccurrenceDeleteAllowed
+              ? () => handlers.confirmDeleteOccurrence(singleEvent)
+              : undefined
           }
           itemCount={selection.itemsToDelete.length}
           eventName={eventDisplayName}

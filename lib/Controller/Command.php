@@ -75,13 +75,6 @@ class Command extends Base
         schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
-        name: 'keyword',
-        description: 'Filter by keyword (searches command name and id)',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
-    )]
-    #[OA\Parameter(
         name: 'useRegexForName',
         description: 'Flag (0,1). When filtering by multiple commands in command filter, should we use regex?', // phpcs:ignore
         in: 'query',
@@ -123,7 +116,15 @@ class Command extends Base
         required: false,
         schema: new OA\Schema(
             type: 'string',
-            enum: ['commandId', 'command', 'code', 'description']
+            enum: [
+                'commandId',
+                'command',
+                'code',
+                'description',
+                'availableOn',
+                'createAlertOn',
+                'groupsWithPermissions',
+            ]
         )
     )]
     #[OA\Parameter(
@@ -447,7 +448,6 @@ class Command extends Base
             'commandId'           => $sanitizedParams->getInt('commandId'),
             'command'             => $sanitizedParams->getString('command'),
             'code'                => $sanitizedParams->getString('code'),
-            'keyword'             => $sanitizedParams->getString('keyword'),
             'useRegexForName'     => $sanitizedParams->getCheckbox('useRegexForName'),
             'useRegexForCode'     => $sanitizedParams->getCheckbox('useRegexForCode'),
             'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),

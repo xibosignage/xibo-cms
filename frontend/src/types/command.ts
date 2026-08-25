@@ -19,6 +19,13 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+export interface CommandPermissions {
+  view?: number;
+  edit?: number;
+  delete?: number;
+  modifyPermissions?: number;
+}
+
 export interface Command {
   commandId: number;
   command: string;
@@ -30,4 +37,5 @@ export interface Command {
   availableOn: string | null;
   createAlertOn: string;
   groupsWithPermissions: string | null;
+  userPermissions?: CommandPermissions;
 }

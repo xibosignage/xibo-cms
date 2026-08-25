@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -30,6 +30,8 @@ use Xibo\Support\Sanitizer\SanitizerInterface;
 /**
  * Class Soap6
  * @package Xibo\Xmds
+ *
+ * @phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps
  */
 class Soap6 extends Soap5
 {
@@ -42,7 +44,7 @@ class Soap6 extends Soap5
      *
      * @return bool
      */
-    public function reportFaults(string $serverKey, string $hardwareKey, string $fault): bool
+    public function ReportFaults(string $serverKey, string $hardwareKey, string $fault): bool
     {
         $this->logProcessor->setRoute('ReportFault');
         //$this->logProcessor->setDisplay(0, 'debug');

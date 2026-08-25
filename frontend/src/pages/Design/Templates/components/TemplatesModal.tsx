@@ -29,19 +29,19 @@ import ExportTemplateModal from './ExportTemplateModal';
 
 import FolderActionModals from '@/components/ui/FolderActionModals';
 import type { PublishValue } from '@/components/ui/forms/PublishDateSelect';
+import EditTagsMultipleModal from '@/components/ui/modals/EditTagsMultipleModal';
 import MoveModal from '@/components/ui/modals/MoveModal';
 import PublishModal from '@/components/ui/modals/PublishModal';
-import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
 import type { useFolderActions } from '@/hooks/useFolderActions';
-import { EventTypeId } from '@/types/event';
 import type { Template } from '@/types/templates';
+import { mergeEntityTags } from '@/utils/tags';
 
 interface TemplatesModalsProps {
   actions: {
     activeModal: string | null;
     closeModal: () => void;
-    handleRefresh: () => void;
+    handleRefresh: () => Promise<unknown>;
     deleteError: string | null;
     isDeleting: boolean;
     isCloning: boolean;
@@ -56,6 +56,7 @@ interface TemplatesModalsProps {
     itemsToDelete: Template[];
     existingNames: string[];
     itemsToMove: Template[];
+    bulkItems: Template[];
     shareEntityIds: number | number[] | null;
     setShareEntityIds: React.Dispatch<React.SetStateAction<number | number[] | null>>;
   };
@@ -103,6 +104,18 @@ export function TemplateModals({
         />
       )}
       <FolderActionModals folderActions={folderActions} />
+      {isModalOpen('editTagsMultiple') && (
+        <EditTagsMultipleModal
+          targetType="layout"
+          ids={selection.bulkItems.map((item) => item.layoutId)}
+          existingTags={mergeEntityTags(selection.bulkItems)}
+          onClose={actions.closeModal}
+          onSuccess={async () => {
+            await actions.handleRefresh();
+            actions.closeModal();
+          }}
+        />
+      )}
       {isModalOpen('share') && (
         <ShareModal
           title={t('Share Template')}
@@ -144,19 +157,6 @@ export function TemplateModals({
           onConfirm={handlers?.handleConfirmMove}
           items={selection.itemsToMove}
           entityLabel={t('Templates')}
-        />
-      )}
-      {isModalOpen('schedule') && selection.selectedTemplate && (
-        <ScheduleEventModal
-          isOpen
-          onClose={() => {
-            actions.closeModal();
-            actions.handleRefresh();
-          }}
-          mode="schedule"
-          eventTypeId={EventTypeId.Layout}
-          contentId={selection.selectedTemplate.campaignId}
-          contentName={selection.selectedTemplate.layout}
         />
       )}
       {isModalOpen('publish') && (

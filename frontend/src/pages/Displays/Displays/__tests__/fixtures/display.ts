@@ -20,6 +20,7 @@
  */
 
 import type { FetchDisplaysResponse } from '@/services/displaysApi';
+import { buildCurrentUser, PERSONAS } from '@/testUtils/personas';
 import type { Display } from '@/types/display';
 import type { User } from '@/types/user';
 
@@ -118,6 +119,7 @@ export const buildDisplay = (overrides: Partial<Display> = {}): Display => ({
   manufacturer: null,
   brand: null,
   model: null,
+  userPermissions: { view: 1, edit: 1, delete: 1, modifyPermissions: 1 },
   ...overrides,
 });
 
@@ -133,20 +135,20 @@ export const EMPTY_DISPLAY_TABLE: FetchDisplaysResponse = {
   totalCount: 0,
 };
 
-// The default logged-in user for display tests.
-export const mockUser: User = {
+// The default logged-in user for display tests — sourced from the shared
+// PERSONAS registry rather than hand-typed. Super Admin, so every
+// hasFeature() check passes via its bypass regardless of the features map.
+export const mockUser: User = buildCurrentUser(PERSONAS.superAdmin, {
   userId: 1,
   userName: 'TestUser',
-  userTypeId: 1,
   groupId: 1,
-  features: { 'folder.view': true },
   settings: {
     defaultTimezone: 'UTC',
     defaultLanguage: 'en',
     DATE_FORMAT_JS: 'DD/MM/YYYY',
     TIME_FORMAT_JS: 'HH:mm',
   },
-};
+});
 
 // Query keys that mirror what useTableState builds internally.
 export const queryKeys = {

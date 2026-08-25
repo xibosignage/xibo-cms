@@ -21,11 +21,11 @@
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
-import type { AxiosError } from 'axios';
 
 import type { MenuBoardProductFilterInput } from '../MenuBoardProductsConfig';
 
 import { fetchMenuBoardProducts } from '@/services/menuBoardApi';
+import { isValidRegex } from '@/utils/regex';
 
 export const MenuBoardProductQueryKeys = {
   all: ['menuBoardProduct'] as const,
@@ -65,17 +65,17 @@ export const useMenuBoardProductsData = ({
       const startOffset = pagination.pageIndex * pagination.pageSize;
       const sortBy = sorting?.[0]?.id;
       const sortDir = sorting?.[0]?.desc ? 'desc' : 'asc';
-      const { menuProductId, name, code, availability } = advancedFilters;
+      const { menuProductId, name, useRegexForName, code, availability } = advancedFilters;
 
       return fetchMenuBoardProducts(menuCategoryId, {
         start: startOffset,
         length: pagination.pageSize,
-        keyword: filter,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,
         menuProductId: menuProductId ? Number(menuProductId) : undefined,
-        name: name || undefined,
+        name: name || filter || undefined,
+        ...(useRegexForName && name && isValidRegex(name) ? { useRegexForName: 1 } : {}),
         code: code || undefined,
         availability: availability !== '' ? Number(availability) : undefined,
       });
@@ -84,9 +84,5 @@ export const useMenuBoardProductsData = ({
     enabled: enabled && !!menuCategoryId,
     placeholderData: keepPreviousData,
     staleTime: 1000 * 60,
-
-    throwOnError: (error: AxiosError) => {
-      return error.response?.status ? error.response.status >= 500 : false;
-    },
   });
 };

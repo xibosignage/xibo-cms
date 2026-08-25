@@ -36,6 +36,7 @@ import { useEffect, useState, useRef, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
+import { useFolderRefresh } from '@/context/FolderRefreshContext';
 import { useUserContext } from '@/context/UserContext';
 import { useDebounce } from '@/hooks/useDebounce';
 import {
@@ -44,7 +45,11 @@ import {
   searchFolders,
   type FolderPermissions,
 } from '@/services/folderApi';
+import { fetchUserPreference, saveUserPreference } from '@/services/userApi';
 import type { Folder } from '@/types/folder';
+import { isPreferenceEnabled } from '@/utils/preferences';
+
+const FOLDER_TREE_STATE_GLOBAL_KEY = 'folderTreeState';
 
 export type FolderAction = 'create' | 'rename' | 'move' | 'share' | 'delete';
 type FolderTab = 'Home' | 'Shared with me';
@@ -117,8 +122,17 @@ export default function FolderTreeList({
 }: FolderTreeListProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
+  const { version: folderRefreshVersion } = useFolderRefresh();
 
   const homeFolderId = user?.homeFolderId ?? 1;
+  const rememberFolderTreeStateGlobally = isPreferenceEnabled(
+    user?.settings?.rememberFolderTreeStateGlobally,
+    true,
+  );
+
+  const folderTreeStateKey = rememberFolderTreeStateGlobally
+    ? FOLDER_TREE_STATE_GLOBAL_KEY
+    : `folderTreeState_${window.location.pathname.replace(/\//g, '_')}`;
 
   const [activeTab, setActiveTab] = useState<FolderTab>('Home');
   const [treeData, setTreeData] = useState<Folder[]>([]);
@@ -129,6 +143,23 @@ export default function FolderTreeList({
   );
 
   const debouncedQuery = useDebounce(searchQuery, 300);
+
+  const hasInteractedRef = useRef(false);
+
+  useEffect(() => {
+    let isActive = true;
+    hasInteractedRef.current = false;
+
+    fetchUserPreference<number[]>(folderTreeStateKey).then((stored) => {
+      if (isActive && !hasInteractedRef.current && Array.isArray(stored)) {
+        setExpandedIds(new Set(stored));
+      }
+    });
+
+    return () => {
+      isActive = false;
+    };
+  }, [folderTreeStateKey]);
 
   const rootFolder = treeData.find((folder) => folder.isRoot === 1);
   const showHomeTab =
@@ -161,7 +192,7 @@ export default function FolderTreeList({
 
     loadTree();
     return () => controller.abort();
-  }, [debouncedQuery, refreshTrigger]);
+  }, [debouncedQuery, refreshTrigger, folderRefreshVersion]);
 
   // Sync home folder into expandedIds once user context resolves
   useEffect(() => {
@@ -193,6 +224,7 @@ export default function FolderTreeList({
 
   const toggleExpand = (id: number, e?: React.MouseEvent) => {
     e?.stopPropagation();
+    hasInteractedRef.current = true;
     setExpandedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -200,6 +232,7 @@ export default function FolderTreeList({
       } else {
         next.add(id);
       }
+      saveUserPreference({ option: folderTreeStateKey, value: Array.from(next) });
       return next;
     });
   };
@@ -315,7 +348,7 @@ export default function FolderTreeList({
               }`}
             >
               {tab === 'Home' && <Home size={14} />}
-              {t(tab)}
+              {tab === 'Home' ? t('Home') : t('Shared with me')}
             </button>
           ))}
         </div>

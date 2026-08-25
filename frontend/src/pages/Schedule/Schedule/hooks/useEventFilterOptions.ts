@@ -56,7 +56,7 @@ export function useEventFilterOptions(t: TFunction) {
       start: 0,
       length: PAGE_SIZE,
       isLayoutSpecific: 1,
-      keyword: debouncedLayoutSearch || undefined,
+      name: debouncedLayoutSearch || undefined,
     })
       .then((res) => {
         setLayoutOptions(res.rows.map((c) => ({ label: c.campaign, value: c.campaignId })));
@@ -75,7 +75,7 @@ export function useEventFilterOptions(t: TFunction) {
       start: 0,
       length: PAGE_SIZE,
       isLayoutSpecific: 0,
-      keyword: debouncedCampaignSearch || undefined,
+      name: debouncedCampaignSearch || undefined,
     })
       .then((res) => {
         setCampaignOptions(res.rows.map((c) => ({ label: c.campaign, value: c.campaignId })));
@@ -95,7 +95,7 @@ export function useEventFilterOptions(t: TFunction) {
       start: nextPage * PAGE_SIZE,
       length: PAGE_SIZE,
       isLayoutSpecific: 1,
-      keyword: debouncedLayoutSearch || undefined,
+      name: debouncedLayoutSearch || undefined,
     })
       .then((res) => {
         setLayoutOptions((prev) => [
@@ -119,7 +119,7 @@ export function useEventFilterOptions(t: TFunction) {
       start: nextPage * PAGE_SIZE,
       length: PAGE_SIZE,
       isLayoutSpecific: 0,
-      keyword: debouncedCampaignSearch || undefined,
+      name: debouncedCampaignSearch || undefined,
     })
       .then((res) => {
         setCampaignOptions((prev) => [

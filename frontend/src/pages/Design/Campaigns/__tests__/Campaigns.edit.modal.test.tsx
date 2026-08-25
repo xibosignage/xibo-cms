@@ -28,14 +28,17 @@ import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import EditCampaignModal from '../components/EditCampaignModal';
 
-import { mockCampaign, mockCampaignWithRefs, mockCycleCampaign } from './campaignTestUtils';
-
-import { updateCampaign } from '@/services/campaignApi';
 import {
-  assignLayoutToCampaign,
-  fetchLayouts,
-  unassignLayoutFromCampaign,
-} from '@/services/layoutsApi';
+  mockCampaign,
+  mockCampaignWithRefs,
+  mockCycleCampaign,
+  mockUser,
+} from './campaignTestUtils';
+
+import type * as TagInputModule from '@/components/ui/forms/TagInput';
+import { UserProvider } from '@/context/UserContext';
+import { updateCampaign } from '@/services/campaignApi';
+import { fetchLayouts } from '@/services/layoutsApi';
 import { testQueryClient } from '@/setupTests';
 import type { Layout } from '@/types/layout';
 
@@ -57,7 +60,7 @@ vi.mock('@/hooks/useDebounce');
 vi.mock('@/components/ui/modals/Modal');
 vi.mock('@/components/ui/forms/SelectFolder', () => ({ default: () => null }));
 vi.mock('@/components/ui/forms/TagInput', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/components/ui/forms/TagInput')>();
+  const actual = await importOriginal<typeof TagInputModule>();
   return { ...actual, default: () => null };
 });
 
@@ -77,7 +80,7 @@ vi.mock('@/components/ui/SearchAssignPanel', () => ({
     assignedItems: Layout[];
     assignedLabel: string;
     onAddItem: (item: Layout) => void;
-    onRemoveItem: (item: Layout) => void;
+    onRemoveItem: (item: Layout, index: number) => void;
     onClearAll: () => void;
     searchRows?: Layout[];
     getItemLabel: (item: Layout) => string;
@@ -86,10 +89,10 @@ vi.mock('@/components/ui/SearchAssignPanel', () => ({
   }) => (
     <div>
       <h3>{assignedLabel}</h3>
-      {assignedItems.map((item) => (
+      {assignedItems.map((item, index) => (
         <div key={getItemId(item)}>
           <span>{getItemLabel(item)}</span>
-          <button onClick={() => onRemoveItem(item)}>Remove</button>
+          <button onClick={() => onRemoveItem(item, index)}>Remove</button>
         </div>
       ))}
       <button onClick={onClearAll}>Clear All</button>
@@ -158,12 +161,14 @@ const renderEditModal = async ({
   await act(async () => {
     result = render(
       <QueryClientProvider client={testQueryClient}>
-        <EditCampaignModal
-          isOpen={isOpen}
-          campaign={campaign}
-          onClose={onClose}
-          onSuccess={onSuccess}
-        />
+        <UserProvider initialUser={mockUser}>
+          <EditCampaignModal
+            isOpen={isOpen}
+            campaign={campaign}
+            onClose={onClose}
+            onSuccess={onSuccess}
+          />
+        </UserProvider>
       </QueryClientProvider>,
     );
   });
@@ -179,8 +184,6 @@ describe('EditCampaignModal', () => {
     vi.clearAllMocks();
     vi.mocked(fetchLayouts).mockResolvedValue({ rows: [], totalCount: 0 });
     vi.mocked(updateCampaign).mockResolvedValue(mockCampaign);
-    vi.mocked(assignLayoutToCampaign).mockResolvedValue(undefined as never);
-    vi.mocked(unassignLayoutFromCampaign).mockResolvedValue(undefined as never);
   });
 
   // ---------------------------------------------------------------------------
@@ -207,7 +210,7 @@ describe('EditCampaignModal', () => {
   test('General tab is active by default', async () => {
     await renderEditModal();
     const generalTab = screen.getByRole('button', { name: 'General' });
-    expect(generalTab).toHaveClass('border-blue-600');
+    expect(generalTab).toHaveClass('border-xibo-blue-600');
   });
 
   test('Name field is pre-populated with the campaign name', async () => {
@@ -414,7 +417,7 @@ describe('EditCampaignModal', () => {
     });
   });
 
-  test('Save calls assignLayoutToCampaign for each newly added layout', async () => {
+  test('Save calls updateCampaign with layoutIds including each newly added layout', async () => {
     vi.mocked(fetchLayouts).mockImplementation(async (params) => {
       if (params?.campaignId) return { rows: [], totalCount: 0 };
       return { rows: [mockSearchLayout], totalCount: 1 };
@@ -431,14 +434,17 @@ describe('EditCampaignModal', () => {
     });
 
     await waitFor(() => {
-      expect(assignLayoutToCampaign).toHaveBeenCalledWith(
+      expect(updateCampaign).toHaveBeenCalledWith(
         mockCampaign.campaignId,
-        mockSearchLayout.layoutId,
+        expect.objectContaining({
+          manageLayouts: 1,
+          layoutIds: [mockSearchLayout.layoutId],
+        }),
       );
     });
   });
 
-  test('Save calls unassignLayoutFromCampaign for each removed layout', async () => {
+  test('Save calls updateCampaign with layoutIds excluding each removed layout', async () => {
     vi.mocked(fetchLayouts).mockImplementation(async (params) => {
       if (params?.campaignId) return { rows: [mockLayout], totalCount: 1 };
       return { rows: [], totalCount: 0 };
@@ -455,9 +461,12 @@ describe('EditCampaignModal', () => {
     });
 
     await waitFor(() => {
-      expect(unassignLayoutFromCampaign).toHaveBeenCalledWith(
+      expect(updateCampaign).toHaveBeenCalledWith(
         mockCampaign.campaignId,
-        mockLayout.layoutId,
+        expect.objectContaining({
+          manageLayouts: 1,
+          layoutIds: [],
+        }),
       );
     });
   });

@@ -301,16 +301,6 @@ class UserGroupFactory extends BaseFactory
             $params['groupId'] = $parsedFilter->getInt('groupId');
         }
 
-        if ($parsedFilter->getString('keyword') != null) {
-            // Fulltext search
-            $body .= $this->buildSearchQuery(
-                $parsedFilter->getString('keyword'),
-                $params,
-                ['group.group', 'group.description'],
-                ['group.groupId'],
-            );
-        }
-
         // Filter by Group Name
         if ($parsedFilter->getString('group') != null) {
             $terms = explode(',', $parsedFilter->getString('group'));
@@ -411,7 +401,8 @@ class UserGroupFactory extends BaseFactory
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            defaultSort: ['groupId ASC']
+            defaultSort: ['groupId ASC'],
+            uniqueColumn: 'groupId'
         );
 
         $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
@@ -847,6 +838,16 @@ class UserGroupFactory extends BaseFactory
                     'feature' => 'command.view',
                     'group' => 'displays',
                     'title' => __('Page to view/add/edit/delete Commands')
+                ],
+                'command.add' => [
+                    'feature' => 'command.add',
+                    'group' => 'displays',
+                    'title' => __('Allow creation of Commands')
+                ],
+                'command.modify' => [
+                    'feature' => 'command.modify',
+                    'group' => 'displays',
+                    'title' => __('Allow edits of Commands')
                 ],
                 'display.syncView' => [
                     'feature' => 'display.syncView',

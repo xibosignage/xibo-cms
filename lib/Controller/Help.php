@@ -75,16 +75,8 @@ class Help extends Base
     {
         $page = $this->getSanitizer($request->getQueryParams())->getString('page');
 
-        // HelpService renders link summaries through Parsedown, which can emit PHP
-        // deprecation notices. Capture and discard any stray output so it cannot
-        // corrupt the JSON response body.
-        ob_start();
-        try {
-            $landingPage = $this->helpService->getLandingPage();
-            $links = empty($page) ? [] : $this->helpService->getLinksForPage($page);
-        } finally {
-            ob_end_clean();
-        }
+        $landingPage = $this->helpService->getLandingPage();
+        $links = empty($page) ? [] : $this->helpService->getLinksForPage($page);
 
         return $response->withJson([
             'landingPage' => $landingPage,

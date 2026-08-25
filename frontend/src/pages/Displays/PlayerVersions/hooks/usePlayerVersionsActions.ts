@@ -25,6 +25,7 @@ import type { TFunction } from 'i18next';
 import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
 
+import { notify } from '@/components/ui/Notification';
 import { deletePlayerVersion } from '@/services/playerVersionApi';
 import type { PlayerVersion } from '@/types/playerVersion';
 
@@ -69,6 +70,9 @@ export function usePlayerVersionActions({
         return;
       }
 
+      notify.success(
+        t('{{count}} player version(s) deleted successfully.', { count: itemsToDelete.length }),
+      );
       setRowSelection({});
       handleRefresh();
       closeModal();

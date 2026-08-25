@@ -44,6 +44,7 @@ import {
   FileX,
   Forward,
   UserPlus2,
+  Tags,
 } from 'lucide-react';
 import { type ComponentProps } from 'react';
 
@@ -55,18 +56,25 @@ import {
   CheckMarkCell,
   StatusCell,
   TagsCell,
+  toDisplayTags,
   MediaCell,
+  getSharingColumn,
 } from '@/components/ui/table/cells';
 import type { Display } from '@/types/display';
 import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
 import type { UIStatus } from '@/types/uiStatus';
 import type { DateLike } from '@/utils/date';
+import { formatTagsForExport } from '@/utils/tags';
 
 export interface DisplayFilterInput {
   displayId?: number | null;
   name?: string;
+  logicalOperatorName?: 'OR' | 'AND';
+  useRegexForName?: boolean;
   tags?: Tag[];
+  logicalOperator?: 'OR' | 'AND';
+  exactTags?: boolean;
   mediaInventoryStatus: string | null;
   loggedIn: string | null;
   authorised: string | null;
@@ -113,13 +121,18 @@ export type ModalType =
   | 'bulkDefaultLayout'
   | 'bulkSendCommand'
   | 'bulkMoveCms'
+  | 'editTagsMultiple'
   | 'schedule'
   | null;
 
 export const INITIAL_FILTER_STATE: DisplayFilterInput = {
   displayId: null,
   name: '',
+  logicalOperatorName: 'OR',
+  useRegexForName: false,
   tags: [],
+  logicalOperator: 'OR',
+  exactTags: false,
   mediaInventoryStatus: null,
   loggedIn: null,
   authorised: null,
@@ -231,7 +244,10 @@ export const getClientTypeOptions = (t: TFunction): { label: string; value: stri
   { label: t('ChromeOS'), value: 'chromeOS' },
 ];
 
-export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DisplayFilterInput>[] => [
+export const getBaseFilterKeys = (
+  t: TFunction,
+  canTag = false,
+): FilterConfigItem<DisplayFilterInput>[] => [
   {
     label: t('ID'),
     placeholder: ' ',
@@ -244,14 +260,26 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DisplayFilterI
     type: 'text',
     className: '',
     placeholder: ' ',
+    showAndOr: true,
+    andOrKey: 'logicalOperatorName',
+    showRegex: true,
+    regexKey: 'useRegexForName',
   },
-  {
-    label: t('Tags'),
-    name: 'tags',
-    type: 'tags',
-    placeholder: ' ',
-    className: '',
-  },
+  ...(canTag
+    ? ([
+        {
+          label: t('Tags'),
+          name: 'tags',
+          type: 'tags',
+          placeholder: ' ',
+          className: '',
+          showAndOr: true,
+          andOrKey: 'logicalOperator',
+          showExactTags: true,
+          exactTagsKey: 'exactTags',
+        },
+      ] as FilterConfigItem<DisplayFilterInput>[])
+    : []),
   {
     label: t('Status'),
     name: 'mediaInventoryStatus',
@@ -383,6 +411,15 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DisplayFilterI
 
 export interface DisplayActionsProps {
   t: TFunction;
+  canModify?: boolean;
+  canTag?: boolean;
+  canUserShare?: boolean;
+  canLimitedView?: boolean;
+  canCommandView?: boolean;
+  canDisplayGroupModify?: boolean;
+  canViewLayout?: boolean;
+  scheduleWithView?: boolean;
+  isSuperAdmin?: boolean;
   onDelete: (id: number) => void;
   openEditModal: (row: Display) => void;
   openMoveModal?: (row: Display | Display[]) => void;
@@ -406,10 +443,23 @@ export interface DisplayActionsProps {
   onSchedule?: (display: Display) => void;
   onPreviewScreenshot?: (display: Display) => void;
   formatDateTime: (value: DateLike) => string;
+  onTagClick?: (tag: Tag) => void;
+  selectedTagIds?: (string | number)[];
 }
+
+// Client types for which a commercial licence check is available (matches release44).
+const LICENCE_CHECK_CLIENT_TYPES = ['android', 'lg', 'sssp', 'chromeOS'];
 
 export const getDisplayItemActions = ({
   t,
+  canModify = false,
+  canUserShare = false,
+  canLimitedView = false,
+  canCommandView = false,
+  canDisplayGroupModify = false,
+  canViewLayout = false,
+  scheduleWithView = false,
+  isSuperAdmin = false,
   onDelete,
   openEditModal,
   openMoveModal,
@@ -433,14 +483,26 @@ export const getDisplayItemActions = ({
   onSchedule,
 }: DisplayActionsProps): ((display: Display) => ActionItem[]) => {
   return (display: Display) => {
+    const canEdit = !!display.userPermissions?.edit;
+    const canDelete = !!display.userPermissions?.delete;
+    const canShare = !!display.userPermissions?.modifyPermissions;
+
+    // "Limited view" block: visible with edit, or when the user has the
+    // displays.limitedView feature (mirrors release44's grid button guards).
+    const limitedBlock = (canModify && canEdit) || canLimitedView;
+    // Items inside the limited-view block that still require edit permission.
+    const limitedEdit = canEdit && (canModify || canLimitedView);
+
     const actions: ActionItem[] = [];
 
-    const canEdit = display.userPermissions?.edit ?? 1;
-    const canDelete = display.userPermissions?.delete ?? 1;
-    const canShare = display.userPermissions?.modifyPermissions ?? 1;
+    const addSeparator = () => {
+      if (actions.length > 0 && !actions[actions.length - 1]?.isSeparator) {
+        actions.push({ isSeparator: true });
+      }
+    };
 
-    // Quick actions
-    if (canEdit) {
+    // Quick action
+    if (canModify && canEdit) {
       actions.push({
         label: t('Edit'),
         icon: Edit,
@@ -449,8 +511,9 @@ export const getDisplayItemActions = ({
         variant: 'primary' as const,
       });
     }
+
     // Dropdown menu actions
-    if (canEdit) {
+    if (canModify && canEdit) {
       actions.push({
         label: t('Edit'),
         icon: Edit,
@@ -458,7 +521,7 @@ export const getDisplayItemActions = ({
       });
     }
 
-    if (canEdit && openMoveModal) {
+    if (canModify && canEdit && openMoveModal) {
       actions.push({
         label: t('Move'),
         icon: FolderInput,
@@ -466,7 +529,7 @@ export const getDisplayItemActions = ({
       });
     }
 
-    if (canShare && openShareModal) {
+    if (canModify && canShare && canUserShare && openShareModal) {
       actions.push({
         label: t('Share'),
         icon: UserPlus2,
@@ -474,108 +537,143 @@ export const getDisplayItemActions = ({
       });
     }
 
-    actions.push({
-      label: t('Schedule'),
-      icon: CalendarDays,
-      onClick: () => onSchedule && onSchedule(display),
-    });
+    if (onSchedule && (canEdit || scheduleWithView)) {
+      actions.push({
+        label: t('Schedule'),
+        icon: CalendarDays,
+        onClick: () => onSchedule(display),
+      });
+    }
 
-    actions.push({
-      label: t('Request Screenshot'),
-      icon: RotateCw,
-      onClick: () => onRequestScreenShot(display),
-    });
+    if (limitedBlock) {
+      actions.push({
+        label: t('Request Screenshot'),
+        icon: RotateCw,
+        onClick: () => onRequestScreenShot(display),
+      });
+    }
 
-    actions.push({
-      label: t('Add to Group'),
-      icon: PlusSquare,
-      onClick: () => onAddToGroup(display),
-    });
+    if (canModify && canShare) {
+      actions.push({
+        label: t('Add to Group'),
+        icon: PlusSquare,
+        onClick: () => onAddToGroup(display),
+      });
+    }
 
-    actions.push({
-      label: display.licensed === 1 ? t('Unauthorise') : t('Authorise'),
-      icon: display.licensed === 1 ? MonitorXIcon : MonitorCheck,
-      onClick: () => onAuthorise(display),
-    });
+    if (canModify && canEdit) {
+      actions.push({
+        label: display.licensed === 1 ? t('Unauthorise') : t('Authorise'),
+        icon: display.licensed === 1 ? MonitorXIcon : MonitorCheck,
+        onClick: () => onAuthorise(display),
+      });
 
-    actions.push({
-      label: t('Manage'),
-      icon: Info,
-      rightIcon: ArrowRight,
-      onClick: () => onManage(display),
-    });
+      actions.push({
+        label: t('Manage'),
+        icon: Info,
+        rightIcon: ArrowRight,
+        onClick: () => onManage(display),
+      });
+    }
 
-    actions.push({ isSeparator: true });
+    if (limitedEdit && canViewLayout && onJumpToScheduledLayouts) {
+      addSeparator();
+      actions.push({
+        label: t('Scheduled Layouts'),
+        rightIcon: ArrowRight,
+        onClick: () => onJumpToScheduledLayouts(display.displayGroupId),
+      });
+    }
 
-    actions.push({
-      label: t('Scheduled Layouts'),
-      rightIcon: ArrowRight,
-      onClick: () => onJumpToScheduledLayouts && onJumpToScheduledLayouts(display.displayGroupId),
-    });
+    if (limitedEdit) {
+      addSeparator();
+      actions.push({
+        label: t('Assign Layouts'),
+        onClick: () => onAssignLayouts(display),
+      });
 
-    actions.push({
-      label: t('Assign Layouts'),
-      onClick: () => onAssignLayouts(display),
-    });
+      actions.push({
+        label: t('Assign Files'),
+        onClick: () => onAssignFiles(display),
+      });
+    }
 
-    actions.push({
-      label: t('Assign Files'),
-      onClick: () => onAssignFiles(display),
-    });
+    if (limitedBlock) {
+      addSeparator();
+      actions.push({
+        label: t('Collect Now'),
+        onClick: () => onCollectNow(display),
+      });
+    }
 
-    actions.push({
-      label: t('Collect Now'),
-      onClick: () => onCollectNow(display),
-    });
+    if (canDisplayGroupModify && canEdit) {
+      actions.push({
+        label: t('Trigger a web hook'),
+        onClick: () => onTriggerWebhook(display),
+      });
+    }
 
-    actions.push({
-      label: t('Trigger a web hook'),
-      onClick: () => onTriggerWebhook(display),
-    });
+    if (limitedEdit) {
+      actions.push({
+        label: t('Wake on LAN'),
+        onClick: () => onWakeOnLan(display),
+      });
+    }
 
-    actions.push({
-      label: t('Wake on LAN'),
-      onClick: () => onWakeOnLan(display),
-    });
+    if (canDisplayGroupModify || canCommandView) {
+      actions.push({
+        label: t('Send Command'),
+        onClick: () => onSendCommand(display),
+      });
+    }
 
-    actions.push({
-      label: t('Send Command'),
-      onClick: () => onSendCommand(display),
-    });
+    if (
+      canModify &&
+      canEdit &&
+      display.clientType &&
+      LICENCE_CHECK_CLIENT_TYPES.includes(display.clientType)
+    ) {
+      actions.push({
+        label: t('Check Licence'),
+        onClick: () => onCheckLicence(display),
+      });
+    }
 
-    actions.push({
-      label: t('Check Licence'),
-      onClick: () => onCheckLicence(display),
-    });
+    if (canModify && canEdit) {
+      actions.push({
+        label: t('Default Layout'),
+        onClick: () => onSetDefaultLayout(display),
+      });
+    }
 
-    actions.push({
-      label: t('Default Layout'),
-      onClick: () => onSetDefaultLayout(display),
-    });
+    if (isSuperAdmin && limitedEdit) {
+      addSeparator();
+      actions.push({
+        label: t('Purge All Media'),
+        icon: FileX,
+        onClick: () => onPurgeAll(display),
+      });
+    }
 
-    actions.push({ isSeparator: true });
+    if (limitedEdit) {
+      addSeparator();
+      actions.push({
+        label: t('Transfer to another CMS'),
+        icon: Forward,
+        onClick: () => onMoveCms(display),
+      });
 
-    actions.push({
-      label: t('Purge All Media'),
-      icon: FileX,
-      onClick: () => onPurgeAll(display),
-    });
+      if (display.newCmsAddress) {
+        actions.push({
+          label: t('Cancel CMS Transfer'),
+          icon: XCircle,
+          onClick: () => onMoveCmsCancel(display),
+        });
+      }
+    }
 
-    actions.push({
-      label: t('Transfer to another CMS'),
-      icon: Forward,
-      onClick: () => onMoveCms(display),
-    });
-
-    actions.push({
-      label: t('Cancel CMS Transfer'),
-      icon: XCircle,
-      onClick: () => onMoveCmsCancel(display),
-    });
-
-    if (canDelete) {
-      actions.push({ isSeparator: true });
-
+    if (canModify && canDelete) {
+      addSeparator();
       actions.push({
         label: t('Delete'),
         icon: Trash2,
@@ -584,12 +682,17 @@ export const getDisplayItemActions = ({
       });
     }
 
+    // Drop a trailing separator if the last visible group was gated out.
+    if (actions.length > 0 && actions[actions.length - 1]?.isSeparator) {
+      actions.pop();
+    }
+
     return actions;
   };
 };
 
 export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display>[] => {
-  const { t, formatDateTime } = props;
+  const { t, formatDateTime, canTag = false, onTagClick, selectedTagIds } = props;
   const getActions = getDisplayItemActions(props);
 
   return [
@@ -619,12 +722,18 @@ export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display
           />
         );
       },
+      meta: {
+        getExportValue: (row) => getInventoryStatusLabel(t, row.mediaInventoryStatus),
+      },
     },
     {
       accessorKey: 'clientType',
       header: t('Player Type'),
       size: 120,
       cell: (info) => <TextCell>{getClientTypeLabel(t, info.getValue<string | null>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => getClientTypeLabel(t, row.clientType),
+      },
     },
     {
       accessorKey: 'clientAddress',
@@ -706,23 +815,29 @@ export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display
       size: 120,
       cell: (info) => <TextCell>{info.getValue<string | null>() ?? ''}</TextCell>,
     },
-    {
-      accessorKey: 'tags',
-      header: t('Tags'),
-      size: 150,
-      enableSorting: false,
-      cell: (info) => {
-        const tags = info.getValue<Tag[]>() ?? [];
-        return (
-          <TagsCell
-            tags={tags.map((tag) => ({
-              id: tag.tagId,
-              label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
-            }))}
-          />
-        );
-      },
-    },
+    ...(canTag
+      ? ([
+          {
+            accessorKey: 'tags',
+            header: t('Tags'),
+            size: 150,
+            enableSorting: false,
+            cell: (info) => {
+              const tags = info.getValue<Tag[]>() ?? [];
+              return (
+                <TagsCell
+                  tags={toDisplayTags(tags)}
+                  onTagClick={onTagClick}
+                  selectedTagIds={selectedTagIds}
+                />
+              );
+            },
+            meta: {
+              getExportValue: (row) => formatTagsForExport(row.tags),
+            },
+          },
+        ] as ColumnDef<Display>[])
+      : []),
     {
       accessorKey: 'defaultLayout',
       header: t('Default Layout'),
@@ -749,6 +864,10 @@ export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display
         const value = info.getValue<number | null>();
         return <TextCell>{value ? formatDateTime(new Date(Number(value) * 1000)) : ''}</TextCell>;
       },
+      meta: {
+        getExportValue: (row) =>
+          row.lastAccessed ? formatDateTime(new Date(Number(row.lastAccessed) * 1000)) : '',
+      },
     },
     {
       accessorKey: 'displayProfile',
@@ -770,6 +889,16 @@ export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display
             ? `${typeAndVersion}-${clientCode}`
             : typeAndVersion;
         return <TextCell>{value}</TextCell>;
+      },
+      meta: {
+        getExportValue: (row) => {
+          const typeAndVersion = [getClientTypeLabel(t, row.clientType), row.clientVersion]
+            .filter(Boolean)
+            .join(' ');
+          return row.clientCode != null && typeAndVersion !== ''
+            ? `${typeAndVersion}-${row.clientCode}`
+            : typeAndVersion;
+        },
       },
     },
     {
@@ -819,6 +948,9 @@ export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display
       header: t('Thumbnail'),
       size: 120,
       enableSorting: false,
+      meta: {
+        excludeFromExport: true,
+      },
       cell: ({ row }) => (
         <MediaCell
           thumb={row.original.thumbnail || undefined}
@@ -848,6 +980,9 @@ export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display
       header: t('Last Command'),
       size: 130,
       cell: (info) => <TextCell>{getLastCommandLabel(t, info.getValue<number>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => getLastCommandLabel(t, row.lastCommandSuccess),
+      },
     },
     {
       id: 'xmrRegistered',
@@ -869,6 +1004,9 @@ export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display
           />
         );
       },
+      meta: {
+        getExportValue: (row) => getCommercialLicenceLabel(t, row.commercialLicence),
+      },
     },
     {
       id: 'remote',
@@ -877,12 +1015,7 @@ export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display
       accessorFn: (row) => row.teamViewerSerial ?? row.webkeySerial ?? '',
       cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
     },
-    {
-      accessorKey: 'groupsWithPermissions',
-      header: t('Sharing'),
-      size: 150,
-      cell: (info) => <TextCell>{info.getValue<string | null>() ?? ''}</TextCell>,
-    },
+    getSharingColumn<Display>(t),
     {
       accessorKey: 'screenSize',
       header: t('Screen Size'),
@@ -954,12 +1087,18 @@ export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display
       header: t('Created Date'),
       size: 170,
       cell: (info) => <TextCell>{formatDateTime(info.getValue<string | null>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatDateTime(row.createdDt),
+      },
     },
     {
       accessorKey: 'modifiedDt',
       header: t('Modified Date'),
       size: 170,
       cell: (info) => <TextCell>{formatDateTime(info.getValue<string | null>())}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatDateTime(row.modifiedDt),
+      },
     },
     {
       accessorKey: 'countFaults',
@@ -1029,6 +1168,7 @@ interface GetBulkActionsProps {
   onSetBandwidth?: () => void;
   onBulkSendCommand?: () => void;
   onBulkMoveCms?: () => void;
+  onEditTags?: () => void;
 }
 
 export const getBulkActions = ({
@@ -1045,6 +1185,7 @@ export const getBulkActions = ({
   onSetBandwidth,
   onBulkSendCommand,
   onBulkMoveCms,
+  onEditTags,
 }: GetBulkActionsProps): DataTableBulkAction<Display>[] => {
   return [
     {
@@ -1092,6 +1233,15 @@ export const getBulkActions = ({
             label: t('Share'),
             icon: UserPlus2,
             onClick: onShare,
+          },
+        ]
+      : []),
+    ...(onEditTags
+      ? [
+          {
+            label: t('Edit Tags'),
+            icon: Tags,
+            onClick: onEditTags,
           },
         ]
       : []),

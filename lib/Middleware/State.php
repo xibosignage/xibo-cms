@@ -171,24 +171,33 @@ class State implements Middleware
             return $reportService;
         });
 
-        // Set some public routes
-        $request = $request->withAttribute('publicRoutes', array_merge($request->getAttribute('publicRoutes', []), [
-            '/login',
-            '/login/forgotten',
-            '/clock',
-            '/about',
-            '/about/config',
-            '/login/ping',
-            '/rss/{psk}',
-            '/sssp_config.xml',
-            '/sssp_dl.wgt',
-            '/playersoftware/{nonce}/sssp_dl.wgt',
-            '/playersoftware/{nonce}/sssp_config.xml',
-            '/tfa',
-            '/error',
-            '/notFound',
-            '/public/thumbnail/{id}',
-        ]));
+        // Set some public routes.
+        // The React SPA shell routes (Spa::getRoutePatterns()) are also public: they render the
+        // shell regardless of auth state and let React's own requireAuthLoader redirect to
+        // login client-side, preserving today's behaviour and any deep-link return path.
+        // Enforcing auth here instead would need WebAuthentication::redirectToLogin() to thread
+        // a return path through, which it doesn't do today.
+        $request = $request->withAttribute('publicRoutes', array_merge(
+            $request->getAttribute('publicRoutes', []),
+            [
+                '/login',
+                '/login/forgotten',
+                '/clock',
+                '/about',
+                '/about/config',
+                '/login/ping',
+                '/rss/{psk}',
+                '/sssp_config.xml',
+                '/sssp_dl.wgt',
+                '/playersoftware/{nonce}/sssp_dl.wgt',
+                '/playersoftware/{nonce}/sssp_config.xml',
+                '/tfa',
+                '/error',
+                '/notFound',
+                '/public/thumbnail/{id}',
+            ],
+            \Xibo\Controller\Spa::getRoutePatterns()
+        ));
 
         // Setup the translations for gettext
         Translate::InitLocale($container->get('configService'));

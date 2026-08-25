@@ -31,36 +31,51 @@ import {
   useInteractions,
   FloatingPortal,
 } from '@floating-ui/react';
-import { ChevronDown, Loader2, X } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { ChevronDown, FolderPlus, Loader2, X } from 'lucide-react';
 import { useEffect, useRef, useState, useId } from 'react';
 import { useTranslation } from 'react-i18next';
+import { twMerge } from 'tailwind-merge';
 
+import Button from '../Button';
+import FolderActionModals from '../FolderActionModals';
 import FolderSearchInput from '../FolderSearchInput';
 import FolderTreeList, { type FolderAction } from '../FolderTreeList';
 
 import { useUserContext } from '@/context/UserContext';
-import { fetchFolderById } from '@/services/folderApi';
+import { useFolderActions } from '@/hooks/useFolderActions';
+import { usePermissions } from '@/hooks/usePermissions';
+import { fetchContextButtons, fetchFolderById } from '@/services/folderApi';
 import type { Folder } from '@/types/folder';
 
 interface SelectFolderProps {
   selectedId?: number | null;
   selectedText?: string | null;
   placeholder?: string;
+  label?: string;
+  helpText?: string;
   onSelect: (folder: { id: number; text: string } | null) => void;
   onAction?: (action: FolderAction, folder: Folder) => void;
   optional?: boolean;
+  enforceViewPermission?: boolean;
+  disabled?: boolean;
 }
 
 export default function SelectFolder({
   selectedId,
   selectedText,
   placeholder,
+  label,
+  helpText,
   onSelect,
   onAction,
   optional = false,
+  enforceViewPermission = true,
+  disabled = false,
 }: SelectFolderProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
+  const { canViewFolders } = usePermissions();
 
   const homeFolderId = user?.homeFolderId ?? 1;
   const generatedId = useId();
@@ -75,9 +90,28 @@ export default function SelectFolder({
   const [isResolvingName, setIsResolvingName] = useState(false);
   const [folderSearch, setFolderSearch] = useState('');
 
+  const folderActions = useFolderActions({
+    onSuccess: (target) => {
+      if (target) {
+        onSelect({ id: target.id, text: target.text });
+        setInitialName(target.text);
+        resolvedIdRef.current = target.id;
+        setIsOpen(false);
+      }
+    },
+  });
+
+  const { data: folderPerms } = useQuery({
+    queryKey: ['folderPermissions', homeFolderId],
+    queryFn: ({ signal }) => fetchContextButtons(homeFolderId, signal),
+    enabled: isOpen && homeFolderId != null,
+  });
+  const canCreate = folderPerms?.create ?? false;
+
   const { refs, floatingStyles, context } = useFloating({
     open: isOpen,
     onOpenChange: (open) => {
+      if (disabled) return;
       setIsOpen(open);
       if (!open) {
         setFolderSearch('');
@@ -100,7 +134,7 @@ export default function SelectFolder({
     ],
   });
 
-  const click = useClick(context);
+  const click = useClick(context, { enabled: !disabled });
   const dismiss = useDismiss(context);
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
 
@@ -180,6 +214,10 @@ export default function SelectFolder({
     };
   }, [selectedId, selectedText]);
 
+  if (enforceViewPermission && !canViewFolders) {
+    return null;
+  }
+
   const renderLabel = () => {
     if (isResolvingName) {
       return (
@@ -204,14 +242,19 @@ export default function SelectFolder({
   return (
     <div className="relative">
       <label className="flex items-center justify-between text-sm font-semibold text-gray-500 mb-1">
-        <span>{t('Select folder location')}</span>
+        <span>{label ?? t('Select folder location')}</span>
         {optional && <span className="text-xs font-normal text-gray-500">{t('Optional')}</span>}
       </label>
 
       <div
         ref={refs.setReference}
         {...getReferenceProps()}
-        className="w-full border border-gray-200 rounded-lg flex items-center bg-white transition-shadow hover:shadow-sm cursor-pointer h-11.25"
+        tabIndex={disabled ? -1 : undefined}
+        aria-disabled={disabled || undefined}
+        className={twMerge(
+          'w-full border border-gray-200 rounded-lg flex items-center bg-white transition-shadow hover:shadow-sm cursor-pointer h-11.25',
+          disabled && 'bg-gray-50 cursor-not-allowed pointer-events-none',
+        )}
       >
         <button
           type="button"
@@ -220,7 +263,7 @@ export default function SelectFolder({
           {renderLabel()}
         </button>
         <div className="flex items-center pr-3 h-full gap-1.5">
-          {selectedId ? (
+          {selectedId && !disabled ? (
             <button
               type="button"
               onClick={handleClear}
@@ -264,7 +307,7 @@ export default function SelectFolder({
                 onAction={onAction}
                 searchQuery={folderSearch}
                 customSlot={
-                  <div className="px-2 shrink-0">
+                  <div className="px-2 shrink-0 flex flex-col gap-2">
                     <FolderSearchInput
                       id={searchInputId}
                       value={folderSearch}
@@ -273,6 +316,20 @@ export default function SelectFolder({
                       placeholder={t('Search Folder')}
                       className="py-1"
                     />
+
+                    {canCreate && (
+                      <Button
+                        variant="tertiary"
+                        className="flex items-center justify-center w-full -outline-offset-4"
+                        leftIcon={FolderPlus}
+                        onClick={() => {
+                          setIsOpen(false);
+                          folderActions.openAction('create', { id: homeFolderId } as Folder);
+                        }}
+                      >
+                        {t('New Folder')}
+                      </Button>
+                    )}
                   </div>
                 }
               />
@@ -280,6 +337,10 @@ export default function SelectFolder({
           </div>
         )}
       </FloatingPortal>
+
+      {helpText && <p className="text-xs text-gray-400 mt-1 whitespace-pre-line">{helpText}</p>}
+
+      <FolderActionModals folderActions={folderActions} />
     </div>
   );
 }

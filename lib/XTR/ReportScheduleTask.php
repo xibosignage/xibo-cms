@@ -269,7 +269,8 @@ class ReportScheduleTask implements TaskInterface
                 $emailTemplate,
                 [
                     'header' => $report->description,
-                    'logo' => rtrim($this->config->getSetting('LIBRARY_LOCATION'), '/') . '/brand/xibologo.png',
+                    'logo' => rtrim($this->config->getSetting('LIBRARY_LOCATION'), '/')
+                        . '/brand/' . $this->config->getBrandLogoDarkFile(),
                     'title' => $savedReport->saveAs,
                     'metadata' => $savedReportData->metadata,
                     'tableData' => $tableData ?? null,

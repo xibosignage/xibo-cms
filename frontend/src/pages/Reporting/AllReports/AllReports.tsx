@@ -26,8 +26,6 @@ import {
   FileClock,
   FileCode2,
   FileCog,
-  Filter,
-  FilterX,
   Gauge,
   HardDrive,
   Loader2,
@@ -44,12 +42,14 @@ import type { ReportFilterInput } from './AllReportsConfig';
 import { useAllReportsData } from './hooks/useAllReportsData';
 
 import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import TabNav from '@/components/ui/TabNav';
 import { withPublicPath } from '@/config/publicPath';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import type { Report } from '@/types/report';
+import { countActiveFilters } from '@/utils/filters';
 
 const LUCIDE_ICON_MAP: Record<string, LucideIcon> = {
   CalendarClock,
@@ -89,7 +89,7 @@ function ReportCardBase({
     >
       <div
         className={
-          'flex h-11.5 w-11.5 items-center justify-center rounded-full bg-blue-100 text-blue-800'
+          'flex h-11.5 w-11.5 items-center justify-center rounded-full bg-xibo-blue-100 text-xibo-blue-800'
         }
       >
         <Icon size={24} />
@@ -150,6 +150,8 @@ export default function AllReports() {
 
   const filterOptions = getFilterKeys(t);
 
+  const activeFilterCount = countActiveFilters(filterInputs, INITIAL_FILTER_STATE, filterOptions);
+
   function handleResetFilters() {
     setFilterInputs(INITIAL_FILTER_STATE);
   }
@@ -162,14 +164,11 @@ export default function AllReports() {
         </div>
 
         <div className="flex flex-col items-end">
-          <Button
-            leftIcon={!openFilter ? Filter : FilterX}
-            variant="secondary"
-            onClick={() => setOpenFilter((prev) => !prev)}
-            removeTextOnMobile
-          >
-            {t('Filters')}
-          </Button>
+          <FilterButton
+            isOpen={openFilter}
+            onToggle={() => setOpenFilter((prev) => !prev)}
+            activeCount={activeFilterCount}
+          />
         </div>
 
         <FilterInputs

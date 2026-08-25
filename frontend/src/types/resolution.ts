@@ -19,6 +19,13 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+export interface ResolutionPermissions {
+  view?: number;
+  edit?: number;
+  delete?: number;
+  modifyPermissions?: number;
+}
+
 export interface Resolution {
   resolutionId: number;
   resolution: string;
@@ -29,4 +36,5 @@ export interface Resolution {
   version?: number;
   enabled: boolean;
   userId?: number;
+  userPermissions?: ResolutionPermissions;
 }

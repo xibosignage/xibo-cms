@@ -24,7 +24,7 @@ namespace Xibo\Widget\Definition;
 
 use GuzzleHttp\Psr7\Stream;
 use Illuminate\Support\Str;
-use Intervention\Image\ImageManagerStatic as Img;
+use Intervention\Image\ImageManager;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response;
 use Slim\Http\ServerRequest;
@@ -185,7 +185,10 @@ class Asset implements \JsonSerializable
             // Send via Nginx X-Accel-Redirect?
             $response = $response->withHeader('X-Accel-Redirect', '/download/assets/' . $this->getFilename());
         } else if (Str::startsWith('image', $this->mimeType)) {
-            $response = Img::make('/' . $this->path)->psrResponse();
+            $encoded = ImageManager::gd()->read('/' . $this->path)->encode();
+            $response = $response
+                ->withHeader('Content-Type', $encoded->mimetype())
+                ->withBody(new Stream($encoded->toFilePointer()));
         } else {
             // Set the right content type.
             $response = $response->withBody(new Stream(fopen($this->path, 'r')));

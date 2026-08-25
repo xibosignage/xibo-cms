@@ -67,7 +67,7 @@ export default function VideoModal({ videos, onClose }: VideoModalProps) {
               onClick={() => setActiveIndex(index)}
               className={`w-50 cursor-pointer rounded border-2 p-2 text-left text-sm ${
                 index === activeIndex
-                  ? 'border-blue-500 bg-blue-50'
+                  ? 'border-xibo-blue-500 bg-xibo-blue-50'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >

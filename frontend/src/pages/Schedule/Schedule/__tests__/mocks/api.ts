@@ -30,6 +30,7 @@ import { fetchLayoutCodes, fetchLayouts } from '@/services/layoutsApi';
 import { fetchMedia } from '@/services/mediaApi';
 import { fetchPlaylist } from '@/services/playlistApi';
 import { fetchResolution } from '@/services/resolutionApi';
+import { fetchScheduleCriteria } from '@/services/scheduleCriteriaApi';
 import { fetchSyncGroupDisplays, fetchSyncGroups } from '@/services/syncGroupApi';
 import type { Daypart } from '@/types/daypart';
 import type { Event } from '@/types/event';
@@ -90,7 +91,7 @@ export const mockFetchEventById = (event: Event): void => {
 // Layouts
 export const setupLayoutsMocks = (): void => {
   vi.mocked(fetchLayouts).mockResolvedValue({ rows: [], totalCount: 0 });
-  vi.mocked(fetchLayoutCodes).mockResolvedValue([]);
+  vi.mocked(fetchLayoutCodes).mockResolvedValue({ rows: [], totalCount: 0 });
 };
 
 // Media
@@ -108,8 +109,33 @@ export const setupResolutionMocks = (): void => {
   vi.mocked(fetchResolution).mockResolvedValue({ rows: [], totalCount: 0 });
 };
 
+// Schedule criteria
+export const setupScheduleCriteriaMocks = (): void => {
+  vi.mocked(fetchScheduleCriteria).mockResolvedValue({ types: [], defaultCondition: [] });
+};
+
 // SyncGroup
 export const setupSyncGroupMocks = (): void => {
   vi.mocked(fetchSyncGroups).mockResolvedValue({ rows: [], totalCount: 0 });
   vi.mocked(fetchSyncGroupDisplays).mockResolvedValue([]);
+};
+
+// Composite: every service ScheduleEventModal fetches on open, with empty
+// defaults. Call this instead of the individual setup*Mocks functions above
+// so a new fetch added to the modal only needs a mock added here, not in
+// every test file that renders it. Override individual mocks afterwards
+// (e.g. mockDaypartRows, vi.mocked(fetchLayouts).mockResolvedValue(...))
+// for test-specific data.
+export const setupScheduleModalMocks = (): void => {
+  setupEventMocks();
+  setupDaypartMocks();
+  setupResolutionMocks();
+  setupLayoutsMocks();
+  setupCampaignMocks();
+  setupCommandMocks();
+  setupMediaMocks();
+  setupPlaylistMocks();
+  setupSyncGroupMocks();
+  setupDatasetMocks();
+  setupScheduleCriteriaMocks();
 };

@@ -109,7 +109,7 @@ export default function MediaInput({
       return fetchMedia({
         start: pageParam,
         length: 20,
-        keyword: debouncedSearch || undefined,
+        media: debouncedSearch || undefined,
         type: mediaType || undefined,
         signal,
       });

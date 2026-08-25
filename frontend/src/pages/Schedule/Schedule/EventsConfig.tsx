@@ -162,6 +162,8 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<EventFilterInp
 export interface EventActionsProps {
   t: TFunction;
   timezone: string;
+  canModify?: boolean;
+  canAdd?: boolean;
   formatDateTime?: (value: DateLike) => string;
   onDelete: (id: number) => void;
   openAddEditModal: (row: Event) => void;
@@ -170,43 +172,60 @@ export interface EventActionsProps {
 
 export const getEventItemActions = ({
   t,
+  canModify = false,
+  canAdd = false,
   onDelete,
   openAddEditModal,
   copyEvent,
 }: EventActionsProps): ((scheduleEvent: Event) => ActionItem[]) => {
   return (scheduleEvent: Event) => {
-    const actions: ActionItem[] = [
-      {
+    const actions: ActionItem[] = [];
+    const isEditable = scheduleEvent.isEditable !== false;
+
+    if (canModify && isEditable) {
+      actions.push({
         label: t('Edit'),
         icon: Edit,
         onClick: () => openAddEditModal(scheduleEvent),
         isQuickAction: true,
         variant: 'primary' as const,
-      },
-      {
+      });
+    }
+
+    if (canAdd && isEditable) {
+      actions.push({
         label: t('Make a Copy'),
         icon: CopyCheck,
         isQuickAction: true,
         onClick: () => copyEvent && copyEvent(scheduleEvent.eventId),
-      },
-      {
+      });
+    }
+
+    if (canModify && isEditable) {
+      actions.push({
         label: t('Edit'),
         icon: Edit,
         onClick: () => openAddEditModal(scheduleEvent),
         variant: 'primary' as const,
-      },
-      {
+      });
+    }
+
+    if (canAdd && isEditable) {
+      actions.push({
         label: t('Make a Copy'),
         icon: CopyCheck,
         onClick: () => copyEvent && copyEvent(scheduleEvent.eventId),
-      },
-      {
+      });
+    }
+
+    if (canModify && isEditable) {
+      actions.push({
         label: t('Delete'),
         icon: Trash2,
         onClick: () => onDelete(scheduleEvent.eventId),
         variant: 'danger' as const,
-      },
-    ];
+      });
+    }
 
     return actions;
   };
@@ -335,6 +354,26 @@ const formatUnixTimestamp = (
   return formatDateTime(new Date(ts * 1000));
 };
 
+const formatRecurrenceRepeatsOn = (event: Event, t: TFunction): string => {
+  if (event.recurrenceType !== 'Week' || !event.recurrenceRepeatsOn) {
+    return '—';
+  }
+
+  const weekdayLabels = [
+    t('Sunday'),
+    t('Monday'),
+    t('Tuesday'),
+    t('Wednesday'),
+    t('Thursday'),
+    t('Friday'),
+    t('Saturday'),
+  ];
+  return event.recurrenceRepeatsOn
+    .split(',')
+    .map((day) => weekdayLabels[Number(day) % 7] ?? '')
+    .join(', ');
+};
+
 export const getEventColumns = (props: EventActionsProps): ColumnDef<Event>[] => {
   const { t, timezone } = props;
   const formatDateTime =
@@ -400,6 +439,10 @@ export const getEventColumns = (props: EventActionsProps): ColumnDef<Event>[] =>
         }
         return <TextCell>{formatUnixTimestamp(row.original.fromDt, formatDateTime)}</TextCell>;
       },
+      meta: {
+        getExportValue: (row) =>
+          row.isAlways === 1 ? t('Always') : formatUnixTimestamp(row.fromDt, formatDateTime),
+      },
     },
     {
       accessorKey: 'toDt',
@@ -411,13 +454,21 @@ export const getEventColumns = (props: EventActionsProps): ColumnDef<Event>[] =>
         }
         return <TextCell>{formatUnixTimestamp(row.original.toDt, formatDateTime)}</TextCell>;
       },
+      meta: {
+        getExportValue: (row) =>
+          row.isAlways === 1 ? t('Always') : formatUnixTimestamp(row.toDt, formatDateTime),
+      },
     },
     {
       id: 'event',
       header: t('Event'),
       size: 200,
       cell: ({ row }) => (
-        <TextCell truncate>{row.original.campaign ?? row.original.command ?? '—'}</TextCell>
+        <TextCell truncate>
+          {row.original.eventTypeId === EventTypeId.Sync
+            ? (row.original.syncGroupName ?? '—')
+            : (row.original.campaign ?? row.original.command ?? '—')}
+        </TextCell>
       ),
     },
     {
@@ -432,7 +483,9 @@ export const getEventColumns = (props: EventActionsProps): ColumnDef<Event>[] =>
       size: 200,
       cell: ({ row }) => (
         <TextCell>
-          {row.original.displayGroups.map((dg) => dg.displayGroup).join(', ') || '—'}
+          {row.original.eventTypeId === EventTypeId.Sync
+            ? (row.original.syncGroupName ?? '—')
+            : row.original.displayGroups.map((dg) => dg.displayGroup).join(', ') || '—'}
         </TextCell>
       ),
     },
@@ -482,7 +535,10 @@ export const getEventColumns = (props: EventActionsProps): ColumnDef<Event>[] =>
       accessorKey: 'recurrenceRepeatsOn',
       header: t('Recurrence Repeats On'),
       size: 180,
-      cell: (info) => <TextCell>{info.getValue<string | null>() || '—'}</TextCell>,
+      cell: ({ row }) => <TextCell>{formatRecurrenceRepeatsOn(row.original, t)}</TextCell>,
+      meta: {
+        getExportValue: (row) => formatRecurrenceRepeatsOn(row, t),
+      },
     },
     {
       accessorKey: 'recurrenceRange',
@@ -491,6 +547,9 @@ export const getEventColumns = (props: EventActionsProps): ColumnDef<Event>[] =>
       cell: (info) => (
         <TextCell>{formatUnixTimestamp(info.getValue<number>(), formatDateTime)}</TextCell>
       ),
+      meta: {
+        getExportValue: (row) => formatUnixTimestamp(row.recurrenceRange, formatDateTime),
+      },
     },
     {
       accessorKey: 'isPriority',
@@ -512,6 +571,9 @@ export const getEventColumns = (props: EventActionsProps): ColumnDef<Event>[] =>
         const val = info.getValue<string | undefined>();
         return <TextCell>{val ? formatDateTime(val) : '—'}</TextCell>;
       },
+      meta: {
+        getExportValue: (row) => (row.createdOn ? formatDateTime(row.createdOn) : ''),
+      },
     },
     {
       accessorKey: 'updatedOn',
@@ -520,6 +582,9 @@ export const getEventColumns = (props: EventActionsProps): ColumnDef<Event>[] =>
       cell: (info) => {
         const val = info.getValue<string | null | undefined>();
         return <TextCell>{val ? formatDateTime(val) : '—'}</TextCell>;
+      },
+      meta: {
+        getExportValue: (row) => (row.updatedOn ? formatDateTime(row.updatedOn) : ''),
       },
     },
     {
@@ -548,18 +613,24 @@ export const getEventColumns = (props: EventActionsProps): ColumnDef<Event>[] =>
 
 interface GetBulkActionsProps {
   t: TFunction;
+  canModify?: boolean;
   onDelete: () => void;
 }
 
 export const getBulkActions = ({
   t,
+  canModify = false,
   onDelete,
 }: GetBulkActionsProps): DataTableBulkAction<Event>[] => {
-  return [
-    {
+  const actions: DataTableBulkAction<Event>[] = [];
+
+  if (canModify) {
+    actions.push({
       label: t('Delete Selected'),
       icon: Trash2,
       onClick: onDelete,
-    },
-  ];
+    });
+  }
+
+  return actions;
 };

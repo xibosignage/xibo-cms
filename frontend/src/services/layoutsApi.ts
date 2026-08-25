@@ -26,7 +26,6 @@ import type { Template } from '@/types/templates';
 export interface FetchLayoutRequest {
   start: number;
   length: number;
-  keyword?: string;
   layout?: string;
   retired?: number | string;
   sortBy?: string;
@@ -80,14 +79,21 @@ export async function fetchLayouts(
   };
 }
 
-export async function createLayout() {
-  const response = await http.post(
-    '/layout',
-    new URLSearchParams({
-      name: 'Untitled Layout',
-      resolutionId: '1',
-    }),
-  );
+export interface CreateLayoutRequest {
+  folderId?: number | null;
+}
+
+export async function createLayout(payload: CreateLayoutRequest = {}) {
+  const params = new URLSearchParams({
+    name: 'Untitled Layout',
+    resolutionId: '1',
+  });
+
+  if (payload.folderId) {
+    params.append('folderId', String(payload.folderId));
+  }
+
+  const response = await http.post('/layout', params);
 
   return response.data;
 }
@@ -121,6 +127,18 @@ export async function updateLayout(
   });
 
   return data;
+}
+
+export async function setLayoutEnableStat(
+  layoutId: number | string,
+  enableStat: boolean,
+): Promise<void> {
+  const params = new URLSearchParams();
+  params.append('enableStat', enableStat ? '1' : '0');
+
+  await http.put(`/layout/setenablestat/${layoutId}`, params.toString(), {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
 }
 
 export async function deleteLayout(layoutId: number | string): Promise<void> {
@@ -360,10 +378,30 @@ export interface LayoutCode {
   layout: string;
 }
 
-export async function fetchLayoutCodes(code?: string): Promise<LayoutCode[]> {
+export interface FetchLayoutCodesRequest {
+  start: number;
+  length: number;
+  code?: string;
+}
+
+export interface FetchLayoutCodesResponse {
+  rows: LayoutCode[];
+  totalCount: number;
+}
+
+export async function fetchLayoutCodes(
+  options: FetchLayoutCodesRequest = { start: 0, length: 10 },
+): Promise<FetchLayoutCodesResponse> {
   const response = await http.get('/layout/codes', {
-    params: code ? { code } : undefined,
+    params: options,
   });
 
-  return response.data;
+  const rows = response.data;
+  const totalCountHeader = response.headers['x-total-count'];
+  const totalCount = totalCountHeader ? parseInt(totalCountHeader, 10) : 0;
+
+  return {
+    rows,
+    totalCount,
+  };
 }

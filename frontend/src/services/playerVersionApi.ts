@@ -25,7 +25,7 @@ import type { PlayerVersion } from '@/types/playerVersion';
 export interface FetchPlayerVersionsRequest {
   start: number;
   length: number;
-  keyword?: string;
+  playerShowVersion?: string;
   playerType?: string;
   playerVersion?: string;
   playerCode?: number;
@@ -87,8 +87,11 @@ export async function updatePlayerVersion(
   params.append('code', String(data.code));
   params.append('playerShowVersion', data.playerShowVersion);
 
-  const response = await http.put(`/playersoftware/${versionId}`, params, {
-    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+  const response = await http.put(`/playersoftware/${versionId}`, params.toString(), {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-Requested-With': 'XMLHttpRequest',
+    },
   });
 
   return response.data;

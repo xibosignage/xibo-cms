@@ -334,12 +334,12 @@ describe('Layouts page - search and pagination', () => {
   });
 
   // -------------------------------------------------------------------------
-  // Clicking Reset clears all active filter values back to their defaults.
+  // Clicking Reset restores all active filter values back to their defaults.
   // -------------------------------------------------------------------------
   test('clicking Reset clears all advanced filter values', async () => {
     // Open the filter panel, select a filter value, then click Reset.
-    // useLayoutData should be called again with the initial empty filter state
-    // so the table shows all layouts with no filter applied.
+    // useLayoutData should be called again with the initial filter state
+    // (Retired defaults to "No") so the table shows non-retired layouts.
     renderLayoutsPage();
 
     await act(async () => {
@@ -354,7 +354,7 @@ describe('Layouts page - search and pagination', () => {
     });
     fireEvent.click(await screen.findByRole('option', { name: 'Yes' }));
 
-    // Now reset - the filter values should return to the initial empty state.
+    // Now reset - the filter values should return to the initial state.
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
     });
@@ -362,7 +362,7 @@ describe('Layouts page - search and pagination', () => {
     await waitFor(() => {
       expect(useLayoutData).toHaveBeenLastCalledWith(
         expect.objectContaining({
-          advancedFilters: expect.objectContaining({ retired: '' }),
+          advancedFilters: expect.objectContaining({ retired: 0 }),
         }),
       );
     });

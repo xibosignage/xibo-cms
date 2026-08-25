@@ -33,12 +33,14 @@ import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagI
 import TextInput from '@/components/ui/forms/TextInput';
 import Modal from '@/components/ui/modals/Modal';
 import { CheckMarkCell, TextCell } from '@/components/ui/table/cells';
+import { useUserContext } from '@/context/UserContext';
 import { useDebounce } from '@/hooks/useDebounce';
 import { updateCampaign } from '@/services/campaignApi';
 import { fetchLayouts } from '@/services/layoutsApi';
 import type { Campaign } from '@/types/campaign';
 import type { Layout } from '@/types/layout';
 import type { Tag } from '@/types/tag';
+import { hasFeature } from '@/utils/permissions';
 
 interface EditCampaignModalProps {
   isOpen?: boolean;
@@ -72,10 +74,12 @@ export default function EditCampaignModal({
   onSuccess,
 }: EditCampaignModalProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
   const [isPending, startTransition] = useTransition();
   const [activeTab, setActiveTab] = useState<Tab>('general');
   const [apiError, setApiError] = useState('');
   const [pendingTagInput, setPendingTagInput] = useState('');
+  const [hasTagPendingValue, setHasTagPendingValue] = useState(false);
 
   const [draft, setDraft] = useState<EditDraft>({
     name: '',
@@ -160,7 +164,7 @@ export default function EditCampaignModal({
       fetchLayouts({
         start: layoutPagination.pageIndex * layoutPagination.pageSize,
         length: layoutPagination.pageSize,
-        keyword: debouncedKeyword || undefined,
+        layout: debouncedKeyword || undefined,
         sortBy: layoutSortBy,
         sortDir: layoutSortDir,
       }),
@@ -269,7 +273,7 @@ export default function EditCampaignModal({
         {
           label: isPending ? t('Saving…') : t('Save'),
           onClick: handleSave,
-          disabled: isPending,
+          disabled: isPending || hasTagPendingValue,
         },
       ]}
     >
@@ -283,7 +287,7 @@ export default function EditCampaignModal({
               onClick={() => setActiveTab(key)}
               className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === key
-                  ? 'border-blue-600 text-blue-600'
+                  ? 'border-xibo-blue-600 text-xibo-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -316,13 +320,17 @@ export default function EditCampaignModal({
                 onChange={(val) => setDraft((prev) => ({ ...prev, name: val }))}
               />
 
-              <TagInput
-                value={draft.tags}
-                helpText={t('Tags for this Campaign — comma-separated Tag or Tag|Value format.')}
-                onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
-                inputValue={pendingTagInput}
-                onInputChange={setPendingTagInput}
-              />
+              {(hasFeature(user, 'tag.tagging') || (draft.tags?.length ?? 0) > 0) && (
+                <TagInput
+                  value={draft.tags}
+                  helpText={t('Tags for this Campaign — comma-separated Tag or Tag|Value format.')}
+                  onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
+                  inputValue={pendingTagInput}
+                  onInputChange={setPendingTagInput}
+                  onPendingValueChange={setHasTagPendingValue}
+                  disabled={!hasFeature(user, 'tag.tagging')}
+                />
+              )}
 
               <Checkbox
                 id="cyclePlayback"
@@ -344,6 +352,7 @@ export default function EditCampaignModal({
                 <TextInput
                   name="playCount"
                   label={t('Play count')}
+                  placeholder={t('Add number')}
                   type="number"
                   value={draft.playCount === '' ? '' : String(draft.playCount)}
                   onChange={(val) =>
@@ -407,6 +416,7 @@ export default function EditCampaignModal({
               columns={layoutColumns}
               searchRows={layoutRows}
               pageCount={layoutPageCount}
+              rowCount={layoutsData?.totalCount ?? 0}
               pagination={layoutPagination}
               onPaginationChange={setLayoutPagination}
               sorting={layoutSorting}

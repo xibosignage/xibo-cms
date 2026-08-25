@@ -22,6 +22,7 @@
 import { useTranslation } from 'react-i18next';
 
 import AssignCampaignModal from './AssignCampaignModal';
+import CheckoutLayoutModal from './CheckoutLayoutModal';
 import CopyLayoutModal from './CopyLayoutModal';
 import DeleteLayoutModal from './DeleteLayoutModal';
 import DiscardLayoutModal from './DiscardLayoutModal';
@@ -35,20 +36,25 @@ import SaveAsTemplateModal from './SaveAsTemplateModal';
 
 import FolderActionModals from '@/components/ui/FolderActionModals';
 import type { PublishValue } from '@/components/ui/forms/PublishDateSelect';
+import EditTagsMultipleModal from '@/components/ui/modals/EditTagsMultipleModal';
+import EnableStatsMultipleModal from '@/components/ui/modals/EnableStatsMultipleModal';
 import MoveModal from '@/components/ui/modals/MoveModal';
 import PublishModal from '@/components/ui/modals/PublishModal';
 import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
+import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
 import type { useFolderActions } from '@/hooks/useFolderActions';
+import { setLayoutEnableStat } from '@/services/layoutsApi';
 import { EventTypeId } from '@/types/event';
 import type { Layout } from '@/types/layout';
 import type { User } from '@/types/user';
+import { mergeEntityTags } from '@/utils/tags';
 
 interface LayoutModalsProps {
   actions: {
     activeModal: string | null;
     closeModal: () => void;
-    handleRefresh: () => void;
+    handleRefresh: () => Promise<unknown>;
     deleteError: string | null;
     isDeleting: boolean;
     isCloning: boolean;
@@ -56,6 +62,8 @@ interface LayoutModalsProps {
     isDiscarding: boolean;
     isAssigning: boolean;
     isExporting: boolean;
+    isCheckingOut: boolean;
+    checkoutError: string | null;
   };
   selection: {
     selectedLayout: Layout | null;
@@ -64,12 +72,14 @@ interface LayoutModalsProps {
     shareEntityIds: number | number[] | null;
     setShareEntityIds: React.Dispatch<React.SetStateAction<number | number[] | null>>;
     existingNames: string[];
+    bulkItems: Layout[];
   };
   handlers: {
     confirmDelete: (items: Layout[]) => void;
     handleConfirmClone: (newName: string, description: string, copyMedia: boolean) => void;
     handleConfirmMove: (newFolderId: number) => void;
     confirmPublish: (itemId: number, value: PublishValue) => void;
+    confirmCheckout: (layoutId: number) => void;
     confirmDiscard: (layoutId: number) => void;
     handleConfirmAssign: (campaignId: number, layoutId: number) => void;
     handleExportLayout: (
@@ -102,6 +112,9 @@ export function LayoutModals({
   const { t } = useTranslation();
 
   const isModalOpen = (name: string) => actions.activeModal === name;
+
+  const bulkIds = selection.bulkItems.map((item) => item.layoutId);
+  const bulkExistingTags = mergeEntityTags(selection.bulkItems);
 
   return (
     <>
@@ -183,6 +196,17 @@ export function LayoutModals({
           isLoading={actions.isDiscarding}
         />
       )}
+      {isModalOpen('checkout') && selection.selectedLayout && (
+        <CheckoutLayoutModal
+          onClose={actions.closeModal}
+          onConfirm={() =>
+            selection.selectedLayout && handlers.confirmCheckout(selection.selectedLayout.layoutId)
+          }
+          isActionPending={actions.isCheckingOut}
+          actionError={actions.checkoutError}
+          autoSubmitFormId={AUTO_SUBMIT_FORMS.layoutCheckout}
+        />
+      )}
       {isModalOpen('campaign') && (
         <AssignCampaignModal
           onClose={actions.closeModal}
@@ -231,6 +255,31 @@ export function LayoutModals({
       {isModalOpen('enableStats') && selection.selectedLayout && (
         <EnableStatsLayoutModal
           layout={selection.selectedLayout}
+          onClose={actions.closeModal}
+          onSuccess={() => actions.handleRefresh()}
+        />
+      )}
+
+      {isModalOpen('editTagsMultiple') && (
+        <EditTagsMultipleModal
+          targetType="layout"
+          ids={bulkIds}
+          existingTags={bulkExistingTags}
+          onClose={actions.closeModal}
+          onSuccess={async () => {
+            await actions.handleRefresh();
+            actions.closeModal();
+          }}
+        />
+      )}
+
+      {isModalOpen('enableStatsMultiple') && (
+        <EnableStatsMultipleModal
+          ids={bulkIds}
+          entityLabel={t('layouts')}
+          setEnableStat={(id, enableStat) =>
+            setLayoutEnableStat(id, enableStat === true || enableStat === 'On')
+          }
           onClose={actions.closeModal}
           onSuccess={() => actions.handleRefresh()}
         />
