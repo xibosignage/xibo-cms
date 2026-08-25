@@ -568,9 +568,8 @@ export async function fetchDisconnectionEvents(
     displayId: String(params.displayId),
     fromDt: params.fromDt,
     toDt: params.toDt,
-    // The player reports in its own timezone, and the chart buckets by day, so ask the CMS to
-    // return display local time rather than making the reader mentally convert.
-    returnDisplayLocalTime: '1',
+    // This endpoint's paging otherwise defaults to LIMIT 0, 10 and truncates the results.
+    disablePaging: '1',
   });
 
   params.eventTypeIds?.forEach((id) => query.append('eventTypeIds[]', String(id)));

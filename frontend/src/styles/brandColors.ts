@@ -23,3 +23,7 @@
 // Safe for SVG/CSS colour props (e.g. Recharts fill/stroke); not for <canvas>.
 export const BRAND_PRIMARY = 'var(--brand-primary)';
 export const BRAND_ACCENT = 'var(--brand-accent)';
+
+// Status, not brand. Defined in global.css so a theme cannot recolour them.
+export const STATUS_UP = 'var(--color-status-up)';
+export const STATUS_DOWN = 'var(--color-status-down)';
