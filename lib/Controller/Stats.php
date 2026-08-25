@@ -764,6 +764,14 @@ class Stats extends Base
         schema: new OA\Schema(items: new OA\Items(type: 'integer'), type: 'array')
     )]
     #[OA\Parameter(
+        name: 'eventTypeIds',
+        description: 'An optional array of display event type IDs to filter, for example 1 for '
+            . 'Display Up/Down and 4 for Network Cycle. Unfiltered if omitted.',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(items: new OA\Items(type: 'integer'), type: 'array')
+    )]
+    #[OA\Parameter(
         name: 'returnDisplayLocalTime',
         description: 'true/1/On if the results should be in display local time, otherwise CMS time',
         in: 'query',
@@ -802,6 +810,7 @@ class Stats extends Base
         $toDt = $params->getDate('toDt');
         $displayId = $params->getInt('displayId');
         $displays = $params->getIntArray('displayIds');
+        $eventTypeIds = $params->getIntArray('eventTypeIds');
         $returnDisplayLocalTime = $params->getCheckbox('returnDisplayLocalTime');
         $returnDateFormat = $params->getString('returnDateFormat', 'Y-m-d H:i:s');
 
@@ -815,21 +824,30 @@ class Stats extends Base
 
         $params = [];
         $select = '
-            SELECT displayevent.eventDate, 
-                    display.displayId, 
-                    display.display, 
-                    displayevent.start, 
-                    displayevent.end
+            SELECT displayevent.eventDate,
+                    display.displayId,
+                    display.display,
+                    displayevent.start,
+                    displayevent.end,
+                    displayevent.eventTypeId
         ';
         $body = '
               FROM displayevent
-                INNER JOIN display 
+                INNER JOIN display
                 ON displayevent.displayId = display.displayId
-             WHERE 1 = 1 
+             WHERE 1 = 1
         ';
 
         if (count($displays) > 0) {
             $body .= ' AND display.displayId IN (' . implode(',', $displayIds) . ') ';
+        }
+
+        // The displayevent table holds every event type, not just connectivity ones, so a
+        // caller reporting on disconnections needs to be able to narrow it down. Left
+        // unfiltered by default, which is the behaviour this call has always had.
+        if (count($eventTypeIds) > 0) {
+            $body .= ' AND displayevent.eventTypeId IN (' .
+                implode(',', array_map('intval', $eventTypeIds)) . ') ';
         }
 
         if ($fromDt != null) {
@@ -871,6 +889,7 @@ class Stats extends Base
             $entry = [];
             $entry['displayId'] = $sanitizedRow->getInt('displayId');
             $entry['display'] = $sanitizedRow->getString('display');
+            $entry['eventTypeId'] = $sanitizedRow->getInt('eventTypeId');
             $entry['isFinished'] = $row['end'] !== null;
 
             // Get the start/end date

@@ -25,7 +25,12 @@ import { withPublicPath } from '@/config/publicPath';
 import http from '@/lib/api';
 import type { Display } from '@/types/display';
 import type { DisplayGroup } from '@/types/displayGroup';
-import type { BandwidthResponse, DisplayManageData, PlayerFault } from '@/types/displayManage';
+import type {
+  BandwidthResponse,
+  DisconnectionEvent,
+  DisplayManageData,
+  PlayerFault,
+} from '@/types/displayManage';
 import type { Layout } from '@/types/layout';
 import type { Media } from '@/types/media';
 
@@ -546,5 +551,30 @@ export async function fetchBandwidthData(
   signal?: AbortSignal,
 ): Promise<BandwidthResponse> {
   const response = await http.get('/stats/data/bandwidth', { params, signal });
+  return response.data;
+}
+
+/**
+ * Disconnection events for a display over a period.
+ *
+ * `eventTypeIds` narrows the displayevent table, which also holds unrelated event types such as
+ * command and app start. Omit it to get everything.
+ */
+export async function fetchDisconnectionEvents(
+  params: { displayId: number; fromDt: string; toDt: string; eventTypeIds?: number[] },
+  signal?: AbortSignal,
+): Promise<DisconnectionEvent[]> {
+  const query = new URLSearchParams({
+    displayId: String(params.displayId),
+    fromDt: params.fromDt,
+    toDt: params.toDt,
+    // The player reports in its own timezone, and the chart buckets by day, so ask the CMS to
+    // return display local time rather than making the reader mentally convert.
+    returnDisplayLocalTime: '1',
+  });
+
+  params.eventTypeIds?.forEach((id) => query.append('eventTypeIds[]', String(id)));
+
+  const response = await http.get(`/stats/timeDisconnected?${query.toString()}`, { signal });
   return response.data;
 }

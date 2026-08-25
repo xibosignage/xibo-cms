@@ -23,10 +23,16 @@ import { useQuery } from '@tanstack/react-query';
 
 import {
   fetchBandwidthData,
+  fetchDisconnectionEvents,
   fetchDisplayManageData,
   fetchPlayerFaults,
 } from '@/services/displaysApi';
-import type { BandwidthResponse, DisplayManageData, PlayerFault } from '@/types/displayManage';
+import type {
+  BandwidthResponse,
+  DisconnectionEvent,
+  DisplayManageData,
+  PlayerFault,
+} from '@/types/displayManage';
 
 export function useDisplayManageData(displayId: number | null) {
   const manageQuery = useQuery<DisplayManageData>({
@@ -55,6 +61,22 @@ export function useBandwidthData(
   return useQuery<BandwidthResponse>({
     queryKey: ['display', 'bandwidth', displayId, fromDt, toDt],
     queryFn: ({ signal }) => fetchBandwidthData({ displayId: displayId!, fromDt, toDt }, signal),
+    enabled: enabled && !!displayId,
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
+export function useDisconnectionEvents(
+  displayId: number | null,
+  fromDt: string,
+  toDt: string,
+  eventTypeIds: number[],
+  enabled: boolean,
+) {
+  return useQuery<DisconnectionEvent[]>({
+    queryKey: ['display', 'disconnections', displayId, fromDt, toDt, eventTypeIds],
+    queryFn: ({ signal }) =>
+      fetchDisconnectionEvents({ displayId: displayId!, fromDt, toDt, eventTypeIds }, signal),
     enabled: enabled && !!displayId,
     staleTime: 1000 * 60 * 5,
   });
