@@ -32,6 +32,7 @@ import type {
   DisplayScreenshot,
   PlayerFault,
 } from '@/types/displayManage';
+import type { DisplayNextSchedule, DisplayOverviewSummary } from '@/types/displayOverview';
 import type { Layout } from '@/types/layout';
 import type { Media } from '@/types/media';
 
@@ -47,6 +48,11 @@ export interface FetchDisplaysRequest {
   logicalOperatorName?: 'OR' | 'AND';
   mediaInventoryStatus?: number | string;
   loggedIn?: number | string;
+  // Server-side buckets for the Display Overview page's KPI tiles — mirror the
+  // aggregate query behind GET /display/overview/summary so the card grid
+  // never re-derives bucket membership client-side.
+  needsAttention?: number | string;
+  faults?: number | string;
   authorised?: number | string;
   xmrRegistered?: number | string;
   clientType?: string;
@@ -87,6 +93,26 @@ export async function fetchDisplays(
   const totalCount = totalCountHeader ? parseInt(totalCountHeader, 10) : 0;
 
   return { rows, totalCount };
+}
+
+export async function fetchDisplayOverviewSummary(
+  signal?: AbortSignal,
+): Promise<DisplayOverviewSummary> {
+  const response = await http.get<DisplayOverviewSummary>('/display/overview/summary', {
+    signal,
+  });
+  return response.data;
+}
+
+export async function fetchDisplayNextSchedule(
+  displayId: number,
+  signal?: AbortSignal,
+): Promise<DisplayNextSchedule | null> {
+  const response = await http.get<DisplayNextSchedule | null>(
+    `/display/${displayId}/schedule/next`,
+    { signal },
+  );
+  return response.data;
 }
 
 export interface UpdateDisplayRequest {
@@ -579,8 +605,9 @@ export async function fetchDisplayManageData(
 export async function fetchPlayerFaults(
   displayId: number,
   signal?: AbortSignal,
+  params?: { activeOnly?: number },
 ): Promise<PlayerFault[]> {
-  const response = await http.get(`/display/faults/${displayId}`, { signal });
+  const response = await http.get(`/display/faults/${displayId}`, { signal, params });
   return response.data;
 }
 

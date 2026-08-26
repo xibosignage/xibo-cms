@@ -174,6 +174,7 @@ class Controllers
                     $c->get('userGroupFactory'),
                     $c->get('playerVersionFactory'),
                     $c->get('dayPartFactory'),
+                    $c->get('scheduleFactory'),
                     $c->get('displayScreenshotFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));

@@ -172,6 +172,153 @@ class DisplayFactory extends BaseFactory
     }
 
     /**
+     * SQL fragment (correlated to `display` in the outer query) counting player faults
+     * recorded against a Display. Shared by the `faults` filter in query() and by
+     * getSummary(), so the definition only exists once.
+     * @return string
+     */
+    private function faultsCountSql(): string
+    {
+        return '(SELECT COUNT(*) FROM player_faults WHERE player_faults.displayId = display.displayId)';
+    }
+
+    /**
+     * SQL predicate (correlated to `display` in the outer query) which is true when a
+     * Display "needs attention": its media inventory isn't fully synced, it is not
+     * authorised (licensed), or its commercial licence isn't Licensed fully / Not
+     * applicable. Shared by the `needsAttention` filter in query() and by getSummary(),
+     * so the definition only exists once and the two can't drift apart.
+     * @return string
+     */
+    private function needsAttentionSql(): string
+    {
+        return '(
+            display.mediaInventoryStatus <> ' . Display::$STATUS_DONE . '
+            OR display.licensed = 0
+            OR display.commercialLicence IS NULL
+            OR display.commercialLicence NOT IN (1, 3)
+        )';
+    }
+
+    /**
+     * The `display`/`lkdisplaydg`/`displaygroup` join every Display query is built on,
+     * restricted to each display's own display-specific group. Shared by query() (which
+     * appends further joins for layout/display_types) and getSummary(), so permission
+     * scoping and the visible-display set can't drift between the grid and the summary
+     * counts.
+     * @return string
+     */
+    private function baseFromSql(): string
+    {
+        return '
+                FROM `display`
+                    INNER JOIN `lkdisplaydg`
+                    ON lkdisplaydg.displayid = display.displayId
+                    INNER JOIN `displaygroup`
+                    ON displaygroup.displaygroupid = lkdisplaydg.displaygroupid
+                        AND `displaygroup`.isDisplaySpecific = 1
+            ';
+    }
+
+    /**
+     * Get a single row of aggregate counts describing the health of the Displays visible
+     * to the caller (Total/Online/Offline/Needs Attention/Faults), for the Display
+     * Overview page. Computed as one SQL aggregate query (no fetch-all-then-loop),
+     * applying the same viewPermissionSql scoping as query(). Also includes 24-hour
+     * trend counts (offlineTrend/onlineTrend/faultsTrend) sourced from existing
+     * history tables (`displayevent`, `player_faults`) — there is no equivalent
+     * history for needsAttention (media sync/licence/authorisation changes aren't
+     * timestamped anywhere), so that bucket deliberately has no trend field rather
+     * than a fabricated one.
+     * @param array $filterBy
+     * @return array{
+     *     total: int, online: int, offline: int, needsAttention: int, faults: int,
+     *     offlineTrend: int, onlineTrend: int, faultsTrend: int
+     * }
+     */
+    public function getSummary(array $filterBy = []): array
+    {
+        $params = [];
+        $body = $this->baseFromSql() . ' WHERE 1 = 1 ';
+
+        $this->viewPermissionSql(
+            'Xibo\Entity\DisplayGroup',
+            $body,
+            $params,
+            'displaygroup.displayGroupId',
+            null,
+            $filterBy,
+            '`displaygroup`.permissionsFolderId'
+        );
+
+        $needsAttentionSql = $this->needsAttentionSql();
+        $faultsCountSql = $this->faultsCountSql();
+
+        // The permission-scoped set of display IDs visible to the caller, reused by
+        // the trend subqueries below so they never surface a display the user
+        // couldn't otherwise see via the bucket counts. Defined once as a CTE
+        // (rather than inlined 3 times) so the correlated permission subquery
+        // (viewPermissionSql's UNION ALL across permission/permissionentity/
+        // group/lkusergroup/user for non-superadmins) is written, and can be
+        // materialised by the optimiser, only once per call instead of 3 times.
+        $visibleDisplayIdsSql = 'SELECT display.displayId' . $body;
+
+        $trendSinceTimestamp = time() - 86400;
+        $params['trendSinceTimestamp'] = $trendSinceTimestamp;
+        $params['trendSinceDateTime'] = date('Y-m-d H:i:s', $trendSinceTimestamp);
+
+        // Buckets are mutually exclusive, in this precedence order: Offline first
+        // (loggedIn = 0, regardless of anything else), then Needs Attention, then
+        // Faults, else Online. Without the loggedIn guard on needsAttention/faults
+        // below, an offline display with e.g. a licence issue would be counted
+        // (and filtered) under both Offline and Needs Attention at once.
+        $sql = '
+                WITH visible_displays AS (' . $visibleDisplayIdsSql . ')
+                SELECT COUNT(*) AS total,
+                    SUM(CASE WHEN display.loggedIn = 1
+                        AND NOT ' . $needsAttentionSql . '
+                        AND NOT (' . $faultsCountSql . ' > 0)
+                        THEN 1 ELSE 0 END) AS online,
+                    SUM(CASE WHEN display.loggedIn = 0 THEN 1 ELSE 0 END) AS offline,
+                    SUM(CASE WHEN display.loggedIn = 1 AND ' . $needsAttentionSql . '
+                        THEN 1 ELSE 0 END) AS needsAttention,
+                    SUM(CASE WHEN display.loggedIn = 1
+                        AND NOT ' . $needsAttentionSql . '
+                        AND ' . $faultsCountSql . ' > 0
+                        THEN 1 ELSE 0 END) AS faults,
+                    (SELECT COUNT(*) FROM `displayevent`
+                        WHERE displayevent.eventTypeId = 1
+                        AND displayevent.start >= :trendSinceTimestamp
+                        AND displayevent.displayId IN (SELECT displayId FROM visible_displays)
+                    ) AS offlineTrend,
+                    (SELECT COUNT(*) FROM `displayevent`
+                        WHERE displayevent.eventTypeId = 1
+                        AND displayevent.end IS NOT NULL
+                        AND displayevent.end >= :trendSinceTimestamp
+                        AND displayevent.displayId IN (SELECT displayId FROM visible_displays)
+                    ) AS onlineTrend,
+                    (SELECT COUNT(*) FROM `player_faults`
+                        WHERE player_faults.incidentDt >= :trendSinceDateTime
+                        AND player_faults.displayId IN (SELECT displayId FROM visible_displays)
+                    ) AS faultsTrend
+            ' . $body;
+
+        $rows = $this->getStore()->select($sql, $params);
+        $row = $rows[0] ?? [];
+
+        return [
+            'total' => intval($row['total'] ?? 0),
+            'online' => intval($row['online'] ?? 0),
+            'offline' => intval($row['offline'] ?? 0),
+            'needsAttention' => intval($row['needsAttention'] ?? 0),
+            'faults' => intval($row['faults'] ?? 0),
+            'offlineTrend' => intval($row['offlineTrend'] ?? 0),
+            'onlineTrend' => intval($row['onlineTrend'] ?? 0),
+            'faultsTrend' => intval($row['faultsTrend'] ?? 0),
+        ];
+    }
+
+    /**
      * @param ?array $sortOrder
      * @param array $filterBy
      * @return Display[]
@@ -352,7 +499,7 @@ class DisplayFactory extends BaseFactory
                   `display`.webkeySerial,
                   `display`.lanIpAddress,
                   `display`.syncGroupId,
-                  (SELECT COUNT(*) FROM player_faults WHERE player_faults.displayId = display.displayId) AS countFaults,
+                  ' . $this->faultsCountSql() . ' AS countFaults,
                   (SELECT GROUP_CONCAT(DISTINCT `group`.group)
                     FROM `permission`
                         INNER JOIN `permissionentity`
@@ -367,14 +514,8 @@ class DisplayFactory extends BaseFactory
 
         $params['entity'] = 'Xibo\\Entity\\DisplayGroup';
 
-        $body = '
-                FROM `display`
-                    INNER JOIN `lkdisplaydg`
-                    ON lkdisplaydg.displayid = display.displayId
-                    INNER JOIN `displaygroup`
-                    ON displaygroup.displaygroupid = lkdisplaydg.displaygroupid
-                        AND `displaygroup`.isDisplaySpecific = 1
-                    LEFT OUTER JOIN layout 
+        $body = $this->baseFromSql() . '
+                    LEFT OUTER JOIN layout
                     ON layout.layoutid = display.defaultlayoutid
                     LEFT OUTER JOIN `display_types`
                     ON `display_types`.displayTypeId = `display`.displayTypeId
@@ -535,6 +676,47 @@ class DisplayFactory extends BaseFactory
         if ($parsedBody->getInt('loggedIn', ['default' => -1]) != -1) {
             $body .= ' AND display.loggedIn = :loggedIn ';
             $params['loggedIn'] = $parsedBody->getInt('loggedIn');
+        }
+
+        // Filter by "needs attention" (mediaInventoryStatus not fully synced, not
+        // authorised, or commercial licence not Licensed fully / Not applicable).
+        // Reuses the same predicate as getSummary(), so the grid and the summary
+        // counts can never drift apart. Guarded on loggedIn = 1 so an offline
+        // display with e.g. a licence issue is only ever matched by the Offline
+        // bucket, never by both Offline and Needs Attention at once.
+        //
+        // needsAttention=0 is the plain logical negation of the needsAttention=1
+        // predicate above (loggedIn = 1 AND needsAttentionSql()), i.e.
+        // "loggedIn = 0 OR NOT needsAttentionSql()" — NOT "loggedIn = 1 AND NOT
+        // needsAttentionSql()". The latter would wrongly exclude every offline
+        // display from the results: an offline display is never in the Needs
+        // Attention bucket regardless of its sync/licence state, so it must
+        // always satisfy needsAttention=0.
+        $needsAttentionFilter = $parsedBody->getInt('needsAttention', ['default' => -1]);
+        if ($needsAttentionFilter === 1) {
+            $body .= ' AND display.loggedIn = 1 AND ' . $this->needsAttentionSql() . ' ';
+        } else if ($needsAttentionFilter === 0) {
+            $body .= ' AND (display.loggedIn = 0 OR NOT ' . $this->needsAttentionSql() . ') ';
+        }
+
+        // Filter by "faults" (has at least one player fault), excluding displays
+        // already matched by the needsAttention predicate above so a display is never
+        // double-counted across the two buckets, and guarded on loggedIn = 1 for the
+        // same reason as needsAttention above. Reuses the same predicates as
+        // getSummary().
+        //
+        // faults=0 is likewise the plain negation of the faults=1 predicate above
+        // (loggedIn = 1 AND faultsCountSql() > 0 AND NOT needsAttentionSql()), so it
+        // also needs the "loggedIn = 0 OR ..." branch — otherwise an offline display
+        // with a recorded fault but no needsAttention issue would be wrongly excluded,
+        // even though it's never in the Faults bucket (Offline takes precedence).
+        $faultsFilter = $parsedBody->getInt('faults', ['default' => -1]);
+        if ($faultsFilter === 1) {
+            $body .= ' AND display.loggedIn = 1 AND ' . $this->faultsCountSql() . ' > 0'
+                . ' AND NOT ' . $this->needsAttentionSql() . ' ';
+        } else if ($faultsFilter === 0) {
+            $body .= ' AND (display.loggedIn = 0'
+                . ' OR NOT (' . $this->faultsCountSql() . ' > 0 AND NOT ' . $this->needsAttentionSql() . ')) ';
         }
 
         if ($parsedBody->getDate('lastAccessed', ['dateFormat' => 'U']) !== null) {

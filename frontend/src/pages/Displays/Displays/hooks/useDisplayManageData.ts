@@ -37,6 +37,23 @@ import type {
 } from '@/types/displayManage';
 import { formatDateTime } from '@/utils/date';
 
+/**
+ * Player faults for a single display, from `/display/faults/{displayId}`. Shared by the
+ * legacy Manage modal's full fault history (`activeOnly` omitted) and the Overview page's
+ * Active Faults panel (`activeOnly: true`), so the fetch/query-key logic exists once.
+ */
+export function usePlayerFaults(displayId: number | null, options: { activeOnly?: boolean } = {}) {
+  const { activeOnly = false } = options;
+
+  return useQuery<PlayerFault[]>({
+    queryKey: ['display', 'faults', displayId, activeOnly],
+    queryFn: ({ signal }) =>
+      fetchPlayerFaults(displayId!, signal, activeOnly ? { activeOnly: 1 } : undefined),
+    enabled: !!displayId,
+    staleTime: 0,
+  });
+}
+
 export function useDisplayManageData(displayId: number | null) {
   const manageQuery = useQuery<DisplayManageData>({
     queryKey: ['display', 'manage', displayId],
@@ -45,12 +62,7 @@ export function useDisplayManageData(displayId: number | null) {
     staleTime: 0,
   });
 
-  const faultsQuery = useQuery<PlayerFault[]>({
-    queryKey: ['display', 'faults', displayId],
-    queryFn: ({ signal }) => fetchPlayerFaults(displayId!, signal),
-    enabled: !!displayId,
-    staleTime: 0,
-  });
+  const faultsQuery = usePlayerFaults(displayId);
 
   return { manageQuery, faultsQuery };
 }

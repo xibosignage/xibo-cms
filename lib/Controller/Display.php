@@ -46,6 +46,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\RequiredFileFactory;
+use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
@@ -92,6 +93,7 @@ class Display extends Base
         private readonly UserGroupFactory $userGroupFactory,
         private readonly PlayerVersionFactory $playerVersionFactory,
         private readonly DayPartFactory $dayPartFactory,
+        private readonly ScheduleFactory $scheduleFactory,
         private readonly DisplayScreenshotFactory $displayScreenshotFactory
     ) {
     }
@@ -415,6 +417,8 @@ class Display extends Base
             'xmrRegistered' => $parsedQueryParams->getInt('xmrRegistered'),
             'isPlayerSupported' => $parsedQueryParams->getInt('isPlayerSupported'),
             'displayGroupIds' => $parsedQueryParams->getIntArray('displayGroupIds'),
+            'needsAttention' => $parsedQueryParams->getInt('needsAttention'),
+            'faults' => $parsedQueryParams->getInt('faults'),
         ];
     }
 
@@ -566,6 +570,20 @@ class Display extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\Parameter(
+        name: 'needsAttention',
+        description: 'Filter by whether the Display needs attention, i.e. its media inventory is not fully synced, it is not authorised, or its commercial licence is not Licensed fully/Not applicable (1 or 0)', // phpcs:ignore
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'faults',
+        description: 'Filter by whether the Display has at least one player fault, excluding Displays already matched by the needsAttention filter (1 or 0)', // phpcs:ignore
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
         name: 'sortBy',
         description: 'Specifies which field the results are sorted by. Used together with sortDir',
         in: 'query',
@@ -683,6 +701,154 @@ class Display extends Base
             ->withStatus(200)
             ->withHeader('X-Total-Count', $this->displayFactory->countLast())
             ->withJson($displays);
+    }
+
+    #[OA\Get(
+        path: '/display/overview/summary',
+        operationId: 'displayOverviewSummary',
+        description: 'Get aggregate health counts for the Displays visible to this User, for the Display Overview page', // phpcs:ignore
+        summary: 'Display Overview Summary',
+        tags: ['display']
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: 'total', type: 'integer'),
+                new OA\Property(property: 'online', type: 'integer'),
+                new OA\Property(property: 'offline', type: 'integer'),
+                new OA\Property(property: 'needsAttention', type: 'integer'),
+                new OA\Property(property: 'faults', type: 'integer'),
+                new OA\Property(
+                    property: 'offlineTrend',
+                    description: 'Displays that went offline in the last 24 hours',
+                    type: 'integer'
+                ),
+                new OA\Property(
+                    property: 'onlineTrend',
+                    description: 'Displays that came back online in the last 24 hours',
+                    type: 'integer'
+                ),
+                new OA\Property(
+                    property: 'faultsTrend',
+                    description: 'Player faults newly reported in the last 24 hours',
+                    type: 'integer'
+                ),
+            ],
+            type: 'object'
+        )
+    )]
+    /**
+     * Aggregate summary counts (Total/Online/Offline/Needs Attention/Faults) for the
+     * Displays visible to this User. Computed as a single SQL aggregate query in
+     * DisplayFactory::getSummary() - not a fetch-all-then-loop - and scoped by the same
+     * viewPermissionSql restriction as the main Display grid.
+     *
+     * @param Response $response
+     * @return ResponseInterface|Response
+     */
+    public function overviewSummary(Response $response): Response|ResponseInterface
+    {
+        $summary = $this->displayFactory->getSummary();
+
+        return $response
+            ->withStatus(200)
+            ->withJson($summary);
+    }
+
+    #[OA\Get(
+        path: '/display/{id}/schedule/next',
+        operationId: 'displayScheduleNext',
+        description: 'Get the next scheduled Layout for a Display, within a short look-ahead window. Note: this is an approximation - it does not replicate player-side priority/shareOfVoice/interrupt resolution, which only happens on the player at runtime. Where several events overlap in the window, the earliest starting occurrence is returned. See ScheduleFactory::getNextForDisplay().', // phpcs:ignore
+        summary: 'Display Next Scheduled Layout',
+        tags: ['display']
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'The Display ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation. Null if nothing is scheduled to play within the look-ahead window.', // phpcs:ignore
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: 'layoutId', type: 'integer'),
+                new OA\Property(property: 'layoutName', type: 'string'),
+                new OA\Property(property: 'startsAt', type: 'string', format: 'date-time'),
+                new OA\Property(
+                    property: 'status',
+                    type: 'string',
+                    description: 'Download status of the Layout on this Display: ready, downloading or pending. There is no "error" status modelled in this schema.', // phpcs:ignore
+                    enum: ['ready', 'downloading', 'pending']
+                ),
+            ],
+            type: 'object',
+            nullable: true
+        )
+    )]
+    /**
+     * Get the next scheduled Layout for a Display, within a short look-ahead window (see
+     * ScheduleFactory::getNextForDisplay() for the window size and the "earliest occurrence
+     * wins" approximation used when events overlap).
+     *
+     * Status is derived from the RequiredFile record for this Display/Layout combination:
+     * complete == 1 => "ready", complete == 0 => "downloading", no record => "pending" (the
+     * Layout has not yet been synced to this Display, e.g. the schedule was created moments
+     * ago, before the player's next RequiredFiles poll). There is no "error" status modelled
+     * anywhere in this schema, so one is not invented here.
+     *
+     * @param Response $response
+     * @param int $id
+     * @return ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws NotFoundException
+     */
+    public function getNextSchedule(Response $response, int $id): Response|ResponseInterface
+    {
+        $display = $this->displayFactory->getById($id);
+
+        if (!$this->getUser()->checkViewable($display)) {
+            throw new AccessDeniedException();
+        }
+
+        $next = $this->scheduleFactory->getNextForDisplay($id, $display->timeZone);
+
+        if ($next === null) {
+            return $response
+                ->withStatus(200)
+                ->withJson(null);
+        }
+
+        $layout = $this->layoutFactory->getById($next['layoutId']);
+
+        try {
+            $requiredFile = $this->requiredFileFactory->getByDisplayAndLayout($id, $next['layoutId']);
+            $status = ($requiredFile->complete == 1) ? 'ready' : 'downloading';
+        } catch (NotFoundException $e) {
+            // Not yet synced to this Display - expected, not an error.
+            $status = 'pending';
+        }
+
+        return $response
+            ->withStatus(200)
+            ->withJson([
+                'layoutId' => $layout->layoutId,
+                'layoutName' => $layout->layout,
+                // ISO 8601 with a UTC offset - not getSystemFormat()'s naive
+                // 'Y-m-d H:i:s', which carries no timezone marker at all. The
+                // frontend parses this with JS Date(), which interprets an
+                // offset-less string in the browser's own local timezone; a
+                // naive string here would silently be off by (CMS timezone -
+                // browser timezone) whenever those differ.
+                'startsAt' => $next['startsAt']->copy()
+                    ->setTimezone(date_default_timezone_get())
+                    ->toIso8601String(),
+                'status' => $status,
+            ]);
     }
 
     #[OA\Get(
