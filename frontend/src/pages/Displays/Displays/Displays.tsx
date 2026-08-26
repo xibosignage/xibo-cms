@@ -567,6 +567,7 @@ export default function Displays() {
       <DisplayModals
         actions={{
           activeModal,
+          openModal,
           closeModal,
           handleRefresh,
           deleteError,

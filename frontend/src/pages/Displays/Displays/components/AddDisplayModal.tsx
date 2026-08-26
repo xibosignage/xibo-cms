@@ -19,15 +19,26 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import {
+  FloatingPortal,
+  flip,
+  offset,
+  shift,
+  useDismiss,
+  useFloating,
+  useHover,
+  useInteractions,
+} from '@floating-ui/react';
 import { isAxiosError } from 'axios';
-import { ChevronDown, ChevronRight } from 'lucide-react';
-import { useEffect, useState, useTransition } from 'react';
+import { ChevronDown, Info, Loader, Loader2, Minimize2, X } from 'lucide-react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useNewDisplayDetector } from '../hooks/useNewDisplayDetector';
 
-import AddDisplaySuccessPanel, { type SubmittedDisplay } from './AddDisplaySuccessPanel';
+import AddDisplaySuccessModal, { type SubmittedDisplay } from './AddDisplaySuccessModal';
 
+import { notify } from '@/components/ui/Notification';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
 import Switch from '@/components/ui/forms/Switch';
 import TextInput from '@/components/ui/forms/TextInput';
@@ -55,6 +66,8 @@ interface AddDisplayModalProps {
   prefill?: AddDisplayPrefill | null;
   /** Called with the new display once the Player has connected and its settings are applied. */
   onManage?: (display: Display) => void;
+  /** Called when the user minimizes the modal during the waiting state. */
+  onMinimize?: () => void;
 }
 
 export default function AddDisplayModal({
@@ -63,22 +76,27 @@ export default function AddDisplayModal({
   onAdded,
   prefill = null,
   onManage,
+  onMinimize,
 }: AddDisplayModalProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
   const [isPending, startTransition] = useTransition();
 
+  // Ref tracks current isOpen so async callbacks always read the latest value
+  const isOpenRef = useRef(isOpen);
+  isOpenRef.current = isOpen;
+
   const [userCode, setUserCode] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [folder, setFolder] = useState<{ id: number; text: string } | null>(null);
+  const [folderId, setFolderId] = useState<number | null>(null);
+  const [folderText, setFolderText] = useState<string | null>(null);
   const [authorise, setAuthorise] = useState(true);
+  const [apiError, setApiError] = useState<string | undefined>();
 
   const [licence, setLicence] = useState<LicenceUsage | null>(null);
   const [watermark, setWatermark] = useState<number | null>(null);
   const [submitted, setSubmitted] = useState<SubmittedDisplay | null>(null);
   const [adopted, setAdopted] = useState<Display | null>(null);
-  const [apiError, setApiError] = useState<string | undefined>();
-  const [showDetail, setShowDetail] = useState(false);
 
   const { state: detectState, candidates } = useNewDisplayDetector(watermark);
 
@@ -90,20 +108,41 @@ export default function AddDisplayModal({
   // The CMS only honours these fields from users who hold it, so hide them from everyone else.
   const canApplySettings = hasFeature(user, 'displays.modify');
 
+  // Derived UI phases — show loading as soon as the user clicks Add (isPending)
+  // and keep it while polling for the new display (submitted but not yet adopted).
+  const isWaiting = isPending || (submitted !== null && !adopted);
+
   const resetForm = () => {
     setUserCode(prefill?.code ?? '');
     setDisplayName(prefill?.displayName ?? '');
-    setFolder(null);
+    setFolderId(null);
+    setFolderText(null);
     setAuthorise(true);
+    setApiError(undefined);
     setWatermark(null);
     setSubmitted(null);
     setAdopted(null);
-    setApiError(undefined);
-    setShowDetail(false);
   };
 
+  // Info tooltip
+  const [isTooltipOpen, setIsTooltipOpen] = useState(false);
+  const {
+    refs: tooltipRefs,
+    floatingStyles: tooltipStyles,
+    context: tooltipContext,
+  } = useFloating({
+    open: isTooltipOpen,
+    onOpenChange: setIsTooltipOpen,
+    placement: 'bottom-start',
+    middleware: [offset(8), flip(), shift()],
+  });
+  const tooltipHover = useHover(tooltipContext, { delay: { open: 200, close: 100 } });
+  const tooltipDismiss = useDismiss(tooltipContext);
+  const { getReferenceProps: getTooltipRefProps, getFloatingProps: getTooltipFloatingProps } =
+    useInteractions([tooltipHover, tooltipDismiss]);
+
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !submitted) {
       resetForm();
     }
   }, [isOpen, prefill?.code, prefill?.displayName]);
@@ -122,7 +161,6 @@ export default function AddDisplayModal({
         }
       })
       .catch(() => {
-        // Licence usage is advisory. If we cannot read it, the form still works.
         if (!cancelled) {
           setLicence(null);
         }
@@ -163,15 +201,16 @@ export default function AddDisplayModal({
         await addDisplayViaCode({
           userCode: userCode.trim(),
           displayName: canApplySettings ? displayName.trim() : undefined,
-          folderId: canApplySettings ? folder?.id : undefined,
+          folderId: canApplySettings ? folderId : undefined,
           authorised: canAuthorise && authorise,
         });
 
         setSubmitted({
           code: userCode.trim(),
           displayName: displayName.trim(),
-          folderText: folder?.text ?? '',
+          folderText: folderText ?? '',
           authorise: canAuthorise && authorise,
+          licenceText: licenceHelpText(),
         });
 
         if (highestSeenId !== null) {
@@ -181,12 +220,15 @@ export default function AddDisplayModal({
         // Let the grid pick the display up as soon as it registers.
         onAdded?.();
       } catch (err: unknown) {
+        let message = t('An unexpected error occurred.');
         if (isAxiosError(err) && err.response?.data?.message) {
-          setApiError(err.response.data.message);
+          message = err.response.data.message;
         } else if (err instanceof Error) {
-          setApiError(err.message);
-        } else {
-          setApiError(t('An unexpected error occurred.'));
+          message = err.message;
+        }
+        setApiError(message);
+        if (!isOpenRef.current) {
+          notify.error(message);
         }
       }
     });
@@ -199,6 +241,16 @@ export default function AddDisplayModal({
   const adopt = (display: Display) => {
     setAdopted(display);
     onAdded?.();
+    if (!isOpenRef.current) {
+      notify.success(t('Display has been added successfully.'), {
+        action: {
+          label: t('Manage'),
+          onClick: () => {
+            onManage?.(display);
+          },
+        },
+      });
+    }
   };
 
   // Exactly one new display means it is ours. More than one is handled by the picker.
@@ -209,6 +261,18 @@ export default function AddDisplayModal({
       adopt(only);
     }
   }, [detectState, candidates, adopted]);
+
+  // Toast notifications for detection outcomes — only when minimized
+  useEffect(() => {
+    if (!isOpenRef.current && detectState === 'timedOut') {
+      notify.error(t('Connection timed out.'), {
+        action: {
+          label: t('Try Again'),
+          onClick: () => resetForm(),
+        },
+      });
+    }
+  }, [detectState, isOpen]);
 
   const handleManage = () => {
     if (adopted && onManage) {
@@ -224,145 +288,178 @@ export default function AddDisplayModal({
     ? userCode.trim() !== '' && displayName.trim() !== ''
     : userCode.trim() !== '';
 
-  /** What the success panel should show. */
-  const panelState = (() => {
-    if (adopted) {
-      return 'connected' as const;
-    }
-    if (!canApplySettings) {
-      // Nothing is being applied, so there is nothing to wait for.
-      return 'submitted' as const;
-    }
-    if (detectState === 'ambiguous') {
-      return 'ambiguous' as const;
-    }
-    if (detectState === 'timedOut') {
-      return 'timedOut' as const;
-    }
-    return 'waiting' as const;
-  })();
-
   return (
-    <Modal
-      title={submitted ? t('Display Added') : t('Add Display')}
-      onClose={onClose}
-      isOpen={isOpen}
-      isPending={isPending}
-      scrollable={false}
-      error={apiError}
-      actions={
-        submitted
-          ? []
-          : [
-              { label: t('Cancel'), onClick: onClose, variant: 'secondary', disabled: isPending },
-              {
-                label: isPending ? t('Saving...') : t('Save'),
-                onClick: handleSubmit,
-                disabled: isPending || !canSubmit,
-              },
-            ]
-      }
-    >
-      {submitted ? (
-        <AddDisplaySuccessPanel
+    <>
+      {/* Success modal — shown when the display has been detected */}
+      {adopted && submitted && (
+        <AddDisplaySuccessModal
           submitted={submitted}
-          state={panelState}
-          candidates={candidates}
-          onPick={adopt}
+          onClose={onClose}
           onAddAnother={resetForm}
           onManage={handleManage}
         />
-      ) : (
-        <div className="px-6 py-4 flex flex-col gap-4">
+      )}
+
+      <Modal
+        onClose={onClose}
+        isOpen={isOpen}
+        error={apiError}
+        size="sm"
+        actions={
+          adopted
+            ? []
+            : [
+                {
+                  label: t('Cancel'),
+                  onClick: onClose,
+                  variant: 'secondary' as const,
+                },
+                {
+                  label: t('Add'),
+                  onClick: handleSubmit,
+                  disabled: isPending || isWaiting || !canSubmit,
+                  leftIcon: isPending || isWaiting ? Loader2 : undefined,
+                  className: isPending || isWaiting ? '[&_svg]:animate-spin' : undefined,
+                },
+              ]
+        }
+      >
+        {/* Custom header with title, info tooltip, and close button */}
+        <div className="shrink-0 flex items-center justify-between px-8 pt-8 pb-3">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold">{t('Add Display')}</h2>
+            <button
+              ref={tooltipRefs.setReference}
+              {...getTooltipRefProps()}
+              type="button"
+              className="text-xibo-blue-500 hover:text-xibo-blue-600 transition-colors"
+              aria-label={t('More information')}
+            >
+              <Info size={20} />
+            </button>
+            <FloatingPortal>
+              {isTooltipOpen && (
+                <div
+                  ref={tooltipRefs.setFloating}
+                  style={tooltipStyles}
+                  {...getTooltipFloatingProps()}
+                  className="z-9999 bg-white shadow-xl rounded-lg border border-gray-100 p-4 max-w-sm text-sm text-gray-600 flex flex-col gap-2"
+                >
+                  <p>
+                    {t(
+                      'After submitting this form with valid code, your CMS Address and Key will be sent and stored in the temporary storage in our Authentication Service.',
+                    )}
+                  </p>
+                  <p>
+                    {t(
+                      'The Player linked to the submitted code, will make regular calls to our Authentication Service to retrieve the CMS details and configure itself with them. Your details are removed from the temporary storage once the Player is configured.',
+                    )}
+                  </p>
+                  <p>
+                    {t(
+                      'Please note that your CMS needs to make a successful call to our Authentication Service for this feature to work.',
+                    )}
+                  </p>
+                </div>
+              )}
+            </FloatingPortal>
+          </div>
+          <button
+            type="button"
+            aria-label={isWaiting ? t('Minimize') : t('Close')}
+            onClick={isWaiting && onMinimize ? onMinimize : onClose}
+            className="size-6 shrink-0 text-gray-500 cursor-pointer hover:text-gray-600 transition-colors"
+          >
+            {isWaiting ? (
+              <Minimize2 className="w-4 h-4" aria-hidden="true" />
+            ) : (
+              <X className="w-4 h-4" aria-hidden="true" />
+            )}
+          </button>
+        </div>
+
+        {/* Form fields */}
+        <div className="px-6 py-4 flex flex-col gap-5">
           <TextInput
             name="user_code"
-            label={t('Code')}
-            placeholder=" "
+            label={t('Activation Code') + '*'}
+            placeholder={t('Enter code')}
             onChange={(value) => setUserCode(value)}
-            helpText={t('Please provide the code displayed on the Player screen')}
+            helpText={t('Code shown on the player screen')}
             value={userCode}
+            disabled={isWaiting}
           />
 
-          {canApplySettings && (
-            <>
-              <TextInput
-                name="displayName"
-                label={t('Display Name')}
-                placeholder=" "
-                onChange={(value) => setDisplayName(value)}
-                helpText={t('A name for this display, so you can find it again later')}
-                value={displayName}
-              />
+          <TextInput
+            name="display_name"
+            label={t('Display Name') + '*'}
+            placeholder={t('Enter Display Name')}
+            onChange={(value) => setDisplayName(value)}
+            value={displayName}
+            disabled={isWaiting}
+          />
 
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-gray-700" htmlFor="add-display-folder">
-                  {t('Folder')}
-                </label>
-                <SelectFolder
-                  selectedId={folder?.id}
-                  selectedText={folder?.text}
-                  onSelect={setFolder}
-                  optional
-                  placeholder={t('Where should this display be filed?')}
+          <SelectFolder
+            selectedId={folderId}
+            selectedText={folderText}
+            optional
+            onSelect={(folder) => {
+              setFolderId(folder ? folder.id : null);
+              setFolderText(folder ? folder.text : null);
+            }}
+          />
+
+          {/* Display Group — placeholder dropdown (to be connected to API later) */}
+          <div className="flex flex-col gap-1 w-full">
+            <label className="flex items-center justify-between text-sm font-semibold text-gray-500 leading-4.5">
+              <span>{t('Display Group')}</span>
+              <span className="text-xs font-normal text-gray-500">{t('Optional')}</span>
+            </label>
+            <div className="h-11.25 border border-gray-200 rounded-lg flex items-center bg-white cursor-default">
+              <span className="py-2 px-3 flex-1 text-sm text-gray-400 truncate">
+                {t('Select Display Group')}
+              </span>
+              <div className="pr-3 text-gray-500 shrink-0">
+                <ChevronDown size={14} />
+              </div>
+            </div>
+          </div>
+
+          {/* Authorise automatically */}
+          <div className="flex flex-col gap-1.5 rounded-lg border border-gray-100 bg-gray-50 p-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-gray-700">
+                {t('Authorise automatically')}
+              </span>
+              <div className="shrink-0">
+                <Switch
+                  checked={authorise}
+                  onChange={setAuthorise}
+                  hideOnOff
+                  size="sm"
+                  disabled={isWaiting}
                 />
               </div>
-            </>
-          )}
-
-          {canAuthorise && canApplySettings && (
-            <Switch
-              label={t('Authorize Display')}
-              checked={authorise}
-              onChange={setAuthorise}
-              helpText={licenceHelpText()}
-            />
-          )}
-
-          {!canApplySettings && (
-            <p className="text-sm text-gray-500">
-              {t(
-                'Your display will be added with a default name. An administrator can rename it and choose a folder for you.',
-              )}
-            </p>
-          )}
-
-          <div className="rounded-lg border border-xibo-blue-200 bg-xibo-blue-50 text-sm text-xibo-blue-700">
-            <button
-              type="button"
-              className="flex w-full items-center gap-1 p-3 text-left font-medium"
-              onClick={() => setShowDetail((prev) => !prev)}
-              aria-expanded={showDetail}
-            >
-              {showDetail ? (
-                <ChevronDown className="h-4 w-4 shrink-0" aria-hidden="true" />
-              ) : (
-                <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />
-              )}
-              {t('How connecting with a code works')}
-            </button>
-
-            {showDetail && (
-              <div className="flex flex-col gap-2 px-3 pb-3">
-                <p>
-                  {t(
-                    'After submitting this form with valid code, your CMS Address and Key will be sent and stored in the temporary storage in our Authentication Service.',
-                  )}
-                </p>
-                <p>
-                  {t(
-                    'The Player linked to the submitted code, will make regular calls to our Authentication Service to retrieve the CMS details and configure itself with them. Your details are removed from the temporary storage once the Player is configured.',
-                  )}
-                </p>
-                <p>
-                  {t(
-                    'Please note that your CMS needs to make a successful call to our Authentication Service for this feature to work.',
-                  )}
-                </p>
-              </div>
-            )}
+            </div>
+            <p className="text-xs text-gray-400">{licenceHelpText()}</p>
           </div>
+
+          {/* Waiting panel */}
+          {isWaiting && (
+            <div className="flex flex-col items-center gap-3 rounded-lg bg-slate-50 p-6 text-center">
+              <div className="bg-xibo-blue-100 w-9.5 h-9.5 flex justify-center items-center rounded-full">
+                <Loader className="h-6 w-6 text-xibo-blue-400 animate-spin" />
+              </div>
+              <p className="text-md font-semibold text-gray-800">
+                {t('Waiting for display to connect...')}
+              </p>
+              <p className="text-sm text-gray-500">
+                {t('Verifying your activation code. Please do not close this window.')}
+              </p>
+            </div>
+          )}
         </div>
-      )}
-    </Modal>
+      </Modal>
+    </>
   );
 }

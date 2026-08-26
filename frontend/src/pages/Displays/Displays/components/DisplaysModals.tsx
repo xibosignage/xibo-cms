@@ -29,8 +29,10 @@ import {
   Wifi,
   XCircle,
 } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import AddDisplayDock from './AddDisplayDock';
 import AddDisplayModal, { type AddDisplayPrefill } from './AddDisplayModal';
 import AssignLayoutModal from './AssignLayoutModal';
 import AssignMediaModal from './AssignMediaModal';
@@ -55,6 +57,7 @@ import type { Display, DisplayCommandTarget } from '@/types/display';
 interface DisplayModalsProps {
   actions: {
     activeModal: string | null;
+    openModal?: (name: string) => void;
     closeModal: () => void;
     handleRefresh: () => void;
     deleteError: string | null;
@@ -118,14 +121,50 @@ export function DisplayModals({ actions, selection, handlers }: DisplayModalsPro
   const display = selection.actionDisplay;
   const bulkItems = selection.bulkActionItems;
 
+  // Minimize/maximize state for the Add Display flow.
+  // The modal stays mounted while minimized so it keeps its internal state (submitted, watermark,
+  // polling). Only `isOpen` toggles — the component is never unmounted mid-flow.
+  const [isAddMinimized, setIsAddMinimized] = useState(false);
+  const [minimizedDisplayName, setMinimizedDisplayName] = useState('');
+
+  // True when the add modal should be rendered (open OR minimized with state to preserve).
+  const addModalMounted = isModalOpen('add') || isAddMinimized;
+
+  const handleMinimize = () => {
+    setMinimizedDisplayName(
+      (document.querySelector<HTMLInputElement>('input[name="display_name"]')?.value) ?? '',
+    );
+    setIsAddMinimized(true);
+  };
+
+  const handleMaximize = () => {
+    setIsAddMinimized(false);
+  };
+
+  const handleAddClose = () => {
+    setIsAddMinimized(false);
+    setMinimizedDisplayName('');
+    actions.closeModal();
+  };
+
   return (
     <>
-      {isModalOpen('add') && (
+      {/* Dock shown when Add Display is minimized */}
+      {isAddMinimized && (
+        <AddDisplayDock
+          displayName={minimizedDisplayName || t('New Display')}
+          onMaximize={handleMaximize}
+        />
+      )}
+
+      {addModalMounted && (
         <AddDisplayModal
-          onClose={actions.closeModal}
+          isOpen={isModalOpen('add') && !isAddMinimized}
+          onClose={handleAddClose}
           onAdded={actions.handleRefresh}
           prefill={handlers.addDisplayPrefill}
           onManage={handlers.manageNewDisplay}
+          onMinimize={handleMinimize}
         />
       )}
 
