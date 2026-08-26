@@ -38,7 +38,7 @@ import DisplayMap from './components/DisplayMap';
 import DisplayScreenshotPreviewer from './components/DisplayScreenshotPreviewer';
 import { DisplayModals } from './components/DisplaysModals';
 import KpiRow from './components/KpiRow';
-import ProofOfPlayPlaceholderPanel from './components/ProofOfPlayPlaceholderPanel';
+import ProofOfPlayGroupsPanel from './components/panels/ProofOfPlayGroupsPanel';
 import ScreenshotGalleryModal from './components/ScreenshotGalleryModal';
 import StatusChipRow from './components/StatusChipRow';
 import { useDisplayOverviewSummary } from './hooks/useDisplayOverviewSummary';
@@ -565,8 +565,8 @@ export default function Displays() {
             isLoading={isSummaryLoading}
           />
 
-          <ProofOfPlayPlaceholderPanel
-            title={t('Proof of Play — Today')}
+          <ProofOfPlayGroupsPanel
+            title={t('Proof of Play — Last 7 Days')}
             canViewProofOfPlay={canViewProofOfPlay}
             onViewReport={() => navigate('/reporting/proof-of-play')}
           />

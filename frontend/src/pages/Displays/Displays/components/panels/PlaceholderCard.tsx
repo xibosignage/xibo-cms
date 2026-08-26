@@ -33,10 +33,10 @@ interface PlaceholderCardProps {
 
 // Shared "coming soon" card for Manage page sections that aren't wired to
 // real data/actions yet (Now Playing, Daily timeline, All commands) — reuses
-// the same dashed-box/icon convention as ProofOfPlayPlaceholderPanel.tsx
-// without duplicating it, since that component's props are specific to
-// Proof of Play (onViewReport/onViewTroubleshooting) and can't be reused here
-// as-is.
+// the same dashed-box/icon convention as the since-replaced Proof of Play
+// placeholder without duplicating it, since that component's props were
+// specific to Proof of Play (onViewReport/onViewTroubleshooting) and could not
+// be reused here as-is.
 export default function PlaceholderCard({ icon: Icon, title, message }: PlaceholderCardProps) {
   const { t } = useTranslation();
 
