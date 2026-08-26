@@ -22,7 +22,7 @@
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
-import { getBucketLabel } from '../OverviewConfig';
+import { getBucketLabel } from '../DisplayStatusConfig';
 
 import type { DisplayOverviewSummary, DisplayOverviewBucket } from '@/types/displayOverview';
 

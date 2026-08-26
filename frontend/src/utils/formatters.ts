@@ -56,9 +56,8 @@ export function formatDurationText(totalSeconds: number, t: TFunction): string {
   });
 }
 
-// Shared by DisplaysConfig.tsx's and Overview's DisplayTableView.tsx's
-// "Storage Free %" column, so the two grids can't disagree on the formula or
-// on what an unknown value renders as.
+// Used by DisplaysConfig.tsx's "Storage Free %" column, so it doesn't
+// disagree with itself on the formula or on what an unknown value renders as.
 export function getStorageFreePercentLabel(available: number | null, total: number | null): string {
   if (available === null || total === null || total === 0) {
     return '';

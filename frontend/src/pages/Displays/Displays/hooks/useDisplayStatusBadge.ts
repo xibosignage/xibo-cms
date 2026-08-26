@@ -22,7 +22,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { getDisplayStatusInfo } from '../OverviewConfig';
+import { getDisplayStatusInfo } from '../DisplayStatusConfig';
 
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import type { Display } from '@/types/display';

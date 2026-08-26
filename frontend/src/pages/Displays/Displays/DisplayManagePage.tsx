@@ -24,24 +24,24 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { getDisplayStatusBucket } from './OverviewConfig';
+import { getDisplayStatusBucket } from './DisplayStatusConfig';
+import ScreenshotGalleryModal from './components/ScreenshotGalleryModal';
 import ActiveFaultsPanel from './components/panels/ActiveFaultsPanel';
 import AllCommandsCard from './components/panels/AllCommandsCard';
 import DailyTimelineCard from './components/panels/DailyTimelineCard';
 import HealthCheckCard from './components/panels/HealthCheckCard';
 import ManageHeaderActions from './components/panels/ManageHeaderActions';
-import ManageModalHeader from './components/panels/ManageModalHeader';
+import ManagePageHeader from './components/panels/ManagePageHeader';
 import NowPlayingCard from './components/panels/NowPlayingCard';
 import PlayerUpdateBanner from './components/panels/PlayerUpdateBanner';
 import ProofOfPlayModal from './components/panels/ProofOfPlayModal';
 import ScreenshotCard from './components/panels/ScreenshotCard';
 import TroubleshootingDiagnosticsModal from './components/panels/TroubleshootingDiagnosticsModal';
 import { useManagePageActions } from './hooks/useManagePageActions';
-import { useOverviewDisplayDetail } from './hooks/useOverviewDisplayDetail';
+import { useManagePageDisplay } from './hooks/useManagePageDisplay';
 
 import Button from '@/components/ui/Button';
 import { useUserContext } from '@/context/UserContext';
-import ScreenshotGalleryModal from '@/pages/Displays/Displays/components/ScreenshotGalleryModal';
 import { hasFeature } from '@/utils/permissions';
 
 const DISPLAYS_PATH = '/displays/displays';
@@ -58,7 +58,7 @@ const DISPLAYS_PATH = '/displays/displays';
  * filter, card view) was folded into the Displays grid; this Manage page and
  * its supporting config/panels moved here as part of that same migration.
  */
-export default function OverviewManagePage() {
+export default function DisplayManagePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { displayId: displayIdParam } = useParams<{ displayId: string }>();
@@ -69,7 +69,7 @@ export default function OverviewManagePage() {
     data: display,
     isLoading,
     isError,
-  } = useOverviewDisplayDetail(Number.isFinite(displayId) ? displayId : null);
+  } = useManagePageDisplay(Number.isFinite(displayId) ? displayId : null);
 
   const { isActionPending, confirmRequestScreenShot, confirmPurgeAll } = useManagePageActions({
     t,
@@ -121,7 +121,7 @@ export default function OverviewManagePage() {
 
   return (
     <section className="flex h-full w-full min-h-0 flex-col overflow-y-auto">
-      <ManageModalHeader
+      <ManagePageHeader
         display={display}
         onClose={handleBack}
         closeIcon={ArrowLeft}

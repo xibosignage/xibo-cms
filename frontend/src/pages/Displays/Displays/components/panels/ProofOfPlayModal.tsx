@@ -20,7 +20,7 @@
  */
 
 import { Download, ExternalLink, Loader2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
@@ -71,32 +71,30 @@ export default function ProofOfPlayModal({ display, isOpen, onClose }: ProofOfPl
 
   const rows = data?.rows ?? [];
 
-  const summary = useMemo(() => {
-    const totalPlays = rows.reduce((sum, row) => sum + row.numberPlays, 0);
-    const totalDurationSec = rows.reduce((sum, row) => sum + row.duration, 0);
-    const campaignCount = new Set(
-      rows.filter((row) => row.parentCampaignId).map((row) => row.parentCampaignId),
-    ).size;
+  const totalPlays = rows.reduce((sum, row) => sum + row.numberPlays, 0);
+  const totalDurationSec = rows.reduce((sum, row) => sum + row.duration, 0);
+  const campaignCount = new Set(
+    rows.filter((row) => row.parentCampaignId).map((row) => row.parentCampaignId),
+  ).size;
 
-    const byLayout = new Map<number, { name: string; plays: number }>();
-    rows.forEach((row) => {
-      const existing = byLayout.get(row.layoutId);
-      if (existing) {
-        existing.plays += row.numberPlays;
-      } else {
-        byLayout.set(row.layoutId, { name: row.layout, plays: row.numberPlays });
-      }
-    });
+  const byLayout = new Map<number, { name: string; plays: number }>();
+  rows.forEach((row) => {
+    const existing = byLayout.get(row.layoutId);
+    if (existing) {
+      existing.plays += row.numberPlays;
+    } else {
+      byLayout.set(row.layoutId, { name: row.layout, plays: row.numberPlays });
+    }
+  });
 
-    const breakdown = Array.from(byLayout.values())
-      .sort((a, b) => b.plays - a.plays)
-      .map((item) => ({
-        ...item,
-        percent: totalPlays > 0 ? Math.round((item.plays / totalPlays) * 100) : 0,
-      }));
+  const breakdown = Array.from(byLayout.values())
+    .sort((a, b) => b.plays - a.plays)
+    .map((item) => ({
+      ...item,
+      percent: totalPlays > 0 ? Math.round((item.plays / totalPlays) * 100) : 0,
+    }));
 
-    return { totalPlays, totalDurationSec, campaignCount, breakdown };
-  }, [rows]);
+  const summary = { totalPlays, totalDurationSec, campaignCount, breakdown };
 
   const handleViewFullReport = () => {
     onClose();

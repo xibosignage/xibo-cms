@@ -223,7 +223,8 @@ describe('Displays page — row action wiring', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // Manage (legacy) — opens the ManageDisplayModal
+  // Manage (legacy) — opens the full-detail ManageDisplayModal (Bandwidth,
+  // Connectivity, Dependencies, Layouts, Media, Widgets, Faults).
   // ---------------------------------------------------------------------------
   test('clicking Manage (legacy) opens the Manage Display modal', async () => {
     const user = userEvent.setup();

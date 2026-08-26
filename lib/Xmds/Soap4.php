@@ -761,13 +761,14 @@ class Soap4 extends Soap
             $storedAs = 'history/' . $this->display->displayId . '_' . $createdDt
                 . '_' . uniqid() . '.' . $screenShotFmt;
 
-            $historyDir = $libraryLocation . 'screenshots/history';
+            $historyDir = LibraryFile::resolve($libraryLocation, 'screenshots/history');
             if (!is_dir($historyDir) && !mkdir($historyDir, 0777, true) && !is_dir($historyDir)) {
                 $this->getLog()->error('Unable to create screenshot history folder');
                 return;
             }
 
-            file_put_contents($libraryLocation . 'screenshots/' . $storedAs, $screenShot);
+            $location = LibraryFile::resolve($libraryLocation, 'screenshots/' . $storedAs);
+            file_put_contents($location, $screenShot);
 
             // The status window is what the player sends up with NotifyStatus, so it is whatever
             // it last reported rather than anything captured with the image itself.
@@ -781,7 +782,7 @@ class Soap4 extends Soap
             $screenshot->save();
 
             foreach ($this->displayScreenshotFactory->getExpiredByDisplayId($this->display->displayId) as $expired) {
-                $expiredPath = $libraryLocation . 'screenshots/' . $expired->storedAs;
+                $expiredPath = LibraryFile::resolve($libraryLocation, 'screenshots/' . $expired->storedAs);
                 if (file_exists($expiredPath)) {
                     unlink($expiredPath);
                 }

@@ -286,7 +286,7 @@ export const APP_ROUTES: AppRoute[] = [
         labelKey: 'Manage Display',
         hideFromMenu: true,
         lazy: () =>
-          import('@/pages/Displays/Displays/OverviewManagePage').then((m) => ({
+          import('@/pages/Displays/Displays/DisplayManagePage').then((m) => ({
             Component: m.default,
           })),
         feature: 'displays.view',

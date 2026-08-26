@@ -21,7 +21,7 @@
 
 import { twMerge } from 'tailwind-merge';
 
-import { BUCKET_STATUS, type BucketColorClasses } from '../OverviewConfig';
+import { BUCKET_STATUS, type BucketColorClasses } from '../DisplayStatusConfig';
 
 import Badge from '@/components/ui/Badge';
 import type { DisplayOverviewBucket } from '@/types/displayOverview';

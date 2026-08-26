@@ -23,7 +23,7 @@ import { Info } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
-import { BUCKET_COLORS, BUCKET_ICON, getBucketLabel } from '../OverviewConfig';
+import { BUCKET_COLORS, BUCKET_ICON, getBucketLabel } from '../DisplayStatusConfig';
 
 import type { DisplayOverviewBucket } from '@/types/displayOverview';
 
