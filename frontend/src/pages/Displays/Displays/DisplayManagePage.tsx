@@ -28,6 +28,7 @@ import { getDisplayStatusBucket } from './DisplayStatusConfig';
 import ScreenshotGalleryModal from './components/ScreenshotGalleryModal';
 import ActiveFaultsPanel from './components/panels/ActiveFaultsPanel';
 import AllCommandsCard from './components/panels/AllCommandsCard';
+import ConnectivityPanel from './components/panels/ConnectivityPanel';
 import DailyTimelineCard from './components/panels/DailyTimelineCard';
 import HealthCheckCard from './components/panels/HealthCheckCard';
 import ManageHeaderActions from './components/panels/ManageHeaderActions';
@@ -162,6 +163,8 @@ export default function DisplayManagePage() {
         </div>
 
         <ActiveFaultsPanel displayId={display.displayId} />
+
+        <ConnectivityPanel displayId={display.displayId} />
       </div>
 
       <ScreenshotGalleryModal
