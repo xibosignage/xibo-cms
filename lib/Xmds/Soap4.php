@@ -740,6 +740,58 @@ class Soap4 extends Soap
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
+    /**
+     * Files a copy of the screenshot in the display's history and trims the history back to the
+     * limit, removing both the rows and the images they point at.
+     *
+     * Failures here are logged and swallowed: the screenshot itself has already been stored, and
+     * losing a history entry is not worth failing the player's submission over.
+     *
+     * @param string $screenShot Raw image data, already converted to the stored format.
+     * @param string $screenShotFmt File extension for the stored format.
+     */
+    private function addToScreenshotHistory(string $screenShot, string $screenShotFmt): void
+    {
+        try {
+            $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+            $createdDt = Carbon::now()->format('U');
+
+            // The id is only unique per second, so the row id cannot be used here: it does not
+            // exist until after the insert. Uniqid keeps two screenshots in the same second apart.
+            $storedAs = 'history/' . $this->display->displayId . '_' . $createdDt
+                . '_' . uniqid() . '.' . $screenShotFmt;
+
+            $historyDir = $libraryLocation . 'screenshots/history';
+            if (!is_dir($historyDir) && !mkdir($historyDir, 0777, true) && !is_dir($historyDir)) {
+                $this->getLog()->error('Unable to create screenshot history folder');
+                return;
+            }
+
+            file_put_contents($libraryLocation . 'screenshots/' . $storedAs, $screenShot);
+
+            // The status window is what the player sends up with NotifyStatus, so it is whatever
+            // it last reported rather than anything captured with the image itself.
+            $status = $this->display->getStatusWindow($this->getPool());
+
+            $screenshot = $this->displayScreenshotFactory->createEmpty();
+            $screenshot->displayId = $this->display->displayId;
+            $screenshot->createdDt = $createdDt;
+            $screenshot->storedAs = $storedAs;
+            $screenshot->statusJson = empty($status) ? null : json_encode($status);
+            $screenshot->save();
+
+            foreach ($this->displayScreenshotFactory->getExpiredByDisplayId($this->display->displayId) as $expired) {
+                $expiredPath = $libraryLocation . 'screenshots/' . $expired->storedAs;
+                if (file_exists($expiredPath)) {
+                    unlink($expiredPath);
+                }
+                $expired->delete();
+            }
+        } catch (\Exception $e) {
+            $this->getLog()->error('Unable to record screenshot history: ' . $e->getMessage());
+        }
+    }
+
     public function SubmitScreenShot($serverKey, $hardwareKey, $screenShot)
     {
         $this->logProcessor->setRoute('SubmitScreenShot');
@@ -819,6 +871,11 @@ class Soap4 extends Soap
         $fp = fopen($location, 'wb');
         fwrite($fp, $screenShot);
         fclose($fp);
+
+        // Keep a copy in the display's history, alongside the status the player last reported.
+        // The file written above is left as it is, so anything showing the current screenshot
+        // carries on reading the same path.
+        $this->addToScreenshotHistory($screenShot, $screenShotFmt);
 
         // Touch the display record
         $this->display->screenShotRequested = 0;

@@ -26,11 +26,13 @@ import {
   fetchDisconnectionEvents,
   fetchDisplayManageData,
   fetchPlayerFaults,
+  fetchScreenshotHistory,
 } from '@/services/displaysApi';
 import type {
   BandwidthResponse,
   DisconnectionEvent,
   DisplayManageData,
+  DisplayScreenshot,
   PlayerFault,
 } from '@/types/displayManage';
 import { formatDateTime } from '@/utils/date';
@@ -71,6 +73,20 @@ export function useBandwidthData(
  * Takes a duration rather than two dates, so the current time stays out of the query key and it
  * does not refetch in a loop.
  */
+/**
+ * A display's recent screenshots. Polled, because a display on an interval keeps producing them
+ * and the Live badge is time sensitive.
+ */
+export function useDisplayScreenshots(displayId: number | null, enabled: boolean) {
+  return useQuery<DisplayScreenshot[]>({
+    queryKey: ['display', 'screenshots', displayId],
+    queryFn: ({ signal }) => fetchScreenshotHistory(displayId!, signal),
+    enabled: enabled && !!displayId,
+    staleTime: 1000 * 15,
+    refetchInterval: 1000 * 30,
+  });
+}
+
 export function useDisconnectionEvents(
   displayId: number | null,
   windowMinutes: number,

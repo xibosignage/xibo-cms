@@ -26,19 +26,22 @@ import { useTranslation } from 'react-i18next';
 import DisplayInfoPanel from './DisplayInfoPanel';
 
 import { useKeydown } from '@/hooks/useKeydown';
-import { fetchDisplayScreenshotBlob } from '@/services/displaysApi';
+import { fetchDisplayScreenshotBlob, fetchHistoryScreenshotBlob } from '@/services/displaysApi';
 import type { Display } from '@/types/display';
 
 interface DisplayScreenshotPreviewerProps {
   display: Display | null;
   onClose: () => void;
   onRequestScreenshot?: (display: Display) => void;
+  /** Show one screenshot out of the display's history instead of its current one. */
+  screenshotId?: number | null;
 }
 
 export default function DisplayScreenshotPreviewer({
   display,
   onClose,
   onRequestScreenshot,
+  screenshotId = null,
 }: DisplayScreenshotPreviewerProps) {
   const { t } = useTranslation();
 
@@ -72,7 +75,10 @@ export default function DisplayScreenshotPreviewer({
       setHasError(false);
 
       try {
-        const blob = await fetchDisplayScreenshotBlob(display.displayId, controller.signal);
+        const blob =
+          screenshotId === null
+            ? await fetchDisplayScreenshotBlob(display.displayId, controller.signal)
+            : await fetchHistoryScreenshotBlob(display.displayId, screenshotId, controller.signal);
 
         if (!isMounted) {
           return;
@@ -99,7 +105,7 @@ export default function DisplayScreenshotPreviewer({
       controller.abort();
       revokeUrl();
     };
-  }, [display]);
+  }, [display, screenshotId]);
 
   useKeydown('Escape', onClose, !!display);
 

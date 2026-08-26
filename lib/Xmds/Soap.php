@@ -148,6 +148,9 @@ class Soap
     /** @var  DisplayEventFactory */
     protected $displayEventFactory;
 
+    /** @var \Xibo\Factory\DisplayScreenshotFactory */
+    protected $displayScreenshotFactory;
+
     /** @var  ScheduleFactory */
     protected $scheduleFactory;
 
@@ -170,9 +173,6 @@ class Soap
 
     /** @var PlayerFaultFactory */
     protected $playerFaultFactory;
-
-    /** @var \Xibo\Factory\DisplayGroupFactory */
-    protected $displayGroupFactory;
 
     /**
      * Soap constructor.
@@ -201,8 +201,6 @@ class Soap
      * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param \Xibo\Factory\CampaignFactory $campaignFactory
      * @param SyncGroupFactory $syncGroupFactory
-     * @param PlayerFaultFactory $playerFaultFactory
-     * @param \Xibo\Factory\DisplayGroupFactory $displayGroupFactory
      */
     public function __construct(
         $logProcessor,
@@ -231,7 +229,7 @@ class Soap
         $campaignFactory,
         $syncGroupFactory,
         $playerFaultFactory,
-        $displayGroupFactory = null
+        $displayScreenshotFactory
     ) {
         $this->logProcessor = $logProcessor;
         $this->pool = $pool;
@@ -259,7 +257,7 @@ class Soap
         $this->campaignFactory = $campaignFactory;
         $this->syncGroupFactory = $syncGroupFactory;
         $this->playerFaultFactory = $playerFaultFactory;
-        $this->displayGroupFactory = $displayGroupFactory;
+        $this->displayScreenshotFactory = $displayScreenshotFactory;
     }
 
     /**
@@ -330,225 +328,6 @@ class Soap
     }
 
     /**
-     * Split an incoming serverKey into the CMS key and an optional Add Display activation code.
-     *
-     * The addViaCode controller appends the activation code to the CMS key ("key||code") so that
-     * the Player's first RegisterDisplay call can be matched back to the Add Display form
-     * submission. Every other call carries the bare key - the Player strips the code before
-     * storing the key in its config.
-     *
-     * @param string|null $serverKey as received from the Player
-     * @return array [string|null $serverKey, string|null $authCode]
-     */
-    protected function parseServerKey(?string $serverKey): array
-    {
-        if ($serverKey !== null && str_contains($serverKey, '||')) {
-            return array_pad(explode('||', $serverKey, 2), 2, null);
-        }
-
-        return [$serverKey, null];
-    }
-
-    /**
-     * Does the serverKey a Player sent match this CMS?
-     *
-     * Players configured through Add Display are given a key with a one-time code appended
-     * ("key||code"), and they store and resend whatever they were given on every subsequent call.
-     * Validation therefore has to look at the key part alone - checking the whole string would let
-     * such a Player register and then fail every RequiredFiles, Schedule and SubmitLog after it.
-     *
-     * @param string|null $serverKey as received from the Player
-     * @return bool
-     */
-    protected function isValidServerKey(?string $serverKey): bool
-    {
-        [$key] = $this->parseServerKey($serverKey);
-
-        return $key === $this->getConfig()->getSetting('SERVER_KEY');
-    }
-
-    /**
-     * Fetch the Add Display form settings cached against an activation code, if there are any.
-     * @param string|null $authCode
-     * @return array|null
-     */
-    protected function getDisplayClaim(?string $authCode): ?array
-    {
-        if (empty($authCode)) {
-            return null;
-        }
-
-        $cache = $this->getPool()->getItem(Display::getAddViaCodeCacheKey($authCode));
-        $claim = $cache->get();
-
-        // An applied claim is spent: its settings belong to the Player that already presented it.
-        if ($cache->isMiss() || !is_array($claim) || !empty($claim['applied'])) {
-            return null;
-        }
-
-        return $claim;
-    }
-
-    /**
-     * Finish an Add Display claim once the new display has been saved: assign the display group
-     * chosen on the form, and drop the cached form data so it is only ever applied once.
-     * @param Display $display
-     * @param array $claim
-     * @param string $authCode
-     */
-    protected function completeDisplayClaim(Display $display, array $claim, string $authCode): void
-    {
-        $this->recordDisplayAdded($display, intval($claim['userId'] ?? 0), 'activation code');
-        $this->clearPendingConnectNotification($claim['notificationId'] ?? null);
-
-        $displayGroupId = intval($claim['displayGroupId'] ?? 0);
-
-        if ($displayGroupId > 0 && $this->displayGroupFactory !== null) {
-            try {
-                $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
-                $displayGroup->load();
-                $this->getDispatcher()->dispatch(
-                    new \Xibo\Event\DisplayGroupLoadEvent($displayGroup),
-                    \Xibo\Event\DisplayGroupLoadEvent::$NAME
-                );
-
-                $displayGroup->assignDisplay($display);
-                $displayGroup->save(['validate' => false]);
-            } catch (GeneralException $e) {
-                // The display registers fine without its group - the operator can assign by hand.
-                $this->getLog()->error('completeDisplayClaim: cannot assign displayId '
-                    . $display->displayId . ' to displayGroupId ' . $displayGroupId
-                    . ', e = ' . $e->getMessage());
-            }
-        }
-
-        // Keep the entry rather than dropping it, so the form that submitted this code can confirm
-        // exactly which display appeared - no guessing from the display list. Marked applied so a
-        // second Player presenting the same code cannot inherit these settings.
-        $item = $this->getPool()->getItem(Display::getAddViaCodeCacheKey($authCode));
-        $item->set(array_merge($claim, [
-            'applied' => true,
-            'displayId' => $display->displayId,
-        ]));
-        $item->expiresAfter(new \DateInterval('PT30M'));
-        $this->getPool()->save($item);
-    }
-
-    /**
-     * Record which display registered against a manual-connect one-time code.
-     *
-     * The code is appended to the server key the operator copies into the Player ("key||code"), so
-     * this is what authenticates a Player as belonging to a particular Add Display form. The
-     * Player keeps its own display name. Matching is exact and single-use: first Player wins.
-     *
-     * @param string|null $code parsed from the server key the Player sent
-     * @param Display $display the display that just registered
-     */
-    protected function claimManualConnectCode(?string $code, Display $display): void
-    {
-        $code = strtoupper(trim($code ?? ''));
-
-        // Codes are always four characters. Anything else is not one of ours.
-        if (strlen($code) !== 4 || !ctype_alnum($code)) {
-            return;
-        }
-
-        $item = $this->getPool()->getItem(Display::getManualConnectCacheKey($code));
-        $pending = $item->get();
-
-        if ($item->isMiss() || !is_array($pending)) {
-            return;
-        }
-
-        // Already claimed by another Player - leave the first claim standing.
-        if (!empty($pending['displayId'])) {
-            return;
-        }
-
-        $item->set([
-            'displayId' => $display->displayId,
-            'userId' => $pending['userId'] ?? null,
-        ]);
-        $item->expiresAfter(new \DateInterval('PT30M'));
-        $this->getPool()->save($item);
-
-        $this->getLog()->debug('claimManualConnectCode: code claimed by displayId '
-            . $display->displayId);
-
-        $this->recordDisplayAdded($display, intval($pending['userId'] ?? 0), 'manual configuration');
-        $this->clearPendingConnectNotification($pending['notificationId'] ?? null);
-    }
-
-    /**
-     * Give a newly claimed display its owner, and record who added it.
-     *
-     * Registration runs with no session, so nothing about it reaches the audit trail: display->save
-     * uses $saveOptionsMinimum, which sets audit => false, and LogService would attribute the entry
-     * to user 0 anyway. The Add Display form is the only place that knows which user is responsible,
-     * so the claim carries that user through and it is applied here.
-     *
-     * @param Display $display the display that just registered
-     * @param int $userId the user whose Add Display form this Player came from
-     * @param string $via how it was connected, for the audit message
-     */
-    protected function recordDisplayAdded(Display $display, int $userId, string $via): void
-    {
-        if ($userId <= 0 || $this->displayGroupFactory === null) {
-            return;
-        }
-
-        try {
-            // Displays created by XMDS are owned by the system user, because there is nobody else
-            // to attribute them to. When we do know, hand the display to the person who added it.
-            foreach ($this->displayGroupFactory->getByDisplayId($display->displayId) as $displayGroup) {
-                if ($displayGroup->isDisplaySpecific === 1) {
-                    $displayGroup->userId = $userId;
-                    $displayGroup->save(['validate' => false, 'manageDisplayLinks' => false]);
-                }
-            }
-        } catch (GeneralException $e) {
-            $this->getLog()->error('recordDisplayAdded: cannot set owner for displayId '
-                . $display->displayId . ', e = ' . $e->getMessage());
-        }
-
-        // Attribute the audit entry to the operator rather than to nobody, then put the log service
-        // back as it was so nothing else in this request is mis-attributed.
-        $previousUserId = $this->getLog()->getUserId();
-
-        try {
-            $this->getLog()->setUserId($userId);
-            $this->getLog()->audit('Display', $display->displayId, 'Display Added', [
-                'display' => $display->display,
-                'via' => $via,
-            ]);
-        } finally {
-            $this->getLog()->setUserId($previousUserId);
-        }
-    }
-
-    /**
-     * Remove the "waiting for a Player" notice once the Player has arrived.
-     *
-     * The notice exists so that an abandoned setup leaves a trace the operator can find. A setup
-     * that completed should leave none, or every successful add would look like a failure.
-     *
-     * @param int|null $notificationId
-     */
-    protected function clearPendingConnectNotification(?int $notificationId): void
-    {
-        if (empty($notificationId)) {
-            return;
-        }
-
-        try {
-            $this->notificationFactory->getById($notificationId)->delete();
-        } catch (GeneralException $e) {
-            // Already gone, or never created. Nothing to tidy.
-            $this->getLog()->debug('clearPendingConnectNotification: ' . $e->getMessage());
-        }
-    }
-
-    /**
      * Get Required Files (common)
      * @param $serverKey
      * @param $hardwareKey
@@ -578,7 +357,7 @@ class Soap
         $hardwareKey = $sanitizer->getString('hardwareKey');
 
         // Check the serverKey matches
-        if (!$this->isValidServerKey($serverKey)) {
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
             throw new \SoapFault(
                 'Sender',
                 'The Server key you entered does not match with the server key at this address'
@@ -1423,7 +1202,7 @@ class Soap
         $hardwareKey = $sanitizer->getString('hardwareKey');
 
         // Check the serverKey matches
-        if (!$this->isValidServerKey($serverKey)) {
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
             throw new \SoapFault(
                 'Sender',
                 'The Server key you entered does not match with the server key at this address'
@@ -1945,7 +1724,7 @@ class Soap
         $hardwareKey = $sanitizer->getString('hardwareKey');
 
         // Check the serverKey matches
-        if (!$this->isValidServerKey($serverKey)) {
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
             throw new \SoapFault(
                 'Sender',
                 'The Server key you entered does not match with the server key at this address'
@@ -2166,7 +1945,7 @@ class Soap
         $hardwareKey = $sanitizer->getString('hardwareKey');
 
         // Check the serverKey matches
-        if (!$this->isValidServerKey($serverKey)) {
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
             throw new \SoapFault(
                 'Sender',
                 'The Server key you entered does not match with the server key at this address'
@@ -2499,7 +2278,7 @@ class Soap
         $hardwareKey = $sanitizer->getString('hardwareKey');
 
         // Check the serverKey matches
-        if (!$this->isValidServerKey($serverKey)) {
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
             throw new \SoapFault(
                 'Sender',
                 'The Server key you entered does not match with the server key at this address'
@@ -2653,7 +2432,7 @@ class Soap
         $mediaId = $sanitizer->getString('mediaId');
 
         // Check the serverKey matches
-        if (!$this->isValidServerKey($serverKey)) {
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
             throw new \SoapFault(
                 'Sender',
                 'The Server key you entered does not match with the server key at this address'

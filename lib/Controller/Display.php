@@ -40,6 +40,7 @@ use Xibo\Factory\DisplayEventFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
+use Xibo\Factory\DisplayScreenshotFactory;
 use Xibo\Factory\DisplayTypeFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\NotificationFactory;
@@ -90,7 +91,8 @@ class Display extends Base
         private readonly NotificationFactory $notificationFactory,
         private readonly UserGroupFactory $userGroupFactory,
         private readonly PlayerVersionFactory $playerVersionFactory,
-        private readonly DayPartFactory $dayPartFactory
+        private readonly DayPartFactory $dayPartFactory,
+        private readonly DisplayScreenshotFactory $displayScreenshotFactory
     ) {
     }
 
@@ -1413,6 +1415,162 @@ class Display extends Base
 
         $response->write($img->encode());
         $response = $response->withHeader('Content-Type', $img->origin()->mediaType());
+        return $this->render($request, $response);
+    }
+
+
+    /**
+     * A display's recent screenshots, newest first.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function screenShotHistory(Request $request, Response $response, $id)
+    {
+        $display = $this->displayFactory->getById($id);
+
+        if (!$this->getUser()->checkViewable($display) && !$this->getUser()->featureEnabled('displays.limitedView')) {
+            throw new AccessDeniedException();
+        }
+
+        $entries = [];
+        foreach ($this->displayScreenshotFactory->getByDisplayId(
+            $display->displayId,
+            DisplayScreenshotFactory::HISTORY_LIMIT
+        ) as $screenshot) {
+            $entry = $screenshot->jsonSerialize();
+            // Built here rather than in the client, which has no business knowing the route. Same
+            // approach as the thumbnail on the display grid.
+            $entry['url'] = $this->urlFor($request, 'display.screenshot.history.item', [
+                'id' => $display->displayId,
+                'screenshotId' => $screenshot->displayScreenshotId,
+            ]);
+            $entries[] = $entry;
+        }
+
+        $this->getState()->template = 'grid';
+        $this->getState()->setData($entries);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * One screenshot out of a display's history.
+     *
+     * Separate from screenShot(), which always serves the display's current image and stamps it
+     * with the capture time. Here the time is known per entry, so the image is returned as stored.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @param $screenshotId
+     * @return ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function screenShotFromHistory(Request $request, Response $response, $id, $screenshotId)
+    {
+        $display = $this->displayFactory->getById($id);
+
+        if (!$this->getUser()->checkViewable($display) && !$this->getUser()->featureEnabled('displays.limitedView')) {
+            throw new AccessDeniedException();
+        }
+
+        $screenshot = $this->displayScreenshotFactory->getById(intval($screenshotId));
+
+        // Guard against reading another display's history by pairing it with this display's id.
+        if ($screenshot->displayId !== $display->displayId) {
+            throw new NotFoundException(__('Screenshot not found'));
+        }
+
+        $this->setNoOutput(true);
+
+        $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION')
+            . 'screenshots/' . $screenshot->storedAs;
+
+        if (!file_exists($fileName)) {
+            $fileName = $this->getConfig()->uri('forms/filenotfound.gif');
+        }
+
+        $img = ImageManager::gd()->read($fileName);
+
+        header('Cache-Control: no-store, no-cache, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
+        $response->write($img->encode());
+        $response = $response->withHeader('Content-Type', $img->origin()->mediaType());
+        return $this->render($request, $response);
+    }
+
+
+    /**
+     * Sets how often this display takes a screenshot on its own, as an override on top of
+     * whatever its display profile says.
+     *
+     * Deliberately narrow rather than going through edit(), which reads every display field off
+     * the request and would blank the ones a caller did not send.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function setScreenShotInterval(Request $request, Response $response, $id)
+    {
+        $display = $this->displayFactory->getById($id);
+
+        if (!$this->getUser()->checkEditable($display)) {
+            throw new AccessDeniedException();
+        }
+
+        $display->load();
+
+        $interval = $this->getSanitizer($request->getParams())
+            ->getInt('screenShotRequestInterval', ['default' => 0]);
+
+        if ($interval < 0) {
+            throw new InvalidArgumentException(
+                __('Interval must be 0 or more'),
+                'screenShotRequestInterval'
+            );
+        }
+
+        // Replace any existing override for this setting, keeping every other override intact.
+        $overrideConfig = [];
+        foreach ($display->overrideConfig as $row) {
+            if ($row['name'] !== 'screenShotRequestInterval') {
+                $overrideConfig[] = $row;
+            }
+        }
+        $overrideConfig[] = ['name' => 'screenShotRequestInterval', 'value' => $interval];
+
+        $display->overrideConfig = $overrideConfig;
+        $display->save();
+
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Screenshot interval set for %s'), $display->display),
+            'id' => $display->displayId,
+        ]);
+
         return $this->render($request, $response);
     }
 
