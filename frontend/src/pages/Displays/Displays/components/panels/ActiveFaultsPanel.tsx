@@ -24,7 +24,7 @@ import { useTranslation } from 'react-i18next';
 
 import { PanelCard, SimpleDataTable, type SimpleDataTableColumn } from './PanelCard';
 
-import { useActivePlayerFaults } from '@/pages/Displays/Displays/hooks/useOverviewManageModalData';
+import { useActivePlayerFaults } from '@/pages/Displays/Displays/hooks/useManagePageData';
 import type { PlayerFault } from '@/types/displayManage';
 
 interface ActiveFaultsPanelProps {

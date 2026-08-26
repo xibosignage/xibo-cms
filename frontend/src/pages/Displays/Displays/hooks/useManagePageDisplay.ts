@@ -21,17 +21,24 @@
 
 import { useQuery } from '@tanstack/react-query';
 
-import { fetchDisplayOverviewSummary } from '@/services/displaysApi';
+import { displayQueryKeys } from '@/pages/Displays/Displays/hooks/useDisplaysData';
+import { fetchDisplays } from '@/services/displaysApi';
 
-export const displayOverviewQueryKeys = {
-  summary: ['display', 'overview', 'summary'] as const,
-};
-
-export function useDisplayOverviewSummary(enabled = true) {
+/**
+ * A single display, fetched directly by ID off the same list endpoint the
+ * grid uses. Backs the Manage page (`/displays/displays/:displayId`), which
+ * — unlike the legacy modal it complements — can be landed on directly (a
+ * refresh, a bookmark, a shared link) without the row already being in
+ * memory from the grid.
+ */
+export function useManagePageDisplay(displayId: number | null) {
   return useQuery({
-    queryKey: displayOverviewQueryKeys.summary,
-    queryFn: ({ signal }) => fetchDisplayOverviewSummary(signal),
-    enabled,
-    staleTime: 1000 * 60,
+    queryKey: displayQueryKeys.list({ displayId }),
+    queryFn: async ({ signal }) => {
+      const { rows } = await fetchDisplays({ start: 0, length: 1, displayId: displayId!, signal });
+      return rows[0] ?? null;
+    },
+    enabled: displayId !== null,
+    staleTime: 1000 * 30,
   });
 }

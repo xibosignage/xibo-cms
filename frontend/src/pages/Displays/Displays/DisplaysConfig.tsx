@@ -444,9 +444,13 @@ export interface DisplayActionsProps {
   openMoveModal?: (row: Display | Display[]) => void;
   openShareModal?: (id: number) => void;
   onAuthorise: (display: Display) => void;
-  /** Opens the legacy ManageDisplayModal — kept alongside onManagePage, not replaced by it. */
+  /**
+   * Opens the full-detail ManageDisplayModal (Bandwidth, Connectivity, Dependencies, Layouts,
+   * Media, Widgets, Faults) — complements onManagePage rather than being replaced by it, since
+   * the newer Manage page doesn't (yet) cover this data.
+   */
   onManage: (display: Display) => void;
-  /** Opens the newer Manage page (`/displays/displays/:displayId`). */
+  /** Opens the newer Manage page (`/displays/displays/:displayId`) — screenshots, live health/diagnostics. */
   onManagePage: (display: Display) => void;
   /** Opens the screenshot gallery modal (multiple captures over time). */
   onViewScreenshots: (display: Display) => void;
@@ -609,7 +613,7 @@ export const getDisplayItemActions = ({
 
       actions.push({
         label: t('Manage'),
-        icon: Info,
+        icon: Settings,
         rightIcon: ArrowRight,
         onClick: () => onManagePage(display),
       });

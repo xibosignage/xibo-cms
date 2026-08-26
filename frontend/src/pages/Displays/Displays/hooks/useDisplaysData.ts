@@ -22,8 +22,8 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
 
+import { getBucketFilterParams } from '../DisplayStatusConfig';
 import type { DisplayFilterInput } from '../DisplaysConfig';
-import { getBucketFilterParams } from '../OverviewConfig';
 
 import { serializeTags } from '@/components/ui/forms/TagInput';
 import type { FetchDisplaysRequest } from '@/services/displaysApi';

@@ -54,6 +54,7 @@ use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
 use Xibo\Helper\Guzzle\SafeClient;
 use Xibo\Helper\HttpsDetect;
+use Xibo\Helper\LibraryFile;
 use Xibo\Helper\Random;
 use Xibo\Helper\WakeOnLan;
 use Xibo\Service\PlayerActionServiceInterface;
@@ -1659,8 +1660,10 @@ class Display extends Base
 
         $this->setNoOutput(true);
 
-        $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION')
-            . 'screenshots/' . $screenshot->storedAs;
+        $fileName = LibraryFile::resolve(
+            $this->getConfig()->getSetting('LIBRARY_LOCATION'),
+            'screenshots/' . $screenshot->storedAs
+        );
 
         if (!file_exists($fileName)) {
             $fileName = $this->getConfig()->uri('forms/filenotfound.gif');

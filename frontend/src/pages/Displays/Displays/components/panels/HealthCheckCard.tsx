@@ -22,8 +22,8 @@
 import { Activity, HeartPulse, ShieldCheck, Smartphone, Wifi } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import { BUCKET_COLORS } from '../../OverviewConfig';
-import { useDisplayUptime } from '../../hooks/useOverviewManageModalData';
+import { BUCKET_COLORS } from '../../DisplayStatusConfig';
+import { useDisplayUptime } from '../../hooks/useManagePageData';
 
 import { formatStorageUsed, getStorageUsedPercent } from './ManagePageFormatters';
 import { PanelCard, PanelField } from './PanelCard';

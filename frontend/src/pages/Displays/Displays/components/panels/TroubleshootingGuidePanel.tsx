@@ -22,7 +22,7 @@
 import { AlertTriangle, CircleCheck, HelpCircle, LifeBuoy } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import { getDisplayStatusBucket } from '../../OverviewConfig';
+import { getDisplayStatusBucket } from '../../DisplayStatusConfig';
 
 import { PanelCard } from './PanelCard';
 

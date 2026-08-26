@@ -19,23 +19,21 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { X, type LucideIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import { getManagePillCopy } from '../../OverviewConfig';
+import { getManagePillCopy } from '../../DisplayStatusConfig';
 import { useDisplayStatusBadge } from '../../hooks/useDisplayStatusBadge';
 import DisplayStatusBadge from '../DisplayStatusBadge';
 
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import type { Display } from '@/types/display';
 
-interface ManageModalHeaderProps {
+interface ManagePageHeaderProps {
   display: Display;
   onClose: () => void;
-  /** Overridable so the Manage page (`OverviewManagePage.tsx`) can swap the "X" for a back arrow. */
-  closeIcon?: LucideIcon;
-  /** Overridable accessible label to pair with closeIcon — defaults to "Close". */
-  closeLabel?: string;
+  closeIcon: LucideIcon;
+  closeLabel: string;
   /** Right-aligned action buttons (Request screenshot / Power menu / Proof of play / Diagnostics gear). */
   actions?: React.ReactNode;
 }
@@ -47,13 +45,13 @@ interface ManageModalHeaderProps {
 // `--sidebar-bg`/`--sidebar-fg` are the left-nav sidebar's own tokens, not a
 // general "dark surface" for page content, so reusing them here read as a
 // stray chunk of the nav bleeding into the page.
-export default function ManageModalHeader({
+export default function ManagePageHeader({
   display,
   onClose,
-  closeIcon: CloseIcon = X,
+  closeIcon: CloseIcon,
   closeLabel,
   actions,
-}: ManageModalHeaderProps) {
+}: ManagePageHeaderProps) {
   const { t } = useTranslation();
   const group = display.displayGroups?.[0]?.displayGroup;
   const { formatRelative } = useDateFormatter();
@@ -68,7 +66,7 @@ export default function ManageModalHeader({
         className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-800 cursor-pointer"
       >
         <CloseIcon className="size-4 shrink-0" aria-hidden="true" />
-        {closeLabel ?? t('Close')}
+        {closeLabel}
       </button>
 
       <div className="flex flex-wrap items-start justify-between gap-4">
