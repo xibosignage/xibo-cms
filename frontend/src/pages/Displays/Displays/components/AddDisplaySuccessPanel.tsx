@@ -33,9 +33,9 @@ export interface SubmittedDisplay {
 }
 
 /**
- * `submitted` - code sent, nothing further being applied (no edit permission).
+ * `submitted` - code sent, nothing further to watch for (no edit permission).
  * `waiting`   - watching for the Player to register.
- * `connected` - found it and applied the settings.
+ * `connected` - the Player registered, with the chosen settings applied by the CMS.
  * `ambiguous` - more than one display appeared; the operator must choose.
  * `timedOut`  - the Player never turned up.
  */
@@ -45,7 +45,6 @@ interface AddDisplaySuccessPanelProps {
   submitted: SubmittedDisplay;
   state: PanelState;
   candidates?: Display[];
-  error?: string;
   onPick?: (display: Display) => void;
   onAddAnother: () => void;
   onManage: () => void;
@@ -66,14 +65,14 @@ function ReadOnlyRow({ label, value }: { label: string; value: string }) {
  * Shown once the activation code has been submitted.
  *
  * The display does not exist yet at this point - the Player creates it when it registers, a few
- * seconds later - so this panel reports what was submitted and then waits. Manage Display only
- * becomes available once a real display has been found and updated.
+ * seconds later, and the CMS applies the chosen settings at that moment - so this panel reports
+ * what was submitted and then waits. Manage Display only becomes available once a real display
+ * has been found.
  */
 export default function AddDisplaySuccessPanel({
   submitted,
   state,
   candidates = [],
-  error,
   onPick,
   onAddAnother,
   onManage,
@@ -168,20 +167,6 @@ export default function AddDisplaySuccessPanel({
           <span>
             {t(
               'We have not heard from your player yet. Check that it is powered on and connected to the internet, then try again.',
-            )}
-          </span>
-        </div>
-      )}
-
-      {error && (
-        <div
-          className="flex items-start gap-2 rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800"
-          role="alert"
-        >
-          <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-          <span>
-            {t(
-              'Your display connected, but we could not apply the name and folder. You can set them from Manage Display.',
             )}
           </span>
         </div>

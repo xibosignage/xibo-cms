@@ -24,7 +24,6 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useEffect, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { useApplyDisplaySettings } from '../hooks/useApplyDisplaySettings';
 import { useNewDisplayDetector } from '../hooks/useNewDisplayDetector';
 
 import AddDisplaySuccessPanel, { type SubmittedDisplay } from './AddDisplaySuccessPanel';
@@ -82,13 +81,13 @@ export default function AddDisplayModal({
   const [showDetail, setShowDetail] = useState(false);
 
   const { state: detectState, candidates } = useNewDisplayDetector(watermark);
-  const { apply, error: applyError } = useApplyDisplaySettings();
 
-  // Authorising takes a licence slot, so only offer it to users who are allowed to authorise.
-  const canAuthorise = hasFeature(user, 'displays.authorise');
+  // Authorising is available to the same audience as this form: displays.add also gates the
+  // toggleAuthorise endpoint, and the CMS accepts it on the same basis at registration.
+  const canAuthorise = hasFeature(user, 'displays.add');
 
   // Naming and filing a display is an edit, which is a different permission from adding one.
-  // Without it we cannot apply anything, so fall back to the plain activation-code form.
+  // The CMS only honours these fields from users who hold it, so hide them from everyone else.
   const canApplySettings = hasFeature(user, 'displays.modify');
 
   const resetForm = () => {
@@ -159,7 +158,14 @@ export default function AddDisplayModal({
         // afterwards can be recognised as new. Must happen before the code is submitted.
         const highestSeenId = canApplySettings ? await fetchHighestDisplayId() : null;
 
-        await addDisplayViaCode(userCode.trim());
+        // The CMS caches these settings against the code and applies them itself when the
+        // Player registers - nothing further needs to be sent once the display appears.
+        await addDisplayViaCode({
+          userCode: userCode.trim(),
+          displayName: canApplySettings ? displayName.trim() : undefined,
+          folderId: canApplySettings ? folder?.id : undefined,
+          authorised: canAuthorise && authorise,
+        });
 
         setSubmitted({
           code: userCode.trim(),
@@ -186,17 +192,12 @@ export default function AddDisplayModal({
     });
   };
 
-  /** Adopt a detected display: apply the chosen name, folder and authorisation to it. */
-  const adopt = async (display: Display) => {
-    const updated = await apply(display, {
-      displayName: displayName.trim() || display.display,
-      folderId: folder?.id ?? null,
-      authorise: canAuthorise && authorise,
-    });
-
-    // Even if the edit failed the display exists, so keep it for the Manage CTA - it just kept
-    // its default name and folder. useApplyDisplaySettings surfaces the error.
-    setAdopted(updated ?? display);
+  /**
+   * Adopt a detected display. The CMS already applied the chosen name, folder and authorisation
+   * when the Player registered, so adoption is only bookkeeping for the Manage CTA.
+   */
+  const adopt = (display: Display) => {
+    setAdopted(display);
     onAdded?.();
   };
 
@@ -205,7 +206,7 @@ export default function AddDisplayModal({
     const only = candidates[0];
 
     if (detectState === 'found' && candidates.length === 1 && only && !adopted) {
-      void adopt(only);
+      adopt(only);
     }
   }, [detectState, candidates, adopted]);
 
@@ -267,7 +268,6 @@ export default function AddDisplayModal({
           submitted={submitted}
           state={panelState}
           candidates={candidates}
-          error={applyError}
           onPick={adopt}
           onAddAnother={resetForm}
           onManage={handleManage}

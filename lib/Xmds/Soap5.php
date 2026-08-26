@@ -108,6 +108,11 @@ class Soap5 extends Soap4
             $xmrPubKey = "-----BEGIN PUBLIC KEY-----\n" . $xmrPubKey . "\n-----END PUBLIC KEY-----\n";
         }
 
+        // A Player added with an activation code presents that code alongside the server key on
+        // its first register ("key||code"), pointing at settings the Add Display form cached.
+        [$serverKey, $authCode] = $this->parseServerKey($serverKey);
+        $claim = null;
+
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
             throw new \SoapFault(
@@ -440,6 +445,21 @@ class Soap5 extends Soap4
                 $display->xmrPubKey = $xmrPubKey;
                 $display->folderId = $this->getConfig()->getSetting('DISPLAY_DEFAULT_FOLDER', 1);
 
+                // Settings chosen on the Add Display form take precedence over the global
+                // defaults above. They are only ever applied to a brand new display.
+                $claim = $this->getDisplayClaim($authCode);
+                if ($claim !== null) {
+                    if (!empty($claim['display'])) {
+                        $display->display = $claim['display'];
+                    }
+                    if (!empty($claim['folderId'])) {
+                        $display->folderId = $claim['folderId'];
+                    }
+                    if (!empty($claim['licensed'])) {
+                        $display->licensed = 1;
+                    }
+                }
+
                 if (!$display->isDisplaySlotAvailable()) {
                     $display->licensed = 0;
                 }
@@ -540,6 +560,12 @@ class Soap5 extends Soap4
         }
 
         $display->save(Display::$saveOptionsMinimum);
+
+        // The display now exists, so any group membership chosen on the Add Display form can be
+        // applied, and the cached form settings consumed.
+        if ($claim !== null && $authCode !== null) {
+            $this->completeDisplayClaim($display, $claim, $authCode);
+        }
 
         // cache checks
         $cacheSchedule = $this->getPool()->getItem($this->display->getCacheKey() . '/schedule');

@@ -317,14 +317,39 @@ export async function fetchDisplayLocales(): Promise<{ id: string; value: string
   return response.data;
 }
 
+export interface AddDisplayViaCodePayload {
+  userCode: string;
+  /** Cached by the CMS against the code and applied when the Player registers. */
+  displayName?: string;
+  folderId?: number | null;
+  displayGroupId?: number | null;
+  authorised?: boolean;
+}
+
 /**
  * Submit an activation code. The CMS relays it to the authentication service; the Player picks the
  * CMS details up moments later and registers itself, which is what actually creates the display.
  *
- * Nothing about the display is set here - see useNewDisplayDetector and useApplyDisplaySettings.
+ * The optional settings are not applied here - the CMS caches them against the code and applies
+ * them itself when the Player registers. useNewDisplayDetector only exists so the UI can tell the
+ * operator when that has happened.
  */
-export async function addDisplayViaCode(userCode: string): Promise<void> {
-  const params = new URLSearchParams({ user_code: userCode });
+export async function addDisplayViaCode(payload: AddDisplayViaCodePayload): Promise<void> {
+  const params = new URLSearchParams({ user_code: payload.userCode });
+
+  if (payload.displayName) {
+    params.set('displayName', payload.displayName);
+  }
+  if (payload.folderId) {
+    params.set('folderId', String(payload.folderId));
+  }
+  if (payload.displayGroupId) {
+    params.set('displayGroupId', String(payload.displayGroupId));
+  }
+  if (payload.authorised) {
+    params.set('authorised', '1');
+  }
+
   await http.post('/display/addViaCode', params.toString(), {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   });

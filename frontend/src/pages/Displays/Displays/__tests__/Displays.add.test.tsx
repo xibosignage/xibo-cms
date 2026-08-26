@@ -76,7 +76,8 @@ vi.mock('../hooks/useDisplaysFilterOptions', () => ({
 
 /**
  * The default mock user only holds folder.view. Naming and filing a display while adding it is an
- * edit, so these tests need displays.modify; the Authorise toggle needs displays.authorise.
+ * edit, so these tests need displays.modify; the Authorise toggle only needs displays.add, the
+ * same feature that gates the form itself.
  */
 const displayAdminUser = {
   ...mockUser,
@@ -84,7 +85,6 @@ const displayAdminUser = {
     ...mockUser.features,
     'displays.add': true,
     'displays.modify': true,
-    'displays.authorise': true,
   },
 };
 
@@ -104,13 +104,16 @@ const submit = async (user: UserEvent) => {
   await user.click(screen.getByRole('button', { name: 'Save' }));
 };
 
-/** A display as it looks the moment a Player registers: default name, unauthorised. */
+/**
+ * A display as it looks the moment a Player added via activation code registers: the CMS has
+ * already applied the name and authorisation cached from the Add Display form.
+ */
 const freshlyRegistered = {
   ...mockDisplay,
   displayId: 99,
-  display: 'chromeOS Player',
+  display: 'Reception Screen',
   license: 'hardware-key-abc123',
-  licensed: 0,
+  licensed: 1,
   folderId: 1,
 };
 
@@ -133,7 +136,6 @@ describe('Displays page - add display', () => {
     vi.mocked(addDisplayViaCode).mockResolvedValue(undefined);
     // Default: the Player has not registered yet.
     vi.mocked(fetchDisplaysNewerThan).mockResolvedValue([]);
-    vi.mocked(updateDisplay).mockResolvedValue(freshlyRegistered);
   });
 
   // ---------------------------------------------------------------------------
@@ -177,17 +179,24 @@ describe('Displays page - add display', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // Submitting sends only the code, and records a watermark first so whatever
-  // registers afterwards can be recognised as new.
+  // Submitting sends the code together with the chosen settings, which the CMS
+  // caches against the code and applies itself when the Player registers. A
+  // watermark is recorded first so whatever registers afterwards can be
+  // recognised as new.
   // ---------------------------------------------------------------------------
-  test('submits only the activation code, and takes a watermark first', async () => {
+  test('submits the code with the chosen settings, and takes a watermark first', async () => {
     const user = userEvent.setup();
     await openAddModal(user);
     await fillRequiredFields(user, 'VALID-CODE', 'Reception Screen');
     await submit(user);
 
     await waitFor(() => {
-      expect(addDisplayViaCode).toHaveBeenCalledWith('VALID-CODE');
+      expect(addDisplayViaCode).toHaveBeenCalledWith({
+        userCode: 'VALID-CODE',
+        displayName: 'Reception Screen',
+        folderId: undefined,
+        authorised: true,
+      });
     });
     expect(fetchHighestDisplayId).toHaveBeenCalled();
   });
@@ -205,23 +214,16 @@ describe('Displays page - add display', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // The heart of the feature: adopt the newly registered display and apply the
-  // operator's choices to it.
+  // The heart of the feature: the CMS applies the operator's choices at
+  // registration, so the moment the display appears it is already configured.
   // ---------------------------------------------------------------------------
-  test('applies the name, folder and authorisation once the player registers', async () => {
+  test('reports connected once the player registers', async () => {
     const user = userEvent.setup();
     vi.mocked(fetchDisplaysNewerThan).mockResolvedValue([freshlyRegistered]);
 
     await openAddModal(user);
     await fillRequiredFields(user, 'VALID-CODE', 'Reception Screen');
     await submit(user);
-
-    await waitFor(() => {
-      expect(updateDisplay).toHaveBeenCalledWith(
-        99,
-        expect.objectContaining({ display: 'Reception Screen', licensed: 1 }),
-      );
-    });
 
     expect(await screen.findByText(/connected\. your display is ready/i)).toBeInTheDocument();
     await waitFor(() => {
@@ -230,10 +232,12 @@ describe('Displays page - add display', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // REGRESSION GUARD. PUT /display/{id} is a full replace: omitting `license`
-  // blanks the Player's hardware key and permanently disconnects it.
+  // REGRESSION GUARD. The settings travel with the activation code and are
+  // applied by the CMS at registration. The UI must NOT fall back to editing
+  // the display: PUT /display/{id} is a full replace, and a partial payload
+  // would blank the Player's hardware key and permanently disconnect it.
   // ---------------------------------------------------------------------------
-  test('preserves the hardware key when applying settings', async () => {
+  test('never edits the display from the browser', async () => {
     const user = userEvent.setup();
     vi.mocked(fetchDisplaysNewerThan).mockResolvedValue([freshlyRegistered]);
 
@@ -241,12 +245,8 @@ describe('Displays page - add display', () => {
     await fillRequiredFields(user, 'VALID-CODE', 'Reception Screen');
     await submit(user);
 
-    await waitFor(() => {
-      expect(updateDisplay).toHaveBeenCalled();
-    });
-
-    const payload = vi.mocked(updateDisplay).mock.calls[0]?.[1];
-    expect(payload?.license).toBe('hardware-key-abc123');
+    expect(await screen.findByText(/connected\. your display is ready/i)).toBeInTheDocument();
+    expect(updateDisplay).not.toHaveBeenCalled();
   });
 
   // ---------------------------------------------------------------------------

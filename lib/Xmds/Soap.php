@@ -171,6 +171,9 @@ class Soap
     /** @var PlayerFaultFactory */
     protected $playerFaultFactory;
 
+    /** @var \Xibo\Factory\DisplayGroupFactory */
+    protected $displayGroupFactory;
+
     /**
      * Soap constructor.
      * @param LogProcessor $logProcessor
@@ -198,6 +201,8 @@ class Soap
      * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param \Xibo\Factory\CampaignFactory $campaignFactory
      * @param SyncGroupFactory $syncGroupFactory
+     * @param PlayerFaultFactory $playerFaultFactory
+     * @param \Xibo\Factory\DisplayGroupFactory $displayGroupFactory
      */
     public function __construct(
         $logProcessor,
@@ -225,7 +230,8 @@ class Soap
         $dispatcher,
         $campaignFactory,
         $syncGroupFactory,
-        $playerFaultFactory
+        $playerFaultFactory,
+        $displayGroupFactory = null
     ) {
         $this->logProcessor = $logProcessor;
         $this->pool = $pool;
@@ -253,6 +259,7 @@ class Soap
         $this->campaignFactory = $campaignFactory;
         $this->syncGroupFactory = $syncGroupFactory;
         $this->playerFaultFactory = $playerFaultFactory;
+        $this->displayGroupFactory = $displayGroupFactory;
     }
 
     /**
@@ -320,6 +327,76 @@ class Soap
         }
 
         return $this->dispatcher;
+    }
+
+    /**
+     * Split an incoming serverKey into the CMS key and an optional Add Display activation code.
+     *
+     * The addViaCode controller appends the activation code to the CMS key ("key||code") so that
+     * the Player's first RegisterDisplay call can be matched back to the Add Display form
+     * submission. Every other call carries the bare key - the Player strips the code before
+     * storing the key in its config.
+     *
+     * @param string|null $serverKey as received from the Player
+     * @return array [string|null $serverKey, string|null $authCode]
+     */
+    protected function parseServerKey(?string $serverKey): array
+    {
+        if ($serverKey !== null && str_contains($serverKey, '||')) {
+            return array_pad(explode('||', $serverKey, 2), 2, null);
+        }
+
+        return [$serverKey, null];
+    }
+
+    /**
+     * Fetch the Add Display form settings cached against an activation code, if there are any.
+     * @param string|null $authCode
+     * @return array|null
+     */
+    protected function getDisplayClaim(?string $authCode): ?array
+    {
+        if (empty($authCode)) {
+            return null;
+        }
+
+        $cache = $this->getPool()->getItem(Display::getAddViaCodeCacheKey($authCode));
+        $claim = $cache->get();
+
+        return ($cache->isMiss() || !is_array($claim)) ? null : $claim;
+    }
+
+    /**
+     * Finish an Add Display claim once the new display has been saved: assign the display group
+     * chosen on the form, and drop the cached form data so it is only ever applied once.
+     * @param Display $display
+     * @param array $claim
+     * @param string $authCode
+     */
+    protected function completeDisplayClaim(Display $display, array $claim, string $authCode): void
+    {
+        $displayGroupId = intval($claim['displayGroupId'] ?? 0);
+
+        if ($displayGroupId > 0 && $this->displayGroupFactory !== null) {
+            try {
+                $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+                $displayGroup->load();
+                $this->getDispatcher()->dispatch(
+                    new \Xibo\Event\DisplayGroupLoadEvent($displayGroup),
+                    \Xibo\Event\DisplayGroupLoadEvent::$NAME
+                );
+
+                $displayGroup->assignDisplay($display);
+                $displayGroup->save(['validate' => false]);
+            } catch (GeneralException $e) {
+                // The display registers fine without its group - the operator can assign by hand.
+                $this->getLog()->error('completeDisplayClaim: cannot assign displayId '
+                    . $display->displayId . ' to displayGroupId ' . $displayGroupId
+                    . ', e = ' . $e->getMessage());
+            }
+        }
+
+        $this->getPool()->deleteItem(Display::getAddViaCodeCacheKey($authCode));
     }
 
     /**

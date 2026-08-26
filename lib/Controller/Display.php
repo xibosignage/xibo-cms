@@ -1781,6 +1781,13 @@ class Display extends Base
             throw new InvalidArgumentException(__('Code cannot be empty'), 'code');
         }
 
+        // Settings chosen on the Add Display form cannot be applied yet, because the display does
+        // not exist until the Player registers. They are cached against the activation code, and
+        // the code rides along with the CMS key so that RegisterDisplay can recognise the Player
+        // this submission belongs to and apply them (see Soap5::RegisterDisplay). The Player
+        // strips the code from the key before storing it.
+        $claim = $this->buildDisplayClaim($sanitizedParams);
+
         $guzzle = SafeClient::getSafeClient();
 
         try {
@@ -1794,12 +1801,19 @@ class Display extends Base
                     'form_params' => [
                         'user_code' => $user_code,
                         'cmsAddress' => $cmsAddress,
-                        'cmsKey' => $cmsKey,
+                        'cmsKey' => empty($claim) ? $cmsKey : $cmsKey . '||' . $user_code,
                     ]
                 ])
             );
 
             $data = json_decode($guzzleRequest->getBody(), true);
+
+            if (!empty($claim)) {
+                $cache = $this->pool->getItem(\Xibo\Entity\Display::getAddViaCodeCacheKey($user_code));
+                $cache->set($claim);
+                $cache->expiresAfter(new \DateInterval('P1D'));
+                $this->pool->save($cache);
+            }
 
             $this->getState()->hydrate([
                 'message' => $data['message']
@@ -1816,6 +1830,63 @@ class Display extends Base
         }
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Build the set of display settings to apply when the Player behind an activation code
+     * registers: a name, folder, display group and whether it should be authorised.
+     *
+     * Registration runs without a user, so entitlement is checked here at submission time: the
+     * fields are only honoured from users who could make the same changes after registration.
+     * Authorisation deliberately needs no extra feature - toggleAuthorise is available to this
+     * form's audience (displays.add) as well.
+     *
+     * @param SanitizerInterface $sanitizedParams
+     * @return array
+     * @throws NotFoundException
+     * @throws AccessDeniedException
+     */
+    private function buildDisplayClaim(SanitizerInterface $sanitizedParams): array
+    {
+        $claim = [];
+
+        if ($sanitizedParams->getCheckbox('authorised')) {
+            $claim['licensed'] = 1;
+        }
+
+        if ($this->getUser()->featureEnabled('displays.modify')) {
+            $displayName = trim($sanitizedParams->getString('displayName') ?? '');
+            if ($displayName !== '') {
+                $claim['display'] = $displayName;
+            }
+
+            $folderId = $sanitizedParams->getInt('folderId');
+            if (!empty($folderId)) {
+                $claim['folderId'] = $folderId;
+            }
+
+            $displayGroupId = $sanitizedParams->getInt('displayGroupId');
+            if (!empty($displayGroupId)) {
+                // Unlike the name and folder, a bad group id would fail at registration where
+                // nobody can see the error, so check it while the operator is still watching.
+                $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+                if (!$this->getUser()->checkEditable($displayGroup)) {
+                    throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
+                }
+
+                if ($displayGroup->isDynamic == 1) {
+                    throw new InvalidArgumentException(
+                        __('Displays cannot be manually assigned to a Dynamic Group'),
+                        'displayGroupId'
+                    );
+                }
+
+                $claim['displayGroupId'] = $displayGroupId;
+            }
+        }
+
+        return $claim;
     }
 
     #[OA\Get(
