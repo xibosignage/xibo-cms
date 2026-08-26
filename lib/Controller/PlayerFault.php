@@ -22,6 +22,7 @@
 
 namespace Xibo\Controller;
 
+use OpenApi\Attributes as OA;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\PlayerFaultFactory;
@@ -40,6 +41,56 @@ class PlayerFault extends Base
         $this->playerFaultFactory = $playerFaultFactory;
     }
 
+    #[OA\Get(
+        path: '/display/faults',
+        operationId: 'displayFaultsSearch',
+        description: 'Search Player reported faults',
+        summary: 'Player Fault Search',
+        tags: ['display']
+    )]
+    #[OA\Get(
+        path: '/display/faults/{displayId}',
+        operationId: 'displayFaultsSearchByDisplayId',
+        description: 'Search Player reported faults for a single Display',
+        summary: 'Player Fault Search by Display',
+        tags: ['display']
+    )]
+    #[OA\Parameter(
+        name: 'displayId',
+        description: 'The Display ID to restrict results to',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'code',
+        description: 'Filter by fault code',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'incidentDt',
+        description: 'Filter by the date the fault occurred',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'activeOnly',
+        description: 'Only return faults which are currently active, excluding any which have already expired',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'boolean')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/PlayerFault')
+        )
+    )]
     /**
      * @param Request $request
      * @param Response $response
@@ -51,14 +102,20 @@ class PlayerFault extends Base
     public function grid(Request $request, Response $response, int $displayId) : Response
     {
         $parsedParams = $this->getSanitizer($request->getQueryParams());
+        $activeOnly = $parsedParams->getCheckbox('activeOnly') === 1;
 
         if ($displayId != null) {
-            $playerFaults = $this->playerFaultFactory->getByDisplayId($displayId, $this->gridRenderSort($parsedParams));
+            $playerFaults = $this->playerFaultFactory->getByDisplayId(
+                $displayId,
+                $this->gridRenderSort($parsedParams),
+                $activeOnly
+            );
         } else {
             $filter = [
                 'code' => $parsedParams->getInt('code'),
                 'incidentDt' => $parsedParams->getDate('incidentDt'),
-                'displayId' => $parsedParams->getInt('displayId')
+                'displayId' => $parsedParams->getInt('displayId'),
+                'activeOnly' => $activeOnly
             ];
 
             $playerFaults = $this->playerFaultFactory->query($this->gridRenderSort($parsedParams), $this->gridRenderFilter($filter, $parsedParams));

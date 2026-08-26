@@ -65,6 +65,7 @@ import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
 import type { UIStatus } from '@/types/uiStatus';
 import type { DateLike } from '@/utils/date';
+import { getStorageFreePercentLabel } from '@/utils/formatters';
 import { formatTagsForExport } from '@/utils/tags';
 
 export interface DisplayFilterInput {
@@ -787,14 +788,8 @@ export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display
       id: 'storageFree',
       header: t('Storage Free %'),
       size: 130,
-      accessorFn: (row) => {
-        const avail = row.storageAvailableSpace;
-        const total = row.storageTotalSpace;
-        if (avail === null || total === null || total === 0) {
-          return '';
-        }
-        return ((avail / total) * 100).toFixed(1) + '%';
-      },
+      accessorFn: (row) =>
+        getStorageFreePercentLabel(row.storageAvailableSpace, row.storageTotalSpace),
       cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
     },
     {

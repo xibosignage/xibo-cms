@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { X, Loader2, Camera, Info, ImageOff } from 'lucide-react';
+import { X, Loader2, Camera, Info, ImageOff, RefreshCw } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -49,6 +49,7 @@ export default function DisplayScreenshotPreviewer({
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [retryToken, setRetryToken] = useState(0);
   const activeUrlRef = useRef<string | null>(null);
 
   const revokeUrl = () => {
@@ -59,10 +60,25 @@ export default function DisplayScreenshotPreviewer({
     setUrl(null);
   };
 
+  // The backend has no "not found" response for a display that has never sent a screenshot — it
+  // falls back to serving a generic placeholder image with a normal 200, so that case can't be
+  // told apart from a real one by letting the fetch run. `display.thumbnail` is already the
+  // signal the card grid and hero status use for the same thing (both set it to '' when the
+  // current screenshot file doesn't exist), so it's checked up front instead, and the request is
+  // skipped entirely rather than fetching a placeholder and treating it as a real image.
+  const noCurrentScreenshot = screenshotId === null && !display?.thumbnail;
+
   useEffect(() => {
     if (!display) {
       revokeUrl();
       setShowInfoPanel(false);
+      return;
+    }
+
+    if (screenshotId === null && !display.thumbnail) {
+      revokeUrl();
+      setLoading(false);
+      setHasError(false);
       return;
     }
 
@@ -105,7 +121,7 @@ export default function DisplayScreenshotPreviewer({
       controller.abort();
       revokeUrl();
     };
-  }, [display, screenshotId]);
+  }, [display, screenshotId, retryToken]);
 
   useKeydown('Escape', onClose, !!display);
 
@@ -154,10 +170,33 @@ export default function DisplayScreenshotPreviewer({
               <Loader2 className="w-10 h-10 animate-spin" />
               <span>{t('Loading screenshot...')}</span>
             </div>
+          ) : noCurrentScreenshot ? (
+            <div className="flex flex-col items-center gap-3 text-gray-400">
+              <ImageOff className="w-12 h-12" />
+              <span className="text-sm">{t('No screenshot has been taken yet')}</span>
+              {onRequestScreenshot && (
+                <button
+                  type="button"
+                  onClick={() => onRequestScreenshot(display)}
+                  className="flex items-center gap-1.5 cursor-pointer rounded-lg border border-gray-600 px-3 py-1.5 text-sm text-gray-300 hover:bg-white/10"
+                >
+                  <Camera className="size-4 shrink-0" />
+                  {t('Request Screenshot')}
+                </button>
+              )}
+            </div>
           ) : hasError || !url ? (
             <div className="flex flex-col items-center gap-3 text-gray-400">
               <ImageOff className="w-12 h-12" />
-              <span className="text-sm">{t('No screenshot available')}</span>
+              <span className="text-sm">{t('Could not load the screenshot')}</span>
+              <button
+                type="button"
+                onClick={() => setRetryToken((prev) => prev + 1)}
+                className="flex items-center gap-1.5 cursor-pointer rounded-lg border border-gray-600 px-3 py-1.5 text-sm text-gray-300 hover:bg-white/10"
+              >
+                <RefreshCw className="size-4 shrink-0" />
+                {t('Retry')}
+              </button>
             </div>
           ) : (
             <img

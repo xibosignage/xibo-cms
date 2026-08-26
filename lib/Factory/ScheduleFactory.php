@@ -25,7 +25,9 @@ use Carbon\Carbon;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Schedule;
 use Xibo\Entity\User;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\ConfigServiceInterface;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -294,6 +296,152 @@ class ScheduleFactory extends BaseFactory
         ';
 
         return $this->getStore()->select($SQL, $params);
+    }
+
+    /**
+     * Resolve a raw getForXmds() row into a hydrated Schedule entity, or null if the row
+     * should be skipped entirely - a Command event (which has no Layout), or an empty
+     * Campaign (a campaignId with no layoutId). Shared by eventList() (Schedule controller)
+     * and getNextForDisplay() so the two candidate-filtering steps can't drift apart.
+     * @param array $row a row from getForXmds()
+     * @return Schedule|null
+     */
+    public function hydrateScheduleFromXmdsRow(array $row): ?Schedule
+    {
+        if ($row['eventTypeId'] == Schedule::$COMMAND_EVENT) {
+            return null;
+        }
+
+        if ($row['layoutId'] == 0 && $row['campaignId'] != 0) {
+            return null;
+        }
+
+        return $this->createEmpty()->hydrate($row, [
+            'intProperties' => [
+                'isPriority',
+                'syncTimezone',
+                'displayOrder',
+                'fromDt',
+                'toDt'
+            ]
+        ]);
+    }
+
+    /**
+     * Get the next scheduled Layout for a Display, within a short look-ahead window.
+     *
+     * This follows the same two-step pattern as the XMDS sync (getForXmds() candidates,
+     * hydrated and passed through Schedule::getEvents() to resolve recurrence/day-parting/
+     * exclusions into concrete occurrences).
+     *
+     * Limitation: there is no priority/shareOfVoice/interrupt resolution here (that only
+     * happens on the player at runtime) - where several events overlap in the window, this
+     * simply returns the occurrence with the earliest start time. That is an honest
+     * approximation of "what's next", not a guarantee of what the player will actually show.
+     *
+     * @param int $displayId
+     * @param string|null $displayTimeZone the Display's timezone, if it has one set
+     * @param int $windowHours how many hours ahead of now to look for the next occurrence
+     * @return array{layoutId: int, startsAt: Carbon}|null null if nothing is scheduled in the window
+     */
+    public function getNextForDisplay(int $displayId, ?string $displayTimeZone = null, int $windowHours = 4): ?array
+    {
+        // Short-lived cache, keyed per Display - this query is a big join and getEvents() can
+        // walk recurrence trees, which is noticeable when a grid renders "next scheduled" for
+        // many Displays at once.
+        $cacheKey = 'schedule/nextForDisplay/' . $displayId . '/' . $windowHours . '/' . ($displayTimeZone ?? '');
+        $cache = $this->pool->getItem($cacheKey);
+
+        if (!$cache->isMiss()) {
+            $cached = $cache->get();
+
+            if ($cached === null) {
+                return null;
+            }
+
+            return [
+                'layoutId' => $cached['layoutId'],
+                'startsAt' => Carbon::createFromTimestamp($cached['startsAt']),
+            ];
+        }
+
+        $fromDt = Carbon::now();
+        $toDt = $fromDt->copy()->addHours($windowHours);
+
+        $rows = $this->getForXmds($displayId, $fromDt, $toDt);
+
+        $next = null;
+        foreach ($rows as $row) {
+            $schedule = $this->hydrateScheduleFromXmdsRow($row);
+            if ($schedule === null) {
+                continue;
+            }
+
+            // If this is a synchronised timezone event, evaluate it with respect to the
+            // Display's local time, rather than the CMS's.
+            $isSyncTimezone = ($schedule->syncTimezone == 1 && !empty($displayTimeZone));
+
+            try {
+                if ($isSyncTimezone) {
+                    $scheduleEvents = $schedule->getEvents(
+                        $fromDt->copy()->setTimezone($displayTimeZone),
+                        $toDt->copy()->setTimezone($displayTimeZone)
+                    );
+                } else {
+                    $scheduleEvents = $schedule->getEvents($fromDt, $toDt);
+                }
+            } catch (GeneralException $e) {
+                $this->getLog()->error('getNextForDisplay: unable to getEvents for ' . $schedule->eventId
+                    . ': ' . $e->getMessage());
+                continue;
+            }
+
+            if (count($scheduleEvents) <= 0) {
+                continue;
+            }
+
+            // Resolve the layoutId, taking into account synchronised events, which play a
+            // different Layout per-Display to keep multiple Displays in sync.
+            if ($row['eventTypeId'] == Schedule::$SYNC_EVENT) {
+                $layoutId = $row['syncLayoutId'];
+            } else {
+                $layoutId = $row['layoutId'];
+            }
+
+            if (empty($layoutId)) {
+                continue;
+            }
+
+            foreach ($scheduleEvents as $scheduleEvent) {
+                $startsAt = $isSyncTimezone
+                    ? Carbon::createFromTimestamp($scheduleEvent->fromDt, $displayTimeZone)
+                    : DateFormatHelper::createFromTimestamp($scheduleEvent->fromDt);
+
+                // "Always" day-parted events resolve to Schedule::$DATE_MIN (the beginning of
+                // time) - clamp to the window start so that an always-on event is treated as
+                // starting "now" rather than always winning the earliest-start comparison.
+                if ($startsAt->lessThan($fromDt)) {
+                    $startsAt = $fromDt->copy();
+                }
+
+                if ($next === null || $startsAt->lessThan($next['startsAt'])) {
+                    $next = [
+                        'layoutId' => (int) $layoutId,
+                        'startsAt' => $startsAt,
+                    ];
+                }
+            }
+        }
+
+        // Cache the result (including the "nothing scheduled" case) for a short time.
+        $cache->set($next === null ? null : [
+            'layoutId' => $next['layoutId'],
+            'startsAt' => $next['startsAt']->getTimestamp(),
+        ]);
+        $cache->setTTL(30);
+        $cache->save();
+
+        return $next;
     }
 
     /**

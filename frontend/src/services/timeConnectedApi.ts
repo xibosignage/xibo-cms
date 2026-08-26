@@ -27,6 +27,8 @@ export interface TimeConnectedRequest {
   toDt?: string;
   groupByFilter: string;
   displayGroupId?: number[];
+  /** Filters the report down to a single display (e.g. for the Display Overview Manage modal). */
+  displayId?: number;
   signal?: AbortSignal;
 }
 
@@ -70,6 +72,9 @@ export async function fetchTimeConnected(
   }
   params.append('groupByFilter', req.groupByFilter);
   req.displayGroupId?.forEach((id) => params.append('displayGroupId[]', String(id)));
+  if (req.displayId !== undefined) {
+    params.append('displayId', String(req.displayId));
+  }
 
   // `/report/data/{name}` is a root web route (routes-web.php), not a `/json` API route, so this
   // uses raw axios rather than the `@/lib/api` client (baseURL `/json`). Mirrors displaysApi.

@@ -459,3 +459,47 @@ export function formatCmsTime(value: DateLike, options: CmsDateFormatOptions = {
     options.locale,
   );
 }
+
+const RELATIVE_TIME_UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
+  ['year', 31536000],
+  ['month', 2592000],
+  ['week', 604800],
+  ['day', 86400],
+  ['hour', 3600],
+  ['minute', 60],
+];
+
+export interface RelativeTimeOptions {
+  locale?: string;
+  // Shown for anything under a minute old, since Intl.RelativeTimeFormat has
+  // no dedicated "just now" wording of its own.
+  justNow?: string;
+  never?: string;
+}
+
+// Minute-through-year granularity (e.g. "5 minutes ago") via
+// Intl.RelativeTimeFormat. For simpler day-granularity phrasing ("Today" /
+// "N days ago"), see formatRelativeDate() in utils/formatters.ts — kept
+// separate since that helper's coarser wording doesn't fit this one's
+// use cases (e.g. "last seen" timestamps that need minute-level precision).
+export function formatRelativeTime(value: DateLike, options: RelativeTimeOptions = {}): string {
+  const date = toDateOrNull(value);
+  if (!date) {
+    return options.never ?? '';
+  }
+
+  const diffSeconds = Math.round((date.getTime() - Date.now()) / 1000);
+  const absSeconds = Math.abs(diffSeconds);
+
+  if (absSeconds < 60) {
+    return options.justNow ?? '';
+  }
+
+  const rtf = new Intl.RelativeTimeFormat(options.locale || 'en', { numeric: 'auto' });
+  for (const [unit, unitSeconds] of RELATIVE_TIME_UNITS) {
+    if (absSeconds >= unitSeconds) {
+      return rtf.format(Math.round(diffSeconds / unitSeconds), unit);
+    }
+  }
+  return rtf.format(diffSeconds, 'second');
+}

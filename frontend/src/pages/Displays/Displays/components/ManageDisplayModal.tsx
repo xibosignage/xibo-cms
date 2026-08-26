@@ -41,10 +41,10 @@ import {
   useBandwidthData,
   useDisconnectionEvents,
   useDisplayManageData,
-  useDisplayScreenshots,
 } from '../hooks/useDisplayManageData';
 
 import DisplayScreenshotPreviewer from './DisplayScreenshotPreviewer';
+import ScreenshotGallery from './ScreenshotGallery';
 
 import TabNav from '@/components/ui/TabNav';
 import Modal from '@/components/ui/modals/Modal';
@@ -707,100 +707,8 @@ function ConnectivitySection({ display }: { display: Display }) {
   );
 }
 
-/** How recent a screenshot has to be to count as live. */
-const LIVE_WINDOW_MS = 2 * 60 * 1000;
-
-/**
- * Cap on how many of the newest screenshots may carry the badge. On a short interval several
- * would sit inside the window at once and the badge would stop meaning "the latest".
- */
-const MAX_LIVE_BADGES = 2;
-
 const MANAGE_TAB_STATUS = 'Status';
 const MANAGE_TAB_PROOF_OF_PLAY = 'Proof of Play';
-
-function ScreenshotGallery({
-  display,
-  onSelect,
-}: {
-  display: Display;
-  onSelect: (screenshot: DisplayScreenshot) => void;
-}) {
-  const { t } = useTranslation();
-  const { user } = useUserContext();
-  const cmsTimeZone = user?.settings?.defaultTimezone ?? 'UTC';
-
-  const { data: screenshots, isPending, error } = useDisplayScreenshots(display.displayId, true);
-
-  const items = screenshots ?? [];
-  const now = Date.now();
-
-  if (isPending) {
-    return (
-      <div className="flex items-center justify-center py-10">
-        <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <p className="px-4 py-3 text-sm text-red-600">
-        {error instanceof Error ? error.message : t('Could not load screenshots')}
-      </p>
-    );
-  }
-
-  if (items.length === 0) {
-    return (
-      <EmptyState
-        message={t('No screenshots yet. Request one, or set an interval to collect them.')}
-      />
-    );
-  }
-
-  return (
-    <div className="p-4">
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-        {items.map((shot, index) => {
-          const takenAt = shot.createdDt * 1000;
-          const isLive = index < MAX_LIVE_BADGES && now - takenAt < LIVE_WINDOW_MS;
-
-          return (
-            <button
-              key={shot.displayScreenshotId}
-              type="button"
-              onClick={() => onSelect(shot)}
-              className="group relative block cursor-pointer overflow-hidden rounded-lg border border-gray-200 bg-gray-50 text-left transition-shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-xibo-blue-500"
-            >
-              <img
-                src={shot.url}
-                alt={t('Screenshot')}
-                loading="lazy"
-                className="aspect-video w-full bg-white object-contain"
-              />
-
-              {isLive && (
-                <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
-                  <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                  {t('Live')}
-                </span>
-              )}
-
-              <span className="block border-t border-gray-200 bg-white px-2 py-1.5 text-xs text-gray-600">
-                {DateTime.fromMillis(takenAt).setZone(cmsTimeZone).toFormat('dd LLL HH:mm:ss')}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
-      <p className="mt-3 text-xs text-gray-500">
-        {t('The most recent screenshots are kept, oldest removed automatically.')}
-      </p>
-    </div>
-  );
-}
 
 export default function ManageDisplayModal({ display, onClose }: ManageDisplayModalProps) {
   const { t } = useTranslation();
