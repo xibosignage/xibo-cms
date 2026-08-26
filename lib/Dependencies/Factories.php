@@ -174,6 +174,11 @@ class Factories
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
             },
+            'displayScreenshotFactory' => function (ContainerInterface $c) {
+                $repository = new \Xibo\Factory\DisplayScreenshotFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
+            },
             'displayGroupFactory' => function (ContainerInterface $c) {
                 $repository = new \Xibo\Factory\DisplayGroupFactory(
                     $c->get('user'),

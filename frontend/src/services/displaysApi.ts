@@ -29,6 +29,7 @@ import type {
   BandwidthResponse,
   DisconnectionEvent,
   DisplayManageData,
+  DisplayScreenshot,
   PlayerFault,
 } from '@/types/displayManage';
 import type { Layout } from '@/types/layout';
@@ -337,6 +338,43 @@ export async function checkLicence(displayId: number | string): Promise<void> {
 export async function requestScreenShot(displayId: number | string): Promise<void> {
   await http.put(`/display/requestscreenshot/${displayId}`, null, {
     headers: { 'X-Requested-With': 'XMLHttpRequest' },
+  });
+}
+
+export async function fetchScreenshotHistory(
+  displayId: number | string,
+  signal?: AbortSignal,
+): Promise<DisplayScreenshot[]> {
+  const response = await http.get(`/display/screenshot/${displayId}/history`, { signal });
+  return response.data;
+}
+
+/** One image out of the history, rather than the display's current one. */
+export async function fetchHistoryScreenshotBlob(
+  displayId: number | string,
+  screenshotId: number,
+  signal?: AbortSignal,
+): Promise<Blob> {
+  const response = await http.get(`/display/screenshot/${displayId}/history/${screenshotId}`, {
+    responseType: 'blob',
+    signal,
+  });
+  return response.data;
+}
+
+/** Minutes between automatic screenshots, as an override on the display's profile. 0 turns it off. */
+export async function setScreenShotInterval(
+  displayId: number | string,
+  screenShotRequestInterval: number,
+): Promise<void> {
+  const params = new URLSearchParams({
+    screenShotRequestInterval: String(screenShotRequestInterval),
+  });
+  await http.put(`/display/screenshotinterval/${displayId}`, params.toString(), {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-Requested-With': 'XMLHttpRequest',
+    },
   });
 }
 

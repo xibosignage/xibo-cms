@@ -322,12 +322,25 @@ $app->group('', function (RouteCollectorProxy $group) {
 $app->get('/display', ['\Xibo\Controller\Display', 'grid'])->setName('display.search');
 $app->get('/display/locales', ['\Xibo\Controller\Display','getLocaleLanguages'])->setName('display.locales');
 $app->group('', function (RouteCollectorProxy $group) {
+    $group->put(
+        '/display/screenshotinterval/{id:[0-9]+}',
+        ['\Xibo\Controller\Display','setScreenShotInterval']
+    )->setName('display.screenshotinterval');
+
     $group->put('/display/requestscreenshot/{id:[0-9]+}', ['\Xibo\Controller\Display','requestScreenShot'])
         ->setName('display.requestscreenshot');
     $group->put('/display/licenceCheck/{id:[0-9]+}', ['\Xibo\Controller\Display','checkLicence'])
         ->setName('display.licencecheck');
     $group->put('/display/purgeAll/{id:[0-9]+}', ['\Xibo\Controller\Display','purgeAll'])
         ->setName('display.purge.all');
+    $group->get('/display/screenshot/{id:[0-9]+}/history', ['\Xibo\Controller\Display','screenShotHistory'])
+        ->setName('display.screenshot.history');
+
+    $group->get(
+        '/display/screenshot/{id:[0-9]+}/history/{screenshotId:[0-9]+}',
+        ['\Xibo\Controller\Display','screenShotFromHistory']
+    )->setName('display.screenshot.history.item');
+
     $group->get('/display/screenshot/{id:[0-9]+}', ['\Xibo\Controller\Display','screenShot'])
         ->setName('display.screenShot');
     $group->get('/display/status/{id:[0-9]+}', ['\Xibo\Controller\Display','statusWindow'])

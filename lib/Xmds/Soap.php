@@ -148,6 +148,9 @@ class Soap
     /** @var  DisplayEventFactory */
     protected $displayEventFactory;
 
+    /** @var \Xibo\Factory\DisplayScreenshotFactory */
+    protected $displayScreenshotFactory;
+
     /** @var  ScheduleFactory */
     protected $scheduleFactory;
 
@@ -225,7 +228,8 @@ class Soap
         $dispatcher,
         $campaignFactory,
         $syncGroupFactory,
-        $playerFaultFactory
+        $playerFaultFactory,
+        $displayScreenshotFactory
     ) {
         $this->logProcessor = $logProcessor;
         $this->pool = $pool;
@@ -253,6 +257,7 @@ class Soap
         $this->campaignFactory = $campaignFactory;
         $this->syncGroupFactory = $syncGroupFactory;
         $this->playerFaultFactory = $playerFaultFactory;
+        $this->displayScreenshotFactory = $displayScreenshotFactory;
     }
 
     /**
