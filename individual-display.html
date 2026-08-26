@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/xibo-design-system-aa450368-b982-41d5-958e-626315af104f/tokens/fig-tokens.css">
+<link rel="stylesheet" href="_ds/xibo-design-system-aa450368-b982-41d5-958e-626315af104f/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/xibo-design-system-aa450368-b982-41d5-958e-626315af104f/components/buttons/fig-assets.css">
+<link rel="stylesheet" href="_ds/xibo-design-system-aa450368-b982-41d5-958e-626315af104f/components/data-display/fig-assets.css">
+<link rel="stylesheet" href="_ds/xibo-design-system-aa450368-b982-41d5-958e-626315af104f/components/forms/fig-assets.css">
+<link rel="stylesheet" href="_ds/xibo-design-system-aa450368-b982-41d5-958e-626315af104f/components/navigation/fig-assets.css">
+<link rel="stylesheet" href="_ds/xibo-design-system-aa450368-b982-41d5-958e-626315af104f/assets/brands-avatars/fig-assets.css">
+<link rel="stylesheet" href="_ds/xibo-design-system-aa450368-b982-41d5-958e-626315af104f/styles.css">
+<script src="_ds/xibo-design-system-aa450368-b982-41d5-958e-626315af104f/_ds_bundle.js"></script>
+<style>
+body{margin:0}
+a{color:var(--text-brand-color)}
+a:hover{color:var(--colors-xibo-blue-700)}
+@keyframes livepulse{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes addspin{to{transform:rotate(360deg)}}
+</style>
+</helmet>
+
+<div style="display:flex;height:100vh;width:100%;background:var(--colors-gray-50);font-family:var(--font-ui);overflow:hidden;box-sizing:border-box">
+
+  <div style="width:240px;height:100%;flex-shrink:0;overflow-y:auto;display:flex;flex-direction:column;gap:20px;background:var(--colors-xibo-blue-800);padding:20px;box-sizing:border-box">
+    <div style="display:flex;align-items:center;gap:12px;height:40px;flex-shrink:0">
+      <div style="width:88px;height:40px;overflow:hidden;position:relative;flex-shrink:0">
+        <div style="position:absolute;top:0;left:0;width:883px;height:457px;transform:scale(0.0996);transform-origin:top left">
+          <x-import component-from-global-scope="XiboDesignSystem_aa4503.XiboLogo" variant="white logo" hint-size="883px,457px"></x-import>
+        </div>
+      </div>
+      <span style="font-size:11px;font-weight:700;color:white;border:1px solid rgba(255,255,255,0.35);border-radius:999px;padding:2px 8px;letter-spacing:0.02em;flex-shrink:0">V5.0</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:4px;flex:1;overflow-y:auto">
+      <sc-for list="{{ navTree }}" as="group" hint-placeholder-count="9">
+        <div>
+          <div onClick="{{ group.onClick }}" style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:4px;cursor:pointer;background:{{ group.bg }};border-bottom:2px solid rgba(255,255,255,0.3)">
+            <x-import component-from-global-scope="XiboDesignSystem_aa4503.Icon" name="{{ group.icon }}" size="16" hint-size="16px,16px" style="color:{{ group.color }};flex-shrink:0"></x-import>
+            <span style="flex:1;font-family:Inter,sans-serif;font-weight:600;font-size:14px;letter-spacing:0.005em;color:{{ group.color }};white-space:nowrap">{{ group.label }}</span>
+            <sc-if value="{{ group.hasChildren }}" hint-placeholder-val="{{ true }}">
+              <x-import component-from-global-scope="XiboDesignSystem_aa4503.Icon" name="{{ group.chevronIcon }}" size="16" hint-size="16px,16px" style="color:{{ group.color }};flex-shrink:0"></x-import>
+            </sc-if>
+          </div>
+          <sc-if value="{{ group.expanded }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;gap:4px;background:rgba(0,0,0,0.1);border-top:1px solid rgba(255,255,255,0.2);border-right:1px solid rgba(255,255,255,0.2);border-bottom:2px solid rgba(255,255,255,0.2);border-left:1px solid rgba(255,255,255,0.2);padding:8px 28px;box-sizing:border-box">
+              <sc-for list="{{ group.children }}" as="child" hint-placeholder-count="4">
+                <div onClick="{{ child.onClick }}" style="padding:8px 0;border-radius:4px;cursor:pointer;font-family:Inter,sans-serif;font-weight:600;font-size:13.5px;letter-spacing:0.005em;color:{{ child.color }}">{{ child.label }}</div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0">
+
+    <div style="height:70px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:var(--colors-gray-50);border-bottom:1px solid var(--border-border-color)">
+      <div style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--colors-gray-500)">
+        <sc-if value="{{ isGallery }}" hint-placeholder-val="{{ true }}">
+          <span style="font-weight:700;color:var(--text-title-color);font-size:16px">Displays</span>
+        </sc-if>
+        <sc-if value="{{ isLicensing }}" hint-placeholder-val="{{ false }}">
+          <span style="font-weight:700;color:var(--text-title-color);font-size:16px">Licensing &amp; billing</span>
+        </sc-if>
+        <sc-if value="{{ isManage }}" hint-placeholder-val="{{ false }}">
+          <a href="#" onClick="{{ goGallery }}" style="text-decoration:none;font-size:13.5px">Displays</a>
+          <span>/</span>
+          <span style="font-weight:700;color:var(--text-title-color);font-size:16px">{{ cur.name }}</span>
+        </sc-if>
+        <sc-if value="{{ isLive }}" hint-placeholder-val="{{ false }}">
+          <a href="#" onClick="{{ goGallery }}" style="text-decoration:none;font-size:13.5px">Displays</a>
+          <span>/</span>
+          <a href="#" onClick="{{ goManage }}" style="text-decoration:none;font-size:13.5px">{{ cur.name }}</a>
+          <span>/</span>
+          <span style="font-weight:700;color:var(--text-title-color);font-size:16px">Live view</span>
+        </sc-if>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <div style="position:relative">
+          <button onClick="{{ toggleNotif }}" style="position:relative;width:36px;height:36px;border-radius:999px;border:1px solid var(--border-border-color);background:var(--comp-card-bg-color);display:flex;align-items:center;justify-content:center;cursor:pointer">
+            <x-import component-from-global-scope="XiboDesignSystem_aa4503.Icon" name="IconCollectionBell" size="17" hint-size="17px,17px" style="color:var(--colors-gray-600)"></x-import>
+            <span style="position:absolute;top:6px;right:7px;width:8px;height:8px;border-radius:999px;background:var(--colors-xibo-sienna-500);border:2px solid var(--comp-card-bg-color)"></span>
+          </button>
+          <sc-if value="{{ notifOpen }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;top:44px;right:0;width:300px;background:var(--overlays-dropdowns-bg-color);border:1px solid var(--overlays-dropdowns-border-color);border-radius:12px;box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);padding:14px;z-index:30">
+              <div style="font-weight:700;font-size:13px;color:var(--text-title-color);margin-bottom:4px">Software update available</div>
+              <div style="font-size:12.5px;line-height:1.5;color:var(--colors-gray-600);margin-bottom:10px">Xibo Player 4 R303 is ready for 12 displays. Adds faster boot times and touch-gesture support.</div>
+              <a href="#" onClick="{{ reviewUpdate }}" style="font-size:12.5px;font-weight:600;text-decoration:none">Review on Manage Display →</a>
+            </div>
+          </sc-if>
+        </div>
+        <div style="width:34px;height:34px;border-radius:999px;background:var(--colors-xibo-blue-800);color:white;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700">AM</div>
+      </div>
+    </div>
+
+    <div style="flex:1;overflow:auto;padding:28px;box-sizing:border-box;background:white">
+
+      <sc-if value="{{ isGallery }}" hint-placeholder-val="{{ true }}">
+      <div data-screen-label="Displays gallery" style="display:flex;flex-direction:column;gap:0">
+
+        <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-border-color);padding-bottom:16px;margin-bottom:16px">
+          <div style="display:flex;align-items:center;gap:28px">
+            <span style="font-size:14px;font-weight:700;color:var(--text-brand-color);padding-bottom:16px;border-bottom:2px solid var(--text-brand-color);margin-bottom:-17px">Displays</span>
+            <span style="font-size:14px;font-weight:600;color:var(--colors-gray-500);cursor:pointer">Display Groups</span>
+            <span style="font-size:14px;font-weight:600;color:var(--colors-gray-500);cursor:pointer">Sync Groups</span>
+            <span style="font-size:14px;font-weight:600;color:var(--colors-gray-500);cursor:pointer">Settings</span>
+            <span style="font-size:14px;font-weight:600;color:var(--colors-gray-500);cursor:pointer">Commands</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <button onClick="{{ openAddDisplay }}" style="padding:9px 16px;border-radius:8px;border:none;background:var(--text-brand-color);color:white;font-size:13.5px;font-weight:600;cursor:pointer">Add Display</button>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--colors-gray-600)">
+              <x-import component-from-global-scope="XiboDesignSystem_aa4503.Icon" name="IconCollectionFolder" size="15" hint-size="15px,15px" style="color:var(--colors-gray-400)"></x-import>
+              All Displays
+            </div>
+            <div style="position:relative;display:flex;align-items:center">
+              <input placeholder="Search displays" style="width:240px;padding:9px 12px 9px 34px;border:1px solid var(--border-border-color);background:var(--colors-gray-50);border-radius:8px;font-size:13px;font-family:var(--font-ui);box-sizing:border-box" />
+              <x-import component-from-global-scope="XiboDesignSystem_aa4503.Icon" name="IconCollectionSearch" size="15" hint-size="15px,15px" style="position:absolute;left:11px;color:var(--colors-gray-400)"></x-import>
+            </div>
+            <button style="padding:9px 14px;border-radius:8px;border:1px solid var(--border-border-color);background:white;font-size:13px;font-weight:600;color:var(--colors-gray-700);cursor:pointer;display:flex;align-items:center;gap:6px">
+              <x-import component-from-global-scope="XiboDesignSystem_aa4503.Icon" name="IconCollectionFilter" size="14" hint-size="14px,14px"></x-import>
+              Filters
+            </button>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <span style="font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--colors-gray-500)">{{ displayCount }} displays</span>
+          <div style="display:inline-flex;background:var(--colors-gray-50);border:1px solid var(--border-border-color);border-radius:10px;padding:3px">
+            <button onClick="{{ setViewTable }}" style="padding:7px 14px;border-radius:7px;border:none;background:{{ tableViewBg }};color:{{ tableViewFg }};font-size:13px;font-weight:600;cursor:pointer">Table</button>
+            <button onClick="{{ setViewMap }}" style="padding:7px 14px;border-radius:7px;border:none;background:{{ mapViewBg }};color:{{ mapViewFg }};font-size:13px;font-weight:600;cursor:pointer">Map</button>
+            <button onClick="{{ setViewGallery }}" style="padding:7px 14px;border-radius:7px;border:none;background:{{ galleryViewBg }};color:{{ galleryViewFg }};font-size:13px;font-weight:600;cursor:pointer">Gallery</button>
+          </div>
+        </div>
+
+        <sc-if value="{{ isTableView }}" hint-placeholder-val="{{ true }}">
+        <div style="border:1px solid var(--border-border-color);border-radius:12px;overflow-x:auto">
+          <div style="display:grid;grid-template-columns:40px 70px 220px 110px 120px 170px 150px;min-width:900px;background:var(--colors-gray-50);border-bottom:1px solid var(--border-border-color)">
+            <div style="padding:10px 8px"><input type="checkbox" /></div>
+            <div style="padding:10px 8px;font-size:11px;font-weight:700;color:var(--colors-gray-500);letter-spacing:0.04em">ID</div>
+            <div style="padding:10px 8px;font-size:11px;font-weight:700;color:var(--colors-gray-500);letter-spacing:0.04em">NAME</div>
+            <div style="padding:10px 8px;font-size:11px;font-weight:700;color:var(--colors-gray-500);letter-spacing:0.04em">STATUS</div>
+            <div style="padding:10px 8px;font-size:11px;font-weight:700;color:var(--colors-gray-500);letter-spacing:0.04em">TYPE</div>
+            <div style="padding:10px 8px;font-size:11px;font-weight:700;color:var(--colors-gray-500);letter-spacing:0.04em">MAC ADDRESS</div>
+            <div style="padding:10px 8px;font-size:11px;font-weight:700;color:var(--colors-gray-500);letter-spacing:0.04em">ACTIONS</div>
+          </div>
+          <sc-for list="{{ tableRows }}" as="d" hint-placeholder-count="6">
+            <div style="display:grid;grid-template-columns:40px 70px 220px 110px 120px 170px 150px;min-width:900px;border-bottom:1px solid var(--border-border-color);align-items:center">
+              <div style="padding:12px 8px"><input type="checkbox" /></div>
+              <div style="padding:12px 8px;font-size:13px;color:var(--colors-gray-500);font-family:var(--font-mono, monospace)">{{ d.idLabel }}</div>
+              <div style="padding:12px 8px">
+                <div onClick="{{ d.onOpen }}" style="font-size:13.5px;font-weight:600;color:var(--text-title-color);cursor:pointer">{{ d.name }}</div>
+                <div style="font-size:11.5px;color:var(--colors-gray-500)">{{ d.location }}</div>
+              </div>
+              <div style="padding:12px 8px">
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;background:{{ d.bg }};color:{{ d.fg }}">
+                  <span style="width:6px;height:6px;border-radius:999px;background:{{ d.dot }}"></span>{{ d.label }}
+                </span>
+              </div>
+              <div style="padding:12px 8px;font-size:12.5px;color:var(--colors-gray-600)">{{ d.type }}</div>
+              <div style="padding:12px 8px;font-size:12.5px;color:var(--colors-gray-500);font-family:var(--font-mono, monospace)">{{ d.mac }}</div>
+              <div style="padding:12px 8px;display:flex;gap:8px;align-items:center">
+                <button onClick="{{ d.onOpen }}" style="padding:6px 10px;border-radius:6px;border:1px solid var(--border-border-color);background:white;font-size:11.5px;font-weight:600;color:var(--colors-gray-700);cursor:pointer">Manage</button>
+                <button onClick="{{ d.onLive }}" style="padding:6px 10px;border-radius:6px;border:1px solid var(--border-border-color);background:white;font-size:11.5px;font-weight:600;color:var(--text-brand-color);cursor:pointer">Live</button>
+                <button style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border-border-color);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
+                  <x-import component-from-global-scope="XiboDesignSystem_aa4503.Icon" name="IconCollectionMoreVertical" size="14" hint-size="14px,14px" style="color:var(--colors-gray-500)"></x-import>
+                </button>
+              </div>
+            </div>
+          </sc-for>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--colors-gray-50)">
+            <span style="font-size:12px;color:var(--colors-gray-500)">Showing {{ displayCount }} of {{ displayCount }}</span>
+            <div style="display:flex;gap:6px">
+              <button style="padding:6px 12px;border-radius:6px;border:1px solid var(--border-border-color);background:white;font-size:12px;font-weight:600;color:var(--colors-gray-400);cursor:default">Previous</button>
+              <button style="padding:6px 12px;border-radius:6px;border:none;background:var(--text-brand-color);color:white;font-size:12px;font-weight:600">1</button>
+              <button style="padding:6px 12px;border-radius:6px;border:1px solid var(--border-border-color);background:white;font-size:12px;font-weight:600;color:var(--colors-gray-400);cursor:default">Next</button>
+            </div>
+          </div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ isMapView }}" hint-placeholder-val="{{ false }}">
+        <div style="border:1px solid var(--border-border-color);border-radius:12px;height:480px;background:var(--colors-gray-50);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px">
+          <x-import component-from-global-scope="XiboDesignSystem_aa4503.Icon" name="IconCollectionMap" size="34" hint-size="34px,34px" style="color:var(--colors-gray-300)"></x-import>
+          <span style="font-size:13px;color:var(--colors-gray-500)">Map view — displays are plotted by their registered location</span>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ isGalleryCardsView }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px">
+          <sc-for list="{{ displayCards }}" as="d" hint-placeholder-count="6">
+            <div style="background:var(--comp-card-bg-color);border:1px solid var(--border-border-color);border-radius:14px;overflow:hidden;display:flex;flex-direction:column">
+              <div onClick="{{ d.onOpen }}" style="position:relative;height:150px;background:linear-gradient(135deg,var(--colors-gray-100),var(--colors-gray-50));display:flex;align-items:center;justify-content:center;cursor:pointer;border-bottom:1px solid var(--border-border-color)">
+                <x-import component-from-global-scope="XiboDesignSystem_aa4503.Icon" name="IconCollectionMonitor" size="30" hint-size="30px,30px" style="color:var(--colors-gray-300)"></x-import>
+                <span style="position:absolute;top:10px;left:10px;display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;background:{{ d.bg }};color:{{ d.fg }}">
+                  <span style="width:6px;height:6px;border-radius:999px;background:{{ d.dot }}"></span>{{ d.label }}
+                </span>
+              </div>
+              <div style="padding:14px 16px;display:flex;flex-direction:column;gap:2px;flex:1">
+                <div style="font-size:14.5px;font-weight:700;color:var(--text-title-color)">{{ d.name }}</div>
+                <div style="font-size:12.5px;color:var(--colors-gray-500)">{{ d.location }}</div>
+                <div style="font-size:11.5px;color:var(--colors-gray-400);margin-top:4px">Last seen {{ d.lastSeen }}</div>
+              </div>
+              <div style="display:flex;border-top:1px solid var(--border-border-color)">
+                <button onClick="{{ d.onOpen }}" style="flex:1;padding:10px;border:none;background:none;font-size:12.5px;font-weight:600;color:var(--colors-gray-700);cursor:pointer;border-right:1px solid var(--border-border-color)">Manage</button>
+                <button onClick="{{ d.onLive }}" style="flex:1;padding:10px;border:none;background:none;font-size:12.5px;font-weight:600;color:var(--text-brand-color);cursor:pointer">Live view</button>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        </sc-if>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ isManage }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Manage display" style="display:flex;flex-direction:column;gap:20px;max-width:1280px">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="font-size:24px;font-weight:700;color:var(--text-title-color)">{{ cur.name }}</div>
+            <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:{{ curMeta.bg }};color:{{ curMeta.fg }}">
+              <span style="width:6px;height:6px;border-radius:999px;background:{{ curMeta.dot }}"></span>{{ curMeta.label }}
+            </span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <button onClick="{{ goLive }}" style="padding:9px 16px;border-radius:8px;border:1px solid var(--border-border-color);background:white;font-size:13.5px;font-weight:600;color:var(--colors-gray-800);cursor:pointer;display:flex;align-items:center;gap:7px">
+              <x-import component-from-global-scope="XiboDesignSystem_aa4503.Icon" name="IconCollectionCamera" size="15" hint-size="15px,15px"></x-import>
+              Request live view
+            </button>
+            <div style="position:relative">
+              <button onClick="{{ togglePower }}" style="padding:9px 16px;border-radius:8px;border:1px solid var(--border-border-color);background:white;font-size:13.5px;font-weight:600;color:var(--colors-gray-800);cursor:pointer;display:flex;align-items:center;gap:7px">
+                <x-import component-from-global-scope="XiboDesignSystem_aa4503.Icon" name="IconCollectionPower" size="15" hint-size="15px,15px"></x-import>
+                Power / Reboot
+                <x-import component-from-global-scope="XiboDesignSystem_aa4503.Icon" name="IconCollectionChevronDown" size="13" hint-size="13px,13px"></x-import>
+              </button>
+              <sc-if value="{{ powerMenuOpen }}" hint-placeholder-val="{{ false }}">
+                <div style="position:absolute;top:44px;right:0;width:210px;background:var(--overlays-dropdowns-bg-color);border:1px solid var(--overlays-dropdowns-border-color);border-radius:10px;box-shadow:0 10px 15px -3px rgba(0,0,0,.1);padding:6px;z-index:30">
+                  <sc-for list="{{ powerActions }}" as="a" hint-placeholder-count="4">
+                    <div onClick="{{ a.onClick }}" style="padding:9px 10px;border-radius:6px;font-size:13px;color:{{ a.color }}">{{ a.label }}</div>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+            <button onClick="{{ openPop }}" style="padding:9px 16px;border-radius:8px;border:none;background:var(--text-brand-color);font-size:13.5px;font-weight:600;color:white;cursor:pointer;display:flex;align-items:center;gap:7px">
+              <x-import component-from-global-scope="XiboDesignSystem_aa4503.Icon" name="IconCollectionFileText" size="15" hint-size="15px,15px"></x-import>
+              Proof of play
+            </button>
+            <button style="width:38px;height:38px;border-radius:8px;border:1px solid var(--border-border-color);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer">
+              <x-import component-from-global-scope="XiboDesignSystem_aa4503.Icon" name="IconCollectionSettings" size="16" hint-size="16px,16px" style="color:var(--colors-gray-600)"></x-import>
+            </button>
+          </div>
+        </div>
+
+        <sc-if value="{{ showBanner }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;align-items:center;gap:14px;background:var(--colors-blue-50);border:1px solid var(--colors-blue-100);border-radius:12px;padding:14px 18px">
+            <div style="width:36px;height:36px;border-radius:999px;background:var(--text-brand-color);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <x-import component-from-global-scope="XiboDesignSystem_aa4503.Icon" name="IconCollectionZap" size="17" hint-size="17px,17px" style="color:white"></x-import>
+            </div>
+            <div style="flex:1">
+              <div style="font-size:13.5px;font-weight:700;color:var(--text-title-color)">Xibo Player 4 R303 is available</div>
+              <div style="font-size:12.5px;color:var(--colors-gray-600)">Adds faster boot times and touch-gesture support. 12 displays on your network are ready to update.</div>
+            </div>
+            <button style="padding:8px 14px;border-radius:7px;border:none;background:var(--text-brand-color);color:white;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap">Upgrade now</button>
+            <button style="padding:8px 14px;border-radius:7px;border:1px solid var(--colors-blue-200);background:white;color:var(--text-title-color);font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap">Enable auto-upgrade</button>
+            <button onClick="{{ dismissBanner }}" style="width:26px;height:26px;border:none;background:none;cursor:pointer;color:var(--colors-gray-400);flex-shrink:0;display:flex;align-items:center;justify-content:center">
+              <x-import component-from-global-scope="XiboDesignSystem_aa4503.Icon" name="IconCollectionX" size="15" hint-size="15px,15px"></x-import>
+            </button>
+          </div>
+        </sc-if>
+
+        <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:18px">
+          <div style="background:var(--comp-card-bg-color);border:1px solid var(--border-border-color);border-radius:14px;overflow:hidden;display:flex;flex-direction:column">
+            <div style="padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-border-color)">
+              <span style="font-size:13.5px;font-weight:700;color:var(--text-title-color)">Live view</span>
+              <a href="#" onClick="{{ goLive }}" style="font-size:12.5px;text-decoration:none">See all</a>
+            </div>
+            <div style="position:relative;flex:1;min-height:190px;background:linear-gradient(135deg,var(--colors-gray-100),var(--colors-gray-50));display:flex;align-items:center;justify-content:center">
+              <x-import component-from-global-scope="XiboDesignSystem_aa4503.Icon" name="IconCollectionMonitor" size="34" hint-size="34px,34px" style="color:var(--colors-gray-300)"></x-import>
+              <span style="position:absolute;top:12px;left:12px;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(0,0,0,.65);color:white;font-size:11px;font-weight:700">
+                <span style="width:6px;height:6px;border-radius:999px;background:#ef4444;animation:livepulse 1.4s ease-in-out infinite"></span>LIVE
+              </span>
+              <span style="position:absolute;bottom:12px;left:12px;padding:4px 10px;border-radius:999px;background:rgba(0,0,0,.55);color:white;font-size:11px">Captured 12s ago</span>
+            </div>
+          </div>
+
+          <div style="background:var(--comp-card-bg-color);border:1px solid var(--border-border-color);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px">
+            <span style="font-size:13.5px;font-weight:700;color:var(--text-title-color)">Now playing</span>
+            <div style="display:flex;flex-direction:column;gap:3px">
+              <span style="font-size:14px;font-weight:600;color:var(--text-title-color)">{{ nowPlaying.layout }}</span>
+              <span style="font-size:12px;color:var(--colors-gray-500)">Layout · {{ nowPlaying.playlist }}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--border-border-color);border-radius:10px">
+              <div style="width:34px;height:34px;border-radius:8px;background:var(--colors-blue-100);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <x-import component-from-global-scope="XiboDesignSystem_aa4503.Icon" name="IconCollectionPlay" size="15" hint-size="15px,15px" style="color:var(--colors-blue-800)"></x-import>
+              </div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:12.5px;font-weight:600;color:var(--text-title-color);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ nowPlaying.media }}</div>
+                <div style="font-size:11.5px;color:var(--colors-gray-500)">{{ nowPlaying.region }}</div>
+              </div>
+            </div>
+            <div style="height:6px;border-radius:999px;background:var(--colors-gray-100);overflow:hidden">
+              <div style="height:100%;border-radius:999px;background:var(--text-brand-color);width:{{ nowPlaying.progressPct }}%"></div>
+            </div>
+          </div>
+
+          <div style="background:var(--comp-card-bg-color);border:1px solid var(--border-border-color);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px">
+            <span style="font-size:13.5px;font-weight:700;color:var(--text-title-color)">Daily timeline</span>
+            <div style="position:relative;height:22px;border-radius:8px;overflow:hidden;display:flex">
+              <sc-for list="{{ timelineBlocks }}" as="b" hint-placeholder-count="4">
+                <div style="height:100%;background:{{ b.bg }};width:{{ b.pct }}%"></div>
+              </sc-for>
+              <div style="position:absolute;top:-4px;left:{{ nowPct }}%;width:2px;height:30px;background:var(--colors-red-500)"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <sc-for list="{{ timelineBlocks }}" as="b" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--colors-gray-600)">
+                  <span style="width:8px;height:8px;border-radius:2px;background:{{ b.bg }}"></span>{{ b.label }}
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:18px">
+          <div style="background:var(--comp-card-bg-color);border:1px solid var(--border-border-color);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:13.5px;font-weight:700;color:var(--text-title-color);margin-bottom:8px">Health check</span>
+
+            <div style="display:flex;flex-direction:column;gap:8px;padding-bottom:12px;border-bottom:1px solid var(--border-border-color)">
+              <div style="display:flex;align-items:center;justify-content:space-between;font-size:12.5px">
+                <span style="color:var(--colors-gray-600);display:flex;align-items:center;gap:6px">
+                  <x-import component-from-global-scope="XiboDesignSystem_aa4503.Icon" name="IconCollectionHardDrive" size="14" hint-size="14px,14px"></x-import>
+                  Storage
+                </span>
+                <span style="font-weight:600;color:var(--text-title-color)">80% full</span>
+              </div>
+              <div style="height:8px;border-radius:999px;background:var(--colors-gray-100);overflow:hidden">
+                <div style="height:100%;width:80%;border-radius:999px;background:var(--colors-yellow-500)"></div>
+              </div>
+              <a href="#" style="font-size:12px;text-decoration:none;align-self:flex-start">Clear cache</a>
+            </div>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border-border-color)">
+              <div style="display:flex;align-items:center;gap:10px">
+                <x-import component-from-global-scope="XiboDesignSystem_aa4503.Icon" name="IconCollectionShieldCheck" size="16" hint-size="16px,16px" style="color:var(--colors-gray-500)"></x-import>
+                <div>
+                  <div style="font-size:13px;font-weight:600;color:var(--text-title-color)">License</div>
+                  <div style="font-size:11.5px;color:var(--colors-gray-500)">{{ curLicenseLabel }}</div>
+                </div>
+              </div>
+              <sc-if value="{{ cur.licensed }}" hint-placeholder-val="{{ true }}">
+                <span style="padding:5px 10px;border-radius:999px;background:var(--colors-green-100);color:var(--colors-green-800);font-size:11.5px;font-weight:700">Authorised</span>
+              </sc-if>
+              <sc-if value="{{ curNotLicensed }}" hint-placeholder-val="{{ false }}">
+                <button onClick="{{ authoriseCurrent }}" style="padding:6px 12px;border-radius:7px;border:none;background:var(--colors-xibo-sienna-500);color:white;font-size:12px;font-weight:600;cursor:pointer">Authorise now</button>
+              </sc-if>
+            </div>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0">
+              <div style="display:flex;align-items:center;gap:10px">
+                <x-import component-from-global-scope="XiboDesignSystem_aa4503.Icon" name="IconCollectionWifi" size="16" hint-size="16px,16px" style="color:var(--colors-gray-500)"></x-import>
+                <div>
+                  <div style="font-size:13px;font-weight:600;color:var(--text-title-color)">Network</div>
+                  <div style="font-size:11.5px;color:var(--colors-gray-500)">{{ cur.ip }} · Wired</div>
+                </div>
+              </div>
+              <span style="font-size:12px;color:var(--colors-gray-500)">92 Mbps</span>
+            </div>
+          </div>
+
+          <div style="background:var(--comp-card-bg-color);border:1px solid var(--border-border-color);border-radius:14px;padding:18px;display:flex;flex-direction:column">
+            <span style="font-size:13.5px;font-weight:700;color:var(--text-title-color);margin-bottom:6px">All commands</span>
+            <sc-for list="{{ commands }}" as="c" hint-placeholder-count="6">
+              <div style="display:flex;align-items:center;gap:12px;padding:11px 4px;border-top:1px solid var(--border-border-color)">
+                <x-import component-from-global-scope="XiboDesignSystem_aa4503.Icon" name="{{ c.icon }}" size="16" hint-size="16px,16px" style="color:{{ c.iconColor }}"></x-import>
+                <div style="flex:1">
+                  <div style="font-size:13px;font-weight:600;color:{{ c.labelColor }}">{{ c.label }}</div>
+                  <div style="font-size:11.5px;color:var(--colors-gray-500)">{{ c.hint }}</div>
+                </div>
+                <x-import component-from-global-scope="XiboDesignSystem_aa4503.Icon" name="IconCollectionChevronRight" size="14" hint-size="14px,14px" style="color:var(--colors-gray-300)"></x-import>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ isLive }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Live view" style="display:flex;flex-direction:column;gap:18px;max-width:1000px">
+        <div>
+          <div style="font-size:20px;font-weight:700;color:var(--text-title-color)">Live view — {{ cur.name }}</div>
+          <div style="font-size:13px;color:var(--colors-gray-500);margin-top:4px">Thumbnails refresh automatically. Captures from the last 3 minutes are marked Live.</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px">
+          <sc-for list="{{ shots }}" as="s" hint-placeholder-count="7">
+            <div style="background:var(--comp-card-bg-color);border:1px solid var(--border-border-color);border-radius:12px;overflow:hidden">
+              <div style="position:relative;height:130px;background:linear-gradient(135deg,var(--colors-gray-100),var(--colors-gray-50));display:flex;align-items:center;justify-content:center">
+                <x-import component-from-global-scope="XiboDesignSystem_aa4503.Icon" name="IconCollectionMonitor" size="26" hint-size="26px,26px" style="color:var(--colors-gray-300)"></x-import>
+                <sc-if value="{{ s.isLive }}" hint-placeholder-val="{{ false }}">
+                  <span style="position:absolute;top:8px;left:8px;display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:999px;background:rgba(0,0,0,.65);color:white;font-size:10.5px;font-weight:700">
+                    <span style="width:5px;height:5px;border-radius:999px;background:#ef4444;animation:livepulse 1.4s ease-in-out infinite"></span>LIVE
+                  </span>
+                </sc-if>
+              </div>
+              <div style="padding:10px 12px">
+                <div style="font-size:12px;font-weight:600;color:var(--text-title-color)">{{ s.timeLabel }}</div>
+                <div style="font-size:11px;color:var(--colors-gray-500);margin-top:2px">{{ s.note }}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ isLicensing }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Licensing" style="display:flex;flex-direction:column;gap:20px;max-width:1200px">
+        <div style="font-size:20px;font-weight:700;color:var(--text-title-color)">Licensing &amp; billing</div>
+
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+          <div style="background:var(--comp-card-bg-color);border:1px solid var(--border-border-color);border-radius:12px;padding:16px">
+            <div style="font-size:12px;color:var(--colors-gray-500)">Licenses purchased</div>
+            <div style="font-size:26px;font-weight:700;color:var(--text-title-color);margin-top:4px;font-family:var(--font-display)">{{ licenseStats.purchased }}</div>
+          </div>
+          <div style="background:var(--comp-card-bg-color);border:1px solid var(--border-border-color);border-radius:12px;padding:16px">
+            <div style="font-size:12px;color:var(--colors-gray-500)">In use</div>
+            <div style="font-size:26px;font-weight:700;color:var(--text-title-color);margin-top:4px;font-family:var(--font-display)">{{ licenseStats.inUse }}</div>
+          </div>
+          <div style="background:var(--comp-card-bg-color);border:1px solid var(--border-border-color);border-radius:12px;padding:16px">
+            <div style="font-size:12px;color:var(--colors-gray-500)">Available</div>
+            <div style="font-size:26px;font-weight:700;color:var(--colors-green-600);margin-top:4px;font-family:var(--font-display)">{{ licenseStats.available }}</div>
+          </div>
+          <div style="background:var(--comp-card-bg-color);border:1px solid var(--border-border-color);border-radius:12px;padding:16px">
+            <div style="font-size:12px;color:var(--colors-gray-500)">On trial</div>
+            <div style="font-size:26px;font-weight:700;color:var(--colors-xibo-sienna-600);margin-top:4px;font-family:var(--font-display)">{{ licenseStats.trial }}</div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;background:var(--comp-card-bg-color);border:1px solid var(--border-border-color);border-radius:14px;padding:18px 20px">
+          <div>
+            <div style="font-size:13px;color:var(--colors-gray-500)">Current plan</div>
+            <div style="font-size:16px;font-weight:700;color:var(--text-title-color);margin-top:2px">Growth — $4.50 / display / month</div>
+            <div style="font-size:12.5px;color:var(--colors-gray-500);margin-top:2px">Billed monthly · renews Sep 21, 2026 · one license per authorised display</div>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button style="padding:10px 16px;border-radius:8px;border:1px solid var(--border-border-color);background:white;font-size:13px;font-weight:600;color:var(--colors-gray-800);cursor:pointer">Manage subscription</button>
+            <button style="padding:10px 16px;border-radius:8px;border:none;background:var(--text-brand-color);color:white;font-size:13px;font-weight:600;cursor:pointer">Buy more licenses</button>
+          </div>
+        </div>
+
+        <div style="background:var(--comp-card-bg-color);border:1px solid var(--border-border-color);border-radius:14px;overflow:hidden">
+          <div style="padding:14px 20px;border-bottom:1px solid var(--border-border-color);font-size:13.5px;font-weight:700;color:var(--text-title-color)">Displays &amp; license status</div>
+          <sc-for list="{{ licenseRows }}" as="d" hint-placeholder-count="6">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 20px;border-top:1px solid var(--border-border-color)">
+              <div>
+                <div style="font-size:13.5px;font-weight:600;color:var(--text-title-color)">{{ d.name }}</div>
+                <div style="font-size:12px;color:var(--colors-gray-500)">{{ d.location }}</div>
+              </div>
+              <sc-if value="{{ d.licensed }}" hint-placeholder-val="{{ true }}">
+                <span style="padding:5px 10px;border-radius:999px;background:var(--colors-green-100);color:var(--colors-green-800);font-size:11.5px;font-weight:700">Licensed</span>
+              </sc-if>
+              <sc-if value="{{ d.showTrialBadge }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <span style="padding:5px 10px;border-radius:999px;background:{{ d.trialBadgeBg }};color:{{ d.trialBadgeFg }};font-size:11.5px;font-weight:700">{{ d.trialLabel }}</span>
+                  <button onClick="{{ d.onAuthorise }}" style="padding:6px 12px;border-radius:7px;border:none;background:var(--text-brand-color);color:white;font-size:12px;font-weight:600;cursor:pointer">Authorise</button>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display:flex;gap:12px;align-items:flex-start;background:var(--colors-xibo-sienna-50);border:1px solid var(--colors-xibo-sienna-100);border-radius:12px;padding:16px 18px">
+          <x-import component-from-global-scope="XiboDesignSystem_aa4503.Icon" name="IconCollectionAlertTriangle" size="18" hint-size="18px,18px" style="color:var(--colors-xibo-sienna-600);flex-shrink:0;margin-top:1px"></x-import>
+          <div style="font-size:12.5px;line-height:1.6;color:var(--colors-xibo-sienna-800)">
+            Newly added displays get a 14-day trial with a countdown shown on their card and in this list. Authorise a display before the trial ends to keep it running — authorising consumes one license.
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+    </div>
+  </div>
+
+  <x-import component-from-global-scope="XiboDesignSystem_aa4503.Modal" open="{{ popOpen }}" onClose="{{ closePop }}" title="Proof of play — {{ cur.name }}" hint-size="520px,420px">
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:12.5px;color:var(--colors-gray-500)">{{ popDateRange }}</span>
+        <div style="display:flex;gap:8px">
+          <button style="padding:7px 12px;border-radius:7px;border:1px solid var(--border-border-color);background:white;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
+            <x-import component-from-global-scope="XiboDesignSystem_aa4503.Icon" name="IconCollectionDownload" size="13" hint-size="13px,13px"></x-import>CSV
+          </button>
+          <button style="padding:7px 12px;border-radius:7px;border:1px solid var(--border-border-color);background:white;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
+            <x-import component-from-global-scope="XiboDesignSystem_aa4503.Icon" name="IconCollectionDownload" size="13" hint-size="13px,13px"></x-import>PDF
+          </button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+        <div style="background:var(--colors-gray-50);border-radius:10px;padding:12px">
+          <div style="font-size:11px;color:var(--colors-gray-500)">Total plays</div>
+          <div style="font-size:18px;font-weight:700;color:var(--text-title-color)">{{ popMetrics.plays }}</div>
+        </div>
+        <div style="background:var(--colors-gray-50);border-radius:10px;padding:12px">
+          <div style="font-size:11px;color:var(--colors-gray-500)">Total duration</div>
+          <div style="font-size:18px;font-weight:700;color:var(--text-title-color)">{{ popMetrics.duration }}</div>
+        </div>
+        <div style="background:var(--colors-gray-50);border-radius:10px;padding:12px">
+          <div style="font-size:11px;color:var(--colors-gray-500)">Campaigns</div>
+          <div style="font-size:18px;font-weight:700;color:var(--text-title-color)">{{ popMetrics.campaigns }}</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column">
+        <sc-for list="{{ popRowsComputed }}" as="r" hint-placeholder-count="4">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 2px;border-top:1px solid var(--border-border-color);font-size:13px">
+            <span style="color:var(--text-title-color)">{{ r.name }}</span>
+            <span style="color:var(--colors-gray-500)">{{ r.plays }} plays · {{ r.share }}%</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;justify-content:flex-end;padding-top:6px">
+        <button onClick="{{ closePop }}" style="padding:9px 16px;border-radius:8px;border:1px solid var(--border-border-color);background:white;font-size:13px;font-weight:600;cursor:pointer">Close</button>
+      </div>
+    </div>
+  </x-import>
+
+  <x-import component-from-global-scope="XiboDesignSystem_aa4503.Modal" open="{{ addOpen }}" onClose="{{ closeAddDisplay }}" title="{{ addModalTitle }}" hint-size="480px,520px">
+    <div style="display:flex;flex-direction:column;gap:16px;max-height:min(72vh,560px);overflow-y:auto;box-sizing:border-box;padding-right:2px">
+
+      <sc-if value="{{ isAddForm }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="font-size:12px;font-weight:600;color:var(--colors-gray-600)">Code shown on the player</div>
+          <input value="{{ addActivationCode }}" onChange="{{ onActivationCodeChange }}" placeholder="XR7-K2M9" style="width:100%;padding:10px 12px;border:1px solid var(--border-border-color);border-radius:8px;font-size:16px;font-family:var(--font-mono, monospace);letter-spacing:0.06em;text-transform:uppercase;box-sizing:border-box" />
+          <div style="font-size:11px;color:var(--colors-gray-500)">Found on the player's splash screen. Valid for 5 minutes.</div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div>
+            <div style="font-size:12px;font-weight:600;color:var(--colors-gray-600);margin-bottom:4px">Display name</div>
+            <input value="{{ addFormName }}" onChange="{{ onAddNameChange }}" placeholder="e.g. Reception TV" style="width:100%;padding:9px 12px;border:1px solid var(--border-border-color);border-radius:8px;font-size:13px;box-sizing:border-box;font-family:var(--font-ui)" />
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:600;color:var(--colors-gray-600);margin-bottom:4px">Display group</div>
+            <select value="{{ addFormGroup }}" onChange="{{ onAddGroupChange }}" style="width:100%;padding:9px 12px;border:1px solid var(--border-border-color);border-radius:8px;font-size:13px;box-sizing:border-box;font-family:var(--font-ui);background:white">
+              <sc-for list="{{ groupOptions }}" as="g" hint-placeholder-count="4">
+                <option value="{{ g }}">{{ g }}</option>
+              </sc-for>
+            </select>
+          </div>
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:12px;border:1px solid var(--border-border-color);border-radius:10px;background:var(--colors-gray-50)">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text-title-color)">Auto-authorise on registration</div>
+              <div style="font-size:11.5px;color:var(--colors-gray-500);margin-top:2px;line-height:1.5">Immediately consumes one license so the display goes live with no manual step. Off leaves it on a 14-day trial until you authorise it.</div>
+            </div>
+            <div onClick="{{ toggleAutoAuthorise }}" style="width:40px;height:22px;border-radius:999px;background:{{ toggleTrackBg }};position:relative;cursor:pointer;flex-shrink:0;margin-top:2px">
+              <div style="position:absolute;top:2px;left:{{ toggleKnobLeft }};width:18px;height:18px;border-radius:999px;background:white;box-shadow:0 1px 3px rgba(0,0,0,0.25)"></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:10px;padding-top:6px;border-top:1px solid var(--border-border-color)">
+          <button onClick="{{ closeAddDisplay }}" style="padding:9px 16px;border-radius:8px;border:1px solid var(--border-border-color);background:white;font-size:13px;font-weight:600;cursor:pointer">Cancel</button>
+          <button onClick="{{ startWaiting }}" disabled="{{ addFormInvalid }}" style="padding:9px 18px;border-radius:8px;border:none;background:{{ startBtnBg }};color:white;font-size:13px;font-weight:600;cursor:{{ startBtnCursor }}">Start waiting for registration</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isAddWaiting }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:14px;padding:14px 4px 4px">
+          <div style="width:56px;height:56px;border-radius:999px;border:4px solid var(--colors-blue-100);border-top-color:var(--text-brand-color);animation:addspin 1s linear infinite"></div>
+          <div style="text-align:center">
+            <div style="font-size:15px;font-weight:700;color:var(--text-title-color)">Waiting for the display to register…</div>
+            <div style="font-size:12.5px;color:var(--colors-gray-500);margin-top:4px">{{ waitingHint }}</div>
+          </div>
+          <div style="font-family:var(--font-mono, monospace);font-size:22px;font-weight:700;color:var(--text-title-color)">{{ addCountdownLabel }}</div>
+          <div style="width:100%;height:6px;border-radius:999px;background:var(--colors-gray-100);overflow:hidden">
+            <div style="height:100%;border-radius:999px;background:var(--text-brand-color);width:{{ addProgressPct }}%"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;width:100%;padding:12px;border:1px solid var(--border-border-color);border-radius:10px;background:var(--colors-gray-50);box-sizing:border-box">
+            <div style="font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--colors-gray-500)">Will be applied</div>
+            <div style="font-size:12.5px;color:var(--colors-gray-700)">{{ addFormName }} · {{ addFormGroup }} · {{ addAutoAuthoriseLabel }}</div>
+          </div>
+          <a href="#" onClick="{{ showFallback }}" style="font-size:12.5px;text-decoration:none">Nothing happening? Pick from recent registrations</a>
+          <div style="display:flex;justify-content:flex-end;gap:10px;padding-top:10px;border-top:1px solid var(--border-border-color);width:100%;box-sizing:border-box">
+            <button onClick="{{ closeAddDisplay }}" style="padding:9px 16px;border-radius:8px;border:1px solid var(--border-border-color);background:white;font-size:13px;font-weight:600;cursor:pointer">Close — I'll check later</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isAddSuccess }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:14px;padding:8px 0 0">
+          <div style="width:52px;height:52px;border-radius:999px;background:var(--colors-green-100);display:flex;align-items:center;justify-content:center">
+            <x-import component-from-global-scope="XiboDesignSystem_aa4503.Icon" name="IconCollectionCheckCircle2" size="28" hint-size="28px,28px" style="color:var(--colors-green-600)"></x-import>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:16px;font-weight:700;color:var(--text-title-color)">{{ addFormName }} is registered</div>
+            <div style="font-size:12.5px;color:var(--colors-gray-500);margin-top:4px">Applied from the pending registration</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;width:100%;box-sizing:border-box">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border-border-color);border-radius:8px">
+              <span style="font-size:12.5px;color:var(--colors-gray-500)">Name</span><span style="font-size:13px;font-weight:600;color:var(--text-title-color)">{{ addFormName }}</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border-border-color);border-radius:8px">
+              <span style="font-size:12.5px;color:var(--colors-gray-500)">Group</span><span style="font-size:13px;font-weight:600;color:var(--text-title-color)">{{ addFormGroup }}</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border-border-color);border-radius:8px">
+              <span style="font-size:12.5px;color:var(--colors-gray-500)">License</span>
+              <span style="padding:4px 10px;border-radius:999px;font-size:11.5px;font-weight:700;background:{{ successLicenseBg }};color:{{ successLicenseFg }}">{{ successLicenseLabel }}</span>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:10px;padding-top:10px;border-top:1px solid var(--border-border-color);width:100%;box-sizing:border-box">
+            <button onClick="{{ closeAddDisplay }}" style="padding:9px 16px;border-radius:8px;border:1px solid var(--border-border-color);background:white;font-size:13px;font-weight:600;cursor:pointer">Done</button>
+            <button onClick="{{ goToNewDisplay }}" style="padding:9px 16px;border-radius:8px;border:none;background:var(--text-brand-color);color:white;font-size:13px;font-weight:600;cursor:pointer">Go to display</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isAddFallback }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--text-title-color)">No matching registration yet</div>
+            <div style="font-size:12.5px;color:var(--colors-gray-500);margin-top:4px">Pick from displays that registered in the last 5 minutes and haven't been claimed.</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;padding:12px;border:1px solid var(--border-border-color);border-radius:10px;background:var(--colors-gray-50)">
+            <div style="font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--colors-gray-500)">Will be applied to your pick</div>
+            <div style="font-size:12.5px;color:var(--colors-gray-700)">{{ addFormName }} · {{ addFormGroup }} · {{ addAutoAuthoriseLabel }}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ recentRegistrations }}" as="r" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border-border-color);border-radius:10px">
+                <div>
+                  <div style="font-size:13px;font-weight:600;color:var(--text-title-color);font-family:var(--font-mono, monospace)">{{ r.mac }}</div>
+                  <div style="font-size:11.5px;color:var(--colors-gray-500)">{{ r.ip }} · first seen {{ r.firstSeen }}</div>
+                </div>
+                <button onClick="{{ r.onUse }}" style="padding:7px 12px;border-radius:7px;border:none;background:var(--text-brand-color);color:white;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">Use this</button>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding-top:10px;border-top:1px solid var(--border-border-color)">
+            <a href="#" onClick="{{ backToWaiting }}" style="font-size:12.5px;text-decoration:none">← Keep waiting</a>
+            <button onClick="{{ closeAddDisplay }}" style="padding:9px 16px;border-radius:8px;border:1px solid var(--border-border-color);background:white;font-size:13px;font-weight:600;cursor:pointer">Close</button>
+          </div>
+        </div>
+      </sc-if>
+
+    </div>
+  </x-import>
+
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;bottom:24px;right:24px;width:320px;background:var(--comp-card-bg-color);border:1px solid var(--border-border-color);border-radius:12px;box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);padding:14px;z-index:50;display:flex;gap:12px;align-items:flex-start">
+      <div style="width:34px;height:34px;border-radius:999px;background:var(--colors-green-100);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <x-import component-from-global-scope="XiboDesignSystem_aa4503.Icon" name="IconCollectionCheckCircle2" size="17" hint-size="17px,17px" style="color:var(--colors-green-600)"></x-import>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;color:var(--text-title-color)">{{ toast.title }}</div>
+        <div style="font-size:12px;color:var(--colors-gray-500);margin-top:2px">{{ toast.body }}</div>
+        <a href="#" onClick="{{ toast.onClick }}" style="font-size:12px;font-weight:600;text-decoration:none;display:inline-block;margin-top:6px">View display →</a>
+      </div>
+      <button onClick="{{ dismissToast }}" style="width:22px;height:22px;border:none;background:none;cursor:pointer;color:var(--colors-gray-400);flex-shrink:0;display:flex;align-items:center;justify-content:center">
+        <x-import component-from-global-scope="XiboDesignSystem_aa4503.Icon" name="IconCollectionX" size="13" hint-size="13px,13px"></x-import>
+      </button>
+    </div>
+  </sc-if>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    screen: 'gallery',
+    selectedId: 1,
+    popOpen: false,
+    notifOpen: false,
+    powerMenuOpen: false,
+    bannerDismissed: false,
+    galleryView: 'table',
+    expandedGroup: 'displays',
+    addOpen: false,
+    addStep: 'form',
+    addForm: { name: '', group: 'Retail Floor', autoAuthorise: true, activationCode: '' },
+    addServerKey: '8f2c1e9d4b7a4f0c9e2d',
+    addSecondsLeft: 300,
+    toast: null,
+    displays: [
+      { id:1, name:'Wall 1', location:'Flagship Store Window', status:'online', trialDaysLeft:null, licensed:true, lastSeen:'Just now', ip:'10.4.12.31', type:'Video Wall', mac:'10:F6:0A:4F:2B:C1' },
+      { id:2, name:'Reception', location:'Lobby Display — HQ Reception', status:'online', trialDaysLeft:6, licensed:false, lastSeen:'1 min ago', ip:'10.4.12.44', type:'Kiosk', mac:'10:F6:0A:4F:2B:C2' },
+      { id:3, name:'Menu Board 2', location:'Drive-Thru Menu Board 2', status:'error', trialDaysLeft:null, licensed:true, lastSeen:'2 hrs ago', ip:'10.4.14.02', type:'Menu Board', mac:'10:F6:0A:4F:2B:C3' },
+      { id:4, name:'Break Room TV', location:'Warehouse Break Room', status:'online', trialDaysLeft:null, licensed:true, lastSeen:'Just now', ip:'10.4.15.19', type:'LED', mac:'10:F6:0A:4F:2B:C4' },
+      { id:5, name:'Regional Lobby', location:'Regional Office Lobby', status:'offline', trialDaysLeft:null, licensed:true, lastSeen:'6 hrs ago', ip:'10.4.16.07', type:'Video Wall', mac:'10:F6:0A:4F:2B:C5' },
+      { id:6, name:'Pop-up Kiosk', location:'Westfield Mall', status:'online', trialDaysLeft:2, licensed:false, lastSeen:'4 min ago', ip:'10.4.19.33', type:'Kiosk', mac:'10:F6:0A:4F:2B:C6' },
+    ],
+  };
+
+  screenshotHistory = [
+    { mins:0, note:'Autumn Promo Loop — Layout 12A' },
+    { mins:2, note:'Autumn Promo Loop — Layout 12A' },
+    { mins:6, note:'Autumn Promo Loop — Layout 12A' },
+    { mins:11, note:'Weekday Loop — Retail' },
+    { mins:19, note:'Weekday Loop — Retail' },
+    { mins:34, note:'Weekday Loop — Retail' },
+    { mins:52, note:'Morning Standby' },
+  ];
+
+  commandsBase = [
+    { icon:'IconCollectionRotateCw', label:'Reboot player', hint:'Restarts the player application' },
+    { icon:'IconCollectionPower', label:'Power on / off', hint:'Sends a display power command' },
+    { icon:'IconCollectionRefreshCw', label:'Restart display service', hint:'Restarts the Xibo player service' },
+    { icon:'IconCollectionDownload', label:'Collect now', hint:'Forces a content sync from the CMS' },
+    { icon:'IconCollectionHardDrive', label:'Clear cache', hint:'Removes downloaded media not in use' },
+    { icon:'IconCollectionTrash2', label:'Factory reset', hint:'Erases local content and settings', danger:true },
+  ];
+
+  sidebarTreeBase = [
+    { key:'dashboard', label:'Dashboard', icon:'IconCollectionLayoutDashboard' },
+    { key:'schedule', label:'Schedule', icon:'IconCollectionCalendarDays', children:[{label:'Event'},{label:'Dayparting'}] },
+    { key:'design', label:'Design', icon:'IconCollectionPenTool', children:[{label:'Campaigns'},{label:'Layouts'},{label:'Templates'},{label:'Resolutions'}] },
+    { key:'library', label:'Library', icon:'IconCollectionFolder', children:[{label:'Playlists'},{label:'Media'},{label:'Datasets'},{label:'Menu Boards'}] },
+    { key:'displays', label:'Displays', icon:'IconCollectionMonitor', children:[
+        {label:'Add Displays', nav:'gallery'},
+        {label:'Display Groups', nav:'gallery'},
+        {label:'Sync Groups', nav:'gallery'},
+        {label:'Settings', nav:'gallery'},
+        {label:'Commands', nav:'gallery'},
+        {label:'Licensing & Billing', nav:'licensing'},
+      ] },
+    { key:'administration', label:'Administration', icon:'IconCollectionShieldCheck', children:[{label:'Users'},{label:'User Groups'},{label:'Settings'},{label:'Applications'},{label:'Connectors'},{label:'Modules'},{label:'Transitions'},{label:'Tasks'},{label:'Tags'},{label:'Folders'},{label:'Fonts'}] },
+    { key:'reports', label:'Reports', icon:'IconCollectionFileText', children:[{label:'All Reports'},{label:'Report Schedules'},{label:'Saved Reports'}] },
+    { key:'advanced', label:'Advanced', icon:'IconCollectionSlidersHorizontal', children:[{label:'Log'},{label:'Sessions'},{label:'Audit Trail'},{label:'Report Fault'}] },
+    { key:'developer', label:'Developer', icon:'IconCollectionCode', children:[{label:'Modules'}] },
+  ];
+
+  timelineBlocks = [
+    { pct:24, label:'Morning Loop', bg:'var(--colors-blue-100)' },
+    { pct:32, label:'Midday Promo', bg:'var(--colors-xibo-sienna-100)' },
+    { pct:26, label:'Evening Loop', bg:'var(--colors-blue-100)' },
+    { pct:18, label:'Overnight Standby', bg:'var(--colors-gray-100)' },
+  ];
+
+  popRows = [
+    { name:'Autumn Promo Loop', plays:'812', share:44 },
+    { name:'Weekday Loop — Retail', plays:'640', share:35 },
+    { name:'Store Hours Signage', plays:'378', share:20 },
+    { name:'Emergency Alerts', plays:'12', share:1 },
+  ];
+
+  groupOptions = ['Retail Floor', 'Reception', 'Warehouse', 'Menu Boards', 'Unassigned'];
+
+  recentRegistrationsBase = [
+    { mac: '10:F6:0A:55:1A:9C', ip: '10.4.22.14', firstSeen: '52s ago' },
+    { mac: '10:F6:0A:55:1A:9D', ip: '10.4.22.19', firstSeen: '2 min ago' },
+    { mac: '10:F6:0A:55:1A:9E', ip: '10.4.22.31', firstSeen: '4 min ago' },
+  ];
+
+  genCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let s = '';
+    for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
+    return s.slice(0, 3) + '-' + s.slice(3);
+  }
+
+  genMac() {
+    let s = '10:F6:0A';
+    for (let i = 0; i < 3; i++) s += ':' + Math.floor(Math.random() * 256).toString(16).padStart(2, '0').toUpperCase();
+    return s;
+  }
+
+  genIp() { return `10.4.${Math.floor(Math.random() * 30)}.${Math.floor(Math.random() * 254)}`; }
+
+  openAddDisplay() {
+    clearInterval(this._addInterval);
+    clearTimeout(this._toastTimer);
+    this._addElapsed = 0;
+    this._arrived = false;
+    this.setState({
+      addOpen: true, addStep: 'form',
+      addForm: { name: '', group: 'Retail Floor', autoAuthorise: true, activationCode: '' },
+      addServerKey: this.genCode().replace('-', ''), addSecondsLeft: 300,
+    });
+  }
+
+  closeAddDisplay() { this.setState({ addOpen: false }); }
+
+  setAddFormField(field, value) {
+    this.setState(s => ({ addForm: { ...s.addForm, [field]: value } }));
+  }
+
+  createDisplayFromForm(extra) {
+    const ids = this.state.displays.map(d => d.id);
+    const id = (ids.length ? Math.max(...ids) : 0) + 1;
+    const auto = this.state.addForm.autoAuthorise;
+    return {
+      id, name: this.state.addForm.name.trim() || 'New Display', location: this.state.addForm.group,
+      status: 'online', licensed: auto, trialDaysLeft: auto ? null : 14,
+      lastSeen: 'Just now', ip: extra.ip, type: 'Unregistered', mac: extra.mac,
+    };
+  }
+
+  addInvalidNow(af) { return !af.name.trim() || !af.activationCode.trim(); }
+
+  startWaiting() {
+    if (this.addInvalidNow(this.state.addForm)) return;
+    this._addElapsed = 0;
+    this._arrived = false;
+    this.setState({ addStep: 'waiting', addSecondsLeft: 300 });
+    this.runCountdown();
+  }
+
+  runCountdown() {
+    clearInterval(this._addInterval);
+    this._addInterval = setInterval(() => {
+      this._addElapsed += 1;
+      const secondsLeft = Math.max(0, 300 - this._addElapsed);
+      this.setState({ addSecondsLeft: secondsLeft });
+      if (!this._arrived && this._addElapsed >= 7) {
+        this._arrived = true;
+        this.handleRegistrationArrived();
+      } else if (secondsLeft <= 0) {
+        clearInterval(this._addInterval);
+        if (this.state.addOpen && this.state.addStep === 'waiting') this.setState({ addStep: 'fallback' });
+      }
+    }, 1000);
+  }
+
+  handleRegistrationArrived() {
+    clearInterval(this._addInterval);
+    const newDisplay = this.createDisplayFromForm({ mac: this.genMac(), ip: this.genIp() });
+    this._lastAddedId = newDisplay.id;
+    this.setState(s => ({ displays: [...s.displays, newDisplay] }));
+    if (this.state.addOpen && this.state.addStep === 'waiting') {
+      this.setState({ addStep: 'success' });
+    } else {
+      this.pushToast(newDisplay);
+    }
+  }
+
+  finalizeWithRegistration(reg) {
+    clearInterval(this._addInterval);
+    this._arrived = true;
+    const newDisplay = this.createDisplayFromForm({ mac: reg.mac, ip: reg.ip });
+    this._lastAddedId = newDisplay.id;
+    this.setState(s => ({ displays: [...s.displays, newDisplay], addStep: 'success' }));
+  }
+
+  showFallback() { clearInterval(this._addInterval); this.setState({ addStep: 'fallback' }); }
+  backToWaiting() { this.setState({ addStep: 'waiting' }); this.runCountdown(); }
+
+  pushToast(display) {
+    clearTimeout(this._toastTimer);
+    this.setState({
+      toast: {
+        title: `${display.name} registered`,
+        body: `${display.location} · ${display.licensed ? 'Authorised' : 'Trial started'}`,
+        onClick: () => { this.setState({ toast: null }); this.go('manage', display.id); },
+      },
+    });
+    this._toastTimer = setTimeout(() => this.setState({ toast: null }), 8000);
+  }
+
+  dismissToast() { clearTimeout(this._toastTimer); this.setState({ toast: null }); }
+  goToNewDisplay() { this.setState({ addOpen: false }); this.go('manage', this._lastAddedId); }
+
+  statusMeta(status) {
+    if (status === 'online') return { label:'Online', bg:'var(--colors-green-100)', fg:'var(--colors-green-800)', dot:'var(--colors-green-500)' };
+    if (status === 'error') return { label:'Fault', bg:'var(--colors-red-100)', fg:'var(--colors-red-800)', dot:'var(--colors-red-500)' };
+    return { label:'Offline', bg:'var(--colors-gray-100)', fg:'var(--colors-gray-600)', dot:'var(--colors-gray-400)' };
+  }
+
+  go(screen, id) {
+    this.setState(s => ({ screen, selectedId: id != null ? id : s.selectedId, powerMenuOpen: false, notifOpen: false }));
+  }
+
+  setGalleryView(v) {
+    this.setState({ galleryView: v });
+  }
+
+  toggleGroup(key) {
+    this.setState(s => ({ expandedGroup: s.expandedGroup === key ? null : key }));
+  }
+
+  authorise(id) {
+    this.setState(s => ({ displays: s.displays.map(d => d.id === id ? { ...d, licensed: true, trialDaysLeft: null } : d) }));
+  }
+
+  renderVals() {
+    const displays = this.state.displays;
+    const cur = displays.find(d => d.id === this.state.selectedId) || displays[0];
+    const curMeta = this.statusMeta(cur.status);
+    const activeKey = (this.state.screen === 'manage' || this.state.screen === 'live') ? 'gallery' : this.state.screen;
+
+    const displayCards = displays.map(d => {
+      const meta = this.statusMeta(d.status);
+      return {
+        ...d, ...meta,
+        trialLabel: d.trialDaysLeft != null ? `Trial · ${d.trialDaysLeft}d left` : null,
+        onOpen: () => this.go('manage', d.id),
+        onLive: () => this.go('live', d.id),
+      };
+    });
+
+    const shots = this.screenshotHistory.map(s => ({ ...s, isLive: s.mins <= 3, timeLabel: s.mins === 0 ? 'Just now' : `${s.mins} min ago` }));
+
+    const tableRows = displays.map(d => {
+      const meta = this.statusMeta(d.status);
+      const warn = d.trialDaysLeft != null && d.trialDaysLeft <= 3;
+      return {
+        ...d, ...meta,
+        idLabel: '00' + (10 + d.id),
+        licenseLabel: d.licensed ? 'Licensed' : `Trial · ${d.trialDaysLeft}d`,
+        licenseBg: d.licensed ? 'var(--colors-green-100)' : (warn ? 'var(--colors-yellow-100)' : 'var(--colors-xibo-sienna-100)'),
+        licenseFg: d.licensed ? 'var(--colors-green-800)' : (warn ? 'var(--colors-yellow-800)' : 'var(--colors-xibo-sienna-800)'),
+        onOpen: () => this.go('manage', d.id),
+        onLive: () => this.go('live', d.id),
+      };
+    });
+
+    const commands = this.commandsBase.map(c => ({
+      ...c,
+      iconColor: c.danger ? 'var(--colors-red-500)' : 'var(--colors-gray-500)',
+      labelColor: c.danger ? 'var(--colors-red-600)' : 'var(--text-title-color)',
+    }));
+
+    const activeSidebarGroup = 'displays';
+    const navTree = this.sidebarTreeBase.map(g => {
+      const hasChildren = !!g.children;
+      const isActiveGroup = g.key === activeSidebarGroup;
+      const expanded = this.state.expandedGroup === g.key;
+      const color = isActiveGroup ? '#ffffff' : 'rgba(188,213,255,1)';
+      return {
+        ...g,
+        hasChildren,
+        expanded,
+        color,
+        bg: isActiveGroup ? 'rgba(255,255,255,0.1)' : 'transparent',
+        chevronIcon: expanded ? 'IconCollectionChevronDown' : 'IconCollectionChevronRight',
+        onClick: hasChildren ? (() => this.toggleGroup(g.key)) : (() => {}),
+        children: (g.children || []).map(c => {
+          const active = c.nav === this.state.screen || (c.nav === 'gallery' && this.state.screen === 'gallery');
+          return {
+            ...c,
+            color: active ? '#ffffff' : 'rgba(188,213,255,1)',
+            onClick: c.nav ? (() => this.go(c.nav)) : (() => {}),
+          };
+        }),
+      };
+    });
+
+    const powerActions = [
+      { label: 'Reboot player', color: 'var(--text-title-color)' },
+      { label: 'Power on', color: 'var(--text-title-color)' },
+      { label: 'Power off', color: 'var(--text-title-color)' },
+      { label: 'Restart display service', color: 'var(--text-title-color)' },
+    ].map(a => ({ ...a, onClick: () => this.setState({ powerMenuOpen: false }) }));
+
+    const purchased = 24;
+    const inUse = displays.filter(d => d.licensed).length;
+    const licenseStats = {
+      purchased,
+      inUse,
+      available: purchased - inUse,
+      trial: displays.filter(d => !d.licensed && d.trialDaysLeft != null).length,
+    };
+
+    const licenseRows = displays.map(d => {
+      const warn = d.trialDaysLeft != null && d.trialDaysLeft <= 3;
+      return {
+        ...d,
+        showTrialBadge: !d.licensed,
+        trialLabel: d.trialDaysLeft != null ? `Trial · ${d.trialDaysLeft}d left` : '',
+        trialBadgeBg: warn ? 'var(--colors-yellow-100)' : 'var(--colors-xibo-sienna-100)',
+        trialBadgeFg: warn ? 'var(--colors-yellow-800)' : 'var(--colors-xibo-sienna-800)',
+        onAuthorise: () => this.authorise(d.id),
+      };
+    });
+
+    const af = this.state.addForm;
+    const mm = String(Math.floor(this.state.addSecondsLeft / 60)).padStart(1, '0');
+    const ss = String(this.state.addSecondsLeft % 60).padStart(2, '0');
+    const licBg = af.autoAuthorise ? 'var(--colors-green-100)' : 'var(--colors-xibo-sienna-100)';
+    const licFg = af.autoAuthorise ? 'var(--colors-green-800)' : 'var(--colors-xibo-sienna-800)';
+    const stepTitles = { form: 'Add display', waiting: 'Waiting for registration', success: 'Display added', fallback: 'Choose a registration' };
+    const recentRegistrations = this.recentRegistrationsBase.map(r => ({ ...r, onUse: () => this.finalizeWithRegistration(r) }));
+
+    return {
+      isAddForm: this.state.addStep === 'form',
+      isAddWaiting: this.state.addStep === 'waiting',
+      isAddSuccess: this.state.addStep === 'success',
+      isAddFallback: this.state.addStep === 'fallback',
+      addModalTitle: stepTitles[this.state.addStep],
+      addOpen: this.state.addOpen,
+      openAddDisplay: () => this.openAddDisplay(),
+      closeAddDisplay: () => this.closeAddDisplay(),
+      addServerKey: this.state.addServerKey,
+      addFormName: af.name,
+      addFormGroup: af.group,
+      addFormAutoAuthorise: af.autoAuthorise,
+      addActivationCode: af.activationCode,
+      addFormInvalid: !af.name.trim() || !af.activationCode.trim(),
+      onAddNameChange: e => this.setAddFormField('name', e.target.value),
+      onAddGroupChange: e => this.setAddFormField('group', e.target.value),
+      onActivationCodeChange: e => this.setAddFormField('activationCode', e.target.value),
+      groupOptions: this.groupOptions,
+      toggleAutoAuthorise: () => this.setAddFormField('autoAuthorise', !af.autoAuthorise),
+      toggleTrackBg: af.autoAuthorise ? 'var(--text-brand-color)' : 'var(--colors-gray-300)',
+      toggleKnobLeft: af.autoAuthorise ? '20px' : '2px',
+      addAutoAuthoriseLabel: af.autoAuthorise ? 'Auto-authorise on' : 'Auto-authorise off · 14-day trial',
+      startWaiting: () => this.startWaiting(),
+      startBtnBg: !this.addInvalidNow(af) ? 'var(--text-brand-color)' : 'var(--colors-gray-300)',
+      startBtnCursor: !this.addInvalidNow(af) ? 'pointer' : 'default',
+      waitingHint: `Matching code ${af.activationCode.toUpperCase()} to an incoming registration`,
+      addCountdownLabel: `${mm}:${ss}`,
+      addProgressPct: Math.round((this.state.addSecondsLeft / 300) * 100),
+      showFallback: () => this.showFallback(),
+      backToWaiting: () => this.backToWaiting(),
+      successLicenseLabel: af.autoAuthorise ? 'Authorised · license consumed' : 'Trial · 14 days',
+      successLicenseBg: licBg, successLicenseFg: licFg,
+      goToNewDisplay: () => this.goToNewDisplay(),
+      recentRegistrations,
+      toast: this.state.toast,
+      dismissToast: () => this.dismissToast(),
+      isGallery: this.state.screen === 'gallery',
+      isManage: this.state.screen === 'manage',
+      isLive: this.state.screen === 'live',
+      isLicensing: this.state.screen === 'licensing',
+      cur, curMeta,
+      curLicenseLabel: cur.licensed ? 'Authorised on this CMS' : `Trial · ${cur.trialDaysLeft} day${cur.trialDaysLeft === 1 ? '' : 's'} left`,
+      curNotLicensed: !cur.licensed,
+      authoriseCurrent: () => this.authorise(cur.id),
+      displayCards, displayCount: displays.length,
+      tableRows,
+      galleryView: this.state.galleryView,
+      isTableView: this.state.galleryView === 'table',
+      isMapView: this.state.galleryView === 'map',
+      isGalleryCardsView: this.state.galleryView === 'gallery',
+      setViewTable: () => this.setGalleryView('table'),
+      setViewMap: () => this.setGalleryView('map'),
+      setViewGallery: () => this.setGalleryView('gallery'),
+      tableViewBg: this.state.galleryView === 'table' ? 'var(--text-brand-color)' : 'transparent',
+      tableViewFg: this.state.galleryView === 'table' ? 'white' : 'var(--colors-gray-600)',
+      mapViewBg: this.state.galleryView === 'map' ? 'var(--text-brand-color)' : 'transparent',
+      mapViewFg: this.state.galleryView === 'map' ? 'white' : 'var(--colors-gray-600)',
+      galleryViewBg: this.state.galleryView === 'gallery' ? 'var(--text-brand-color)' : 'transparent',
+      galleryViewFg: this.state.galleryView === 'gallery' ? 'white' : 'var(--colors-gray-600)',
+      shots, commands,
+      navTree,
+      powerActions,
+      timelineBlocks: this.timelineBlocks, nowPct: 46,
+      nowPlaying: { layout: 'Autumn Promo Loop — Layout 12A', playlist: 'Weekday Loop — Retail', media: 'seasonal-hero-loop.mp4', region: 'Full Screen Video Region', progressPct: 64 },
+      licenseStats, licenseRows,
+      popDateRange: 'Aug 1 – Aug 21, 2026',
+      popMetrics: { plays: '1,842', duration: '38h 12m', campaigns: 4 },
+      popRowsComputed: this.popRows,
+      showBanner: !this.state.bannerDismissed,
+      popOpen: this.state.popOpen,
+      notifOpen: this.state.notifOpen,
+      powerMenuOpen: this.state.powerMenuOpen,
+      goGallery: () => this.go('gallery'),
+      goManage: () => this.go('manage', cur.id),
+      goLive: () => this.go('live', cur.id),
+      togglePower: () => this.setState(s => ({ powerMenuOpen: !s.powerMenuOpen, notifOpen: false })),
+      toggleNotif: () => this.setState(s => ({ notifOpen: !s.notifOpen, powerMenuOpen: false })),
+      reviewUpdate: () => this.go('manage', 1),
+      openPop: () => this.setState({ popOpen: true }),
+      closePop: () => this.setState({ popOpen: false }),
+      dismissBanner: () => this.setState({ bannerDismissed: true }),
+    };
+  }
+}
+
+</script>
+</body>
+</html>

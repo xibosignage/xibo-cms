@@ -31,8 +31,12 @@ import { useUserContext } from '@/context/UserContext';
 import type { Display } from '@/types/display';
 import type { DisplayScreenshot } from '@/types/displayManage';
 
-/** How recent a screenshot has to be to count as live. */
-const LIVE_WINDOW_MS = 2 * 60 * 1000;
+/**
+ * How recent a screenshot has to be to count as live. Exported for reuse by
+ * the Overview Manage page's ScreenshotCard, which shows the same "Live"
+ * badge convention for its single most-recent capture.
+ */
+export const LIVE_WINDOW_MS = 2 * 60 * 1000;
 
 /**
  * Cap on how many of the newest screenshots may carry the badge. On a short interval several

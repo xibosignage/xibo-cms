@@ -45,6 +45,8 @@ import {
   Forward,
   UserPlus2,
   Tags,
+  Eye,
+  Settings,
 } from 'lucide-react';
 import { type ComponentProps } from 'react';
 
@@ -71,6 +73,8 @@ import { formatTagsForExport } from '@/utils/tags';
 export interface DisplayFilterInput {
   displayId?: number | null;
   name?: string;
+  /** Bucket quick-filter (online/needsAttention/offline/faults) — see getBucketFilterParams. */
+  healthStatus?: string | null;
   logicalOperatorName?: 'OR' | 'AND';
   useRegexForName?: boolean;
   tags?: Tag[];
@@ -129,6 +133,7 @@ export type ModalType =
 export const INITIAL_FILTER_STATE: DisplayFilterInput = {
   displayId: null,
   name: '',
+  healthStatus: null,
   logicalOperatorName: 'OR',
   useRegexForName: false,
   tags: [],
@@ -249,6 +254,19 @@ export const getBaseFilterKeys = (
   t: TFunction,
   canTag = false,
 ): FilterConfigItem<DisplayFilterInput>[] => [
+  {
+    label: t('Health Status'),
+    name: 'healthStatus',
+    className: '',
+    placeholder: t('All'),
+    options: [
+      { label: t('All'), value: '' },
+      { label: t('Online'), value: 'online' },
+      { label: t('Needs Attention'), value: 'needsAttention' },
+      { label: t('Offline'), value: 'offline' },
+      { label: t('Faults'), value: 'faults' },
+    ],
+  },
   {
     label: t('ID'),
     placeholder: ' ',
@@ -426,7 +444,12 @@ export interface DisplayActionsProps {
   openMoveModal?: (row: Display | Display[]) => void;
   openShareModal?: (id: number) => void;
   onAuthorise: (display: Display) => void;
+  /** Opens the legacy ManageDisplayModal — kept alongside onManagePage, not replaced by it. */
   onManage: (display: Display) => void;
+  /** Opens the newer Manage page (`/displays/displays/:displayId`). */
+  onManagePage: (display: Display) => void;
+  /** Opens the screenshot gallery modal (multiple captures over time). */
+  onViewScreenshots: (display: Display) => void;
   onCheckLicence: (display: Display) => void;
   onRequestScreenShot: (display: Display) => void;
   onCollectNow: (display: Display) => void;
@@ -467,6 +490,8 @@ export const getDisplayItemActions = ({
   openShareModal,
   onAuthorise,
   onManage,
+  onManagePage,
+  onViewScreenshots,
   onCheckLicence,
   onRequestScreenShot,
   onCollectNow,
@@ -502,8 +527,15 @@ export const getDisplayItemActions = ({
       }
     };
 
-    // Quick action
+    // Quick actions
     if (canModify && canEdit) {
+      actions.push({
+        label: t('Manage'),
+        icon: Settings,
+        onClick: () => onManagePage(display),
+        isQuickAction: true,
+      });
+
       actions.push({
         label: t('Edit'),
         icon: Edit,
@@ -552,6 +584,12 @@ export const getDisplayItemActions = ({
         icon: RotateCw,
         onClick: () => onRequestScreenShot(display),
       });
+
+      actions.push({
+        label: t('View Screenshots'),
+        icon: Eye,
+        onClick: () => onViewScreenshots(display),
+      });
     }
 
     if (canModify && canShare) {
@@ -571,6 +609,13 @@ export const getDisplayItemActions = ({
 
       actions.push({
         label: t('Manage'),
+        icon: Info,
+        rightIcon: ArrowRight,
+        onClick: () => onManagePage(display),
+      });
+
+      actions.push({
+        label: t('Manage (legacy)'),
         icon: Info,
         rightIcon: ArrowRight,
         onClick: () => onManage(display),

@@ -23,10 +23,12 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
 
 import type { DisplayFilterInput } from '../DisplaysConfig';
+import { getBucketFilterParams } from '../OverviewConfig';
 
 import { serializeTags } from '@/components/ui/forms/TagInput';
 import type { FetchDisplaysRequest } from '@/services/displaysApi';
 import { fetchDisplays } from '@/services/displaysApi';
+import type { DisplayOverviewBucket } from '@/types/displayOverview';
 import { resolveLastAccessed } from '@/utils/date';
 import { isValidRegex } from '@/utils/regex';
 
@@ -81,6 +83,9 @@ export const useDisplaysData = ({
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,
+        ...getBucketFilterParams(
+          (advancedFilters.healthStatus as DisplayOverviewBucket | null) || null,
+        ),
         ...(advancedFilters.displayId != null ? { displayId: advancedFilters.displayId } : {}),
         ...(advancedFilters.name || filter ? { display: advancedFilters.name || filter } : {}),
         ...(advancedFilters.useRegexForName &&

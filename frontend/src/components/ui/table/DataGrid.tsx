@@ -48,6 +48,7 @@ interface DataGridProps<TData> {
   onRefresh?: () => void;
   viewMode: 'grid';
   onViewModeChange: (mode: ViewMode) => void;
+  availableViewModes?: ViewMode[];
   renderCard: (
     item: TData,
     isSelected: boolean,
@@ -69,6 +70,7 @@ export function DataGrid<TData>({
   onRefresh,
   viewMode,
   onViewModeChange,
+  availableViewModes = ['table', 'grid'],
   renderCard,
   bulkActions = [],
   getRowId,
@@ -126,7 +128,7 @@ export function DataGrid<TData>({
             onRefresh={onRefresh}
             viewMode={viewMode}
             onViewModeChange={onViewModeChange}
-            availableViewModes={['table', 'grid']}
+            availableViewModes={availableViewModes}
           />
         </div>
       </div>
