@@ -55,14 +55,15 @@ class DisplayFactory extends BaseFactory
      * @param FolderFactory $folderFactory
      */
     public function __construct(
-        User $user,
-        UserFactory $userFactory,
+        User                          $user,
+        UserFactory                   $userFactory,
         DisplayNotifyServiceInterface $displayNotifyService,
-        ConfigServiceInterface $config,
-        DisplayGroupFactory $displayGroupFactory,
-        DisplayProfileFactory $displayProfileFactory,
-        FolderFactory $folderFactory
-    ) {
+        ConfigServiceInterface        $config,
+        DisplayGroupFactory           $displayGroupFactory,
+        DisplayProfileFactory         $displayProfileFactory,
+        FolderFactory                 $folderFactory
+    )
+    {
         $this->setAclDependencies($user, $userFactory);
 
         $this->displayNotifyService = $displayNotifyService;
