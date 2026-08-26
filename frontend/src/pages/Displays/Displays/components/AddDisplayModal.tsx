@@ -30,7 +30,7 @@ import {
   useInteractions,
 } from '@floating-ui/react';
 import { isAxiosError } from 'axios';
-import { ChevronDown, Info, Loader, Loader2, Minimize2, X } from 'lucide-react';
+import { Info, Loader, Loader2, Minimize2, X } from 'lucide-react';
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -44,6 +44,7 @@ import Switch from '@/components/ui/forms/Switch';
 import TextInput from '@/components/ui/forms/TextInput';
 import Modal from '@/components/ui/modals/Modal';
 import { useUserContext } from '@/context/UserContext';
+import DisplayGroupSelect from '@/pages/Administration/Connectors/components/DisplayGroupSelect';
 import {
   addDisplayViaCode,
   fetchHighestDisplayId,
@@ -90,6 +91,8 @@ export default function AddDisplayModal({
   const [displayName, setDisplayName] = useState('');
   const [folderId, setFolderId] = useState<number | null>(null);
   const [folderText, setFolderText] = useState<string | null>(null);
+  const [displayGroupId, setDisplayGroupId] = useState<number | null>(null);
+  const [displayGroupText, setDisplayGroupText] = useState('');
   const [authorise, setAuthorise] = useState(true);
   const [apiError, setApiError] = useState<string | undefined>();
 
@@ -117,6 +120,8 @@ export default function AddDisplayModal({
     setDisplayName(prefill?.displayName ?? '');
     setFolderId(null);
     setFolderText(null);
+    setDisplayGroupId(null);
+    setDisplayGroupText('');
     setAuthorise(true);
     setApiError(undefined);
     setWatermark(null);
@@ -202,6 +207,7 @@ export default function AddDisplayModal({
           userCode: userCode.trim(),
           displayName: canApplySettings ? displayName.trim() : undefined,
           folderId: canApplySettings ? folderId : undefined,
+          displayGroupId: canApplySettings ? displayGroupId : undefined,
           authorised: canAuthorise && authorise,
         });
 
@@ -209,6 +215,7 @@ export default function AddDisplayModal({
           code: userCode.trim(),
           displayName: displayName.trim(),
           folderText: folderText ?? '',
+          displayGroup: displayGroupText,
           authorise: canAuthorise && authorise,
           licenceText: licenceHelpText(),
         });
@@ -303,6 +310,7 @@ export default function AddDisplayModal({
       <Modal
         onClose={onClose}
         isOpen={isOpen}
+        ariaLabel={t('Add Display')}
         error={apiError}
         size="sm"
         actions={
@@ -409,21 +417,17 @@ export default function AddDisplayModal({
             }}
           />
 
-          {/* Display Group — placeholder dropdown (to be connected to API later) */}
-          <div className="flex flex-col gap-1 w-full">
-            <label className="flex items-center justify-between text-sm font-semibold text-gray-500 leading-4.5">
-              <span>{t('Display Group')}</span>
-              <span className="text-xs font-normal text-gray-500">{t('Optional')}</span>
-            </label>
-            <div className="h-11.25 border border-gray-200 rounded-lg flex items-center bg-white cursor-default">
-              <span className="py-2 px-3 flex-1 text-sm text-gray-400 truncate">
-                {t('Select Display Group')}
-              </span>
-              <div className="pr-3 text-gray-500 shrink-0">
-                <ChevronDown size={14} />
-              </div>
-            </div>
-          </div>
+          <DisplayGroupSelect
+            label={t('Display Group')}
+            value={displayGroupId}
+            valueLabel={displayGroupText}
+            onChange={(id, label) => {
+              setDisplayGroupId(id);
+              setDisplayGroupText(label);
+            }}
+            optional
+            excludeDynamic
+          />
 
           {/* Authorise automatically */}
           <div className="flex flex-col gap-1.5 rounded-lg border border-gray-100 bg-gray-50 p-4">

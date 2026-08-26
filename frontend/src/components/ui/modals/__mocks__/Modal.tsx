@@ -28,6 +28,7 @@ type ModalProps = React.ComponentProps<typeof Modal>;
 export default function MockModal({
   isOpen = true,
   title,
+  ariaLabel,
   children,
   actions,
   onClose,
@@ -44,7 +45,7 @@ export default function MockModal({
 
   if (!isOpen) return null;
   return (
-    <div role="dialog" aria-label={title}>
+    <div role="dialog" aria-label={title ?? ariaLabel}>
       <h1>{title}</h1>
       {error && <p role="alert">{error}</p>}
       {children}

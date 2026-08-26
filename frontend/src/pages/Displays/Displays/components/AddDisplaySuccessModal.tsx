@@ -59,7 +59,13 @@ export default function AddDisplaySuccessModal({
   const { t } = useTranslation();
 
   return (
-    <Modal isOpen onClose={onClose} size="sm" showCloseButton>
+    <Modal
+      isOpen
+      onClose={onClose}
+      size="sm"
+      showCloseButton
+      ariaLabel={t('Display Added Successfully')}
+    >
       <div className="px-6 py-6 flex flex-col items-center gap-5">
         {/* Success icon */}
         <div className="flex items-center justify-center h-14 w-14 rounded-full bg-teal-50 border-2 border-teal-200">
@@ -68,9 +74,7 @@ export default function AddDisplaySuccessModal({
 
         {/* Title and subtitle */}
         <div className="text-center">
-          <h3 className="text-lg font-semibold text-gray-900">
-            {t('Display Added Successfully')}
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('Display Added Successfully')}</h3>
           <p className="text-sm text-gray-500 mt-1">
             {t('Your Display has been added and verified.')}
           </p>
@@ -78,12 +82,8 @@ export default function AddDisplaySuccessModal({
 
         {/* Summary card */}
         <div className="w-full rounded-lg border border-gray-200 px-4">
-          <SummaryRow label={t('Display Name')}>
-            {submitted.displayName || t('—')}
-          </SummaryRow>
-          <SummaryRow label={t('Display Group')}>
-            {submitted.displayGroup || t('—')}
-          </SummaryRow>
+          <SummaryRow label={t('Display Name')}>{submitted.displayName || t('—')}</SummaryRow>
+          <SummaryRow label={t('Display Group')}>{submitted.displayGroup || t('—')}</SummaryRow>
           <SummaryRow label={t('Status')}>
             <span className="inline-flex items-center rounded-md bg-orange-50 border border-orange-200 px-2 py-0.5 text-xs font-medium text-orange-600">
               {t('Downloading')}
@@ -91,9 +91,7 @@ export default function AddDisplaySuccessModal({
           </SummaryRow>
           <SummaryRow label={t('License')}>
             <span className="inline-flex items-center gap-1.5">
-              {submitted.authorise && (
-                <Check className="h-4 w-4 text-teal-500" strokeWidth={2.5} />
-              )}
+              {submitted.authorise && <Check className="h-4 w-4 text-teal-500" strokeWidth={2.5} />}
               <span>{submitted.authorise ? t('Authorized') : t('Not authorized')}</span>
               {submitted.licenceText && (
                 <span className="text-gray-400">| {submitted.licenceText}</span>

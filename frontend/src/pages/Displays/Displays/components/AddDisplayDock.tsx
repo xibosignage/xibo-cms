@@ -57,9 +57,7 @@ export default function AddDisplayDock({ displayName, onMaximize }: AddDisplayDo
         {isExpanded && (
           <div className="bg-white p-5 flex flex-col gap-1 max-h-40 overflow-y-auto">
             <div className="flex items-center justify-between gap-3">
-              <div className="text-sm font-normal text-gray-800 w-full truncate">
-                {displayName}
-              </div>
+              <div className="text-sm font-normal text-gray-800 w-full truncate">{displayName}</div>
               <div className="flex items-center gap-2 shrink-0">
                 <Loader2 size={16} className="text-xibo-blue-500 animate-spin" />
                 <button

@@ -32,6 +32,8 @@ import {
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import type { ModalType } from '../DisplaysConfig';
+
 import AddDisplayDock from './AddDisplayDock';
 import AddDisplayModal, { type AddDisplayPrefill } from './AddDisplayModal';
 import AssignLayoutModal from './AssignLayoutModal';
@@ -57,7 +59,7 @@ import type { Display, DisplayCommandTarget } from '@/types/display';
 interface DisplayModalsProps {
   actions: {
     activeModal: string | null;
-    openModal?: (name: string) => void;
+    openModal?: (name: ModalType) => void;
     closeModal: () => void;
     handleRefresh: () => void;
     deleteError: string | null;
@@ -132,7 +134,7 @@ export function DisplayModals({ actions, selection, handlers }: DisplayModalsPro
 
   const handleMinimize = () => {
     setMinimizedDisplayName(
-      (document.querySelector<HTMLInputElement>('input[name="display_name"]')?.value) ?? '',
+      document.querySelector<HTMLInputElement>('input[name="display_name"]')?.value ?? '',
     );
     setIsAddMinimized(true);
   };
