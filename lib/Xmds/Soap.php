@@ -2053,7 +2053,7 @@ class Soap
 
                 // Do we need to set the duration of this record (we will do for older individually collected stats)
                 if ($duration == '') {
-                    $duration = (int) $toDt->diffInSeconds($fromDt);
+                    $duration = (int) $toDt->diffInSeconds($fromDt, true);
                 }
             } catch (\Exception $e) {
                 // Protect against the date format being unreadable
