@@ -1611,6 +1611,45 @@ class Display extends Base
 
 
     /**
+     * When the display's current screenshot was captured.
+     *
+     * screenShot() draws the capture time into the image rather than returning it in a header, so
+     * there is no cheap way to tell a new screenshot has arrived short of downloading the image
+     * and comparing it. This returns the same cached time that image is stamped with, for a client
+     * that wants to poll for a change.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws NotFoundException
+     */
+    public function screenShotTime(Request $request, Response $response, $id)
+    {
+        $display = $this->displayFactory->getById($id);
+
+        // Allow limited view access, matching screenShot()
+        if (!$this->getUser()->checkViewable($display)
+            && !$this->getUser()->featureEnabled('displays.limitedView')
+        ) {
+            throw new AccessDeniedException();
+        }
+
+        // Empty until the display has ever sent one.
+        $time = $display->getCurrentScreenShotTime($this->pool);
+
+        // withJson rather than the state envelope, the same way statusWindow() does it, so the
+        // body is just the one field and a client can compare it without unwrapping anything.
+        return $response->withJson([
+            'time' => empty($time) ? null : $time,
+        ]);
+    }
+
+    /**
+     * PARKED (screenshot history & interval): unreachable, its route is commented out.
+     * See the note on Soap4::addToScreenshotHistory().
+     *
      * A display's recent screenshots, newest first.
      *
      * @param Request $request
@@ -1667,6 +1706,7 @@ class Display extends Base
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
+    // PARKED (screenshot history & interval): unreachable, its route is commented out.
     public function screenShotFromHistory(Request $request, Response $response, $id, $screenshotId)
     {
         $display = $this->displayFactory->getById($id);
@@ -1710,6 +1750,7 @@ class Display extends Base
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
+    // PARKED (screenshot history & interval): unreachable, its route is commented out.
     public function setScreenShotInterval(Request $request, Response $response, $id)
     {
         $display = $this->displayFactory->getById($id);

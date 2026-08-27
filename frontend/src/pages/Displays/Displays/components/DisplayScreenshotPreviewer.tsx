@@ -33,7 +33,13 @@ interface DisplayScreenshotPreviewerProps {
   display: Display | null;
   onClose: () => void;
   onRequestScreenshot?: (display: Display) => void;
-  /** Show one screenshot out of the display's history instead of its current one. */
+  /**
+   * Show one screenshot out of the display's history instead of its current one.
+   *
+   * PARKED (screenshot history & interval): nothing passes this now, so the history branch
+   * below is unreachable. Left in place because it is what the gallery would need back. See
+   * the note on Soap4::addToScreenshotHistory().
+   */
   screenshotId?: number | null;
 }
 

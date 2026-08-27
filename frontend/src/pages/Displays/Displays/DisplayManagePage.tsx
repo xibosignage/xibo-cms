@@ -25,10 +25,9 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { getDisplayStatusBucket } from './DisplayStatusConfig';
-import ScreenshotGalleryModal from './components/ScreenshotGalleryModal';
+import DisplayScreenshotPreviewer from './components/DisplayScreenshotPreviewer';
 import ActiveFaultsPanel from './components/panels/ActiveFaultsPanel';
 import AllCommandsCard from './components/panels/AllCommandsCard';
-import ConnectivityPanel from './components/panels/ConnectivityPanel';
 import DailyTimelineCard from './components/panels/DailyTimelineCard';
 import HealthCheckCard from './components/panels/HealthCheckCard';
 import ManageHeaderActions from './components/panels/ManageHeaderActions';
@@ -72,7 +71,7 @@ export default function DisplayManagePage() {
     isError,
   } = useManagePageDisplay(Number.isFinite(displayId) ? displayId : null);
 
-  const { isActionPending, confirmRequestScreenShot, confirmPurgeAll } = useManagePageActions({
+  const { isActionPending, confirmPurgeAll } = useManagePageActions({
     t,
   });
 
@@ -115,7 +114,6 @@ export default function DisplayManagePage() {
   const isSuperAdmin = user?.userTypeId === 1;
   const limitedEdit = canEditDisplay && (canModify || canLimitedViewFeature);
 
-  const canRequestScreenshot = (canModify && canEditDisplay) || canLimitedViewFeature;
   const canClearCache = isSuperAdmin && limitedEdit;
   const canViewProofOfPlay = hasFeature(user, 'proof-of-play');
   const needsAttention = getDisplayStatusBucket(display) !== 'online';
@@ -129,12 +127,6 @@ export default function DisplayManagePage() {
         closeLabel={t('Back to Overview')}
         actions={
           <ManageHeaderActions
-            onRequestScreenshot={() => {
-              confirmRequestScreenShot(display);
-              setShowScreenshots(true);
-            }}
-            isRequestingScreenshot={isActionPending}
-            canRequestScreenshot={canRequestScreenshot}
             onOpenProofOfPlay={() => setShowProofOfPlay(true)}
             canViewProofOfPlay={canViewProofOfPlay}
             onOpenDiagnostics={() => setShowDiagnostics(true)}
@@ -147,7 +139,7 @@ export default function DisplayManagePage() {
         <PlayerUpdateBanner />
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <ScreenshotCard display={display} />
+          <ScreenshotCard display={display} onOpen={() => setShowScreenshots(true)} />
           <NowPlayingCard />
           <DailyTimelineCard />
         </div>
@@ -163,11 +155,12 @@ export default function DisplayManagePage() {
         </div>
 
         <ActiveFaultsPanel displayId={display.displayId} />
-
-        <ConnectivityPanel displayId={display.displayId} />
       </div>
 
-      <ScreenshotGalleryModal
+      {/* PARKED (screenshot history & interval): was ScreenshotGalleryModal, a grid of the last ten
+          captures. With nothing recording history there is one screenshot to show, so this is the
+          previewer for the current one. Swap the component back to restore the gallery. */}
+      <DisplayScreenshotPreviewer
         display={showScreenshots ? display : null}
         onClose={() => setShowScreenshots(false)}
       />

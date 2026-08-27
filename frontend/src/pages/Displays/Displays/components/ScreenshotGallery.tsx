@@ -54,6 +54,9 @@ interface ScreenshotGalleryProps {
  * legacy Manage modal and the Overview page's Screenshots quick action so both read from the
  * same `/display/screenshot/{id}/history` history rather than each growing its own gallery.
  */
+// PARKED (screenshot history & interval): nothing renders this any more. Both entry points now show
+// the current screenshot instead, since no history is recorded. Left intact so restoring
+// the gallery is a matter of pointing the two call sites back at it.
 export default function ScreenshotGallery({ display, onSelect }: ScreenshotGalleryProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();

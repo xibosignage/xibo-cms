@@ -38,7 +38,6 @@ import DisplayMap from './components/DisplayMap';
 import DisplayScreenshotPreviewer from './components/DisplayScreenshotPreviewer';
 import { DisplayModals } from './components/DisplaysModals';
 import KpiRow from './components/KpiRow';
-import ScreenshotGalleryModal from './components/ScreenshotGalleryModal';
 import StatusChipRow from './components/StatusChipRow';
 import { useDisplayOverviewSummary } from './hooks/useDisplayOverviewSummary';
 import { useDisplaysActions } from './hooks/useDisplaysActions';
@@ -195,7 +194,6 @@ export default function Displays() {
   const [actionDisplay, setActionDisplay] = useState<Display | null>(null);
   const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
   const [previewDisplay, setPreviewDisplay] = useState<Display | null>(null);
-  const [liveViewDisplay, setLiveViewDisplay] = useState<Display | null>(null);
 
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
@@ -373,7 +371,10 @@ export default function Displays() {
       ),
     onManage: (display) => openActionModal(display, 'manage'),
     onManagePage: handleManagePage,
-    onViewScreenshots: (display) => setLiveViewDisplay(display),
+    // PARKED (screenshot history & interval): opened the screenshot gallery. With no history
+    // recorded there is one screenshot to show, which is what the previewer below already
+    // does for a thumbnail click, so the action reuses it rather than rendering a second copy.
+    onViewScreenshots: (display) => setPreviewDisplay(display),
     onCheckLicence: (display) =>
       guard(
         AUTO_SUBMIT_FORMS.displayLicenceCheck,
@@ -651,8 +652,6 @@ export default function Displays() {
           openActionModal(display, 'requestScreenShot');
         }}
       />
-
-      <ScreenshotGalleryModal display={liveViewDisplay} onClose={() => setLiveViewDisplay(null)} />
 
       <DisplayModals
         actions={{

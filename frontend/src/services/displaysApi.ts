@@ -27,7 +27,6 @@ import type { Display } from '@/types/display';
 import type { DisplayGroup } from '@/types/displayGroup';
 import type {
   BandwidthResponse,
-  DisconnectionEvent,
   DisplayManageData,
   DisplayScreenshot,
   PlayerFault,
@@ -369,6 +368,13 @@ export async function requestScreenShot(displayId: number | string): Promise<voi
   });
 }
 
+/**
+ * PARKED (screenshot history & interval).
+ *
+ * Left defined but unreferenced. Nothing writes history rows any more (see the note on
+ * Soap4::addToScreenshotHistory) and the route is commented out, so this would return an empty
+ * list. Kept so restoring the gallery is a matter of uncommenting, not rewriting.
+ */
 export async function fetchScreenshotHistory(
   displayId: number | string,
   signal?: AbortSignal,
@@ -377,7 +383,11 @@ export async function fetchScreenshotHistory(
   return response.data;
 }
 
-/** One image out of the history, rather than the display's current one. */
+/**
+ * One image out of the history, rather than the display's current one.
+ *
+ * PARKED (screenshot history & interval): unreferenced, its route is commented out.
+ */
 export async function fetchHistoryScreenshotBlob(
   displayId: number | string,
   screenshotId: number,
@@ -390,7 +400,12 @@ export async function fetchHistoryScreenshotBlob(
   return response.data;
 }
 
-/** Minutes between automatic screenshots, as an override on the display's profile. 0 turns it off. */
+/**
+ * Minutes between automatic screenshots, as an override on the display's profile. 0 turns it off.
+ *
+ * PARKED (screenshot history & interval): unreferenced, its route is commented out. The Manage page asks
+ * for screenshots itself while it is open, which is what replaced this.
+ */
 export async function setScreenShotInterval(
   displayId: number | string,
   screenShotRequestInterval: number,
@@ -404,6 +419,21 @@ export async function setScreenShotInterval(
       'X-Requested-With': 'XMLHttpRequest',
     },
   });
+}
+
+/**
+ * When the display's current screenshot was captured, as the CMS's own datetime string in CMS
+ * time, or null if it has never sent one.
+ *
+ * The image itself carries its capture time drawn into the pixels rather than in a header, so
+ * this is the only cheap way to notice a new one has landed.
+ */
+export async function fetchScreenshotTime(
+  displayId: number | string,
+  signal?: AbortSignal,
+): Promise<string | null> {
+  const response = await http.get(`/display/screenshot/${displayId}/time`, { signal });
+  return response.data?.time ?? null;
 }
 
 export async function fetchDisplayScreenshotBlob(
@@ -618,29 +648,5 @@ export async function fetchBandwidthData(
   signal?: AbortSignal,
 ): Promise<BandwidthResponse> {
   const response = await http.get('/stats/data/bandwidth', { params, signal });
-  return response.data;
-}
-
-/**
- * Disconnection events for a display over a period.
- *
- * `eventTypeIds` narrows the displayevent table, which also holds unrelated event types such as
- * command and app start. Omit it to get everything.
- */
-export async function fetchDisconnectionEvents(
-  params: { displayId: number; fromDt: string; toDt: string; eventTypeIds?: number[] },
-  signal?: AbortSignal,
-): Promise<DisconnectionEvent[]> {
-  const query = new URLSearchParams({
-    displayId: String(params.displayId),
-    fromDt: params.fromDt,
-    toDt: params.toDt,
-    // This endpoint's paging otherwise defaults to LIMIT 0, 10 and truncates the results.
-    disablePaging: '1',
-  });
-
-  params.eventTypeIds?.forEach((id) => query.append('eventTypeIds[]', String(id)));
-
-  const response = await http.get(`/stats/timeDisconnected?${query.toString()}`, { signal });
   return response.data;
 }

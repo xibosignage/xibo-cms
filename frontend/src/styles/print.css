@@ -66,4 +66,24 @@
   .printable-table-container .no-print {
     display: none !important;
   }
+
+  /*
+   * A page can hold more than one printable region: the shared DataTable marks
+   * itself printable, and so does a Proof of Play panel sitting above it. Both
+   * would otherwise print, stacked at the same fixed position.
+   *
+   * When a panel prints itself it puts .printing-scoped on the body, which
+   * narrows the above down to that panel's .print-target alone.
+   */
+  body.printing-scoped .printable-table-container:not(.print-target),
+  body.printing-scoped .printable-table-container:not(.print-target) * {
+    visibility: hidden !important;
+  }
+
+  body.printing-scoped .printable-table-container:not(.print-target) {
+    position: static !important;
+    height: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
 }

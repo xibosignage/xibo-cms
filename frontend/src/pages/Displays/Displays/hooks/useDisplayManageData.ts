@@ -20,22 +20,22 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
 
 import {
   fetchBandwidthData,
-  fetchDisconnectionEvents,
   fetchDisplayManageData,
   fetchPlayerFaults,
   fetchScreenshotHistory,
+  fetchScreenshotTime,
+  requestScreenShot,
 } from '@/services/displaysApi';
 import type {
   BandwidthResponse,
-  DisconnectionEvent,
   DisplayManageData,
   DisplayScreenshot,
   PlayerFault,
 } from '@/types/displayManage';
-import { formatDateTime } from '@/utils/date';
 
 /**
  * Player faults for a single display, from `/display/faults/{displayId}`. Shared by the
@@ -84,6 +84,9 @@ export function useBandwidthData(
 /**
  * A display's recent screenshots. Polled, because a display on an interval keeps producing them
  * and the Live badge is time sensitive.
+ *
+ * PARKED (screenshot history & interval): unreferenced. Nothing records history now, so this would
+ * resolve to an empty list. See the note on Soap4::addToScreenshotHistory().
  */
 export function useDisplayScreenshots(displayId: number | null, enabled: boolean) {
   return useQuery<DisplayScreenshot[]>({
@@ -96,34 +99,71 @@ export function useDisplayScreenshots(displayId: number | null, enabled: boolean
 }
 
 /**
- * Takes a duration rather than two dates, so the current time stays out of the query key and it
- * does not refetch in a loop.
+ * How often the Manage page asks for a new screenshot, and how often it looks to see whether one
+ * has landed.
+ *
+ * Note what a request costs: requestScreenShot() pushes a ScreenShotAction over XMR when the
+ * display has a channel, so on a player with working push this is a capture-and-upload every
+ * tick for as long as the page is open, not just a flag being set. Raise this if that turns out
+ * to be too much for a fleet.
  */
-export function useDisconnectionEvents(
-  displayId: number | null,
-  windowMinutes: number,
-  timeZone: string,
-  eventTypeIds: number[],
-  enabled: boolean,
-) {
-  return useQuery<DisconnectionEvent[]>({
-    queryKey: ['display', 'disconnections', displayId, windowMinutes, timeZone, eventTypeIds],
-    queryFn: ({ signal }) => {
-      // The endpoint reads these in the CMS timezone, so they have to be written in it.
-      const now = Date.now();
+export const SCREENSHOT_POLL_MS = 3000;
 
-      return fetchDisconnectionEvents(
-        {
-          displayId: displayId!,
-          fromDt: formatDateTime(new Date(now - windowMinutes * 60 * 1000), timeZone),
-          toDt: formatDateTime(new Date(now), timeZone),
-          eventTypeIds,
-        },
-        signal,
-      );
-    },
-    enabled: enabled && !!displayId,
-    staleTime: 1000 * 15,
-    refetchInterval: 1000 * 30,
+/**
+ * When the display's current screenshot was taken, polled so the caller can notice a new one.
+ *
+ * The value is only ever compared, never parsed for its own sake, so the CMS's own string is
+ * returned as it stands.
+ */
+export function useCurrentScreenshotTime(displayId: number | null, poll: boolean = true) {
+  return useQuery<string | null>({
+    queryKey: ['display', 'screenshotTime', displayId],
+    queryFn: ({ signal }) => fetchScreenshotTime(displayId!, signal),
+    enabled: !!displayId,
+    // Always refetched rather than served from cache: noticing the new capture is the whole job.
+    staleTime: 0,
+    // Fetched once and left alone when not polling, since a display that is not checking in
+    // cannot produce a new answer. Deliberately not `enabled: false`, which would leave the query
+    // reporting pending forever and the caller unable to tell that apart from a first load.
+    refetchInterval: poll ? SCREENSHOT_POLL_MS : false,
   });
+}
+
+/**
+ * Asks the display for a screenshot on a timer, for as long as the caller is mounted.
+ *
+ * Driven from the client on purpose: leaving the page unmounts this and the asking stops, which a
+ * server-side interval could not do. A request only asks, so the reply arrives whenever the
+ * player next acts on it rather than on this timer.
+ *
+ * Pass enabled=false for a display that is not checking in. Asking anyway is not harmless: each
+ * request writes the display row, and it still publishes over XMR when the display has a channel,
+ * which an offline display keeps from when it registered.
+ */
+export function useScreenshotAutoRequest(displayId: number | null, enabled: boolean = true) {
+  useEffect(() => {
+    if (!enabled || !displayId) {
+      return;
+    }
+
+    let stopped = false;
+
+    const ask = () => {
+      if (stopped) {
+        return;
+      }
+
+      // Swallowed deliberately. This runs unattended every few seconds, so a failed ask is not
+      // worth a toast; the card keeps showing the last screenshot it managed to get.
+      requestScreenShot(displayId).catch(() => {});
+    };
+
+    ask();
+    const timer = setInterval(ask, SCREENSHOT_POLL_MS);
+
+    return () => {
+      stopped = true;
+      clearInterval(timer);
+    };
+  }, [displayId, enabled]);
 }

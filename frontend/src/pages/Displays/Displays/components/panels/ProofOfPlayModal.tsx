@@ -29,6 +29,7 @@ import {
   type PlayListItem,
   PlayList,
   PrintableTable,
+  printPanelTable,
   StatTile,
   VISIBLE_ROWS,
   downloadCsv,
@@ -232,12 +233,20 @@ export default function ProofOfPlayModal({ display, isOpen, onClose }: ProofOfPl
     );
   };
 
-  // print.css hides everything outside .printable-table-container, so only the detail table
-  // below reaches the page. Saving as PDF is one of the options the dialog offers.
-  const handlePrint = () => window.print();
+  // Scoped so only this panel's table prints; the displays grid behind marks itself
+  // printable too. Saving as PDF is one of the options the dialog offers.
+  const handlePrint = () => printPanelTable();
+
+  // The modal stays mounted while closed, so the drilled-into layout has to be
+  // cleared on the way out. Every close path goes through here, otherwise
+  // reopening lands back on a layout's widgets instead of the layout list.
+  const handleClose = () => {
+    setSelectedLayout(null);
+    onClose();
+  };
 
   const handleViewFullReport = () => {
-    onClose();
+    handleClose();
     navigate('/reporting/proof-of-play', { state: { displayId: display.displayId } });
   };
 
@@ -249,7 +258,7 @@ export default function ProofOfPlayModal({ display, isOpen, onClose }: ProofOfPl
           variant: 'secondary' as const,
           leftIcon: ArrowLeft,
         },
-        { label: t('Close'), onClick: onClose, variant: 'secondary' as const },
+        { label: t('Close'), onClick: handleClose, variant: 'secondary' as const },
       ]
     : [
         {
@@ -258,13 +267,13 @@ export default function ProofOfPlayModal({ display, isOpen, onClose }: ProofOfPl
           variant: 'secondary' as const,
           rightIcon: ExternalLink,
         },
-        { label: t('Close'), onClick: onClose, variant: 'secondary' as const },
+        { label: t('Close'), onClick: handleClose, variant: 'secondary' as const },
       ];
 
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleClose}
       title={
         selectedLayout
           ? selectedLayout.label

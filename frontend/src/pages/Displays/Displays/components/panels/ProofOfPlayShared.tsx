@@ -282,6 +282,30 @@ export function PlayList({
 }
 
 /**
+ * Print just this panel's table.
+ *
+ * The shared DataTable also marks itself printable, so on a page that has both, an unscoped
+ * print puts the displays grid on the page alongside this table. The body class narrows print.css
+ * down to the .print-target below for the duration of the print, and is removed afterwards.
+ */
+export function printPanelTable() {
+  const SCOPE = 'printing-scoped';
+
+  const cleanUp = () => {
+    document.body.classList.remove(SCOPE);
+    window.removeEventListener('afterprint', cleanUp);
+  };
+
+  document.body.classList.add(SCOPE);
+  window.addEventListener('afterprint', cleanUp);
+
+  window.print();
+
+  // Safari does not always fire afterprint, so do not rely on it alone
+  window.setTimeout(cleanUp, 1000);
+}
+
+/**
  * The detail table, hidden on screen and the only thing print.css lets through.
  *
  * Marked up and styled the way the shared data table is, so a sheet printed from a panel looks
@@ -299,7 +323,7 @@ export function PrintableTable({
   columns: ExportColumn[];
 }) {
   return (
-    <div className="printable-table-container hidden w-full print:block">
+    <div className="printable-table-container print-target hidden w-full print:block">
       <p className="mb-2 text-base font-semibold">{heading}</p>
       <p className="mb-3 text-sm text-gray-500">{period}</p>
 
