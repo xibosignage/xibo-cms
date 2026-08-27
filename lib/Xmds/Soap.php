@@ -350,6 +350,24 @@ class Soap
     }
 
     /**
+     * Does the serverKey a Player sent match this CMS?
+     *
+     * Players configured through Add Display are given a key with a one-time code appended
+     * ("key||code"), and they store and resend whatever they were given on every subsequent call.
+     * Validation therefore has to look at the key part alone - checking the whole string would let
+     * such a Player register and then fail every RequiredFiles, Schedule and SubmitLog after it.
+     *
+     * @param string|null $serverKey as received from the Player
+     * @return bool
+     */
+    protected function isValidServerKey(?string $serverKey): bool
+    {
+        [$key] = $this->parseServerKey($serverKey);
+
+        return $key === $this->getConfig()->getSetting('SERVER_KEY');
+    }
+
+    /**
      * Fetch the Add Display form settings cached against an activation code, if there are any.
      * @param string|null $authCode
      * @return array|null
@@ -400,6 +418,45 @@ class Soap
     }
 
     /**
+     * Record which display registered against a manual-connect one-time code.
+     *
+     * The code is appended to the server key the operator copies into the Player ("key||code"), so
+     * this is what authenticates a Player as belonging to a particular Add Display form. The
+     * Player keeps its own display name. Matching is exact and single-use: first Player wins.
+     *
+     * @param string|null $code parsed from the server key the Player sent
+     * @param Display $display the display that just registered
+     */
+    protected function claimManualConnectCode(?string $code, Display $display): void
+    {
+        $code = strtoupper(trim($code ?? ''));
+
+        // Codes are always four characters. Anything else is an ordinary display name.
+        if (strlen($code) !== 4 || !ctype_alnum($code)) {
+            return;
+        }
+
+        $item = $this->getPool()->getItem(Display::getManualConnectCacheKey($code));
+        $pending = $item->get();
+
+        if ($item->isMiss() || !is_array($pending)) {
+            return;
+        }
+
+        // Already claimed by another Player - leave the first claim standing.
+        if (!empty($pending['displayId'])) {
+            return;
+        }
+
+        $item->set(['displayId' => $display->displayId]);
+        $item->expiresAfter(new \DateInterval('PT30M'));
+        $this->getPool()->save($item);
+
+        $this->getLog()->debug('claimManualConnectCode: code claimed by displayId '
+            . $display->displayId);
+    }
+
+    /**
      * Get Required Files (common)
      * @param $serverKey
      * @param $hardwareKey
@@ -429,7 +486,7 @@ class Soap
         $hardwareKey = $sanitizer->getString('hardwareKey');
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
+        if (!$this->isValidServerKey($serverKey)) {
             throw new \SoapFault(
                 'Sender',
                 'The Server key you entered does not match with the server key at this address'
@@ -1274,7 +1331,7 @@ class Soap
         $hardwareKey = $sanitizer->getString('hardwareKey');
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
+        if (!$this->isValidServerKey($serverKey)) {
             throw new \SoapFault(
                 'Sender',
                 'The Server key you entered does not match with the server key at this address'
@@ -1792,7 +1849,7 @@ class Soap
         $hardwareKey = $sanitizer->getString('hardwareKey');
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
+        if (!$this->isValidServerKey($serverKey)) {
             throw new \SoapFault(
                 'Sender',
                 'The Server key you entered does not match with the server key at this address'
@@ -2013,7 +2070,7 @@ class Soap
         $hardwareKey = $sanitizer->getString('hardwareKey');
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
+        if (!$this->isValidServerKey($serverKey)) {
             throw new \SoapFault(
                 'Sender',
                 'The Server key you entered does not match with the server key at this address'
@@ -2344,7 +2401,7 @@ class Soap
         $hardwareKey = $sanitizer->getString('hardwareKey');
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
+        if (!$this->isValidServerKey($serverKey)) {
             throw new \SoapFault(
                 'Sender',
                 'The Server key you entered does not match with the server key at this address'
@@ -2498,7 +2555,7 @@ class Soap
         $mediaId = $sanitizer->getString('mediaId');
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
+        if (!$this->isValidServerKey($serverKey)) {
             throw new \SoapFault(
                 'Sender',
                 'The Server key you entered does not match with the server key at this address'

@@ -30,6 +30,11 @@ import { mockFetchDisplays } from './mocks/displaysApi';
 import { fetchDisplayGroups } from '@/services/displayGroupApi';
 import {
   addDisplayViaCode,
+  assignDisplayGroups,
+  fetchConnectCode,
+  fetchConnectDetails,
+  fetchConnectStatus,
+  fetchDisplays,
   fetchDisplaysNewerThan,
   fetchHighestDisplayId,
   fetchLicenceUsage,
@@ -90,13 +95,26 @@ const displayAdminUser = {
   },
 };
 
-const openAddModal = async (user: UserEvent) => {
-  renderDisplaysPage(displayAdminUser);
+const openAddModal = async (user: UserEvent, as = displayAdminUser) => {
+  renderDisplaysPage(as);
   const addButton = await screen.findByRole('button', { name: /add display/i });
   await user.click(addButton);
   await screen.findByRole('dialog', { name: /^add display$/i });
 };
 
+/**
+ * Add Display now opens on a chooser screen, so most tests have to pick a route first.
+ * These wrap that step so the individual tests stay about behaviour, not navigation.
+ */
+const openCodeForm = async (user: UserEvent, as = displayAdminUser) => {
+  await openAddModal(user, as);
+  await user.click(await screen.findByRole('button', { name: /use activation code/i }));
+};
+
+const openManualForm = async (user: UserEvent, as = displayAdminUser) => {
+  await openAddModal(user, as);
+  await user.click(await screen.findByRole('button', { name: /manually configure/i }));
+};
 const fillRequiredFields = async (user: UserEvent, code: string, displayName: string) => {
   await user.type(screen.getByRole('textbox', { name: /code/i }), code);
   await user.type(screen.getByRole('textbox', { name: /display name/i }), displayName);
@@ -136,6 +154,21 @@ describe('Displays page - add display', () => {
     });
     vi.mocked(fetchHighestDisplayId).mockResolvedValue(98);
     vi.mocked(addDisplayViaCode).mockResolvedValue(undefined);
+    vi.mocked(assignDisplayGroups).mockResolvedValue(undefined);
+    vi.mocked(updateDisplay).mockResolvedValue(freshlyRegistered);
+    vi.mocked(fetchConnectDetails).mockResolvedValue({
+      cmsAddress: 'https://cms.example.org',
+      cmsKey: 'server-key-xyz',
+    });
+    vi.mocked(fetchConnectCode).mockResolvedValue({ code: '65A2', expiresInMinutes: 30 });
+    // Default: the coded Player has not registered yet.
+    vi.mocked(fetchConnectStatus).mockResolvedValue({
+      expired: false,
+      connected: false,
+      displayId: null,
+      display: null,
+    });
+    vi.mocked(fetchDisplays).mockResolvedValue({ rows: [freshlyRegistered], totalCount: 1 });
     // Default: the Player has not registered yet.
     vi.mocked(fetchDisplaysNewerThan).mockResolvedValue([]);
   });
@@ -143,16 +176,19 @@ describe('Displays page - add display', () => {
   // ---------------------------------------------------------------------------
   // Opening and validating the form.
   // ---------------------------------------------------------------------------
-  test('clicking Add Display opens the Add Display modal', async () => {
+  test('clicking Add Display opens the connection method chooser', async () => {
     const user = userEvent.setup();
     await openAddModal(user);
 
     expect(screen.getByRole('dialog', { name: /^add display$/i })).toBeInTheDocument();
+    expect(screen.getByText(/how would you like to connect your display/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /use activation code/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /manually configure/i })).toBeInTheDocument();
   });
 
   test('Save is disabled until both a code and a display name are entered', async () => {
     const user = userEvent.setup();
-    await openAddModal(user);
+    await openCodeForm(user);
 
     expect(screen.getByRole('button', { name: 'Add' })).toBeDisabled();
 
@@ -165,14 +201,14 @@ describe('Displays page - add display', () => {
 
   test('shows how many licences are in use', async () => {
     const user = userEvent.setup();
-    await openAddModal(user);
+    await openCodeForm(user);
 
     expect(await screen.findByText(/12 of 50 licences in use, 38 available/i)).toBeInTheDocument();
   });
 
   test('Cancel closes the modal without calling the API', async () => {
     const user = userEvent.setup();
-    await openAddModal(user);
+    await openCodeForm(user);
 
     await user.click(screen.getByRole('button', { name: /cancel/i }));
 
@@ -188,7 +224,7 @@ describe('Displays page - add display', () => {
   // ---------------------------------------------------------------------------
   test('submits the code with the chosen settings, and takes a watermark first', async () => {
     const user = userEvent.setup();
-    await openAddModal(user);
+    await openCodeForm(user);
     await fillRequiredFields(user, 'VALID-CODE', 'Reception Screen');
     await submit(user);
 
@@ -213,7 +249,7 @@ describe('Displays page - add display', () => {
       totalCount: 1,
     });
 
-    await openAddModal(user);
+    await openCodeForm(user);
     await fillRequiredFields(user, 'VALID-CODE', 'Reception Screen');
 
     await user.click(screen.getByRole('combobox'));
@@ -232,7 +268,7 @@ describe('Displays page - add display', () => {
 
   test('waits for the player and echoes back what was submitted', async () => {
     const user = userEvent.setup();
-    await openAddModal(user);
+    await openCodeForm(user);
     await fillRequiredFields(user, 'VALID-CODE', 'Reception Screen');
     await submit(user);
 
@@ -252,7 +288,7 @@ describe('Displays page - add display', () => {
     const user = userEvent.setup();
     vi.mocked(fetchDisplaysNewerThan).mockResolvedValue([freshlyRegistered]);
 
-    await openAddModal(user);
+    await openCodeForm(user);
     await fillRequiredFields(user, 'VALID-CODE', 'Reception Screen');
     await submit(user);
 
@@ -272,7 +308,7 @@ describe('Displays page - add display', () => {
     const user = userEvent.setup();
     vi.mocked(fetchDisplaysNewerThan).mockResolvedValue([freshlyRegistered]);
 
-    await openAddModal(user);
+    await openCodeForm(user);
     await fillRequiredFields(user, 'VALID-CODE', 'Reception Screen');
     await submit(user);
 
@@ -293,7 +329,7 @@ describe('Displays page - add display', () => {
       { ...freshlyRegistered, displayId: 100, license: 'hardware-key-other' },
     ]);
 
-    await openAddModal(user);
+    await openCodeForm(user);
     await fillRequiredFields(user, 'VALID-CODE', 'Reception Screen');
     await submit(user);
 
@@ -301,6 +337,189 @@ describe('Displays page - add display', () => {
     expect(updateDisplay).not.toHaveBeenCalled();
   });
 
+  // ---------------------------------------------------------------------------
+  // Manual configuration. There is no activation code, so the CMS cannot
+  // correlate the registration and applies nothing itself - the form waits for
+  // the Player, then saves the chosen settings against the display it created.
+  // ---------------------------------------------------------------------------
+  test('manual configuration shows the CMS address and key to copy', async () => {
+    const user = userEvent.setup();
+    await openManualForm(user);
+
+    expect(await screen.findByRole('textbox', { name: /cms url/i })).toHaveValue(
+      'https://cms.example.org',
+    );
+    // The one-time code rides on the key, so there is a single value to copy.
+    expect(screen.getByRole('textbox', { name: /cms secret key/i })).toHaveValue(
+      'server-key-xyz||65A2',
+    );
+
+    // They are for copying into the Player, never for editing.
+    expect(screen.getByRole('textbox', { name: /cms url/i })).toHaveAttribute('readonly');
+    expect(screen.getByRole('textbox', { name: /cms secret key/i })).toHaveAttribute('readonly');
+
+    // No activation code field is involved in this route.
+    expect(screen.queryByRole('textbox', { name: /activation code/i })).not.toBeInTheDocument();
+  });
+
+  test('manual configuration locks Save and Cancel until the player connects', async () => {
+    const user = userEvent.setup();
+    await openManualForm(user);
+
+    await user.type(await screen.findByRole('textbox', { name: /display name/i }), 'Foyer Screen');
+
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /cancel/i })).toBeDisabled();
+    // Back is never locked, so the operator is not trapped while waiting.
+    expect(screen.getByRole('button', { name: /back/i })).toBeEnabled();
+    expect(await screen.findByText(/waiting for display to connect/i)).toBeInTheDocument();
+  });
+
+  test('manual configuration saves the chosen settings once the player connects', async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetchConnectStatus).mockResolvedValue({
+      expired: false,
+      connected: true,
+      displayId: 99,
+      display: 'Foyer Screen',
+    });
+
+    await openManualForm(user);
+
+    // The name comes from the Player, so the form needs no typing here.
+    await waitFor(() => {
+      expect(screen.getByRole('textbox', { name: /display name/i })).toHaveValue('Foyer Screen');
+    });
+
+    // Detection only unlocks the form - nothing is saved until the operator says so.
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
+    });
+    expect(updateDisplay).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => {
+      expect(updateDisplay).toHaveBeenCalledWith(
+        99,
+        expect.objectContaining({ display: 'Foyer Screen', licensed: 1 }),
+      );
+    });
+
+    // REGRESSION GUARD. PUT /display/{id} is a full replace: omitting `license` blanks the
+    // Player's hardware key and permanently disconnects it.
+    const payload = vi.mocked(updateDisplay).mock.calls[0]?.[1];
+    expect(payload?.license).toBe('hardware-key-abc123');
+
+    // The activation-code relay has no part in this route.
+    expect(addDisplayViaCode).not.toHaveBeenCalled();
+  });
+
+  test('manual configuration assigns the chosen display group on save', async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetchConnectStatus).mockResolvedValue({
+      expired: false,
+      connected: true,
+      displayId: 99,
+      display: 'Foyer Screen',
+    });
+    vi.mocked(fetchDisplayGroups).mockResolvedValue({
+      rows: [{ displayGroupId: 9, displayGroup: 'Test SSP' } as DisplayGroup],
+      totalCount: 1,
+    });
+
+    await openManualForm(user);
+    await screen.findByRole('textbox', { name: /display name/i });
+
+    await user.click(screen.getByRole('combobox'));
+    await user.click(await screen.findByRole('button', { name: 'Test SSP' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
+    });
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => {
+      expect(assignDisplayGroups).toHaveBeenCalledWith(99, [9]);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // The point of the one-time code: correlation is an exact match by the CMS, not
+  // a guess from the display list, so a second Player registering in the same
+  // window cannot be mistaken for this one.
+  // ---------------------------------------------------------------------------
+  test('manual configuration identifies the player by its code, not the display list', async () => {
+    const user = userEvent.setup();
+    // Something else registers while we wait. The old watermark poll would have adopted it.
+    vi.mocked(fetchDisplaysNewerThan).mockResolvedValue([
+      { ...freshlyRegistered, displayId: 500, display: 'Someone Elses Screen' },
+    ]);
+
+    await openManualForm(user);
+    await user.type(await screen.findByRole('textbox', { name: /display name/i }), 'Foyer Screen');
+
+    expect(await screen.findByText(/waiting for display to connect/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+
+    // Manual mode never consults the display list.
+    expect(fetchDisplaysNewerThan).not.toHaveBeenCalled();
+    expect(fetchConnectStatus).toHaveBeenCalledWith('65A2');
+  });
+
+  test('manual configuration reports an expired code', async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetchConnectStatus).mockResolvedValue({
+      expired: true,
+      connected: false,
+      displayId: null,
+      display: null,
+    });
+
+    await openManualForm(user);
+
+    expect(await screen.findByText(/this code has expired/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+  });
+
+  test('manual configuration adopts the name given on the player', async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetchConnectStatus).mockResolvedValue({
+      expired: false,
+      connected: true,
+      displayId: 99,
+      display: 'Lobby TV',
+    });
+
+    await openManualForm(user);
+
+    // The operator named it on the device, so the form starts from that.
+    await waitFor(() => {
+      expect(screen.getByRole('textbox', { name: /display name/i })).toHaveValue('Lobby TV');
+    });
+  });
+
+  test('a name typed in the CMS is not overwritten by the player', async () => {
+    const user = userEvent.setup();
+    await openManualForm(user);
+    await user.type(await screen.findByRole('textbox', { name: /display name/i }), 'Foyer Screen');
+
+    vi.mocked(fetchConnectStatus).mockResolvedValue({
+      expired: false,
+      connected: true,
+      displayId: 99,
+      display: 'Lobby TV',
+    });
+
+    // The watcher polls every few seconds, so allow for a cycle rather than the 1s default.
+    await waitFor(
+      () => {
+        expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
+      },
+      { timeout: 8000 },
+    );
+    expect(screen.getByRole('textbox', { name: /display name/i })).toHaveValue('Foyer Screen');
+  });
   // ---------------------------------------------------------------------------
   // Failure paths.
   // ---------------------------------------------------------------------------
@@ -316,7 +535,7 @@ describe('Displays page - add display', () => {
       },
     });
 
-    await openAddModal(user);
+    await openCodeForm(user);
     await fillRequiredFields(user, 'WRONG-CODE', 'Reception Screen');
     await submit(user);
 
@@ -328,13 +547,16 @@ describe('Displays page - add display', () => {
 
   test('form is blank when the modal is reopened after being closed', async () => {
     const user = userEvent.setup();
-    await openAddModal(user);
+    await openCodeForm(user);
 
     await fillRequiredFields(user, 'LEFTOVER-CODE', 'Leftover Name');
     await user.click(screen.getByRole('button', { name: /cancel/i }));
 
     await user.click(screen.getByRole('button', { name: /add display/i }));
     await screen.findByRole('dialog', { name: /^add display$/i });
+
+    // Reopening returns to the chooser, so the route has to be picked again.
+    await user.click(await screen.findByRole('button', { name: /use activation code/i }));
 
     expect(screen.getByRole('textbox', { name: /code/i })).toHaveValue('');
     expect(screen.getByRole('textbox', { name: /display name/i })).toHaveValue('');

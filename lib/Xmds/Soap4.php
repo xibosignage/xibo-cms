@@ -85,7 +85,7 @@ class Soap4 extends Soap
         $operatingSystem = $sanitized->getString('operatingSystem');
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
+        if (!$this->isValidServerKey($serverKey)) {
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
         }
 
@@ -353,7 +353,7 @@ class Soap4 extends Soap
         $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
+        if (!$this->isValidServerKey($serverKey)) {
             throw new \SoapFault(
                 'Sender',
                 'The Server key you entered does not match with the server key at this address'
@@ -599,7 +599,7 @@ class Soap4 extends Soap
         $hardwareKey = $sanitizer->getString('hardwareKey');
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
+        if (!$this->isValidServerKey($serverKey)) {
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
         }
 
@@ -759,7 +759,7 @@ class Soap4 extends Soap
         $needConversion = false;
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
+        if (!$this->isValidServerKey($serverKey)) {
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
         }
 

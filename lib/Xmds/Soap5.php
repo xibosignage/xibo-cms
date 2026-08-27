@@ -114,7 +114,7 @@ class Soap5 extends Soap4
         $claim = null;
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
+        if (!$this->isValidServerKey($serverKey)) {
             throw new \SoapFault(
                 'Sender',
                 'The Server key you entered does not match with the server key at this address'
@@ -560,6 +560,10 @@ class Soap5 extends Soap4
         }
 
         $display->save(Display::$saveOptionsMinimum);
+
+        // A manually configured Player carries its one-time code appended to the server key, which is
+        // what lets the form it came from recognise it. Its display name stays its own.
+        $this->claimManualConnectCode($authCode, $display);
 
         // The display now exists, so any group membership chosen on the Add Display form can be
         // applied, and the cached form settings consumed.

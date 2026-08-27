@@ -340,6 +340,12 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/display/authorise/{id}', ['\Xibo\Controller\Display','toggleAuthorise'])
         ->setName('display.authorise');
     $group->post('/display/addViaCode', ['\Xibo\Controller\Display','addViaCode'])->setName('display.addViaCode');
+    $group->get('/display/connect/details', ['\Xibo\Controller\Display','connectDetails'])
+        ->setName('display.connect.details');
+    $group->post('/display/connect/code', ['\Xibo\Controller\Display','connectCode'])
+        ->setName('display.connect.code');
+    $group->get('/display/connect/status', ['\Xibo\Controller\Display','connectStatus'])
+        ->setName('display.connect.status');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['displays.add']));
 
 $app->group('', function (RouteCollectorProxy $group) {

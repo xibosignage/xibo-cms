@@ -1934,6 +1934,179 @@ class Display extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(
+        path: '/display/connect/details',
+        operationId: 'displayConnectDetails',
+        description: 'The CMS Address and Key a Player needs to be configured manually',
+        summary: 'Display Connect Details',
+        tags: ['display']
+    )]
+    #[OA\Response(response: 200, description: 'successful operation')]
+    /**
+     * The CMS Address and Key an operator has to type into a Player when configuring it by hand.
+     *
+     * Gated on displays.add rather than super admin: these are exactly the two values needed to
+     * connect a Player, so anyone entitled to add a Display needs to be able to read them. The
+     * activation-code path already sends the same pair to the authentication service on behalf of
+     * this audience - the difference here is only that the operator copies them across themselves.
+     *
+     * The address is derived server side rather than from the browser's location, because
+     * WHITELIST_HOSTS (when set) is what decides the address a Player can actually reach.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return ResponseInterface|Response
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function connectDetails(Request $request, Response $response): Response|ResponseInterface
+    {
+        $this->getState()->hydrate([
+            'data' => [
+                'cmsAddress' => (new HttpsDetect($this->getConfig()))->getBaseUrl($request),
+                'cmsKey' => $this->getConfig()->getSetting('SERVER_KEY'),
+            ]
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Characters used for manual-connect codes.
+     *
+     * Deliberately excludes 0/O/1/I to stop the operator mis-typing a code they are reading off
+     * one screen and keying into another, often with a remote control.
+     */
+    private const MANUAL_CODE_ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+
+    #[OA\Post(
+        path: '/display/connect/code',
+        operationId: 'displayConnectCode',
+        description: 'Issue a one-time code identifying a Player about to be configured by hand',
+        summary: 'Display Connect Code',
+        tags: ['display']
+    )]
+    #[OA\Response(response: 200, description: 'successful operation')]
+    /**
+     * Issue a one-time code for a manually configured Player.
+     *
+     * The operator types this into the Player instead of a display name. RegisterDisplay looks the
+     * code up, which is what lets the CMS say *this* registration belongs to *that* Add Display
+     * form - without it, correlation is a guess and two operators adding displays at the same
+     * moment can be confused for one another.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return ResponseInterface|Response
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function connectCode(Request $request, Response $response): Response|ResponseInterface
+    {
+        $code = null;
+
+        // Reissue on collision: a code already in flight belongs to somebody else's Player.
+        for ($attempt = 0; $attempt < 10; $attempt++) {
+            $candidate = '';
+            for ($i = 0; $i < 4; $i++) {
+                $candidate .= self::MANUAL_CODE_ALPHABET[random_int(0, strlen(self::MANUAL_CODE_ALPHABET) - 1)];
+            }
+
+            if ($this->pool->getItem(\Xibo\Entity\Display::getManualConnectCacheKey($candidate))->isMiss()) {
+                $code = $candidate;
+                break;
+            }
+        }
+
+        if ($code === null) {
+            throw new GeneralException(__('Unable to issue a connection code, please try again'));
+        }
+
+        $item = $this->pool->getItem(\Xibo\Entity\Display::getManualConnectCacheKey($code));
+        $item->set(['displayId' => null]);
+        $item->expiresAfter(new \DateInterval('PT30M'));
+        $this->pool->save($item);
+
+        $this->getState()->hydrate([
+            'data' => [
+                'code' => $code,
+                // Minutes, so the UI can tell the operator how long they have.
+                'expiresInMinutes' => 30,
+            ]
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    #[OA\Get(
+        path: '/display/connect/status',
+        operationId: 'displayConnectStatus',
+        description: 'Has the Player holding this one-time code reached the CMS yet?',
+        summary: 'Display Connect Status',
+        tags: ['display']
+    )]
+    #[OA\Response(response: 200, description: 'successful operation')]
+    /**
+     * Report whether the Player holding a one-time code has registered.
+     *
+     * This is an identity check against a single cached code, not a search of the display list, so
+     * it cannot pick up somebody else's Player the way a "newest display wins" poll can.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return ResponseInterface|Response
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function connectStatus(Request $request, Response $response): Response|ResponseInterface
+    {
+        $code = $this->getSanitizer($request->getQueryParams())->getString('code');
+
+        if (empty($code)) {
+            throw new InvalidArgumentException(__('Code cannot be empty'), 'code');
+        }
+
+        $item = $this->pool->getItem(\Xibo\Entity\Display::getManualConnectCacheKey($code));
+        $pending = $item->get();
+
+        if ($item->isMiss() || !is_array($pending)) {
+            // Expired, or never issued. Either way there is nothing to wait for.
+            $this->getState()->hydrate([
+                'data' => [
+                    'expired' => true,
+                    'connected' => false,
+                ]
+            ]);
+
+            return $this->render($request, $response);
+        }
+
+        $displayId = intval($pending['displayId'] ?? 0);
+        $display = null;
+
+        if ($displayId > 0) {
+            try {
+                $display = $this->displayFactory->getById($displayId);
+            } catch (NotFoundException $e) {
+                // Registered, then deleted again before the operator saved. Report it as pending
+                // rather than handing back an id that no longer resolves.
+                $displayId = 0;
+            }
+        }
+
+        $this->getState()->hydrate([
+            'data' => [
+                'expired' => false,
+                'connected' => $displayId > 0,
+                'displayId' => $displayId > 0 ? $displayId : null,
+                'display' => $display?->display,
+            ]
+        ]);
+
+        return $this->render($request, $response);
+    }
+
     #[OA\Put(
         path: '/display/licenceCheck/{displayId}',
         operationId: 'displayLicenceCheck',
