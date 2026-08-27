@@ -31,13 +31,14 @@ import { BrandingProvider } from '@/context/BrandingContext';
 import { FolderRefreshProvider } from '@/context/FolderRefreshContext';
 import { UserProvider } from '@/context/UserContext';
 import { usePreline } from '@/hooks/usePreline';
+import { useSidebarCollapsed } from '@/hooks/useSidebarPreferences';
 import { UploadProgressDock } from '@/pages/Library/Media/components/UploadProgressDock';
 import NotificationInterruptCheck from '@/pages/Notification/components/NotificationInterruptCheck';
 import type { User } from '@/types/user';
 
 export default function RootLayout() {
   const { pathname } = useLocation();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useSidebarCollapsed();
   const [openMobileDrawer, setOpenMobileDrawer] = useState(false);
   const { user } = useLoaderData() as { user: User | null };
 
