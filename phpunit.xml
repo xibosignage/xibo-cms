@@ -25,6 +25,9 @@
         <testsuite name="Xibo XMDS Test Suite">
             <directory suffix="Test.php">tests/Xmds/</directory>
         </testsuite>
+        <testsuite name="Xibo Helper Test Suite">
+            <directory suffix="Test.php">tests/Helper/</directory>
+        </testsuite>
     </testsuites>
     <groups>
         <exclude>
