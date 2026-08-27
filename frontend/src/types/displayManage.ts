@@ -127,16 +127,3 @@ export interface BandwidthResponse {
   backgroundColor: string[];
   postUnits: string;
 }
-
-/** One screenshot in a display's history, newest first from the API. */
-export interface DisplayScreenshot {
-  displayScreenshotId: number;
-  displayId: number;
-  /** Unix seconds. */
-  createdDt: number;
-  storedAs: string;
-  /** The player's status window as it stood when the screenshot arrived, if it had reported one. */
-  status: Record<string, unknown> | null;
-  /** Built by the API, so the client does not need to know the route. */
-  url: string;
-}

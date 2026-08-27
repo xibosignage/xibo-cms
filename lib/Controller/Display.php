@@ -40,7 +40,6 @@ use Xibo\Factory\DisplayEventFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
-use Xibo\Factory\DisplayScreenshotFactory;
 use Xibo\Factory\DisplayTypeFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\NotificationFactory;
@@ -54,7 +53,6 @@ use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
 use Xibo\Helper\Guzzle\SafeClient;
 use Xibo\Helper\HttpsDetect;
-use Xibo\Helper\LibraryFile;
 use Xibo\Helper\Random;
 use Xibo\Helper\WakeOnLan;
 use Xibo\Service\PlayerActionServiceInterface;
@@ -94,8 +92,7 @@ class Display extends Base
         private readonly UserGroupFactory $userGroupFactory,
         private readonly PlayerVersionFactory $playerVersionFactory,
         private readonly DayPartFactory $dayPartFactory,
-        private readonly ScheduleFactory $scheduleFactory,
-        private readonly DisplayScreenshotFactory $displayScreenshotFactory
+        private readonly ScheduleFactory $scheduleFactory
     ) {
     }
 
@@ -418,7 +415,6 @@ class Display extends Base
             'xmrRegistered' => $parsedQueryParams->getInt('xmrRegistered'),
             'isPlayerSupported' => $parsedQueryParams->getInt('isPlayerSupported'),
             'displayGroupIds' => $parsedQueryParams->getIntArray('displayGroupIds'),
-            'needsAttention' => $parsedQueryParams->getInt('needsAttention'),
             'faults' => $parsedQueryParams->getInt('faults'),
         ];
     }
@@ -571,15 +567,8 @@ class Display extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\Parameter(
-        name: 'needsAttention',
-        description: 'Filter by whether the Display needs attention, i.e. its media inventory is not fully synced, it is not authorised, or its commercial licence is not Licensed fully/Not applicable (1 or 0)', // phpcs:ignore
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'integer')
-    )]
-    #[OA\Parameter(
         name: 'faults',
-        description: 'Filter by whether the Display has at least one player fault, excluding Displays already matched by the needsAttention filter (1 or 0)', // phpcs:ignore
+        description: 'Filter by whether the Display has at least one player fault (1 or 0)',
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'integer')
@@ -717,20 +706,10 @@ class Display extends Base
         content: new OA\JsonContent(
             properties: [
                 new OA\Property(property: 'total', type: 'integer'),
-                new OA\Property(property: 'online', type: 'integer'),
-                new OA\Property(property: 'offline', type: 'integer'),
-                new OA\Property(property: 'needsAttention', type: 'integer'),
                 new OA\Property(property: 'faults', type: 'integer'),
-                new OA\Property(
-                    property: 'offlineTrend',
-                    description: 'Displays that went offline in the last 24 hours',
-                    type: 'integer'
-                ),
-                new OA\Property(
-                    property: 'onlineTrend',
-                    description: 'Displays that came back online in the last 24 hours',
-                    type: 'integer'
-                ),
+                new OA\Property(property: 'loggedIn', type: 'integer'),
+                new OA\Property(property: 'authorised', type: 'integer'),
+                new OA\Property(property: 'upToDate', type: 'integer'),
                 new OA\Property(
                     property: 'faultsTrend',
                     description: 'Player faults newly reported in the last 24 hours',
@@ -741,7 +720,7 @@ class Display extends Base
         )
     )]
     /**
-     * Aggregate summary counts (Total/Online/Offline/Needs Attention/Faults) for the
+     * Aggregate summary counts (Total/Logged In/Authorised/Up-to-date/Faults) for the
      * Displays visible to this User. Computed as a single SQL aggregate query in
      * DisplayFactory::getSummary() - not a fetch-all-then-loop - and scoped by the same
      * viewPermissionSql restriction as the main Display grid.
@@ -761,100 +740,6 @@ class Display extends Base
         return $response
             ->withStatus(200)
             ->withJson($summary);
-    }
-
-    #[OA\Get(
-        path: '/display/{id}/schedule/next',
-        operationId: 'displayScheduleNext',
-        description: 'Get the next scheduled Layout for a Display, within a short look-ahead window. Note: this is an approximation - it does not replicate player-side priority/shareOfVoice/interrupt resolution, which only happens on the player at runtime. Where several events overlap in the window, the earliest starting occurrence is returned. See ScheduleFactory::getNextForDisplay().', // phpcs:ignore
-        summary: 'Display Next Scheduled Layout',
-        tags: ['display']
-    )]
-    #[OA\Parameter(
-        name: 'id',
-        description: 'The Display ID',
-        in: 'path',
-        required: true,
-        schema: new OA\Schema(type: 'integer')
-    )]
-    #[OA\Response(
-        response: 200,
-        description: 'successful operation. Null if nothing is scheduled to play within the look-ahead window.', // phpcs:ignore
-        content: new OA\JsonContent(
-            properties: [
-                new OA\Property(property: 'layoutId', type: 'integer'),
-                new OA\Property(property: 'layoutName', type: 'string'),
-                new OA\Property(property: 'startsAt', type: 'string', format: 'date-time'),
-                new OA\Property(
-                    property: 'status',
-                    type: 'string',
-                    description: 'Download status of the Layout on this Display: ready, downloading or pending. There is no "error" status modelled in this schema.', // phpcs:ignore
-                    enum: ['ready', 'downloading', 'pending']
-                ),
-            ],
-            type: 'object',
-            nullable: true
-        )
-    )]
-    /**
-     * Get the next scheduled Layout for a Display, within a short look-ahead window (see
-     * ScheduleFactory::getNextForDisplay() for the window size and the "earliest occurrence
-     * wins" approximation used when events overlap).
-     *
-     * Status is derived from the RequiredFile record for this Display/Layout combination:
-     * complete == 1 => "ready", complete == 0 => "downloading", no record => "pending" (the
-     * Layout has not yet been synced to this Display, e.g. the schedule was created moments
-     * ago, before the player's next RequiredFiles poll). There is no "error" status modelled
-     * anywhere in this schema, so one is not invented here.
-     *
-     * @param Response $response
-     * @param int $id
-     * @return ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws NotFoundException
-     */
-    public function getNextSchedule(Response $response, int $id): Response|ResponseInterface
-    {
-        $display = $this->displayFactory->getById($id);
-
-        if (!$this->getUser()->checkViewable($display)) {
-            throw new AccessDeniedException();
-        }
-
-        $next = $this->scheduleFactory->getNextForDisplay($id, $display->timeZone);
-
-        if ($next === null) {
-            return $response
-                ->withStatus(200)
-                ->withJson(null);
-        }
-
-        $layout = $this->layoutFactory->getById($next['layoutId']);
-
-        try {
-            $requiredFile = $this->requiredFileFactory->getByDisplayAndLayout($id, $next['layoutId']);
-            $status = ($requiredFile->complete == 1) ? 'ready' : 'downloading';
-        } catch (NotFoundException $e) {
-            // Not yet synced to this Display - expected, not an error.
-            $status = 'pending';
-        }
-
-        return $response
-            ->withStatus(200)
-            ->withJson([
-                'layoutId' => $layout->layoutId,
-                'layoutName' => $layout->layout,
-                // ISO 8601 with a UTC offset - not getSystemFormat()'s naive
-                // 'Y-m-d H:i:s', which carries no timezone marker at all. The
-                // frontend parses this with JS Date(), which interprets an
-                // offset-less string in the browser's own local timezone; a
-                // naive string here would silently be off by (CMS timezone -
-                // browser timezone) whenever those differ.
-                'startsAt' => $next['startsAt']->copy()
-                    ->setTimezone(date_default_timezone_get())
-                    ->toIso8601String(),
-                'status' => $status,
-            ]);
     }
 
     #[OA\Get(
@@ -1644,152 +1529,6 @@ class Display extends Base
         return $response->withJson([
             'time' => empty($time) ? null : $time,
         ]);
-    }
-
-    /**
-     * PARKED (screenshot history & interval): unreachable, its route is commented out.
-     * See the note on Soap4::addToScreenshotHistory().
-     *
-     * A display's recent screenshots, newest first.
-     *
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function screenShotHistory(Request $request, Response $response, $id)
-    {
-        $display = $this->displayFactory->getById($id);
-
-        if (!$this->getUser()->checkViewable($display) && !$this->getUser()->featureEnabled('displays.limitedView')) {
-            throw new AccessDeniedException();
-        }
-
-        $entries = [];
-        foreach ($this->displayScreenshotFactory->getByDisplayId(
-            $display->displayId,
-            DisplayScreenshotFactory::HISTORY_LIMIT
-        ) as $screenshot) {
-            $entry = $screenshot->jsonSerialize();
-            // Built here rather than in the client, which has no business knowing the route. Same
-            // approach as the thumbnail on the display grid.
-            $entry['url'] = $this->urlFor($request, 'display.screenshot.history.item', [
-                'id' => $display->displayId,
-                'screenshotId' => $screenshot->displayScreenshotId,
-            ]);
-            $entries[] = $entry;
-        }
-
-        $this->getState()->template = 'grid';
-        $this->getState()->setData($entries);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * One screenshot out of a display's history.
-     *
-     * Separate from screenShot(), which always serves the display's current image and stamps it
-     * with the capture time. Here the time is known per entry, so the image is returned as stored.
-     *
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @param $screenshotId
-     * @return ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    // PARKED (screenshot history & interval): unreachable, its route is commented out.
-    public function screenShotFromHistory(Request $request, Response $response, $id, $screenshotId)
-    {
-        $display = $this->displayFactory->getById($id);
-
-        if (!$this->getUser()->checkViewable($display) && !$this->getUser()->featureEnabled('displays.limitedView')) {
-            throw new AccessDeniedException();
-        }
-
-        $screenshot = $this->displayScreenshotFactory->getById(intval($screenshotId));
-
-        // Guard against reading another display's history by pairing it with this display's id.
-        if ($screenshot->displayId !== $display->displayId) {
-            throw new NotFoundException(__('Screenshot not found'));
-        }
-
-        $this->setNoOutput(true);
-
-        $fileName = LibraryFile::resolve(
-            $this->getConfig()->getSetting('LIBRARY_LOCATION'),
-            'screenshots/' . $screenshot->storedAs
-        );
-
-        return $this->renderScreenshotFile($request, $response, $fileName);
-    }
-
-
-    /**
-     * Sets how often this display takes a screenshot on its own, as an override on top of
-     * whatever its display profile says.
-     *
-     * Deliberately narrow rather than going through edit(), which reads every display field off
-     * the request and would blank the ones a caller did not send.
-     *
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    // PARKED (screenshot history & interval): unreachable, its route is commented out.
-    public function setScreenShotInterval(Request $request, Response $response, $id)
-    {
-        $display = $this->displayFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($display)) {
-            throw new AccessDeniedException();
-        }
-
-        $display->load();
-
-        $interval = $this->getSanitizer($request->getParams())
-            ->getInt('screenShotRequestInterval', ['default' => 0]);
-
-        if ($interval < 0) {
-            throw new InvalidArgumentException(
-                __('Interval must be 0 or more'),
-                'screenShotRequestInterval'
-            );
-        }
-
-        // Replace any existing override for this setting, keeping every other override intact.
-        $overrideConfig = [];
-        foreach ($display->overrideConfig as $row) {
-            if ($row['name'] !== 'screenShotRequestInterval') {
-                $overrideConfig[] = $row;
-            }
-        }
-        $overrideConfig[] = ['name' => 'screenShotRequestInterval', 'value' => $interval];
-
-        $display->overrideConfig = $overrideConfig;
-        $display->save();
-
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('Screenshot interval set for %s'), $display->display),
-            'id' => $display->displayId,
-        ]);
-
-        return $this->render($request, $response);
     }
 
     #[OA\Put(

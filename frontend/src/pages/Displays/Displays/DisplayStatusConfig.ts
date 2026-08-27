@@ -20,26 +20,10 @@
  */
 
 import type { TFunction } from 'i18next';
-import { AlertTriangle, OctagonAlert, Wifi, WifiOff, type LucideIcon } from 'lucide-react';
 
-import type { FetchDisplaysRequest } from '@/services/displaysApi';
 import type { Display } from '@/types/display';
 import type { DisplayOverviewBucket } from '@/types/displayOverview';
 import type { UIStatus } from '@/types/uiStatus';
-
-export const CARD_PAGE_SIZE = 12;
-
-// Shared between the card grid's own pagination bar and the table view's
-// DataTable — both drive the same `pagination` state from Overview.tsx, so
-// their page-size choices need to stay identical.
-export const PAGE_SIZE_OPTIONS = [12, 24, 50];
-
-export const BUCKET_ICON: Record<DisplayOverviewBucket, LucideIcon> = {
-  online: Wifi,
-  needsAttention: AlertTriangle,
-  offline: WifiOff,
-  faults: OctagonAlert,
-};
 
 // Maps each bucket onto the app's existing Badge/UIStatus semantic colours —
 // the same success/warning/neutral/danger (teal/yellow/gray/red) tokens the
@@ -116,30 +100,6 @@ export function getBucketLabel(t: TFunction, bucket: DisplayOverviewBucket): str
       return t('Faults');
     default:
       return '';
-  }
-}
-
-// Maps the active KPI bucket to the list endpoint's filter params (row 7 of
-// the backlog: "don't reimplement the bucket logic client-side, just pass the
-// right filter param through to the existing list query"). The four buckets
-// are mutually exclusive server-side (see DisplayFactory::getSummary()), so
-// "online" has to explicitly rule out needsAttention/faults membership too —
-// otherwise a display that's logged in but has e.g. a licence issue would
-// show up under both Online and Needs Attention.
-export function getBucketFilterParams(
-  bucket: DisplayOverviewBucket | null,
-): Partial<FetchDisplaysRequest> {
-  switch (bucket) {
-    case 'online':
-      return { loggedIn: 1, needsAttention: 0, faults: 0 };
-    case 'offline':
-      return { loggedIn: 0 };
-    case 'needsAttention':
-      return { needsAttention: 1 };
-    case 'faults':
-      return { faults: 1 };
-    default:
-      return {};
   }
 }
 
@@ -234,23 +194,26 @@ export function getDisplayStatusInfo(
   };
 }
 
-// The Manage page's big status pill wants "bucket — reason" copy (e.g. "Needs
-// attention — Unauthorised") rather than just the bucket label on its own.
-// Takes an already-derived DisplayStatusInfo (e.g. from useDisplayStatusBadge)
-// rather than a Display, so callers that already derived it once don't pay
-// for a second getDisplayStatusInfo() call.
+// The Manage page's big status pill wants "bucket — reason" copy for
+// needsAttention/faults (e.g. "Needs attention — Unauthorised"), since that
+// detail isn't shown anywhere else on the page. Online/Offline get just the
+// bucket label on its own — the header's separate "Last seen" line already
+// covers that, so a "— last seen {{time}}"/"— healthy" suffix here would only
+// repeat it. Takes an already-derived DisplayStatusInfo (e.g. from
+// useDisplayStatusBadge) rather than a Display, so callers that already
+// derived it once don't pay for a second getDisplayStatusInfo() call.
 export function getManagePillCopy(
-  { bucket, badgeLabel, lastSeenLabel }: DisplayStatusInfo,
+  { bucket, badgeLabel }: DisplayStatusInfo,
   countFaults: number,
   t: TFunction,
 ): string {
   switch (bucket) {
     case 'online':
-      return t('Online — healthy');
+      return t('Online');
     case 'needsAttention':
       return t('Needs attention — {{reason}}', { reason: badgeLabel });
     case 'offline':
-      return t('Offline — last seen {{time}}', { time: lastSeenLabel });
+      return t('Offline');
     case 'faults':
       return t('Faults — {{count}} active', { count: countFaults });
     default:

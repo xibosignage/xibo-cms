@@ -26,16 +26,10 @@ import {
   fetchBandwidthData,
   fetchDisplayManageData,
   fetchPlayerFaults,
-  fetchScreenshotHistory,
   fetchScreenshotTime,
   requestScreenShot,
 } from '@/services/displaysApi';
-import type {
-  BandwidthResponse,
-  DisplayManageData,
-  DisplayScreenshot,
-  PlayerFault,
-} from '@/types/displayManage';
+import type { BandwidthResponse, DisplayManageData, PlayerFault } from '@/types/displayManage';
 
 /**
  * Player faults for a single display, from `/display/faults/{displayId}`. Shared by the
@@ -78,23 +72,6 @@ export function useBandwidthData(
     queryFn: ({ signal }) => fetchBandwidthData({ displayId: displayId!, fromDt, toDt }, signal),
     enabled: enabled && !!displayId,
     staleTime: 1000 * 60 * 5,
-  });
-}
-
-/**
- * A display's recent screenshots. Polled, because a display on an interval keeps producing them
- * and the Live badge is time sensitive.
- *
- * PARKED (screenshot history & interval): unreferenced. Nothing records history now, so this would
- * resolve to an empty list. See the note on Soap4::addToScreenshotHistory().
- */
-export function useDisplayScreenshots(displayId: number | null, enabled: boolean) {
-  return useQuery<DisplayScreenshot[]>({
-    queryKey: ['display', 'screenshots', displayId],
-    queryFn: ({ signal }) => fetchScreenshotHistory(displayId!, signal),
-    enabled: enabled && !!displayId,
-    staleTime: 1000 * 15,
-    refetchInterval: 1000 * 30,
   });
 }
 

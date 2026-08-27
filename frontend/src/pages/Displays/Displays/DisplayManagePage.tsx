@@ -24,16 +24,11 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { getDisplayStatusBucket } from './DisplayStatusConfig';
 import DisplayScreenshotPreviewer from './components/DisplayScreenshotPreviewer';
 import ActiveFaultsPanel from './components/panels/ActiveFaultsPanel';
-import AllCommandsCard from './components/panels/AllCommandsCard';
-import DailyTimelineCard from './components/panels/DailyTimelineCard';
 import HealthCheckCard from './components/panels/HealthCheckCard';
 import ManageHeaderActions from './components/panels/ManageHeaderActions';
 import ManagePageHeader from './components/panels/ManagePageHeader';
-import NowPlayingCard from './components/panels/NowPlayingCard';
-import PlayerUpdateBanner from './components/panels/PlayerUpdateBanner';
 import ProofOfPlayModal from './components/panels/ProofOfPlayModal';
 import ScreenshotCard from './components/panels/ScreenshotCard';
 import TroubleshootingDiagnosticsModal from './components/panels/TroubleshootingDiagnosticsModal';
@@ -46,18 +41,8 @@ import { hasFeature } from '@/utils/permissions';
 
 const DISPLAYS_PATH = '/displays/displays';
 
-/**
- * The Manage page for a single display (`/displays/displays/:displayId`) —
- * the same content that used to live in `OverviewManageModal.tsx`, now a
- * standalone, linkable/bookmarkable page rather than a modal. The display is
- * re-fetched by ID here rather than carried over from the grid row, since a
- * direct navigation (refresh, bookmark, shared link) won't have that row in
- * memory. Reached from the Displays grid's row/card "Manage" action —
- * originally built as part of a since-retired standalone "Display Overview"
- * page (`/displays/overview`), whose functionality (KPI tiles, health-status
- * filter, card view) was folded into the Displays grid; this Manage page and
- * its supporting config/panels moved here as part of that same migration.
- */
+// The Manage page for a single display (`/displays/displays/:displayId`) — linkable/bookmarkable,
+// so the display is re-fetched by ID here rather than carried over from the grid row.
 export default function DisplayManagePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -71,9 +56,8 @@ export default function DisplayManagePage() {
     isError,
   } = useManagePageDisplay(Number.isFinite(displayId) ? displayId : null);
 
-  const { isActionPending, confirmPurgeAll } = useManagePageActions({
-    t,
-  });
+  const { isClearingCache, isTogglingAuthorise, confirmPurgeAll, confirmToggleAuthorise } =
+    useManagePageActions({ t });
 
   const [showScreenshots, setShowScreenshots] = useState(false);
   const [showProofOfPlay, setShowProofOfPlay] = useState(false);
@@ -115,8 +99,8 @@ export default function DisplayManagePage() {
   const limitedEdit = canEditDisplay && (canModify || canLimitedViewFeature);
 
   const canClearCache = isSuperAdmin && limitedEdit;
+  const canAuthorise = canModify && canEditDisplay;
   const canViewProofOfPlay = hasFeature(user, 'proof-of-play');
-  const needsAttention = getDisplayStatusBucket(display) !== 'online';
 
   return (
     <section className="flex h-full w-full min-h-0 flex-col overflow-y-auto">
@@ -124,34 +108,28 @@ export default function DisplayManagePage() {
         display={display}
         onClose={handleBack}
         closeIcon={ArrowLeft}
-        closeLabel={t('Back to Overview')}
+        closeLabel={t('Back to Displays')}
         actions={
           <ManageHeaderActions
             onOpenProofOfPlay={() => setShowProofOfPlay(true)}
             canViewProofOfPlay={canViewProofOfPlay}
             onOpenDiagnostics={() => setShowDiagnostics(true)}
-            needsAttention={needsAttention}
           />
         }
       />
 
       <div className="flex flex-col gap-6 p-6">
-        <PlayerUpdateBanner />
-
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <ScreenshotCard display={display} onOpen={() => setShowScreenshots(true)} />
-          <NowPlayingCard />
-          <DailyTimelineCard />
-        </div>
-
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <ScreenshotCard display={display} onOpen={() => setShowScreenshots(true)} />
           <HealthCheckCard
             display={display}
             onClearCache={() => confirmPurgeAll(display)}
-            isClearingCache={isActionPending}
+            isClearingCache={isClearingCache}
             canClearCache={canClearCache}
+            onToggleAuthorise={() => confirmToggleAuthorise(display)}
+            isTogglingAuthorise={isTogglingAuthorise}
+            canAuthorise={canAuthorise}
           />
-          <AllCommandsCard />
         </div>
 
         <ActiveFaultsPanel displayId={display.displayId} />

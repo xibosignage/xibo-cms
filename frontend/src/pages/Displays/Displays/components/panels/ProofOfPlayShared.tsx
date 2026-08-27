@@ -34,13 +34,7 @@ interface ExportColumn {
   value: (row: ProofOfPlayRow) => string | number;
 }
 
-/**
- * How far back both proof of play panels look.
- *
- * Defined once because the per-display and the by-group panel sit on different pages: if
- * each carried its own figure they would eventually disagree, and the two would quietly
- * stop being comparable.
- */
+// Shared window so the per-display and by-group panels stay comparable.
 export const PROOF_OF_PLAY_WINDOW_HOURS = 7 * 24;
 
 /** How many rows to list before the rest are folded away. */
@@ -54,12 +48,8 @@ export interface PlayListItem {
   duration: number;
 }
 
-/**
- * A window ending now, expressed the way the report filters do. Only named presets like "today"
- * and calendar ranges exist, so a rolling window has to be built as an explicit range with times.
- *
- * Returns the ends alongside the filter so the header can state the period it is showing.
- */
+// A window ending now, expressed as an explicit range filter (only named presets/calendar
+// ranges exist otherwise). Returns the ends too, so the header can state the period shown.
 export function rollingWindow(hours: number): { filter: string; from: DateTime; to: DateTime } {
   const to = DateTime.now();
   const from = to.minus({ hours });
@@ -91,12 +81,8 @@ function csvField(value: string | number): string {
   return `"${String(value).replace(/"/g, '""')}"`;
 }
 
-/**
- * Saves the rows on screen as CSV, for this display only.
- *
- * Built from what is already loaded rather than calling the CMS export, which returns raw stat
- * rows for the whole network. This is the aggregated per-layout view the panel is showing.
- */
+// Saves the rows already on screen as CSV — not the CMS export, which returns raw
+// network-wide stat rows rather than this panel's aggregated per-layout view.
 export function downloadCsv(
   fileName: string,
   headers: string[],
@@ -139,12 +125,7 @@ function capitalize(value: string): string {
   return value ? value.charAt(0).toUpperCase() + value.slice(1) : '';
 }
 
-/**
- * The columns the Proof of Play report exports, in its order.
- *
- * Kept identical on purpose: an export from this panel should be the same file you would get from
- * the full report, just already narrowed to one display.
- */
+// Same column order as the full Proof of Play report export, just narrowed to one display.
 export function exportColumns(
   t: TFunction,
 ): { header: string; value: (row: ProofOfPlayRow) => string | number }[] {
@@ -207,11 +188,7 @@ export function totalPlaysBy(
   return [...totals.values()].sort((a, b) => b.plays - a.plays);
 }
 
-/**
- * One row per item: name on the left, plays and share of the total on the right.
- *
- * Rows become buttons when onSelect is given, which is what makes the layout list drill down.
- */
+// One row per item: name left, plays/share right. Becomes buttons when onSelect is given.
 export function PlayList({
   items,
   totalPlays,
@@ -281,13 +258,8 @@ export function PlayList({
   );
 }
 
-/**
- * Print just this panel's table.
- *
- * The shared DataTable also marks itself printable, so on a page that has both, an unscoped
- * print puts the displays grid on the page alongside this table. The body class narrows print.css
- * down to the .print-target below for the duration of the print, and is removed afterwards.
- */
+// Scopes the print to just this panel's table (the shared DataTable is also printable, so an
+// unscoped print would include it too) via a body class print.css narrows down to .print-target.
 export function printPanelTable() {
   const SCOPE = 'printing-scoped';
 
@@ -305,12 +277,8 @@ export function printPanelTable() {
   window.setTimeout(cleanUp, 1000);
 }
 
-/**
- * The detail table, hidden on screen and the only thing print.css lets through.
- *
- * Marked up and styled the way the shared data table is, so a sheet printed from a panel looks
- * like one printed from the full report.
- */
+// Hidden on screen; the only thing print.css lets through. Styled like the shared data
+// table so a panel's printout matches the full report's.
 export function PrintableTable({
   heading,
   period,

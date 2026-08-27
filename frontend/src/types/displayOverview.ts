@@ -19,49 +19,29 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// Response shape for GET /display/overview/summary — backs the four KPI tiles
-// on the Display Overview page. `total` is shown as every tile's denominator
-// ("Online/Total", "Faults/Total", etc); it is never rendered as its own tile.
+// Response shape for GET /display/overview/summary — backs the five KPI tiles
+// and quick-filter chips on the Display Overview page (Total/Logged In/
+// Authorised/Up-to-date/Faults). loggedIn/authorised/upToDate/faults are
+// independent, overlapping counts (a display can be all four at once) — see
+// DisplayFactory::getSummary().
 //
-// offlineTrend/onlineTrend/faultsTrend are 24-hour counts sourced from real
-// history tables (`displayevent`, `player_faults`) — see
-// DisplayFactory::getSummary(). There's deliberately no needsAttentionTrend:
-// media sync/licence/authorisation changes aren't timestamped anywhere in the
-// schema, so a trend for that bucket would have to be fabricated.
+// faultsTrend is a 24-hour count sourced from the real `player_faults` history
+// table. There's deliberately no trend for loggedIn/authorised/upToDate: none
+// of those states are timestamped anywhere in the schema, so a trend for them
+// would have to be fabricated.
 export interface DisplayOverviewSummary {
   total: number;
-  online: number;
-  offline: number;
-  needsAttention: number;
   faults: number;
-  offlineTrend: number;
-  onlineTrend: number;
+  loggedIn: number;
+  authorised: number;
+  upToDate: number;
   faultsTrend: number;
 }
 
-// The four KPI buckets a display can be filtered/grouped by on the Overview
-// page. A display can belong to more than one of these conceptually (e.g. it
-// could be both offline and have a stale licence), but the KPI counts and the
-// server-side filters treat them as mutually exclusive buckets — Faults never
-// double-counts a display already shown under Needs Attention.
+// The per-display health classification used for a single display's own
+// status badge/dot (card, table row, Manage page) — see
+// DisplayStatusConfig.ts's getDisplayStatusBucket(). Not used by the list's
+// quick-filter chips, which filter on the concrete loggedIn/authorised/
+// mediaInventoryStatus/faults fields directly instead of re-deriving a
+// bucket.
 export type DisplayOverviewBucket = 'online' | 'needsAttention' | 'offline' | 'faults';
-
-// A display's readiness for its own next-scheduled-item lookup. There is no
-// "error" state modeled anywhere in the backend today (requiredfile.complete
-// is a plain 0/1, with no stuck-download indicator) — don't add one here
-// without a corresponding backend change; a fabricated "error" state would be
-// presenting a guess as fact.
-export type DisplayNextScheduleStatus = 'ready' | 'downloading' | 'pending';
-
-// Response shape for GET /display/{id}/schedule/next. `null` means nothing is
-// scheduled within the lookahead window — a normal, expected state, not an
-// error. Picking "next" is an earliest-start-time approximation: overlapping
-// priority/shareOfVoice/interrupt schedules are resolved by the player at
-// runtime, not here, so this can legitimately disagree with what's actually
-// on screen.
-export interface DisplayNextSchedule {
-  layoutId: number;
-  layoutName: string;
-  startsAt: string;
-  status: DisplayNextScheduleStatus;
-}

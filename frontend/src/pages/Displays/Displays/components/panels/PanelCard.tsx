@@ -32,6 +32,8 @@ interface PanelCardProps {
   headerClassName?: string;
   /** Overrides the body wrapper's background (plain by default). */
   bodyClassName?: string;
+  /** Right-aligned control(s) in the header row, e.g. a pause/resume toggle. */
+  headerActions?: React.ReactNode;
 }
 
 /**
@@ -47,6 +49,7 @@ export function PanelCard({
   className,
   headerClassName,
   bodyClassName,
+  headerActions,
 }: PanelCardProps) {
   return (
     <div
@@ -65,6 +68,7 @@ export function PanelCard({
           {Icon && <Icon className="size-3.5 shrink-0 text-gray-400" aria-hidden="true" />}
           {title}
         </h3>
+        {headerActions}
       </div>
       <div className={twMerge('flex flex-1 min-h-0 flex-col overflow-x-auto', bodyClassName)}>
         {children}

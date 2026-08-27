@@ -47,9 +47,8 @@ interface DisplayCardProps {
 // Card face follows display-selection.png: status pill overlaid on the
 // screenshot (top-left), a "⋮" actions menu overlaid opposite it (top-right —
 // functionally the same menu as the Displays grid's row kebab, built from the
-// same getDisplayItemActions list), name + description, a relative "Last
-// seen" line, then Currently Playing / Up Next detail, and a two-way
-// Manage / Edit footer.
+// same getDisplayItemActions list), name + display group, a relative "Last
+// seen" line, and a two-way Manage / Edit footer.
 export default function DisplayCard({
   display,
   onManagePage,
@@ -63,7 +62,7 @@ export default function DisplayCard({
   const { bucket, colors, badgeLabel, lastSeenLabel, showThumbnail, onThumbnailError } =
     useDisplayStatusBadge(display);
 
-  const subtitle = display.description || display.displayGroups?.[0]?.displayGroup || '';
+  const subtitle = display.displayGroups?.[0]?.displayGroup || '';
 
   // Quick actions (e.g. the dropdown's own "Edit" entry) are already covered
   // by this card's dedicated Edit button, so only the non-quick menu items
@@ -125,7 +124,7 @@ export default function DisplayCard({
         )}
       </div>
 
-      <div className="flex flex-col gap-0.5 px-3 pt-2 pb-1.5">
+      <div className="flex flex-col gap-0.5 px-3 pt-2 pb-2">
         <h3 className="truncate text-sm font-semibold text-gray-800" title={display.display}>
           {display.display}
         </h3>
@@ -135,28 +134,6 @@ export default function DisplayCard({
           </p>
         )}
         <p className="text-xs text-gray-400">{t('Last seen {{time}}', { time: lastSeenLabel })}</p>
-      </div>
-
-      <div className="flex flex-col gap-1.5 px-3 pb-2">
-        <div className="flex flex-col gap-0.5">
-          <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
-            {t('Currently Playing')}
-          </span>
-          <span
-            className="truncate text-xs text-gray-700"
-            title={display.currentLayout ?? undefined}
-          >
-            {display.currentLayout || '-'}
-          </span>
-        </div>
-
-        <div className="flex flex-col gap-0.5">
-          <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
-            {t('Up Next')}
-          </span>
-          {/* Not available yet — see useDisplayNextSchedule for the API/hook this will use. */}
-          <span className="text-xs text-gray-700">-</span>
-        </div>
       </div>
 
       <div className="mt-auto grid grid-cols-2 border-t border-gray-200 text-xs font-semibold">

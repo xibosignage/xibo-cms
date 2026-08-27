@@ -22,13 +22,11 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
 
-import { getBucketFilterParams } from '../DisplayStatusConfig';
 import type { DisplayFilterInput } from '../DisplaysConfig';
 
 import { serializeTags } from '@/components/ui/forms/TagInput';
 import type { FetchDisplaysRequest } from '@/services/displaysApi';
 import { fetchDisplays } from '@/services/displaysApi';
-import type { DisplayOverviewBucket } from '@/types/displayOverview';
 import { resolveLastAccessed } from '@/utils/date';
 import { isValidRegex } from '@/utils/regex';
 
@@ -83,9 +81,6 @@ export const useDisplaysData = ({
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,
-        ...getBucketFilterParams(
-          (advancedFilters.healthStatus as DisplayOverviewBucket | null) || null,
-        ),
         ...(advancedFilters.displayId != null ? { displayId: advancedFilters.displayId } : {}),
         ...(advancedFilters.name || filter ? { display: advancedFilters.name || filter } : {}),
         ...(advancedFilters.useRegexForName &&
@@ -111,6 +106,9 @@ export const useDisplaysData = ({
           : {}),
         ...(advancedFilters.authorised !== null && advancedFilters.authorised !== undefined
           ? { authorised: advancedFilters.authorised }
+          : {}),
+        ...(advancedFilters.faults !== null && advancedFilters.faults !== undefined
+          ? { faults: advancedFilters.faults }
           : {}),
         ...(advancedFilters.xmrRegistered !== null && advancedFilters.xmrRegistered !== undefined
           ? { xmrRegistered: advancedFilters.xmrRegistered }

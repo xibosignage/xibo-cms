@@ -19,12 +19,15 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { useQueryClient } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
 import type { TFunction } from 'i18next';
 import { useState } from 'react';
 
+import { displayQueryKeys } from './useDisplaysData';
+
 import { notify } from '@/components/ui/Notification';
-import { purgeAll, requestScreenShot } from '@/services/displaysApi';
+import { purgeAll, toggleDisplayAuthorised } from '@/services/displaysApi';
 import type { Display } from '@/types/display';
 
 interface UseManagePageActionsProps {
@@ -35,19 +38,22 @@ interface UseManagePageActionsProps {
 // Displays/hooks/useDisplaysActions.ts's runAction pattern but without that
 // hook's grid-refresh/modal-close coordination (there's no list/modal to
 // coordinate with on this page) — a success/error toast is enough feedback
-// here. Only wraps what this page actually wires today: Request screenshot
-// and Clear cache. Wake on LAN/Send command/Collect now aren't included yet
-// (see PowerRebootMenu and AllCommandsCard for why).
+// here. Only wraps what this page actually wires today: Clear cache and the
+// Authorise toggle. Wake on LAN/Send command/Collect now/Request screenshot
+// aren't wired to anything on this page.
 export function useManagePageActions({ t }: UseManagePageActionsProps) {
-  const [isActionPending, setIsActionPending] = useState(false);
+  const queryClient = useQueryClient();
+  const [isClearingCache, setIsClearingCache] = useState(false);
+  const [isTogglingAuthorise, setIsTogglingAuthorise] = useState(false);
 
   const runAction = async (
     fn: () => Promise<unknown>,
+    setPending: (pending: boolean) => void,
     successMessage: string,
     errorMessage: string,
   ) => {
     try {
-      setIsActionPending(true);
+      setPending(true);
       await fn();
       notify.success(successMessage);
     } catch (error) {
@@ -58,19 +64,33 @@ export function useManagePageActions({ t }: UseManagePageActionsProps) {
           : errorMessage;
       notify.error(message);
     } finally {
-      setIsActionPending(false);
+      setPending(false);
     }
   };
 
-  const confirmRequestScreenShot = (display: Display) =>
+  const confirmPurgeAll = (display: Display) =>
     runAction(
-      () => requestScreenShot(display.displayId),
-      t('Screenshot requested.'),
-      t('Failed to request screenshot.'),
+      () => purgeAll(display.displayId),
+      setIsClearingCache,
+      t('Cache cleared.'),
+      t('Failed to clear cache.'),
     );
 
-  const confirmPurgeAll = (display: Display) =>
-    runAction(() => purgeAll(display.displayId), t('Cache cleared.'), t('Failed to clear cache.'));
+  // Re-fetches the display record on success so the switch reflects the new
+  // licensed state straight away, rather than waiting for
+  // useManagePageDisplay's 30s poll.
+  const confirmToggleAuthorise = (display: Display) =>
+    runAction(
+      async () => {
+        await toggleDisplayAuthorised(display.displayId);
+        await queryClient.invalidateQueries({
+          queryKey: displayQueryKeys.list({ displayId: display.displayId }),
+        });
+      },
+      setIsTogglingAuthorise,
+      display.licensed === 1 ? t('Display unauthorised.') : t('Display authorised.'),
+      t('Failed to update authorisation.'),
+    );
 
-  return { isActionPending, confirmRequestScreenShot, confirmPurgeAll };
+  return { isClearingCache, isTogglingAuthorise, confirmPurgeAll, confirmToggleAuthorise };
 }

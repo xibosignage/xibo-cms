@@ -26,28 +26,19 @@ import { useTranslation } from 'react-i18next';
 import DisplayInfoPanel from './DisplayInfoPanel';
 
 import { useKeydown } from '@/hooks/useKeydown';
-import { fetchDisplayScreenshotBlob, fetchHistoryScreenshotBlob } from '@/services/displaysApi';
+import { fetchDisplayScreenshotBlob } from '@/services/displaysApi';
 import type { Display } from '@/types/display';
 
 interface DisplayScreenshotPreviewerProps {
   display: Display | null;
   onClose: () => void;
   onRequestScreenshot?: (display: Display) => void;
-  /**
-   * Show one screenshot out of the display's history instead of its current one.
-   *
-   * PARKED (screenshot history & interval): nothing passes this now, so the history branch
-   * below is unreachable. Left in place because it is what the gallery would need back. See
-   * the note on Soap4::addToScreenshotHistory().
-   */
-  screenshotId?: number | null;
 }
 
 export default function DisplayScreenshotPreviewer({
   display,
   onClose,
   onRequestScreenshot,
-  screenshotId = null,
 }: DisplayScreenshotPreviewerProps) {
   const { t } = useTranslation();
 
@@ -72,7 +63,7 @@ export default function DisplayScreenshotPreviewer({
   // signal the card grid and hero status use for the same thing (both set it to '' when the
   // current screenshot file doesn't exist), so it's checked up front instead, and the request is
   // skipped entirely rather than fetching a placeholder and treating it as a real image.
-  const noCurrentScreenshot = screenshotId === null && !display?.thumbnail;
+  const noCurrentScreenshot = !display?.thumbnail;
 
   useEffect(() => {
     if (!display) {
@@ -81,7 +72,7 @@ export default function DisplayScreenshotPreviewer({
       return;
     }
 
-    if (screenshotId === null && !display.thumbnail) {
+    if (!display.thumbnail) {
       revokeUrl();
       setLoading(false);
       setHasError(false);
@@ -97,10 +88,7 @@ export default function DisplayScreenshotPreviewer({
       setHasError(false);
 
       try {
-        const blob =
-          screenshotId === null
-            ? await fetchDisplayScreenshotBlob(display.displayId, controller.signal)
-            : await fetchHistoryScreenshotBlob(display.displayId, screenshotId, controller.signal);
+        const blob = await fetchDisplayScreenshotBlob(display.displayId, controller.signal);
 
         if (!isMounted) {
           return;
@@ -127,7 +115,7 @@ export default function DisplayScreenshotPreviewer({
       controller.abort();
       revokeUrl();
     };
-  }, [display, screenshotId, retryToken]);
+  }, [display, retryToken]);
 
   useKeydown('Escape', onClose, !!display);
 

@@ -65,7 +65,6 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useSelectionState } from '@/hooks/useSelectionState';
 import { useTableState } from '@/hooks/useTableState';
 import type { Display } from '@/types/display';
-import type { DisplayOverviewBucket } from '@/types/displayOverview';
 import type { Tag } from '@/types/tag';
 import { countActiveFilters } from '@/utils/filters';
 import { hasFeature } from '@/utils/permissions';
@@ -198,10 +197,25 @@ export default function Displays() {
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
 
-  const activeBucket = (filterInputs.healthStatus as DisplayOverviewBucket | null) || null;
+  // Quick-filter chips (StatusChipRow) toggle these four concrete fields directly
+  // rather than a re-derived "bucket" — each chip sets/clears its own field, so any
+  // combination (e.g. Unauthorised + Faults) can be active at once.
+  const handleChipFilterChange = (
+    name: 'loggedIn' | 'authorised' | 'mediaInventoryStatus' | 'faults',
+    value: string | null,
+  ) => {
+    setFilterInputs((prev) => ({ ...prev, [name]: value }));
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
 
-  const handleSelectBucket = (bucket: DisplayOverviewBucket | null) => {
-    setFilterInputs((prev) => ({ ...prev, healthStatus: bucket }));
+  const handleClearChipFilters = () => {
+    setFilterInputs((prev) => ({
+      ...prev,
+      loggedIn: null,
+      authorised: null,
+      mediaInventoryStatus: null,
+      faults: null,
+    }));
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
@@ -371,9 +385,6 @@ export default function Displays() {
       ),
     onManage: (display) => openActionModal(display, 'manage'),
     onManagePage: handleManagePage,
-    // PARKED (screenshot history & interval): opened the screenshot gallery. With no history
-    // recorded there is one screenshot to show, which is what the previewer below already
-    // does for a thumbnail click, so the action reuses it rather than rendering a second copy.
     onViewScreenshots: (display) => setPreviewDisplay(display),
     onCheckLicence: (display) =>
       guard(
@@ -554,20 +565,19 @@ export default function Displays() {
         <div className="flex flex-1 flex-col gap-4 min-h-0 mt-4 overflow-y-auto">
           <KpiRow
             total={summary?.total}
-            online={summary?.online}
-            offline={summary?.offline}
-            needsAttention={summary?.needsAttention}
+            loggedIn={summary?.loggedIn}
+            authorised={summary?.authorised}
+            upToDate={summary?.upToDate}
             faults={summary?.faults}
-            offlineTrend={summary?.offlineTrend}
-            onlineTrend={summary?.onlineTrend}
             faultsTrend={summary?.faultsTrend}
             isLoading={isSummaryLoading}
           />
 
           <StatusChipRow
             summary={summary}
-            activeBucket={activeBucket}
-            onSelectBucket={handleSelectBucket}
+            filters={filterInputs}
+            onFilterChange={handleChipFilterChange}
+            onClearAll={handleClearChipFilters}
           />
 
           <div className="min-h-[60vh] flex flex-1 shrink-0 flex-col">

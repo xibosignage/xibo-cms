@@ -23,6 +23,9 @@ import { ChevronRight, type LucideIcon } from 'lucide-react';
 import { useId, useState } from 'react';
 import { twMerge } from 'tailwind-merge';
 
+/** headerClassName for a nested accordion sitting inside another panel/accordion. */
+export const ACCORDION_NESTED_HEADER_CLASS = 'bg-white hover:bg-gray-50';
+
 export interface AccordionProps {
   /** Header label. */
   title: string;

@@ -56,16 +56,8 @@ interface ProofOfPlayModalProps {
   onClose: () => void;
 }
 
-/**
- * What played inside one layout, shown in place of the layout list.
- *
- * Widget rows carry the layout they belong to, so this is the same query narrowed by layoutId
- * rather than anything new.
- *
- * Rendered inside the existing modal rather than as a second one on top: stacking two dialogs
- * means two backdrops and two focus traps, and there is nothing on the layout list worth keeping
- * on screen behind it.
- */
+// What played inside one layout — same query as the layout list, narrowed by layoutId.
+// Rendered inside the existing modal (not a second one) to avoid stacking backdrops/focus traps.
 function LayoutWidgets({
   displayId,
   layout,
@@ -146,19 +138,8 @@ function LayoutWidgets({
   );
 }
 
-// Real report data (useProofOfPlayData, already filterable by displayId + date
-// range server-side) rather than the fabricated demo numbers in
-// xibo-displays.html's popModal. Total plays/duration and the per-layout
-// breakdown are a real aggregation over the real rows, computed client-side
-// since there's no dedicated backend KPI endpoint for this compact view. The
-// date-range picker and "View full report" link are deliberate additions
-// beyond the mockup, justified since the real backend already supports
-// arbitrary ranges.
-//
-// The range defaults to a rolling 7 days rather than one of the report's own presets, because
-// the by-group panel on the Displays grid reports over that same window. Landing on "Last Week"
-// (the previous calendar week) would mean the two panels disagreed by default and could not be
-// read against each other.
+// Real aggregated report data, computed client-side (no dedicated KPI endpoint). Defaults to a
+// rolling 7 days to match the Displays grid's by-group panel, so the two stay comparable.
 export default function ProofOfPlayModal({ display, isOpen, onClose }: ProofOfPlayModalProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
