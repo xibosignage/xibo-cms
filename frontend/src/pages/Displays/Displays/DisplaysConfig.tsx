@@ -255,19 +255,6 @@ export const getBaseFilterKeys = (
   canTag = false,
 ): FilterConfigItem<DisplayFilterInput>[] => [
   {
-    label: t('Health Status'),
-    name: 'healthStatus',
-    className: '',
-    placeholder: t('All'),
-    options: [
-      { label: t('All'), value: '' },
-      { label: t('Online'), value: 'online' },
-      { label: t('Needs Attention'), value: 'needsAttention' },
-      { label: t('Offline'), value: 'offline' },
-      { label: t('Faults'), value: 'faults' },
-    ],
-  },
-  {
     label: t('ID'),
     placeholder: ' ',
     name: 'displayId',
@@ -425,6 +412,19 @@ export const getBaseFilterKeys = (
     name: 'lastAccessed',
     type: 'date',
     className: '',
+  },
+  {
+    label: t('Health Status'),
+    name: 'healthStatus',
+    className: '',
+    placeholder: t('All'),
+    options: [
+      { label: t('All'), value: '' },
+      { label: t('Online'), value: 'online' },
+      { label: t('Needs Attention'), value: 'needsAttention' },
+      { label: t('Offline'), value: 'offline' },
+      { label: t('Faults'), value: 'faults' },
+    ],
   },
 ];
 
@@ -619,7 +619,7 @@ export const getDisplayItemActions = ({
       });
 
       actions.push({
-        label: t('Manage (legacy)'),
+        label: t('Full Details'),
         icon: Info,
         rightIcon: ArrowRight,
         onClick: () => onManage(display),

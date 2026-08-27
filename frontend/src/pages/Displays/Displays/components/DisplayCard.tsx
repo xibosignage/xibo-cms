@@ -24,49 +24,24 @@ import { type ComponentProps } from 'react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
-import { useDisplayNextSchedule } from '../hooks/useDisplayNextSchedule';
 import { useDisplayStatusBadge } from '../hooks/useDisplayStatusBadge';
 
 import DisplayStatusBadge from './DisplayStatusBadge';
 
-import Badge from '@/components/ui/Badge';
 import DataTableRowActions from '@/components/ui/table/DataTableRowActions';
-import { useDateFormatter } from '@/hooks/useDateFormatter';
 import type { Display } from '@/types/display';
-import type { DisplayNextScheduleStatus } from '@/types/displayOverview';
 import type { ActionItem } from '@/types/table';
-import type { UIStatus } from '@/types/uiStatus';
 
 interface DisplayCardProps {
   display: Display;
-  onManage: (display: Display) => void;
+  /** Opens the newer Manage page (`/displays/displays/:displayId`). */
+  onManagePage: (display: Display) => void;
   onEdit: (display: Display) => void;
   /** Same action list the Displays grid's row "⋮" menu is built from (getDisplayItemActions). */
   actions: ActionItem[];
   /** Set when rendered inside DataGrid's Grid view, which drives selection for bulk actions. */
   isSelected?: boolean;
   onToggleSelect?: (checked: boolean) => void;
-}
-
-// "error" deliberately isn't here — the backend never returns it (see
-// DisplayNextScheduleStatus), so there's nothing to map.
-const NEXT_SCHEDULE_STATUS: Record<DisplayNextScheduleStatus, UIStatus> = {
-  ready: 'success',
-  downloading: 'warning',
-  pending: 'neutral',
-};
-
-function getNextScheduleStatusLabel(t: (key: string) => string, status: DisplayNextScheduleStatus) {
-  switch (status) {
-    case 'ready':
-      return t('Ready');
-    case 'downloading':
-      return t('Downloading');
-    case 'pending':
-      return t('Pending');
-    default:
-      return '';
-  }
 }
 
 // Card face follows display-selection.png: status pill overlaid on the
@@ -77,17 +52,13 @@ function getNextScheduleStatusLabel(t: (key: string) => string, status: DisplayN
 // Manage / Edit footer.
 export default function DisplayCard({
   display,
-  onManage,
+  onManagePage,
   onEdit,
   actions,
   isSelected,
   onToggleSelect,
 }: DisplayCardProps) {
   const { t } = useTranslation();
-  const { formatRelative } = useDateFormatter();
-  const { data: nextSchedule, isLoading: isNextScheduleLoading } = useDisplayNextSchedule(
-    display.displayId,
-  );
 
   const { bucket, colors, badgeLabel, lastSeenLabel, showThumbnail, onThumbnailError } =
     useDisplayStatusBadge(display);
@@ -104,7 +75,7 @@ export default function DisplayCard({
   return (
     <div
       className={twMerge(
-        'flex flex-col rounded-xl bg-slate-50 overflow-hidden pt-2.5 transition-colors',
+        'flex w-full min-w-0 flex-col rounded-xl bg-slate-50 overflow-hidden pt-2.5 transition-colors',
         isSelected ? 'bg-xibo-blue-50 ring-2 ring-xibo-blue-500' : 'hover:bg-gray-100',
       )}
     >
@@ -183,39 +154,15 @@ export default function DisplayCard({
           <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
             {t('Up Next')}
           </span>
-          {isNextScheduleLoading ? (
-            <Badge type="neutral" variation="outline" className="w-fit border-dashed text-gray-400">
-              {t('Loading…')}
-            </Badge>
-          ) : nextSchedule ? (
-            <div className="flex flex-col gap-0.5 min-w-0">
-              <span className="truncate text-xs text-gray-700" title={nextSchedule.layoutName}>
-                {nextSchedule.layoutName}
-              </span>
-              <div className="flex items-center gap-1.5 min-w-0">
-                <Badge
-                  type={NEXT_SCHEDULE_STATUS[nextSchedule.status]}
-                  className="w-fit shrink-0 py-0.5 px-1.5 text-[10px]"
-                >
-                  {getNextScheduleStatusLabel(t, nextSchedule.status)}
-                </Badge>
-                {nextSchedule.status !== 'ready' && (
-                  <span className="truncate text-[11px] text-gray-400">
-                    {t('starts {{time}}', { time: formatRelative(nextSchedule.startsAt) })}
-                  </span>
-                )}
-              </div>
-            </div>
-          ) : (
-            <span className="text-xs text-gray-700">-</span>
-          )}
+          {/* Not available yet — see useDisplayNextSchedule for the API/hook this will use. */}
+          <span className="text-xs text-gray-700">-</span>
         </div>
       </div>
 
       <div className="mt-auto grid grid-cols-2 border-t border-gray-200 text-xs font-semibold">
         <button
           type="button"
-          onClick={() => onManage(display)}
+          onClick={() => onManagePage(display)}
           className="flex items-center justify-center gap-1.5 py-2 text-gray-800 border-r border-gray-200 hover:bg-gray-50 cursor-pointer focus:outline-2 focus:-outline-offset-2 focus:outline-xibo-blue-500"
         >
           <Settings className="size-3.5 shrink-0" />

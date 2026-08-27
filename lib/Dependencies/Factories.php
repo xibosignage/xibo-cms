@@ -164,7 +164,8 @@ class Factories
                     $c->get('configService'),
                     $c->get('displayGroupFactory'),
                     $c->get('displayProfileFactory'),
-                    $c->get('folderFactory')
+                    $c->get('folderFactory'),
+                    $c->get('displayScreenshotFactory')
                 );
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;

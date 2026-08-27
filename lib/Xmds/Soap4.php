@@ -731,16 +731,6 @@ class Soap4 extends Soap
     }
 
     /**
-     * Submit ScreenShot
-     * @param string $serverKey
-     * @param string $hardwareKey
-     * @param string $screenShot
-     * @return bool
-     * @throws \SoapFault
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    /**
      * Files a copy of the screenshot in the display's history and trims the history back to the
      * limit, removing both the rows and the images they point at.
      *
@@ -793,6 +783,16 @@ class Soap4 extends Soap
         }
     }
 
+    /**
+     * Submit ScreenShot
+     * @param string $serverKey
+     * @param string $hardwareKey
+     * @param string $screenShot
+     * @return bool
+     * @throws \SoapFault
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
     public function SubmitScreenShot($serverKey, $hardwareKey, $screenShot)
     {
         $this->logProcessor->setRoute('SubmitScreenShot');

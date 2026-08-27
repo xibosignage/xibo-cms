@@ -97,8 +97,10 @@ export async function fetchDisplays(
 
 export async function fetchDisplayOverviewSummary(
   signal?: AbortSignal,
+  folderId?: number | null,
 ): Promise<DisplayOverviewSummary> {
   const response = await http.get<DisplayOverviewSummary>('/display/overview/summary', {
+    params: folderId ? { folderId } : undefined,
     signal,
   });
   return response.data;

@@ -746,12 +746,17 @@ class Display extends Base
      * DisplayFactory::getSummary() - not a fetch-all-then-loop - and scoped by the same
      * viewPermissionSql restriction as the main Display grid.
      *
+     * @param Request $request
      * @param Response $response
      * @return ResponseInterface|Response
      */
-    public function overviewSummary(Response $response): Response|ResponseInterface
+    public function overviewSummary(Request $request, Response $response): Response|ResponseInterface
     {
-        $summary = $this->displayFactory->getSummary();
+        $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
+
+        $summary = $this->displayFactory->getSummary([
+            'folderId' => $parsedQueryParams->getInt('folderId'),
+        ]);
 
         return $response
             ->withStatus(200)
@@ -1552,22 +1557,41 @@ class Display extends Base
         $library = $this->getConfig()->getSetting('LIBRARY_LOCATION');
         $fileName = $library . $file;
 
+        $date = $display->getCurrentScreenShotTime($this->pool);
+
+        return $this->renderScreenshotFile($request, $response, $fileName, function ($img) use ($date) {
+            if ($date != '') {
+                $img
+                    ->drawRectangle(0, 0, function ($draw) {
+                        $draw->size(110, 15);
+                        $draw->background('#ffffff');
+                    })
+                    ->text($date, 10, 10, function ($font) {
+                    });
+            }
+        });
+    }
+
+    /**
+     * Reads an image file (falling back to the not-found placeholder), stamps no-cache headers and
+     * writes it to the response. Shared by screenShot() and screenShotFromHistory().
+     *
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    private function renderScreenshotFile(
+        Request $request,
+        Response $response,
+        string $fileName,
+        ?callable $decorate = null
+    ): ResponseInterface|Response {
         if (!file_exists($fileName)) {
             $fileName = $this->getConfig()->uri('forms/filenotfound.gif');
         }
 
         $img = ImageManager::gd()->read($fileName);
 
-        $date = $display->getCurrentScreenShotTime($this->pool);
-
-        if ($date != '') {
-            $img
-                ->drawRectangle(0, 0, function ($draw) {
-                    $draw->size(110, 15);
-                    $draw->background('#ffffff');
-                })
-                ->text($date, 10, 10, function ($font) {
-                });
+        if ($decorate !== null) {
+            $decorate($img);
         }
 
         // Cache headers
@@ -1665,23 +1689,7 @@ class Display extends Base
             'screenshots/' . $screenshot->storedAs
         );
 
-        if (!file_exists($fileName)) {
-            $fileName = $this->getConfig()->uri('forms/filenotfound.gif');
-        }
-
-        $img = ImageManager::gd()->read($fileName);
-
-        header('Cache-Control: no-store, no-cache, must-revalidate');
-        header('Pragma: no-cache');
-        header('Expires: 0');
-
-        while (ob_get_level() > 0) {
-            ob_end_clean();
-        }
-
-        $response->write($img->encode());
-        $response = $response->withHeader('Content-Type', $img->origin()->mediaType());
-        return $this->render($request, $response);
+        return $this->renderScreenshotFile($request, $response, $fileName);
     }
 
 

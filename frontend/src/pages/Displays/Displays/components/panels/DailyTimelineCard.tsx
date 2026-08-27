@@ -27,8 +27,7 @@ import PlaceholderCard from './PlaceholderCard';
 // Placeholder for the mockup's "Daily timeline" card — deliberately not wired
 // to any data yet (a future pass would take a `display` prop to feed
 // useDisplayNextSchedule, or a new "today's resolved schedule" endpoint for a
-// real Gantt-style view). See wiggly-doodling-wren.md's scope note and
-// "Deferred to a future pass" section for why.
+// real Gantt-style view).
 export default function DailyTimelineCard() {
   const { t } = useTranslation();
 

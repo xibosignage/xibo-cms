@@ -151,8 +151,8 @@ function LayoutWidgets({
 // breakdown are a real aggregation over the real rows, computed client-side
 // since there's no dedicated backend KPI endpoint for this compact view. The
 // date-range picker and "View full report" link are deliberate additions
-// beyond the mockup (justified since the real backend already supports
-// arbitrary ranges) — see wiggly-doodling-wren.md.
+// beyond the mockup, justified since the real backend already supports
+// arbitrary ranges.
 //
 // The range defaults to a rolling 7 days rather than one of the report's own presets, because
 // the by-group panel on the Displays grid reports over that same window. Landing on "Last Week"

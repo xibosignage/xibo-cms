@@ -26,7 +26,6 @@ import { getManagePillCopy } from '../../DisplayStatusConfig';
 import { useDisplayStatusBadge } from '../../hooks/useDisplayStatusBadge';
 import DisplayStatusBadge from '../DisplayStatusBadge';
 
-import { useDateFormatter } from '@/hooks/useDateFormatter';
 import type { Display } from '@/types/display';
 
 interface ManagePageHeaderProps {
@@ -54,9 +53,12 @@ export default function ManagePageHeader({
 }: ManagePageHeaderProps) {
   const { t } = useTranslation();
   const group = display.displayGroups?.[0]?.displayGroup;
-  const { formatRelative } = useDateFormatter();
-  const { bucket, colors, lastSeenLabel } = useDisplayStatusBadge(display);
-  const pillLabel = getManagePillCopy(display, t, formatRelative);
+  const { bucket, colors, badgeLabel, lastSeenLabel } = useDisplayStatusBadge(display);
+  const pillLabel = getManagePillCopy(
+    { bucket, colors, badgeLabel, lastSeenLabel },
+    display.countFaults,
+    t,
+  );
 
   return (
     <div className="shrink-0 border-b border-gray-200 bg-white px-6 py-5">

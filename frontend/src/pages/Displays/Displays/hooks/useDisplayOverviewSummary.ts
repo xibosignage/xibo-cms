@@ -24,13 +24,14 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchDisplayOverviewSummary } from '@/services/displaysApi';
 
 export const displayOverviewQueryKeys = {
-  summary: ['display', 'overview', 'summary'] as const,
+  summary: (folderId?: number | null) =>
+    ['display', 'overview', 'summary', folderId ?? null] as const,
 };
 
-export function useDisplayOverviewSummary(enabled = true) {
+export function useDisplayOverviewSummary(enabled = true, folderId?: number | null) {
   return useQuery({
-    queryKey: displayOverviewQueryKeys.summary,
-    queryFn: ({ signal }) => fetchDisplayOverviewSummary(signal),
+    queryKey: displayOverviewQueryKeys.summary(folderId),
+    queryFn: ({ signal }) => fetchDisplayOverviewSummary(signal, folderId),
     enabled,
     staleTime: 1000 * 60,
   });

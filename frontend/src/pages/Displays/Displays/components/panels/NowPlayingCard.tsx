@@ -24,10 +24,9 @@ import { useTranslation } from 'react-i18next';
 
 import PlaceholderCard from './PlaceholderCard';
 
-// Placeholder only, per explicit scope direction — display.currentLayout is
-// real data, but this card is deliberately not wired to it yet (see
-// wiggly-doodling-wren.md's "Deferred to a future pass" section). Takes no
-// props for now; a future pass adds `display` back once it's actually used.
+// Placeholder only — display.currentLayout is real data, but this card is
+// deliberately not wired to it yet. Takes no props for now; a future pass
+// adds `display` back once it's actually used.
 export default function NowPlayingCard() {
   const { t } = useTranslation();
 
