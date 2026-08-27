@@ -30,7 +30,18 @@ import {
   useInteractions,
 } from '@floating-ui/react';
 import { isAxiosError } from 'axios';
-import { Check, Copy, Info, Loader, Loader2, Minimize2, TriangleAlert, X } from 'lucide-react';
+import {
+  ArrowLeft,
+  Eye,
+  EyeOff,
+  Info,
+  Loader2,
+  Minimize2,
+  Monitor,
+  Server,
+  TriangleAlert,
+  X,
+} from 'lucide-react';
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -81,44 +92,52 @@ interface AddDisplayModalProps {
   onMinimize?: () => void;
 }
 
-/** Read-only CMS credential with a copy button, for the manual configuration screen. */
-function CopyableValue({ label, value }: { label: string; value: string }) {
+/** Read-only credential field with optional hide/reveal toggle. */
+function ReadOnlyField({
+  label,
+  value,
+  secret = false,
+}: {
+  label: string;
+  value: string;
+  secret?: boolean;
+}) {
   const { t } = useTranslation();
-  const [copied, setCopied] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Clipboard access is unavailable over plain http, and can be blocked outright. The value is
-      // selectable either way, so let the operator copy it by hand rather than claiming we did.
-      setCopied(false);
-    }
-  };
+  useEffect(() => {
+    if (!secret || hidden) return;
+
+    timerRef.current = setTimeout(() => setHidden(true), 15000);
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [secret, hidden]);
 
   return (
-    <TextInput
-      name={label}
-      label={label}
-      value={value}
-      readOnly
-      suffix={
-        <button
-          type="button"
-          onClick={copy}
-          aria-label={copied ? t('Copied') : t('Copy')}
-          className="p-3 text-gray-400 hover:text-gray-600"
-        >
-          {copied ? (
-            <Check size={16} className="text-teal-500" aria-hidden="true" />
-          ) : (
-            <Copy size={16} aria-hidden="true" />
-          )}
-        </button>
-      }
-    />
+    <div className="flex flex-col gap-1.5">
+      <span className="text-xs font-semibold uppercase text-gray-500">{label}</span>
+      <div className="flex items-center justify-between gap-2 rounded-lg bg-gray-100 px-4 py-3">
+        <span className="text-md font-medium text-gray-800 select-all break-all">
+          {hidden ? '•'.repeat(value.length) : value}
+        </span>
+        {secret && (
+          <button
+            type="button"
+            onClick={() => setHidden((prev) => !prev)}
+            aria-label={hidden ? t('Show') : t('Hide')}
+            className="shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            {hidden ? (
+              <EyeOff size={18} aria-hidden="true" />
+            ) : (
+              <Eye size={18} aria-hidden="true" />
+            )}
+          </button>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -138,10 +157,13 @@ export default function AddDisplayModal({
   const isOpenRef = useRef(isOpen);
   isOpenRef.current = isOpen;
 
+  const defaultDisplayFolder =
+    Number(user?.settings?.DISPLAY_DEFAULT_FOLDER) || (user?.homeFolderId ?? 1);
+
   const [step, setStep] = useState<Step>('choose');
   const [userCode, setUserCode] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [folderId, setFolderId] = useState<number | null>(null);
+  const [folderId, setFolderId] = useState<number | null>(defaultDisplayFolder);
   const [folderText, setFolderText] = useState<string | null>(null);
   const [displayGroupId, setDisplayGroupId] = useState<number | null>(null);
   const [displayGroupText, setDisplayGroupText] = useState('');
@@ -187,12 +209,15 @@ export default function AddDisplayModal({
    */
   const isConnected = step === 'manual' && manual.state === 'connected';
 
+  /** Manual flow completed: display saved successfully. */
+  const isManualDone = step === 'manual' && adopted !== null && submitted !== null;
+
   const resetForm = () => {
     // A deep-linked code means the customer already chose their route.
     setStep(prefill?.code ? 'code' : 'choose');
     setUserCode(prefill?.code ?? '');
     setDisplayName(prefill?.displayName ?? '');
-    setFolderId(null);
+    setFolderId(defaultDisplayFolder);
     setFolderText(null);
     setDisplayGroupId(null);
     setDisplayGroupText('');
@@ -224,10 +249,10 @@ export default function AddDisplayModal({
     useInteractions([tooltipHover, tooltipDismiss]);
 
   useEffect(() => {
-    if (isOpen && !submitted) {
+    if (isOpen && !submitted && !isPending && !apiError && step === 'choose') {
       resetForm();
     }
-  }, [isOpen, prefill?.code, prefill?.displayName]);
+  }, [isOpen, prefill?.code, prefill?.displayName, defaultDisplayFolder]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -289,8 +314,6 @@ export default function AddDisplayModal({
 
     startTransition(async () => {
       try {
-        // The code is issued before the form is usable: it is what the operator types into the
-        // Player, and what lets the CMS recognise that Player as this form's.
         const [details, issued] = await Promise.all([fetchConnectDetails(), fetchConnectCode()]);
 
         setConnect(details);
@@ -341,12 +364,8 @@ export default function AddDisplayModal({
       setApiError(undefined);
 
       try {
-        // Note where the display list stands BEFORE the Player can register, so whatever turns up
-        // afterwards can be recognised as new. Must happen before the code is submitted.
         const highestSeenId = canApplySettings ? await fetchHighestDisplayId() : null;
 
-        // The CMS caches these settings against the code and applies them itself when the
-        // Player registers - nothing further needs to be sent once the display appears.
         await addDisplayViaCode({
           userCode: userCode.trim(),
           displayName: canApplySettings ? displayName.trim() : undefined,
@@ -361,7 +380,6 @@ export default function AddDisplayModal({
           setWatermark(highestSeenId);
         }
 
-        // Let the grid pick the display up as soon as it registers.
         onAdded?.();
       } catch (err: unknown) {
         let message = t('An unexpected error occurred.');
@@ -372,7 +390,15 @@ export default function AddDisplayModal({
         }
         setApiError(message);
         if (!isOpenRef.current) {
-          notify.error(message);
+          notify.error(message, {
+            action: {
+              label: t('Try Again'),
+              onClick: () => {
+                resetForm();
+              },
+            },
+          });
+          onClose();
         }
       }
     });
@@ -393,8 +419,6 @@ export default function AddDisplayModal({
       setApiError(undefined);
 
       try {
-        // The code check gives us an id, but applying settings needs the whole display: the edit
-        // endpoint is a full replace, and a partial payload blanks the Player's hardware key.
         const { rows } = await fetchDisplays({
           start: 0,
           length: 1,
@@ -414,8 +438,6 @@ export default function AddDisplayModal({
           authorise: canAuthorise && authorise,
         });
 
-        // The display exists whether or not the edit landed, so always finish the flow. The
-        // summary reports what was asked for, and applyError explains anything that did not stick.
         setSubmitted(summarise());
         setAdopted(updated ?? target);
         onAdded?.();
@@ -445,6 +467,7 @@ export default function AddDisplayModal({
           },
         },
       });
+      onClose();
     }
   };
 
@@ -471,6 +494,7 @@ export default function AddDisplayModal({
           onClick: () => resetForm(),
         },
       });
+      onClose();
     }
   }, [detectState, isOpen]);
 
@@ -515,6 +539,8 @@ export default function AddDisplayModal({
           label: t('Back'),
           onClick: handleBack,
           variant: 'secondary' as const,
+          leftIcon: ArrowLeft,
+          className: 'mr-auto',
         },
         {
           label: t('Cancel'),
@@ -525,9 +551,7 @@ export default function AddDisplayModal({
         {
           label: t('Save'),
           onClick: handleManualSubmit,
-          disabled: isPending || !isConnected || !canSubmitManual,
-          leftIcon: isPending ? Loader2 : undefined,
-          className: isPending ? '[&_svg]:animate-spin' : undefined,
+          disabled: !isConnected || !canSubmitManual,
         },
       ];
     }
@@ -537,6 +561,8 @@ export default function AddDisplayModal({
         label: t('Back'),
         onClick: handleBack,
         variant: 'secondary' as const,
+        leftIcon: ArrowLeft,
+        className: 'mr-auto',
       },
       {
         label: t('Cancel'),
@@ -553,7 +579,7 @@ export default function AddDisplayModal({
     ];
   };
 
-  const canMinimize = isWaiting || isConnecting;
+  const canMinimize = isWaiting;
 
   return (
     <>
@@ -561,6 +587,7 @@ export default function AddDisplayModal({
       {adopted && submitted && (
         <AddDisplaySuccessModal
           submitted={submitted}
+          display={adopted}
           onClose={onClose}
           onAddAnother={resetForm}
           onManage={handleManage}
@@ -569,7 +596,7 @@ export default function AddDisplayModal({
 
       <Modal
         onClose={onClose}
-        isOpen={isOpen}
+        isOpen={isOpen && !(adopted && submitted)}
         ariaLabel={t('Add Display')}
         error={apiError ?? applyError}
         size="sm"
@@ -650,23 +677,107 @@ export default function AddDisplayModal({
             )}
 
             {step === 'manual' && (
-              <div className="flex flex-col gap-3 rounded-lg border border-gray-100 bg-gray-50 p-4">
-                <p className="text-xs text-gray-500">
-                  {t('Enter these details into the Player, then press Connect on the Player.')}
-                </p>
+              <>
+                {/* Connection animation — grey while waiting, colored once connected */}
+                {(isConnecting || isConnected || isManualDone) && (
+                  <div
+                    className="flex flex-col items-center gap-4 rounded-lg bg-slate-50 p-6"
+                    role="status"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="flex flex-col items-center gap-1">
+                        <div
+                          className={`flex h-12 w-12 items-center justify-center rounded-full border ${isConnected || isManualDone ? 'bg-xibo-blue-50 border-xibo-blue-200' : 'bg-gray-100 border-gray-200'}`}
+                        >
+                          <Monitor
+                            className={`h-6 w-6 ${isConnected || isManualDone ? 'text-xibo-blue-500' : 'text-gray-400'}`}
+                          />
+                        </div>
+                        <span className="text-xs text-gray-500">{t('Player')}</span>
+                      </div>
 
-                <CopyableValue label={t('CMS URL')} value={connect?.cmsAddress ?? ''} />
-                {/* The one-time code rides on the end of the key, so the operator copies a single
-                    value and the Player's own Display Name field stays free for a real name. */}
-                <CopyableValue
-                  label={t('CMS Secret Key')}
-                  value={connect && connectCode ? `${connect.cmsKey}||${connectCode}` : ''}
-                />
+                      {/* Animated dots while connecting, solid line when connected/done */}
+                      <div className="flex items-center gap-1.5 pb-4">
+                        {isConnected || isManualDone ? (
+                          <>
+                            <span className="h-1.5 w-1.5 rounded-full bg-teal-400" />
+                            <span className="h-1.5 w-1.5 rounded-full bg-teal-400" />
+                            <span className="h-1.5 w-1.5 rounded-full bg-teal-400" />
+                          </>
+                        ) : (
+                          <>
+                            <span className="h-1.5 w-1.5 rounded-full bg-gray-300 animate-[pulse_1.4s_ease-in-out_infinite]" />
+                            <span className="h-1.5 w-1.5 rounded-full bg-gray-300 animate-[pulse_1.4s_ease-in-out_0.2s_infinite]" />
+                            <span className="h-1.5 w-1.5 rounded-full bg-gray-300 animate-[pulse_1.4s_ease-in-out_0.4s_infinite]" />
+                          </>
+                        )}
+                      </div>
 
-                <p className="text-xs text-gray-500">
-                  {t('Name the Player as you like - that name appears here once it connects.')}
-                </p>
-              </div>
+                      <div className="flex flex-col items-center gap-1">
+                        <div
+                          className={`flex h-12 w-12 items-center justify-center rounded-full border ${isConnected || isManualDone ? 'bg-teal-50 border-teal-200' : 'bg-gray-100 border-gray-200'}`}
+                        >
+                          <Server
+                            className={`h-6 w-6 ${isConnected || isManualDone ? 'text-teal-500' : 'text-gray-400'}`}
+                          />
+                        </div>
+                        <span className="text-xs text-gray-500">{t('CMS')}</span>
+                      </div>
+                    </div>
+
+                    <div className="text-center">
+                      <p className="text-sm font-semibold text-gray-800">
+                        {isManualDone
+                          ? t('Display added successfully!')
+                          : isConnected
+                            ? t('Display connected!')
+                            : t('Waiting for display to connect...')}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {isManualDone
+                          ? t('Your display settings have been saved.')
+                          : isConnected
+                            ? t('Connected to {{display}}. Save to apply your settings.', {
+                                display: manual.displayName ?? '',
+                              })
+                            : t(
+                                'Press Connect on the Player once you have entered the details below.',
+                              )}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-3 rounded-lg border border-gray-100 p-4">
+                  {connect && connectCode ? (
+                    <>
+                      <p className="text-sm text-gray-800">
+                        {t(
+                          'Enter these details into the Player, then press Connect on the Player.',
+                        )}
+                      </p>
+                      <ReadOnlyField label={t('CMS URL')} value={connect.cmsAddress} />
+                      <ReadOnlyField
+                        label={t('Secret Key')}
+                        value={`${connect.cmsKey}||${connectCode}`}
+                        secret
+                      />
+                      <p className="text-xs text-gray-500">
+                        {t(
+                          'Name the Player as you like - that name appears here once it connects.',
+                        )}
+                      </p>
+                    </>
+                  ) : (
+                    <div className="flex items-center justify-center gap-2 py-4">
+                      <Loader2 className="h-4 w-4 text-gray-400 animate-spin" />
+                      <p className="text-xs text-gray-500">
+                        {t('Retrieving your CMS connection details...')}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </>
             )}
 
             <TextInput
@@ -721,48 +832,40 @@ export default function AddDisplayModal({
 
             {/* Waiting panel — activation code mode */}
             {isWaiting && (
-              <div className="flex flex-col items-center gap-3 rounded-lg bg-slate-50 p-6 text-center">
-                <div className="bg-xibo-blue-100 w-9.5 h-9.5 flex justify-center items-center rounded-full">
-                  <Loader className="h-6 w-6 text-xibo-blue-400 animate-spin" />
-                </div>
-                <p className="text-md font-semibold text-gray-800">
-                  {t('Waiting for display to connect...')}
-                </p>
-                <p className="text-sm text-gray-500">
-                  {t('Verifying your activation code. Please do not close this window.')}
-                </p>
-              </div>
-            )}
-
-            {/* Connection status — manual configuration mode */}
-            {isConnecting && (
               <div
-                className="flex flex-col items-center gap-3 rounded-lg bg-slate-50 p-6 text-center"
+                className="flex flex-col items-center gap-4 rounded-lg bg-slate-50 p-6"
                 role="status"
               >
-                <div className="bg-xibo-blue-100 w-9.5 h-9.5 flex justify-center items-center rounded-full">
-                  <Loader className="h-6 w-6 text-xibo-blue-400 animate-spin" />
-                </div>
-                <p className="text-md font-semibold text-gray-800">
-                  {t('Waiting for display to connect...')}
-                </p>
-                <p className="text-sm text-gray-500">
-                  {t('Press Connect on the Player once you have entered the details above.')}
-                </p>
-              </div>
-            )}
+                <div className="flex items-center gap-4">
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 border border-gray-200">
+                      <Monitor className="h-6 w-6 text-gray-400" />
+                    </div>
+                    <span className="text-xs text-gray-500">{t('Player')}</span>
+                  </div>
 
-            {isConnected && (
-              <div
-                className="flex items-center gap-2 rounded-lg border border-teal-200 bg-teal-50 p-3 text-sm text-teal-800"
-                role="status"
-              >
-                <Check className="h-4 w-4 shrink-0" aria-hidden="true" />
-                <span>
-                  {t('Connected to {{display}}. Save to apply your settings.', {
-                    display: manual.displayName ?? '',
-                  })}
-                </span>
+                  <div className="flex items-center gap-1.5 pb-4">
+                    <span className="h-1.5 w-1.5 rounded-full bg-gray-300 animate-[pulse_1.4s_ease-in-out_infinite]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-gray-300 animate-[pulse_1.4s_ease-in-out_0.2s_infinite]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-gray-300 animate-[pulse_1.4s_ease-in-out_0.4s_infinite]" />
+                  </div>
+
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 border border-gray-200">
+                      <Server className="h-6 w-6 text-gray-400" />
+                    </div>
+                    <span className="text-xs text-gray-500">{t('CMS')}</span>
+                  </div>
+                </div>
+
+                <div className="text-center">
+                  <p className="text-sm font-semibold text-gray-800">
+                    {t('Waiting for display to connect...')}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {t('Verifying your activation code. Please do not close this window.')}
+                  </p>
+                </div>
               </div>
             )}
 

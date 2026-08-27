@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { ChevronRight, KeyRound, Sliders } from 'lucide-react';
+import { ChevronRight, KeyRound, Settings2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 /** Which route the operator takes to connect their Player. */
@@ -48,7 +48,7 @@ export default function AddDisplayModeChooser({ onSelect }: AddDisplayModeChoose
     },
     {
       mode: 'manual' as const,
-      icon: Sliders,
+      icon: Settings2,
       title: t('Manually Configure'),
       description: t('Copy the CMS address and key into the Player yourself.'),
     },

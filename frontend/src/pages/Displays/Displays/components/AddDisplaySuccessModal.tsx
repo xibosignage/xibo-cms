@@ -24,6 +24,7 @@ import { useTranslation } from 'react-i18next';
 
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/modals/Modal';
+import type { Display } from '@/types/display';
 
 export interface SubmittedDisplay {
   code: string;
@@ -36,6 +37,7 @@ export interface SubmittedDisplay {
 
 interface AddDisplaySuccessModalProps {
   submitted: SubmittedDisplay;
+  display?: Display | null;
   onClose: () => void;
   onAddAnother: () => void;
   onManage: () => void;
@@ -52,11 +54,25 @@ function SummaryRow({ label, children }: { label: string; children: React.ReactN
 
 export default function AddDisplaySuccessModal({
   submitted,
+  display,
   onClose,
   onAddAnother,
   onManage,
 }: AddDisplaySuccessModalProps) {
   const { t } = useTranslation();
+
+  const statusBadge = (() => {
+    const status = display?.mediaInventoryStatus;
+    if (status === 1) {
+      return { label: t('Up to date'), bg: 'bg-teal-50 border-teal-200 text-teal-600' };
+    }
+    if (status === 3) {
+      return { label: t('Downloading'), bg: 'bg-orange-50 border-orange-200 text-orange-600' };
+    }
+    return { label: t('Pending'), bg: 'bg-gray-50 border-gray-200 text-gray-600' };
+  })();
+
+  const isLicensed = display ? display.licensed === 1 : submitted.authorise;
 
   return (
     <Modal
@@ -82,17 +98,21 @@ export default function AddDisplaySuccessModal({
 
         {/* Summary card */}
         <div className="w-full rounded-lg border border-gray-200 px-4">
-          <SummaryRow label={t('Display Name')}>{submitted.displayName || t('—')}</SummaryRow>
+          <SummaryRow label={t('Display Name')}>
+            {display?.display || submitted.displayName || t('—')}
+          </SummaryRow>
           <SummaryRow label={t('Display Group')}>{submitted.displayGroup || t('—')}</SummaryRow>
           <SummaryRow label={t('Status')}>
-            <span className="inline-flex items-center rounded-md bg-orange-50 border border-orange-200 px-2 py-0.5 text-xs font-medium text-orange-600">
-              {t('Downloading')}
+            <span
+              className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium ${statusBadge.bg}`}
+            >
+              {statusBadge.label}
             </span>
           </SummaryRow>
           <SummaryRow label={t('License')}>
             <span className="inline-flex items-center gap-1.5">
-              {submitted.authorise && <Check className="h-4 w-4 text-teal-500" strokeWidth={2.5} />}
-              <span>{submitted.authorise ? t('Authorized') : t('Not authorized')}</span>
+              {isLicensed && <Check className="h-4 w-4 text-teal-500" strokeWidth={2.5} />}
+              <span>{isLicensed ? t('Authorized') : t('Not authorized')}</span>
               {submitted.licenceText && (
                 <span className="text-gray-400">| {submitted.licenceText}</span>
               )}
