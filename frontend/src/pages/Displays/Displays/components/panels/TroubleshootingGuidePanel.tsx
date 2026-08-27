@@ -26,7 +26,7 @@ import { getDisplayStatusBucket } from '../../DisplayStatusConfig';
 
 import { PanelCard } from './PanelCard';
 
-import Accordion from '@/components/ui/Accordion';
+import Accordion, { ACCORDION_NESTED_HEADER_CLASS } from '@/components/ui/Accordion';
 import type { Display } from '@/types/display';
 
 interface TroubleshootingGuidePanelProps {
@@ -185,7 +185,7 @@ export default function TroubleshootingGuidePanel({
     >
       {isHealthy && !forceShow ? (
         <div className="p-4">
-          <div className="flex items-center gap-2 rounded-lg border border-teal-100 bg-teal-50 px-4 py-3 text-sm font-medium text-teal-700">
+          <div className="flex items-center gap-2 rounded-lg border border-teal-200 bg-teal-100 px-4 py-3 text-sm font-medium text-teal-800">
             <CircleCheck className="size-4 shrink-0" />
             {t('All clear — this display is checking in normally. No action needed.')}
           </div>
@@ -197,7 +197,7 @@ export default function TroubleshootingGuidePanel({
             icon={AlertTriangle}
             defaultOpen
             className="border-gray-100 bg-white"
-            headerClassName="bg-white hover:bg-gray-50"
+            headerClassName={ACCORDION_NESTED_HEADER_CLASS}
             contentClassName="bg-white"
           >
             <StepList steps={primarySteps} />
@@ -207,7 +207,7 @@ export default function TroubleshootingGuidePanel({
             title={t('Online but zero plays')}
             icon={HelpCircle}
             className="border-gray-100 bg-white"
-            headerClassName="bg-white hover:bg-gray-50"
+            headerClassName={ACCORDION_NESTED_HEADER_CLASS}
             contentClassName="bg-white"
           >
             <StepList steps={zeroPlaysSteps} />

@@ -188,24 +188,6 @@ class DisplayFactory extends BaseFactory
     }
 
     /**
-     * SQL predicate (correlated to `display` in the outer query) which is true when a
-     * Display "needs attention": its media inventory isn't fully synced, it is not
-     * authorised (licensed), or its commercial licence isn't Licensed fully / Not
-     * applicable. Shared by the `needsAttention` filter in query() and by getSummary(),
-     * so the definition only exists once and the two can't drift apart.
-     * @return string
-     */
-    private function needsAttentionSql(): string
-    {
-        return '(
-            display.mediaInventoryStatus <> ' . Display::$STATUS_DONE . '
-            OR display.licensed = 0
-            OR display.commercialLicence IS NULL
-            OR display.commercialLicence NOT IN (1, 3)
-        )';
-    }
-
-    /**
      * The `display`/`lkdisplaydg`/`displaygroup` join every Display query is built on,
      * restricted to each display's own display-specific group. Shared by query() (which
      * appends further joins for layout/display_types) and getSummary(), so permission
@@ -226,19 +208,13 @@ class DisplayFactory extends BaseFactory
     }
 
     /**
-     * Get a single row of aggregate counts describing the health of the Displays visible
-     * to the caller (Total/Online/Offline/Needs Attention/Faults), for the Display
-     * Overview page. Computed as one SQL aggregate query (no fetch-all-then-loop),
-     * applying the same viewPermissionSql scoping as query(). Also includes 24-hour
-     * trend counts (offlineTrend/onlineTrend/faultsTrend) sourced from existing
-     * history tables (`displayevent`, `player_faults`) — there is no equivalent
-     * history for needsAttention (media sync/licence/authorisation changes aren't
-     * timestamped anywhere), so that bucket deliberately has no trend field rather
-     * than a fabricated one.
+     * Aggregate health counts for the Overview page's KPI tiles/chips, one query, same permission
+     * scoping as query(). Counts overlap (not mutually exclusive); only faults has a 24h trend
+     * since it's the only timestamped state.
      * @param array $filterBy
      * @return array{
-     *     total: int, online: int, offline: int, needsAttention: int, faults: int,
-     *     offlineTrend: int, onlineTrend: int, faultsTrend: int
+     *     total: int, faults: int, loggedIn: int, authorised: int, upToDate: int,
+     *     faultsTrend: int
      * }
      */
     public function getSummary(array $filterBy = []): array
@@ -262,69 +238,40 @@ class DisplayFactory extends BaseFactory
             $params['folderId'] = $parsedBody->getInt('folderId');
         }
 
-        $needsAttentionSql = $this->needsAttentionSql();
         $faultsCountSql = $this->faultsCountSql();
 
-        // The permission-scoped set of display IDs visible to the caller, reused by
-        // the trend subqueries below so they never surface a display the user
-        // couldn't otherwise see via the bucket counts. Defined once as a CTE
-        // (rather than inlined 3 times) so the correlated permission subquery
-        // (viewPermissionSql's UNION ALL across permission/permissionentity/
-        // group/lkusergroup/user for non-superadmins) is written, and can be
-        // materialised by the optimiser, only once per call instead of 3 times.
+        // The permission-scoped set of display IDs visible to the caller, defined once as a CTE
+        // and joined back onto `display` below — so the join tree and permission subquery are
+        // only ever evaluated once per call, and the faultsTrend subquery can reuse the same set.
         $visibleDisplayIdsSql = 'SELECT display.displayId' . $body;
 
-        $trendSinceTimestamp = time() - 86400;
-        $params['trendSinceTimestamp'] = $trendSinceTimestamp;
-        $params['trendSinceDateTime'] = date('Y-m-d H:i:s', $trendSinceTimestamp);
+        $params['trendSinceDateTime'] = date('Y-m-d H:i:s', time() - 86400);
 
-        // Buckets are mutually exclusive, in this precedence order: Offline first
-        // (loggedIn = 0, regardless of anything else), then Needs Attention, then
-        // Faults, else Online. Without the loggedIn guard on needsAttention/faults
-        // below, an offline display with e.g. a licence issue would be counted
-        // (and filtered) under both Offline and Needs Attention at once.
         $sql = '
                 WITH visible_displays AS (' . $visibleDisplayIdsSql . ')
                 SELECT COUNT(*) AS total,
-                    SUM(CASE WHEN display.loggedIn = 1
-                        AND NOT ' . $needsAttentionSql . '
-                        AND NOT (' . $faultsCountSql . ' > 0)
-                        THEN 1 ELSE 0 END) AS online,
-                    SUM(CASE WHEN display.loggedIn = 0 THEN 1 ELSE 0 END) AS offline,
-                    SUM(CASE WHEN display.loggedIn = 1 AND ' . $needsAttentionSql . '
-                        THEN 1 ELSE 0 END) AS needsAttention,
-                    SUM(CASE WHEN display.loggedIn = 1
-                        AND NOT ' . $needsAttentionSql . '
-                        AND ' . $faultsCountSql . ' > 0
+                    SUM(CASE WHEN ' . $faultsCountSql . ' > 0
                         THEN 1 ELSE 0 END) AS faults,
-                    (SELECT COUNT(*) FROM `displayevent`
-                        WHERE displayevent.eventTypeId = 1
-                        AND displayevent.start >= :trendSinceTimestamp
-                        AND displayevent.displayId IN (SELECT displayId FROM visible_displays)
-                    ) AS offlineTrend,
-                    (SELECT COUNT(*) FROM `displayevent`
-                        WHERE displayevent.eventTypeId = 1
-                        AND displayevent.end IS NOT NULL
-                        AND displayevent.end >= :trendSinceTimestamp
-                        AND displayevent.displayId IN (SELECT displayId FROM visible_displays)
-                    ) AS onlineTrend,
+                    SUM(CASE WHEN display.loggedIn = 1 THEN 1 ELSE 0 END) AS loggedIn,
+                    SUM(CASE WHEN display.licensed = 1 THEN 1 ELSE 0 END) AS authorised,
+                    SUM(CASE WHEN display.mediaInventoryStatus = ' . Display::$STATUS_DONE . '
+                        THEN 1 ELSE 0 END) AS upToDate,
                     (SELECT COUNT(*) FROM `player_faults`
                         WHERE player_faults.incidentDt >= :trendSinceDateTime
                         AND player_faults.displayId IN (SELECT displayId FROM visible_displays)
                     ) AS faultsTrend
-            ' . $body;
+                FROM `display`
+                INNER JOIN visible_displays ON visible_displays.displayId = display.displayId';
 
         $rows = $this->getStore()->select($sql, $params);
         $row = $rows[0] ?? [];
 
         return [
             'total' => intval($row['total'] ?? 0),
-            'online' => intval($row['online'] ?? 0),
-            'offline' => intval($row['offline'] ?? 0),
-            'needsAttention' => intval($row['needsAttention'] ?? 0),
             'faults' => intval($row['faults'] ?? 0),
-            'offlineTrend' => intval($row['offlineTrend'] ?? 0),
-            'onlineTrend' => intval($row['onlineTrend'] ?? 0),
+            'loggedIn' => intval($row['loggedIn'] ?? 0),
+            'authorised' => intval($row['authorised'] ?? 0),
+            'upToDate' => intval($row['upToDate'] ?? 0),
             'faultsTrend' => intval($row['faultsTrend'] ?? 0),
         ];
     }
@@ -689,45 +636,14 @@ class DisplayFactory extends BaseFactory
             $params['loggedIn'] = $parsedBody->getInt('loggedIn');
         }
 
-        // Filter by "needs attention" (mediaInventoryStatus not fully synced, not
-        // authorised, or commercial licence not Licensed fully / Not applicable).
-        // Reuses the same predicate as getSummary(), so the grid and the summary
-        // counts can never drift apart. Guarded on loggedIn = 1 so an offline
-        // display with e.g. a licence issue is only ever matched by the Offline
-        // bucket, never by both Offline and Needs Attention at once.
-        //
-        // needsAttention=0 is the plain logical negation of the needsAttention=1
-        // predicate above (loggedIn = 1 AND needsAttentionSql()), i.e.
-        // "loggedIn = 0 OR NOT needsAttentionSql()" — NOT "loggedIn = 1 AND NOT
-        // needsAttentionSql()". The latter would wrongly exclude every offline
-        // display from the results: an offline display is never in the Needs
-        // Attention bucket regardless of its sync/licence state, so it must
-        // always satisfy needsAttention=0.
-        $needsAttentionFilter = $parsedBody->getInt('needsAttention', ['default' => -1]);
-        if ($needsAttentionFilter === 1) {
-            $body .= ' AND display.loggedIn = 1 AND ' . $this->needsAttentionSql() . ' ';
-        } else if ($needsAttentionFilter === 0) {
-            $body .= ' AND (display.loggedIn = 0 OR NOT ' . $this->needsAttentionSql() . ') ';
-        }
-
-        // Filter by "faults" (has at least one player fault), excluding displays
-        // already matched by the needsAttention predicate above so a display is never
-        // double-counted across the two buckets, and guarded on loggedIn = 1 for the
-        // same reason as needsAttention above. Reuses the same predicates as
-        // getSummary().
-        //
-        // faults=0 is likewise the plain negation of the faults=1 predicate above
-        // (loggedIn = 1 AND faultsCountSql() > 0 AND NOT needsAttentionSql()), so it
-        // also needs the "loggedIn = 0 OR ..." branch — otherwise an offline display
-        // with a recorded fault but no needsAttention issue would be wrongly excluded,
-        // even though it's never in the Faults bucket (Offline takes precedence).
+        // Filter by "faults" (has at least one recorded player fault). Reuses the same
+        // predicate as getSummary(), so the grid and the summary counts can never drift
+        // apart.
         $faultsFilter = $parsedBody->getInt('faults', ['default' => -1]);
         if ($faultsFilter === 1) {
-            $body .= ' AND display.loggedIn = 1 AND ' . $this->faultsCountSql() . ' > 0'
-                . ' AND NOT ' . $this->needsAttentionSql() . ' ';
+            $body .= ' AND ' . $this->faultsCountSql() . ' > 0 ';
         } else if ($faultsFilter === 0) {
-            $body .= ' AND (display.loggedIn = 0'
-                . ' OR NOT (' . $this->faultsCountSql() . ' > 0 AND NOT ' . $this->needsAttentionSql() . ')) ';
+            $body .= ' AND NOT (' . $this->faultsCountSql() . ' > 0) ';
         }
 
         if ($parsedBody->getDate('lastAccessed', ['dateFormat' => 'U']) !== null) {
@@ -970,8 +886,13 @@ class DisplayFactory extends BaseFactory
             $this->decorateWithTagLinks('lktagdisplaygroup', 'displayGroupId', $displayGroupIds, $entries);
         }
 
-        // Paging
-        if ($limit != '' && count($entries) > 0) {
+        // Paging. Always run this when paginating, not just when the current page
+        // came back non-empty — the two are unrelated. A shrunk result set (a
+        // narrower filter, or fewer displays than before) can easily leave the
+        // caller's requested `start` offset past the end of the new, smaller
+        // result set: that page is legitimately empty, but the *total* is not,
+        // and skipping the count here would report 0 instead of it.
+        if ($limit != '') {
             unset($params['entity']);
             $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);

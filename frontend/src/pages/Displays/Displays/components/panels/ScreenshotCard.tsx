@@ -24,6 +24,8 @@ import { DateTime } from 'luxon';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { PanelCard } from './PanelCard';
+
 import { useUserContext } from '@/context/UserContext';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import {
@@ -45,25 +47,14 @@ const LIVE_WINDOW_MS = 2 * 60 * 1000;
 /** Seconds counted down in front of the viewer before a new capture takes over. */
 const SWAP_COUNTDOWN_SECONDS = 3;
 
-/**
- * How long a capture outlives its display going quiet.
- *
- * A screenshot from a few minutes ago is still worth showing: it is probably what is on the
- * screen. Half an hour on, it is only what the player last managed to send, and leaving it up
- * reads as current when it is not.
- */
+// Screenshot still trusted for 30min after going offline; older is misleading.
 const OFFLINE_SCREENSHOT_TTL_MS = 30 * 60 * 1000;
 
 /** The format getCurrentScreenShotTime() is cached in, in CMS time. */
 const CMS_TIME_FORMAT = 'yyyy-MM-dd HH:mm:ss';
 
-/**
- * How long the label stays on the relative wording before it starts counting seconds out.
- *
- * formatRelative() reads anything under a minute as "Just now", which on this card is too coarse:
- * it is asking for a screenshot every few seconds, so "Just now" sitting there for a whole minute
- * makes a live card look stuck.
- */
+// formatRelative() reads anything under a minute as "Just now" — too coarse for a card
+// polling every few seconds, so seconds are counted out instead until this threshold.
 const SECONDS_LABEL_FROM = 30;
 
 /** A minute in, formatRelative() changes wording by the minute, so counting seconds can stop. */
@@ -85,27 +76,21 @@ export default function ScreenshotCard({ display, onOpen }: ScreenshotCardProps)
   const { user } = useUserContext();
   const cmsTimeZone = user?.settings?.defaultTimezone ?? 'UTC';
 
-  // Matches the first test getDisplayStatusBucket() makes. A display needing attention is still
-  // checking in, so it keeps updating; only one that is not logged in stops.
+  // Matches getDisplayStatusBucket()'s loggedIn check — only an offline display stops updating.
   const isOnline = display.loggedIn === 1;
 
-  // Live by default: opening the page starts asking, so the control offered is Pause. This
-  // holds the viewer's intent, which is why it is kept separate from isOnline rather than folded
-  // into one flag: an offline display has nothing running, but the viewer has not paused it.
+  // Kept separate from isOnline: an offline display has nothing running, but the viewer may not
+  // have paused it. Live by default, so the control offered is Pause.
   const [isPaused, setIsPaused] = useState(false);
   const isActive = isOnline && !isPaused;
 
-  // Measured from the display's own last check-in, the same field the page header reads for its
-  // "last seen", so the two cannot disagree about how long it has been gone.
+  // Same field the page header reads for "last seen", so the two can't disagree.
   const lastSeenMs = display.lastAccessed ? Number(display.lastAccessed) * 1000 : null;
   const isStaleOffline =
     !isOnline && lastSeenMs !== null && Date.now() - lastSeenMs > OFFLINE_SCREENSHOT_TTL_MS;
 
-  // Ask for a screenshot on a timer, and watch for one arriving. Both stop when this unmounts,
-  // which is the reason the asking lives here rather than on the server, and both stand down for
-  // a display that is not checking in: it cannot answer, so asking every few seconds only writes
-  // the display row and pushes XMR messages nobody reads. Pausing stops them the same way, so
-  // the image on screen simply stays put. The last capture is still fetched once and shown.
+  // Stand down (no request, no poll) when not active: an offline display can't answer, so asking
+  // would only write the display row and push unread XMR messages; pausing just freezes the image.
   useScreenshotAutoRequest(display.displayId, isActive);
   const {
     data: latestTime,
@@ -136,9 +121,8 @@ export default function ScreenshotCard({ display, onOpen }: ScreenshotCardProps)
     setShownTime(time);
   }, []);
 
-  // Fetch the image whenever the reported capture time is one we are not already showing or
-  // holding. The time is the only signal available: the image endpoint always answers, so
-  // without it there would be nothing to compare but the bytes.
+  // Fetch when the reported capture time isn't one already shown/held — the only signal
+  // available, since the image endpoint always answers with something.
   useEffect(() => {
     if (
       !latestTime ||
@@ -273,9 +257,7 @@ export default function ScreenshotCard({ display, onOpen }: ScreenshotCardProps)
   const takenAtDate = takenAt?.isValid ? takenAt.toJSDate() : null;
   const takenAtMs = takenAtDate?.getTime() ?? null;
 
-  // A pulse rather than a clock: the age below is read from Date.now() on each render, and this
-  // only exists to cause those renders while the seconds are moving. Nothing reads its value, so
-  // it cannot go stale when a new capture resets the age.
+  // Unused value — just a pulse to force a re-render each second while age is read from Date.now().
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
@@ -283,8 +265,7 @@ export default function ScreenshotCard({ display, onOpen }: ScreenshotCardProps)
       return;
     }
 
-    // Chained rather than an interval, so depending on `tick` makes it stop itself once the
-    // capture ages past the window instead of ticking for as long as the page is open.
+    // Chained, not an interval, so it self-stops once the capture ages past the window.
     const timer = setTimeout(() => setTick((current) => current + 1), 1000);
 
     return () => clearTimeout(timer);
@@ -313,23 +294,18 @@ export default function ScreenshotCard({ display, onOpen }: ScreenshotCardProps)
 
   const neverCaptured = !isPending && !isError && !latestTime;
 
-  // Nothing is on its way while the display is not checking in, so a spinner would claim the card
-  // is still working on something. A recent capture is shown in preference to this, since the
-  // image and its "Taken ..." label tell the story better than any message; one too old to trust
-  // is dropped by the effect above. isStaleOffline is read here as well so the swap happens on the
-  // same render, rather than flashing the old image for one frame first.
+  // No spinner while offline (nothing is coming); prefer showing a recent capture over this,
+  // and read isStaleOffline directly so the swap happens on the same render, no flash first.
   const showOffline = !isOnline && (shownUrl === null || isStaleOffline);
   const failed = (isError || loadFailed) && !showOffline;
   const isWaitingForFirst = shownUrl === null && !neverCaptured && !failed && !showOffline;
 
   return (
-    <div className="flex flex-col rounded-lg border border-gray-200 overflow-hidden">
-      <div className="bg-gray-50 px-4 py-2.5 border-b border-gray-200 flex items-center justify-between gap-3">
-        <h3 className="flex items-center gap-1.5 text-sm font-semibold text-gray-700">
-          <Camera className="size-3.5 shrink-0 text-gray-400" aria-hidden="true" />
-          {t('Screenshot')}
-        </h3>
-
+    <PanelCard
+      title={t('Screenshot')}
+      icon={Camera}
+      bodyClassName="relative min-h-[190px] bg-gradient-to-br from-gray-50 to-gray-100 items-center justify-center overflow-visible"
+      headerActions={
         <button
           type="button"
           onClick={() => setIsPaused((current) => !current)}
@@ -346,9 +322,9 @@ export default function ScreenshotCard({ display, onOpen }: ScreenshotCardProps)
           )}
           {isPaused ? t('Resume') : t('Pause')}
         </button>
-      </div>
-
-      <div className="relative flex-1 min-h-[190px] bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+      }
+    >
+      <>
         {showOffline ? (
           <div className="flex flex-col items-center gap-2 px-4 text-center">
             <WifiOff className="size-8 text-gray-300" aria-hidden="true" />
@@ -416,7 +392,7 @@ export default function ScreenshotCard({ display, onOpen }: ScreenshotCardProps)
             {display.currentLayout || t('No layout playing')}
           </span>
         )}
-      </div>
-    </div>
+      </>
+    </PanelCard>
   );
 }

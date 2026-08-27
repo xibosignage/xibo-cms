@@ -29,9 +29,6 @@ import {
   Wifi,
   XCircle,
 } from 'lucide-react';
-// PARKED (screenshot history & interval): only ScreenShotIntervalField used this. Uncomment it
-// along with the field.
-// import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import AddDisplayModal from './AddDisplayModal';
@@ -48,9 +45,6 @@ import SetDefaultLayoutModal from './SetDefaultLayoutModal';
 import TransferCmsModal from './TransferCmsModal';
 import TriggerWebhookModal from './TriggerWebhookModal';
 
-// PARKED (screenshot history & interval): only ScreenShotIntervalField used these two.
-// import Button from '@/components/ui/Button';
-// import { notify } from '@/components/ui/Notification';
 import EditTagsMultipleModal from '@/components/ui/modals/EditTagsMultipleModal';
 import Modal from '@/components/ui/modals/Modal';
 import MoveModal from '@/components/ui/modals/MoveModal';
@@ -58,8 +52,6 @@ import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
 import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
 import type { MoveCmsData } from '@/services/displaysApi';
-// PARKED (screenshot history & interval): the import goes with the field below.
-// import { setScreenShotInterval } from '@/services/displaysApi';
 import type { Display, DisplayCommandTarget } from '@/types/display';
 import { mergeEntityTags } from '@/utils/tags';
 
@@ -117,78 +109,6 @@ function ActionError({ error }: { error: string | null }) {
     </div>
   );
 }
-
-// PARKED (screenshot history & interval).
-//
-// The Manage page asks the player for a screenshot every few seconds while it is open, so a
-// per-display capture interval has nothing left to do. Commented out rather than deleted, and
-// commented out rather than simply unused because noUnusedLocals would reject a component
-// nothing renders. Uncomment this, the import above, the usage below and the route in
-// lib/routes.php to bring it back. See the note on Soap4::addToScreenshotHistory().
-// /**
-//  * Sets how often the player takes a screenshot by itself. This is the display profile's
-//  * screenShotRequestInterval, repeated here so it can be reached without leaving this dialog, and
-//  * saved as an override on this display alone. Minutes, matching the profile setting. Zero is off.
-//  */
-// function ScreenShotIntervalField({ display }: { display: Display }) {
-//   const { t } = useTranslation();
-//
-//   // Only this display's own overrides are on the record, not the value inherited from its
-//   // profile, so an unset field reads as off rather than as whatever the profile says.
-//   const override = display.overrideConfig?.find(
-//     (row) => (row as { name?: string })?.name === 'screenShotRequestInterval',
-//   ) as { value?: unknown } | undefined;
-//   const initial = Number(override?.value ?? 0);
-//
-//   const [minutes, setMinutes] = useState(Number.isFinite(initial) ? String(initial) : '0');
-//   const [isSaving, setIsSaving] = useState(false);
-//
-//   const save = async () => {
-//     const value = Number(minutes);
-//
-//     if (!Number.isFinite(value) || value < 0) {
-//       notify.error(t('Enter 0 or more minutes'));
-//       return;
-//     }
-//
-//     setIsSaving(true);
-//
-//     try {
-//       await setScreenShotInterval(display.displayId, Math.floor(value));
-//       notify.success(
-//         value === 0 ? t('Automatic screenshots turned off') : t('Screenshot interval saved'),
-//       );
-//     } catch (e) {
-//       notify.error(e instanceof Error ? e.message : t('Could not save the interval'));
-//     } finally {
-//       setIsSaving(false);
-//     }
-//   };
-//
-//   return (
-//     <div className="rounded-lg border border-gray-200 p-3">
-//       <label className="block text-sm text-gray-600" htmlFor="screenShotRequestInterval">
-//         {t('Or take one automatically every')}
-//       </label>
-//       <div className="mt-2 flex items-center gap-2">
-//         <input
-//           id="screenShotRequestInterval"
-//           type="number"
-//           min={0}
-//           step={1}
-//           value={minutes}
-//           onChange={(e) => setMinutes(e.target.value)}
-//           className="w-24 rounded border border-gray-300 px-2 py-1 text-sm"
-//         />
-//         <span className="text-sm text-gray-600">{t('minutes')}</span>
-//         <Button variant="secondary" onClick={save} disabled={isSaving} className="ml-auto py-1.5">
-//           {isSaving ? t('Saving…') : t('Save interval')}
-//         </Button>
-//       </div>
-//       <p className="mt-2 text-xs text-gray-500">{t('Set 0 to turn automatic screenshots off.')}</p>
-//     </div>
-//   );
-// }
 
 export function DisplayModals({ actions, selection, handlers }: DisplayModalsProps) {
   const { t } = useTranslation();
@@ -379,8 +299,6 @@ export function DisplayModals({ actions, selection, handlers }: DisplayModalsPro
                 )}
               </div>
             )}
-            {/* PARKED (screenshot history & interval): see the note above ScreenShotIntervalField. */}
-            {/* <ScreenShotIntervalField display={display} /> */}
             <ActionError error={actions.actionError} />
           </div>
         </Modal>

@@ -19,20 +19,9 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// These four panels (Dependencies, Layouts, Widgets, Bandwidth) intentionally
-// duplicate the presentational JSX from the legacy Manage modal
-// (frontend/src/pages/Displays/Displays/components/ManageDisplayModal.tsx)
-// rather than importing it. The legacy modal has no automated test coverage
-// and is explicitly required to keep behaving exactly as it does today, so
-// extracting its private, unexported render helpers into a shared module
-// would mean editing that file — a needless regression risk for a handful of
-// small <table> renderers. The DATA layer is reused unmodified: both this
-// file and the legacy modal call the same `useDisplayManageData` /
-// `useBandwidthData` hooks and the same `/display/manage/{id}` endpoint. The
-// three table shells below (Dependencies/Layouts/Widgets) do reuse this
-// feature's own SimpleDataTable primitive, so they don't duplicate that
-// markup a third/fourth time from each other. Same reasoning covers the
-// small CompletionIcon helper just below.
+// Presentational JSX intentionally duplicated from ManageDisplayModal.tsx (no
+// test coverage there, must not change); the data layer (hooks/endpoint) is
+// shared, and the three table shells below reuse SimpleDataTable.
 
 import { ArrowUpDown, Blocks, Check, Files, LayoutTemplate, Loader2, X } from 'lucide-react';
 import { useState } from 'react';
@@ -41,7 +30,7 @@ import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, XAxis, YAxis
 
 import { PanelEmptyState, SimpleDataTable, type SimpleDataTableColumn } from './PanelCard';
 
-import Accordion from '@/components/ui/Accordion';
+import Accordion, { ACCORDION_NESTED_HEADER_CLASS } from '@/components/ui/Accordion';
 import Badge from '@/components/ui/Badge';
 import { useBandwidthData } from '@/pages/Displays/Displays/hooks/useDisplayManageData';
 import { BRAND_PRIMARY } from '@/styles/brandColors';
@@ -96,7 +85,7 @@ export function DependenciesPanel({ data }: { data: ManageDependency[] }) {
       title={t('Dependencies')}
       icon={Files}
       badge={<CompletionBadge complete={complete} total={data.length} />}
-      headerClassName="bg-white hover:bg-gray-50"
+      headerClassName={ACCORDION_NESTED_HEADER_CLASS}
       contentClassName="overflow-x-auto"
     >
       {data.length === 0 ? (
@@ -139,7 +128,7 @@ export function LayoutsPanel({ data }: { data: ManageLayout[] }) {
       title={t('Layouts')}
       icon={LayoutTemplate}
       badge={<CompletionBadge complete={complete} total={data.length} />}
-      headerClassName="bg-white hover:bg-gray-50"
+      headerClassName={ACCORDION_NESTED_HEADER_CLASS}
       contentClassName="overflow-x-auto"
     >
       {data.length === 0 ? (
@@ -177,7 +166,7 @@ export function WidgetsPanel({ data }: { data: ManageWidget[] }) {
       title={t('Widgets')}
       icon={Blocks}
       badge={<CompletionBadge complete={complete} total={data.length} />}
-      headerClassName="bg-white hover:bg-gray-50"
+      headerClassName={ACCORDION_NESTED_HEADER_CLASS}
       contentClassName="overflow-x-auto"
     >
       {data.length === 0 ? (
@@ -213,7 +202,7 @@ export function BandwidthPanel({ displayId, defaults }: BandwidthPanelProps) {
     <Accordion
       title={t('Bandwidth')}
       icon={ArrowUpDown}
-      headerClassName="bg-white hover:bg-gray-50"
+      headerClassName={ACCORDION_NESTED_HEADER_CLASS}
     >
       <div className="p-4">
         <div className="flex items-center gap-4 mb-4">

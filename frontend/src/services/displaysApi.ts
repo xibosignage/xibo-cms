@@ -25,13 +25,8 @@ import { withPublicPath } from '@/config/publicPath';
 import http from '@/lib/api';
 import type { Display } from '@/types/display';
 import type { DisplayGroup } from '@/types/displayGroup';
-import type {
-  BandwidthResponse,
-  DisplayManageData,
-  DisplayScreenshot,
-  PlayerFault,
-} from '@/types/displayManage';
-import type { DisplayNextSchedule, DisplayOverviewSummary } from '@/types/displayOverview';
+import type { BandwidthResponse, DisplayManageData, PlayerFault } from '@/types/displayManage';
+import type { DisplayOverviewSummary } from '@/types/displayOverview';
 import type { Layout } from '@/types/layout';
 import type { Media } from '@/types/media';
 
@@ -47,10 +42,6 @@ export interface FetchDisplaysRequest {
   logicalOperatorName?: 'OR' | 'AND';
   mediaInventoryStatus?: number | string;
   loggedIn?: number | string;
-  // Server-side buckets for the Display Overview page's KPI tiles — mirror the
-  // aggregate query behind GET /display/overview/summary so the card grid
-  // never re-derives bucket membership client-side.
-  needsAttention?: number | string;
   faults?: number | string;
   authorised?: number | string;
   xmrRegistered?: number | string;
@@ -102,17 +93,6 @@ export async function fetchDisplayOverviewSummary(
     params: folderId ? { folderId } : undefined,
     signal,
   });
-  return response.data;
-}
-
-export async function fetchDisplayNextSchedule(
-  displayId: number,
-  signal?: AbortSignal,
-): Promise<DisplayNextSchedule | null> {
-  const response = await http.get<DisplayNextSchedule | null>(
-    `/display/${displayId}/schedule/next`,
-    { signal },
-  );
   return response.data;
 }
 
@@ -365,59 +345,6 @@ export async function checkLicence(displayId: number | string): Promise<void> {
 export async function requestScreenShot(displayId: number | string): Promise<void> {
   await http.put(`/display/requestscreenshot/${displayId}`, null, {
     headers: { 'X-Requested-With': 'XMLHttpRequest' },
-  });
-}
-
-/**
- * PARKED (screenshot history & interval).
- *
- * Left defined but unreferenced. Nothing writes history rows any more (see the note on
- * Soap4::addToScreenshotHistory) and the route is commented out, so this would return an empty
- * list. Kept so restoring the gallery is a matter of uncommenting, not rewriting.
- */
-export async function fetchScreenshotHistory(
-  displayId: number | string,
-  signal?: AbortSignal,
-): Promise<DisplayScreenshot[]> {
-  const response = await http.get(`/display/screenshot/${displayId}/history`, { signal });
-  return response.data;
-}
-
-/**
- * One image out of the history, rather than the display's current one.
- *
- * PARKED (screenshot history & interval): unreferenced, its route is commented out.
- */
-export async function fetchHistoryScreenshotBlob(
-  displayId: number | string,
-  screenshotId: number,
-  signal?: AbortSignal,
-): Promise<Blob> {
-  const response = await http.get(`/display/screenshot/${displayId}/history/${screenshotId}`, {
-    responseType: 'blob',
-    signal,
-  });
-  return response.data;
-}
-
-/**
- * Minutes between automatic screenshots, as an override on the display's profile. 0 turns it off.
- *
- * PARKED (screenshot history & interval): unreferenced, its route is commented out. The Manage page asks
- * for screenshots itself while it is open, which is what replaced this.
- */
-export async function setScreenShotInterval(
-  displayId: number | string,
-  screenShotRequestInterval: number,
-): Promise<void> {
-  const params = new URLSearchParams({
-    screenShotRequestInterval: String(screenShotRequestInterval),
-  });
-  await http.put(`/display/screenshotinterval/${displayId}`, params.toString(), {
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'X-Requested-With': 'XMLHttpRequest',
-    },
   });
 }
 

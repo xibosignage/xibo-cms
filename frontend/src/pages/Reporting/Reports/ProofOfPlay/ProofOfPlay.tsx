@@ -217,7 +217,11 @@ export default function ProofOfPlay() {
         onSuccess={() => setScheduleModalOpen(false)}
       />
 
-      <ExportStatisticsModal isOpen={exportModalOpen} onClose={() => setExportModalOpen(false)} />
+      <ExportStatisticsModal
+        isOpen={exportModalOpen}
+        onClose={() => setExportModalOpen(false)}
+        initialDisplayId={filter.displayId ?? undefined}
+      />
     </section>
   );
 }

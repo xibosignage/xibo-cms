@@ -33,7 +33,7 @@ interface ManagePageHeaderProps {
   onClose: () => void;
   closeIcon: LucideIcon;
   closeLabel: string;
-  /** Right-aligned action buttons (Request screenshot / Power menu / Proof of play / Diagnostics gear). */
+  /** Right-aligned action buttons (Proof of Play / Diagnostics gear). */
   actions?: React.ReactNode;
 }
 

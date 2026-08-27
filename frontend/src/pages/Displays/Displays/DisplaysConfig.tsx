@@ -73,8 +73,6 @@ import { formatTagsForExport } from '@/utils/tags';
 export interface DisplayFilterInput {
   displayId?: number | null;
   name?: string;
-  /** Bucket quick-filter (online/needsAttention/offline/faults) — see getBucketFilterParams. */
-  healthStatus?: string | null;
   logicalOperatorName?: 'OR' | 'AND';
   useRegexForName?: boolean;
   tags?: Tag[];
@@ -83,6 +81,7 @@ export interface DisplayFilterInput {
   mediaInventoryStatus: string | null;
   loggedIn: string | null;
   authorised: string | null;
+  faults: string | null;
   xmrRegistered: string | null;
   clientType: string | null;
   displayGroupId: string | null;
@@ -133,7 +132,6 @@ export type ModalType =
 export const INITIAL_FILTER_STATE: DisplayFilterInput = {
   displayId: null,
   name: '',
-  healthStatus: null,
   logicalOperatorName: 'OR',
   useRegexForName: false,
   tags: [],
@@ -142,6 +140,7 @@ export const INITIAL_FILTER_STATE: DisplayFilterInput = {
   mediaInventoryStatus: null,
   loggedIn: null,
   authorised: null,
+  faults: null,
   xmrRegistered: null,
   clientType: null,
   displayGroupId: null,
@@ -318,6 +317,16 @@ export const getBaseFilterKeys = (
     ],
   },
   {
+    label: t('Faults'),
+    name: 'faults',
+    className: '',
+    options: [
+      { label: t('All'), value: '' },
+      { label: t('Yes'), value: '1' },
+      { label: t('No'), value: '0' },
+    ],
+  },
+  {
     label: t('XMR Registered'),
     name: 'xmrRegistered',
     className: '',
@@ -413,19 +422,6 @@ export const getBaseFilterKeys = (
     type: 'date',
     className: '',
   },
-  {
-    label: t('Health Status'),
-    name: 'healthStatus',
-    className: '',
-    placeholder: t('All'),
-    options: [
-      { label: t('All'), value: '' },
-      { label: t('Online'), value: 'online' },
-      { label: t('Needs Attention'), value: 'needsAttention' },
-      { label: t('Offline'), value: 'offline' },
-      { label: t('Faults'), value: 'faults' },
-    ],
-  },
 ];
 
 export interface DisplayActionsProps {
@@ -452,7 +448,7 @@ export interface DisplayActionsProps {
   onManage: (display: Display) => void;
   /** Opens the newer Manage page (`/displays/displays/:displayId`) — screenshots, live health/diagnostics. */
   onManagePage: (display: Display) => void;
-  /** Opens the screenshot gallery modal (multiple captures over time). */
+  /** Opens the display's current screenshot in the full-screen previewer. */
   onViewScreenshots: (display: Display) => void;
   onCheckLicence: (display: Display) => void;
   onRequestScreenShot: (display: Display) => void;

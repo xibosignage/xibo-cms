@@ -731,59 +731,6 @@ class Soap4 extends Soap
     }
 
     /**
-     * Files a copy of the screenshot in the display's history and trims the history back to the
-     * limit, removing both the rows and the images they point at.
-     *
-     * Failures here are logged and swallowed: the screenshot itself has already been stored, and
-     * losing a history entry is not worth failing the player's submission over.
-     *
-     * @param string $screenShot Raw image data, already converted to the stored format.
-     * @param string $screenShotFmt File extension for the stored format.
-     */
-    private function addToScreenshotHistory(string $screenShot, string $screenShotFmt): void
-    {
-        try {
-            $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
-            $createdDt = Carbon::now()->format('U');
-
-            // The id is only unique per second, so the row id cannot be used here: it does not
-            // exist until after the insert. Uniqid keeps two screenshots in the same second apart.
-            $storedAs = 'history/' . $this->display->displayId . '_' . $createdDt
-                . '_' . uniqid() . '.' . $screenShotFmt;
-
-            $historyDir = LibraryFile::resolve($libraryLocation, 'screenshots/history');
-            if (!is_dir($historyDir) && !mkdir($historyDir, 0777, true) && !is_dir($historyDir)) {
-                $this->getLog()->error('Unable to create screenshot history folder');
-                return;
-            }
-
-            $location = LibraryFile::resolve($libraryLocation, 'screenshots/' . $storedAs);
-            file_put_contents($location, $screenShot);
-
-            // The status window is what the player sends up with NotifyStatus, so it is whatever
-            // it last reported rather than anything captured with the image itself.
-            $status = $this->display->getStatusWindow($this->getPool());
-
-            $screenshot = $this->displayScreenshotFactory->createEmpty();
-            $screenshot->displayId = $this->display->displayId;
-            $screenshot->createdDt = $createdDt;
-            $screenshot->storedAs = $storedAs;
-            $screenshot->statusJson = empty($status) ? null : json_encode($status);
-            $screenshot->save();
-
-            foreach ($this->displayScreenshotFactory->getExpiredByDisplayId($this->display->displayId) as $expired) {
-                $expiredPath = LibraryFile::resolve($libraryLocation, 'screenshots/' . $expired->storedAs);
-                if (file_exists($expiredPath)) {
-                    unlink($expiredPath);
-                }
-                $expired->delete();
-            }
-        } catch (\Exception $e) {
-            $this->getLog()->error('Unable to record screenshot history: ' . $e->getMessage());
-        }
-    }
-
-    /**
      * Submit ScreenShot
      * @param string $serverKey
      * @param string $hardwareKey
@@ -875,29 +822,6 @@ class Soap4 extends Soap
         $fp = fopen($location, 'wb');
         fwrite($fp, $screenShot);
         fclose($fp);
-
-        // PARKED (screenshot history & interval).
-        //
-        // The Manage page now asks the player for a screenshot every few seconds while it is
-        // open and swaps the current image in as each one lands, so neither a stored history nor
-        // a server-side capture interval has a job left to do. Both are commented out rather
-        // than deleted so the decision can be reversed cheaply.
-        //
-        // To restore: uncomment the call below, the routes in lib/routes.php
-        // (display.screenshot.history, display.screenshot.history.item,
-        // display.screenshotinterval) and their frontend callers in
-        // frontend/src/services/displaysApi.ts. Nothing else was removed.
-        //
-        // To retire for good: delete this block and addToScreenshotHistory() below, the three
-        // parked controller methods in lib/Controller/Display.php, lib/Entity/DisplayScreenshot.php,
-        // lib/Factory/DisplayScreenshotFactory.php and their container wiring. The
-        // `displayscreenshot` table and its migration are deliberately left alone: the migration
-        // has already run, so dropping the table needs a new migration rather than an edit here.
-        //
-        // Keep a copy in the display's history, alongside the status the player last reported.
-        // The file written above is left as it is, so anything showing the current screenshot
-        // carries on reading the same path.
-        // $this->addToScreenshotHistory($screenShot, $screenShotFmt);
 
         // Touch the display record
         $this->display->screenShotRequested = 0;

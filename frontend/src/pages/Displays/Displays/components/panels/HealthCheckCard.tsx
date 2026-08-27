@@ -19,16 +19,24 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { Activity, HeartPulse, ShieldCheck, Smartphone, Wifi } from 'lucide-react';
+import {
+  Activity,
+  HardDrive,
+  HeartPulse,
+  ShieldCheck,
+  Smartphone,
+  Wifi,
+  type LucideIcon,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { BUCKET_COLORS } from '../../DisplayStatusConfig';
 import { useDisplayUptime } from '../../hooks/useManagePageData';
 
 import { formatStorageUsed, getStorageUsedPercent } from './ManagePageFormatters';
-import { PanelCard, PanelField } from './PanelCard';
+import { PanelCard } from './PanelCard';
 
-import Badge from '@/components/ui/Badge';
+import Switch from '@/components/ui/forms/Switch';
 import { useUserContext } from '@/context/UserContext';
 import { getClientTypeLabel } from '@/pages/Displays/Displays/DisplaysConfig';
 import type { Display } from '@/types/display';
@@ -39,6 +47,9 @@ interface HealthCheckCardProps {
   onClearCache: () => void;
   isClearingCache: boolean;
   canClearCache: boolean;
+  onToggleAuthorise: () => void;
+  isTogglingAuthorise: boolean;
+  canAuthorise: boolean;
 }
 
 // Storage bar fill colour by how full it is — same thresholds/shades as the
@@ -54,11 +65,40 @@ function getStorageBarColor(percent: number): string {
   return 'bg-xibo-blue-600';
 }
 
+// A left label (with its topic icon) / right value row — every field below
+// shares this shape, so the card reads as a consistent two-column list.
+function HealthRow({
+  icon: Icon,
+  label,
+  value,
+  bordered = true,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: React.ReactNode;
+  bordered?: boolean;
+}) {
+  return (
+    <div
+      className={`flex items-center justify-between gap-3 px-4 py-3 ${bordered ? 'border-b border-gray-100' : ''}`}
+    >
+      <span className="flex items-center gap-1.5 text-sm text-gray-600">
+        <Icon className="size-4 shrink-0 text-gray-400" aria-hidden="true" />
+        {label}
+      </span>
+      <span className="text-sm font-medium text-gray-700">{value}</span>
+    </div>
+  );
+}
+
 export default function HealthCheckCard({
   display,
   onClearCache,
   isClearingCache,
   canClearCache,
+  onToggleAuthorise,
+  isTogglingAuthorise,
+  canAuthorise,
 }: HealthCheckCardProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
@@ -86,8 +126,23 @@ export default function HealthCheckCard({
       <div className="flex flex-col">
         <div className="flex flex-col gap-2 border-b border-gray-100 px-4 py-3">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">{t('Storage')}</span>
-            <span className="font-medium text-gray-700">{formatStorageUsed(display, t)}</span>
+            <span className="flex items-center gap-1.5 text-gray-600">
+              <HardDrive className="size-4 shrink-0 text-gray-400" aria-hidden="true" />
+              {t('Storage')}
+            </span>
+            <div className="flex flex-col items-end gap-1">
+              <span className="font-medium text-gray-700">{formatStorageUsed(display, t)}</span>
+              {canClearCache && (
+                <button
+                  type="button"
+                  onClick={onClearCache}
+                  disabled={isClearingCache}
+                  className="text-xs font-semibold text-xibo-blue-600 hover:underline disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                >
+                  {t('Clear Cache')}
+                </button>
+              )}
+            </div>
           </div>
           {storagePercent !== null && (
             <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
@@ -97,39 +152,31 @@ export default function HealthCheckCard({
               />
             </div>
           )}
-          {canClearCache && (
-            <button
-              type="button"
-              onClick={onClearCache}
-              disabled={isClearingCache}
-              className="self-start text-xs font-semibold text-xibo-blue-600 hover:underline disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
-            >
-              {t('Clear Cache')}
-            </button>
-          )}
         </div>
 
         <div className="flex items-center justify-between gap-3 border-b border-gray-100 px-4 py-3">
           <span className="flex items-center gap-1.5 text-sm text-gray-600">
             <ShieldCheck className="size-4 shrink-0 text-gray-400" aria-hidden="true" />
-            {t('Licence')}
+            {t('Authorised')}
           </span>
-          <Badge type={isAuthorised ? 'success' : 'warning'} className="w-fit shrink-0">
-            {isAuthorised ? t('Authorised') : t('Unauthorised')}
-          </Badge>
+          {/* Switch's own root element is w-full (it's built for a form column, not an
+              inline trailing control) — wrapped in a shrink-0/w-fit box so that doesn't
+              stretch it across the row and pull it off the right edge. */}
+          <div className="w-fit shrink-0">
+            <Switch
+              ariaLabel={t('Authorised')}
+              checked={isAuthorised}
+              onChange={onToggleAuthorise}
+              disabled={!canAuthorise || isTogglingAuthorise}
+              size="sm"
+              hideOnOff
+            />
+          </div>
         </div>
 
-        <div className="border-b border-gray-100 px-4 py-3">
-          <PanelField icon={Wifi} label={t('Network')} value={display.clientAddress || '-'} />
-        </div>
-
-        <div className="border-b border-gray-100 px-4 py-3">
-          <PanelField icon={Activity} label={t('Uptime')} value={uptimeValue} />
-        </div>
-
-        <div className="px-4 py-3">
-          <PanelField icon={Smartphone} label={t('Player Type')} value={playerType} />
-        </div>
+        <HealthRow icon={Wifi} label={t('Network')} value={display.clientAddress || '-'} />
+        <HealthRow icon={Activity} label={t('Uptime')} value={uptimeValue} />
+        <HealthRow icon={Smartphone} label={t('Player Type')} value={playerType} bordered={false} />
       </div>
     </PanelCard>
   );

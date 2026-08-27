@@ -27,16 +27,15 @@ import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, XAxis, YAxis
 import { useBandwidthData, useDisplayManageData } from '../hooks/useDisplayManageData';
 
 import DisplayScreenshotPreviewer from './DisplayScreenshotPreviewer';
-import ScreenshotGallery from './ScreenshotGallery';
 
 import TabNav from '@/components/ui/TabNav';
 import Modal from '@/components/ui/modals/Modal';
+import { MediaCell } from '@/components/ui/table/cells';
 import { useUserContext } from '@/context/UserContext';
 import DisplayChart from '@/pages/Dashboard/StatusDashboard/components/DisplayChart';
 import { BRAND_PRIMARY, STATUS_DOWN, STATUS_UP } from '@/styles/brandColors';
 import type { Display } from '@/types/display';
 import type {
-  DisplayScreenshot,
   ManageDependency,
   ManageLayout,
   ManageMedia,
@@ -380,7 +379,7 @@ export default function ManageDisplayModal({ display, onClose }: ManageDisplayMo
   const showBandwidth = hasFeature(user, 'displays.reporting');
 
   const [activeTab, setActiveTab] = useState(MANAGE_TAB_STATUS);
-  const [previewScreenshot, setPreviewScreenshot] = useState<DisplayScreenshot | null>(null);
+  const [showScreenshotPreview, setShowScreenshotPreview] = useState(false);
 
   const { manageQuery, faultsQuery } = useDisplayManageData(display.displayId);
 
@@ -447,20 +446,22 @@ export default function ManageDisplayModal({ display, onClose }: ManageDisplayMo
       {activeTab === MANAGE_TAB_PROOF_OF_PLAY && (
         <div className="p-2">
           <SectionCard title={t('Screenshots')}>
-            <ScreenshotGallery display={display} onSelect={setPreviewScreenshot} />
+            <div className="p-4">
+              <MediaCell
+                thumb={display.thumbnail || undefined}
+                alt={display.display}
+                mediaType="image"
+                onPreview={() => setShowScreenshotPreview(true)}
+              />
+            </div>
           </SectionCard>
         </div>
       )}
 
-      {/*
-        Opened over the modal so a gallery item lands on the same viewer as the thumbnail in the
-        display grid, with the history id telling it which image to load.
-      */}
-      {previewScreenshot && (
+      {showScreenshotPreview && (
         <DisplayScreenshotPreviewer
           display={display}
-          screenshotId={previewScreenshot.displayScreenshotId}
-          onClose={() => setPreviewScreenshot(null)}
+          onClose={() => setShowScreenshotPreview(false)}
         />
       )}
 
