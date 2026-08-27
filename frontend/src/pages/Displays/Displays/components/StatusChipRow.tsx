@@ -22,89 +22,48 @@
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
-import type { DisplayFilterInput } from '../DisplaysConfig';
+import { getBucketLabel } from '../DisplayStatusConfig';
 
-import type { DisplayOverviewSummary } from '@/types/displayOverview';
-
-type ChipField = 'loggedIn' | 'authorised' | 'mediaInventoryStatus' | 'faults';
+import type { DisplayOverviewSummary, DisplayOverviewBucket } from '@/types/displayOverview';
 
 interface StatusChipRowProps {
   summary: DisplayOverviewSummary | undefined;
-  filters: DisplayFilterInput;
-  onFilterChange: (name: ChipField, value: string | null) => void;
-  onClearAll: () => void;
+  status: string | null;
+  onStatusChange: (value: string | null) => void;
 }
 
 interface ChipDef {
-  field: ChipField;
-  value: string;
+  value: Extract<DisplayOverviewBucket, 'online' | 'needsAttention'>;
   label: string;
   count: number;
 }
 
-// Each chip toggles one concrete list-filter field directly (no re-derived
-// "bucket" in between) — Logged In/Logged Out and Authorised/Unauthorised and
-// Up-to-date/Out-of-date are pairs sharing one field (so picking one in a
-// pair naturally replaces the other), while Faults is independent and can be
-// combined with any of them. mediaInventoryStatus's "-1" is the same
-// "not fully synced" sentinel DisplayFactory::query() already understands
-// for that field (mediaInventoryStatus <> STATUS_DONE) — broader than the
-// Filters modal's own "Out of date" option (which targets the specific
-// Pending status only), since a quick chip is meant to be the plain
-// complement of Up-to-date.
-export default function StatusChipRow({
-  summary,
-  filters,
-  onFilterChange,
-  onClearAll,
-}: StatusChipRowProps) {
+// Two mutually-exclusive quick-filter chips driving the single `status`
+// field — matches DisplayFactory::getSummary()'s Online (logged in,
+// authorised, fully synced, fault-free) vs. Needs Attention (everything
+// else) split. The advanced Filters panel keeps its own, more granular
+// loggedIn/authorised/mediaInventoryStatus/faults fields untouched.
+export default function StatusChipRow({ summary, status, onStatusChange }: StatusChipRowProps) {
   const { t } = useTranslation();
   const total = summary?.total ?? 0;
 
   const chips: ChipDef[] = [
-    { field: 'loggedIn', value: '1', label: t('Logged In'), count: summary?.loggedIn ?? 0 },
+    { value: 'online', label: getBucketLabel(t, 'online'), count: summary?.online ?? 0 },
     {
-      field: 'loggedIn',
-      value: '0',
-      label: t('Logged Out'),
-      count: total - (summary?.loggedIn ?? 0),
+      value: 'needsAttention',
+      label: getBucketLabel(t, 'needsAttention'),
+      count: summary?.needsAttention ?? 0,
     },
-    {
-      field: 'authorised',
-      value: '1',
-      label: t('Authorised'),
-      count: summary?.authorised ?? 0,
-    },
-    {
-      field: 'authorised',
-      value: '0',
-      label: t('Unauthorised'),
-      count: total - (summary?.authorised ?? 0),
-    },
-    {
-      field: 'mediaInventoryStatus',
-      value: '1',
-      label: t('Up-to-date'),
-      count: summary?.upToDate ?? 0,
-    },
-    {
-      field: 'mediaInventoryStatus',
-      value: '-1',
-      label: t('Out-of-date'),
-      count: total - (summary?.upToDate ?? 0),
-    },
-    { field: 'faults', value: '1', label: t('Faults'), count: summary?.faults ?? 0 },
   ];
 
-  const isAllActive =
-    !filters.loggedIn && !filters.authorised && !filters.mediaInventoryStatus && !filters.faults;
+  const isAllActive = !status;
 
   return (
     <div className="flex flex-wrap gap-2">
       <button
         type="button"
         aria-pressed={isAllActive}
-        onClick={onClearAll}
+        onClick={() => onStatusChange(null)}
         className={twMerge(
           'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer',
           isAllActive
@@ -123,13 +82,13 @@ export default function StatusChipRow({
         </span>
       </button>
       {chips.map((chip) => {
-        const isActive = filters[chip.field] === chip.value;
+        const isActive = status === chip.value;
         return (
           <button
-            key={`${chip.field}-${chip.value}`}
+            key={chip.value}
             type="button"
             aria-pressed={isActive}
-            onClick={() => onFilterChange(chip.field, isActive ? null : chip.value)}
+            onClick={() => onStatusChange(isActive ? null : chip.value)}
             className={twMerge(
               'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer',
               isActive

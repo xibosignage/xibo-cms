@@ -416,6 +416,7 @@ class Display extends Base
             'isPlayerSupported' => $parsedQueryParams->getInt('isPlayerSupported'),
             'displayGroupIds' => $parsedQueryParams->getIntArray('displayGroupIds'),
             'faults' => $parsedQueryParams->getInt('faults'),
+            'status' => $parsedQueryParams->getString('status'),
         ];
     }
 
@@ -574,6 +575,13 @@ class Display extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\Parameter(
+        name: 'status',
+        description: 'Filter by overall health status',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['online', 'needsAttention'])
+    )]
+    #[OA\Parameter(
         name: 'sortBy',
         description: 'Specifies which field the results are sorted by. Used together with sortDir',
         in: 'query',
@@ -715,15 +723,17 @@ class Display extends Base
                     description: 'Player faults newly reported in the last 24 hours',
                     type: 'integer'
                 ),
+                new OA\Property(property: 'online', type: 'integer'),
+                new OA\Property(property: 'needsAttention', type: 'integer'),
             ],
             type: 'object'
         )
     )]
     /**
-     * Aggregate summary counts (Total/Logged In/Authorised/Up-to-date/Faults) for the
-     * Displays visible to this User. Computed as a single SQL aggregate query in
-     * DisplayFactory::getSummary() - not a fetch-all-then-loop - and scoped by the same
-     * viewPermissionSql restriction as the main Display grid.
+     * Aggregate summary counts (Total/Logged In/Authorised/Up-to-date/Faults/Online/Needs
+     * Attention) for the Displays visible to this User. Computed as a single SQL aggregate
+     * query in DisplayFactory::getSummary() - not a fetch-all-then-loop - and scoped by the
+     * same viewPermissionSql restriction as the main Display grid.
      *
      * @param Request $request
      * @param Response $response

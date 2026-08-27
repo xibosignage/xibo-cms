@@ -19,10 +19,13 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// Response shape for GET /display/overview/summary — backs the five KPI tiles
-// and quick-filter chips on the Display Overview page (Total/Logged In/
-// Authorised/Up-to-date/Faults). loggedIn/authorised/upToDate/faults are
-// independent, overlapping counts (a display can be all four at once) — see
+// Response shape for GET /display/overview/summary — backs the Displays page's
+// five KPI tiles (Total/Logged In/Authorised/Up-to-date/Faults) and the
+// Online/Needs Attention quick-filter chips. loggedIn/authorised/upToDate/
+// faults are independent, overlapping counts (a display can be all four at
+// once); online/needsAttention are the mutually exclusive pair the chips
+// filter on — a display is Online when it's logged in, authorised, fully
+// synced and fault-free, else it needs attention. See
 // DisplayFactory::getSummary().
 //
 // faultsTrend is a 24-hour count sourced from the real `player_faults` history
@@ -36,12 +39,13 @@ export interface DisplayOverviewSummary {
   authorised: number;
   upToDate: number;
   faultsTrend: number;
+  online: number;
+  needsAttention: number;
 }
 
 // The per-display health classification used for a single display's own
 // status badge/dot (card, table row, Manage page) — see
 // DisplayStatusConfig.ts's getDisplayStatusBucket(). Not used by the list's
-// quick-filter chips, which filter on the concrete loggedIn/authorised/
-// mediaInventoryStatus/faults fields directly instead of re-deriving a
-// bucket.
+// quick-filter chips, which filter on the single `status` field
+// ('online'/'needsAttention') directly instead of re-deriving a bucket.
 export type DisplayOverviewBucket = 'online' | 'needsAttention' | 'offline' | 'faults';

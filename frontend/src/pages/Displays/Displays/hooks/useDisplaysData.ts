@@ -110,6 +110,7 @@ export const useDisplaysData = ({
         ...(advancedFilters.faults !== null && advancedFilters.faults !== undefined
           ? { faults: advancedFilters.faults }
           : {}),
+        ...(advancedFilters.status ? { status: advancedFilters.status } : {}),
         ...(advancedFilters.xmrRegistered !== null && advancedFilters.xmrRegistered !== undefined
           ? { xmrRegistered: advancedFilters.xmrRegistered }
           : {}),

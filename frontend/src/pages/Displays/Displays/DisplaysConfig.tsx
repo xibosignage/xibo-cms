@@ -82,6 +82,8 @@ export interface DisplayFilterInput {
   loggedIn: string | null;
   authorised: string | null;
   faults: string | null;
+  /** Quick-filter chip field (StatusChipRow/KpiRow) — 'online' | 'needsAttention'. */
+  status: string | null;
   xmrRegistered: string | null;
   clientType: string | null;
   displayGroupId: string | null;
@@ -141,6 +143,7 @@ export const INITIAL_FILTER_STATE: DisplayFilterInput = {
   loggedIn: null,
   authorised: null,
   faults: null,
+  status: null,
   xmrRegistered: null,
   clientType: null,
   displayGroupId: null,

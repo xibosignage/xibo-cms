@@ -197,20 +197,20 @@ export default function Displays() {
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
 
-  // Quick-filter chips (StatusChipRow) toggle these four concrete fields directly
-  // rather than a re-derived "bucket" — each chip sets/clears its own field, so any
-  // combination (e.g. Unauthorised + Faults) can be active at once.
-  const handleChipFilterChange = (
-    name: 'loggedIn' | 'authorised' | 'mediaInventoryStatus' | 'faults',
-    value: string | null,
-  ) => {
-    setFilterInputs((prev) => ({ ...prev, [name]: value }));
-    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-  };
+  // The advanced Filters panel's own granular fields, each a component of what
+  // the `status` quick-filter chips already express — kept mutually exclusive
+  // with `status` (below and in the FilterInputs onChange handler) so the two
+  // can never combine into a contradictory, permanently-empty filter (e.g.
+  // status=online + authorised=0), which would otherwise get persisted to the
+  // user's saved preferences and show 0 results on every subsequent load.
+  const STATUS_FIELDS = ['loggedIn', 'authorised', 'mediaInventoryStatus', 'faults'] as const;
 
-  const handleClearChipFilters = () => {
+  // Quick-filter chips (StatusChipRow) toggle a single `status` field
+  // ('online' | 'needsAttention' | null).
+  const handleStatusFilterChange = (value: string | null) => {
     setFilterInputs((prev) => ({
       ...prev,
+      status: value,
       loggedIn: null,
       authorised: null,
       mediaInventoryStatus: null,
@@ -548,6 +548,9 @@ export default function Displays() {
               return {
                 ...prev,
                 [name]: value === undefined || value === '' ? null : value,
+                ...(STATUS_FIELDS.includes(name as (typeof STATUS_FIELDS)[number])
+                  ? { status: null }
+                  : {}),
               } as DisplayFilterInput;
             });
             setPagination((prev) => {
@@ -575,9 +578,8 @@ export default function Displays() {
 
           <StatusChipRow
             summary={summary}
-            filters={filterInputs}
-            onFilterChange={handleChipFilterChange}
-            onClearAll={handleClearChipFilters}
+            status={filterInputs.status}
+            onStatusChange={handleStatusFilterChange}
           />
 
           <div className="min-h-[60vh] flex flex-1 shrink-0 flex-col">
