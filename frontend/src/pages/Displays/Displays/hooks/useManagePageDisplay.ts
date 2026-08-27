@@ -40,5 +40,14 @@ export function useManagePageDisplay(displayId: number | null) {
     },
     enabled: displayId !== null,
     staleTime: 1000 * 30,
+    // Re-read while the page is open, rather than once on mount. Everything on the page that
+    // reflects the display's state reads this record, so without it a display that comes online
+    // (or drops offline) is not noticed until a refresh: the header keeps its stale status badge,
+    // and ScreenshotCard keeps standing down because it gates on loggedIn.
+    //
+    // Slower than the screenshot poll on purpose. This fetches the whole display row off the list
+    // endpoint, and the fields on it only move when the display next checks in, so there is
+    // nothing to gain from asking at the same rate.
+    refetchInterval: 1000 * 30,
   });
 }

@@ -31,7 +31,7 @@ import {
   useFloating,
   useInteractions,
 } from '@floating-ui/react';
-import { Camera, ChevronDown, FileText, Info, Power } from 'lucide-react';
+import { ChevronDown, FileText, Info, Power } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -119,9 +119,6 @@ function PowerRebootMenu() {
 }
 
 interface ManageHeaderActionsProps {
-  onRequestScreenshot: () => void;
-  isRequestingScreenshot: boolean;
-  canRequestScreenshot: boolean;
   onOpenProofOfPlay: () => void;
   canViewProofOfPlay: boolean;
   onOpenDiagnostics: () => void;
@@ -129,9 +126,6 @@ interface ManageHeaderActionsProps {
 }
 
 export default function ManageHeaderActions({
-  onRequestScreenshot,
-  isRequestingScreenshot,
-  canRequestScreenshot,
   onOpenProofOfPlay,
   canViewProofOfPlay,
   onOpenDiagnostics,
@@ -141,18 +135,9 @@ export default function ManageHeaderActions({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {canRequestScreenshot && (
-        <Button
-          variant="secondary"
-          leftIcon={Camera}
-          onClick={onRequestScreenshot}
-          disabled={isRequestingScreenshot}
-          className="h-11.25"
-        >
-          {t('Request Screenshot')}
-        </Button>
-      )}
-
+      {/* "Request Screenshot" was here. The page asks for one every few seconds by itself while
+          it is open, so a button to ask again had nothing to add. ScreenshotCard opens the
+          full-size viewer that this button used to open alongside the request. */}
       <PowerRebootMenu />
 
       {canViewProofOfPlay && (

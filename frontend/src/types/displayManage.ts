@@ -128,16 +128,6 @@ export interface BandwidthResponse {
   postUnits: string;
 }
 
-/**
- * Display event types relevant to connectivity, as mapped by
- * DisplayEvent::getEventIdFromString.
- *
- * DisplayUpDown rows are raised by the CMS itself when a display's lastAccessed goes stale.
- */
-export const DISPLAY_EVENT_TYPE = {
-  displayUpDown: 1,
-} as const;
-
 /** One screenshot in a display's history, newest first from the API. */
 export interface DisplayScreenshot {
   displayScreenshotId: number;
@@ -149,14 +139,4 @@ export interface DisplayScreenshot {
   status: Record<string, unknown> | null;
   /** Built by the API, so the client does not need to know the route. */
   url: string;
-}
-
-/** One row from /stats/timeDisconnected. Dates are 'YYYY-MM-DD HH:mm:ss' in CMS time. */
-export interface DisconnectionEvent {
-  displayId: number;
-  display: string;
-  isFinished: boolean;
-  start: string;
-  end: string | null;
-  duration: number;
 }

@@ -873,10 +873,28 @@ class Soap4 extends Soap
         fwrite($fp, $screenShot);
         fclose($fp);
 
+        // PARKED (screenshot history & interval).
+        //
+        // The Manage page now asks the player for a screenshot every few seconds while it is
+        // open and swaps the current image in as each one lands, so neither a stored history nor
+        // a server-side capture interval has a job left to do. Both are commented out rather
+        // than deleted so the decision can be reversed cheaply.
+        //
+        // To restore: uncomment the call below, the routes in lib/routes.php
+        // (display.screenshot.history, display.screenshot.history.item,
+        // display.screenshotinterval) and their frontend callers in
+        // frontend/src/services/displaysApi.ts. Nothing else was removed.
+        //
+        // To retire for good: delete this block and addToScreenshotHistory() below, the three
+        // parked controller methods in lib/Controller/Display.php, lib/Entity/DisplayScreenshot.php,
+        // lib/Factory/DisplayScreenshotFactory.php and their container wiring. The
+        // `displayscreenshot` table and its migration are deliberately left alone: the migration
+        // has already run, so dropping the table needs a new migration rather than an edit here.
+        //
         // Keep a copy in the display's history, alongside the status the player last reported.
         // The file written above is left as it is, so anything showing the current screenshot
         // carries on reading the same path.
-        $this->addToScreenshotHistory($screenShot, $screenShotFmt);
+        // $this->addToScreenshotHistory($screenShot, $screenShotFmt);
 
         // Touch the display record
         $this->display->screenShotRequested = 0;

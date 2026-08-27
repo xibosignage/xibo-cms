@@ -40,6 +40,8 @@ interface ScreenshotGalleryModalProps {
  * the Displays Overview page's "Screenshots" quick action, where there's no surrounding Manage
  * modal to host a tab.
  */
+// PARKED (screenshot history & interval): nothing renders this any more. See the note in
+// ScreenshotGallery.tsx.
 export default function ScreenshotGalleryModal({ display, onClose }: ScreenshotGalleryModalProps) {
   const { t } = useTranslation();
   const [previewScreenshot, setPreviewScreenshot] = useState<DisplayScreenshot | null>(null);

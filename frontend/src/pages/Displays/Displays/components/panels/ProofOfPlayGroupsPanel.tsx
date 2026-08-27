@@ -27,6 +27,7 @@ import {
   PROOF_OF_PLAY_WINDOW_HOURS,
   PlayList,
   PrintableTable,
+  printPanelTable,
   StatTile,
   VISIBLE_ROWS,
   downloadCsv,
@@ -109,7 +110,7 @@ export default function ProofOfPlayGroupsPanel({
     );
   };
 
-  const handlePrint = () => window.print();
+  const handlePrint = () => printPanelTable();
 
   return (
     <div className="rounded-lg border border-blue-100 bg-blue-50/60 p-4">

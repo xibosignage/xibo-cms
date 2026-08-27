@@ -322,10 +322,13 @@ $app->group('', function (RouteCollectorProxy $group) {
 $app->get('/display', ['\Xibo\Controller\Display', 'grid'])->setName('display.search');
 $app->get('/display/locales', ['\Xibo\Controller\Display','getLocaleLanguages'])->setName('display.locales');
 $app->group('', function (RouteCollectorProxy $group) {
-    $group->put(
-        '/display/screenshotinterval/{id:[0-9]+}',
-        ['\Xibo\Controller\Display','setScreenShotInterval']
-    )->setName('display.screenshotinterval');
+    // PARKED (screenshot history & interval): the Manage page drives screenshots itself now,
+    // so a server-side interval has nothing left to do. See the note on
+    // Soap4::addToScreenshotHistory().
+    // $group->put(
+    //     '/display/screenshotinterval/{id:[0-9]+}',
+    //     ['\Xibo\Controller\Display','setScreenShotInterval']
+    // )->setName('display.screenshotinterval');
 
     $group->put('/display/requestscreenshot/{id:[0-9]+}', ['\Xibo\Controller\Display','requestScreenShot'])
         ->setName('display.requestscreenshot');
@@ -333,13 +336,20 @@ $app->group('', function (RouteCollectorProxy $group) {
         ->setName('display.licencecheck');
     $group->put('/display/purgeAll/{id:[0-9]+}', ['\Xibo\Controller\Display','purgeAll'])
         ->setName('display.purge.all');
-    $group->get('/display/screenshot/{id:[0-9]+}/history', ['\Xibo\Controller\Display','screenShotHistory'])
-        ->setName('display.screenshot.history');
+    // PARKED (screenshot history & interval): nothing reads the history now that the Manage
+    // page shows the current screenshot live. See the note on Soap4::addToScreenshotHistory().
+    // $group->get('/display/screenshot/{id:[0-9]+}/history', ['\Xibo\Controller\Display','screenShotHistory'])
+    //     ->setName('display.screenshot.history');
+    //
+    // $group->get(
+    //     '/display/screenshot/{id:[0-9]+}/history/{screenshotId:[0-9]+}',
+    //     ['\Xibo\Controller\Display','screenShotFromHistory']
+    // )->setName('display.screenshot.history.item');
 
-    $group->get(
-        '/display/screenshot/{id:[0-9]+}/history/{screenshotId:[0-9]+}',
-        ['\Xibo\Controller\Display','screenShotFromHistory']
-    )->setName('display.screenshot.history.item');
+    // When the display's current screenshot was taken. Polled while the Manage page is open, so
+    // it can tell a new capture has landed without downloading the image to compare it.
+    $group->get('/display/screenshot/{id:[0-9]+}/time', ['\Xibo\Controller\Display','screenShotTime'])
+        ->setName('display.screenshot.time');
 
     $group->get('/display/screenshot/{id:[0-9]+}', ['\Xibo\Controller\Display','screenShot'])
         ->setName('display.screenShot');
