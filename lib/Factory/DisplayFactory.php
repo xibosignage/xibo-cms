@@ -208,13 +208,29 @@ class DisplayFactory extends BaseFactory
     }
 
     /**
-     * Aggregate health counts for the Overview page's KPI tiles/chips, one query, same permission
+     * SQL boolean expression (correlated to `display` in the outer query) for the "Online"
+     * status: logged in, authorised, fully synced and with no active player faults. Shared by
+     * the `status` filter in query() and by getSummary(), so a Display can never be counted as
+     * Online in one place and Needs Attention in the other.
+     * @return string
+     */
+    private function onlineSql(): string
+    {
+        return '(display.loggedIn = 1
+            AND display.licensed = 1
+            AND display.mediaInventoryStatus = ' . Display::$STATUS_DONE . '
+            AND NOT (' . $this->faultsCountSql() . ' > 0))';
+    }
+
+    /**
+     * Aggregate health counts for the Displays page's KPI tiles/chips, one query, same permission
      * scoping as query(). Counts overlap (not mutually exclusive); only faults has a 24h trend
-     * since it's the only timestamped state.
+     * since it's the only timestamped state. online/needsAttention are the mutually exclusive
+     * pair the quick-filter chips filter on (see onlineSql()).
      * @param array $filterBy
      * @return array{
      *     total: int, faults: int, loggedIn: int, authorised: int, upToDate: int,
-     *     faultsTrend: int
+     *     faultsTrend: int, online: int, needsAttention: int
      * }
      */
     public function getSummary(array $filterBy = []): array
@@ -256,6 +272,7 @@ class DisplayFactory extends BaseFactory
                     SUM(CASE WHEN display.licensed = 1 THEN 1 ELSE 0 END) AS authorised,
                     SUM(CASE WHEN display.mediaInventoryStatus = ' . Display::$STATUS_DONE . '
                         THEN 1 ELSE 0 END) AS upToDate,
+                    SUM(CASE WHEN ' . $this->onlineSql() . ' THEN 1 ELSE 0 END) AS online,
                     (SELECT COUNT(*) FROM `player_faults`
                         WHERE player_faults.incidentDt >= :trendSinceDateTime
                         AND player_faults.displayId IN (SELECT displayId FROM visible_displays)
@@ -266,13 +283,18 @@ class DisplayFactory extends BaseFactory
         $rows = $this->getStore()->select($sql, $params);
         $row = $rows[0] ?? [];
 
+        $total = intval($row['total'] ?? 0);
+        $online = intval($row['online'] ?? 0);
+
         return [
-            'total' => intval($row['total'] ?? 0),
+            'total' => $total,
             'faults' => intval($row['faults'] ?? 0),
             'loggedIn' => intval($row['loggedIn'] ?? 0),
             'authorised' => intval($row['authorised'] ?? 0),
             'upToDate' => intval($row['upToDate'] ?? 0),
             'faultsTrend' => intval($row['faultsTrend'] ?? 0),
+            'online' => $online,
+            'needsAttention' => $total - $online,
         ];
     }
 
@@ -644,6 +666,16 @@ class DisplayFactory extends BaseFactory
             $body .= ' AND ' . $this->faultsCountSql() . ' > 0 ';
         } else if ($faultsFilter === 0) {
             $body .= ' AND NOT (' . $this->faultsCountSql() . ' > 0) ';
+        }
+
+        // Filter by overall health status ("online" or "needsAttention"). Reuses the same
+        // onlineSql() predicate as getSummary(), so the Displays page's KPI/chip counts and
+        // the grid rows they filter to can never drift apart.
+        $status = $parsedBody->getString('status');
+        if ($status === 'online') {
+            $body .= ' AND ' . $this->onlineSql() . ' ';
+        } else if ($status === 'needsAttention') {
+            $body .= ' AND NOT ' . $this->onlineSql() . ' ';
         }
 
         if ($parsedBody->getDate('lastAccessed', ['dateFormat' => 'U']) !== null) {

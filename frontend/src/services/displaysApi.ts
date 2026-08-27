@@ -44,6 +44,7 @@ export interface FetchDisplaysRequest {
   loggedIn?: number | string;
   faults?: number | string;
   authorised?: number | string;
+  status?: string;
   xmrRegistered?: number | string;
   clientType?: string;
   displayGroupId?: number | string;
