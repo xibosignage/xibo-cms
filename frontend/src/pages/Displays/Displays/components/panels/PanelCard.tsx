@@ -34,7 +34,12 @@ interface PanelCardProps {
   bodyClassName?: string;
 }
 
-/** Shared card chrome for the Display Overview Manage modal's panels. */
+/**
+ * Shared card chrome for the Manage page's panels. Deliberately not reused by the legacy
+ * ManageDisplayModal's private SectionCard/EmptyState — that modal has no automated test coverage
+ * and is required to keep behaving exactly as it does today, so its internals stay untouched (see
+ * DiagnosticsPanels.tsx's file-level comment for the full rationale).
+ */
 export function PanelCard({
   title,
   icon: Icon,

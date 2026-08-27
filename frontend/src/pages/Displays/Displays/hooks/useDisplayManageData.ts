@@ -82,10 +82,6 @@ export function useBandwidthData(
 }
 
 /**
- * Takes a duration rather than two dates, so the current time stays out of the query key and it
- * does not refetch in a loop.
- */
-/**
  * A display's recent screenshots. Polled, because a display on an interval keeps producing them
  * and the Live badge is time sensitive.
  */
@@ -99,6 +95,10 @@ export function useDisplayScreenshots(displayId: number | null, enabled: boolean
   });
 }
 
+/**
+ * Takes a duration rather than two dates, so the current time stays out of the query key and it
+ * does not refetch in a loop.
+ */
 export function useDisconnectionEvents(
   displayId: number | null,
   windowMinutes: number,

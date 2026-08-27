@@ -31,9 +31,11 @@ use Xibo\Event\TriggerTaskEvent;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
+use Xibo\Factory\DisplayScreenshotFactory;
 use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\LibraryFile;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Support\Exception\DeadlockException;
 use Xibo\Support\Exception\GeneralException;
@@ -572,7 +574,8 @@ class Display implements \JsonSerializable, XmrTargetInterface
         private readonly DisplayGroupFactory $displayGroupFactory,
         private readonly DisplayProfileFactory $displayProfileFactory,
         private readonly DisplayFactory $displayFactory,
-        private readonly FolderFactory $folderFactory
+        private readonly FolderFactory $folderFactory,
+        private readonly DisplayScreenshotFactory $displayScreenshotFactory
     ) {
         $this->setCommonDependencies($store, $log, $dispatcher);
         $this->excludeProperty('mediaInventoryXml');
@@ -1030,6 +1033,15 @@ class Display implements \JsonSerializable, XmrTargetInterface
     public function delete()
     {
         $this->load();
+
+        // Remove screenshot history images from disk before the DB rows cascade away.
+        $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
+        foreach ($this->displayScreenshotFactory->getByDisplayId($this->displayId) as $screenshot) {
+            $path = LibraryFile::resolve($libraryLocation, 'screenshots/' . $screenshot->storedAs);
+            if (file_exists($path)) {
+                unlink($path);
+            }
+        }
 
         // Delete references
         $this->getStore()->update('DELETE FROM `display_media` WHERE displayId = :displayId', [

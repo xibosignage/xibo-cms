@@ -104,7 +104,7 @@ export default function HealthCheckCard({
               disabled={isClearingCache}
               className="self-start text-xs font-semibold text-xibo-blue-600 hover:underline disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
             >
-              {t('Clear cache')}
+              {t('Clear Cache')}
             </button>
           )}
         </div>

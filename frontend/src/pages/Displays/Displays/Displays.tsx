@@ -38,7 +38,6 @@ import DisplayMap from './components/DisplayMap';
 import DisplayScreenshotPreviewer from './components/DisplayScreenshotPreviewer';
 import { DisplayModals } from './components/DisplaysModals';
 import KpiRow from './components/KpiRow';
-import ProofOfPlayGroupsPanel from './components/panels/ProofOfPlayGroupsPanel';
 import ScreenshotGalleryModal from './components/ScreenshotGalleryModal';
 import StatusChipRow from './components/StatusChipRow';
 import { useDisplayOverviewSummary } from './hooks/useDisplayOverviewSummary';
@@ -88,17 +87,9 @@ export default function Displays() {
   const canCommandView = hasFeature(user, 'command.view');
   const canDisplayGroupModify = hasFeature(user, 'displaygroup.modify');
   const canViewLayout = hasFeature(user, 'layout.view');
-  const canViewProofOfPlay = hasFeature(user, 'proof-of-play');
   const scheduleWithView = Number(user?.settings?.SCHEDULE_WITH_VIEW_PERMISSION) === 1;
   const isSuperAdmin = user?.userTypeId === 1;
   const homeFolderId = user?.homeFolderId ?? 1;
-
-  const {
-    data: summary,
-    isLoading: isSummaryLoading,
-    isError: isSummaryError,
-    error: summaryError,
-  } = useDisplayOverviewSummary();
 
   const {
     pagination,
@@ -184,6 +175,13 @@ export default function Displays() {
     filterInputs: INITIAL_FILTER_STATE,
     folderId: canViewFolders ? homeFolderId : null,
   });
+
+  const {
+    data: summary,
+    isLoading: isSummaryLoading,
+    isError: isSummaryError,
+    error: summaryError,
+  } = useDisplayOverviewSummary(true, canViewFolders ? selectedFolderId : null);
 
   const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
   const [showFolderSidebar, setShowFolderSidebar] = useState(false);
@@ -565,19 +563,13 @@ export default function Displays() {
             isLoading={isSummaryLoading}
           />
 
-          <ProofOfPlayGroupsPanel
-            title={t('Proof of Play — Last 7 Days')}
-            canViewProofOfPlay={canViewProofOfPlay}
-            onViewReport={() => navigate('/reporting/proof-of-play')}
-          />
-
           <StatusChipRow
             summary={summary}
             activeBucket={activeBucket}
             onSelectBucket={handleSelectBucket}
           />
 
-          <div className="min-h-96 flex flex-1 shrink-0 flex-col">
+          <div className="min-h-[60vh] flex flex-1 shrink-0 flex-col">
             {!isHydrated ? (
               <div className="flex-1 flex items-center justify-center bg-gray-50 animate-pulse rounded-lg border border-gray-200">
                 <span className="text-gray-400 font-medium">{t('Loading your displays...')}</span>
@@ -613,7 +605,7 @@ export default function Displays() {
                 renderCard={(display, isSelected, toggleSelect) => (
                   <DisplayCard
                     display={display}
-                    onManage={handleManagePage}
+                    onManagePage={handleManagePage}
                     onEdit={openEditModal}
                     actions={getCardActions(display)}
                     isSelected={isSelected}

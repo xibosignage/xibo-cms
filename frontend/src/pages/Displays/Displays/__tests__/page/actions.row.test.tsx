@@ -223,15 +223,15 @@ describe('Displays page — row action wiring', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // Manage (legacy) — opens the full-detail ManageDisplayModal (Bandwidth,
+  // Full Details — opens the full-detail ManageDisplayModal (Bandwidth,
   // Connectivity, Dependencies, Layouts, Media, Widgets, Faults).
   // ---------------------------------------------------------------------------
-  test('clicking Manage (legacy) opens the Manage Display modal', async () => {
+  test('clicking Full Details opens the Manage Display modal', async () => {
     const user = userEvent.setup();
     renderDisplaysPage();
 
     await openMoreActions(user);
-    await user.click(screen.getByRole('button', { name: /manage \(legacy\)/i }));
+    await user.click(screen.getByRole('button', { name: /full details/i }));
 
     await screen.findByRole('dialog', { name: /manage display/i });
   });

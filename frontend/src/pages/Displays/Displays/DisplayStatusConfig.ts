@@ -235,16 +235,15 @@ export function getDisplayStatusInfo(
 }
 
 // The Manage page's big status pill wants "bucket — reason" copy (e.g. "Needs
-// attention — Unauthorised") rather than just the bucket label on its own —
-// built on top of getDisplayStatusInfo() rather than re-deriving the bucket
-// or the reason a second time.
+// attention — Unauthorised") rather than just the bucket label on its own.
+// Takes an already-derived DisplayStatusInfo (e.g. from useDisplayStatusBadge)
+// rather than a Display, so callers that already derived it once don't pay
+// for a second getDisplayStatusInfo() call.
 export function getManagePillCopy(
-  display: Display,
+  { bucket, badgeLabel, lastSeenLabel }: DisplayStatusInfo,
+  countFaults: number,
   t: TFunction,
-  formatRelative: (value: Date) => string,
 ): string {
-  const { bucket, badgeLabel, lastSeenLabel } = getDisplayStatusInfo(display, t, formatRelative);
-
   switch (bucket) {
     case 'online':
       return t('Online — healthy');
@@ -253,7 +252,7 @@ export function getManagePillCopy(
     case 'offline':
       return t('Offline — last seen {{time}}', { time: lastSeenLabel });
     case 'faults':
-      return t('Faults — {{count}} active', { count: display.countFaults });
+      return t('Faults — {{count}} active', { count: countFaults });
     default:
       return badgeLabel;
   }

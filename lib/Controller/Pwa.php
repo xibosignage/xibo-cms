@@ -201,7 +201,8 @@ class Pwa extends Base
             $this->container->get('dispatcher'),
             $this->container->get('campaignFactory'),
             $this->container->get('syncGroupFactory'),
-            $this->container->get('playerFaultFactory')
+            $this->container->get('playerFaultFactory'),
+            $this->container->get('displayScreenshotFactory')
         );
     }
 }

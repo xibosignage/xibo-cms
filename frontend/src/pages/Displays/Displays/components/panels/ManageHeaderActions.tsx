@@ -31,18 +31,17 @@ import {
   useFloating,
   useInteractions,
 } from '@floating-ui/react';
-import { Camera, ChevronDown, FileText, Power, Settings } from 'lucide-react';
+import { Camera, ChevronDown, FileText, Info, Power } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Button from '@/components/ui/Button';
 
-// The header's "Power / Reboot" menu — a frontend-only UI shell per explicit
-// scope direction (see wiggly-doodling-wren.md): no native reboot/power-off
-// primitive exists in Xibo today, so every item here renders disabled
+// The header's "Power / Reboot" menu — a frontend-only UI shell: no native
+// reboot/power-off primitive exists in Xibo today, so every item here renders disabled
 // (greyed out, no click handler) rather than being wired to a service call,
-// including Wake-on-LAN's "Power on" equivalent — keeping the whole menu's
-// behaviour consistent rather than partially working.
+// including Wake on LAN — keeping the whole menu's behaviour consistent
+// rather than partially working.
 function PowerRebootMenu() {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -72,7 +71,7 @@ function PowerRebootMenu() {
   const dismiss = useDismiss(context);
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
 
-  const items = [t('Reboot player'), t('Power off'), t('Power on')];
+  const items = [t('Reboot player'), t('Power off'), t('Wake on LAN')];
 
   return (
     <div className="relative inline-block">
@@ -84,6 +83,7 @@ function PowerRebootMenu() {
         rightIcon={ChevronDown}
         aria-haspopup="menu"
         aria-expanded={open}
+        className="h-11.25"
       >
         {t('Power / Reboot')}
       </Button>
@@ -147,6 +147,7 @@ export default function ManageHeaderActions({
           leftIcon={Camera}
           onClick={onRequestScreenshot}
           disabled={isRequestingScreenshot}
+          className="h-11.25"
         >
           {t('Request Screenshot')}
         </Button>
@@ -155,7 +156,12 @@ export default function ManageHeaderActions({
       <PowerRebootMenu />
 
       {canViewProofOfPlay && (
-        <Button variant="primary" leftIcon={FileText} onClick={onOpenProofOfPlay}>
+        <Button
+          variant="primary"
+          leftIcon={FileText}
+          onClick={onOpenProofOfPlay}
+          className="h-11.25"
+        >
           {t('Proof of Play')}
         </Button>
       )}
@@ -164,9 +170,9 @@ export default function ManageHeaderActions({
         type="button"
         onClick={onOpenDiagnostics}
         aria-label={t('Troubleshooting & Diagnostics')}
-        className="relative flex size-9 shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 cursor-pointer"
+        className="relative flex size-11.25 shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 cursor-pointer"
       >
-        <Settings className="size-4" aria-hidden="true" />
+        <Info className="size-4" aria-hidden="true" />
         {needsAttention && (
           <span
             className="absolute right-1.5 top-1.5 size-2 rounded-full bg-red-500 ring-2 ring-white"

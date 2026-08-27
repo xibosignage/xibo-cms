@@ -25,10 +25,8 @@ import { useTranslation } from 'react-i18next';
 
 // Placeholder for the mockup's "player update available" banner —
 // deliberately static, with no version-comparison logic, no data hook, and
-// no "Upgrade now"/"Enable auto-upgrade" actions. See
-// wiggly-doodling-wren.md's scope note and "Deferred to a future pass"
-// section for why (no aggregate comparing clientVersion/clientCode against
-// PlayerVersion/versionMediaId exists yet).
+// no "Upgrade now"/"Enable auto-upgrade" actions (no aggregate comparing
+// clientVersion/clientCode against PlayerVersion/versionMediaId exists yet).
 export default function PlayerUpdateBanner() {
   const { t } = useTranslation();
   const [isDismissed, setIsDismissed] = useState(false);

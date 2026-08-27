@@ -43,6 +43,7 @@ class DisplayFactory extends BaseFactory
     private DisplayGroupFactory $displayGroupFactory;
     private DisplayProfileFactory $displayProfileFactory;
     private FolderFactory $folderFactory;
+    private DisplayScreenshotFactory $displayScreenshotFactory;
 
     /**
      * Construct a factory
@@ -53,6 +54,7 @@ class DisplayFactory extends BaseFactory
      * @param DisplayGroupFactory $displayGroupFactory
      * @param DisplayProfileFactory $displayProfileFactory
      * @param FolderFactory $folderFactory
+     * @param DisplayScreenshotFactory $displayScreenshotFactory
      */
     public function __construct(
         User $user,
@@ -61,7 +63,8 @@ class DisplayFactory extends BaseFactory
         ConfigServiceInterface $config,
         DisplayGroupFactory $displayGroupFactory,
         DisplayProfileFactory $displayProfileFactory,
-        FolderFactory $folderFactory
+        FolderFactory $folderFactory,
+        DisplayScreenshotFactory $displayScreenshotFactory
     ) {
         $this->setAclDependencies($user, $userFactory);
 
@@ -70,6 +73,7 @@ class DisplayFactory extends BaseFactory
         $this->displayGroupFactory = $displayGroupFactory;
         $this->displayProfileFactory = $displayProfileFactory;
         $this->folderFactory = $folderFactory;
+        $this->displayScreenshotFactory = $displayScreenshotFactory;
     }
 
     /**
@@ -95,7 +99,8 @@ class DisplayFactory extends BaseFactory
             $this->displayGroupFactory,
             $this->displayProfileFactory,
             $this,
-            $this->folderFactory
+            $this->folderFactory,
+            $this->displayScreenshotFactory
         );
     }
 
@@ -238,6 +243,7 @@ class DisplayFactory extends BaseFactory
      */
     public function getSummary(array $filterBy = []): array
     {
+        $parsedBody = $this->getSanitizer($filterBy);
         $params = [];
         $body = $this->baseFromSql() . ' WHERE 1 = 1 ';
 
@@ -250,6 +256,11 @@ class DisplayFactory extends BaseFactory
             $filterBy,
             '`displaygroup`.permissionsFolderId'
         );
+
+        if ($parsedBody->getInt('folderId') !== null) {
+            $body .= ' AND displaygroup.folderId = :folderId ';
+            $params['folderId'] = $parsedBody->getInt('folderId');
+        }
 
         $needsAttentionSql = $this->needsAttentionSql();
         $faultsCountSql = $this->faultsCountSql();

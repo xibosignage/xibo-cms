@@ -36,8 +36,8 @@ interface UseManagePageActionsProps {
 // hook's grid-refresh/modal-close coordination (there's no list/modal to
 // coordinate with on this page) — a success/error toast is enough feedback
 // here. Only wraps what this page actually wires today: Request screenshot
-// and Clear cache. See wiggly-doodling-wren.md for why Wake on
-// LAN/Send command/Collect now aren't included yet.
+// and Clear cache. Wake on LAN/Send command/Collect now aren't included yet
+// (see PowerRebootMenu and AllCommandsCard for why).
 export function useManagePageActions({ t }: UseManagePageActionsProps) {
   const [isActionPending, setIsActionPending] = useState(false);
 

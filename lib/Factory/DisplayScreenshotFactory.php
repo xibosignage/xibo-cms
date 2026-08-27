@@ -43,7 +43,7 @@ class DisplayScreenshotFactory extends BaseFactory
      *
      * @return DisplayScreenshot[]
      */
-    public function getByDisplayId(int $displayId, ?int $limit = null): array
+    public function getByDisplayId(int $displayId, ?int $limit = null, int $offset = 0): array
     {
         $sql = '
             SELECT displayScreenshotId, displayId, createdDt, storedAs, statusJson
@@ -54,11 +54,18 @@ class DisplayScreenshotFactory extends BaseFactory
 
         if ($limit !== null) {
             $sql .= ' LIMIT ' . intval($limit);
+        } elseif ($offset > 0) {
+            // MySQL requires a LIMIT to use OFFSET; this is its documented way to mean "no cap".
+            $sql .= ' LIMIT 18446744073709551615';
+        }
+
+        if ($offset > 0) {
+            $sql .= ' OFFSET ' . $offset;
         }
 
         $entries = [];
         foreach ($this->getStore()->select($sql, ['displayId' => $displayId]) as $row) {
-            $entries[] = $this->hydrate($row);
+            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['createdDt']]);
         }
 
         return $entries;
@@ -79,7 +86,7 @@ class DisplayScreenshotFactory extends BaseFactory
             throw new NotFoundException(__('Screenshot not found'));
         }
 
-        return $this->hydrate($rows[0]);
+        return $this->createEmpty()->hydrate($rows[0], ['intProperties' => ['createdDt']]);
     }
 
     /**
@@ -90,20 +97,6 @@ class DisplayScreenshotFactory extends BaseFactory
      */
     public function getExpiredByDisplayId(int $displayId): array
     {
-        $all = $this->getByDisplayId($displayId);
-
-        return array_slice($all, self::HISTORY_LIMIT);
-    }
-
-    private function hydrate(array $row): DisplayScreenshot
-    {
-        $screenshot = $this->createEmpty();
-        $screenshot->displayScreenshotId = intval($row['displayScreenshotId']);
-        $screenshot->displayId = intval($row['displayId']);
-        $screenshot->createdDt = intval($row['createdDt']);
-        $screenshot->storedAs = $row['storedAs'];
-        $screenshot->statusJson = $row['statusJson'];
-
-        return $screenshot;
+        return $this->getByDisplayId($displayId, null, self::HISTORY_LIMIT);
     }
 }

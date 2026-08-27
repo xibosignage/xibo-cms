@@ -26,11 +26,9 @@ import PlaceholderCard from './PlaceholderCard';
 
 // Placeholder for the mockup's "All commands" card — deliberately not wired
 // to any data or action yet (a future pass would take a `display` prop to
-// wire real Collect now/Wake display/Send command actions — see
-// wiggly-doodling-wren.md's "highest-risk section" note on why this isn't
-// wired yet: no fixed default commands exist, and sendCommand/collectNow
-// need displayGroupId, not displayId). See wiggly-doodling-wren.md's scope
-// note and "Deferred to a future pass" section for why.
+// wire real Collect now/Wake display/Send command actions: no fixed default
+// commands exist, and sendCommand/collectNow need displayGroupId, not
+// displayId).
 export default function AllCommandsCard() {
   const { t } = useTranslation();
 

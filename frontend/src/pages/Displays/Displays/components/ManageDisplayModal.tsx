@@ -36,6 +36,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { twMerge } from 'tailwind-merge';
 
 import {
   useBandwidthData,
@@ -46,6 +47,7 @@ import {
 import DisplayScreenshotPreviewer from './DisplayScreenshotPreviewer';
 import ScreenshotGallery from './ScreenshotGallery';
 
+import Badge from '@/components/ui/Badge';
 import TabNav from '@/components/ui/TabNav';
 import Modal from '@/components/ui/modals/Modal';
 import { useUserContext } from '@/context/UserContext';
@@ -463,6 +465,32 @@ function collectOutages(
 }
 
 /**
+ * Merges overlapping/adjacent outages.
+ *
+ * The CMS can write more than one row for the same outage: its status task starts a row from the
+ * display's last contact, and if that runs twice against the same state the rows come out
+ * identical. Left alone they inflate the count and the total, and the bands stack into a darker
+ * shade than a single outage draws.
+ */
+function mergeOutages(outages: Outage[]): Outage[] {
+  const merged: Outage[] = [];
+
+  // collectOutages already sorted these by start.
+  for (const outage of outages) {
+    const last = merged[merged.length - 1];
+
+    if (last && outage.from <= last.to) {
+      last.to = Math.max(last.to, outage.to);
+      last.ongoing = last.ongoing || outage.ongoing;
+    } else {
+      merged.push({ ...outage });
+    }
+  }
+
+  return merged;
+}
+
+/**
  * Builds the points the line is drawn through. Outage edges are added to the even samples so a
  * dip lands on the second it happened. An outage covers its start up to but not including its
  * end, so the point at the end is already back up.
@@ -555,7 +583,7 @@ function ConnectivitySection({ display }: { display: Display }) {
   const windowEnd = Date.now();
   const windowStart = windowEnd - windowMinutes * 60 * 1000;
 
-  const outages = collectOutages(events ?? [], windowStart, windowEnd, cmsTimeZone);
+  const outages = mergeOutages(collectOutages(events ?? [], windowStart, windowEnd, cmsTimeZone));
   const samples = buildConnectivitySamples(outages, windowStart, windowEnd);
 
   // Includes an ongoing outage; its length so far is real downtime.
@@ -572,17 +600,16 @@ function ConnectivitySection({ display }: { display: Display }) {
       <div className="p-4">
         <div className="flex items-center gap-4 mb-4">
           <p className="text-sm text-gray-600">{windowLabel(t, windowMinutes)}</p>
-          <span
-            className={
-              'ml-auto inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ' +
-              (isDownNow ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700')
-            }
-          >
+          <Badge type={isDownNow ? 'danger' : 'success'} className="ml-auto">
             <span
-              className={'h-1.5 w-1.5 rounded-full ' + (isDownNow ? 'bg-red-500' : 'bg-green-500')}
+              aria-hidden="true"
+              className={twMerge(
+                'size-1.5 shrink-0 rounded-full',
+                isDownNow ? 'bg-red-500' : 'bg-green-500',
+              )}
             />
             {isDownNow ? t('Disconnected now') : t('Connected now')}
-          </span>
+          </Badge>
         </div>
 
         {isPending && (

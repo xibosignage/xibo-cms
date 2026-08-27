@@ -31,7 +31,8 @@
 // `useBandwidthData` hooks and the same `/display/manage/{id}` endpoint. The
 // three table shells below (Dependencies/Layouts/Widgets) do reuse this
 // feature's own SimpleDataTable primitive, so they don't duplicate that
-// markup a third/fourth time from each other.
+// markup a third/fourth time from each other. Same reasoning covers the
+// small CompletionIcon helper just below.
 
 import { ArrowUpDown, Blocks, Check, Files, LayoutTemplate, Loader2, X } from 'lucide-react';
 import { useState } from 'react';
