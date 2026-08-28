@@ -32,6 +32,7 @@ import {
 import { isAxiosError } from 'axios';
 import {
   ArrowLeft,
+  Check,
   Eye,
   EyeOff,
   Info,
@@ -532,42 +533,53 @@ export default function AddDisplayModal({
     }
 
     if (step === 'manual') {
-      return [
-        // Deliberately never disabled: the operator must always be able to change their mind,
-        // even while Cancel is locked waiting for the Player.
-        {
+      const manualActions = [];
+
+      if (!isConnected) {
+        manualActions.push({
           label: t('Back'),
           onClick: handleBack,
           variant: 'secondary' as const,
           leftIcon: ArrowLeft,
           className: 'mr-auto',
-        },
+        });
+      }
+
+      manualActions.push(
         {
           label: t('Cancel'),
           onClick: onClose,
           variant: 'secondary' as const,
-          disabled: !isConnected,
+          disabled: isConnecting,
         },
         {
           label: t('Save'),
           onClick: handleManualSubmit,
           disabled: !isConnected || !canSubmitManual,
         },
-      ];
+      );
+
+      return manualActions;
     }
 
-    return [
-      {
+    const actions = [];
+
+    if (!isWaiting) {
+      actions.push({
         label: t('Back'),
         onClick: handleBack,
         variant: 'secondary' as const,
         leftIcon: ArrowLeft,
         className: 'mr-auto',
-      },
+      });
+    }
+
+    actions.push(
       {
         label: t('Cancel'),
         onClick: onClose,
         variant: 'secondary' as const,
+        disabled: isWaiting,
       },
       {
         label: t('Add'),
@@ -576,7 +588,9 @@ export default function AddDisplayModal({
         leftIcon: isPending || isWaiting ? Loader2 : undefined,
         className: isPending || isWaiting ? '[&_svg]:animate-spin' : undefined,
       },
-    ];
+    );
+
+    return actions;
   };
 
   const canMinimize = isWaiting;
@@ -604,9 +618,9 @@ export default function AddDisplayModal({
       >
         {/* Custom header with title, info tooltip, and close button */}
         <div className="shrink-0 flex items-center justify-between px-8 pt-8 pb-3">
+          <h2 className="text-lg font-semibold">{t('Add Display')}</h2>
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold">{t('Add Display')}</h2>
-            {step === 'code' && (
+            {step !== 'choose' && (
               <>
                 <button
                   ref={tooltipRefs.setReference}
@@ -645,25 +659,64 @@ export default function AddDisplayModal({
                 </FloatingPortal>
               </>
             )}
+            <button
+              type="button"
+              aria-label={canMinimize ? t('Minimize') : t('Close')}
+              onClick={canMinimize && onMinimize ? onMinimize : onClose}
+              className="size-6 shrink-0 text-gray-500 cursor-pointer hover:text-gray-600 transition-colors"
+            >
+              {canMinimize ? (
+                <Minimize2 className="w-4 h-4" aria-hidden="true" />
+              ) : (
+                <X className="w-4 h-4" aria-hidden="true" />
+              )}
+            </button>
           </div>
-          <button
-            type="button"
-            aria-label={canMinimize ? t('Minimize') : t('Close')}
-            onClick={canMinimize && onMinimize ? onMinimize : onClose}
-            className="size-6 shrink-0 text-gray-500 cursor-pointer hover:text-gray-600 transition-colors"
-          >
-            {canMinimize ? (
-              <Minimize2 className="w-4 h-4" aria-hidden="true" />
-            ) : (
-              <X className="w-4 h-4" aria-hidden="true" />
-            )}
-          </button>
         </div>
 
         {step === 'choose' ? (
           <AddDisplayModeChooser onSelect={handleSelectMode} />
         ) : (
           <div className="px-6 py-4 flex flex-col gap-5">
+            {/* Waiting panel — activation code mode */}
+            {isWaiting && (
+              <div
+                className="flex flex-col items-center gap-4 rounded-lg bg-slate-50 p-6"
+                role="status"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full border bg-xibo-blue-50 border-xibo-blue-200">
+                      <Monitor className="h-6 w-6 text-xibo-blue-500" />
+                    </div>
+                    <span className="text-xs text-gray-500">{t('Player')}</span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 pb-4">
+                    <span className="h-1.5 w-1.5 rounded-full bg-gray-300 animate-[pulse_1.4s_ease-in-out_infinite]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-gray-300 animate-[pulse_1.4s_ease-in-out_0.2s_infinite]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-gray-300 animate-[pulse_1.4s_ease-in-out_0.4s_infinite]" />
+                  </div>
+
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full border bg-teal-50 border-teal-200">
+                      <Server className="h-6 w-6 text-teal-500" />
+                    </div>
+                    <span className="text-xs text-gray-500">{t('CMS')}</span>
+                  </div>
+                </div>
+
+                <div className="text-center">
+                  <p className="text-sm font-semibold text-gray-800">
+                    {t('Waiting for display to connect...')}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {t('Verifying your activation code. Please do not close this window.')}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {step === 'code' && (
               <TextInput
                 name="user_code"
@@ -684,46 +737,33 @@ export default function AddDisplayModal({
                     className="flex flex-col items-center gap-4 rounded-lg bg-slate-50 p-6"
                     role="status"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="flex flex-col items-center gap-1">
-                        <div
-                          className={`flex h-12 w-12 items-center justify-center rounded-full border ${isConnected || isManualDone ? 'bg-xibo-blue-50 border-xibo-blue-200' : 'bg-gray-100 border-gray-200'}`}
-                        >
-                          <Monitor
-                            className={`h-6 w-6 ${isConnected || isManualDone ? 'text-xibo-blue-500' : 'text-gray-400'}`}
-                          />
+                    {isConnected || isManualDone ? (
+                      <div className="flex items-center justify-center h-14 w-14 rounded-full bg-teal-50 border-2 border-teal-200">
+                        <Check className="h-7 w-7 text-teal-500" strokeWidth={2.5} />
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-4">
+                        <div className="flex flex-col items-center gap-1">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-full border bg-xibo-blue-50 border-xibo-blue-200">
+                            <Monitor className="h-6 w-6 text-xibo-blue-500" />
+                          </div>
+                          <span className="text-xs text-gray-500">{t('Player')}</span>
                         </div>
-                        <span className="text-xs text-gray-500">{t('Player')}</span>
-                      </div>
 
-                      {/* Animated dots while connecting, solid line when connected/done */}
-                      <div className="flex items-center gap-1.5 pb-4">
-                        {isConnected || isManualDone ? (
-                          <>
-                            <span className="h-1.5 w-1.5 rounded-full bg-teal-400" />
-                            <span className="h-1.5 w-1.5 rounded-full bg-teal-400" />
-                            <span className="h-1.5 w-1.5 rounded-full bg-teal-400" />
-                          </>
-                        ) : (
-                          <>
-                            <span className="h-1.5 w-1.5 rounded-full bg-gray-300 animate-[pulse_1.4s_ease-in-out_infinite]" />
-                            <span className="h-1.5 w-1.5 rounded-full bg-gray-300 animate-[pulse_1.4s_ease-in-out_0.2s_infinite]" />
-                            <span className="h-1.5 w-1.5 rounded-full bg-gray-300 animate-[pulse_1.4s_ease-in-out_0.4s_infinite]" />
-                          </>
-                        )}
-                      </div>
-
-                      <div className="flex flex-col items-center gap-1">
-                        <div
-                          className={`flex h-12 w-12 items-center justify-center rounded-full border ${isConnected || isManualDone ? 'bg-teal-50 border-teal-200' : 'bg-gray-100 border-gray-200'}`}
-                        >
-                          <Server
-                            className={`h-6 w-6 ${isConnected || isManualDone ? 'text-teal-500' : 'text-gray-400'}`}
-                          />
+                        <div className="flex items-center gap-1.5 pb-4">
+                          <span className="h-1.5 w-1.5 rounded-full bg-gray-300 animate-[pulse_1.4s_ease-in-out_infinite]" />
+                          <span className="h-1.5 w-1.5 rounded-full bg-gray-300 animate-[pulse_1.4s_ease-in-out_0.2s_infinite]" />
+                          <span className="h-1.5 w-1.5 rounded-full bg-gray-300 animate-[pulse_1.4s_ease-in-out_0.4s_infinite]" />
                         </div>
-                        <span className="text-xs text-gray-500">{t('CMS')}</span>
+
+                        <div className="flex flex-col items-center gap-1">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-full border bg-teal-50 border-teal-200">
+                            <Server className="h-6 w-6 text-teal-500" />
+                          </div>
+                          <span className="text-xs text-gray-500">{t('CMS')}</span>
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     <div className="text-center">
                       <p className="text-sm font-semibold text-gray-800">
@@ -830,52 +870,22 @@ export default function AddDisplayModal({
               <p className="text-xs text-gray-400">{licenceHelpText()}</p>
             </div>
 
-            {/* Waiting panel — activation code mode */}
-            {isWaiting && (
-              <div
-                className="flex flex-col items-center gap-4 rounded-lg bg-slate-50 p-6"
-                role="status"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="flex flex-col items-center gap-1">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 border border-gray-200">
-                      <Monitor className="h-6 w-6 text-gray-400" />
-                    </div>
-                    <span className="text-xs text-gray-500">{t('Player')}</span>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 pb-4">
-                    <span className="h-1.5 w-1.5 rounded-full bg-gray-300 animate-[pulse_1.4s_ease-in-out_infinite]" />
-                    <span className="h-1.5 w-1.5 rounded-full bg-gray-300 animate-[pulse_1.4s_ease-in-out_0.2s_infinite]" />
-                    <span className="h-1.5 w-1.5 rounded-full bg-gray-300 animate-[pulse_1.4s_ease-in-out_0.4s_infinite]" />
-                  </div>
-
-                  <div className="flex flex-col items-center gap-1">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 border border-gray-200">
-                      <Server className="h-6 w-6 text-gray-400" />
-                    </div>
-                    <span className="text-xs text-gray-500">{t('CMS')}</span>
-                  </div>
-                </div>
-
-                <div className="text-center">
-                  <p className="text-sm font-semibold text-gray-800">
-                    {t('Waiting for display to connect...')}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {t('Verifying your activation code. Please do not close this window.')}
-                  </p>
-                </div>
-              </div>
-            )}
-
             {step === 'manual' && manual.state === 'expired' && (
               <div
-                className="flex items-start gap-2 rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800"
+                className="flex items-center justify-between gap-2 rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800"
                 role="alert"
               >
-                <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                <span>{t('This code has expired. Go Back and start again to get a new one.')}</span>
+                <div className="flex items-start gap-2">
+                  <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span>{t('Your secret key has expired for security reasons.')}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={startManual}
+                  className="shrink-0 text-xs font-semibold text-yellow-800 hover:text-yellow-900 underline"
+                >
+                  {t('Refresh')}
+                </button>
               </div>
             )}
           </div>

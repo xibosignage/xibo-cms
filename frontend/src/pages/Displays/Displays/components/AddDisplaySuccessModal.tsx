@@ -61,6 +61,8 @@ export default function AddDisplaySuccessModal({
 }: AddDisplaySuccessModalProps) {
   const { t } = useTranslation();
 
+  const isLicensed = display ? display.licensed === 1 : submitted.authorise;
+
   const statusBadge = (() => {
     const status = display?.mediaInventoryStatus;
     if (status === 1) {
@@ -69,10 +71,12 @@ export default function AddDisplaySuccessModal({
     if (status === 3) {
       return { label: t('Downloading'), bg: 'bg-orange-50 border-orange-200 text-orange-600' };
     }
-    return { label: t('Pending'), bg: 'bg-gray-50 border-gray-200 text-gray-600' };
+    // Freshly added displays may not have an accurate status yet — infer from licence
+    if (isLicensed) {
+      return { label: t('Downloading'), bg: 'bg-orange-50 border-orange-200 text-orange-600' };
+    }
+    return { label: t('Out of date'), bg: 'bg-gray-50 border-gray-200 text-gray-600' };
   })();
-
-  const isLicensed = display ? display.licensed === 1 : submitted.authorise;
 
   return (
     <Modal
@@ -101,7 +105,12 @@ export default function AddDisplaySuccessModal({
           <SummaryRow label={t('Display Name')}>
             {display?.display || submitted.displayName || t('—')}
           </SummaryRow>
-          <SummaryRow label={t('Display Group')}>{submitted.displayGroup || t('—')}</SummaryRow>
+          <SummaryRow label={t('Display Group')}>
+            {submitted.displayGroup ||
+              display?.displayGroups?.find((g) => g.isDynamic === 0 && g.isDisplaySpecific === 0)
+                ?.displayGroup ||
+              t('—')}
+          </SummaryRow>
           <SummaryRow label={t('Status')}>
             <span
               className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium ${statusBadge.bg}`}
