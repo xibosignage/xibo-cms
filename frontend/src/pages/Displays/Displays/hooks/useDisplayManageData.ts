@@ -106,12 +106,83 @@ export function useCurrentScreenshotTime(displayId: number | null, poll: boolean
   });
 }
 
+  /** Where one tab records that it is the one asking for a given display. */
+const REQUEST_OWNER_KEY = 'xibo:screenshot-owner:';
+
+/**
+ * How long an unrenewed claim stands. Long enough to ride out a missed tick, short enough that
+ * closing the owning tab hands over quickly.
+ */
+const OWNER_TTL_MS = SCREENSHOT_POLL_MS * 3;
+
+/** Identifies this tab for the lifetime of the page. */
+const TAB_ID =
+  typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : String(Date.now()) + String(Math.random());
+
+/**
+ * Whether this tab should be the one asking for this display's screenshots.
+ *
+ * Two tabs on the same display would otherwise both ask, and the player honours both: it has no
+ * de-duplication, so each request is a separate capture and upload. Claims are per display, so
+ * tabs on different displays never contend and both ask as normal.
+ *
+ * Read-then-write rather than atomic, since localStorage has no compare-and-set. Two tabs can
+ * both claim within the same tick; the loser sees the other's id on its next tick and backs off,
+ * so the cost is one duplicate capture, once.
+ */
+function claimRequestOwnership(displayId: number): boolean {
+  try {
+    const key = REQUEST_OWNER_KEY + displayId;
+    const now = Date.now();
+    const raw = window.localStorage.getItem(key);
+
+    if (raw) {
+      const held = JSON.parse(raw) as { tabId?: string; expiresAt?: number };
+
+      if (held.tabId !== TAB_ID && (held.expiresAt ?? 0) > now) {
+        return false;
+      }
+    }
+
+    // Writing while already the owner is the renewal.
+    window.localStorage.setItem(
+      key,
+      JSON.stringify({ tabId: TAB_ID, expiresAt: now + OWNER_TTL_MS }),
+    );
+
+    return true;
+  } catch {
+    // Private windows and full quotas both throw here. Losing the sharing-out is better than
+    // losing the screenshots, so carry on as the owner.
+    return true;
+  }
+}
+
+/** Gives the claim up early, so another tab does not have to wait out the TTL. */
+function releaseRequestOwnership(displayId: number): void {
+  try {
+    const key = REQUEST_OWNER_KEY + displayId;
+    const raw = window.localStorage.getItem(key);
+
+    if (raw && (JSON.parse(raw) as { tabId?: string }).tabId === TAB_ID) {
+      window.localStorage.removeItem(key);
+    }
+  } catch {
+    // Nothing to do: an unreleased claim expires by itself.
+  }
+}
+
 /**
  * Asks the display for a screenshot on a timer, for as long as the caller is mounted.
  *
  * Driven from the client on purpose: leaving the page unmounts this and the asking stops, which a
  * server-side interval could not do. A request only asks, so the reply arrives whenever the
  * player next acts on it rather than on this timer.
+ *
+ * Only one tab per display actually asks, see claimRequestOwnership. The others stay quiet but
+ * keep watching, so their cards still update from the screenshots this one brings in.
  *
  * Pass enabled=false for a display that is not checking in. Asking anyway is not harmless: each
  * request writes the display row, and it still publishes over XMR when the display has a channel,
@@ -126,7 +197,7 @@ export function useScreenshotAutoRequest(displayId: number | null, enabled: bool
     let stopped = false;
 
     const ask = () => {
-      if (stopped) {
+      if (stopped || !claimRequestOwnership(displayId)) {
         return;
       }
 
@@ -141,6 +212,7 @@ export function useScreenshotAutoRequest(displayId: number | null, enabled: bool
     return () => {
       stopped = true;
       clearInterval(timer);
+      releaseRequestOwnership(displayId);
     };
   }, [displayId, enabled]);
 }
