@@ -56,6 +56,7 @@ import {
   deleteMenuBoardCategory,
 } from '@/services/menuBoardApi';
 import type { MenuBoardCategory } from '@/types/menuBoardCategory';
+import { isAlreadyDeletedError } from '@/utils/errors';
 import { countActiveFilters } from '@/utils/filters';
 
 type CategoryModalType = 'edit' | 'copy' | 'delete' | null;
@@ -188,16 +189,27 @@ export default function MenuBoardCategories() {
         itemsToDelete.map((item) => deleteMenuBoardCategory(item.menuCategoryId)),
       );
 
-      const failed = results.filter((r) => r.status === 'rejected');
+      const trueFailed = results.filter(
+        (r) => r.status === 'rejected' && !isAlreadyDeletedError(r.reason),
+      );
+      const deletedCount = itemsToDelete.length - trueFailed.length;
 
-      if (failed.length > 0) {
-        const firstRejected = failed[0] as PromiseRejectedResult;
+      if (trueFailed.length > 0) {
+        const firstRejected = trueFailed[0] as PromiseRejectedResult;
         const reason = firstRejected.reason;
-        const message =
+        const specificMessage =
           isAxiosError(reason) && reason.response?.data?.message
             ? reason.response.data.message
-            : t('{{count}} item(s) could not be deleted.', { count: failed.length });
-        setDeleteError(message);
+            : undefined;
+        const failurePart =
+          specificMessage ??
+          t('{{count}} item(s) could not be deleted.', { count: trueFailed.length });
+        const successPart =
+          deletedCount > 0
+            ? t('{{count}} item(s) deleted successfully.', { count: deletedCount })
+            : '';
+
+        setDeleteError([successPart, failurePart].filter(Boolean).join(' '));
         setRowSelection({});
         handleRefresh();
         return;
@@ -205,7 +217,7 @@ export default function MenuBoardCategories() {
 
       notify.success(
         t('{{count}} item(s) deleted successfully.', {
-          count: itemsToDelete.length,
+          count: deletedCount,
         }),
       );
       setRowSelection({});
