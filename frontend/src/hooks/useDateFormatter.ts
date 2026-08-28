@@ -19,6 +19,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { useTranslation } from 'react-i18next';
+
 import { useUserContext } from '@/context/UserContext';
 import {
   DEFAULT_CMS_DATE_FORMAT,
@@ -26,6 +28,7 @@ import {
   formatCmsDate,
   formatCmsDateTime,
   formatCmsTime,
+  formatRelativeTime,
   type DateLike,
 } from '@/utils/date';
 
@@ -36,9 +39,11 @@ export interface DateFormatter {
   formatDateTime: (value: DateLike) => string;
   formatDate: (value: DateLike) => string;
   formatTime: (value: DateLike) => string;
+  formatRelative: (value: DateLike) => string;
 }
 
 export function useDateFormatter(): DateFormatter {
+  const { t } = useTranslation();
   const { user } = useUserContext();
   const settings = user?.settings;
 
@@ -57,5 +62,7 @@ export function useDateFormatter(): DateFormatter {
     formatDateTime: (value) => formatCmsDateTime(value, { format: dateFormat, timeZone, locale }),
     formatDate: (value) => formatCmsDate(value, { format: dateFormat, timeZone, locale }),
     formatTime: (value) => formatCmsTime(value, { format: timeFormat, timeZone, locale }),
+    formatRelative: (value) =>
+      formatRelativeTime(value, { locale, justNow: t('Just now'), never: t('Never') }),
   };
 }

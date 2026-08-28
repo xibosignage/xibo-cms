@@ -26,10 +26,14 @@ import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, XAxis, YAxis
 
 import { useBandwidthData, useDisplayManageData } from '../hooks/useDisplayManageData';
 
+import DisplayScreenshotPreviewer from './DisplayScreenshotPreviewer';
+
+import TabNav from '@/components/ui/TabNav';
 import Modal from '@/components/ui/modals/Modal';
+import { MediaCell } from '@/components/ui/table/cells';
 import { useUserContext } from '@/context/UserContext';
 import DisplayChart from '@/pages/Dashboard/StatusDashboard/components/DisplayChart';
-import { BRAND_PRIMARY } from '@/styles/brandColors';
+import { BRAND_PRIMARY, STATUS_DOWN, STATUS_UP } from '@/styles/brandColors';
 import type { Display } from '@/types/display';
 import type {
   ManageDependency,
@@ -366,10 +370,16 @@ function BandwidthSection({
   );
 }
 
+const MANAGE_TAB_STATUS = 'Status';
+const MANAGE_TAB_PROOF_OF_PLAY = 'Proof of Play';
+
 export default function ManageDisplayModal({ display, onClose }: ManageDisplayModalProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
   const showBandwidth = hasFeature(user, 'displays.reporting');
+
+  const [activeTab, setActiveTab] = useState(MANAGE_TAB_STATUS);
+  const [showScreenshotPreview, setShowScreenshotPreview] = useState(false);
 
   const { manageQuery, faultsQuery } = useDisplayManageData(display.displayId);
 
@@ -386,12 +396,12 @@ export default function ManageDisplayModal({ display, onClose }: ManageDisplayMo
         {
           name: t('Downloaded'),
           value: status.countComplete,
-          color: '#4ADE80',
+          color: STATUS_UP,
         },
         {
           name: t('Pending'),
           value: status.countRemaining,
-          color: '#F87171',
+          color: STATUS_DOWN,
         },
       ]
     : [];
@@ -401,12 +411,12 @@ export default function ManageDisplayModal({ display, onClose }: ManageDisplayMo
         {
           name: `${t('Downloaded')} (${status.units})`,
           value: status.sizeComplete,
-          color: '#4ADE80',
+          color: STATUS_UP,
         },
         {
           name: `${t('Pending')} (${status.units})`,
           value: status.sizeRemaining,
-          color: '#F87171',
+          color: STATUS_DOWN,
         },
       ]
     : [];
@@ -421,7 +431,41 @@ export default function ManageDisplayModal({ display, onClose }: ManageDisplayMo
       actions={[{ label: t('Close'), onClick: onClose, variant: 'secondary' }]}
       error={error ?? undefined}
     >
-      <div className="p-6 space-y-6">
+      <div className="px-6 pt-4 border-b border-gray-200">
+        <TabNav
+          navigation={[
+            { labelKey: MANAGE_TAB_STATUS, path: MANAGE_TAB_STATUS },
+            { labelKey: MANAGE_TAB_PROOF_OF_PLAY, path: MANAGE_TAB_PROOF_OF_PLAY },
+          ]}
+          activeTab={activeTab}
+          // Handled locally: this is a modal, so switching tabs must not touch the route.
+          onTabClick={(tab) => setActiveTab(tab.labelKey)}
+        />
+      </div>
+
+      {activeTab === MANAGE_TAB_PROOF_OF_PLAY && (
+        <div className="p-2">
+          <SectionCard title={t('Screenshots')}>
+            <div className="p-4">
+              <MediaCell
+                thumb={display.thumbnail || undefined}
+                alt={display.display}
+                mediaType="image"
+                onPreview={() => setShowScreenshotPreview(true)}
+              />
+            </div>
+          </SectionCard>
+        </div>
+      )}
+
+      {showScreenshotPreview && (
+        <DisplayScreenshotPreviewer
+          display={display}
+          onClose={() => setShowScreenshotPreview(false)}
+        />
+      )}
+
+      <div className={`p-6 space-y-6 ${activeTab === MANAGE_TAB_STATUS ? '' : 'hidden'}`}>
         {isLoading && (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-8 h-8 animate-spin text-gray-400" />

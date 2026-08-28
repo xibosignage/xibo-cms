@@ -204,26 +204,11 @@ class Schedule extends Base
         $this->getLog()->debug(count($scheduleForXmds) . ' events returned for displaygroup and date');
 
         foreach ($scheduleForXmds as $event) {
-            // Ignore command events
-            if ($event['eventTypeId'] == \Xibo\Entity\Schedule::$COMMAND_EVENT) {
-                continue;
-            }
-
-            // Ignore events that have a campaignId, but no layoutId (empty Campaigns)
-            if ($event['layoutId'] == 0 && $event['campaignId'] != 0) {
-                continue;
-            }
-
             // Assess schedules
-            $schedule = $this->scheduleFactory->createEmpty()->hydrate($event, [
-                'intProperties' => [
-                    'isPriority',
-                    'syncTimezone',
-                    'displayOrder',
-                    'fromDt',
-                    'toDt'
-                ]
-            ]);
+            $schedule = $this->scheduleFactory->hydrateScheduleFromXmdsRow($event);
+            if ($schedule === null) {
+                continue;
+            }
             $schedule->load();
 
             $this->getLog()->debug(

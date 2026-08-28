@@ -99,7 +99,11 @@ const getCommonPinningStyles = <TData, TValue>(column: Column<TData, TValue>): C
     opacity: 1,
     position: 'sticky',
     width: column.getSize(),
-    zIndex: 20,
+    // Must stay below the sticky header's z-index (10/30, set where <th> uses
+    // this function) — otherwise a pinned body cell (e.g. the row actions
+    // column) bleeds above the header during vertical scroll. Still above
+    // non-pinned body cells (0) so it wins the horizontal-scroll overlay.
+    zIndex: 5,
   };
 };
 

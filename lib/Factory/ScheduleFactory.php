@@ -21,7 +21,6 @@
  */
 namespace Xibo\Factory;
 
-use Carbon\Carbon;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Schedule;
 use Xibo\Entity\User;
@@ -294,6 +293,34 @@ class ScheduleFactory extends BaseFactory
         ';
 
         return $this->getStore()->select($SQL, $params);
+    }
+
+    /**
+     * Resolve a raw getForXmds() row into a hydrated Schedule entity, or null if the row
+     * should be skipped entirely - a Command event (which has no Layout), or an empty
+     * Campaign (a campaignId with no layoutId).
+     * @param array $row a row from getForXmds()
+     * @return Schedule|null
+     */
+    public function hydrateScheduleFromXmdsRow(array $row): ?Schedule
+    {
+        if ($row['eventTypeId'] == Schedule::$COMMAND_EVENT) {
+            return null;
+        }
+
+        if ($row['layoutId'] == 0 && $row['campaignId'] != 0) {
+            return null;
+        }
+
+        return $this->createEmpty()->hydrate($row, [
+            'intProperties' => [
+                'isPriority',
+                'syncTimezone',
+                'displayOrder',
+                'fromDt',
+                'toDt'
+            ]
+        ]);
     }
 
     /**

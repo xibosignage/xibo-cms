@@ -45,6 +45,8 @@ import {
   Forward,
   UserPlus2,
   Tags,
+  Eye,
+  Settings,
 } from 'lucide-react';
 import { type ComponentProps } from 'react';
 
@@ -65,6 +67,7 @@ import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
 import type { UIStatus } from '@/types/uiStatus';
 import type { DateLike } from '@/utils/date';
+import { getStorageFreePercentLabel } from '@/utils/formatters';
 import { formatTagsForExport } from '@/utils/tags';
 
 export interface DisplayFilterInput {
@@ -78,6 +81,9 @@ export interface DisplayFilterInput {
   mediaInventoryStatus: string | null;
   loggedIn: string | null;
   authorised: string | null;
+  faults: string | null;
+  /** Quick-filter chip field (StatusChipRow/KpiRow) — 'online' | 'needsAttention'. */
+  status: string | null;
   xmrRegistered: string | null;
   clientType: string | null;
   displayGroupId: string | null;
@@ -136,6 +142,8 @@ export const INITIAL_FILTER_STATE: DisplayFilterInput = {
   mediaInventoryStatus: null,
   loggedIn: null,
   authorised: null,
+  faults: null,
+  status: null,
   xmrRegistered: null,
   clientType: null,
   displayGroupId: null,
@@ -312,6 +320,16 @@ export const getBaseFilterKeys = (
     ],
   },
   {
+    label: t('Faults'),
+    name: 'faults',
+    className: '',
+    options: [
+      { label: t('All'), value: '' },
+      { label: t('Yes'), value: '1' },
+      { label: t('No'), value: '0' },
+    ],
+  },
+  {
     label: t('XMR Registered'),
     name: 'xmrRegistered',
     className: '',
@@ -425,7 +443,16 @@ export interface DisplayActionsProps {
   openMoveModal?: (row: Display | Display[]) => void;
   openShareModal?: (id: number) => void;
   onAuthorise: (display: Display) => void;
+  /**
+   * Opens the full-detail ManageDisplayModal (Bandwidth, Connectivity, Dependencies, Layouts,
+   * Media, Widgets, Faults) — complements onManagePage rather than being replaced by it, since
+   * the newer Manage page doesn't (yet) cover this data.
+   */
   onManage: (display: Display) => void;
+  /** Opens the newer Manage page (`/displays/displays/:displayId`) — screenshots, live health/diagnostics. */
+  onManagePage: (display: Display) => void;
+  /** Opens the display's current screenshot in the full-screen previewer. */
+  onViewScreenshots: (display: Display) => void;
   onCheckLicence: (display: Display) => void;
   onRequestScreenShot: (display: Display) => void;
   onCollectNow: (display: Display) => void;
@@ -466,6 +493,8 @@ export const getDisplayItemActions = ({
   openShareModal,
   onAuthorise,
   onManage,
+  onManagePage,
+  onViewScreenshots,
   onCheckLicence,
   onRequestScreenShot,
   onCollectNow,
@@ -501,8 +530,15 @@ export const getDisplayItemActions = ({
       }
     };
 
-    // Quick action
+    // Quick actions
     if (canModify && canEdit) {
+      actions.push({
+        label: t('Manage'),
+        icon: Settings,
+        onClick: () => onManagePage(display),
+        isQuickAction: true,
+      });
+
       actions.push({
         label: t('Edit'),
         icon: Edit,
@@ -551,6 +587,12 @@ export const getDisplayItemActions = ({
         icon: RotateCw,
         onClick: () => onRequestScreenShot(display),
       });
+
+      actions.push({
+        label: t('View Screenshots'),
+        icon: Eye,
+        onClick: () => onViewScreenshots(display),
+      });
     }
 
     if (canModify && canShare) {
@@ -570,6 +612,13 @@ export const getDisplayItemActions = ({
 
       actions.push({
         label: t('Manage'),
+        icon: Settings,
+        rightIcon: ArrowRight,
+        onClick: () => onManagePage(display),
+      });
+
+      actions.push({
+        label: t('Full Details'),
         icon: Info,
         rightIcon: ArrowRight,
         onClick: () => onManage(display),
@@ -787,14 +836,8 @@ export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display
       id: 'storageFree',
       header: t('Storage Free %'),
       size: 130,
-      accessorFn: (row) => {
-        const avail = row.storageAvailableSpace;
-        const total = row.storageTotalSpace;
-        if (avail === null || total === null || total === 0) {
-          return '';
-        }
-        return ((avail / total) * 100).toFixed(1) + '%';
-      },
+      accessorFn: (row) =>
+        getStorageFreePercentLabel(row.storageAvailableSpace, row.storageTotalSpace),
       cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
     },
     {

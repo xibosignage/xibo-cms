@@ -56,6 +56,18 @@ export function formatDurationText(totalSeconds: number, t: TFunction): string {
   });
 }
 
+// Used by DisplaysConfig.tsx's "Storage Free %" column, so it doesn't
+// disagree with itself on the formula or on what an unknown value renders as.
+export function getStorageFreePercentLabel(available: number | null, total: number | null): string {
+  if (available === null || total === null || total === 0) {
+    return '';
+  }
+  return ((available / total) * 100).toFixed(1) + '%';
+}
+
+// Day-granularity ("Today" / "N days ago" / "N months ago"). For finer
+// minute-through-year granularity (e.g. "5 minutes ago"), see
+// formatRelativeTime() in utils/date.ts, used via useDateFormatter().
 export function formatRelativeDate(dateStr: string, t: TFunction): string {
   const date = new Date(dateStr);
   const now = new Date();

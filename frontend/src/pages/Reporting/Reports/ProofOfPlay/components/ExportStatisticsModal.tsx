@@ -33,12 +33,18 @@ import { fetchExportStatsCount } from '@/services/reportApi';
 interface ExportStatisticsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Pre-fills the Display filter, e.g. when opened from a single display's Manage page. */
+  initialDisplayId?: number | string;
 }
 
 const toPhpDatetime = (iso: string): string =>
   new Date(iso).toISOString().slice(0, 19).replace('T', ' ');
 
-export default function ExportStatisticsModal({ isOpen, onClose }: ExportStatisticsModalProps) {
+export default function ExportStatisticsModal({
+  isOpen,
+  onClose,
+  initialDisplayId,
+}: ExportStatisticsModalProps) {
   const { t } = useTranslation();
 
   const [fromDt, setFromDt] = useState('');
@@ -60,12 +66,12 @@ export default function ExportStatisticsModal({ isOpen, onClose }: ExportStatist
     }
     setFromDt('');
     setToDt('');
-    setDisplayId('');
+    setDisplayId(initialDisplayId != null ? String(initialDisplayId) : '');
     setIsOutputUtc(true);
     setErrors({});
     setRecordCount(null);
     setCountError(null);
-  }, [isOpen]);
+  }, [isOpen, initialDisplayId]);
 
   useEffect(() => {
     if (!fromDt || !toDt) {

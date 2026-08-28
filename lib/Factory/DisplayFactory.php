@@ -43,6 +43,7 @@ class DisplayFactory extends BaseFactory
     private DisplayGroupFactory $displayGroupFactory;
     private DisplayProfileFactory $displayProfileFactory;
     private FolderFactory $folderFactory;
+    private DisplayScreenshotFactory $displayScreenshotFactory;
 
     /**
      * Construct a factory
@@ -53,6 +54,7 @@ class DisplayFactory extends BaseFactory
      * @param DisplayGroupFactory $displayGroupFactory
      * @param DisplayProfileFactory $displayProfileFactory
      * @param FolderFactory $folderFactory
+     * @param DisplayScreenshotFactory $displayScreenshotFactory
      */
     public function __construct(
         User $user,
@@ -61,7 +63,8 @@ class DisplayFactory extends BaseFactory
         ConfigServiceInterface $config,
         DisplayGroupFactory $displayGroupFactory,
         DisplayProfileFactory $displayProfileFactory,
-        FolderFactory $folderFactory
+        FolderFactory $folderFactory,
+        DisplayScreenshotFactory $displayScreenshotFactory
     ) {
         $this->setAclDependencies($user, $userFactory);
 
@@ -70,6 +73,7 @@ class DisplayFactory extends BaseFactory
         $this->displayGroupFactory = $displayGroupFactory;
         $this->displayProfileFactory = $displayProfileFactory;
         $this->folderFactory = $folderFactory;
+        $this->displayScreenshotFactory = $displayScreenshotFactory;
     }
 
     /**
@@ -95,7 +99,8 @@ class DisplayFactory extends BaseFactory
             $this->displayGroupFactory,
             $this->displayProfileFactory,
             $this,
-            $this->folderFactory
+            $this->folderFactory,
+            $this->displayScreenshotFactory
         );
     }
 
@@ -181,6 +186,128 @@ class DisplayFactory extends BaseFactory
             'SELECT COUNT(DisplayID) AS CountLicensed FROM `display` WHERE licensed = 1',
             []
         )[0]['CountLicensed'] ?? 0);
+    }
+
+    /**
+     * SQL fragment (correlated to `display` in the outer query) counting player faults
+     * recorded against a Display. Shared by the `faults` filter in query() and by
+     * getSummary(), so the definition only exists once.
+     * @return string
+     */
+    private function faultsCountSql(): string
+    {
+        return '(SELECT COUNT(*) FROM player_faults WHERE player_faults.displayId = display.displayId)';
+    }
+
+    /**
+     * The `display`/`lkdisplaydg`/`displaygroup` join every Display query is built on,
+     * restricted to each display's own display-specific group. Shared by query() (which
+     * appends further joins for layout/display_types) and getSummary(), so permission
+     * scoping and the visible-display set can't drift between the grid and the summary
+     * counts.
+     * @return string
+     */
+    private function baseFromSql(): string
+    {
+        return '
+                FROM `display`
+                    INNER JOIN `lkdisplaydg`
+                    ON lkdisplaydg.displayid = display.displayId
+                    INNER JOIN `displaygroup`
+                    ON displaygroup.displaygroupid = lkdisplaydg.displaygroupid
+                        AND `displaygroup`.isDisplaySpecific = 1
+            ';
+    }
+
+    /**
+     * SQL boolean expression (correlated to `display` in the outer query) for the "Online"
+     * status: logged in, authorised, fully synced and with no active player faults. Shared by
+     * the `status` filter in query() and by getSummary(), so a Display can never be counted as
+     * Online in one place and Needs Attention in the other.
+     * @return string
+     */
+    private function onlineSql(): string
+    {
+        return '(display.loggedIn = 1
+            AND display.licensed = 1
+            AND display.mediaInventoryStatus = ' . Display::$STATUS_DONE . '
+            AND NOT (' . $this->faultsCountSql() . ' > 0))';
+    }
+
+    /**
+     * Aggregate health counts for the Displays page's KPI tiles/chips, one query, same permission
+     * scoping as query(). Counts overlap (not mutually exclusive); only faults has a 24h trend
+     * since it's the only timestamped state. online/needsAttention are the mutually exclusive
+     * pair the quick-filter chips filter on (see onlineSql()).
+     * @param array $filterBy
+     * @return array{
+     *     total: int, faults: int, loggedIn: int, authorised: int, upToDate: int,
+     *     faultsTrend: int, online: int, needsAttention: int
+     * }
+     */
+    public function getSummary(array $filterBy = []): array
+    {
+        $parsedBody = $this->getSanitizer($filterBy);
+        $params = [];
+        $body = $this->baseFromSql() . ' WHERE 1 = 1 ';
+
+        $this->viewPermissionSql(
+            'Xibo\Entity\DisplayGroup',
+            $body,
+            $params,
+            'displaygroup.displayGroupId',
+            null,
+            $filterBy,
+            '`displaygroup`.permissionsFolderId'
+        );
+
+        if ($parsedBody->getInt('folderId') !== null) {
+            $body .= ' AND displaygroup.folderId = :folderId ';
+            $params['folderId'] = $parsedBody->getInt('folderId');
+        }
+
+        $faultsCountSql = $this->faultsCountSql();
+
+        // The permission-scoped set of display IDs visible to the caller, defined once as a CTE
+        // and joined back onto `display` below — so the join tree and permission subquery are
+        // only ever evaluated once per call, and the faultsTrend subquery can reuse the same set.
+        $visibleDisplayIdsSql = 'SELECT display.displayId' . $body;
+
+        $params['trendSinceDateTime'] = date('Y-m-d H:i:s', time() - 86400);
+
+        $sql = '
+                WITH visible_displays AS (' . $visibleDisplayIdsSql . ')
+                SELECT COUNT(*) AS total,
+                    SUM(CASE WHEN ' . $faultsCountSql . ' > 0
+                        THEN 1 ELSE 0 END) AS faults,
+                    SUM(CASE WHEN display.loggedIn = 1 THEN 1 ELSE 0 END) AS loggedIn,
+                    SUM(CASE WHEN display.licensed = 1 THEN 1 ELSE 0 END) AS authorised,
+                    SUM(CASE WHEN display.mediaInventoryStatus = ' . Display::$STATUS_DONE . '
+                        THEN 1 ELSE 0 END) AS upToDate,
+                    SUM(CASE WHEN ' . $this->onlineSql() . ' THEN 1 ELSE 0 END) AS online,
+                    (SELECT COUNT(*) FROM `player_faults`
+                        WHERE player_faults.incidentDt >= :trendSinceDateTime
+                        AND player_faults.displayId IN (SELECT displayId FROM visible_displays)
+                    ) AS faultsTrend
+                FROM `display`
+                INNER JOIN visible_displays ON visible_displays.displayId = display.displayId';
+
+        $rows = $this->getStore()->select($sql, $params);
+        $row = $rows[0] ?? [];
+
+        $total = intval($row['total'] ?? 0);
+        $online = intval($row['online'] ?? 0);
+
+        return [
+            'total' => $total,
+            'faults' => intval($row['faults'] ?? 0),
+            'loggedIn' => intval($row['loggedIn'] ?? 0),
+            'authorised' => intval($row['authorised'] ?? 0),
+            'upToDate' => intval($row['upToDate'] ?? 0),
+            'faultsTrend' => intval($row['faultsTrend'] ?? 0),
+            'online' => $online,
+            'needsAttention' => $total - $online,
+        ];
     }
 
     /**
@@ -364,7 +491,7 @@ class DisplayFactory extends BaseFactory
                   `display`.webkeySerial,
                   `display`.lanIpAddress,
                   `display`.syncGroupId,
-                  (SELECT COUNT(*) FROM player_faults WHERE player_faults.displayId = display.displayId) AS countFaults,
+                  ' . $this->faultsCountSql() . ' AS countFaults,
                   (SELECT GROUP_CONCAT(DISTINCT `group`.group)
                     FROM `permission`
                         INNER JOIN `permissionentity`
@@ -379,14 +506,8 @@ class DisplayFactory extends BaseFactory
 
         $params['entity'] = 'Xibo\\Entity\\DisplayGroup';
 
-        $body = '
-                FROM `display`
-                    INNER JOIN `lkdisplaydg`
-                    ON lkdisplaydg.displayid = display.displayId
-                    INNER JOIN `displaygroup`
-                    ON displaygroup.displaygroupid = lkdisplaydg.displaygroupid
-                        AND `displaygroup`.isDisplaySpecific = 1
-                    LEFT OUTER JOIN layout 
+        $body = $this->baseFromSql() . '
+                    LEFT OUTER JOIN layout
                     ON layout.layoutid = display.defaultlayoutid
                     LEFT OUTER JOIN `display_types`
                     ON `display_types`.displayTypeId = `display`.displayTypeId
@@ -547,6 +668,26 @@ class DisplayFactory extends BaseFactory
         if ($parsedBody->getInt('loggedIn', ['default' => -1]) != -1) {
             $body .= ' AND display.loggedIn = :loggedIn ';
             $params['loggedIn'] = $parsedBody->getInt('loggedIn');
+        }
+
+        // Filter by "faults" (has at least one recorded player fault). Reuses the same
+        // predicate as getSummary(), so the grid and the summary counts can never drift
+        // apart.
+        $faultsFilter = $parsedBody->getInt('faults', ['default' => -1]);
+        if ($faultsFilter === 1) {
+            $body .= ' AND ' . $this->faultsCountSql() . ' > 0 ';
+        } else if ($faultsFilter === 0) {
+            $body .= ' AND NOT (' . $this->faultsCountSql() . ' > 0) ';
+        }
+
+        // Filter by overall health status ("online" or "needsAttention"). Reuses the same
+        // onlineSql() predicate as getSummary(), so the Displays page's KPI/chip counts and
+        // the grid rows they filter to can never drift apart.
+        $status = $parsedBody->getString('status');
+        if ($status === 'online') {
+            $body .= ' AND ' . $this->onlineSql() . ' ';
+        } else if ($status === 'needsAttention') {
+            $body .= ' AND NOT ' . $this->onlineSql() . ' ';
         }
 
         if ($parsedBody->getDate('lastAccessed', ['dateFormat' => 'U']) !== null) {
@@ -789,8 +930,13 @@ class DisplayFactory extends BaseFactory
             $this->decorateWithTagLinks('lktagdisplaygroup', 'displayGroupId', $displayGroupIds, $entries);
         }
 
-        // Paging
-        if ($limit != '' && count($entries) > 0) {
+        // Paging. Always run this when paginating, not just when the current page
+        // came back non-empty — the two are unrelated. A shrunk result set (a
+        // narrower filter, or fewer displays than before) can easily leave the
+        // caller's requested `start` offset past the end of the new, smaller
+        // result set: that page is legitimately empty, but the *total* is not,
+        // and skipping the count here would report 0 instead of it.
+        if ($limit != '') {
             unset($params['entity']);
             $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);

@@ -87,6 +87,14 @@ body,
   --color-xibo-white: #ffffff;
 }
 
+/* Status colours — up/down and complete/pending. Not derived from the brand tokens, so a
+   white-label theme cannot end up with a red that reads as healthy. Declared in a plain
+   @theme block, not an inline one, so the custom properties are emitted for var() lookups. */
+@theme {
+  --color-status-up: #4ade80;
+  --color-status-down: #f87171;
+}
+
 /* Sidebar tokens — lightness curve so a light brand primary gives a light
    sidebar instead of the fixed dark shade below. Contrast flips via
    [data-sidebar-contrast], set in BrandingContext. */

@@ -22,6 +22,7 @@
 
 namespace Xibo\Factory;
 
+use Carbon\Carbon;
 use Xibo\Entity\PlayerFault;
 
 class PlayerFaultFactory extends BaseFactory
@@ -41,11 +42,17 @@ class PlayerFaultFactory extends BaseFactory
 
     /**
      * @param int $displayId
+     * @param null $sortOrder
+     * @param bool $activeOnly Only return faults which have not yet expired
      * @return PlayerFault[]
      */
-    public function getByDisplayId(int $displayId, $sortOrder = null)
+    public function getByDisplayId(int $displayId, $sortOrder = null, bool $activeOnly = false)
     {
-        return $this->query($sortOrder, ['disableUserCheck' => 1, 'displayId' => $displayId]);
+        return $this->query($sortOrder, [
+            'disableUserCheck' => 1,
+            'displayId' => $displayId,
+            'activeOnly' => $activeOnly
+        ]);
     }
 
     /**
@@ -90,6 +97,12 @@ class PlayerFaultFactory extends BaseFactory
         if ($sanitizedFilter->getInt('displayId') !== null) {
             $body .= ' AND `player_faults`.displayId = :displayId ';
             $params['displayId'] = $sanitizedFilter->getInt('displayId');
+        }
+
+        // Only include faults which are currently active (i.e. not expired)
+        if ($sanitizedFilter->getCheckbox('activeOnly') === 1) {
+            $body .= ' AND (`player_faults`.expires IS NULL OR `player_faults`.expires >= :now) ';
+            $params['now'] = Carbon::now()->format('Y-m-d H:i:s');
         }
 
         // Sorting?

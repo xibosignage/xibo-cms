@@ -1209,6 +1209,17 @@ class Schedule implements \JsonSerializable
     }
 
     /**
+     * Whether this event should be evaluated against the Display's own timezone rather than
+     * the CMS's, for a Display with the given timezone.
+     * @param string|null $displayTimeZone
+     * @return bool
+     */
+    public function isSyncTimezone(?string $displayTimeZone): bool
+    {
+        return $this->syncTimezone == 1 && !empty($displayTimeZone);
+    }
+
+    /**
      * Get events between the provided dates.
      * @param Carbon $fromDt
      * @param Carbon $toDt

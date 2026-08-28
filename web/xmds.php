@@ -475,7 +475,8 @@ try {
         $container->get('campaignFactory'),
         $container->get('syncGroupFactory'),
         $container->get('playerFaultFactory'),
-        $container->get('displayGroupFactory')
+        $container->get('displayGroupFactory'),
+        $container->get('displayScreenshotFactory')
     );
 
     // Add manual raw post data parsing, as HTTP_RAW_POST_DATA is deprecated.

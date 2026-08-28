@@ -328,6 +328,12 @@ $app->group('', function (RouteCollectorProxy $group) {
         ->setName('display.licencecheck');
     $group->put('/display/purgeAll/{id:[0-9]+}', ['\Xibo\Controller\Display','purgeAll'])
         ->setName('display.purge.all');
+
+    // When the display's current screenshot was taken. Polled while the Manage page is open, so
+    // it can tell a new capture has landed without downloading the image to compare it.
+    $group->get('/display/screenshot/{id:[0-9]+}/time', ['\Xibo\Controller\Display','screenShotTime'])
+        ->setName('display.screenshot.time');
+
     $group->get('/display/screenshot/{id:[0-9]+}', ['\Xibo\Controller\Display','screenShot'])
         ->setName('display.screenShot');
     $group->get('/display/status/{id:[0-9]+}', ['\Xibo\Controller\Display','statusWindow'])

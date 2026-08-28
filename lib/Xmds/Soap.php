@@ -148,6 +148,9 @@ class Soap
     /** @var  DisplayEventFactory */
     protected $displayEventFactory;
 
+    /** @var \Xibo\Factory\DisplayScreenshotFactory */
+    protected $displayScreenshotFactory;
+
     /** @var  ScheduleFactory */
     protected $scheduleFactory;
 
@@ -231,7 +234,8 @@ class Soap
         $campaignFactory,
         $syncGroupFactory,
         $playerFaultFactory,
-        $displayGroupFactory = null
+        $displayGroupFactory = null,
+        $displayScreenshotFactory
     ) {
         $this->logProcessor = $logProcessor;
         $this->pool = $pool;
@@ -260,6 +264,7 @@ class Soap
         $this->syncGroupFactory = $syncGroupFactory;
         $this->playerFaultFactory = $playerFaultFactory;
         $this->displayGroupFactory = $displayGroupFactory;
+        $this->displayScreenshotFactory = $displayScreenshotFactory;
     }
 
     /**
@@ -766,9 +771,7 @@ class Soap
                 $parsedRow = $this->getSanitizer($row);
                 $schedule = $this->scheduleFactory->createEmpty()->hydrate($row);
 
-                // Is this scheduled event a synchronised timezone?
-                // if it is, then we get our events with respect to the timezone of the display
-                $isSyncTimezone = ($schedule->syncTimezone == 1 && !empty($this->display->timeZone));
+                $isSyncTimezone = $schedule->isSyncTimezone($this->display->timeZone);
 
                 try {
                     if ($isSyncTimezone) {
@@ -1557,9 +1560,7 @@ class Soap
                 $parsedRow = $this->getSanitizer($row);
                 $schedule = $this->scheduleFactory->createEmpty()->hydrate($row);
 
-                // Is this scheduled event a synchronised timezone?
-                // if it is, then we get our events with respect to the timezone of the display
-                $isSyncTimezone = ($schedule->syncTimezone == 1 && !empty($this->display->timeZone));
+                $isSyncTimezone = $schedule->isSyncTimezone($this->display->timeZone);
 
                 try {
                     if ($isSyncTimezone) {

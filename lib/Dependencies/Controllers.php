@@ -173,7 +173,8 @@ class Controllers
                     $c->get('notificationFactory'),
                     $c->get('userGroupFactory'),
                     $c->get('playerVersionFactory'),
-                    $c->get('dayPartFactory')
+                    $c->get('dayPartFactory'),
+                    $c->get('scheduleFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;

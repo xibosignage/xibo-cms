@@ -20,9 +20,9 @@
  */
 
 import { ArrowLeft, Download, Loader2, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import type { ProofOfPlayFilter } from './ProofOfPlayConfig';
 import { ACTIVE_FILTER_KEYS, INITIAL_FILTER_STATE } from './ProofOfPlayConfig';
@@ -43,7 +43,14 @@ import { countActiveFilters } from '@/utils/filters';
 export default function ProofOfPlay() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const reportingTabs = useFilteredTabs('reporting');
+
+  // Deep-link support: the Display Overview Manage modal's "Proof of Play"
+  // button navigates here with `{ state: { displayId } }` so the report opens
+  // pre-filtered to that display, rather than requiring the user to filter
+  // manually.
+  const locationDisplayId = (location.state as { displayId?: number } | null)?.displayId;
 
   const [submittedFilter, setSubmittedFilter] = useState<ProofOfPlayFilter | null>(null);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
@@ -78,6 +85,24 @@ export default function ProofOfPlay() {
   });
 
   const filter: ProofOfPlayFilter = { ...INITIAL_FILTER_STATE, ...filterInputs };
+
+  // Once persisted table state has hydrated, a displayId carried in via
+  // navigation state overrides it and the report is run immediately so the
+  // deep link lands on filtered results rather than an empty "set your
+  // filters" placeholder.
+  useEffect(() => {
+    if (!isHydrated || locationDisplayId == null) {
+      return;
+    }
+
+    setFilterInputs((prev) => ({ ...prev, displayId: locationDisplayId }));
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    setSubmittedFilter((prev) => ({
+      ...(prev ?? INITIAL_FILTER_STATE),
+      displayId: locationDisplayId,
+    }));
+    setFiltersOpen(false);
+  }, [isHydrated, locationDisplayId, setFilterInputs, setPagination]);
 
   const { data, isFetching, isError, refetch } = useProofOfPlayData({
     filter: submittedFilter ?? INITIAL_FILTER_STATE,
@@ -192,7 +217,11 @@ export default function ProofOfPlay() {
         onSuccess={() => setScheduleModalOpen(false)}
       />
 
-      <ExportStatisticsModal isOpen={exportModalOpen} onClose={() => setExportModalOpen(false)} />
+      <ExportStatisticsModal
+        isOpen={exportModalOpen}
+        onClose={() => setExportModalOpen(false)}
+        initialDisplayId={filter.displayId ?? undefined}
+      />
     </section>
   );
 }
