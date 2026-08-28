@@ -23,6 +23,7 @@ import { isAxiosError } from 'axios';
 import { useEffect, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { notify } from '@/components/ui/Notification';
 import DatePickerInput from '@/components/ui/forms/DatePickerInput';
 import MediaInput from '@/components/ui/forms/MediaInput';
 import NumberInput from '@/components/ui/forms/NumberInput';
@@ -66,6 +67,16 @@ const formatToSqlDateTime = (isoString: string): string => {
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 };
 
+const buildEmptyDraft = (columnsSchema: DatasetColumn[]): Record<string, DatasetRowValue> => {
+  const draft: Record<string, DatasetRowValue> = {};
+  columnsSchema.forEach((col) => {
+    if (col.dataSetColumnTypeId === 1) {
+      draft[String(col.dataSetColumnId)] = '';
+    }
+  });
+  return draft;
+};
+
 export function AddAndEditDataModal({
   type,
   isOpen = true,
@@ -87,21 +98,18 @@ export function AddAndEditDataModal({
     if (isOpen) {
       setApiError(undefined);
 
-      const initialDraft: Record<string, DatasetRowValue> = {};
-
-      columnsSchema.forEach((col) => {
-        if (col.dataSetColumnTypeId === 1) {
-          const columnId = String(col.dataSetColumnId);
-
-          if (type === 'edit' && rowData) {
+      if (type === 'edit' && rowData) {
+        const initialDraft: Record<string, DatasetRowValue> = {};
+        columnsSchema.forEach((col) => {
+          if (col.dataSetColumnTypeId === 1) {
+            const columnId = String(col.dataSetColumnId);
             initialDraft[columnId] = rowData[col.heading] ?? rowData[columnId] ?? '';
-          } else {
-            initialDraft[columnId] = '';
           }
-        }
-      });
-
-      setDraft(initialDraft);
+        });
+        setDraft(initialDraft);
+      } else {
+        setDraft(buildEmptyDraft(columnsSchema));
+      }
     }
   }, [isOpen, type, rowData, columnsSchema]);
 
@@ -109,7 +117,7 @@ export function AddAndEditDataModal({
     setDraft((prev) => ({ ...prev, [String(columnId)]: value }));
   };
 
-  const handleSave = () => {
+  const submit = (keepOpen: boolean) => {
     for (const col of columnsSchema) {
       if (col.dataSetColumnTypeId === 1 && col.isRequired) {
         const val = draft[String(col.dataSetColumnId)];
@@ -132,6 +140,11 @@ export function AddAndEditDataModal({
           await updateDatasetRow(datasetId, rowId, draft);
         } else {
           await createDatasetRow(datasetId, draft);
+          if (keepOpen) {
+            notify.success(t('Data added'));
+            onSave();
+            return;
+          }
         }
 
         onSave();
@@ -155,7 +168,21 @@ export function AddAndEditDataModal({
       error={apiError}
       actions={[
         { label: t('Cancel'), onClick: onClose, variant: 'secondary', disabled: isPending },
-        { label: isPending ? t('Saving…') : t('Save'), onClick: handleSave, disabled: isPending },
+        ...(type === 'add'
+          ? [
+              {
+                label: t('Next'),
+                onClick: () => submit(true),
+                variant: 'secondary' as const,
+                disabled: isPending,
+              },
+            ]
+          : []),
+        {
+          label: isPending ? t('Saving…') : t('Save'),
+          onClick: () => submit(false),
+          disabled: isPending,
+        },
       ]}
     >
       <div className="flex flex-col px-8 pb-8 gap-4 overflow-y-auto">
@@ -215,6 +242,7 @@ export function AddAndEditDataModal({
                   value={String(currentValue || '')}
                   options={options}
                   helpText={col.tooltip}
+                  clearable
                   onSelect={(val) => {
                     updateDraft(col.dataSetColumnId, val);
                   }}

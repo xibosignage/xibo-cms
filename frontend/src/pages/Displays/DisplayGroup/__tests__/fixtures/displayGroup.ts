@@ -58,6 +58,7 @@ export const buildDisplayGroup = (overrides: Partial<DisplayGroup> = {}): Displa
   ref3: '',
   ref4: '',
   ref5: '',
+  userPermissions: { view: 1, edit: 1, delete: 1, modifyPermissions: 1 },
   ...overrides,
 });
 

@@ -22,7 +22,7 @@
 import type { TFunction } from 'i18next';
 import { z } from 'zod';
 
-export const getPlaylistSchema = (t: TFunction) =>
+export const getPlaylistSchema = (t: TFunction, maxNumberOfItemsLimit = 0) =>
   z
     .object({
       name: z.string().min(1, t('Name is required')),
@@ -62,6 +62,22 @@ export const getPlaylistSchema = (t: TFunction) =>
           code: z.ZodIssueCode.custom,
           message: t('No filters have been set for this dynamic Playlist!'),
           path: ['filterMediaName'],
+        });
+      }
+
+      if (maxNumberOfItemsLimit > 0 && (data.maxNumberOfItems ?? 0) > maxNumberOfItemsLimit) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: t('Maximum number of items cannot exceed the limit set in CMS Settings'),
+          path: ['maxNumberOfItems'],
+        });
+      }
+
+      if ((data.maxNumberOfItems ?? 0) < 1) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: t('Max number of items must be at least 1'),
+          path: ['maxNumberOfItems'],
         });
       }
     });

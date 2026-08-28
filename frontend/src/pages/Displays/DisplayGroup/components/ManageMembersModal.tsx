@@ -153,7 +153,7 @@ export default function ManageMembersModal({
       fetchDisplays({
         start: displayPagination.pageIndex * displayPagination.pageSize,
         length: displayPagination.pageSize,
-        keyword: debouncedDisplayKeyword || undefined,
+        display: debouncedDisplayKeyword || undefined,
         sortBy: displaySorting[0]?.id,
         sortDir: displaySorting[0] ? (displaySorting[0].desc ? 'desc' : 'asc') : undefined,
         signal,
@@ -175,7 +175,7 @@ export default function ManageMembersModal({
       fetchDisplayGroups({
         start: groupPagination.pageIndex * groupPagination.pageSize,
         length: groupPagination.pageSize,
-        keyword: debouncedGroupKeyword || undefined,
+        displayGroup: debouncedGroupKeyword || undefined,
         isDisplaySpecific: 0,
         sortBy: groupSorting[0]?.id,
         sortDir: groupSorting[0] ? (groupSorting[0].desc ? 'desc' : 'asc') : undefined,
@@ -324,8 +324,8 @@ export default function ManageMembersModal({
               onClick={() => setActiveTab(tab.key)}
               className={`py-2 px-3 inline-flex items-center gap-2 border-b-2 text-sm font-semibold whitespace-nowrap focus:outline-none transition-all  ${
                 activeTab === tab.key
-                  ? 'border-blue-600 text-blue-500'
-                  : 'border-gray-200 text-gray-500 hover:text-blue-600'
+                  ? 'border-xibo-blue-600 text-xibo-blue-500'
+                  : 'border-gray-200 text-gray-500 hover:text-xibo-blue-600'
               }`}
             >
               {tab.label}
@@ -354,6 +354,7 @@ export default function ManageMembersModal({
             columns={displayColumns}
             searchRows={displaySearchRows}
             pageCount={displayPageCount}
+            rowCount={displaySearchData?.totalCount ?? 0}
             pagination={displayPagination}
             onPaginationChange={setDisplayPagination}
             sorting={displaySorting}
@@ -384,6 +385,7 @@ export default function ManageMembersModal({
             columns={groupColumns}
             searchRows={groupSearchRows}
             pageCount={groupPageCount}
+            rowCount={groupSearchData?.totalCount ?? 0}
             pagination={groupPagination}
             onPaginationChange={setGroupPagination}
             sorting={groupSorting}

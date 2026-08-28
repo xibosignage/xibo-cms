@@ -30,6 +30,7 @@ import SpotRow from './components/SpotRow';
 import { usePlaylistDashboardActions } from './hooks/usePlaylistDashboardActions';
 import { usePlaylistSpots } from './hooks/usePlaylistSpots';
 
+import MediaPreviewer from '@/pages/Library/Media/components/MediaPreviewer';
 import { fetchUserPreference, saveUserPreference } from '@/services/userApi';
 import type { SpotWidget } from '@/types/dashboard';
 
@@ -76,6 +77,8 @@ export default function PlaylistDashboard() {
     }, 500);
     return () => clearTimeout(saveTimeoutRef.current);
   }, [selectedPlaylistId]);
+  const [previewWidget, setPreviewWidget] = useState<SpotWidget | null>(null);
+
   const [deleteTarget, setDeleteTarget] = useState<
     | {
         type: 'single';
@@ -88,7 +91,8 @@ export default function PlaylistDashboard() {
     | null
   >(null);
 
-  const { data, isLoading } = usePlaylistSpots(selectedPlaylistId);
+  const { data, isLoading, isError, error: queryError } = usePlaylistSpots(selectedPlaylistId);
+  const error = isError && queryError instanceof Error ? queryError.message : '';
   const { uploadStates, startUpload, handleDeleteWidget, handleRemoveAll, isDeleting } =
     usePlaylistDashboardActions(queryClient, selectedPlaylistId);
 
@@ -114,11 +118,17 @@ export default function PlaylistDashboard() {
   };
 
   return (
-    <section className="flex flex-col mx-auto max-w-151 gap-5 p-5">
+    <section className="flex flex-col mx-0 sm:mx-auto max-w-151 min-w-100 gap-5 p-5">
       {/* Playlist Dropdown */}
       <div>
         <PlaylistDropdown value={selectedPlaylistId} onSelect={setSelectedPlaylistId} />
       </div>
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
+          {error}
+        </div>
+      )}
+
       <div className="space-y-2">
         <div className="flex justify-between">
           <h2 className="text-lg font-semibold text-gray-800">{t('Playlist Content')}</h2>
@@ -172,6 +182,7 @@ export default function PlaylistDashboard() {
                   const widget = widgets.find((w) => w.widgetId === widgetId);
                   if (widget) setDeleteTarget({ type: 'single', widget });
                 }}
+                onPreview={setPreviewWidget}
               />
             ))}
           </div>
@@ -202,6 +213,13 @@ export default function PlaylistDashboard() {
           isDynamic={isDynamic}
         />
       )}
+
+      <MediaPreviewer
+        mediaId={previewWidget?.mediaIds[0] ?? null}
+        mediaType={previewWidget?.type}
+        fileName={previewWidget?.mediaFiles[0]?.fileName ?? previewWidget?.name}
+        onClose={() => setPreviewWidget(null)}
+      />
     </section>
   );
 }

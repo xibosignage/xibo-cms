@@ -39,7 +39,7 @@ export interface LogsFilterInput {
   function?: string;
   displayId?: string;
   display?: string;
-  useRegexForName?: string;
+  useRegexForName?: boolean;
   displayGroupId?: string;
   message?: string;
   excludeLog?: boolean;
@@ -59,17 +59,20 @@ export const INITIAL_FILTER_STATE: LogsFilterInput = {
   function: '',
   displayId: '',
   display: '',
-  useRegexForName: '',
+  useRegexForName: false,
   displayGroupId: '',
   message: '',
-  excludeLog: false,
+  excludeLog: true,
 };
 
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<LogsFilterInput>[] => [
   {
-    label: t('From Date'),
+    label: t('Date'),
     name: 'fromDt',
     type: 'date',
+    tooltip: t(
+      'Set the time to start searching for logs based on the interval filter. Leave empty to start from the current time.',
+    ),
   },
   {
     label: t('Level'),
@@ -94,7 +97,7 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<LogsFilterInpu
     type: 'number',
   },
   {
-    label: t('Run No'),
+    label: t('Run'),
     name: 'runNo',
     type: 'text',
   },
@@ -150,7 +153,7 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<LogsFilterInpu
     type: 'text',
   },
   {
-    label: t('Exclude Log'),
+    label: t('Exclude logs common to each request?'),
     name: 'excludeLog',
     type: 'checkbox',
   },
@@ -165,7 +168,7 @@ export const getLogsColumns = (t: TFunction): ColumnDef<LogEntry>[] => [
   },
   {
     accessorKey: 'runNo',
-    header: t('Run No'),
+    header: t('Run'),
     size: 100,
     cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
   },

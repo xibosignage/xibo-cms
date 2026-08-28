@@ -23,6 +23,7 @@ import { isAxiosError } from 'axios';
 import type { TFunction } from 'i18next';
 import { useState } from 'react';
 
+import { notify } from '@/components/ui/Notification';
 import { clearModuleCache, updateModuleSettings } from '@/services/moduleApi';
 import type { UpdateModuleSettingsRequest } from '@/services/moduleApi';
 
@@ -59,7 +60,7 @@ export function useModuleActions({ t, handleRefresh, closeModal }: UseModuleActi
     }
   };
 
-  const confirmClearCache = async (id: string) => {
+  const confirmClearCache = async (id: string, options?: { notifyOnError?: boolean }) => {
     if (isClearing) return;
 
     try {
@@ -73,7 +74,11 @@ export function useModuleActions({ t, handleRefresh, closeModal }: UseModuleActi
         isAxiosError(err) && err.response?.data?.message
           ? err.response.data.message
           : t('Failed to clear module cache.');
-      setClearError(message);
+      if (options?.notifyOnError) {
+        notify.error(message);
+      } else {
+        setClearError(message);
+      }
     } finally {
       setIsClearing(false);
     }

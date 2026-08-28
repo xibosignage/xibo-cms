@@ -25,7 +25,6 @@ import type { Daypart } from '@/types/daypart';
 export interface FetchDaypartRequest {
   start: number;
   length: number;
-  keyword?: string;
   name?: string;
   isRetired?: number | null;
   sortBy?: string;
@@ -127,4 +126,11 @@ export async function deleteDaypart(daypartId: number | string): Promise<void> {
   await http.delete(`/daypart/${daypartId}`, {
     headers: { 'X-Requested-With': 'XMLHttpRequest' },
   });
+}
+
+export async function fetchDaypartScheduleCount(dayPartId: number): Promise<number> {
+  const response = await http.get(`/daypart/${dayPartId}`, {
+    params: { embed: 'scheduleCount' },
+  });
+  return response.data?.scheduleCount ?? 0;
 }

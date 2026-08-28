@@ -204,15 +204,6 @@ class SyncGroupFactory extends BaseFactory
             $params['leadDisplayId'] = $parsedBody->getInt('leadDisplayId');
         }
 
-        if ($parsedBody->getString('keyword') != null) {
-            $body .= $this->buildSearchQuery(
-                $parsedBody->getString('keyword'),
-                $params,
-                ['syncgroup.name'],
-                ['syncgroup.syncGroupId']
-            );
-        }
-
         // View Permissions
         $this->viewPermissionSql(
             'Xibo\Entity\SyncGroup',
@@ -226,7 +217,7 @@ class SyncGroupFactory extends BaseFactory
 
         // Sorting
         $allowedColumns = ['syncGroupId', 'name', 'createdDt', 'modifiedDt', 'owner', 'modifiedByName'];
-        $sortOrder = $this->buildSortQuery($sortOrder, $allowedColumns, [], ['name ASC']);
+        $sortOrder = $this->buildSortQuery($sortOrder, $allowedColumns, [], ['name ASC'], 'syncGroupId');
         $order = empty($sortOrder) ? '' : ' ORDER BY ' . implode(', ', $sortOrder);
 
         $limit = '';

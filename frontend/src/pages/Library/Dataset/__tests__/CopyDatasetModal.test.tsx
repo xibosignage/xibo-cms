@@ -64,7 +64,7 @@ describe('CopyDatasetModal', () => {
 
     expect(screen.getByLabelText('Name')).toHaveValue('Test Dataset (1)');
     expect(screen.getByLabelText('Description')).toHaveValue('Desc');
-    expect(screen.getByLabelText('Code')).toHaveValue('C1');
+    expect(screen.getByLabelText('Code')).toHaveValue('');
 
     expect(
       screen.getByRole('checkbox', {

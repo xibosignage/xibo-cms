@@ -49,6 +49,7 @@ export const buildSyncGroup = (overrides: Partial<SyncGroup> = {}): SyncGroup =>
   leadDisplay: '',
   folderId: 1,
   permissionsFolderId: 1,
+  userPermissions: { view: 1, edit: 1, delete: 1, modifyPermissions: 1 },
   ...overrides,
 });
 
@@ -105,7 +106,12 @@ export const mockUser: User = {
   userName: 'TestUser',
   userTypeId: 1,
   groupId: 1,
-  features: { 'folder.view': true, 'display.syncView': true, 'displays.view': true },
+  features: {
+    'folder.view': true,
+    'display.syncView': true,
+    'displays.view': true,
+    'display.syncModify': true,
+  },
   settings: {
     defaultTimezone: 'UTC',
     defaultLanguage: 'en',

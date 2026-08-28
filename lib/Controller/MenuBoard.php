@@ -100,20 +100,13 @@ class MenuBoard extends Base
         schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
-        name: 'keyword',
-        description: 'Filter by keyword (searches name)',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
-    )]
-    #[OA\Parameter(
         name: 'sortBy',
         description: 'Specifies which field the results are sorted by. Used together with sortDir',
         in: 'query',
         required: false,
         schema: new OA\Schema(
             type: 'string',
-            enum: ['menuId', 'name', 'code', 'modifiedDt', 'owner', 'folderName']
+            enum: ['menuId', 'name', 'code', 'modifiedDt', 'owner', 'folderName', 'groupsWithPermissions']
         )
     )]
     #[OA\Parameter(
@@ -177,7 +170,6 @@ class MenuBoard extends Base
             'useRegexForName'     => $params->getCheckbox('useRegexForName'),
             'modifiedDateFrom'    => $params->getDate('modifiedDateFrom'),
             'modifiedDateTo'      => $params->getDate('modifiedDateTo'),
-            'keyword'             => $params->getString('keyword'),
         ], $params);
     }
 

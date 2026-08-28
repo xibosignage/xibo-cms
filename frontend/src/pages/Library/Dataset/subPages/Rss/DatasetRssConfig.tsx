@@ -115,7 +115,7 @@ export const getRssDefinitions = (props: DatasetRssActionsProps): ColumnDef<Data
               href={fullUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xibo-blue-600 hover:text-blue-800 hover:underline transition-colors"
+              className="text-xibo-blue-600 hover:text-xibo-blue-800 hover:underline transition-colors"
             >
               {fullUrl}
             </a>

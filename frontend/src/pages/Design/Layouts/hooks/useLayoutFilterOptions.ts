@@ -32,7 +32,7 @@ import type { FilterOption } from '@/types/filter';
 
 const PAGE_SIZE = 10;
 
-export function useLayoutFilterOptions(t: TFunction) {
+export function useLayoutFilterOptions(t: TFunction, canTag = false) {
   const [ownerOptions, setOwnerOptions] = useState<FilterOption[]>([]);
   const [ownerPage, setOwnerPage] = useState(0);
   const [hasMoreOwners, setHasMoreOwners] = useState(false);
@@ -203,7 +203,7 @@ export function useLayoutFilterOptions(t: TFunction) {
       .finally(() => setIsLoadingMoreDisplayGroups(false));
   };
 
-  const filterOptions = getBaseFilterKeys(t).map((item) => {
+  const filterOptions = getBaseFilterKeys(t, canTag).map((item) => {
     if (item.name === 'ownerId') {
       return {
         ...item,

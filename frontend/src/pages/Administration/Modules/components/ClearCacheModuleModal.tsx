@@ -32,6 +32,7 @@ interface ClearCacheModuleModalProps {
   onConfirm: () => void;
   error?: string | null;
   isLoading?: boolean;
+  autoSubmitFormId?: string;
 }
 
 export default function ClearCacheModuleModal({
@@ -41,6 +42,7 @@ export default function ClearCacheModuleModal({
   onConfirm,
   error,
   isLoading,
+  autoSubmitFormId,
 }: ClearCacheModuleModalProps) {
   const { t } = useTranslation();
 
@@ -50,6 +52,7 @@ export default function ClearCacheModuleModal({
       isOpen={isOpen}
       isPending={isLoading}
       onClose={onClose}
+      autoSubmitFormId={autoSubmitFormId}
       actions={[
         {
           label: t('Cancel'),

@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { screen, waitFor } from '@testing-library/react';
+import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -37,12 +37,14 @@ import {
 const mockFetchDataConnectorSource = vi.fn();
 const mockCreateDataset = vi.fn();
 const mockUpdateDataset = vi.fn();
+const mockFetchDataset = vi.fn().mockResolvedValue({ rows: [], totalCount: 0 });
 const mockUsePermissions = vi.fn(() => ({ canViewFolders: false }));
 
 vi.mock('@/services/datasetApi', () => ({
   fetchDataConnectorSource: (...args: unknown[]) => mockFetchDataConnectorSource(...args),
   createDataset: (...args: unknown[]) => mockCreateDataset(...args),
   updateDataset: (...args: unknown[]) => mockUpdateDataset(...args),
+  fetchDataset: (...args: unknown[]) => mockFetchDataset(...args),
   testRemoteDataset: vi.fn(),
 }));
 
@@ -58,22 +60,26 @@ vi.mock('@/components/ui/modals/Modal');
 
 // -- Helpers --
 
-function renderAddModal() {
+// Both modes fire fetchDataConnectorSource/fetchDataset on mount; flushing
+// here lets their resolution land inside act() instead of after the test ends.
+async function renderAddModal() {
   const mockOnClose = vi.fn();
   const mockOnSave = vi.fn();
   renderWithProviders(
     <AddAndEditDatasetModal type="add" onClose={mockOnClose} onSave={mockOnSave} />,
   );
+  await act(async () => {});
   return { mockOnClose, mockOnSave };
 }
 
-function renderEditModal(dataOverrides = {}) {
+async function renderEditModal(dataOverrides = {}) {
   const mockOnClose = vi.fn();
   const mockOnSave = vi.fn();
   const dataset = mockDataset(dataOverrides);
   renderWithProviders(
     <AddAndEditDatasetModal type="edit" data={dataset} onClose={mockOnClose} onSave={mockOnSave} />,
   );
+  await act(async () => {});
   return { mockOnClose, mockOnSave, dataset };
 }
 
@@ -89,8 +95,8 @@ describe('AddAndEditDatasetModal', () => {
   });
 
   describe('Add mode', () => {
-    it('renders "Add Dataset" title with empty general tab fields', () => {
-      renderAddModal();
+    it('renders "Add Dataset" title with empty general tab fields', async () => {
+      await renderAddModal();
 
       expect(screen.getByRole('dialog', { name: 'Add Dataset' })).toBeInTheDocument();
       expect(screen.getByLabelText('Name')).toHaveValue('');
@@ -99,7 +105,7 @@ describe('AddAndEditDatasetModal', () => {
 
     it('shows validation error for empty name on save', async () => {
       const user = userEvent.setup();
-      renderAddModal();
+      await renderAddModal();
 
       await user.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -108,7 +114,7 @@ describe('AddAndEditDatasetModal', () => {
     });
 
     it('calls fetchDataConnectorSource on mount', async () => {
-      renderAddModal();
+      await renderAddModal();
 
       await waitFor(() => {
         expect(mockFetchDataConnectorSource).toHaveBeenCalledTimes(1);
@@ -117,7 +123,7 @@ describe('AddAndEditDatasetModal', () => {
 
     it('calls createDataset with correct name on valid submit', async () => {
       const user = userEvent.setup();
-      renderAddModal();
+      await renderAddModal();
 
       await user.type(screen.getByLabelText('Name'), 'My Dataset');
       await user.click(screen.getByRole('button', { name: 'Save' }));
@@ -133,7 +139,7 @@ describe('AddAndEditDatasetModal', () => {
       const user = userEvent.setup();
       const newDataset = { dataSetId: 99, dataSet: 'My Dataset' };
       mockCreateDataset.mockResolvedValue(newDataset);
-      const { mockOnClose, mockOnSave } = renderAddModal();
+      const { mockOnClose, mockOnSave } = await renderAddModal();
 
       await user.type(screen.getByLabelText('Name'), 'My Dataset');
       await user.click(screen.getByRole('button', { name: 'Save' }));
@@ -147,7 +153,7 @@ describe('AddAndEditDatasetModal', () => {
     it('displays API error (role="alert") when createDataset rejects', async () => {
       const user = userEvent.setup();
       mockCreateDataset.mockRejectedValue(new Error('Server error'));
-      renderAddModal();
+      await renderAddModal();
 
       await user.type(screen.getByLabelText('Name'), 'My Dataset');
       await user.click(screen.getByRole('button', { name: 'Save' }));
@@ -159,7 +165,7 @@ describe('AddAndEditDatasetModal', () => {
 
     it('Cancel button calls onClose without submitting', async () => {
       const user = userEvent.setup();
-      const { mockOnClose } = renderAddModal();
+      const { mockOnClose } = await renderAddModal();
 
       await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
@@ -175,7 +181,7 @@ describe('AddAndEditDatasetModal', () => {
           resolveCreate = resolve;
         }),
       );
-      renderAddModal();
+      await renderAddModal();
 
       await user.type(screen.getByLabelText('Name'), 'My Dataset');
       await user.click(screen.getByRole('button', { name: 'Save' }));
@@ -189,7 +195,7 @@ describe('AddAndEditDatasetModal', () => {
 
     it('Description field accepts text', async () => {
       const user = userEvent.setup();
-      renderAddModal();
+      await renderAddModal();
 
       await user.type(screen.getByLabelText('Description'), 'A useful description');
 
@@ -198,7 +204,7 @@ describe('AddAndEditDatasetModal', () => {
 
     it('Code field accepts text', async () => {
       const user = userEvent.setup();
-      renderAddModal();
+      await renderAddModal();
 
       await user.type(screen.getByLabelText('Code'), 'MY_CODE_01');
 
@@ -207,8 +213,8 @@ describe('AddAndEditDatasetModal', () => {
   });
 
   describe('Edit mode', () => {
-    it('renders "Edit Dataset" title and pre-populates fields from data', () => {
-      renderEditModal({
+    it('renders "Edit Dataset" title and pre-populates fields from data', async () => {
+      await renderEditModal({
         dataSet: 'Sales Data',
         description: 'Monthly sales',
         code: 'SALES_01',
@@ -222,7 +228,7 @@ describe('AddAndEditDatasetModal', () => {
 
     it('calls updateDataset with correct payload on valid submit', async () => {
       const user = userEvent.setup();
-      renderEditModal({ dataSet: 'Original Name' });
+      await renderEditModal({ dataSet: 'Original Name' });
 
       const nameInput = screen.getByLabelText('Name');
       await user.clear(nameInput);
@@ -240,7 +246,7 @@ describe('AddAndEditDatasetModal', () => {
     it('displays API error when updateDataset rejects', async () => {
       const user = userEvent.setup();
       mockUpdateDataset.mockRejectedValue(new Error('Server error'));
-      renderEditModal({ dataSet: 'Test Dataset' });
+      await renderEditModal({ dataSet: 'Test Dataset' });
 
       await user.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -251,8 +257,8 @@ describe('AddAndEditDatasetModal', () => {
   });
 
   describe('Real-time dataset', () => {
-    it('hides Data Connector Source dropdown by default', () => {
-      renderAddModal();
+    it('hides Data Connector Source dropdown by default', async () => {
+      await renderAddModal();
 
       expect(screen.queryByText('Data Connector Source')).not.toBeInTheDocument();
     });
@@ -261,7 +267,7 @@ describe('AddAndEditDatasetModal', () => {
       const user = userEvent.setup();
       mockFetchDataConnectorSource.mockResolvedValue(mockDataConnectorSources);
 
-      renderAddModal();
+      await renderAddModal();
 
       await user.click(screen.getByRole('checkbox', { name: /Real-time/i }));
 
@@ -270,7 +276,7 @@ describe('AddAndEditDatasetModal', () => {
 
     it('hides Data Connector Source dropdown when Real-time is unchecked again', async () => {
       const user = userEvent.setup();
-      renderAddModal();
+      await renderAddModal();
 
       const checkbox = screen.getByRole('checkbox', { name: /Real-time/i });
       await user.click(checkbox);
@@ -301,8 +307,8 @@ describe('AddAndEditDatasetModal', () => {
   });
 
   describe('Remote dataset', () => {
-    it('hides remote tabs when Remote is unchecked', () => {
-      renderAddModal();
+    it('hides remote tabs when Remote is unchecked', async () => {
+      await renderAddModal();
 
       expect(screen.queryByRole('button', { name: 'Remote' })).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Authentication' })).not.toBeInTheDocument();
@@ -312,7 +318,7 @@ describe('AddAndEditDatasetModal', () => {
 
     it('shows Remote, Authentication, Data, and Advanced tabs when Remote is checked', async () => {
       const user = userEvent.setup();
-      renderAddModal();
+      await renderAddModal();
 
       await user.click(screen.getByRole('checkbox', { name: /^Remote$/i }));
 
@@ -324,7 +330,7 @@ describe('AddAndEditDatasetModal', () => {
 
     it('hides extra tabs when Remote is unchecked again', async () => {
       const user = userEvent.setup();
-      renderAddModal();
+      await renderAddModal();
 
       const remoteCheckbox = screen.getByRole('checkbox', { name: /^Remote$/i });
       await user.click(remoteCheckbox);
@@ -335,7 +341,7 @@ describe('AddAndEditDatasetModal', () => {
 
     it('shows URI validation error when Remote is checked and URI is empty on save', async () => {
       const user = userEvent.setup();
-      renderAddModal();
+      await renderAddModal();
 
       await user.type(screen.getByLabelText('Name'), 'My Remote Dataset');
       await user.click(screen.getByRole('checkbox', { name: /^Remote$/i }));
@@ -350,7 +356,7 @@ describe('AddAndEditDatasetModal', () => {
 
     it('URI field is rendered on the Remote tab', async () => {
       const user = userEvent.setup();
-      renderEditModal({ isRemote: 1 });
+      await renderEditModal({ isRemote: 1 });
 
       await user.click(screen.getByRole('button', { name: 'Remote' }));
 
@@ -359,7 +365,7 @@ describe('AddAndEditDatasetModal', () => {
 
     it('Method label is visible on the Remote tab', async () => {
       const user = userEvent.setup();
-      renderEditModal({ isRemote: 1 });
+      await renderEditModal({ isRemote: 1 });
 
       await user.click(screen.getByRole('button', { name: 'Remote' }));
 
@@ -368,7 +374,7 @@ describe('AddAndEditDatasetModal', () => {
 
     it('Replacements field is visible on the Remote tab', async () => {
       const user = userEvent.setup();
-      renderEditModal({ isRemote: 1 });
+      await renderEditModal({ isRemote: 1 });
 
       await user.click(screen.getByRole('button', { name: 'Remote' }));
 
@@ -379,7 +385,7 @@ describe('AddAndEditDatasetModal', () => {
   describe('Authentication tab', () => {
     it('Username field is visible when authentication is "basic"', async () => {
       const user = userEvent.setup();
-      renderEditModal({ isRemote: 1, authentication: 'basic' });
+      await renderEditModal({ isRemote: 1, authentication: 'basic' });
 
       await user.click(screen.getByRole('button', { name: 'Authentication' }));
 
@@ -388,7 +394,7 @@ describe('AddAndEditDatasetModal', () => {
 
     it('Password field is visible when authentication is "basic"', async () => {
       const user = userEvent.setup();
-      renderEditModal({ isRemote: 1, authentication: 'basic' });
+      await renderEditModal({ isRemote: 1, authentication: 'basic' });
 
       await user.click(screen.getByRole('button', { name: 'Authentication' }));
 
@@ -397,7 +403,7 @@ describe('AddAndEditDatasetModal', () => {
 
     it('Username field is not shown when authentication is none (default)', async () => {
       const user = userEvent.setup();
-      renderAddModal();
+      await renderAddModal();
 
       await user.click(screen.getByRole('checkbox', { name: /^Remote$/i }));
       await user.click(screen.getByRole('button', { name: 'Authentication' }));
@@ -409,7 +415,7 @@ describe('AddAndEditDatasetModal', () => {
   describe('Data tab', () => {
     it('Source label is visible on the Data tab', async () => {
       const user = userEvent.setup();
-      renderEditModal({ isRemote: 1 });
+      await renderEditModal({ isRemote: 1 });
 
       await user.click(screen.getByRole('button', { name: 'Data' }));
 
@@ -418,7 +424,7 @@ describe('AddAndEditDatasetModal', () => {
 
     it('Data Root field is visible when source is JSON', async () => {
       const user = userEvent.setup();
-      renderEditModal({ isRemote: 1, sourceId: 1 });
+      await renderEditModal({ isRemote: 1, sourceId: 1 });
 
       await user.click(screen.getByRole('button', { name: 'Data' }));
 
@@ -429,7 +435,7 @@ describe('AddAndEditDatasetModal', () => {
   describe('Advanced tab', () => {
     it('Refresh label is visible on the Advanced tab', async () => {
       const user = userEvent.setup();
-      renderEditModal({ isRemote: 1 });
+      await renderEditModal({ isRemote: 1 });
 
       await user.click(screen.getByRole('button', { name: 'Advanced' }));
 
@@ -438,7 +444,7 @@ describe('AddAndEditDatasetModal', () => {
 
     it('Row Limit field is visible on the Advanced tab', async () => {
       const user = userEvent.setup();
-      renderEditModal({ isRemote: 1 });
+      await renderEditModal({ isRemote: 1 });
 
       await user.click(screen.getByRole('button', { name: 'Advanced' }));
 
@@ -447,7 +453,7 @@ describe('AddAndEditDatasetModal', () => {
 
     it('Limit Policy label is visible on the Advanced tab', async () => {
       const user = userEvent.setup();
-      renderEditModal({ isRemote: 1 });
+      await renderEditModal({ isRemote: 1 });
 
       await user.click(screen.getByRole('button', { name: 'Advanced' }));
 
@@ -456,16 +462,16 @@ describe('AddAndEditDatasetModal', () => {
   });
 
   describe('Folder selection', () => {
-    it('SelectFolder is rendered when canViewFolders is true', () => {
+    it('SelectFolder is rendered when canViewFolders is true', async () => {
       mockUsePermissions.mockReturnValue({ canViewFolders: true });
-      renderAddModal();
+      await renderAddModal();
 
       expect(screen.getByTestId('select-folder')).toBeInTheDocument();
     });
 
-    it('SelectFolder is NOT rendered when canViewFolders is false', () => {
+    it('SelectFolder is NOT rendered when canViewFolders is false', async () => {
       mockUsePermissions.mockReturnValue({ canViewFolders: false });
-      renderAddModal();
+      await renderAddModal();
 
       expect(screen.queryByTestId('select-folder')).not.toBeInTheDocument();
     });

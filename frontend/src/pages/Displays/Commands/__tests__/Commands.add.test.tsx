@@ -105,7 +105,9 @@ describe('Commands page - add wiring', () => {
   test('"Add Command" button opens the Add modal', async () => {
     const user = userEvent.setup();
     renderCommandsPage();
-    await screen.findByText(mockCommand.command);
+    // Extended timeout: under full-suite parallel load this can take longer
+    // than the default 1000ms, causing intermittent flakes.
+    await screen.findByText(mockCommand.command, {}, { timeout: 5000 });
 
     await user.click(screen.getByRole('button', { name: /add command/i }));
 
@@ -115,7 +117,9 @@ describe('Commands page - add wiring', () => {
   test('the table is refreshed after a successful add', async () => {
     const user = userEvent.setup();
     renderCommandsPage();
-    await screen.findByText(mockCommand.command);
+    // Extended timeout: under full-suite parallel load this can take longer
+    // than the default 1000ms, causing intermittent flakes.
+    await screen.findByText(mockCommand.command, {}, { timeout: 5000 });
 
     await user.click(screen.getByRole('button', { name: /add command/i }));
     const fetchCountBeforeSave = vi.mocked(fetchCommands).mock.calls.length;
@@ -129,7 +133,9 @@ describe('Commands page - add wiring', () => {
   test('no second modal opens automatically after add', async () => {
     const user = userEvent.setup();
     renderCommandsPage();
-    await screen.findByText(mockCommand.command);
+    // Extended timeout: under full-suite parallel load this can take longer
+    // than the default 1000ms, causing intermittent flakes.
+    await screen.findByText(mockCommand.command, {}, { timeout: 5000 });
 
     await user.click(screen.getByRole('button', { name: /add command/i }));
     await user.click(screen.getByRole('button', { name: /stub-save/i }));

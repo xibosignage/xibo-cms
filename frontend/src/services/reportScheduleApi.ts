@@ -28,7 +28,6 @@ export interface FetchReportSchedulesRequest {
   length?: number;
   sortBy?: string;
   sortDir?: string;
-  keyword?: string;
   name?: string;
   useRegexForName?: number;
   logicalOperatorName?: 'OR' | 'AND';

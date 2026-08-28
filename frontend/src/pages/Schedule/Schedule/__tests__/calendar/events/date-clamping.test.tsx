@@ -59,10 +59,10 @@ describe('EventCalendar – monthly date clamping', () => {
     }
   });
 
-  test('monthly event set to repeat on the 5th Monday skips months with only 4 Mondays', () => {
+  test('monthly event set to repeat on the 5th Monday clamps to the last Monday in months with only 4', () => {
     // March 30 2026 is the 5th Monday of March
-    // April 2026 only has 4 Mondays (6, 13, 20, 27), so the 5th Monday spills to May
-    // The code detects eventMoment.month !== nextMonthBase.month and skips the occurrence
+    // April 2026 only has 4 Mondays (6, 13, 20, 27); a literal "5th Monday" spills to May,
+    // so the code clamps to the true last Monday of April (27th) instead of skipping it
     const event = buildRecurringEvent('Month', 1, {
       name: 'Fifth Monday',
       fromDt: MAR_30_2026,
@@ -72,12 +72,14 @@ describe('EventCalendar – monthly date clamping', () => {
 
     renderCalendar({ date: CALENDAR_DATE, events: [event] });
 
-    // The original (March 30) is outside the April grid start (March 30 IS in view)
-    // But we only care about the April generated occurrence — it should be skipped
-    // March 30 itself may appear as an overflow day in the grid
-    const icons = screen.queryAllByTitle('Fifth Monday');
-    // Only the original March 30 might appear (as overflow), no April occurrence
-    expect(icons.length).toBeLessThanOrEqual(1);
+    // Original (March 30, shown as the leading overflow day of the April grid)
+    // + clamped April occurrence (27th) = 2
+    const icons = screen.getAllByTitle('Fifth Monday');
+    expect(icons).toHaveLength(2);
+
+    // The generated occurrence lands on April 27 (the actual last Monday), not May
+    const apr27Cell = screen.getByRole('gridcell', { name: /^27 April 2026/ });
+    expect(within(apr27Cell).getAllByRole('button', { name: 'Fifth Monday' })).toHaveLength(1);
   });
 
   test('monthly event on the 29th in a non-leap year February clamps to the 28th', () => {

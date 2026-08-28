@@ -30,12 +30,14 @@ import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
 import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
+import { useUserContext } from '@/context/UserContext';
 import { getTemplateSchema } from '@/schema/templates';
 import { fetchResolution } from '@/services/resolutionApi';
 import { createTemplate, updateTemplate } from '@/services/templatesApi';
 import type { Resolution } from '@/types/resolution';
 import type { Tag } from '@/types/tag';
 import type { Template } from '@/types/templates';
+import { hasFeature } from '@/utils/permissions';
 
 interface AddAndEditTemplateModalProps {
   type: 'add' | 'edit';
@@ -75,10 +77,12 @@ export default function AddAndEditTemplateModal({
   onSave,
 }: AddAndEditTemplateModalProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
   const [isPending, startTransition] = useTransition();
   const [formErrors, setFormErrors] = useState<TemplateFormErrors>({});
   const [apiError, setApiError] = useState<string | undefined>();
   const [pendingTagInput, setPendingTagInput] = useState('');
+  const [hasTagPendingValue, setHasTagPendingValue] = useState(false);
   const [resolutions, setResolutions] = useState<Resolution[]>([]);
   const [loadingResolutions, setLoadingResolutions] = useState(false);
 
@@ -105,9 +109,19 @@ export default function AddAndEditTemplateModal({
         const res = await fetchResolution({
           start: 0,
           length: 100,
+          enabled: 1,
         });
 
         setResolutions(res.rows);
+
+        const [firstResolution] = res.rows;
+        if (type === 'add' && firstResolution) {
+          setDraft((prev) =>
+            prev.resolutionId === null
+              ? { ...prev, resolutionId: firstResolution.resolutionId }
+              : prev,
+          );
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -116,7 +130,7 @@ export default function AddAndEditTemplateModal({
     };
 
     loadResolutions();
-  }, [isOpen]);
+  }, [isOpen, type]);
 
   useEffect(() => {
     setPendingTagInput('');
@@ -156,6 +170,11 @@ export default function AddAndEditTemplateModal({
         });
 
         setFormErrors(mappedErrors);
+        return;
+      }
+
+      if (type === 'add' && !draft.resolutionId) {
+        setFormErrors({ resolutionId: t('Resolution is required') });
         return;
       }
 
@@ -228,7 +247,7 @@ export default function AddAndEditTemplateModal({
         {
           label: isPending ? t('Saving…') : t('Save'),
           onClick: handleSave,
-          disabled: isPending,
+          disabled: isPending || hasTagPendingValue,
         },
       ]}
     >
@@ -266,13 +285,17 @@ export default function AddAndEditTemplateModal({
             error={formErrors.description}
           />
 
-          <TagInput
-            value={draft.tags}
-            helpText={t('Tags separated by commas')}
-            onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
-            inputValue={pendingTagInput}
-            onInputChange={setPendingTagInput}
-          />
+          {(hasFeature(user, 'tag.tagging') || (draft.tags?.length ?? 0) > 0) && (
+            <TagInput
+              value={draft.tags}
+              helpText={t('Tags separated by commas')}
+              onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
+              inputValue={pendingTagInput}
+              onInputChange={setPendingTagInput}
+              onPendingValueChange={setHasTagPendingValue}
+              disabled={!hasFeature(user, 'tag.tagging')}
+            />
+          )}
 
           {type === 'add' ? (
             <SelectDropdown

@@ -26,8 +26,10 @@ import CopyDisplayGroupModal from './CopyDisplayGroupModal';
 import DeleteDisplayGroupModal from './DeleteDisplayGroupModal';
 import ManageMembersModal from './ManageMembersModal';
 
+import EditTagsMultipleModal from '@/components/ui/modals/EditTagsMultipleModal';
 import MoveModal from '@/components/ui/modals/MoveModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
+import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
 import type { CopyDisplayGroupFormData } from '@/pages/Displays/DisplayGroup/hooks/useDisplayGroupActions';
 import AssignLayoutModal from '@/pages/Displays/Displays/components/AssignLayoutModal';
 import AssignMediaModal from '@/pages/Displays/Displays/components/AssignMediaModal';
@@ -36,12 +38,13 @@ import SendCommandModal from '@/pages/Displays/Displays/components/SendCommandMo
 import TriggerWebhookModal from '@/pages/Displays/Displays/components/TriggerWebhookModal';
 import type { DisplayCommandTarget } from '@/types/display';
 import type { DisplayGroup } from '@/types/displayGroup';
+import { mergeEntityTags } from '@/utils/tags';
 
 interface DisplayGroupModalsProps {
   actions: {
     activeModal: string | null;
     closeModal: () => void;
-    handleRefresh: () => void;
+    handleRefresh: () => Promise<unknown>;
     deleteError: string | null;
     isDeleting: boolean;
     isCopying: boolean;
@@ -80,6 +83,10 @@ export function DisplayGroupModals({ actions, selection, handlers }: DisplayGrou
         display: selection.selectedDisplayGroup.displayGroup,
       }
     : null;
+
+  const editTagsSelectedItems = isModalOpen('editTagsMultiple')
+    ? handlers.getAllSelectedItems()
+    : [];
 
   return (
     <>
@@ -156,6 +163,7 @@ export function DisplayGroupModals({ actions, selection, handlers }: DisplayGrou
           onConfirm={handlers.confirmCollectNow}
           isActionPending={actions.isActionPending}
           actionError={actions.actionError}
+          autoSubmitFormId={AUTO_SUBMIT_FORMS.displayGroupCollectNow}
         />
       )}
 
@@ -217,6 +225,19 @@ export function DisplayGroupModals({ actions, selection, handlers }: DisplayGrou
           }}
           isActionPending={actions.isActionPending}
           actionError={actions.actionError}
+        />
+      )}
+
+      {isModalOpen('editTagsMultiple') && (
+        <EditTagsMultipleModal
+          targetType="displayGroup"
+          ids={editTagsSelectedItems.map((dg) => dg.displayGroupId)}
+          existingTags={mergeEntityTags(editTagsSelectedItems)}
+          onClose={actions.closeModal}
+          onSuccess={async () => {
+            await actions.handleRefresh();
+            actions.closeModal();
+          }}
         />
       )}
 

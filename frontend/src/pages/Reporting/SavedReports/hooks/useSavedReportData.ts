@@ -21,7 +21,6 @@
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
-import type { AxiosError } from 'axios';
 
 import type { SavedReportFilterInput } from '../SavedReportsConfig';
 
@@ -73,12 +72,8 @@ export const useSavedReportData = ({
         signal,
       };
 
-      if (filter) {
-        request.keyword = filter;
-      }
-
-      if (advancedFilters.saveAs) {
-        request.saveAs = advancedFilters.saveAs;
+      if (advancedFilters.saveAs || filter) {
+        request.saveAs = advancedFilters.saveAs || filter;
       }
 
       if (advancedFilters.saveAs && advancedFilters.logicalOperatorName) {
@@ -111,9 +106,5 @@ export const useSavedReportData = ({
     enabled,
     placeholderData: keepPreviousData,
     staleTime: 1000 * 60,
-
-    throwOnError: (error: AxiosError) => {
-      return error.response?.status ? error.response.status >= 500 : false;
-    },
   });
 };

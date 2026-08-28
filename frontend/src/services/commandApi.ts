@@ -25,7 +25,6 @@ import type { Command } from '@/types/command';
 export interface FetchCommandsRequest {
   start: number;
   length: number;
-  keyword?: string;
   command?: string;
   code?: string;
   type?: string;

@@ -123,6 +123,7 @@ class PlayerVersionFactory extends BaseFactory
             ],
             [],
             ['code DESC'],
+            'versionId',
         );
 
         $params = [];
@@ -175,15 +176,6 @@ class PlayerVersionFactory extends BaseFactory
                 $body,
                 $params,
                 ($sanitizedFilter->getCheckbox('useRegexForName') == 1)
-            );
-        }
-
-        if ($sanitizedFilter->getString('keyword') != null) {
-            $body .= $this->buildSearchQuery(
-                $sanitizedFilter->getString('keyword'),
-                $params,
-                ['player_software.playerShowVersion'],
-                ['player_software.versionId'],
             );
         }
 

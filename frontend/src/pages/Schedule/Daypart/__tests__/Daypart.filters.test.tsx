@@ -122,7 +122,7 @@ describe('Dayparting page - search and filters', () => {
 
     await waitFor(
       () => {
-        expect(fetchDaypart).toHaveBeenCalledWith(expect.objectContaining({ keyword: 'Alpha' }));
+        expect(fetchDaypart).toHaveBeenCalledWith(expect.objectContaining({ name: 'Alpha' }));
       },
       { timeout: 2000 },
     );
@@ -139,7 +139,7 @@ describe('Dayparting page - search and filters', () => {
     await waitFor(
       () => {
         expect(fetchDaypart).toHaveBeenCalledWith(
-          expect.objectContaining({ keyword: 'Alpha', start: 0 }),
+          expect.objectContaining({ name: 'Alpha', start: 0 }),
         );
       },
       { timeout: 2000 },
@@ -193,7 +193,7 @@ describe('Dayparting page - search and filters', () => {
     await user.type(search, 'Alpha');
     await waitFor(
       () => {
-        expect(fetchDaypart).toHaveBeenCalledWith(expect.objectContaining({ keyword: 'Alpha' }));
+        expect(fetchDaypart).toHaveBeenCalledWith(expect.objectContaining({ name: 'Alpha' }));
       },
       { timeout: 2000 },
     );
@@ -201,7 +201,7 @@ describe('Dayparting page - search and filters', () => {
     await user.clear(search);
     await waitFor(
       () => {
-        expect(fetchDaypart).toHaveBeenCalledWith(expect.objectContaining({ keyword: '' }));
+        expect(fetchDaypart).toHaveBeenCalledWith(expect.objectContaining({ name: undefined }));
       },
       { timeout: 2000 },
     );
@@ -252,7 +252,7 @@ describe('Dayparting page - search and filters', () => {
     );
   });
 
-  // Reset empties the filter inputs (Name and Retired).
+  // Reset restores the filter inputs to their defaults (Name empty, Retired "No").
   test('clicking Reset clears the filter inputs', async () => {
     const user = userEvent.setup();
     renderDaypartPage();
@@ -278,7 +278,7 @@ describe('Dayparting page - search and filters', () => {
     await waitFor(() => {
       expect(screen.getByRole('textbox', { name: /^name$/i })).toHaveValue('');
     });
-    expect(screen.getByRole('combobox', { name: /^retired$/i })).toHaveValue('');
+    expect(screen.getByRole('combobox', { name: /^retired$/i })).toHaveValue('0');
   });
 
   // Reset clears the inputs but leaves the panel open.

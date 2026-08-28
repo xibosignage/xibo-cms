@@ -144,7 +144,7 @@ describe('DisplayProfile page - filters', () => {
     await waitFor(
       () => {
         expect(fetchDisplayProfile).toHaveBeenCalledWith(
-          expect.objectContaining({ keyword: 'Android' }),
+          expect.objectContaining({ displayProfile: 'Android' }),
         );
       },
       { timeout: 2000 },
@@ -161,7 +161,7 @@ describe('DisplayProfile page - filters', () => {
     await waitFor(
       () => {
         expect(fetchDisplayProfile).toHaveBeenCalledWith(
-          expect.objectContaining({ start: 0, keyword: 'screen' }),
+          expect.objectContaining({ start: 0, displayProfile: 'screen' }),
         );
       },
       { timeout: 2000 },
@@ -276,7 +276,7 @@ describe('DisplayProfile page - filters', () => {
     const user = userEvent.setup();
     // Unfiltered returns the row; the 'Alpha' keyword returns nothing.
     vi.mocked(fetchDisplayProfile).mockImplementation(async (opts) =>
-      opts?.keyword === 'Alpha' ? EMPTY_DISPLAY_PROFILE_TABLE : SINGLE_DISPLAY_PROFILE,
+      opts?.displayProfile === 'Alpha' ? EMPTY_DISPLAY_PROFILE_TABLE : SINGLE_DISPLAY_PROFILE,
     );
 
     renderDisplayProfilePage();

@@ -21,8 +21,8 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
-import { Filter, FilterX, Plus } from 'lucide-react';
-import type { DateTime } from 'luxon';
+import { Plus } from 'lucide-react';
+import { DateTime } from 'luxon';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -43,9 +43,12 @@ import { EventModals } from './components/EventModals';
 import { useEventActions } from './hooks/useEventActions';
 import { useEventData } from './hooks/useEventData';
 import { useEventFilterOptions } from './hooks/useEventFilterOptions';
+import { expandRecurringEvents } from './utils/expandRecurringEvents';
 
 import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataCalendar } from '@/components/ui/table/DataCalendar';
 import { DataTable } from '@/components/ui/table/DataTable';
@@ -55,6 +58,8 @@ import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import { fetchUserPreference, saveUserPreference } from '@/services/userApi';
 import type { Event } from '@/types/event';
+import { countActiveFilters } from '@/utils/filters';
+import { hasFeature } from '@/utils/permissions';
 
 const DATE_RANGE_PREF_KEY = 'event_page_date_range';
 
@@ -63,7 +68,10 @@ export default function Events() {
   const queryClient = useQueryClient();
   const { user } = useUserContext();
   const { formatDateTime } = useDateFormatter();
+  // The CMS-wide `defaultTimezone` setting, not a personal/browser timezone
+  // - see User::myDetails() in lib/Controller/User.php.
   const timezone = user?.settings?.defaultTimezone ?? 'UTC';
+  const canModifySchedule = hasFeature(user, 'schedule.modify');
 
   const {
     pagination,
@@ -139,7 +147,12 @@ export default function Events() {
     };
   }, []);
 
+  const [dateRangeViewState, setDateRangeViewState] = useState<DateRangeControllerState | null>(
+    null,
+  );
+
   const handleDateRangeStateChange = (state: DateRangeControllerState) => {
+    setDateRangeViewState(state);
     pendingDateRangeState.current = state;
     if (dateRangeDebounceRef.current) {
       clearTimeout(dateRangeDebounceRef.current);
@@ -159,6 +172,7 @@ export default function Events() {
   const [agendaDayEvents, setAgendaDayEvents] = useState<Event[]>([]);
 
   const [itemsToDelete, setItemsToDelete] = useState<Event[]>([]);
+  const [isOccurrenceDeleteAllowed, setIsOccurrenceDeleteAllowed] = useState(false);
   const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
 
@@ -169,6 +183,7 @@ export default function Events() {
     data: queryData,
     isFetching,
     isError,
+    isPaused,
     error: queryError,
   } = useEventData({
     pagination,
@@ -180,6 +195,48 @@ export default function Events() {
 
   const data = queryData?.rows ?? [];
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
+
+  // In Day view, resolve rows to their actual occurrence on the viewed day (or drop them if
+  // the recurrence doesn't land on that day, or it's been excluded). This mirrors
+  // the Calendar's own fetch-broad-then-resolve-client-side approach below.
+  const dayViewRange =
+    dateRangeViewState?.viewMode === 'day' && dateRangeViewState?.currentDate
+      ? {
+          start: DateTime.fromISO(dateRangeViewState.currentDate, { zone: timezone }).startOf(
+            'day',
+          ),
+          end: DateTime.fromISO(dateRangeViewState.currentDate, { zone: timezone }).endOf('day'),
+        }
+      : null;
+
+  const { data: dayViewQueryData, isFetching: isDayViewFetching } = useEventData({
+    pagination: { pageIndex: 0, pageSize: 500 },
+    sorting: [],
+    filter: '',
+    advancedFilters: filterInputs,
+    enabled: isHydrated && viewMode === 'table' && dayViewRange !== null,
+  });
+
+  const dayViewOccurrences = dayViewRange
+    ? expandRecurringEvents(
+        dayViewQueryData?.rows ?? [],
+        dayViewRange.start,
+        dayViewRange.end,
+        timezone,
+      )
+    : [];
+
+  const visibleData = dayViewRange
+    ? dayViewOccurrences.slice(
+        pagination.pageIndex * pagination.pageSize,
+        (pagination.pageIndex + 1) * pagination.pageSize,
+      )
+    : data;
+
+  const visibleRowCount = dayViewRange ? dayViewOccurrences.length : queryData?.totalCount || 0;
+  const visiblePageCount = dayViewRange
+    ? Math.max(1, Math.ceil(dayViewOccurrences.length / pagination.pageSize))
+    : pageCount;
 
   const { data: calendarQueryData, isFetching: isCalendarFetching } = useEventData({
     pagination: { pageIndex: 0, pageSize: 500 },
@@ -206,7 +263,8 @@ export default function Events() {
 
     setSelectionCache((prev) => {
       const next = { ...prev };
-      data.forEach((item) => {
+      // In Day view, rendered rows come from `dayViewOccurrences`, not `data`
+      (dayViewRange ? dayViewOccurrences : data).forEach((item) => {
         const id = getRowId(item);
         if (newSelection[id]) {
           next[id] = item;
@@ -216,8 +274,10 @@ export default function Events() {
     });
   };
 
+  // In Day view, a rendered row's eventId may not exist in `data` so that has to be checked too
   const selectedEvent =
     data.find((m) => m.eventId === selectedEventId) ??
+    dayViewOccurrences.find((m) => m.eventId === selectedEventId) ??
     calendarEvents.find((m) => m.eventId === selectedEventId) ??
     null;
   const existingNames = data.map((m) => m.name ?? '');
@@ -242,16 +302,23 @@ export default function Events() {
   });
 
   const handleDelete = (id: number) => {
-    const event = data.find((m) => m.eventId === id);
+    // In Day view, visibleData is already resolved to the specific occurrence on the viewed
+    // day (via expandRecurringEvents), so its fromDt/toDt are the correct delete-occurrence
+    // target. Any other view (week/month/etc.) can't identify a single occurrence, so
+    // whole-series delete only.
+    const isDayView = dateRangeViewState?.viewMode === 'day';
+    const event = (isDayView ? visibleData : data).find((m) => m.eventId === id);
     if (!event) return;
 
     setItemsToDelete([event]);
+    setIsOccurrenceDeleteAllowed(isDayView && !!event.recurringEvent);
     setDeleteError(null);
     openModal('delete');
   };
 
   const handleDeleteFromCalendar = (scheduleEvent: Event) => {
     setItemsToDelete([scheduleEvent]);
+    setIsOccurrenceDeleteAllowed(true);
     setDeleteError(null);
     openModal('delete');
   };
@@ -284,6 +351,8 @@ export default function Events() {
     t,
     formatDateTime,
     timezone,
+    canModify: hasFeature(user, 'schedule.modify'),
+    canAdd: hasFeature(user, 'schedule.add'),
     onDelete: handleDelete,
     openAddEditModal,
     copyEvent: openCopyModal,
@@ -297,6 +366,7 @@ export default function Events() {
 
   const bulkActions = getBulkActions({
     t,
+    canModify: canModifySchedule,
     onDelete: () => {
       const allItems = getAllSelectedItems();
       setItemsToDelete(allItems);
@@ -331,21 +401,25 @@ export default function Events() {
     return Array.from(seen.values()).sort((a, b) => a.name.localeCompare(b.name));
   })();
 
+  const activeFilterCount = countActiveFilters(filterInputs, INITIAL_FILTER_STATE, filterOptions);
+
   return (
     <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="Events" navigation={libraryTabs} />
           <div className="flex items-center gap-2 md:mb-0">
-            <Button
-              variant="primary"
-              className="font-semibold"
-              disabled={!isHydrated}
-              onClick={() => openModal('schedule')}
-              leftIcon={Plus}
-            >
-              {t('Add Event')}
-            </Button>
+            {hasFeature(user, 'schedule.add') && (
+              <Button
+                variant="primary"
+                className="font-semibold"
+                disabled={!isHydrated}
+                onClick={() => openModal('schedule')}
+                leftIcon={Plus}
+              >
+                {t('Add Event')}
+              </Button>
+            )}
           </div>
         </div>
 
@@ -383,15 +457,12 @@ export default function Events() {
                 setPagination((prev) => ({ ...prev, pageIndex: 0 }));
               }}
             />
-            <Button
-              leftIcon={!openFilter ? Filter : FilterX}
-              variant="secondary"
+            <FilterButton
+              isOpen={openFilter}
+              onToggle={() => setOpenFilter((prev) => !prev)}
+              activeCount={activeFilterCount}
               disabled={!isHydrated}
-              onClick={() => setOpenFilter((prev) => !prev)}
-              removeTextOnMobile
-            >
-              {t('Filters')}
-            </Button>
+            />
           </div>
         </div>
 
@@ -413,11 +484,7 @@ export default function Events() {
           onReset={handleResetFilters}
         />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
-            {error}
-          </div>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         <div className={`min-h-0 flex flex-col ${viewMode === 'calendar' && 'flex-1'}`}>
           {!isHydrated ? (
@@ -437,27 +504,32 @@ export default function Events() {
                 date={calendarDate}
                 events={calendarEvents}
                 isLoading={isCalendarFetching}
-                onEditEvent={openAddEditModal}
-                onDeleteEvent={handleDeleteFromCalendar}
-                onAgenda={(day, events) => {
-                  setAgendaDate(day);
-                  setAgendaDayEvents(events);
-                  openModal('agenda');
-                }}
+                onEditEvent={canModifySchedule ? openAddEditModal : undefined}
+                onDeleteEvent={canModifySchedule ? handleDeleteFromCalendar : undefined}
+                onAgenda={
+                  hasFeature(user, 'schedule.agenda')
+                    ? (day, events) => {
+                        setAgendaDate(day);
+                        setAgendaDayEvents(events);
+                        openModal('agenda');
+                      }
+                    : undefined
+                }
               />
             </DataCalendar>
           ) : (
             <DataTable
               columns={columns}
-              data={data}
-              pageCount={pageCount}
+              data={visibleData}
+              pageCount={visiblePageCount}
+              rowCount={visibleRowCount}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}
               onSortingChange={setSorting}
               globalFilter=""
               onGlobalFilterChange={() => {}}
-              loading={isFetching}
+              loading={dayViewRange ? isDayViewFetching : isFetching}
               rowSelection={rowSelection}
               onRowSelectionChange={handleRowSelectionChange}
               onRefresh={handleRefresh}
@@ -486,6 +558,7 @@ export default function Events() {
           displayGroups: agendaDisplayGroups,
           displaySpecificGroupIds: filterInputs.displaySpecificGroupIds ?? [],
           displayGroupIds: filterInputs.displayGroupIds ?? [],
+          isOccurrenceDeleteAllowed,
         }}
         selection={{
           selectedEvent,

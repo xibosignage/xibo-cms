@@ -78,7 +78,9 @@ const EMPTY_DATA: UseMediaReturn = {
 } as unknown as UseMediaReturn;
 
 // Returns real filter config with an identity t-function (key → key).
-const realFilterOptions = () => getBaseFilterKeys(((k: string) => k) as unknown as TFunction);
+// canTag=true so the Tags filter entry (with its AND/OR and Exact Tags
+// toggles) is included, matching how Media.tsx calls the real hook.
+const realFilterOptions = () => getBaseFilterKeys(((k: string) => k) as unknown as TFunction, true);
 
 // Renders Media with an arbitrary router state (e.g. { layoutId: 99 }).
 const renderWithRouterState = (state: Record<string, unknown> = {}) => {

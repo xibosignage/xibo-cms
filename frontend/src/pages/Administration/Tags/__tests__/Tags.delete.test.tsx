@@ -29,6 +29,7 @@ import { mockFetchTags } from './mocks/tagApi';
 
 import { deleteTag } from '@/services/tagApi';
 import { testQueryClient } from '@/setupTests';
+import { waitForDialogToClose } from '@/testUtils/rtl';
 
 // =============================================================================
 // Module mocks
@@ -63,8 +64,7 @@ const openRowDeleteModal = async (user: UserEvent) => {
 };
 
 const selectAllRows = async (user: UserEvent) => {
-  const checkboxes = screen.getAllByRole('checkbox', { name: /select row/i });
-  await user.click(checkboxes[0]!);
+  await user.click(screen.getByRole('checkbox', { name: /select all rows/i }));
 };
 
 // =============================================================================
@@ -111,9 +111,7 @@ describe('Tags page - single delete', () => {
     await waitFor(() => {
       expect(deleteTag).toHaveBeenCalledWith(mockTag.tagId);
     });
-    await waitFor(() => {
-      expect(screen.queryByText('Delete Tag?')).not.toBeInTheDocument();
-    });
+    await waitForDialogToClose('Delete Tag?');
   }, 20_000);
 
   test('Delete button shows "Deleting…" while the request is in progress', async () => {
@@ -131,7 +129,9 @@ describe('Tags page - single delete', () => {
 
     expect(await screen.findByRole('button', { name: /deleting/i })).toBeDisabled();
 
+    // Wait for the resulting close so the update isn't left outside act().
     resolveDelete();
+    await waitForDialogToClose('Delete Tag?');
   }, 20_000);
 
   test('a failed delete keeps the modal open and shows the error', async () => {

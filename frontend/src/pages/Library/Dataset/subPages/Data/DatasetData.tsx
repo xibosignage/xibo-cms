@@ -22,7 +22,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { isAxiosError } from 'axios';
-import { Plus, Search, Slash, Table, Filter, FilterX } from 'lucide-react';
+import { Plus, Search, Slash, Table } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -34,9 +34,12 @@ import { DatasetDataModals } from './components/DatasetDataModals';
 import { useDatasetData } from './hooks/useDatasetData';
 
 import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { useUserContext } from '@/context/UserContext';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import type { DatasetRowValue } from '@/services/datasetApi';
@@ -46,6 +49,8 @@ import {
   getDatasetById,
   type DynamicRowData,
 } from '@/services/datasetApi';
+import { countActiveFilters } from '@/utils/filters';
+import { hasFeature } from '@/utils/permissions';
 
 type DataModalType = 'edit' | 'delete' | 'copy' | null;
 
@@ -53,7 +58,10 @@ export default function DatasetData() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useUserContext();
   const { datasetId } = useParams<{ datasetId: string }>();
+
+  const canEditData = hasFeature(user, 'dataset.data');
 
   const {
     pagination,
@@ -109,6 +117,7 @@ export default function DatasetData() {
     data: queryData,
     isFetching: isFetchingData,
     isError,
+    isPaused,
     error: queryError,
   } = useDatasetData({
     datasetId: datasetId!,
@@ -253,6 +262,7 @@ export default function DatasetData() {
 
   const tableColumns = getDynamicDataColumns(columnsSchema, {
     t,
+    canEdit: canEditData,
     rowIdKey: 'id',
     onEdit: (row) => {
       setSelectedRow(row);
@@ -278,17 +288,21 @@ export default function DatasetData() {
       .filter((item): item is DynamicRowData => !!item);
   };
 
-  const bulkActions = getBulkActions({
-    t,
-    onDelete: () => {
-      const allItems = getAllSelectedItems();
-      setItemsToDelete(allItems);
-      setDeleteError(null);
-      setActiveModal('delete');
-    },
-  });
+  const bulkActions = canEditData
+    ? getBulkActions({
+        t,
+        onDelete: () => {
+          const allItems = getAllSelectedItems();
+          setItemsToDelete(allItems);
+          setDeleteError(null);
+          setActiveModal('delete');
+        },
+      })
+    : [];
 
   const libraryTabs = useFilteredTabs('library');
+
+  const activeFilterCount = countActiveFilters(filterInputs, {}, filterOptions);
 
   return (
     <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
@@ -296,18 +310,20 @@ export default function DatasetData() {
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="Datasets" navigation={libraryTabs} />
           <div className="flex items-center gap-2">
-            <Button
-              variant="primary"
-              className="font-semibold"
-              disabled={isLoading || columnsSchema.length === 0}
-              onClick={() => {
-                setSelectedRow(null);
-                setActiveModal('edit');
-              }}
-              leftIcon={Plus}
-            >
-              {t('Add Row')}
-            </Button>
+            {canEditData && (
+              <Button
+                variant="primary"
+                className="font-semibold"
+                disabled={isLoading || columnsSchema.length === 0}
+                onClick={() => {
+                  setSelectedRow(null);
+                  setActiveModal('edit');
+                }}
+                leftIcon={Plus}
+              >
+                {t('Add Row')}
+              </Button>
+            )}
             <Button
               variant="secondary"
               className="font-semibold"
@@ -353,14 +369,11 @@ export default function DatasetData() {
               />
             </div>
             {filterOptions.length > 0 && (
-              <Button
-                leftIcon={!openFilter ? Filter : FilterX}
-                variant="secondary"
-                onClick={() => setOpenFilter((prev) => !prev)}
-                removeTextOnMobile
-              >
-                {t('Filters')}
-              </Button>
+              <FilterButton
+                isOpen={openFilter}
+                onToggle={() => setOpenFilter((prev) => !prev)}
+                activeCount={activeFilterCount}
+              />
             )}
           </div>
         </div>
@@ -376,14 +389,7 @@ export default function DatasetData() {
           onReset={handleResetFilters}
         />
 
-        {error && (
-          <div
-            className="bg-red-50 border border-red-200 text-red-800 p-4 mb-4 rounded-lg"
-            role="alert"
-          >
-            {error}
-          </div>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         <div className="min-h-0 flex flex-col">
           {isLoading ? (
@@ -407,6 +413,7 @@ export default function DatasetData() {
               columns={tableColumns}
               data={rowData}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

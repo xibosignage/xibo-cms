@@ -207,7 +207,8 @@ class Controllers
             },
             '\Xibo\Controller\Folder' => function (ContainerInterface $c) {
                 $controller = new \Xibo\Controller\Folder(
-                    $c->get('folderFactory')
+                    $c->get('folderFactory'),
+                    $c->get('permissionFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
@@ -492,6 +493,11 @@ class Controllers
                     $c->get('store'),
                     $c->get('sessionFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
+            },
+            '\Xibo\Controller\Spa' => function (ContainerInterface $c) {
+                $controller = new \Xibo\Controller\Spa();
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },

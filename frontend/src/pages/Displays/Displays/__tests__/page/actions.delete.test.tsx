@@ -69,7 +69,7 @@ const openDeleteModal = async (user: UserEvent) => {
   await screen.findByText(mockDisplay.display);
 
   const checkboxes = screen.getAllByRole('checkbox', { name: /Select row/i });
-  await user.click(checkboxes[1]!);
+  await user.click(checkboxes[0]!);
 
   const deleteBtn = await screen.findByRole('button', { name: /Delete Selected/i });
   await user.click(deleteBtn);

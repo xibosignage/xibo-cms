@@ -55,6 +55,19 @@ const MediaInfoTemplate =
 const TABLE_VIEW_LEVEL = 4;
 
 /**
+ * Provider logo/icon URLs are returned root-uri-relative (no leading
+ * slash) so that they resolve correctly on sub-folder/alias installs.
+ * @param {string} url - root-uri-relative URL returned by a connector
+ * @return {string} url prefixed with the install's public path
+ */
+const resolveProviderAssetUrl = function(url) {
+  if (!url) {
+    return url;
+  }
+  return $('meta[name=public-path]').attr('content') + url;
+};
+
+/**
  * Bottom toolbar contructor
  * @param {object} parent - parent container
  * @param {object} container - the container to render the navigator to
@@ -684,7 +697,7 @@ Toolbar.prototype.init = function(
             customIcon: true,
             itemTitle: toolbarTrans.menuItems
               .providerTitle.replace('%obj%', provider.id),
-            itemIcon: provider.iconUrl,
+            itemIcon: resolveProviderAssetUrl(provider.iconUrl),
             contentType: 'media',
             filters: self.loadProviderFilters(provider.filters),
             state: '',
@@ -843,7 +856,7 @@ Toolbar.prototype.loadPrefs = function() {
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.reload();
+        LoginBox();
       } else {
         // Just an error we dont know about
         if (res.message == undefined) {
@@ -968,7 +981,7 @@ Toolbar.prototype.savePrefs = _.debounce(function(clearPrefs = false) {
     if (!res.success) {
       // Login Form needed?
       if (res.login) {
-        window.location.reload();
+        LoginBox();
       } else {
         toastr.error(errorMessagesTrans.userSavePreferencesFailed);
 
@@ -1904,6 +1917,12 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
           element.icon = modulesList.filter((el) =>
             el.type === element.type)[0]?.icon || null;
 
+          // Provider logos do not have the root uri
+          if (element.provider && element.provider.logoUrl) {
+            element.provider.logoUrl =
+              resolveProviderAssetUrl(element.provider.logoUrl);
+          }
+
           // Use template
           const $card = $(ToolbarCardMediaTemplate(element));
 
@@ -1974,7 +1993,7 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
     }).catch(function(jqXHR, textStatus, errorThrown) {
       // Login Form needed?
       if (res.login) {
-        window.location.reload();
+        LoginBox();
       } else {
         // Just an error we dont know about
         if (res.message == undefined) {
@@ -2598,8 +2617,8 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
 
             // Provider logos do not have the root uri
             if (el.provider && el.provider.logoUrl) {
-              el.provider.logoUrl = $('meta[name=public-path]')
-                .attr('content') + el.provider.logoUrl;
+              el.provider.logoUrl =
+                resolveProviderAssetUrl(el.provider.logoUrl);
             }
 
             if (el.provider && !el.provider.link) {
@@ -2660,7 +2679,7 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
           // Handle card behaviour
           self.handleCardsBehaviour();
         } else if (response.login) {
-          window.location.reload();
+          LoginBox();
         } else if (
           $content.find('.toolbar-card:not(.toolbar-card-special)').length === 0
         ) {
@@ -2837,8 +2856,8 @@ Toolbar.prototype.playlistsContentPopulate = function(menu) {
 
             // Provider logos do not have the root uri
             if (el.provider && el.provider.logoUrl) {
-              el.provider.logoUrl = $('meta[name=public-path]')
-                .attr('content') + el.provider.logoUrl;
+              el.provider.logoUrl =
+                resolveProviderAssetUrl(el.provider.logoUrl);
             }
 
             if (el.provider && !el.provider.link) {

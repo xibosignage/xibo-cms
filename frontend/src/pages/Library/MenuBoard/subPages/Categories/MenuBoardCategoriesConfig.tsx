@@ -32,11 +32,15 @@ import type { ActionItem } from '@/types/table';
 
 export interface MenuBoardCategoryFilterInput {
   menuCategoryId: string;
+  name: string;
+  useRegexForName: boolean;
   code: string;
 }
 
 export const INITIAL_CATEGORY_FILTER_STATE: MenuBoardCategoryFilterInput = {
   menuCategoryId: '',
+  name: '',
+  useRegexForName: false,
   code: '',
 };
 
@@ -48,6 +52,14 @@ export const getCategoryFilterKeys = (
     placeholder: t('Enter ID'),
     name: 'menuCategoryId',
     type: 'number',
+  },
+  {
+    label: t('Name'),
+    placeholder: t('Enter Name'),
+    name: 'name',
+    type: 'text',
+    showRegex: true,
+    regexKey: 'useRegexForName',
   },
   {
     label: t('Code'),
@@ -132,6 +144,9 @@ export const getCategoryColumnDefinitions = (
       header: t('Media'),
       size: 100,
       enableSorting: false,
+      meta: {
+        excludeFromExport: true,
+      },
       cell: (info) => {
         const thumb = info.getValue<string | undefined>();
         if (!thumb) {

@@ -37,6 +37,7 @@ use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\MediaServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -352,7 +353,10 @@ class LayoutFactory extends BaseFactory
             throw new InvalidArgumentException(__('Invalid Input'), 'layoutId');
         }
 
-        $row = $this->getStore()->select('SELECT campaignId FROM `layouthistory` WHERE layoutId = :layoutId LIMIT 1', ['layoutId' => $layoutId]);
+        $row = $this->getStore()->select(
+            'SELECT campaignId FROM `layouthistory` WHERE layoutId = :layoutId LIMIT 1',
+            ['layoutId' => $layoutId]
+        );
 
         if (count($row) <= 0) {
             throw new NotFoundException(__('Layout does not exist'));
@@ -371,7 +375,10 @@ class LayoutFactory extends BaseFactory
     public function getByLayoutHistory($layoutId)
     {
         // Get a Layout by its Layout HistoryId
-        $layouts = $this->query(null, array('disableUserCheck' => 1, 'layoutHistoryId' => $layoutId, 'excludeTemplates' => -1, 'retired' => -1));
+        $layouts = $this->query(
+            null,
+            ['disableUserCheck' => 1, 'layoutHistoryId' => $layoutId, 'excludeTemplates' => -1, 'retired' => -1]
+        );
 
         if (count($layouts) <= 0) {
             throw new NotFoundException(__('Layout not found'));
@@ -394,7 +401,10 @@ class LayoutFactory extends BaseFactory
             throw new InvalidArgumentException(__('Invalid Input'), 'campaignId');
         }
 
-        $row = $this->getStore()->select('SELECT MAX(layoutId) AS layoutId FROM `layouthistory` WHERE campaignId = :campaignId  ', ['campaignId' => $campaignId]);
+        $row = $this->getStore()->select(
+            'SELECT MAX(layoutId) AS layoutId FROM `layouthistory` WHERE campaignId = :campaignId  ',
+            ['campaignId' => $campaignId]
+        );
 
         if (count($row) <= 0) {
             throw new NotFoundException(__('Layout does not exist'));
@@ -416,7 +426,10 @@ class LayoutFactory extends BaseFactory
             throw new NotFoundException();
         }
 
-        $layouts = $this->query(null, array('disableUserCheck' => 1, 'parentId' => $layoutId, 'excludeTemplates' => -1, 'retired' => -1));
+        $layouts = $this->query(
+            null,
+            ['disableUserCheck' => 1, 'parentId' => $layoutId, 'excludeTemplates' => -1, 'retired' => -1]
+        );
 
         if (count($layouts) <= 0) {
             throw new NotFoundException(__('Layout not found'));
@@ -434,10 +447,14 @@ class LayoutFactory extends BaseFactory
      */
     public function getByParentCampaignId($campaignId)
     {
-        if ($campaignId == 0)
+        if ($campaignId == 0) {
             throw new NotFoundException();
+        }
 
-        $layouts = $this->query(null, array('disableUserCheck' => 1, 'ownerCampaignId' => $campaignId, 'excludeTemplates' => -1, 'retired' => -1));
+        $layouts = $this->query(
+            null,
+            ['disableUserCheck' => 1, 'ownerCampaignId' => $campaignId, 'excludeTemplates' => -1, 'retired' => -1]
+        );
 
         if (count($layouts) <= 0) {
             throw new NotFoundException(__('Layout not found'));
@@ -455,7 +472,10 @@ class LayoutFactory extends BaseFactory
      */
     public function getByOwnerId($ownerId)
     {
-        return $this->query(null, array('userId' => $ownerId, 'excludeTemplates' => -1, 'retired' => -1, 'showDrafts' => 1));
+        return $this->query(
+            null,
+            ['userId' => $ownerId, 'excludeTemplates' => -1, 'retired' => -1, 'showDrafts' => 1]
+        );
     }
 
     /**
@@ -525,7 +545,10 @@ class LayoutFactory extends BaseFactory
      */
     public function getByBackgroundImageId($backgroundImageId)
     {
-        return $this->query(null, ['disableUserCheck' => 1, 'backgroundImageId' => $backgroundImageId, 'showDrafts' => 1]);
+        return $this->query(
+            null,
+            ['disableUserCheck' => 1, 'backgroundImageId' => $backgroundImageId, 'showDrafts' => 1]
+        );
     }
 
     /**
@@ -546,7 +569,10 @@ class LayoutFactory extends BaseFactory
      */
     public function getByCode($code)
     {
-        $layouts = $this->query(null, ['disableUserCheck' => 1, 'code' => $code, 'excludeTemplates' => -1, 'retired' => -1]);
+        $layouts = $this->query(
+            null,
+            ['disableUserCheck' => 1, 'code' => $code, 'excludeTemplates' => -1, 'retired' => -1]
+        );
 
         if (count($layouts) <= 0) {
             throw new NotFoundException(__('Layout not found'));
@@ -594,7 +620,8 @@ class LayoutFactory extends BaseFactory
      */
     public function getLinkedFullScreenMediaId(int $campaignId): ?int
     {
-        $mediaId = $this->getStore()->select('SELECT `lkwidgetmedia`.mediaId
+        $mediaId = $this->getStore()->select(
+            'SELECT `lkwidgetmedia`.mediaId
                     FROM region
                      INNER JOIN playlist
                             ON playlist.regionId = region.regionId
@@ -875,7 +902,9 @@ class LayoutFactory extends BaseFactory
             $layout->regions[] = $region;
         }
 
-        $this->getLog()->debug(sprintf('Finished loading layout - there are %d regions.', count($layout->regions)));
+        $this->getLog()->debug(
+            sprintf('Finished loading layout - there are %d regions.', count($layout->regions))
+        );
 
         // Load any existing tags
         if (!is_array($layout->tags)) {
@@ -907,8 +936,14 @@ class LayoutFactory extends BaseFactory
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function loadByJson($layoutJson, $playlistJson, $nestedPlaylistJson, Folder $folder, $layout = null, $importTags = false): array
-    {
+    public function loadByJson(
+        $layoutJson,
+        $playlistJson,
+        $nestedPlaylistJson,
+        Folder $folder,
+        $layout = null,
+        $importTags = false
+    ): array {
         $this->getLog()->debug('Loading Layout by JSON');
 
         // New Layout
@@ -950,7 +985,10 @@ class LayoutFactory extends BaseFactory
         // Nested Playlists are Playlists which exist below the first level of Playlists in Sub-Playlist Widgets
         // we need to import and save them first.
         if ($nestedPlaylistJson != null) {
-            $this->getLog()->debug('Layout import, creating nested Playlists from JSON, there are ' . count($nestedPlaylistJson) . ' Playlists to create');
+            $this->getLog()->debug(
+                'Layout import, creating nested Playlists from JSON, there are ' . count($nestedPlaylistJson) .
+                ' Playlists to create'
+            );
 
             // create all nested Playlists, save their widgets to key=>value array
             foreach ($nestedPlaylistJson as $nestedPlaylist) {
@@ -976,14 +1014,19 @@ class LayoutFactory extends BaseFactory
 
             $combined = array_combine($oldIds, $newIds);
 
-            // this function will go through all widgets assigned to the nested Playlists, create the widgets, adjust the Ids and return an array of Playlists
+            // this function will go through all widgets assigned to the nested Playlists,
+            // create the widgets, adjust the Ids and return an array of Playlists
             // then the Playlists array is used later on to adjust mediaIds if needed
             $playlists = $this->createNestedPlaylistWidgets($widgets, $combined, $playlists);
 
-            $this->getLog()->debug('Finished creating nested playlists there are ' . count($playlists) . ' Playlists created');
+            $this->getLog()->debug(
+                'Finished creating nested playlists there are ' . count($playlists) . ' Playlists created'
+            );
         }
 
-        $drawers = (array_key_exists('drawers', $layoutJson['layoutDefinitions'])) ? $layoutJson['layoutDefinitions']['drawers'] : [];
+        $drawers = (array_key_exists('drawers', $layoutJson['layoutDefinitions']))
+            ? $layoutJson['layoutDefinitions']['drawers']
+            : [];
 
         // merge Layout Regions and Drawers into one array.
         $allRegions = array_merge($layoutJson['layoutDefinitions']['regions'], $drawers);
@@ -1228,9 +1271,13 @@ class LayoutFactory extends BaseFactory
             }
         }
 
-        $this->getLog()->debug(sprintf('Finished loading layout - there are %d regions.', count($layout->regions)));
+        $this->getLog()->debug(
+            sprintf('Finished loading layout - there are %d regions.', count($layout->regions))
+        );
 
-        $this->getLog()->debug(sprintf('Finished loading layout - there are %d drawer regions.', count($layout->drawers)));
+        $this->getLog()->debug(
+            sprintf('Finished loading layout - there are %d drawer regions.', count($layout->drawers))
+        );
 
         if ($importTags) {
             foreach ($layoutJson['layoutDefinitions']['tags'] as $tagNode) {
@@ -1619,7 +1666,9 @@ class LayoutFactory extends BaseFactory
                     ));
 
                     if (in_array($oldMediaId, $widget->mediaIds)) {
-                        $this->getLog()->debug(sprintf('Removing %d and replacing with %d', $oldMediaId, $newMediaId));
+                        $this->getLog()->debug(
+                            sprintf('Removing %d and replacing with %d', $oldMediaId, $newMediaId)
+                        );
 
                         // Are we an audio record?
                         if (in_array($oldMediaId, $audioIds)) {
@@ -1798,7 +1847,9 @@ class LayoutFactory extends BaseFactory
                             // try and get by code
                             $existingDataSet = $dataSetFactory->getByCode($dataSet->code);
                         } catch (NotFoundException $e) {
-                            $this->getLog()->debug(sprintf('Existing dataset not found with code %s', $dataSet->code));
+                            $this->getLog()->debug(
+                                sprintf('Existing dataset not found with code %s', $dataSet->code)
+                            );
                         }
                     }
 
@@ -1807,7 +1858,9 @@ class LayoutFactory extends BaseFactory
                         try {
                             $existingDataSet = $dataSetFactory->getByName($dataSet->dataSet);
                         } catch (NotFoundException $e) {
-                            $this->getLog()->debug(sprintf('Existing dataset not found with name %s', $dataSet->code));
+                            $this->getLog()->debug(
+                                sprintf('Existing dataset not found with name %s', $dataSet->code)
+                            );
                         }
                     }
                 }
@@ -1999,7 +2052,11 @@ class LayoutFactory extends BaseFactory
             $widget->calculateDuration($module);
 
             // Get global stat setting of widget to set to on/off/inherit
-            $widget->setOptionValue('enableStat', 'attrib', $this->config->getSetting('WIDGET_STATS_ENABLED_DEFAULT'));
+            $widget->setOptionValue(
+                'enableStat',
+                'attrib',
+                $this->config->getSetting('WIDGET_STATS_ENABLED_DEFAULT')
+            );
         }
 
         if ($fontsAdded) {
@@ -2070,7 +2127,10 @@ class LayoutFactory extends BaseFactory
 
                 if ($playlistWidget->type == 'subplaylist') {
                     // Get the subplaylists from widget option
-                    $nestedSubPlaylists = json_decode($playlistWidget->getOptionValue('subPlaylists', '[]'), true);
+                    $nestedSubPlaylists = json_decode(
+                        $playlistWidget->getOptionValue('subPlaylists', '[]'),
+                        true
+                    );
 
                     $updatedSubPlaylists = [];
                     foreach ($combined as $old => $new) {
@@ -2094,20 +2154,27 @@ class LayoutFactory extends BaseFactory
                         ]);
                     }
 
-                    $playlistWidget->setOptionValue('subPlaylists', 'attrib', json_encode($updatedSubPlaylists));
+                    $playlistWidget->setOptionValue(
+                        'subPlaylists',
+                        'attrib',
+                        json_encode($updatedSubPlaylists)
+                    );
                 }
 
                 $playlist->assignWidget($playlistWidget);
                 $playlist->requiresDurationUpdate = 1;
 
-                // save non-media based widget, we can't save media based widgets here as we don't have updated mediaId yet.
+                // save non-media based widget,
+                // we can't save media based widgets here as we don't have updated mediaId yet.
                 if ($module->regionSpecific == 1 && $playlistWidget->mediaIds == []) {
                     $playlistWidget->save();
                 }
             }
 
             $playlists[] = $playlist;
-            $this->getLog()->debug('Finished creating Playlist added the following Playlist ' . json_encode($playlist));
+            $this->getLog()->debug(
+                'Finished creating Playlist added the following Playlist ' . json_encode($playlist)
+            );
         }
 
         return $playlists;
@@ -2136,7 +2203,10 @@ class LayoutFactory extends BaseFactory
         $parsedFilter = $this->getSanitizer($filterBy);
         $params = [];
         $select = 'SELECT DISTINCT code, `layout`.layout, `campaign`.CampaignID, `campaign`.permissionsFolderId ';
-        $body = ' FROM layout INNER JOIN `lkcampaignlayout` ON lkcampaignlayout.LayoutID = layout.LayoutID INNER JOIN `campaign` ON lkcampaignlayout.CampaignID = campaign.CampaignID AND campaign.IsLayoutSpecific = 1 WHERE `layout`.code IS NOT NULL AND `layout`.code <> \'\' ';
+        $body = ' FROM layout 
+            INNER JOIN `lkcampaignlayout` ON lkcampaignlayout.LayoutID = layout.LayoutID
+            INNER JOIN `campaign` ON lkcampaignlayout.CampaignID = campaign.CampaignID AND campaign.IsLayoutSpecific = 1
+         WHERE `layout`.code IS NOT NULL AND `layout`.code <> \'\' ';
 
         // get by Code
         if ($parsedFilter->getString('code') != '') {
@@ -2145,14 +2215,26 @@ class LayoutFactory extends BaseFactory
         }
 
         // Logged in user view permissions
-        $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, 'campaign.campaignId', 'layout.userId', $filterBy, 'campaign.permissionsFolderId');
+        $this->viewPermissionSql(
+            'Xibo\Entity\Campaign',
+            $body,
+            $params,
+            'campaign.campaignId',
+            'layout.userId',
+            $filterBy,
+            'campaign.permissionsFolderId'
+        );
 
         $order = ' ORDER BY code';
 
         // Paging
         $limit = '';
-        if ($filterBy !== null && $parsedFilter->getInt('start') !== null && $parsedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . $parsedFilter->getInt('start', ['default' => 0]) . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
+        if ($filterBy !== null &&
+            $parsedFilter->getInt('start') !== null &&
+            $parsedFilter->getInt('length') !== null
+        ) {
+            $limit = ' LIMIT ' . $parsedFilter->getInt('start', ['default' => 0]) . ', ' .
+                $parsedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
@@ -2182,7 +2264,7 @@ class LayoutFactory extends BaseFactory
 
         // Sorting
         $allowedColumns = ['layoutId', 'layout', 'publishedStatus', 'enableStat', 'duration', 'owner', 'modifiedDt',
-            'campaignId', 'displayOrder'
+            'campaignId', 'displayOrder', 'groupsWithPermissions'
         ];
         $customColumns = [
             'orientation' => 'CASE WHEN layout.`width` < layout.`height` THEN 1 ELSE 0 END',
@@ -2193,7 +2275,8 @@ class LayoutFactory extends BaseFactory
             $sortOrder,
             $allowedColumns,
             $customColumns,
-            ['layout ASC']
+            ['layout ASC'],
+            'layoutId'
         );
 
         $select  = 'SELECT `layout`.layoutID, 
@@ -2233,7 +2316,7 @@ class LayoutFactory extends BaseFactory
             $select .= ' NULL as displayOrder, ';
         }
 
-        $select .= "     (SELECT GROUP_CONCAT(DISTINCT `group`.group)
+        $select .= '     (SELECT GROUP_CONCAT(DISTINCT `group`.group)
                           FROM `permission`
                             INNER JOIN `permissionentity`
                             ON `permissionentity`.entityId = permission.entityId
@@ -2242,7 +2325,7 @@ class LayoutFactory extends BaseFactory
                          WHERE entity = :permissionEntityForGroup
                             AND objectId = campaign.CampaignID
                             AND view = 1
-                        ) AS groupsWithPermissions ";
+                        ) AS groupsWithPermissions ';
         $params['permissionEntityForGroup'] = 'Xibo\\Entity\\Campaign';
 
         $body  = '  FROM layout 
@@ -2261,11 +2344,11 @@ class LayoutFactory extends BaseFactory
 
         if ($parsedFilter->getInt('campaignId') !== null) {
             // Join Campaign back onto it again
-            $body .= " 
+            $body .= ' 
                 INNER JOIN `lkcampaignlayout` lkcl 
                 ON lkcl.layoutid = layout.layoutid 
                     AND lkcl.CampaignID = :campaignId 
-            ";
+            ';
             $params['campaignId'] = $parsedFilter->getInt('campaignId');
         }
 
@@ -2284,9 +2367,16 @@ class LayoutFactory extends BaseFactory
             $displayId = null;
 
             // get the displayId if we were provided with display specific displayGroup in the filter
-            $sql = 'SELECT display.displayId FROM display INNER JOIN lkdisplaydg ON lkdisplaydg.displayId = display.displayId INNER JOIN displaygroup ON displaygroup.displayGroupId = lkdisplaydg.displayGroupId WHERE displaygroup.displayGroupId = :displayGroupId AND displaygroup.isDisplaySpecific = 1';
+            $sql = 'SELECT display.displayId 
+                FROM display 
+                    INNER JOIN lkdisplaydg ON lkdisplaydg.displayId = display.displayId 
+                    INNER JOIN displaygroup ON displaygroup.displayGroupId = lkdisplaydg.displayGroupId 
+                WHERE displaygroup.displayGroupId = :displayGroupId AND displaygroup.isDisplaySpecific = 1';
 
-            foreach ($this->getStore()->select($sql, ['displayGroupId' => $parsedFilter->getInt('activeDisplayGroupId')]) as $row) {
+            foreach ($this->getStore()->select(
+                $sql,
+                ['displayGroupId' => $parsedFilter->getInt('activeDisplayGroupId')]
+            ) as $row) {
                 $displayId = $this->getSanitizer($row)->getInt('displayId');
             }
 
@@ -2357,7 +2447,7 @@ class LayoutFactory extends BaseFactory
             $params['mediaLike'] = '%' . $parsedFilter->getString('mediaLike') . '%';
         }
 
-        $body .= " WHERE 1 = 1 ";
+        $body .= ' WHERE 1 = 1 ';
 
         // Layout Like
         if ($parsedFilter->getString('layout') != '') {
@@ -2375,26 +2465,34 @@ class LayoutFactory extends BaseFactory
         }
 
         if ($parsedFilter->getString('layoutExact') != '') {
-            $body.= " AND layout.layout = :exact ";
+            $body.= ' AND layout.layout = :exact ';
             $params['exact'] = $parsedFilter->getString('layoutExact');
         }
 
         // Layout
         if ($parsedFilter->getInt('layoutId', ['default' => 0]) != 0) {
-            $body .= " AND layout.layoutId = :layoutId ";
+            $body .= ' AND layout.layoutId = :layoutId ';
             $params['layoutId'] = $parsedFilter->getInt('layoutId', ['default' => 0]);
         } else if ($parsedFilter->getInt('excludeTemplates', ['default' => 1]) != -1) {
             // Exclude templates by default
             if ($parsedFilter->getInt('excludeTemplates', ['default' => 1]) == 1) {
-                $body .= " AND layout.layoutID NOT IN (SELECT layoutId FROM lktaglayout INNER JOIN tag ON lktaglayout.tagId = tag.tagId WHERE tag = 'template') ";
+                $body .= ' AND layout.layoutID NOT IN (
+                    SELECT layoutId FROM lktaglayout 
+                    INNER JOIN tag ON lktaglayout.tagId = tag.tagId 
+                    WHERE tag = \'template\'
+                ) ';
             } else {
-                $body .= " AND layout.layoutID IN (SELECT layoutId FROM lktaglayout INNER JOIN tag ON lktaglayout.tagId = tag.tagId WHERE tag = 'template') ";
+                $body .= ' AND layout.layoutID IN (
+                    SELECT layoutId FROM lktaglayout 
+                    INNER JOIN tag ON lktaglayout.tagId = tag.tagId 
+                    WHERE tag = \'template\'
+                ) ';
             }
         }
 
         // Layout Draft
         if ($parsedFilter->getInt('parentId', ['default' => 0]) != 0) {
-            $body .= " AND layout.parentId = :parentId ";
+            $body .= ' AND layout.parentId = :parentId ';
             $params['parentId'] = $parsedFilter->getInt('parentId', ['default' => 0]);
         } else if ($parsedFilter->getInt('layoutId', ['default' => 0]) == 0
             && $parsedFilter->getInt('showDrafts', ['default' => 0]) == 0) {
@@ -2405,13 +2503,13 @@ class LayoutFactory extends BaseFactory
 
         // Layout Published Status
         if ($parsedFilter->getInt('publishedStatusId') !== null) {
-            $body .= " AND layout.publishedStatusId = :publishedStatusId ";
+            $body .= ' AND layout.publishedStatusId = :publishedStatusId ';
             $params['publishedStatusId'] = $parsedFilter->getInt('publishedStatusId');
         }
 
         // Layout Status
         if ($parsedFilter->getInt('status') !== null) {
-            $body .= " AND layout.status = :status ";
+            $body .= ' AND layout.status = :status ';
             $params['status'] = $parsedFilter->getInt('status');
         }
 
@@ -2457,18 +2555,18 @@ class LayoutFactory extends BaseFactory
 
         // Background Image
         if ($parsedFilter->getInt('backgroundImageId') !== null) {
-            $body .= " AND layout.backgroundImageId = :backgroundImageId ";
+            $body .= ' AND layout.backgroundImageId = :backgroundImageId ';
             $params['backgroundImageId'] = $parsedFilter->getInt('backgroundImageId', ['default' => 0]);
         }
         // Not Layout
         if ($parsedFilter->getInt('notLayoutId', ['default' => 0]) != 0) {
-            $body .= " AND layout.layoutId <> :notLayoutId ";
+            $body .= ' AND layout.layoutId <> :notLayoutId ';
             $params['notLayoutId'] = $parsedFilter->getInt('notLayoutId', ['default' => 0]);
         }
 
         // Owner filter
         if ($parsedFilter->getInt('userId', ['default' => 0]) != 0) {
-            $body .= " AND layout.userid = :userId ";
+            $body .= ' AND layout.userid = :userId ';
             $params['userId'] = $parsedFilter->getInt('userId', ['default' => 0]);
         }
 
@@ -2479,14 +2577,16 @@ class LayoutFactory extends BaseFactory
 
         // User Group filter
         if ($parsedFilter->getInt('ownerUserGroupId', ['default' => 0]) != 0) {
-            $body .= ' AND layout.userid IN (SELECT DISTINCT userId FROM `lkusergroup` WHERE groupId =  :ownerUserGroupId) ';
+            $body .= ' AND layout.userid IN (
+                SELECT DISTINCT userId FROM `lkusergroup` WHERE groupId =  :ownerUserGroupId
+            ) ';
             $params['ownerUserGroupId'] = $parsedFilter->getInt('ownerUserGroupId', ['default' => 0]);
         }
 
         // Retired options (provide -1 to return all)
         if ($parsedFilter->getInt('retired', ['default' => -1]) != -1) {
-            $body .= " AND layout.retired = :retired ";
-            $params['retired'] = $parsedFilter->getInt('retired',['default' => 0]);
+            $body .= ' AND layout.retired = :retired ';
+            $params['retired'] = $parsedFilter->getInt('retired', ['default' => 0]);
         }
 
         // Modified Date range
@@ -2504,7 +2604,7 @@ class LayoutFactory extends BaseFactory
 
         if ($parsedFilter->getInt('ownerCampaignId') !== null) {
             // Join Campaign back onto it again
-            $body .= " AND `campaign`.campaignId = :ownerCampaignId ";
+            $body .= ' AND `campaign`.campaignId = :ownerCampaignId ';
             $params['ownerCampaignId'] = $parsedFilter->getInt('ownerCampaignId', ['default' => 0]);
         }
 
@@ -2520,13 +2620,13 @@ class LayoutFactory extends BaseFactory
         // Get by regionId
         if ($parsedFilter->getInt('regionId') !== null) {
             // Join Campaign back onto it again
-            $body .= " AND `layout`.layoutId IN (SELECT layoutId FROM `region` WHERE regionId = :regionId) ";
+            $body .= ' AND `layout`.layoutId IN (SELECT layoutId FROM `region` WHERE regionId = :regionId) ';
             $params['regionId'] = $parsedFilter->getInt('regionId', ['default' => 0]);
         }
 
         // get by Code
         if ($parsedFilter->getString('code') != '') {
-            $body.= " AND layout.code = :code ";
+            $body.= ' AND layout.code = :code ';
             $params['code'] = $parsedFilter->getString('code');
         }
 
@@ -2608,8 +2708,9 @@ class LayoutFactory extends BaseFactory
 
         // Show All, Used or UnUsed
         // Used - In active schedule, scheduled in the future, directly assigned to displayGroup, default Layout.
-        // Unused - Every layout NOT matching the Used ie not in active schedule, not scheduled in the future, not directly assigned to any displayGroup, not default layout.
-        if ($parsedFilter->getInt('filterLayoutStatusId', ['default' => 1]) != 1)  {
+        // Unused - Every layout NOT matching the Used ie not in active schedule,
+        // not scheduled in the future, not directly assigned to any displayGroup, not default layout.
+        if ($parsedFilter->getInt('filterLayoutStatusId', ['default' => 1]) != 1) {
             // Get the current or future scheduled layouts
             $now = Carbon::now()->format('U');
 
@@ -2677,20 +2778,22 @@ class LayoutFactory extends BaseFactory
 
         // publishedDate
         if ($parsedFilter->getInt('havePublishDate', ['default' => -1]) != -1) {
-            $body .= " AND `layout`.publishedDate IS NOT NULL ";
+            $body .= ' AND `layout`.publishedDate IS NOT NULL ';
         }
 
         if ($parsedFilter->getInt('activeDisplayGroupId') !== null) {
-
             $date = Carbon::now()->format('U');
 
-            // for filter by displayGroup, we need to add some additional filters in WHERE clause to show only relevant Layouts at the time the Layout grid is viewed
+            // for filter by displayGroup,
+            // we need to add some additional filters in WHERE clause
+            // to show only relevant Layouts at the time the Layout grid is viewed
             $body .= ' AND campaign.campaignId = schedule.campaignId 
-                       AND ( schedule.fromDt < '. $date . ' OR schedule.fromDt = 0 ) ' . ' AND schedule.toDt > ' . $date;
+                       AND ( schedule.fromDt < '. $date . ' OR schedule.fromDt = 0 ) ' .
+                     ' AND schedule.toDt > ' . $date;
         }
 
         if ($parsedFilter->getInt('folderId') !== null) {
-            $body .= " AND campaign.folderId = :folderId ";
+            $body .= ' AND campaign.folderId = :folderId ';
             $params['folderId'] = $parsedFilter->getInt('folderId');
         }
 
@@ -2710,26 +2813,28 @@ class LayoutFactory extends BaseFactory
             $params['type'] = $parsedFilter->getString('campaignType');
         }
 
-        if ($parsedFilter->getString('keyword') != null) {
-            // Fulltext search
-            $body .= $this->buildSearchQuery(
-                $parsedFilter->getString('keyword'),
-                $params,
-                ['layout.layout', 'layout.description'],
-                ['layout.layoutId', 'campaign.campaignId'],
-            );
-        }
-
         // Logged in user view permissions
-        $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, 'campaign.campaignId', 'layout.userId', $filterBy, 'campaign.permissionsFolderId');
+        $this->viewPermissionSql(
+            'Xibo\Entity\Campaign',
+            $body,
+            $params,
+            'campaign.campaignId',
+            'layout.userId',
+            $filterBy,
+            'campaign.permissionsFolderId'
+        );
 
         // Sorting?
         $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $parsedFilter->getInt('start') !== null && $parsedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . $parsedFilter->getInt('start', ['default' => 0]) . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
+        if ($filterBy !== null &&
+            $parsedFilter->getInt('start') !== null &&
+            $parsedFilter->getInt('length') !== null
+        ) {
+            $limit = ' LIMIT ' . $parsedFilter->getInt('start', ['default' => 0]) . ', ' .
+                $parsedFilter->getInt('length', ['default' => 10]);
         }
 
         // The final statements
@@ -2801,19 +2906,28 @@ class LayoutFactory extends BaseFactory
      */
     private function setWidgetExpiryDatesOrDefault($widget)
     {
-        $minSubYear = Carbon::createFromTimestamp(Widget::$DATE_MIN)->subYear()->format('U');
-        $minAddYear = Carbon::createFromTimestamp(Widget::$DATE_MIN)->addYear()->format('U');
-        $maxSubYear = Carbon::createFromTimestamp(Widget::$DATE_MAX)->subYear()->format('U');
-        $maxAddYear = Carbon::createFromTimestamp(Widget::$DATE_MAX)->addYear()->format('U');
+        $minSubYear = DateFormatHelper::createFromTimestamp(Widget::$DATE_MIN)->subYear()->format('U');
+        $minAddYear = DateFormatHelper::createFromTimestamp(Widget::$DATE_MIN)->addYear()->format('U');
+        $maxSubYear = DateFormatHelper::createFromTimestamp(Widget::$DATE_MAX)->subYear()->format('U');
+        $maxAddYear = DateFormatHelper::createFromTimestamp(Widget::$DATE_MAX)->addYear()->format('U');
 
         // if we are importing from layout.json the Widget from/to expiry dates are already timestamps
         // for old Layouts when the Widget from/to dt are missing we set them to timestamps as well.
-        $timestampFromDt = is_integer($widget->fromDt) ? $widget->fromDt : Carbon::createFromTimeString($widget->fromDt)->format('U');
-        $timestampToDt =  is_integer($widget->toDt) ? $widget->toDt : Carbon::createFromTimeString($widget->toDt)->format('U');
+        $timestampFromDt = is_integer($widget->fromDt)
+            ? $widget->fromDt
+            : Carbon::createFromTimeString($widget->fromDt)->format('U');
+        $timestampToDt =  is_integer($widget->toDt)
+            ? $widget->toDt
+            : Carbon::createFromTimeString($widget->toDt)->format('U');
 
-        // convert the date string to a unix timestamp, if the layout xlf does not contain dates, then set it to the $DATE_MIN / $DATE_MAX which are already unix timestamps, don't attempt to convert them
-        // we need to check if provided from and to dates are within $DATE_MIN +- year to avoid issues with CMS Instances in different timezones https://github.com/xibosignage/xibo/issues/1934
-        if ($widget->fromDt === Widget::$DATE_MIN || ($timestampFromDt > $minSubYear && $timestampFromDt < $minAddYear)) {
+        // convert the date string to a unix timestamp,
+        // if the layout xlf does not contain dates,
+        // then set it to the $DATE_MIN / $DATE_MAX which are already unix timestamps, don't attempt to convert them
+        // we need to check if provided from and to dates are within $DATE_MIN +- year
+        // to avoid issues with CMS Instances in different timezones https://github.com/xibosignage/xibo/issues/1934
+        if ($widget->fromDt === Widget::$DATE_MIN ||
+            ($timestampFromDt > $minSubYear && $timestampFromDt < $minAddYear)
+        ) {
             $widget->fromDt = Widget::$DATE_MIN;
         } else {
             $widget->fromDt = $timestampFromDt;
@@ -2979,8 +3093,11 @@ class LayoutFactory extends BaseFactory
      * @param array $processedLayoutIds
      * @return array
      */
-    public function getActionPublishedLayoutIds(int $layoutId, array &$actionLayoutIds, array &$processedLayoutIds): array
-    {
+    public function getActionPublishedLayoutIds(
+        int $layoutId,
+        array &$actionLayoutIds,
+        array &$processedLayoutIds
+    ): array {
         // if Layout was already processed, do not attempt to do it again
         // we should have all actionLayoutsIds from it at this point, there is no need to process it again
         if (!in_array($layoutId, $processedLayoutIds)) {
@@ -3101,8 +3218,14 @@ class LayoutFactory extends BaseFactory
      * @param int $tries
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function concurrentRequestLock(Layout $layout, $force = false, $pass = 1, $ttl = 300, $wait = 6, $tries = 10): Layout
-    {
+    public function concurrentRequestLock(
+        Layout $layout,
+        $force = false,
+        $pass = 1,
+        $ttl = 300,
+        $wait = 6,
+        $tries = 10
+    ): Layout {
         // Does this layout require building?
         if (!$force && !$layout->isBuildRequired()) {
             return $layout;
@@ -3121,7 +3244,10 @@ class LayoutFactory extends BaseFactory
         // Did we get a lock?
         // if we're a miss, then we're not already locked
         if ($lock->isMiss() || $locked === false) {
-            $this->getLog()->debug('Lock miss or false. Locking for ' . $ttl . ' seconds. $locked is '. var_export($locked, true));
+            $this->getLog()->debug(
+                'Lock miss or false. Locking for ' . $ttl . ' seconds. $locked is '.
+                var_export($locked, true)
+            );
 
             // so lock now
             $lock->set(true);
@@ -3270,6 +3396,25 @@ class LayoutFactory extends BaseFactory
             $playlist->load();
         }
 
+        $scheduledItem = $type === 'media' ? $media : $playlist;
+        $scheduleWithViewOnItem = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
+        $isAllowed = $scheduleWithViewOnItem
+            ? $this->getUser()->checkViewable($scheduledItem)
+            : $this->getUser()->checkEditable($scheduledItem);
+
+        if (!$isAllowed) {
+            throw new AccessDeniedException(__('Access to this item denied'));
+        }
+
+        // Only images and videos may be scheduled directly - other media types
+        // (audio, pdf, etc) have no meaningful full-screen presentation.
+        if ($type === 'media' && !in_array($media->mediaType, ['image', 'video'], true)) {
+            throw new InvalidArgumentException(
+                __('Only images and videos can be scheduled directly'),
+                'mediaId'
+            );
+        }
+
         if (empty($resolutionId)) {
             if ($type === 'media') {
                 $resolutionId = $this->resolutionFactory->getClosestMatchingResolution(
@@ -3333,13 +3478,28 @@ class LayoutFactory extends BaseFactory
             return $existingFullscreenLayout;
         }
 
+        // Build the Layout name/description from the media/playlist name. This name is not length
+        // validated upstream (Playlist names in particular have no max length), but the layout,
+        // description and region name columns are all varchar(254), so we need to truncate here
+        // to avoid an "unexpected" SQL error - save() below skips validation.
+        $sourceName = ($type === 'media' ? $media->name : $playlist->name);
+        $sourceId = ($type === 'media' ? $media->mediaId : $playlist->playlistId);
+
+        $namePrefix = $type . '_';
+        $nameSuffix = '_' . $sourceId;
+        // Leave enough room for the "-<region count>" suffix appended to the region name later.
+        $maxNameLength = 254 - strlen($namePrefix) - strlen($nameSuffix) - 10;
+        $layoutName = $namePrefix . mb_substr($sourceName, 0, max($maxNameLength, 1)) . $nameSuffix;
+
+        $descriptionPrefix = 'Full Screen Layout created from ';
+        $maxDescriptionNameLength = 254 - strlen($descriptionPrefix);
+        $description = $descriptionPrefix . mb_substr($sourceName, 0, max($maxDescriptionNameLength, 1));
+
         $layout = $this->createFromResolution(
             $resolutionId,
             $this->getUser()->userId,
-            $type . '_' .
-            ($type === 'media' ? $media->name : $playlist->name) .
-            '_' . ($type === 'media' ? $media->mediaId : $playlist->playlistId),
-            'Full Screen Layout created from ' . ($type === 'media' ? $media->name : $playlist->name),
+            $layoutName,
+            $description,
             '',
             null,
             false

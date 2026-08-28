@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -443,7 +443,7 @@ class Soap5 extends Soap4
                 $display->clientAddress = $this->getIp();
                 $display->xmrChannel = $xmrChannel;
                 $display->xmrPubKey = $xmrPubKey;
-                $display->folderId = $this->getConfig()->getSetting('DISPLAY_DEFAULT_FOLDER', 1);
+                $display->folderId = intval($this->getConfig()->getSetting('DISPLAY_DEFAULT_FOLDER', 1));
 
                 // Settings chosen on the Add Display form take precedence over the global
                 // defaults above. They are only ever applied to a brand new display.
@@ -559,7 +559,13 @@ class Soap5 extends Soap4
             }
         }
 
-        $display->save(Display::$saveOptionsMinimum);
+        try {
+            $display->save(Display::$saveOptionsMinimum);
+        } catch (\Throwable $e) {
+            $this->getLog()->error('RegisterDisplay: unexpected error saving display - ' . $e->getMessage());
+            $this->getLog()->debug($e->getTraceAsString());
+            return new \SoapFault('Receiver', __('Unexpected error, please contact your administrator.'));
+        }
 
         // A manually configured Player carries its one-time code appended to the server key, which is
         // what lets the form it came from recognise it. Its display name stays its own.

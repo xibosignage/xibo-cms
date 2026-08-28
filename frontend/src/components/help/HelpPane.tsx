@@ -130,7 +130,7 @@ export default function HelpPane() {
           aria-label={t('Help Centre')}
           aria-expanded={isOpen}
           onClick={() => (isOpen ? close() : openPane())}
-          className="flex size-11.25 items-center justify-center rounded-full bg-xibo-blue-600 text-white shadow-lg transition-colors hover:bg-xibo-blue-700 cursor-pointer focus:outline-4 focus:outline-blue-500/25"
+          className="flex size-11.25 items-center justify-center rounded-full bg-xibo-blue-600 text-white shadow-lg transition-colors hover:bg-xibo-blue-700 cursor-pointer focus:outline-4 focus:outline-xibo-blue-500/25"
         >
           <span className="text-2xl">?</span>
         </button>

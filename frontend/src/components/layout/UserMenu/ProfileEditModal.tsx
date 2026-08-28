@@ -224,7 +224,7 @@ export default function ProfileEditModal({ isOpen = true, onClose }: ProfileEdit
       if (!result.success) {
         return {
           fieldErrors: result.error.flatten().fieldErrors,
-          apiError: undefined,
+          apiError: t('Please fix the highlighted errors before saving.'),
         };
       }
 

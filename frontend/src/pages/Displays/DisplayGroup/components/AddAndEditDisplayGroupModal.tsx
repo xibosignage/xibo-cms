@@ -31,7 +31,8 @@ import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagI
 import TextInput from '@/components/ui/forms/TextInput';
 import Modal from '@/components/ui/modals/Modal';
 import { DataTable } from '@/components/ui/table/DataTable';
-import { CheckMarkCell, TagsCell, TextCell } from '@/components/ui/table/cells';
+import { CheckMarkCell, TagsCell, TextCell, toDisplayTags } from '@/components/ui/table/cells';
+import { useUserContext } from '@/context/UserContext';
 import { useDebounce } from '@/hooks/useDebounce';
 import { getDisplayGroupSchema } from '@/schema/displayGroup';
 import { createDisplayGroup, updateDisplayGroup } from '@/services/displayGroupApi';
@@ -39,6 +40,7 @@ import { fetchDisplays } from '@/services/displaysApi';
 import type { Display } from '@/types/display';
 import type { DisplayGroup } from '@/types/displayGroup';
 import type { Tag } from '@/types/tag';
+import { hasFeature } from '@/utils/permissions';
 
 interface AddAndEditDisplayGroupModalProps {
   type: 'add' | 'edit';
@@ -114,6 +116,7 @@ export default function AddAndEditDisplayGroupModal({
   onSave,
 }: AddAndEditDisplayGroupModalProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
   const [isPending, startTransition] = useTransition();
   const [activeTab, setActiveTab] = useState<'general' | 'reference'>('general');
   const [draft, setDraft] = useState<DraftState>(() => {
@@ -125,6 +128,7 @@ export default function AddAndEditDisplayGroupModal({
   const [formErrors, setFormErrors] = useState<DisplayGroupFormErrors>({});
   const [apiError, setApiError] = useState<string | undefined>();
   const [pendingTagInput, setPendingTagInput] = useState('');
+  const [hasTagPendingValue, setHasTagPendingValue] = useState(false);
 
   const [previewPagination, setPreviewPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -275,14 +279,7 @@ export default function AddAndEditDisplayGroupModal({
       header: t('Tags'),
       size: 140,
       enableSorting: false,
-      cell: ({ row }) => (
-        <TagsCell
-          tags={(row.original.tags ?? []).map((tag) => ({
-            id: tag.tagId,
-            label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
-          }))}
-        />
-      ),
+      cell: ({ row }) => <TagsCell tags={toDisplayTags(row.original.tags)} />,
     },
     {
       accessorKey: 'loggedIn',
@@ -312,7 +309,7 @@ export default function AddAndEditDisplayGroupModal({
     {
       label: isPending ? t('Saving…') : t('Save'),
       onClick: handleSave,
-      disabled: isPending,
+      disabled: isPending || hasTagPendingValue,
     },
   ];
 
@@ -340,8 +337,8 @@ export default function AddAndEditDisplayGroupModal({
               onClick={() => setActiveTab(tab)}
               className={`py-2 px-3 inline-flex items-center gap-2 border-b-2 text-sm font-semibold whitespace-nowrap focus:outline-none transition-all  ${
                 activeTab === tab
-                  ? 'border-blue-600 text-blue-500'
-                  : 'border-gray-200 text-gray-500 hover:text-blue-600'
+                  ? 'border-xibo-blue-600 text-xibo-blue-500'
+                  : 'border-gray-200 text-gray-500 hover:text-xibo-blue-600'
               }`}
             >
               {tab === 'general' ? t('General') : t('Reference')}
@@ -386,13 +383,17 @@ export default function AddAndEditDisplayGroupModal({
             />
 
             {/* Tags */}
-            <TagInput
-              value={draft.tags}
-              helpText={t('Tags (Comma-separated: Tag or Tag|Value)')}
-              onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
-              inputValue={pendingTagInput}
-              onInputChange={setPendingTagInput}
-            />
+            {(hasFeature(user, 'tag.tagging') || (draft.tags?.length ?? 0) > 0) && (
+              <TagInput
+                value={draft.tags}
+                helpText={t('Tags (Comma-separated: Tag or Tag|Value)')}
+                onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
+                inputValue={pendingTagInput}
+                onInputChange={setPendingTagInput}
+                onPendingValueChange={setHasTagPendingValue}
+                disabled={!hasFeature(user, 'tag.tagging')}
+              />
+            )}
 
             {/* Dynamic Group */}
             <div className="p-3 flex flex-col gap-3 bg-slate-50 rounded-lg">
@@ -445,7 +446,7 @@ export default function AddAndEditDisplayGroupModal({
                           <input
                             type="checkbox"
                             title={t('Exact')}
-                            className="shrink-0 mt-0.5 border-gray-200 rounded text-blue-600 focus:ring-blue-500"
+                            className="shrink-0 mt-0.5 border-gray-200 rounded text-xibo-blue-600 focus:ring-xibo-blue-500"
                             checked={draft.exactTags}
                             onChange={(e) =>
                               setDraft((prev) => ({ ...prev, exactTags: e.target.checked }))
@@ -478,6 +479,7 @@ export default function AddAndEditDisplayGroupModal({
                           columns={previewColumns}
                           data={previewRows}
                           pageCount={previewPageCount}
+                          rowCount={previewQueryData?.totalCount ?? 0}
                           pagination={previewPagination}
                           onPaginationChange={setPreviewPagination}
                           sorting={previewSorting}

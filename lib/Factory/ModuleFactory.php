@@ -195,9 +195,11 @@ class ModuleFactory extends BaseFactory
                 }
             }
 
-            // Include a separate cache per fallback data?
-            if ($module->fallbackData == 1) {
-                $cacheKey .= '_fb ' . $widget->getOptionValue('showFallback', 'never');
+            // A widget with fallback configured gets its own private cache slot, so that its own fallback
+            // content (or its own live data) never shares a slot with sibling widgets that have identical
+            // settings.
+            if ($module->fallbackData == 1 && $widget->getOptionValue('showFallback', 'never') !== 'never') {
+                $cacheKey .= '_widget' . $widget->widgetId;
             }
         }
 
@@ -803,9 +805,9 @@ class ModuleFactory extends BaseFactory
 
         $module = new Module($this->getStore(), $this->getLog(), $this->getDispatcher(), $this);
         $module->moduleId = $this->getFirstValueOrDefaultFromXmlNode($xml, 'id');
-        $module->name = __($this->getFirstValueOrDefaultFromXmlNode($xml, 'name'));
+        $module->name = __($this->getFirstValueOrDefaultFromXmlNode($xml, 'name') ?? '');
         $module->author = $this->getFirstValueOrDefaultFromXmlNode($xml, 'author');
-        $module->description = __($this->getFirstValueOrDefaultFromXmlNode($xml, 'description'));
+        $module->description = __($this->getFirstValueOrDefaultFromXmlNode($xml, 'description') ?? '');
         $module->icon = $this->getFirstValueOrDefaultFromXmlNode($xml, 'icon');
         $module->class = $this->getFirstValueOrDefaultFromXmlNode($xml, 'class');
         $module->type = $this->getFirstValueOrDefaultFromXmlNode($xml, 'type');

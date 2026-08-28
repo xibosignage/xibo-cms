@@ -29,6 +29,7 @@ import { mockFetchTasks } from './mocks/taskApi';
 
 import { deleteTask, fetchTasks } from '@/services/taskApi';
 import { testQueryClient } from '@/setupTests';
+import { waitForDialogToClose } from '@/testUtils/rtl';
 
 // =============================================================================
 // Module mocks
@@ -59,9 +60,7 @@ const openRowDeleteModal = async (user: UserEvent) => {
 };
 
 const selectAllRows = async (user: UserEvent) => {
-  // The first checkbox is the column header's "select all" toggle.
-  const checkboxes = screen.getAllByRole('checkbox', { name: /select row/i });
-  await user.click(checkboxes[0]!);
+  await user.click(screen.getByRole('checkbox', { name: /select all rows/i }));
 };
 
 // =============================================================================
@@ -109,9 +108,7 @@ describe('Tasks page - single delete', () => {
     await waitFor(() => {
       expect(deleteTask).toHaveBeenCalledWith(mockTask.taskId);
     });
-    await waitFor(() => {
-      expect(screen.queryByText('Delete Task?')).not.toBeInTheDocument();
-    });
+    await waitForDialogToClose('Delete Task?');
   });
 
   test('Delete button shows "Deleting…" while the request is in progress', async () => {
@@ -129,8 +126,9 @@ describe('Tasks page - single delete', () => {
 
     expect(await screen.findByRole('button', { name: /deleting/i })).toBeDisabled();
 
-    // Resolve so the test doesn't leak a pending promise.
+    // Wait for the resulting close so the update isn't left outside act().
     resolveDelete();
+    await waitForDialogToClose('Delete Task?');
   });
 
   test('a failed delete keeps the modal open and shows the error', async () => {

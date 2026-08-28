@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,7 +22,8 @@
 namespace Xibo\Xmds;
 
 use Carbon\Carbon;
-use Intervention\Image\ImageManagerStatic as Img;
+use Intervention\Image\Encoders\JpegEncoder;
+use Intervention\Image\ImageManager;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
 use Xibo\Event\XmdsDependencyRequestEvent;
@@ -751,8 +752,8 @@ class Soap4 extends Soap
         $serverKey = $sanitizer->getString('serverKey');
         $hardwareKey = $sanitizer->getString('hardwareKey');
 
-        $screenShotFmt = "jpg";
-        $screenShotMime = "image/jpeg";
+        $screenShotFmt = 'jpg';
+        $screenShotMime = 'image/jpeg';
         $screenShotImg = false;
 
         $converted = false;
@@ -770,7 +771,7 @@ class Soap4 extends Soap
 
         // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
         if (!$this->checkBandwidth($this->display->displayId)) {
-            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
+            throw new \SoapFault('Receiver', 'Bandwidth Limit exceeded');
         }
 
         $this->getLog()->debug('Received Screen shot');
@@ -781,27 +782,27 @@ class Soap4 extends Soap
             'screenshots/' . $this->display->displayId . '_screenshot.' . $screenShotFmt
         );
 
-        foreach (array('imagick', 'gd') as $imgDriver) {
-            Img::configure(array('driver' => $imgDriver));
+        foreach (['imagick', 'gd'] as $driverName) {
             try {
-                $screenShotImg = Img::make($screenShot);
+                $manager = $driverName === 'imagick' ? ImageManager::imagick() : ImageManager::gd();
+                $screenShotImg = $manager->read($screenShot);
             } catch (\Exception $e) {
-                $this->getLog()->debug($imgDriver . ' - ' . $e->getMessage());
+                $this->getLog()->debug($driverName . ' - ' . $e->getMessage());
             }
             if ($screenShotImg !== false) {
-                $this->getLog()->debug('Use ' . $imgDriver);
+                $this->getLog()->debug('Use ' . $driverName);
                 break;
             }
         }
 
         if ($screenShotImg !== false) {
-            $imgMime = $screenShotImg->mime();
+            $imgMime = $screenShotImg->origin()->mediaType();
 
             if ($imgMime != $screenShotMime) {
                 $needConversion = true;
                 try {
                     $this->getLog()->debug("converting: '" . $imgMime . "' to '" . $screenShotMime . "'");
-                    $screenShot = (string) $screenShotImg->encode($screenShotFmt);
+                    $screenShot = (string) $screenShotImg->encode(new JpegEncoder());
                     $converted = true;
                 } catch (\Exception $e) {
                     $this->getLog()->debug($e->getMessage());
@@ -824,7 +825,10 @@ class Soap4 extends Soap
         $this->display->save(Display::$saveOptionsMinimum);
 
         // Cache the current screen shot time
-        $this->display->setCurrentScreenShotTime($this->getPool(), Carbon::now()->format(DateFormatHelper::getSystemFormat()));
+        $this->display->setCurrentScreenShotTime(
+            $this->getPool(),
+            Carbon::now()->format(DateFormatHelper::getSystemFormat())
+        );
 
         $this->logBandwidth($this->display->displayId, Bandwidth::$SCREENSHOT, filesize($location));
 

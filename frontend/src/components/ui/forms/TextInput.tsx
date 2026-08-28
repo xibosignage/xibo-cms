@@ -44,6 +44,7 @@ interface TextInputProps {
   rows?: number;
   type?: React.HTMLInputTypeAttribute;
   optional?: boolean;
+  required?: boolean;
   maxLength?: number;
 }
 
@@ -67,6 +68,7 @@ export default function TextInput({
   rows,
   type,
   optional = false,
+  required = false,
   maxLength,
 }: TextInputProps) {
   const { t } = useTranslation();
@@ -84,6 +86,7 @@ export default function TextInput({
         >
           <span className="inline-flex items-center gap-1.5">
             {label}
+            {required && <span className="text-red-500">*</span>}
             {labelExtra}
           </span>
           {optional && <span className="text-xs font-normal text-gray-500">{t('Optional')}</span>}
@@ -110,6 +113,7 @@ export default function TextInput({
             disabled={disabled}
             rows={rows}
             maxLength={maxLength}
+            aria-required={required}
             onChange={(e) => onChange && onChange(e.target.value)}
             placeholder={placeholder || t('Add text')}
             className={twMerge(
@@ -126,6 +130,7 @@ export default function TextInput({
             disabled={disabled}
             readOnly={readOnly}
             maxLength={maxLength}
+            aria-required={required}
             onChange={(e) => onChange && onChange(e.target.value)}
             placeholder={placeholder || t('Add text')}
             type={type || 'text'}

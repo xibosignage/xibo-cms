@@ -33,7 +33,7 @@
         <script src="{{ theme.rootUri() }}dist/style.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
         <link href="/brand/theme.css" rel="stylesheet" media="screen">
 
-        <!-- Copyright 2006-2023 Xibo Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
+        <!-- Copyright 2006-{{ 'now' | date('Y') }} Xibo Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
         <style type="text/css">
             body {
                 padding-top: 40px !important;
@@ -61,6 +61,17 @@
             .login-logo {
                 width: 200px;
             }
+            .btn-brand {
+                background-color: var(--brand-primary, #0e70f6);
+                border-color: var(--brand-primary, #0e70f6);
+                color: #fff;
+            }
+            .btn-brand:hover,
+            .btn-brand:focus {
+                background-color: color-mix(in srgb, var(--brand-primary, #0e70f6) 88%, #000);
+                border-color: color-mix(in srgb, var(--brand-primary, #0e70f6) 88%, #000);
+                color: #fff;
+            }
 
         </style>
         {% block style %}{% endblock %}
@@ -68,7 +79,7 @@
     <body>
         <div class="container">
             <div class="{% block contentClass %}form-signin text-center{% endblock %}">
-                {% block header %}<p><a href="{{ theme.getThemeConfig("theme_url") }}"><img class="login-logo" src="{{ theme.rootUri() }}brand/{{ brandLogoFile }}" alt="Logo"></a></p>{% endblock %}
+                {% block header %}<p><a href="{{ theme.getThemeConfig("theme_url") }}"><img class="login-logo" src="/brand/{{ brandLogoFile }}" alt="Logo"></a></p>{% endblock %}
 
                 {% block content %}{% endblock %}
             </div>

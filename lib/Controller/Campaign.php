@@ -140,13 +140,6 @@ class Campaign extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\Parameter(
-        name: 'keyword',
-        description: 'Filter by campaign name or ID',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
-    )]
-    #[OA\Parameter(
         name: 'sortBy',
         description: 'Specifies which field the results are sorted by. Used together with sortDir',
         in: 'query',
@@ -273,10 +266,13 @@ class Campaign extends Base
      * @return Response|ResponseInterface
      * @throws NotFoundException
      * @throws InvalidArgumentException
+     * @throws AccessDeniedException
      */
     public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $campaign = $this->campaignFactory->getById($id, false);
+
+        $this->checkAdCampaignFeature($campaign);
 
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
 
@@ -587,6 +583,8 @@ class Campaign extends Base
             throw new AccessDeniedException();
         }
 
+        $this->checkAdCampaignFeature($campaign);
+
         $campaign->campaign = $parsedRequestParams->getString('name');
         $campaign->folderId = $parsedRequestParams->getInt('folderId', ['default' => $campaign->folderId]);
         $campaign->modifiedBy = $this->getUser()->getId();
@@ -734,6 +732,8 @@ class Campaign extends Base
             throw new AccessDeniedException();
         }
 
+        $this->checkAdCampaignFeature($campaign);
+
         $campaign->delete();
         $this->touchFolder($campaign->folderId);
 
@@ -822,6 +822,8 @@ class Campaign extends Base
                 'campaignId'
             );
         }
+
+        $this->checkAdCampaignFeature($campaign);
 
         // Load our existing layouts
         $campaign->loadLayouts();
@@ -915,6 +917,7 @@ class Campaign extends Base
      * @param Response $response
      * @param $id
      * @return ResponseInterface|Response
+     * @throws AccessDeniedException
      * @throws \Xibo\Support\Exception\GeneralException
      */
     public function removeLayout(Request $request, Response $response, $id)
@@ -933,6 +936,8 @@ class Campaign extends Base
                 'campaignId'
             );
         }
+
+        $this->checkAdCampaignFeature($campaign);
 
         $params = $this->getSanitizer($request->getParams());
         $layoutId = $params->getInt('layoutId', [
@@ -983,6 +988,8 @@ class Campaign extends Base
         if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $campaign->ownerId) {
             throw new AccessDeniedException(__('You do not have permission to copy this Campaign'));
         }
+
+        $this->checkAdCampaignFeature($campaign);
 
         $newCampaign = clone $campaign;
         $newCampaign->campaign = $sanitizedParams->getString('name');
@@ -1078,6 +1085,8 @@ class Campaign extends Base
             throw new AccessDeniedException();
         }
 
+        $this->checkAdCampaignFeature($campaign);
+
         $folderId = $this->getSanitizer($request->getParams())->getInt('folderId');
 
         if ($folderId === 1) {
@@ -1143,6 +1152,16 @@ class Campaign extends Base
     }
 
     /**
+     * @throws AccessDeniedException
+     */
+    private function checkAdCampaignFeature(\Xibo\Entity\Campaign $campaign): void
+    {
+        if ($campaign->type === 'ad' && !$this->getUser()->featureEnabled('ad.campaign')) {
+            throw new AccessDeniedException(__('Feature not enabled.'));
+        }
+    }
+
+    /**
      * Get the campaign filters
      * @param $parsedParams
      * @return array
@@ -1152,6 +1171,7 @@ class Campaign extends Base
         return $this->gridRenderFilter([
             'campaignId' => $parsedParams->getInt('campaignId'),
             'type' => $parsedParams->getString('type'),
+            'excludeAdCampaigns' => !$this->getUser()->featureEnabled('ad.campaign'),
             'name' => $parsedParams->getString('name'),
             'useRegexForName' => $parsedParams->getCheckbox('useRegexForName'),
             'tags' => $parsedParams->getString('tags'),
@@ -1166,7 +1186,6 @@ class Campaign extends Base
             'logicalOperator' => $parsedParams->getString('logicalOperator'),
             'logicalOperatorName' => $parsedParams->getString('logicalOperatorName'),
             'excludeMedia' => $parsedParams->getInt('excludeMedia'),
-            'keyword' => $parsedParams->getString('keyword')
         ], $parsedParams);
     }
 

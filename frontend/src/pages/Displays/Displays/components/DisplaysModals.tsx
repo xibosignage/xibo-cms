@@ -49,18 +49,21 @@ import SetDefaultLayoutModal from './SetDefaultLayoutModal';
 import TransferCmsModal from './TransferCmsModal';
 import TriggerWebhookModal from './TriggerWebhookModal';
 
+import EditTagsMultipleModal from '@/components/ui/modals/EditTagsMultipleModal';
 import Modal from '@/components/ui/modals/Modal';
 import MoveModal from '@/components/ui/modals/MoveModal';
 import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
+import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
 import type { MoveCmsData } from '@/services/displaysApi';
 import type { Display, DisplayCommandTarget } from '@/types/display';
+import { mergeEntityTags } from '@/utils/tags';
 
 interface DisplayModalsProps {
   actions: {
     activeModal: string | null;
     closeModal: () => void;
-    handleRefresh: () => void;
+    handleRefresh: () => Promise<unknown>;
     deleteError: string | null;
     isDeleting: boolean;
     isActionPending: boolean;
@@ -226,6 +229,7 @@ export function DisplayModals({ actions, selection, handlers }: DisplayModalsPro
           isOpen
           isPending={actions.isActionPending}
           onClose={actions.closeModal}
+          autoSubmitFormId={AUTO_SUBMIT_FORMS.displayAuthorise}
           actions={[
             { label: t('Cancel'), onClick: actions.closeModal, variant: 'secondary' },
             {
@@ -264,6 +268,7 @@ export function DisplayModals({ actions, selection, handlers }: DisplayModalsPro
           isOpen
           isPending={actions.isActionPending}
           onClose={actions.closeModal}
+          autoSubmitFormId={AUTO_SUBMIT_FORMS.displayLicenceCheck}
           actions={[
             { label: t('Cancel'), onClick: actions.closeModal, variant: 'secondary' },
             {
@@ -308,6 +313,7 @@ export function DisplayModals({ actions, selection, handlers }: DisplayModalsPro
           isOpen
           isPending={actions.isActionPending}
           onClose={actions.closeModal}
+          autoSubmitFormId={AUTO_SUBMIT_FORMS.displayRequestScreenshot}
           actions={[
             { label: t('Cancel'), onClick: actions.closeModal, variant: 'secondary' },
             {
@@ -356,6 +362,7 @@ export function DisplayModals({ actions, selection, handlers }: DisplayModalsPro
           onConfirm={() => handlers.confirmCollectNow(display)}
           isActionPending={actions.isActionPending}
           actionError={actions.actionError}
+          autoSubmitFormId={AUTO_SUBMIT_FORMS.displayGroupCollectNow}
         />
       )}
 
@@ -686,6 +693,19 @@ export function DisplayModals({ actions, selection, handlers }: DisplayModalsPro
           onConfirm={(data) => handlers.confirmBulkMoveCms(bulkItems, data)}
           isActionPending={actions.isActionPending}
           actionError={actions.actionError}
+        />
+      )}
+
+      {isModalOpen('editTagsMultiple') && (
+        <EditTagsMultipleModal
+          targetType="display"
+          ids={bulkItems.map((item) => item.displayId)}
+          existingTags={mergeEntityTags(bulkItems)}
+          onClose={actions.closeModal}
+          onSuccess={async () => {
+            await actions.handleRefresh();
+            actions.closeModal();
+          }}
         />
       )}
 

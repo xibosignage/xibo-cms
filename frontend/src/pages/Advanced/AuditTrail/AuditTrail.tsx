@@ -21,7 +21,7 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
-import { Download, Filter, FilterX } from 'lucide-react';
+import { Download } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -36,12 +36,15 @@ import { useAuditTrailData } from './hooks/useAuditTrailData';
 import { useAuditTrailFilterOptions } from './hooks/useAuditTrailFilterOptions';
 
 import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
+import { countActiveFilters } from '@/utils/filters';
 
 export default function AuditTrail() {
   const { t } = useTranslation();
@@ -89,6 +92,7 @@ export default function AuditTrail() {
     data: queryData,
     isFetching,
     isError,
+    isPaused,
     error: queryError,
   } = useAuditTrailData({
     pagination,
@@ -114,6 +118,8 @@ export default function AuditTrail() {
   const { filterOptions } = useAuditTrailFilterOptions(t);
   const advancedTabs = useFilteredTabs('advanced');
 
+  const activeFilterCount = countActiveFilters(filterInputs, INITIAL_FILTER_STATE, filterOptions);
+
   return (
     <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
@@ -125,15 +131,12 @@ export default function AuditTrail() {
           <Button leftIcon={Download} variant="secondary" onClick={() => openModal('export')}>
             {t('Export')}
           </Button>
-          <Button
-            leftIcon={!openFilter ? Filter : FilterX}
-            variant="secondary"
+          <FilterButton
+            isOpen={openFilter}
+            onToggle={() => setOpenFilter((prev) => !prev)}
+            activeCount={activeFilterCount}
             disabled={!isHydrated}
-            onClick={() => setOpenFilter((prev) => !prev)}
-            removeTextOnMobile
-          >
-            {t('Filters')}
-          </Button>
+          />
         </div>
 
         <FilterInputs
@@ -147,11 +150,7 @@ export default function AuditTrail() {
           onReset={handleResetFilters}
         />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
-            {error}
-          </div>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
         <div className="min-h-0 flex flex-col">
           {!isHydrated ? (
@@ -163,6 +162,7 @@ export default function AuditTrail() {
               columns={columns}
               data={auditLogList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

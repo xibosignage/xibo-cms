@@ -25,12 +25,13 @@ import { twMerge } from 'tailwind-merge';
 
 const BASE_STYLE = 'inline-flex justify-center items-center size-6 rounded-lg';
 
-export function CheckMarkCell({ active = true }) {
+export function CheckMarkCell({ active = true, title }: { active?: boolean; title?: string }) {
   const Icon = (active ? Check : X) as LucideIcon;
 
   return (
     <div className="flex items-center justify-center">
       <span
+        title={title}
         className={twMerge(
           BASE_STYLE,
           active ? 'text-teal-800 bg-teal-100' : 'text-gray-500 bg-gray-50',

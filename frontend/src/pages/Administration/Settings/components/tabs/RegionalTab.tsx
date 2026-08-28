@@ -131,7 +131,7 @@ export default function RegionalTab({
           {isVisible('DEFAULT_LANGUAGE') && (
             <SelectDropdown
               label={t('Default Language')}
-              helpText={t('Applied globally; users can override in their profile.')}
+              helpText={t('The default language to use')}
               value={formValues.DEFAULT_LANGUAGE ?? ''}
               options={options.languages.map((l) => ({
                 value: l.id,
@@ -139,13 +139,14 @@ export default function RegionalTab({
               }))}
               onSelect={(v) => updateField('DEFAULT_LANGUAGE', v)}
               searchable
+              disabled={!isEditable('DEFAULT_LANGUAGE')}
               className="w-full"
             />
           )}
           {isVisible('defaultTimezone') && (
             <SelectDropdown
               label={t('Timezone')}
-              helpText={t('Set the default timezone for the application.')}
+              helpText={t('Set the default timezone for the application')}
               value={formValues.defaultTimezone ?? ''}
               options={options.timeZones.map((tz) => ({
                 value: tz.id,
@@ -153,6 +154,7 @@ export default function RegionalTab({
               }))}
               onSelect={(v) => updateField('defaultTimezone', v)}
               searchable
+              disabled={!isEditable('defaultTimezone')}
               className="w-full"
             />
           )}
@@ -163,6 +165,7 @@ export default function RegionalTab({
               <TextInput
                 name="DATE_FORMAT"
                 label={t('Date Format')}
+                required
                 labelExtra={<DateFormatInfoPopover />}
                 helpText={t('The Date Format to use when displaying dates in the CMS.')}
                 value={formValues.DATE_FORMAT ?? ''}
@@ -172,28 +175,27 @@ export default function RegionalTab({
               />
             </div>
           )}
-          {isVisible('CALENDAR_TYPE') && (
-            <SelectDropdown
-              label={t('Calendar Type')}
-              value={formValues.CALENDAR_TYPE ?? ''}
-              options={[
-                { value: 'Gregorian', label: t('Gregorian') },
-                { value: 'Jalali', label: t('Jalali') },
-              ]}
-              onSelect={(v) => updateField('CALENDAR_TYPE', v)}
-              className="flex-1"
-            />
-          )}
         </div>
         {isVisible('DETECT_LANGUAGE') && (
           <SwitchRow
-            title={t('Auto-detect browser language')}
-            description={t(
-              "Use each visitor's browser locale instead of the default language above.",
-            )}
+            title={t('Detect language?')}
+            description={t('Detect the browser language?')}
             checked={formValues.DETECT_LANGUAGE === '1'}
             onChange={(v) => updateField('DETECT_LANGUAGE', v ? '1' : '0')}
             disabled={!isEditable('DETECT_LANGUAGE')}
+          />
+        )}
+        {isVisible('CALENDAR_TYPE') && (
+          <SelectDropdown
+            label={t('Calendar Type')}
+            value={formValues.CALENDAR_TYPE ?? ''}
+            options={[
+              { value: 'Gregorian', label: t('Gregorian') },
+              { value: 'Jalali', label: t('Jalali') },
+            ]}
+            onSelect={(v) => updateField('CALENDAR_TYPE', v)}
+            helpText={t('Which Calendar Type should the CMS use?')}
+            disabled={!isEditable('CALENDAR_TYPE')}
           />
         )}
       </SettingsSection>

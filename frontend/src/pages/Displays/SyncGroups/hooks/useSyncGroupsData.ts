@@ -21,7 +21,6 @@
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
-import type { AxiosError } from 'axios';
 
 import type { SyncGroupsFilterInput } from '../SyncGroupsConfig';
 
@@ -72,12 +71,11 @@ export const useSyncGroupData = ({
       return fetchSyncGroups({
         start: startOffset,
         length: pagination.pageSize,
-        keyword: filter || undefined,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         ...(typeof folderId === 'number' ? { folderId } : {}),
         ...(advancedFilters.syncGroupId ? { syncGroupId: advancedFilters.syncGroupId } : {}),
-        ...(advancedFilters.name ? { name: advancedFilters.name } : {}),
+        ...(advancedFilters.name || filter ? { name: advancedFilters.name || filter } : {}),
         ...(advancedFilters.leadDisplayId ? { leadDisplayId: advancedFilters.leadDisplayId } : {}),
         ...(useRegexForName && advancedFilters.name && isValidRegex(advancedFilters.name)
           ? { useRegexForName: 1 }
@@ -91,9 +89,5 @@ export const useSyncGroupData = ({
 
     placeholderData: keepPreviousData,
     staleTime: 1000 * 60 * 1,
-
-    throwOnError: (error: AxiosError) => {
-      return error.response?.status ? error.response.status >= 500 : false;
-    },
   });
 };

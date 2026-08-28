@@ -25,6 +25,7 @@ import { useEffect, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Button from '@/components/ui/Button';
+import { notify } from '@/components/ui/Notification';
 import MediaInput from '@/components/ui/forms/MediaInput';
 import NumberInput from '@/components/ui/forms/NumberInput';
 import Switch from '@/components/ui/forms/Switch';
@@ -112,7 +113,9 @@ type ProductTab = 'general' | 'details' | 'options';
 function tabClass(activeTab: ProductTab, tab: ProductTab): string {
   const isActive = activeTab === tab;
   return `py-2 px-3 inline-flex items-center gap-2 border-b-2 text-sm font-semibold whitespace-nowrap focus:outline-none transition-all ${
-    isActive ? 'border-blue-600 text-blue-500' : 'border-gray-200 text-gray-500 hover:text-blue-600'
+    isActive
+      ? 'border-xibo-blue-600 text-xibo-blue-500'
+      : 'border-gray-200 text-gray-500 hover:text-xibo-blue-600'
   }`;
 }
 
@@ -176,7 +179,7 @@ export default function AddAndEditMenuBoardProductModal({
     }));
   };
 
-  const handleSave = () => {
+  const submit = (keepOpen: boolean) => {
     const schema = getMenuBoardProductSchema(t);
     const payload = {
       ...draft,
@@ -215,6 +218,11 @@ export default function AddAndEditMenuBoardProductModal({
           await updateMenuBoardProduct(data.menuProductId, payload);
         } else {
           await createMenuBoardProduct(menuCategoryId, payload);
+          if (keepOpen) {
+            notify.success(t('Product added'));
+            onSave();
+            return;
+          }
         }
         onSave();
         onClose();
@@ -236,7 +244,21 @@ export default function AddAndEditMenuBoardProductModal({
       error={apiError}
       actions={[
         { label: t('Cancel'), onClick: onClose, variant: 'secondary', disabled: isPending },
-        { label: isPending ? t('Saving…') : t('Save'), onClick: handleSave, disabled: isPending },
+        ...(type === 'add'
+          ? [
+              {
+                label: t('Next'),
+                onClick: () => submit(true),
+                variant: 'secondary' as const,
+                disabled: isPending,
+              },
+            ]
+          : []),
+        {
+          label: isPending ? t('Saving…') : t('Save'),
+          onClick: () => submit(false),
+          disabled: isPending,
+        },
       ]}
     >
       <>

@@ -31,7 +31,7 @@ import type { FilterOption } from '@/types/filter';
 
 const PAGE_SIZE = 10;
 
-export function useDisplaysFilterOptions(t: TFunction) {
+export function useDisplaysFilterOptions(t: TFunction, canTag = false) {
   const [groupOptions, setGroupOptions] = useState<FilterOption[]>([]);
   const [groupPage, setGroupPage] = useState(0);
   const [hasMoreGroups, setHasMoreGroups] = useState(false);
@@ -58,7 +58,7 @@ export function useDisplaysFilterOptions(t: TFunction) {
       start: 0,
       length: PAGE_SIZE,
       isDisplaySpecific: 0,
-      keyword: debouncedGroupSearch || undefined,
+      displayGroup: debouncedGroupSearch || undefined,
     })
       .then((res) => {
         if (ignore) {
@@ -89,7 +89,7 @@ export function useDisplaysFilterOptions(t: TFunction) {
     fetchDisplayProfile({
       start: 0,
       length: PAGE_SIZE,
-      keyword: debouncedProfileSearch || undefined,
+      displayProfile: debouncedProfileSearch || undefined,
     })
       .then((res) => {
         if (ignore) {
@@ -119,7 +119,7 @@ export function useDisplaysFilterOptions(t: TFunction) {
       start: nextPage * PAGE_SIZE,
       length: PAGE_SIZE,
       isDisplaySpecific: 0,
-      keyword: debouncedGroupSearch || undefined,
+      displayGroup: debouncedGroupSearch || undefined,
     })
       .then((res) => {
         setGroupOptions((prev) => [
@@ -140,7 +140,7 @@ export function useDisplaysFilterOptions(t: TFunction) {
     fetchDisplayProfile({
       start: nextPage * PAGE_SIZE,
       length: PAGE_SIZE,
-      keyword: debouncedProfileSearch || undefined,
+      displayProfile: debouncedProfileSearch || undefined,
     })
       .then((res) => {
         setProfileOptions((prev) => [
@@ -154,7 +154,7 @@ export function useDisplaysFilterOptions(t: TFunction) {
       .finally(() => setIsLoadingMoreProfiles(false));
   };
 
-  const filterOptions = getBaseFilterKeys(t).map((item) => {
+  const filterOptions = getBaseFilterKeys(t, canTag).map((item) => {
     if (item.name === 'displayGroupId') {
       return {
         ...item,

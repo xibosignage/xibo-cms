@@ -49,6 +49,7 @@ import { fetchLayouts } from '@/services/layoutsApi';
 import type { Campaign, LayoutOnCampaign } from '@/types/campaign';
 import type { Tag } from '@/types/tag';
 import { formatDateTime } from '@/utils/date';
+import { hasFeature } from '@/utils/permissions';
 
 const DEFAULT_LAT_FALLBACK = 51.5;
 const DEFAULT_LNG_FALLBACK = -0.13;
@@ -220,6 +221,7 @@ export default function CampaignEditor() {
   const [activeTab, setActiveTab] = useState<EditorTab>('general');
   const [draft, setDraft] = useState<GeneralDraft | null>(null);
   const [pendingTagInput, setPendingTagInput] = useState('');
+  const [hasTagPendingValue, setHasTagPendingValue] = useState(false);
   const [dateErrors, setDateErrors] = useState<{ startDt?: string; endDt?: string }>({});
 
   const [displayTargets, setDisplayTargets] = useState<DisplayGroupMultiSelectValue>({
@@ -534,7 +536,7 @@ export default function CampaignEditor() {
                   onClick={() => setActiveTab(key)}
                   className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                     activeTab === key
-                      ? 'border-blue-600 text-blue-600'
+                      ? 'border-xibo-blue-600 text-xibo-blue-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700'
                   }`}
                 >
@@ -617,15 +619,19 @@ export default function CampaignEditor() {
                   />
                 </div>
 
-                <TagInput
-                  value={draft.tags}
-                  helpText={t(
-                    'Tags for this Campaign - Comma separated string of Tags or Tag|Value format. If you choose a Tag that has associated values, they will be shown for selection below.',
-                  )}
-                  onChange={(tags) => setDraft((prev) => prev && { ...prev, tags })}
-                  inputValue={pendingTagInput}
-                  onInputChange={setPendingTagInput}
-                />
+                {(hasFeature(user, 'tag.tagging') || (draft.tags?.length ?? 0) > 0) && (
+                  <TagInput
+                    value={draft.tags}
+                    helpText={t(
+                      'Tags for this Campaign - Comma separated string of Tags or Tag|Value format. If you choose a Tag that has associated values, they will be shown for selection below.',
+                    )}
+                    onChange={(tags) => setDraft((prev) => prev && { ...prev, tags })}
+                    inputValue={pendingTagInput}
+                    onInputChange={setPendingTagInput}
+                    onPendingValueChange={setHasTagPendingValue}
+                    disabled={!hasFeature(user, 'tag.tagging')}
+                  />
+                )}
               </>
             )}
 
@@ -685,6 +691,7 @@ export default function CampaignEditor() {
             data={layoutPageRows}
             enableSelection={false}
             pageCount={layoutPageCount}
+            rowCount={sortedLayouts.length}
             pagination={layoutTablePagination}
             onPaginationChange={setLayoutTablePagination}
             sorting={layoutTableSorting}
@@ -716,7 +723,11 @@ export default function CampaignEditor() {
         <Button variant="secondary" onClick={() => navigate('/design/campaign')}>
           {t('Back')}
         </Button>
-        <Button variant="primary" disabled={saveGeneral.isPending} onClick={handleSaveGeneral}>
+        <Button
+          variant="primary"
+          disabled={saveGeneral.isPending || hasTagPendingValue}
+          onClick={handleSaveGeneral}
+        >
           {saveGeneral.isPending ? t('Saving…') : t('Save')}
         </Button>
       </div>

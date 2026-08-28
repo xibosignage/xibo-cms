@@ -67,13 +67,6 @@ class Resolution extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\Parameter(
-        name: 'keyword',
-        description: 'Filter by Resolution name, ID, height, or width',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
-    )]
-    #[OA\Parameter(
         name: 'resolution',
         description: 'Filter by Resolution Name',
         in: 'query',
@@ -81,8 +74,15 @@ class Resolution extends Base
         schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
-        name: 'partialResolution',
-        description: 'Filter by Partial Resolution Name',
+        name: 'useRegexForName',
+        description: 'Flag (0,1). When filtering by multiple resolutions in resolution filter, should we use regex?', // phpcs:ignore
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'logicalOperatorName',
+        description: 'When filtering by multiple resolutions in resolution filter, which logical operator should be used? AND|OR', // phpcs:ignore
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'string')
@@ -426,8 +426,8 @@ class Resolution extends Base
             'enabled' => $sanitizedQueryParams->getInt('enabled', ['default' => -1]),
             'resolutionId' => $sanitizedQueryParams->getInt('resolutionId'),
             'resolution' => $sanitizedQueryParams->getString('resolution'),
-            'keyword' => $sanitizedQueryParams->getString('keyword'),
-            'partialResolution' => $sanitizedQueryParams->getString('partialResolution'),
+            'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
+            'logicalOperatorName' => $sanitizedQueryParams->getString('logicalOperatorName'),
             'width' => $sanitizedQueryParams->getInt('width'),
             'height' => $sanitizedQueryParams->getInt('height'),
             'orientation' => $sanitizedQueryParams->getString('orientation')

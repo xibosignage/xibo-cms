@@ -186,15 +186,6 @@ class CommandFactory extends BaseFactory
             $params['userId'] = $sanitizedFilter->getInt('userId');
         }
 
-        if ($sanitizedFilter->getString('keyword') != null) {
-            $body .= $this->buildSearchQuery(
-                $sanitizedFilter->getString('keyword'),
-                $params,
-                ['command.command'],
-                ['command.commandId']
-            );
-        }
-
         $this->viewPermissionSql(
             'Xibo\Entity\Command',
             $body,
@@ -204,8 +195,16 @@ class CommandFactory extends BaseFactory
             $filterBy
         );
 
-        $allowedColumns = ['commandId', 'command', 'code', 'description'];
-        $sortOrder = $this->buildSortQuery($sortOrder, $allowedColumns, [], ['command ASC']);
+        $allowedColumns = [
+            'commandId',
+            'command',
+            'code',
+            'description',
+            'availableOn',
+            'createAlertOn',
+            'groupsWithPermissions',
+        ];
+        $sortOrder = $this->buildSortQuery($sortOrder, $allowedColumns, [], ['command ASC'], 'commandId');
         $order = empty($sortOrder) ? '' : ' ORDER BY ' . implode(', ', $sortOrder);
 
         $limit = '';

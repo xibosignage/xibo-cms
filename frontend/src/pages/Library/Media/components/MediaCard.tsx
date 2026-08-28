@@ -77,7 +77,7 @@ export default function MediaCard({
     <div
       className={twMerge(
         'relative flex flex-col bg-white rounded-lg border-2 group',
-        isSelected ? 'bg-blue-100 border-blue-100' : 'border-slate-50 hover:bg-black/5',
+        isSelected ? 'bg-xibo-blue-100 border-xibo-blue-100' : 'border-slate-50 hover:bg-black/5',
         isMenuOpen ? 'z-10' : '',
       )}
     >
@@ -95,8 +95,8 @@ export default function MediaCard({
           className={twMerge(
             'size-5 rounded border cursor-pointer flex items-center justify-center transition-colors shadow-sm',
             isSelected
-              ? 'bg-blue-500 border-blue-500'
-              : 'bg-white border-gray-300 hover:border-blue-400',
+              ? 'bg-xibo-blue-500 border-xibo-blue-500'
+              : 'bg-white border-gray-300 hover:border-xibo-blue-400',
           )}
         >
           {isSelected && <Check className="size-3.5 text-white" />}
@@ -174,7 +174,7 @@ export default function MediaCard({
                       action.variant === 'danger'
                         ? 'text-red-800 hover:bg-red-50 focus:bg-red-100'
                         : action.variant === 'primary'
-                          ? 'text-blue-800 hover:bg-blue-50 focus:bg-blue-100'
+                          ? 'text-xibo-blue-800 hover:bg-xibo-blue-50 focus:bg-xibo-blue-100'
                           : 'text-gray-800 hover:bg-gray-50 focus:bg-gray-100',
                     )}
                   >

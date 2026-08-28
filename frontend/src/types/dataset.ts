@@ -66,6 +66,7 @@ export interface Dataset {
   folderId: number;
   permissionsFolderId: number;
   permissions: DatasetPermissions[];
+  userPermissions?: DatasetPermissions;
   columns?: DatasetColumn[];
   isActive?: boolean;
 }

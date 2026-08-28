@@ -25,8 +25,11 @@ import { getBaseFilterKeys } from '../TemplatesConfig';
 
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
 
-export function useTemplateFilterOptions<T = Record<string, unknown>>(t: TFunction) {
-  const filterOptions = getBaseFilterKeys(t) as FilterConfigItem<T>[];
+export function useTemplateFilterOptions<T = Record<string, unknown>>(
+  t: TFunction,
+  canTag = false,
+) {
+  const filterOptions = getBaseFilterKeys(t, canTag) as FilterConfigItem<T>[];
 
   return {
     filterOptions,

@@ -58,13 +58,6 @@ class UserGroup extends Base
         tags: ['usergroup']
     )]
     #[OA\Parameter(
-        name: 'keyword',
-        description: 'Filter by Group name and description',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
-    )]
-    #[OA\Parameter(
         name: 'userGroupId',
         description: 'Filter by UserGroup Id',
         in: 'query',
@@ -887,7 +880,6 @@ class UserGroup extends Base
             'isUserSpecific' => 0,
             'userIdMember' => $sanitizedQueryParams->getInt('userIdMember'),
             'isShownForAddUser' => $sanitizedQueryParams->getInt('isShownForAddUser'),
-            'keyword' => $sanitizedQueryParams->getString('keyword'),
         ], $sanitizedQueryParams);
     }
 

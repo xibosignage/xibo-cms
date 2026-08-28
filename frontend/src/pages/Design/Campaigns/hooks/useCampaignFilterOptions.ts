@@ -25,7 +25,7 @@ import { getCampaignFilterKeys } from '../CampaignConfig';
 
 export function useCampaignFilterOptions(
   t: TFunction,
-  options?: { canAccessAdCampaign?: boolean },
+  options?: { canAccessAdCampaign?: boolean; canTag?: boolean },
 ) {
   const filterOptions = getCampaignFilterKeys(t, options);
 

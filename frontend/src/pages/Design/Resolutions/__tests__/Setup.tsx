@@ -66,7 +66,23 @@ export const renderWithClient = (ui: React.ReactElement = <Resolution />) => {
   );
 };
 
+const fullPermissions = { view: 1, edit: 1, delete: 1, modifyPermissions: 1 } as const;
+
 export const mockResolutions: ResolutionType[] = [
-  { resolutionId: 1, resolution: '1080p', width: 1920, height: 1080, enabled: true },
-  { resolutionId: 2, resolution: '720p', width: 1280, height: 720, enabled: true },
+  {
+    resolutionId: 1,
+    resolution: '1080p',
+    width: 1920,
+    height: 1080,
+    enabled: true,
+    userPermissions: fullPermissions,
+  },
+  {
+    resolutionId: 2,
+    resolution: '720p',
+    width: 1280,
+    height: 720,
+    enabled: true,
+    userPermissions: fullPermissions,
+  },
 ];

@@ -29,7 +29,7 @@ use Lcobucci\JWT\Signer\Key;
 use Lcobucci\JWT\Signer\Rsa\Sha256;
 use Lcobucci\JWT\Token;
 use Lcobucci\JWT\Token\Builder;
-use League\OAuth2\Server\CryptKey;
+use League\OAuth2\Server\CryptKeyInterface;
 use League\OAuth2\Server\Entities\AccessTokenEntityInterface;
 use League\OAuth2\Server\Entities\Traits\AccessTokenTrait;
 use League\OAuth2\Server\Entities\Traits\EntityTrait;
@@ -46,11 +46,11 @@ class AccessTokenEntity implements AccessTokenEntityInterface
     /**
      * Generate a JWT from the access token
      *
-     * @param CryptKey $privateKey
+     * @param CryptKeyInterface $privateKey
      *
      * @return Token
      */
-    private function convertToJWT(CryptKey $privateKey)
+    private function convertToJWT(CryptKeyInterface $privateKey)
     {
         $userId = $this->getUserIdentifier();
         $tokenBuilder = (new Builder(new JoseEncoder(), ChainedFormatter::default()));
@@ -72,7 +72,7 @@ class AccessTokenEntity implements AccessTokenEntityInterface
     /**
      * Generate a string representation from the access token
      */
-    public function __toString()
+    public function toString(): string
     {
         return $this->convertToJWT($this->privateKey)->toString();
     }

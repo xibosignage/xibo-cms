@@ -21,17 +21,33 @@
 
 import type { ColumnDef } from '@tanstack/react-table';
 import type { TFunction } from 'i18next';
-import { Edit, CopyCheck, FolderInput, UserPlus2, CalendarClock, Trash2, Eye } from 'lucide-react';
+import {
+  Edit,
+  CopyCheck,
+  FolderInput,
+  UserPlus2,
+  CalendarClock,
+  Trash2,
+  Eye,
+  Tags,
+} from 'lucide-react';
 import type { ComponentProps } from 'react';
 
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
 import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkActions';
-import { TextCell, TagsCell, StatusCell, ActionsCell } from '@/components/ui/table/cells';
+import {
+  TextCell,
+  TagsCell,
+  toDisplayTags,
+  StatusCell,
+  ActionsCell,
+} from '@/components/ui/table/cells';
 import { getCommonFormOptions } from '@/config/commonForms';
 import type { Campaign } from '@/types/campaign';
 import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
 import type { DateLike } from '@/utils/date';
+import { formatTagsForExport } from '@/utils/tags';
 
 export interface CampaignFilterInput {
   name?: string;
@@ -54,6 +70,7 @@ export const CAMPAIGN_INITIAL_FILTER_STATE: CampaignFilterInput = {
   layoutId: '',
   type: '',
   cyclePlaybackEnabled: '',
+  retired: 0,
   logicalOperatorName: 'OR',
   useRegexForName: false,
   logicalOperator: 'OR',
@@ -62,7 +79,7 @@ export const CAMPAIGN_INITIAL_FILTER_STATE: CampaignFilterInput = {
 
 export const getCampaignFilterKeys = (
   t: TFunction,
-  options?: { canAccessAdCampaign?: boolean },
+  options?: { canAccessAdCampaign?: boolean; canTag?: boolean },
 ): FilterConfigItem<CampaignFilterInput>[] => [
   {
     label: t('Name'),
@@ -76,17 +93,21 @@ export const getCampaignFilterKeys = (
     regexKey: 'useRegexForName',
   },
 
-  {
-    label: t('Tags'),
-    name: 'tags',
-    type: 'tags',
-    placeholder: ' ',
-    className: 'md:w-auto md:flex-1 min-w-0',
-    showAndOr: true,
-    andOrKey: 'logicalOperator',
-    showExactTags: true,
-    exactTagsKey: 'exactTags',
-  },
+  ...(options?.canTag
+    ? ([
+        {
+          label: t('Tags'),
+          name: 'tags',
+          type: 'tags',
+          placeholder: ' ',
+          className: 'md:w-auto md:flex-1 min-w-0',
+          showAndOr: true,
+          andOrKey: 'logicalOperator',
+          showExactTags: true,
+          exactTagsKey: 'exactTags',
+        },
+      ] as FilterConfigItem<CampaignFilterInput>[])
+    : []),
 
   {
     label: t('Layout'),
@@ -137,15 +158,21 @@ export const getCampaignFilterKeys = (
     label: t('Retired'),
     name: 'retired',
     options: getCommonFormOptions(t).retired,
+    compareToDefault: true,
   },
 ];
 
-export type ModalType = BaseModalType | 'schedule' | null;
+export type ModalType = BaseModalType | 'schedule' | 'editTagsMultiple' | null;
 
 interface CampaignActionsProps {
   t: TFunction;
   formatDateTime: (value: DateLike) => string;
   canAccessAdCampaign?: boolean;
+  canModify?: boolean;
+  canUserShare?: boolean;
+  canPreview?: boolean;
+  canViewFolders?: boolean;
+  canTag?: boolean;
   onDelete?: (id: number) => void;
   openEditModal?: (campaign: Campaign) => void;
   openAdEditor?: (campaign: Campaign) => void;
@@ -154,10 +181,19 @@ interface CampaignActionsProps {
   openCopyModal?: (campaign: Campaign) => void;
   onSchedule?: (campaign: Campaign) => void;
   onPreview?: (campaign: Campaign) => void;
+  onTagClick?: (tag: Tag) => void;
+  selectedTagIds?: (string | number)[];
 }
 
 export const getCampaignColumn = (props: CampaignActionsProps): ColumnDef<Campaign>[] => {
-  const { t, formatDateTime, canAccessAdCampaign } = props;
+  const {
+    t,
+    formatDateTime,
+    canAccessAdCampaign,
+    canTag = false,
+    onTagClick,
+    selectedTagIds,
+  } = props;
   const getActions = getCampaignItemActions(props);
 
   return [
@@ -195,6 +231,10 @@ export const getCampaignColumn = (props: CampaignActionsProps): ColumnDef<Campai
               const value = info.getValue<number>();
               return <TextCell>{value ? formatDateTime(new Date(value * 1000)) : '-'}</TextCell>;
             },
+            meta: {
+              getExportValue: (row) =>
+                row.startDt ? formatDateTime(new Date(row.startDt * 1000)) : '',
+            },
           },
           {
             accessorKey: 'endDt',
@@ -204,6 +244,10 @@ export const getCampaignColumn = (props: CampaignActionsProps): ColumnDef<Campai
             cell: (info) => {
               const value = info.getValue<number>();
               return <TextCell>{value ? formatDateTime(new Date(value * 1000)) : '-'}</TextCell>;
+            },
+            meta: {
+              getExportValue: (row) =>
+                row.endDt ? formatDateTime(new Date(row.endDt * 1000)) : '',
             },
           },
         ] as ColumnDef<Campaign>[])
@@ -217,20 +261,29 @@ export const getCampaignColumn = (props: CampaignActionsProps): ColumnDef<Campai
       cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
     },
 
-    {
-      accessorKey: 'tags',
-      header: t('Tags'),
-      size: 150,
-      enableSorting: false,
-      cell: (info) => {
-        const tags = info.getValue<Tag[]>() || [];
-        const formattedTags = tags.map((tag) => ({
-          id: tag.tagId,
-          label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
-        }));
-        return <TagsCell tags={formattedTags} />;
-      },
-    },
+    ...(canTag
+      ? ([
+          {
+            accessorKey: 'tags',
+            header: t('Tags'),
+            size: 150,
+            enableSorting: false,
+            cell: (info) => {
+              const tags = info.getValue<Tag[]>() || [];
+              return (
+                <TagsCell
+                  tags={toDisplayTags(tags)}
+                  onTagClick={onTagClick}
+                  selectedTagIds={selectedTagIds}
+                />
+              );
+            },
+            meta: {
+              getExportValue: (row) => formatTagsForExport(row.tags),
+            },
+          },
+        ] as ColumnDef<Campaign>[])
+      : []),
 
     {
       accessorKey: 'totalDuration',
@@ -253,6 +306,9 @@ export const getCampaignColumn = (props: CampaignActionsProps): ColumnDef<Campai
             type={value ? 'success' : 'neutral'}
           />
         );
+      },
+      meta: {
+        getExportValue: (row) => (row.cyclePlaybackEnabled ? t('Enabled') : t('Disabled')),
       },
     },
 
@@ -393,6 +449,11 @@ export const getCampaignColumn = (props: CampaignActionsProps): ColumnDef<Campai
 
 export const getCampaignItemActions = ({
   t,
+  canAccessAdCampaign = false,
+  canModify = false,
+  canUserShare = false,
+  canPreview = false,
+  canViewFolders = false,
   onDelete,
   openEditModal,
   openAdEditor,
@@ -410,58 +471,92 @@ export const getCampaignItemActions = ({
     }
   };
 
-  return (campaign: Campaign) => [
-    {
-      label: t('Edit'),
-      icon: Edit,
-      onClick: () => editCampaign(campaign),
-      isQuickAction: true,
-      variant: 'primary' as const,
-    },
-    ...(campaign.type !== 'ad'
-      ? [
-          {
-            label: t('Schedule'),
-            icon: CalendarClock,
-            onClick: () => onSchedule && onSchedule(campaign),
-          },
-          {
-            label: t('Preview Campaign'),
-            icon: Eye,
-            onClick: () => onPreview && onPreview(campaign),
-          },
-        ]
-      : []),
-    { isSeparator: true },
-    {
-      label: t('Edit'),
-      icon: Edit,
-      onClick: () => editCampaign(campaign),
-    },
-    {
-      label: t('Make a Copy'),
-      icon: CopyCheck,
-      onClick: () => openCopyModal && openCopyModal(campaign),
-    },
-    {
-      label: t('Move'),
-      icon: FolderInput,
-      onClick: () => openMoveModal && openMoveModal(campaign),
-    },
-    {
-      label: t('Share'),
-      icon: UserPlus2,
-      onClick: () => openShareModal && openShareModal(campaign.campaignId),
-    },
+  return (campaign: Campaign) => {
+    const isAd = campaign.type === 'ad';
 
-    { isSeparator: true },
-    {
-      label: t('Delete'),
-      icon: Trash2,
-      onClick: () => onDelete && onDelete(campaign.campaignId),
-      variant: 'danger' as const,
-    },
-  ];
+    const canEdit = !!campaign.userPermissions?.edit;
+    const canDelete = !!campaign.userPermissions?.delete;
+    const canShare = !!campaign.userPermissions?.modifyPermissions;
+
+    const canEditAction = canModify && canEdit && (!isAd || canAccessAdCampaign);
+
+    const actions: ActionItem[] = [];
+
+    if (canEditAction) {
+      actions.push({
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => editCampaign(campaign),
+        isQuickAction: true,
+        variant: 'primary' as const,
+      });
+    }
+
+    if (onSchedule && !isAd) {
+      actions.push({
+        label: t('Schedule'),
+        icon: CalendarClock,
+        onClick: () => onSchedule(campaign),
+      });
+    }
+
+    if (canPreview && !isAd) {
+      actions.push({
+        label: t('Preview Campaign'),
+        icon: Eye,
+        onClick: () => onPreview && onPreview(campaign),
+      });
+    }
+
+    if (canEditAction) {
+      if (actions.length > 0) {
+        actions.push({ isSeparator: true });
+      }
+      actions.push({
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => editCampaign(campaign),
+      });
+    }
+
+    if (canModify && canEdit) {
+      actions.push({
+        label: t('Make a Copy'),
+        icon: CopyCheck,
+        onClick: () => openCopyModal && openCopyModal(campaign),
+      });
+    }
+
+    if (canModify && canEdit && canViewFolders) {
+      actions.push({
+        label: t('Move'),
+        icon: FolderInput,
+        onClick: () => openMoveModal && openMoveModal(campaign),
+      });
+    }
+
+    if (canModify && canShare && canUserShare) {
+      actions.push({
+        label: t('Share'),
+        icon: UserPlus2,
+        onClick: () => openShareModal && openShareModal(campaign.campaignId),
+      });
+    }
+
+    if (canModify && canDelete) {
+      if (actions.length > 0) {
+        actions.push({ isSeparator: true });
+      }
+      actions.push({
+        label: t('Delete'),
+        icon: Trash2,
+        onClick: () => onDelete && onDelete(campaign.campaignId),
+        variant: 'danger' as const,
+      });
+    }
+
+    return actions;
+  };
 };
 
 interface GetBulkActionsProps {
@@ -469,6 +564,7 @@ interface GetBulkActionsProps {
   onDelete: () => void;
   onMove: () => void;
   onShare: () => void;
+  onEditTags?: () => void;
 }
 
 export const getBulkActions = ({
@@ -476,6 +572,7 @@ export const getBulkActions = ({
   onDelete,
   onMove,
   onShare,
+  onEditTags,
 }: GetBulkActionsProps): DataTableBulkAction<Campaign>[] => {
   return [
     {
@@ -488,6 +585,15 @@ export const getBulkActions = ({
       icon: UserPlus2,
       onClick: onShare,
     },
+    ...(onEditTags
+      ? [
+          {
+            label: t('Edit Tags'),
+            icon: Tags,
+            onClick: onEditTags,
+          },
+        ]
+      : []),
     {
       label: t('Delete Selected'),
       icon: Trash2,

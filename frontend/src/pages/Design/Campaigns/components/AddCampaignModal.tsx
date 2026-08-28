@@ -29,15 +29,18 @@ import SelectFolder from '@/components/ui/forms/SelectFolder';
 import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
 import Modal from '@/components/ui/modals/Modal';
+import { useUserContext } from '@/context/UserContext';
 import { getCampaignSchema } from '@/schema/campaign';
 import { createCampaign } from '@/services/campaignApi';
+import type { Campaign } from '@/types/campaign';
 import type { Tag } from '@/types/tag';
+import { hasFeature } from '@/utils/permissions';
 
 interface AddCampaignModalProps {
   isOpen?: boolean;
   defaultFolderId?: number;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (campaign: Campaign) => void;
 }
 
 type CampaignDraft = {
@@ -75,6 +78,7 @@ export default function AddCampaignModal({
   onSuccess,
 }: AddCampaignModalProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
   const [isPending, startTransition] = useTransition();
 
   const [draft, setDraft] = useState<CampaignDraft>(() => ({
@@ -84,6 +88,7 @@ export default function AddCampaignModal({
   const [formErrors, setFormErrors] = useState<CampaignFormErrors>({});
   const [apiError, setApiError] = useState<string | undefined>();
   const [pendingTagInput, setPendingTagInput] = useState('');
+  const [hasTagPendingValue, setHasTagPendingValue] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
@@ -122,7 +127,7 @@ export default function AddCampaignModal({
         setPendingTagInput('');
         const serializedTags = serializeTags(finalTags);
 
-        await createCampaign({
+        const createdCampaign = await createCampaign({
           name: draft.name,
           type: draft.type,
           folderId: draft.folderId,
@@ -143,8 +148,8 @@ export default function AddCampaignModal({
               }),
         });
 
-        onSuccess();
         onClose();
+        onSuccess(createdCampaign);
       } catch (err: unknown) {
         console.error('Failed to create campaign:', err);
 
@@ -178,7 +183,7 @@ export default function AddCampaignModal({
         {
           label: isPending ? t('Saving…') : t('Save'),
           onClick: handleSave,
-          disabled: isPending,
+          disabled: isPending || hasTagPendingValue,
         },
       ]}
     >
@@ -223,13 +228,17 @@ export default function AddCampaignModal({
           />
 
           {/* Tags */}
-          <TagInput
-            value={draft.tags}
-            helpText={t('Tags separated by commas')}
-            onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
-            inputValue={pendingTagInput}
-            onInputChange={setPendingTagInput}
-          />
+          {(hasFeature(user, 'tag.tagging') || (draft.tags?.length ?? 0) > 0) && (
+            <TagInput
+              value={draft.tags}
+              helpText={t('Tags separated by commas')}
+              onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
+              inputValue={pendingTagInput}
+              onInputChange={setPendingTagInput}
+              onPendingValueChange={setHasTagPendingValue}
+              disabled={!hasFeature(user, 'tag.tagging')}
+            />
+          )}
 
           {draft.type === 'ad' ? (
             <>
@@ -292,6 +301,7 @@ export default function AddCampaignModal({
                   name="playCount"
                   label={t('Play count')}
                   type="number"
+                  placeholder={t('Add number')}
                   value={draft.playCount === '' ? '' : String(draft.playCount)}
                   onChange={(val) =>
                     setDraft((prev) => ({

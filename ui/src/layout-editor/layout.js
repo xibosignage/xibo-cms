@@ -423,7 +423,7 @@ Layout.prototype.checkout = function() {
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.reload();
+        LoginBox();
       } else {
         toastr.error(res.message);
       }
@@ -475,7 +475,7 @@ Layout.prototype.publish = function() {
 
       // Login Form needed?
       if (res.login) {
-        window.location.reload();
+        LoginBox();
       } else {
         toastr.error(res.message);
 
@@ -526,7 +526,7 @@ Layout.prototype.discard = function() {
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.reload();
+        LoginBox();
       } else {
         toastr.error(res.message);
 
@@ -579,7 +579,7 @@ Layout.prototype.delete = function() {
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.reload();
+        LoginBox();
       } else {
         toastr.error(res.message);
 
@@ -651,7 +651,7 @@ Layout.prototype.clear = function() {
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.reload();
+        LoginBox();
       } else {
         toastr.error(res.message);
 

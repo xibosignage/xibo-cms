@@ -312,16 +312,6 @@ class DataSetFactory extends BaseFactory
             $params['modifiedDateTo'] = strtotime($parsedFilter->getDate('modifiedDateTo'));
         }
 
-        if ($parsedFilter->getString('keyword') != null) {
-            // Fulltext search
-            $body .= $this->buildSearchQuery(
-                $parsedFilter->getString('keyword'),
-                $params,
-                ['dataset.dataSet', 'dataset.description', 'dataset.code'],
-                ['dataset.dataSetId']
-            );
-        }
-
         // View Permissions
         $this->viewPermissionSql(
             'Xibo\Entity\DataSet',
@@ -337,18 +327,21 @@ class DataSetFactory extends BaseFactory
         $allowedColumns = [
             'dataSetId',
             'dataSet',
+            'description',
             'code',
             'isRemote',
             'isRealTime',
             'owner',
-            'lastSync'
+            'lastSync',
+            'groupsWithPermissions'
         ];
 
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
             ['dataLastModified' => '`lastDataEdit`'],
-            ['dataSetId ASC']
+            ['dataSetId ASC'],
+            'dataSetId'
         );
 
         $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
@@ -356,8 +349,7 @@ class DataSetFactory extends BaseFactory
         $limit = '';
 
         // Paging
-        if (
-            $filterBy !== null
+        if ($filterBy !== null
             && $parsedFilter->getInt('start') !== null
             && $parsedFilter->getInt('length') !== null
         ) {
@@ -586,7 +578,7 @@ class DataSetFactory extends BaseFactory
                     $csv = $request->getBody()->getContents();
                     $array = array_map(
                         function ($v) use ($dataSet) {
-                            return str_getcsv($v, $dataSet->csvSeparator ?? ',');
+                            return str_getcsv($v, $dataSet->csvSeparator ?? ',', '"', '');
                         },
                         explode("\n", $csv)
                     );

@@ -24,7 +24,7 @@ import { z } from 'zod';
 
 import type { DatasetColumn } from '@/types/datasetColumn';
 
-export const getDatasetSchema = (t: TFunction) =>
+export const getDatasetSchema = (t: TFunction, datasetHardRowLimit = 0) =>
   z
     .object({
       dataSet: z
@@ -81,6 +81,14 @@ export const getDatasetSchema = (t: TFunction) =>
             code: z.ZodIssueCode.custom,
             message: t('Username is required for this authentication type.'),
             path: ['username'],
+          });
+        }
+
+        if (datasetHardRowLimit > 0 && (data.rowLimit ?? 0) > datasetHardRowLimit) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: t('DataSet row limit cannot be larger than the CMS dataSet row limit'),
+            path: ['rowLimit'],
           });
         }
       }

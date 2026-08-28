@@ -24,12 +24,13 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { getMediaIcon } from '@/pages/Library/Media/MediaConfig';
+import type { MediaType } from '@/types/media';
 
 interface MediaProps {
   thumb?: string;
   alt?: string;
   title?: string;
-  mediaType: 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';
+  mediaType: MediaType;
   onPreview?: () => void;
 }
 

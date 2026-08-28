@@ -29,10 +29,13 @@ import EditMediaModal from './EditMediaModal';
 import EnableStatsMediaModal from './EnableStatsMediaModal';
 import { MediaInfoPanel } from './MediaInfoPanel';
 import ReplaceFileModal from './ReplaceFileModal';
+import TidyLibraryModal from './TidyLibraryModal';
 
 import { FileUploader } from '@/components/ui/FileUploader';
 import FolderActionModals from '@/components/ui/FolderActionModals';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
+import EditTagsMultipleModal from '@/components/ui/modals/EditTagsMultipleModal';
+import EnableStatsMultipleModal from '@/components/ui/modals/EnableStatsMultipleModal';
 import Modal from '@/components/ui/modals/Modal';
 import MoveModal from '@/components/ui/modals/MoveModal';
 import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
@@ -40,25 +43,30 @@ import ShareModal from '@/components/ui/modals/ShareModal';
 import UsageReportModal from '@/components/ui/modals/UsageReportModal';
 import type { useFolderActions } from '@/hooks/useFolderActions';
 import type { UploadItem } from '@/hooks/useUploadQueue';
+import { setMediaEnableStat } from '@/services/mediaApi';
 import { EventTypeId } from '@/types/event';
 import type { Media } from '@/types/media';
 import type { Tag } from '@/types/tag';
 import type { User } from '@/types/user';
+import { mergeEntityTags } from '@/utils/tags';
 
 interface MediaModalsProps {
   actions: {
     activeModal: string | null;
     closeModal: () => void;
-    handleRefresh: () => void;
+    handleRefresh: () => Promise<unknown>;
     deleteError: string | null;
     isDeleting: boolean;
     isCloning: boolean;
     isUpdatingStats: boolean;
+    isTidying: boolean;
+    tidyError: string | null;
   };
   selection: {
     selectedMedia: Media | null;
     itemsToDelete: Media[];
     itemsToMove: Media[];
+    bulkItems: Media[];
     existingNames: string[];
     shareEntityIds: number | number[] | null;
     setShareEntityIds: React.Dispatch<React.SetStateAction<number | number[] | null>>;
@@ -68,6 +76,7 @@ interface MediaModalsProps {
     handleConfirmClone: (newName: string, tags: Tag[]) => void;
     handleConfirmMove: (newFolderId: number) => void;
     handleConfirmEnableStats: (value: string) => void;
+    handleConfirmTidy: (options: { tidyGenericFiles: boolean }) => void;
   };
   upload: {
     isOpen: boolean;
@@ -85,6 +94,8 @@ interface MediaModalsProps {
     selectedFolderId: number | null;
     setSelectedFolderId: (id: number | null) => void;
     canViewFolders: boolean;
+    canTag: boolean;
+    maxSize: number;
   };
   infoPanel: {
     isOpen: boolean;
@@ -139,6 +150,15 @@ export function MediaModals({
         />
       )}
 
+      {isModalOpen('tidy') && (
+        <TidyLibraryModal
+          onClose={actions.closeModal}
+          onConfirm={handlers.handleConfirmTidy}
+          isLoading={actions.isTidying}
+          error={actions.tidyError}
+        />
+      )}
+
       {isModalOpen('copy') && (
         <CopyMediaModal
           onClose={actions.closeModal}
@@ -168,6 +188,30 @@ export function MediaModals({
           }}
           entityType="media"
           entityId={selection.shareEntityIds ?? (selection.selectedMedia?.mediaId || null)}
+        />
+      )}
+
+      {isModalOpen('editTagsMultiple') && (
+        <EditTagsMultipleModal
+          targetType="media"
+          ids={selection.bulkItems.map((item) => item.mediaId)}
+          existingTags={mergeEntityTags(selection.bulkItems)}
+          onClose={actions.closeModal}
+          onSuccess={async () => {
+            await actions.handleRefresh();
+            actions.closeModal();
+          }}
+        />
+      )}
+
+      {isModalOpen('enableStatsMultiple') && (
+        <EnableStatsMultipleModal
+          ids={selection.bulkItems.map((item) => item.mediaId)}
+          entityLabel={t('media items')}
+          mode="inherit"
+          setEnableStat={(id, enableStat) => setMediaEnableStat(id, String(enableStat))}
+          onClose={actions.closeModal}
+          onSuccess={() => actions.handleRefresh()}
         />
       )}
 
@@ -246,8 +290,9 @@ export function MediaModals({
               clearQueue={upload.clearQueue}
               updateFileData={upload.updateFileData}
               isUploading={false}
-              maxSize={2 * 1024 * 1024 * 1024}
+              maxSize={upload.maxSize}
               disabled={!upload.canAdd}
+              canTag={upload.canTag}
               onUrlUpload={(url) => {
                 upload.onUrlAdd(url, upload.targetFolderId);
               }}

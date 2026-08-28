@@ -35,6 +35,13 @@ export const INITIAL_FILTER_STATE: SessionHistoryFilter = {
   sessionHistoryId: '',
 };
 
+export const ACTIVE_FILTER_KEYS: (keyof SessionHistoryFilter)[] = [
+  'reportFilter',
+  'type',
+  'userId',
+  'sessionHistoryId',
+];
+
 export const DATE_RANGE_OPTIONS = [
   { value: 'today', label: 'Today' },
   { value: 'yesterday', label: 'Yesterday' },

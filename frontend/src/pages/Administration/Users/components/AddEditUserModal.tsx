@@ -41,7 +41,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { getAddUserSchema, getEditUserSchema } from '@/schema/user';
 import { fetchFolderTree } from '@/services/folderApi';
 import { fetchGroupFolderPermissions, saveMultiPermissions } from '@/services/permissionsApi';
-import { createUser, updateUser } from '@/services/userApi';
+import { createUser, updateUser, fetchHomepages } from '@/services/userApi';
 import { fetchUserGroups } from '@/services/userGroupApi';
 import type { Folder } from '@/types/folder';
 import type { User } from '@/types/user';
@@ -54,7 +54,9 @@ type Tab = 'general' | 'folderPermission' | 'references' | 'notifications' | 'op
 function tabClass(activeTab: Tab, tab: Tab): string {
   const isActive = activeTab === tab;
   return `py-2 px-3 inline-flex items-center gap-2 border-b-2 text-sm font-semibold whitespace-nowrap focus:outline-none transition-all ${
-    isActive ? 'border-blue-600 text-blue-500' : 'border-gray-200 text-gray-500 hover:text-blue-600'
+    isActive
+      ? 'border-xibo-blue-600 text-xibo-blue-500'
+      : 'border-gray-200 text-gray-500 hover:text-xibo-blue-600'
   }`;
 }
 
@@ -144,9 +146,6 @@ export default function AddEditUserModal({
   const [showPassword, setShowPassword] = useState(false);
 
   // Dynamic options — paginated user group loading
-  const [groupData, setGroupData] = useState<
-    { groupId: number; name: string; features: string[] }[]
-  >([]);
   const [groupOptions, setGroupOptions] = useState<SelectOption[]>([]);
   const [groupHasMore, setGroupHasMore] = useState(false);
   const [groupSearch, setGroupSearch] = useState('');
@@ -176,39 +175,8 @@ export default function AddEditUserModal({
   }
   tabs.push({ key: 'options', label: t('Options') });
 
-  // Homepage options — filtered by user type / group features
-  const allHomepages = [
-    { label: t('Icon Dashboard'), value: 'icondashboard.view', feature: '' },
-    { label: t('Status Dashboard'), value: 'statusdashboard.view', feature: 'dashboard.status' },
-    {
-      label: t('Media Manager Dashboard'),
-      value: 'mediamanager.view',
-      feature: 'dashboard.media.manager',
-    },
-    {
-      label: t('Playlist Dashboard'),
-      value: 'playlistdashboard.view',
-      feature: 'dashboard.playlist',
-    },
-  ];
-
-  const homepageOptions: SelectOption[] = (() => {
-    if (draft.userTypeId === UserType.SuperAdmin) {
-      return allHomepages.map(({ label, value }) => ({ label, value }));
-    }
-    if (isEdit && user?.features) {
-      return allHomepages
-        .filter((hp) => !hp.feature || user.features![hp.feature])
-        .map(({ label, value }) => ({ label, value }));
-    }
-    const selectedGroup = groupData.find((g) => g.groupId === draft.groupId);
-    if (selectedGroup) {
-      return allHomepages
-        .filter((hp) => !hp.feature || selectedGroup.features.includes(hp.feature))
-        .map(({ label, value }) => ({ label, value }));
-    }
-    return allHomepages.filter((hp) => !hp.feature).map(({ label, value }) => ({ label, value }));
-  })();
+  // Homepage options — resolved server-side by user type / group features
+  const [homepageOptions, setHomepageOptions] = useState<SelectOption[]>([]);
 
   // Load user groups with pagination
   useEffect(() => {
@@ -216,7 +184,6 @@ export default function AddEditUserModal({
     const controller = new AbortController();
     groupPageRef.current = 0;
     setGroupOptions([]);
-    setGroupData([]);
     fetchUserGroups({
       start: 0,
       length: GROUP_PAGE_SIZE,
@@ -228,13 +195,6 @@ export default function AddEditUserModal({
       .then((res) => {
         if (controller.signal.aborted) return;
         const filtered = res.rows.filter((g) => g.isUserSpecific !== 1);
-        setGroupData(
-          filtered.map((g) => ({
-            groupId: g.groupId,
-            name: g.group,
-            features: g.features ?? [],
-          })),
-        );
         setGroupOptions(
           filtered.map((g) => ({
             label: g.group,
@@ -248,6 +208,41 @@ export default function AddEditUserModal({
     return () => controller.abort();
   }, [isOpen, debouncedGroupSearch]);
 
+  // Load homepage options — the backend resolves which are available from the
+  // target user's (edit) or selected group's (add) enabled features.
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const isSuperAdmin = draft.userTypeId === UserType.SuperAdmin;
+
+    // Work out which selector the backend endpoint needs.
+    let params: { userId?: number; userTypeId?: number; groupId?: number } | null = null;
+    if (isSuperAdmin) {
+      params = { userTypeId: UserType.SuperAdmin };
+    } else if (isEdit && user?.userId) {
+      params = { userId: user.userId };
+    } else if (draft.groupId) {
+      params = { userTypeId: draft.userTypeId, groupId: draft.groupId };
+    }
+
+    // No group selected yet in add mode — only the always-available homepage.
+    if (!params) {
+      setHomepageOptions([{ label: t('Icon Dashboard'), value: 'icondashboard.view' }]);
+      return;
+    }
+
+    const controller = new AbortController();
+    fetchHomepages(params, controller.signal)
+      .then((homepages) => {
+        if (controller.signal.aborted) return;
+        setHomepageOptions(homepages.map((hp) => ({ label: hp.title, value: hp.homepage })));
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [isOpen, isEdit, user?.userId, draft.userTypeId, draft.groupId, t]);
+
   const loadMoreGroups = () => {
     if (isLoadingMoreGroups || !groupHasMore) return;
     setIsLoadingMoreGroups(true);
@@ -260,14 +255,6 @@ export default function AddEditUserModal({
     })
       .then((res) => {
         const filtered = res.rows.filter((g) => g.isUserSpecific !== 1);
-        setGroupData((prev) => [
-          ...prev,
-          ...filtered.map((g) => ({
-            groupId: g.groupId,
-            name: g.group,
-            features: g.features ?? [],
-          })),
-        ]);
         setGroupOptions((prev) => [
           ...prev,
           ...filtered.map((g) => ({
@@ -425,6 +412,7 @@ export default function AddEditUserModal({
           if (value?.[0]) mapped[key as keyof UserFormErrors] = value[0];
         });
         setFormErrors(mapped);
+        setApiError(t('Please fix the highlighted errors before saving.'));
         if (
           mapped.userName ||
           mapped.email ||
@@ -447,6 +435,7 @@ export default function AddEditUserModal({
         if (isEdit && user) {
           if (draft.password && draft.password !== draft.retypePassword) {
             setFormErrors({ retypePassword: t('Passwords do not match') });
+            setApiError(t('Please fix the highlighted errors before saving.'));
             setActiveTab('general');
             return;
           }

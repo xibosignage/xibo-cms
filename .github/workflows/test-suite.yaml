@@ -70,7 +70,7 @@ jobs:
         run: |
           docker exec -t cms-web /bin/bash -c "/usr/local/bin/wait-for-command.sh -q -t 300 -c \"nc -z localhost 80\""
           docker cp cms-web:/var/www/cms/web/settings.php web/settings.php
-          docker exec -t cms-web /bin/bash -c "chown -R www-data.www-data /var/www/cms"
+          docker exec -t cms-web /bin/bash -c "chown -R www-data:www-data /var/www/cms"
           docker exec --user www-data -t cms-web /bin/bash -c "cd /var/www/cms; /usr/bin/php bin/run.php 1"
           sleep 5
 
@@ -218,6 +218,7 @@ jobs:
       - name: Run Vitest with coverage
         if: env.with_coverage == 'true'
         working-directory: frontend
+        timeout-minutes: 30
         env:
           TEST_PATTERN: ${{ env.test_pattern }}
         run: |
@@ -227,6 +228,7 @@ jobs:
       - name: Run Vitest without coverage
         if: env.with_coverage == 'false'
         working-directory: frontend
+        timeout-minutes: 30
         env:
           TEST_PATTERN: ${{ env.test_pattern }}
         run: |
@@ -352,7 +354,7 @@ jobs:
         run: |
           docker exec -t cms-web /bin/bash -c "/usr/local/bin/wait-for-command.sh -q -t 300 -c \"nc -z localhost 80\""
           docker cp cms-web:/var/www/cms/web/settings.php web/settings.php
-          docker exec -t cms-web /bin/bash -c "chown -R www-data.www-data /var/www/cms"
+          docker exec -t cms-web /bin/bash -c "chown -R www-data:www-data /var/www/cms"
           docker exec --user www-data -t cms-web /bin/bash -c "cd /var/www/cms; /usr/bin/php bin/run.php 1"
           sleep 5
 

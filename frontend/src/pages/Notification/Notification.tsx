@@ -21,7 +21,7 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
-import { Filter, FilterX, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -37,12 +37,15 @@ import { useNotificationActions } from './hooks/useNotificationActions';
 import { useNotificationData } from './hooks/useNotificationData';
 
 import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
+import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useUserContext } from '@/context/UserContext';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useTableState } from '@/hooks/useTableState';
 import type { Notification } from '@/types/notification';
+import { countActiveFilters } from '@/utils/filters';
 import { hasFeature } from '@/utils/permissions';
 
 export default function NotificationCentre() {
@@ -90,6 +93,7 @@ export default function NotificationCentre() {
     data: queryData,
     isFetching,
     isError,
+    isPaused,
     error: queryError,
   } = useNotificationData({
     pagination,
@@ -163,6 +167,7 @@ export default function NotificationCentre() {
 
   const columns = getNotificationColumns({
     t,
+    canModify: hasFeature(user, 'notification.modify'),
     onDelete: handleDelete,
     onView: handleView,
     onEdit: handleEdit,
@@ -187,6 +192,12 @@ export default function NotificationCentre() {
 
   const filterOptions = getBaseFilterKeys(t);
 
+  const activeFilterCount = countActiveFilters(
+    filterInputs,
+    NOTIFICATION_INITIAL_FILTER_STATE,
+    filterOptions,
+  );
+
   return (
     <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
@@ -204,15 +215,12 @@ export default function NotificationCentre() {
                 {t('Add Notification')}
               </Button>
             )}
-            <Button
-              leftIcon={!openFilter ? Filter : FilterX}
-              variant="secondary"
+            <FilterButton
+              isOpen={openFilter}
+              onToggle={() => setOpenFilter((prev) => !prev)}
+              activeCount={activeFilterCount}
               disabled={!isHydrated}
-              onClick={() => setOpenFilter((prev) => !prev)}
-              removeTextOnMobile
-            >
-              {t('Filters')}
-            </Button>
+            />
           </div>
         </div>
 
@@ -233,49 +241,45 @@ export default function NotificationCentre() {
           onReset={handleResetFilters}
         />
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-md" role="alert">
-            {error}
-          </div>
-        )}
+        <QueryStatusBanner error={error} isPaused={isPaused} />
 
-        <div className="min-h-0 flex flex-col">
+        <div
+          className="flex-1 min-h-0 flex flex-col"
+          onDoubleClick={(e) => {
+            const el = (e.target as Element).closest('[data-notification-id]');
+            if (!el) return;
+            const id = Number(el.getAttribute('data-notification-id'));
+            const notif = notificationList.find((n) => n.notificationId === id);
+            if (notif) handleView(notif);
+          }}
+        >
           {!isHydrated ? (
             <div className="flex-1 flex items-center justify-center bg-gray-50 animate-pulse rounded-lg border border-gray-200">
               <span className="text-gray-400 font-medium">{t('Loading...')}</span>
             </div>
           ) : (
-            <div
-              onDoubleClick={(e) => {
-                const el = (e.target as Element).closest('[data-notification-id]');
-                if (!el) return;
-                const id = Number(el.getAttribute('data-notification-id'));
-                const notif = notificationList.find((n) => n.notificationId === id);
-                if (notif) handleView(notif);
-              }}
-            >
-              <DataTable
-                columns={columns}
-                data={notificationList}
-                pageCount={pageCount}
-                pagination={pagination}
-                onPaginationChange={setPagination}
-                sorting={sorting}
-                onSortingChange={setSorting}
-                globalFilter=""
-                onGlobalFilterChange={() => {}}
-                loading={isFetching}
-                rowSelection={rowSelection}
-                onRowSelectionChange={handleRowSelectionChange}
-                onRefresh={handleRefresh}
-                columnPinning={{ left: ['tableSelection'], right: ['tableActions'] }}
-                columnVisibility={columnVisibility}
-                onColumnVisibilityChange={setColumnVisibility}
-                bulkActions={bulkActions}
-                viewMode={null}
-                getRowId={getRowId}
-              />
-            </div>
+            <DataTable
+              columns={columns}
+              data={notificationList}
+              pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
+              pagination={pagination}
+              onPaginationChange={setPagination}
+              sorting={sorting}
+              onSortingChange={setSorting}
+              globalFilter=""
+              onGlobalFilterChange={() => {}}
+              loading={isFetching}
+              rowSelection={rowSelection}
+              onRowSelectionChange={handleRowSelectionChange}
+              onRefresh={handleRefresh}
+              columnPinning={{ left: ['tableSelection'], right: ['tableActions'] }}
+              columnVisibility={columnVisibility}
+              onColumnVisibilityChange={setColumnVisibility}
+              bulkActions={bulkActions}
+              viewMode={null}
+              getRowId={getRowId}
+            />
           )}
         </div>
       </div>

@@ -339,7 +339,8 @@ class ScheduleFactory extends BaseFactory
             $sortOrder,
             $allowedColumns,
             $customColumns,
-            ['eventId ASC']
+            ['eventId ASC'],
+            'eventId'
         );
 
         $select = '
@@ -408,16 +409,6 @@ class ScheduleFactory extends BaseFactory
         if ($parsedFilter->getInt('eventId') !== null) {
             $body .= ' AND `schedule`.eventId = :eventId ';
             $params['eventId'] = $parsedFilter->getInt('eventId');
-        }
-
-        if ($parsedFilter->getString('keyword') != null) {
-            // Fulltext search
-            $body .= $this->buildSearchQuery(
-                $parsedFilter->getString('keyword'),
-                $params,
-                ['schedule.name'],
-                ['schedule.eventId']
-            );
         }
 
         if ($parsedFilter->getInt('eventTypeId') !== null) {
@@ -665,8 +656,8 @@ class ScheduleFactory extends BaseFactory
                     IFNULL(`schedule`.recurrence_type, \'\') <> \'\'
                     AND `schedule`.fromDt < :futureSchedulesTo
                     AND (
-                        `schedule`.recurrence_range >= :futureSchedulesFrom 
-                        OR IFNULL(`schedule`.recurrence_range, 0) = 0 
+                        `schedule`.recurrence_range >= :futureSchedulesFrom
+                        OR IFNULL(`schedule`.recurrence_range, 0) = 0
                     )
                 )
             ) ';

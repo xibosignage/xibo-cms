@@ -88,9 +88,9 @@ export default function DefaultsTab({
       <SettingsSection title={t('Media & Layout')}>
         {isVisible('LIBRARY_MEDIA_UPDATEINALL_CHECKB') && (
           <SwitchRow
-            title={t('Update media across all Layouts')}
+            title={t('Default update media in all layouts')}
             description={t(
-              'When editing a file in the library, automatically update it in every layout it appears in.',
+              'Default the checkbox for updating media on all layouts when editing in the library',
             )}
             checked={formValues.LIBRARY_MEDIA_UPDATEINALL_CHECKB === '1'}
             onChange={(v) => updateField('LIBRARY_MEDIA_UPDATEINALL_CHECKB', v ? '1' : '0')}
@@ -100,9 +100,9 @@ export default function DefaultsTab({
 
         {isVisible('LAYOUT_COPY_MEDIA_CHECKB') && (
           <SwitchRow
-            title={t('Copy media when copying a layout')}
+            title={t('Default copy media when copying a layout?')}
             description={t(
-              'Duplicate media files when a layout is copied, rather than sharing the original.',
+              'Default the checkbox for making duplicates of media when copying layouts',
             )}
             checked={formValues.LAYOUT_COPY_MEDIA_CHECKB === '1'}
             onChange={(v) => updateField('LAYOUT_COPY_MEDIA_CHECKB', v ? '1' : '0')}
@@ -112,9 +112,11 @@ export default function DefaultsTab({
 
         {isVisible('LIBRARY_MEDIA_DELETEOLDVER_CHECKB') && (
           <SwitchRow
-            title={t('Delete old version when replacing a file')}
+            title={t(
+              'Default for "Delete old version of Media" checkbox. Shown when Editing Library Media.',
+            )}
             description={t(
-              'Delete old version of Media when uploading a replacement file to the Library.',
+              'Default the checkbox for Deleting Old Version of media when a new file is being uploaded to the library.',
             )}
             checked={formValues.LIBRARY_MEDIA_DELETEOLDVER_CHECKB === '1'}
             onChange={(v) => updateField('LIBRARY_MEDIA_DELETEOLDVER_CHECKB', v ? '1' : '0')}
@@ -124,8 +126,10 @@ export default function DefaultsTab({
 
         {isVisible('DEFAULT_LAYOUT_AUTO_PUBLISH_CHECKB') && (
           <SwitchRow
-            title={t('Auto-publish layouts after 30 minutes')}
-            description={t('Draft layouts publish automatically 30 minutes after the last edit.')}
+            title={t('Should Layouts be automatically Published?')}
+            description={t(
+              'When enabled draft Layouts will be automatically published 30 minutes after the last edit',
+            )}
             checked={formValues.DEFAULT_LAYOUT_AUTO_PUBLISH_CHECKB === '1'}
             onChange={(v) => updateField('DEFAULT_LAYOUT_AUTO_PUBLISH_CHECKB', v ? '1' : '0')}
             disabled={!isEditable('DEFAULT_LAYOUT_AUTO_PUBLISH_CHECKB')}
@@ -136,7 +140,8 @@ export default function DefaultsTab({
         <div className="flex items-center justify-between space-x-4">
           {isVisible('DEFAULT_TRANSITION_IN') && (
             <SelectDropdown
-              label={t('Transition In')}
+              label={t('Default Transition In')}
+              helpText={t('Default Transition In that should be applied to widgets')}
               value={formValues.DEFAULT_TRANSITION_IN ?? ''}
               initialLabel={relatedEntities.defaultTransitionIn?.transition}
               options={transIn.options}
@@ -147,13 +152,15 @@ export default function DefaultsTab({
               isLoadingMore={transIn.isLoadingMore}
               onSearch={() => {}}
               clearable
+              disabled={!isEditable('DEFAULT_TRANSITION_IN')}
               className="w-full"
             />
           )}
 
           {isVisible('DEFAULT_TRANSITION_OUT') && (
             <SelectDropdown
-              label={t('Transition Out')}
+              label={t('Default Transition Out')}
+              helpText={t('Default Transition Out that should be applied to widgets')}
               value={formValues.DEFAULT_TRANSITION_OUT ?? ''}
               initialLabel={relatedEntities.defaultTransitionOut?.transition}
               options={transOut.options}
@@ -164,6 +171,7 @@ export default function DefaultsTab({
               isLoadingMore={transOut.isLoadingMore}
               onSearch={() => {}}
               clearable
+              disabled={!isEditable('DEFAULT_TRANSITION_OUT')}
               className="w-full"
             />
           )}
@@ -172,7 +180,8 @@ export default function DefaultsTab({
         {isVisible('DEFAULT_TRANSITION_DURATION') && (
           <NumberInput
             name="DEFAULT_TRANSITION_DURATION"
-            label={t('Duration (ms)')}
+            label={t('Default Transition duration')}
+            helpText={t('Default duration for in and out transitions')}
             value={Number(formValues.DEFAULT_TRANSITION_DURATION) || 0}
             onChange={(v) => updateField('DEFAULT_TRANSITION_DURATION', String(v))}
             disabled={!isEditable('DEFAULT_TRANSITION_DURATION')}
@@ -181,7 +190,9 @@ export default function DefaultsTab({
 
         {isVisible('DEFAULT_TRANSITION_AUTO_APPLY') && (
           <SwitchRow
-            title={t('Auto-apply transitions on new Layouts')}
+            title={t(
+              'Default value for "Automatically apply Transitions?." checkbox on Layout add form',
+            )}
             checked={formValues.DEFAULT_TRANSITION_AUTO_APPLY === '1'}
             onChange={(v) => updateField('DEFAULT_TRANSITION_AUTO_APPLY', v ? '1' : '0')}
             disabled={!isEditable('DEFAULT_TRANSITION_AUTO_APPLY')}
@@ -193,8 +204,10 @@ export default function DefaultsTab({
           {isVisible('DEFAULT_RESIZE_THRESHOLD') && (
             <NumberInput
               name="DEFAULT_RESIZE_THRESHOLD"
-              label={t('Resize threshold (px, longest side)')}
-              helpText={t('Images up to this size will be resized as needed.')}
+              label={t('Resize Threshold')}
+              helpText={t(
+                'The maximum dimensions to be considered when an image is resized, based on the longest side',
+              )}
               value={Number(formValues.DEFAULT_RESIZE_THRESHOLD) || 0}
               onChange={(v) => updateField('DEFAULT_RESIZE_THRESHOLD', String(v))}
               disabled={!isEditable('DEFAULT_RESIZE_THRESHOLD')}
@@ -204,8 +217,10 @@ export default function DefaultsTab({
           {isVisible('DEFAULT_RESIZE_LIMIT') && (
             <NumberInput
               name="DEFAULT_RESIZE_LIMIT"
-              label={t('Resize limit (px, longest side)')}
-              helpText={t('Images larger than this will not be processed at all.')}
+              label={t('Resize Limit')}
+              helpText={t(
+                'Images that exceed the resize limit, based on the longest side, will not be processed',
+              )}
               value={Number(formValues.DEFAULT_RESIZE_LIMIT) || 0}
               onChange={(v) => updateField('DEFAULT_RESIZE_LIMIT', String(v))}
               disabled={!isEditable('DEFAULT_RESIZE_LIMIT')}
@@ -218,43 +233,59 @@ export default function DefaultsTab({
           {isVisible('DATASET_HARD_ROW_LIMIT') && (
             <NumberInput
               name="DATASET_HARD_ROW_LIMIT"
-              label={t('Max rows per dataset')}
+              label={t('DataSet maximum number of Rows')}
+              helpText={t(
+                'The maximum number of rows per DataSet, once the limit is met the limit policy defined per DataSet will dictate further action.',
+              )}
               value={Number(formValues.DATASET_HARD_ROW_LIMIT) || 0}
               onChange={(v) => updateField('DATASET_HARD_ROW_LIMIT', String(v))}
               disabled={!isEditable('DATASET_HARD_ROW_LIMIT')}
             />
           )}
 
+          {isVisible('DEFAULT_PURGE_LIST_TTL') && (
+            <NumberInput
+              name="DEFAULT_PURGE_LIST_TTL"
+              label={t('Default ttl, in days, for records in purge_list table')}
+              helpText={t(
+                'Entries in purge_list table with expiry date older than specified ttl will be removed.',
+              )}
+              value={Number(formValues.DEFAULT_PURGE_LIST_TTL) || 0}
+              onChange={(v) => updateField('DEFAULT_PURGE_LIST_TTL', String(v))}
+              disabled={!isEditable('DEFAULT_PURGE_LIST_TTL')}
+            />
+          )}
+        </div>
+
+        <div className="flex items-center justify-between space-x-4">
+          {isVisible('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER') && (
+            <NumberInput
+              name="DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER"
+              label={t('The default value for max number of items on a new dynamic Playlist')}
+              helpText={t(
+                'This value can be adjusted on a per dynamic Playlist basis, it cannot exceed value set in the Limit below',
+              )}
+              value={Number(formValues.DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER) || 0}
+              max={Number(formValues.DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT) || 100}
+              onChange={(v) => updateField('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER', String(v))}
+              disabled={!isEditable('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER')}
+            />
+          )}
           {isVisible('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT') && (
             <NumberInput
               name="DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT"
-              label={t('Default items / dynamic playlist')}
+              label={t(
+                'The default upper limit of items that can be assigned to a dynamic Playlist',
+              )}
+              helpText={t(
+                'When matching Media by Tags and name to a dynamic Playlist, this is the maximum number of allowed items that can be assigned to a dynamic Playlist',
+              )}
               value={Number(formValues.DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT) || 0}
               onChange={(v) => updateField('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT', String(v))}
               disabled={!isEditable('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT')}
             />
           )}
-          {isVisible('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER') && (
-            <NumberInput
-              name="DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER"
-              label={t('Max items / dynamic playlist')}
-              value={Number(formValues.DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER) || 0}
-              onChange={(v) => updateField('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER', String(v))}
-              disabled={!isEditable('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER')}
-            />
-          )}
         </div>
-
-        {isVisible('DEFAULT_PURGE_LIST_TTL') && (
-          <NumberInput
-            name="DEFAULT_PURGE_LIST_TTL"
-            label={t('Purge list TTL (days)')}
-            helpText={t('Records in purge_list older than this are removed automatically.')}
-            value={Number(formValues.DEFAULT_PURGE_LIST_TTL) || 0}
-            onChange={(v) => updateField('DEFAULT_PURGE_LIST_TTL', String(v))}
-            disabled={!isEditable('DEFAULT_PURGE_LIST_TTL')}
-          />
-        )}
       </SettingsSection>
     </div>
   );

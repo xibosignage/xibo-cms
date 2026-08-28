@@ -21,13 +21,14 @@
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
-import type { AxiosError } from 'axios';
 
 import type { DisplayFilterInput } from '../DisplaysConfig';
 
+import { serializeTags } from '@/components/ui/forms/TagInput';
 import type { FetchDisplaysRequest } from '@/services/displaysApi';
 import { fetchDisplays } from '@/services/displaysApi';
 import { resolveLastAccessed } from '@/utils/date';
+import { isValidRegex } from '@/utils/regex';
 
 export const displayQueryKeys = {
   all: ['display'] as const,
@@ -71,19 +72,32 @@ export const useDisplaysData = ({
 
       const normalizedTags =
         advancedFilters.tags && advancedFilters.tags.length > 0
-          ? advancedFilters.tags.map((tag) => tag.tag).join(',')
+          ? serializeTags(advancedFilters.tags)
           : undefined;
 
       const request: FetchDisplaysRequest = {
         start: startOffset,
         length: pagination.pageSize,
-        keyword: filter,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,
         ...(advancedFilters.displayId != null ? { displayId: advancedFilters.displayId } : {}),
-        ...(advancedFilters.name ? { display: advancedFilters.name } : {}),
+        ...(advancedFilters.name || filter ? { display: advancedFilters.name || filter } : {}),
+        ...(advancedFilters.useRegexForName &&
+        advancedFilters.name &&
+        isValidRegex(advancedFilters.name)
+          ? { useRegexForName: 1 }
+          : {}),
+        ...(advancedFilters.logicalOperatorName
+          ? { logicalOperatorName: advancedFilters.logicalOperatorName }
+          : {}),
         ...(normalizedTags ? { tags: normalizedTags } : {}),
+        ...(advancedFilters.exactTags !== undefined
+          ? { exactTags: advancedFilters.exactTags ? 1 : 0 }
+          : {}),
+        ...(advancedFilters.logicalOperator
+          ? { logicalOperator: advancedFilters.logicalOperator }
+          : {}),
         ...(advancedFilters.mediaInventoryStatus
           ? { mediaInventoryStatus: advancedFilters.mediaInventoryStatus }
           : {}),
@@ -127,9 +141,5 @@ export const useDisplaysData = ({
 
     placeholderData: keepPreviousData,
     staleTime: 1000 * 60 * 1,
-
-    throwOnError: (error: AxiosError) => {
-      return error.response?.status ? error.response.status >= 500 : false;
-    },
   });
 };

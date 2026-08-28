@@ -30,8 +30,10 @@ import Button from '@/components/ui/Button';
 import Checkbox from '@/components/ui/forms/Checkbox';
 import NumberInput from '@/components/ui/forms/NumberInput';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
+import type { SelectOption } from '@/components/ui/forms/SelectDropdown';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
 import TextInput from '@/components/ui/forms/TextInput';
+import { useUserContext } from '@/context/UserContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { getDatasetSchema } from '@/schema/dataset';
 import type { UpdateDatasetRequest } from '@/services/datasetApi';
@@ -40,6 +42,7 @@ import {
   createDataset,
   testRemoteDataset,
   fetchDataConnectorSource,
+  fetchDataset,
 } from '@/services/datasetApi';
 import type {
   Dataset,
@@ -55,6 +58,7 @@ interface AddAndEditDatasetModalProps {
   data?: Dataset | null;
   defaultFolderId?: number;
   dataConnectorSources?: { id: string; name: string }[];
+  canUseRealTime?: boolean;
   onClose: () => void;
   onSave: (updated: Dataset) => void;
 }
@@ -65,6 +69,7 @@ type DatasetFormErrors = {
   code?: string;
   uri?: string;
   username?: string;
+  rowLimit?: string;
 };
 
 const DEFAULT_DRAFT: UpdateDatasetRequest = {
@@ -143,9 +148,12 @@ export default function AddAndEditDatasetModal({
   onClose,
   data,
   defaultFolderId,
+  canUseRealTime = true,
   onSave,
 }: AddAndEditDatasetModalProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
+  const datasetHardRowLimit = Number(user?.settings?.DATASET_HARD_ROW_LIMIT) || 0;
   const [isPending, startTransition] = useTransition();
   const [apiError, setApiError] = useState<string | undefined>();
   const [formErrors, setFormErrors] = useState<DatasetFormErrors>({});
@@ -164,6 +172,7 @@ export default function AddAndEditDatasetModal({
   const [dataConnectorSources, setDataConnectorSources] = useState<{ id: string; name: string }[]>(
     [],
   );
+  const [runsAfterOptions, setRunsAfterOptions] = useState<SelectOption[]>([]);
 
   useEffect(() => {
     fetchDataConnectorSource()
@@ -174,6 +183,21 @@ export default function AddAndEditDatasetModal({
         console.error('Failed to fetch data connector sources:', err);
       });
   }, [isOpen]);
+
+  useEffect(() => {
+    fetchDataset({ start: 0, length: 10000 })
+      .then(({ rows }) => {
+        setRunsAfterOptions([
+          { label: t('None'), value: '0' },
+          ...rows
+            .filter((ds) => ds.dataSetId !== data?.dataSetId)
+            .map((ds) => ({ label: ds.dataSet, value: String(ds.dataSetId) })),
+        ]);
+      })
+      .catch((err) => {
+        console.error('Failed to fetch datasets:', err);
+      });
+  }, [isOpen, data?.dataSetId, t]);
 
   const handleTestRemoteData = () => {
     setTestResult(t('Testing...'));
@@ -220,7 +244,7 @@ export default function AddAndEditDatasetModal({
   }, [data, isOpen, defaultFolderId]);
 
   const handleSave = () => {
-    const schema = getDatasetSchema(t);
+    const schema = getDatasetSchema(t, datasetHardRowLimit);
     const result = schema.safeParse(draft);
 
     if (!result.success) {
@@ -232,12 +256,15 @@ export default function AddAndEditDatasetModal({
         code: fieldErrors.code?.[0],
         uri: fieldErrors.uri?.[0],
         username: fieldErrors.username?.[0],
+        rowLimit: fieldErrors.rowLimit?.[0],
       });
 
       if (fieldErrors.dataSet || fieldErrors.description || fieldErrors.code) {
         setActiveTab('general');
       } else if (draft.isRemote && (fieldErrors.uri || fieldErrors.username)) {
         setActiveTab(fieldErrors.uri ? 'remote' : 'auth');
+      } else if (draft.isRemote && fieldErrors.rowLimit) {
+        setActiveTab('advanced');
       }
       setApiError(t('Please fix the highlighted errors before saving.'));
       return;
@@ -283,8 +310,8 @@ export default function AddAndEditDatasetModal({
     const isActive = activeTab === tabName;
     return `py-2 px-3 inline-flex items-center gap-2 border-b-2 text-sm font-semibold whitespace-nowrap focus:outline-none transition-all ${
       isActive
-        ? 'border-blue-600 text-blue-500'
-        : 'border-gray-200 text-gray-500 hover:text-blue-600'
+        ? 'border-xibo-blue-600 text-xibo-blue-500'
+        : 'border-gray-200 text-gray-500 hover:text-xibo-blue-600'
     }`;
   };
 
@@ -414,28 +441,32 @@ export default function AddAndEditDatasetModal({
               </div>
 
               <div className="flex flex-col gap-3 pt-2  p-4 rounded-lg">
-                <Checkbox
-                  id="isRealTime"
-                  title={t('Real-time')}
-                  label={t('Enable live data streaming for this source.')}
-                  checked={draft.isRealTime}
-                  onChange={(e) => updateDraft('isRealTime', e.target.checked)}
-                />
-                {!!draft.isRealTime && (
-                  <div className="pt-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                    <SelectDropdown
-                      label={t('Data Connector Source')}
-                      value={draft.dataConnectorSource}
-                      options={dataConnectorSources.map((source) => ({
-                        label: source.name,
-                        value: String(source.id),
-                      }))}
-                      onSelect={(val) => {
-                        updateDraft('dataConnectorSource', val);
-                      }}
-                      helpText={t('Select data connector source.')}
+                {canUseRealTime && (
+                  <>
+                    <Checkbox
+                      id="isRealTime"
+                      title={t('Real-time')}
+                      label={t('Enable live data streaming for this source.')}
+                      checked={draft.isRealTime}
+                      onChange={(e) => updateDraft('isRealTime', e.target.checked)}
                     />
-                  </div>
+                    {!!draft.isRealTime && (
+                      <div className="pt-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <SelectDropdown
+                          label={t('Data Connector Source')}
+                          value={draft.dataConnectorSource}
+                          options={dataConnectorSources.map((source) => ({
+                            label: source.name,
+                            value: String(source.id),
+                          }))}
+                          onSelect={(val) => {
+                            updateDraft('dataConnectorSource', val);
+                          }}
+                          helpText={t('Select data connector source.')}
+                        />
+                      </div>
+                    )}
+                  </>
                 )}
 
                 {type === 'edit' && data && (
@@ -618,33 +649,6 @@ export default function AddAndEditDatasetModal({
                     onChange={(val) => updateDraft('dataRoot', val)}
                   />
 
-                  <Button
-                    className="h-11 rounded-0!"
-                    name="dataSetRemoteTestButton"
-                    variant="tertiary"
-                    onClick={handleTestRemoteData}
-                  >
-                    {isTesting ? t('Testing...') : t('Test Data URL')}
-                  </Button>
-
-                  {testResult && (
-                    <div className="relative bg-gray-100 rounded-lg p-3 h-35 overflow-y-auto w-full group">
-                      <button
-                        type="button"
-                        onClick={handleCopy}
-                        className="absolute top-2 right-2 p-3 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-md"
-                        aria-label={t('Copy to clipboard')}
-                        title={t('Copy to clipboard')}
-                      >
-                        {isCopied ? <Check size={14}></Check> : <Copy size={14}></Copy>}
-                      </button>
-
-                      <pre className="text-xs font-mono text-gray-700 whitespace-pre-wrap wrap-break-word pr-10">
-                        {testResult}
-                      </pre>
-                    </div>
-                  )}
-
                   <SelectDropdown
                     label={t('Aggregation')}
                     value={draft.summarize}
@@ -697,6 +701,33 @@ export default function AddAndEditDatasetModal({
                     onChange={(e) => updateDraft('ignoreFirstRow', e.target.checked)}
                   />
                 </>
+              )}
+
+              <Button
+                className="h-11 rounded-0!"
+                name="dataSetRemoteTestButton"
+                variant="tertiary"
+                onClick={handleTestRemoteData}
+              >
+                {isTesting ? t('Testing...') : t('Test Data URL')}
+              </Button>
+
+              {testResult && (
+                <div className="relative bg-gray-100 rounded-lg p-3 h-35 overflow-y-auto w-full group">
+                  <button
+                    type="button"
+                    onClick={handleCopy}
+                    className="absolute top-2 right-2 p-3 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-md"
+                    aria-label={t('Copy to clipboard')}
+                    title={t('Copy to clipboard')}
+                  >
+                    {isCopied ? <Check size={14}></Check> : <Copy size={14}></Copy>}
+                  </button>
+
+                  <pre className="text-xs font-mono text-gray-700 whitespace-pre-wrap wrap-break-word pr-10">
+                    {testResult}
+                  </pre>
+                </div>
               )}
             </div>
           )}
@@ -757,7 +788,8 @@ export default function AddAndEditDatasetModal({
               <SelectDropdown
                 label={t('Depends on Dataset')}
                 value={draft.runsAfter.toString()}
-                options={[]}
+                options={runsAfterOptions}
+                searchable
                 helpText={t(
                   'The DataSet you select here will be processed in advance and have its values available for substitution in the data to add to this request on the Remote tab.',
                 )}
@@ -774,6 +806,8 @@ export default function AddAndEditDatasetModal({
                 )}
                 value={draft.rowLimit}
                 onChange={(num) => updateDraft('rowLimit', num)}
+                max={datasetHardRowLimit || undefined}
+                error={formErrors.rowLimit}
               />
 
               <SelectDropdown

@@ -80,7 +80,7 @@ export function SidebarItem({
   toggleMenu,
 }: SidebarItemProps) {
   const activeClasses =
-    'font-medium text-sm w-full flex items-center flex-row text-white dark:text-black focus:outline-hidden group';
+    'font-medium text-sm w-full flex items-center flex-row text-(--sidebar-fg) dark:text-black focus:outline-hidden group';
   const inactiveClasses =
     'font-medium text-sm w-full flex items-center flex-row focus:outline-hidden focus:text-gray-400 dark:text-neutral-400 dark:hover:text-neutral-500 dark:focus:text-neutral-500 group';
 
@@ -88,13 +88,15 @@ export function SidebarItem({
   function getSidebarItemClasses({ isCollapsed, isOpen, isActive }: SidebarItemClassProps) {
     return [
       'flex cursor-pointer py-2 relative',
-      'hover:bg-white/10 hover:text-white text-xibo-blue-100',
+      'hover:bg-(--sidebar-overlay) hover:text-(--sidebar-fg) text-(--sidebar-fg-muted)',
 
       isCollapsed ? 'px-3 w-fit justify-center' : 'px-3 w-full justify-between',
 
-      isOpen && !isCollapsed ? 'bg-white/10 rounded-t-sm rounded-b-0' : 'rounded-sm',
+      isOpen && !isCollapsed ? 'bg-(--sidebar-overlay) rounded-t-sm rounded-b-0' : 'rounded-sm',
 
-      isActive && isCollapsed && 'bg-white/10 border-b-2 border-white/20',
+      isActive &&
+        isCollapsed &&
+        'bg-(--sidebar-overlay) border-b-2 border-(--sidebar-overlay-strong)',
     ]
       .filter(Boolean)
       .join(' ');
@@ -133,7 +135,7 @@ export function SidebarItem({
             e.preventDefault();
             toggleMenu(route.path);
           }}
-          className="text-white absolute right-0 top-0 size-9 z-10 flex items-center justify-center cursor-pointer"
+          className="text-(--sidebar-fg) absolute right-0 top-0 size-9 z-10 flex items-center justify-center cursor-pointer"
         >
           <ChevronDown size={16} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>

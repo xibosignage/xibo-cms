@@ -36,6 +36,7 @@ export function DataTableBulkActions<TData>({
         <button
           onClick={onClearSelection}
           className="cursor-pointer rounded-full px-2 py-1 flex gap-2 items-center text-gray-600 hover:bg-gray-200 focus:bg-gray-300"
+          aria-label={t('Clear selection')}
           title={t('Clear selection')}
         >
           <X className="size-5.25" />
@@ -58,6 +59,7 @@ export function DataTableBulkActions<TData>({
                   ? 'text-red-600 hover:bg-red-50 focus:bg-red-100'
                   : 'text-gray-600 hover:bg-gray-200 focus:bg-gray-300',
               )}
+              aria-label={action.label}
               title={action.label}
             >
               {action.icon && <action.icon className="w-4 h-4"></action.icon>}

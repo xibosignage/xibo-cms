@@ -19,6 +19,13 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+export interface SyncGroupPermissions {
+  view?: number;
+  edit?: number;
+  delete?: number;
+  modifyPermissions?: number;
+}
+
 export interface SyncGroup {
   syncGroupId: number;
   name: string;
@@ -35,6 +42,7 @@ export interface SyncGroup {
   leadDisplay: string;
   folderId: number;
   permissionsFolderId: number;
+  userPermissions?: SyncGroupPermissions;
 }
 
 export interface SyncGroupDisplay {

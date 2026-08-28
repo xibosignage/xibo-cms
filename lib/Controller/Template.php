@@ -22,7 +22,6 @@
 namespace Xibo\Controller;
 
 use OpenApi\Attributes as OA;
-use Parsedown;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -86,13 +85,6 @@ class Template extends Base
         schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
-        name: 'keyword',
-        description: 'Filter by template name, ID, or description',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
-    )]
-    #[OA\Parameter(
         name: 'sortBy',
         description: 'Specifies which field the results are sorted by. Used together with sortDir',
         in: 'query',
@@ -105,6 +97,7 @@ class Template extends Base
                 'publishedStatus',
                 'modifiedDt',
                 'orientation',
+                'groupsWithPermissions',
             ]
         )
     )]
@@ -271,7 +264,7 @@ class Template extends Base
                 // Handle the description
                 $searchResult->description = '';
                 if (!empty($template->description)) {
-                    $searchResult->description = Parsedown::instance()->setSafeMode(true)->line($template->description);
+                    $searchResult->description = $template->description;
                 }
                 $searchResult->orientation = $template->orientation;
                 $searchResult->width = $template->width;
@@ -634,7 +627,6 @@ class Template extends Base
     {
         return $this->gridRenderFilter([
             'excludeTemplates' => 0,
-            'keyword' => $sanitizedQueryParams->getString('keyword'),
             'tags' => $sanitizedQueryParams->getString('tags'),
             'layoutId' => $sanitizedQueryParams->getInt('templateId'),
             'layout' => $sanitizedQueryParams->getString('template'),
@@ -684,12 +676,6 @@ class Template extends Base
                 $this->urlFor($request, 'layout.download.thumbnail', ['id' => $template->layoutId])
             );
         }
-
-        // Parse down for description
-        $template->setUnmatchedProperty(
-            'descriptionWithMarkup',
-            Parsedown::instance()->setSafeMode(true)->text($template->description),
-        );
 
         $template->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($template));
     }

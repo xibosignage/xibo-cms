@@ -133,7 +133,7 @@ class Settings extends Base
             if ($elevateLogUntil <= Carbon::now()->format('U')) {
                 $elevateLogUntil = null;
             } else {
-                $elevateLogUntil = Carbon::createFromTimestamp($elevateLogUntil)
+                $elevateLogUntil = DateFormatHelper::createFromTimestamp($elevateLogUntil)
                     ->format(DateFormatHelper::getSystemFormat());
             }
         }
@@ -209,30 +209,6 @@ class Settings extends Base
             $this->getConfig()->changeSetting(
                 'SERVER_KEY',
                 $sanitizedParams->getString('SERVER_KEY')
-            );
-        }
-
-        if ($this->getConfig()->isSettingEditable('GLOBAL_THEME_NAME')) {
-            $this->handleChangedSettings(
-                'GLOBAL_THEME_NAME',
-                $sanitizedParams->getString('GLOBAL_THEME_NAME'),
-                $changedSettings
-            );
-            $this->getConfig()->changeSetting(
-                'GLOBAL_THEME_NAME',
-                $sanitizedParams->getString('GLOBAL_THEME_NAME')
-            );
-        }
-
-        if ($this->getConfig()->isSettingEditable('NAVIGATION_MENU_POSITION')) {
-            $this->handleChangedSettings(
-                'NAVIGATION_MENU_POSITION',
-                $sanitizedParams->getString('NAVIGATION_MENU_POSITION'),
-                $changedSettings
-            );
-            $this->getConfig()->changeSetting(
-                'NAVIGATION_MENU_POSITION',
-                $sanitizedParams->getString('NAVIGATION_MENU_POSITION')
             );
         }
 
@@ -664,12 +640,12 @@ class Settings extends Base
         if ($this->getConfig()->isSettingEditable('DISPLAY_DEFAULT_FOLDER')) {
             $this->handleChangedSettings(
                 'DISPLAY_DEFAULT_FOLDER',
-                $sanitizedParams->getInt('DISPLAY_DEFAULT_FOLDER'),
+                $sanitizedParams->getInt('DISPLAY_DEFAULT_FOLDER', ['default' => 1]),
                 $changedSettings
             );
             $this->getConfig()->changeSetting(
                 'DISPLAY_DEFAULT_FOLDER',
-                $sanitizedParams->getInt('DISPLAY_DEFAULT_FOLDER'),
+                $sanitizedParams->getInt('DISPLAY_DEFAULT_FOLDER', ['default' => 1]),
                 1
             );
         }
@@ -755,18 +731,6 @@ class Settings extends Base
             $this->getConfig()->changeSetting(
                 'REQUIRED_FILES_LOOKAHEAD',
                 $sanitizedParams->getInt('REQUIRED_FILES_LOOKAHEAD')
-            );
-        }
-
-        if ($this->getConfig()->isSettingEditable('SETTING_IMPORT_ENABLED')) {
-            $this->handleChangedSettings(
-                'SETTING_IMPORT_ENABLED',
-                $sanitizedParams->getCheckbox('SETTING_IMPORT_ENABLED'),
-                $changedSettings
-            );
-            $this->getConfig()->changeSetting(
-                'SETTING_IMPORT_ENABLED',
-                $sanitizedParams->getCheckbox('SETTING_IMPORT_ENABLED')
             );
         }
 
@@ -1385,10 +1349,10 @@ class Settings extends Base
                 );
             }
             if ($setting === 'ELEVATE_LOG_UNTIL') {
-                $changedSettings[$setting] = Carbon::createFromTimestamp($oldValue)
+                $changedSettings[$setting] = DateFormatHelper::createFromTimestamp($oldValue)
                     ->format(DateFormatHelper::getSystemFormat())
                     . ' > '
-                    . Carbon::createFromTimestamp($newValue)
+                    . DateFormatHelper::createFromTimestamp($newValue)
                         ->format(DateFormatHelper::getSystemFormat());
             } else {
                 $changedSettings[$setting] = $oldValue . ' > ' . $newValue;

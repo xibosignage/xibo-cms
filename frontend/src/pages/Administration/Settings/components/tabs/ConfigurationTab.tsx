@@ -55,6 +55,7 @@ export default function ConfigurationTab({
           <TextInput
             name="LIBRARY_LOCATION"
             label={t('Library Location')}
+            required
             helpText={t('The fully qualified path to the CMS library location.')}
             value={formValues.LIBRARY_LOCATION ?? ''}
             onChange={(v) => updateField('LIBRARY_LOCATION', v)}
@@ -62,28 +63,34 @@ export default function ConfigurationTab({
           />
         )}
         {isVisible('SERVER_KEY') && (
-          <TextInput
-            name="SERVER_KEY"
-            label={t('CMS Secret Key')}
-            helpText={`${phoneticKey} | ${t('Enter this key into each player to authenticate it with this CMS.')}`}
-            value={formValues.SERVER_KEY ?? ''}
-            onChange={(v) => updateField('SERVER_KEY', v)}
-            disabled={!isEditable('SERVER_KEY')}
-            suffix={
-              <button
-                type="button"
-                onClick={() => handleCopy(formValues.SERVER_KEY ?? '')}
-                title={t('Copy to clipboard')}
-                className="p-2 h-full rounded text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-              >
-                {copied ? (
-                  <Check size={16} className="text-green-500" />
-                ) : (
-                  <ClipboardCopy size={16} />
-                )}
-              </button>
-            }
-          />
+          <>
+            <TextInput
+              name="SERVER_KEY"
+              label={t('CMS Secret Key')}
+              required
+              helpText={t(
+                'This key must be entered into each Player to authenticate the Player with the CMS.',
+              )}
+              value={formValues.SERVER_KEY ?? ''}
+              onChange={(v) => updateField('SERVER_KEY', v)}
+              disabled={!isEditable('SERVER_KEY')}
+              suffix={
+                <button
+                  type="button"
+                  onClick={() => handleCopy(formValues.SERVER_KEY ?? '')}
+                  title={t('Copy to clipboard')}
+                  className="p-2 h-full rounded text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                >
+                  {copied ? (
+                    <Check size={16} className="text-green-500" />
+                  ) : (
+                    <ClipboardCopy size={16} />
+                  )}
+                </button>
+              }
+            />
+            {phoneticKey && <p className="text-sm italic text-gray-500">{phoneticKey}</p>}
+          </>
         )}
       </SettingsSection>
     </div>

@@ -35,6 +35,7 @@ export const createMockSession = (overrides?: Partial<Session>): Session => ({
   remoteAddress: '192.168.1.1',
   userAgent: 'Chrome 120',
   isExpired: false,
+  isCurrentSession: false,
   lastAccessed: '2024-01-01T10:00:00Z',
   expiresAt: '2024-01-02T10:00:00Z',
   ...overrides,

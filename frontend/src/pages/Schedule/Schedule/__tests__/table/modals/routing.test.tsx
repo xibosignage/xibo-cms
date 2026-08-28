@@ -65,6 +65,7 @@ const buildProps = (overrides: Partial<EventModalsProps> = {}): EventModalsProps
     displayGroups: [],
     displaySpecificGroupIds: [],
     displayGroupIds: [],
+    isOccurrenceDeleteAllowed: false,
     ...overrides.actions,
   },
   selection: {
@@ -132,14 +133,18 @@ describe('EventModals - routing', () => {
       );
     });
 
-    // Deleting one recurring event: EventModals should pass isRecurring=true
-    // so the delete modal knows to show the "this instance only / entire
-    // series" radio buttons.
-    test('opens DeleteEventModal with isRecurring=true for a recurring event', () => {
+    // Deleting one recurring event when occurrence-delete IS allowed (Calendar,
+    // or the Table's Day view): EventModals should pass isRecurring=true and an
+    // onDeleteOccurrence function, so the delete modal shows the "this instance
+    // only / entire series" radio buttons.
+    test('opens DeleteEventModal with isRecurring=true and onDeleteOccurrence when occurrence delete is allowed', () => {
       render(
         <EventModals
           {...buildProps({
-            actions: { activeModal: 'delete' } as EventModalsProps['actions'],
+            actions: {
+              activeModal: 'delete',
+              isOccurrenceDeleteAllowed: true,
+            } as EventModalsProps['actions'],
             selection: { itemsToDelete: [mockRecurringEvent] } as EventModalsProps['selection'],
           })}
         />,
@@ -155,6 +160,26 @@ describe('EventModals - routing', () => {
       const firstCall = (DeleteEventModal as unknown as ReturnType<typeof vi.fn>).mock.calls[0];
       const props = firstCall![0] as Parameters<typeof DeleteEventModal>[0];
       expect(typeof props.onDeleteOccurrence).toBe('function');
+    });
+
+    // Deleting the same recurring event when occurrence-delete is NOT allowed
+    // (the Table's Week/Month/etc. views, which can't identify a single
+    // occurrence): onDeleteOccurrence must not be forwarded, so the modal
+    // falls back to whole-series-only.
+    test('does not forward onDeleteOccurrence for a recurring event when occurrence delete is not allowed', () => {
+      render(
+        <EventModals
+          {...buildProps({
+            actions: { activeModal: 'delete' } as EventModalsProps['actions'],
+            selection: { itemsToDelete: [mockRecurringEvent] } as EventModalsProps['selection'],
+          })}
+        />,
+      );
+
+      expect(DeleteEventModal).toHaveBeenCalledWith(
+        expect.objectContaining({ itemCount: 1, isRecurring: true, onDeleteOccurrence: undefined }),
+        undefined,
+      );
     });
 
     // Bulk delete (more than one event selected): there's no single event

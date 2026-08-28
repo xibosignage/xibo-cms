@@ -25,6 +25,7 @@ import type { TFunction } from 'i18next';
 import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
 
+import { notify } from '@/components/ui/Notification';
 import { copyDisplayProfile, deleteDisplayProfile } from '@/services/displayProfileApi';
 import type { DisplayProfile } from '@/types/displayProfile';
 
@@ -56,7 +57,12 @@ export function useDisplayProfileActions({
         itemsToDelete.map((item) => deleteDisplayProfile(item.displayProfileId)),
       );
 
-      const failed = results.filter((r) => r.status === 'rejected');
+      // A 404 means the item was already deleted (e.g. by another user/tab) — that's the
+      // outcome we wanted anyway, so treat it as success rather than a hard failure.
+      const failed = results.filter(
+        (r) =>
+          r.status === 'rejected' && !(isAxiosError(r.reason) && r.reason.response?.status === 404),
+      );
       if (failed.length > 0) {
         const firstRejected = failed[0] as PromiseRejectedResult;
         const reason = firstRejected.reason;
@@ -70,6 +76,11 @@ export function useDisplayProfileActions({
         return;
       }
 
+      notify.success(
+        t('{{count}} display profile(s) deleted successfully.', {
+          count: itemsToDelete.length,
+        }),
+      );
       setRowSelection({});
       handleRefresh();
       closeModal();

@@ -27,18 +27,20 @@ import DeleteCampaignModal from './DeleteCampaignModal';
 import EditCampaignModal from './EditCampaignModal';
 
 import FolderActionModals from '@/components/ui/FolderActionModals';
+import EditTagsMultipleModal from '@/components/ui/modals/EditTagsMultipleModal';
 import MoveModal from '@/components/ui/modals/MoveModal';
 import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
 import type { useFolderActions } from '@/hooks/useFolderActions';
 import type { Campaign } from '@/types/campaign';
 import { EventTypeId } from '@/types/event';
+import { mergeEntityTags } from '@/utils/tags';
 
 interface CampaignModalsProps {
   actions: {
     activeModal: string | null;
     closeModal: () => void;
-    handleRefresh: () => void;
+    handleRefresh: () => Promise<unknown>;
     deleteError: string | null;
     isDeleting: boolean;
     isCloning: boolean;
@@ -48,6 +50,7 @@ interface CampaignModalsProps {
     defaultFolderId?: number;
     itemsToDelete: Campaign[];
     itemsToMove: Campaign[];
+    bulkItems: Campaign[];
     existingNames: string[];
     shareEntityIds: number | number[] | null;
     setShareEntityIds: React.Dispatch<React.SetStateAction<number | number[] | null>>;
@@ -56,6 +59,7 @@ interface CampaignModalsProps {
     confirmDelete: (items: Campaign[]) => void;
     handleConfirmMove: (newFolderId: number) => void;
     handleConfirmClone: (campaign: Campaign | null, newName: string) => void;
+    handleAddSuccess: (campaign: Campaign) => void;
   };
   folderActions: ReturnType<typeof useFolderActions>;
 }
@@ -87,9 +91,7 @@ export function CampaignModals({
         <AddCampaignModal
           defaultFolderId={selection.defaultFolderId}
           onClose={actions.closeModal}
-          onSuccess={() => {
-            actions.handleRefresh();
-          }}
+          onSuccess={handlers.handleAddSuccess}
         />
       )}
       {/* Folder Actions */}
@@ -141,6 +143,20 @@ export function CampaignModals({
           onConfirm={handlers.handleConfirmMove}
           items={selection.itemsToMove}
           entityLabel={t('Campaigns')}
+        />
+      )}
+
+      {/* Edit Tags (bulk) */}
+      {isModalOpen('editTagsMultiple') && (
+        <EditTagsMultipleModal
+          targetType="campaign"
+          ids={selection.bulkItems.map((item) => item.campaignId)}
+          existingTags={mergeEntityTags(selection.bulkItems)}
+          onClose={actions.closeModal}
+          onSuccess={async () => {
+            await actions.handleRefresh();
+            actions.closeModal();
+          }}
         />
       )}
 
