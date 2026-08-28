@@ -183,7 +183,7 @@ export function DataTableOptions<TData>({
       </Button>
 
       {onViewModeChange && (
-        <div className="flex items-center rounded-lg bg-gray-50">
+        <div className="flex items-center gap-1 rounded-lg bg-gray-50">
           {(!availableViewModes || availableViewModes.includes('table')) && (
             <Button
               variant="tertiary"

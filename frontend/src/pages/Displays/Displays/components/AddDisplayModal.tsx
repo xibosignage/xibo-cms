@@ -203,8 +203,7 @@ export default function AddDisplayModal({
   // account can't see it - both are terminal outcomes, not "still waiting".
   const isWaiting =
     step === 'code' &&
-    (isPending ||
-      (submitted !== null && !adopted && watched.state !== 'expired' && !apiError));
+    (isPending || (submitted !== null && !adopted && watched.state !== 'expired' && !apiError));
 
   /** Manual mode is still waiting for the coded Player to reach the CMS. */
   const isConnecting = step === 'manual' && watched.state === 'waiting';

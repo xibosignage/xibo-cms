@@ -45,6 +45,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\RequiredFileFactory;
+use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
@@ -90,7 +91,8 @@ class Display extends Base
         private readonly NotificationFactory $notificationFactory,
         private readonly UserGroupFactory $userGroupFactory,
         private readonly PlayerVersionFactory $playerVersionFactory,
-        private readonly DayPartFactory $dayPartFactory
+        private readonly DayPartFactory $dayPartFactory,
+        private readonly ScheduleFactory $scheduleFactory
     ) {
     }
 
@@ -413,6 +415,8 @@ class Display extends Base
             'xmrRegistered' => $parsedQueryParams->getInt('xmrRegistered'),
             'isPlayerSupported' => $parsedQueryParams->getInt('isPlayerSupported'),
             'displayGroupIds' => $parsedQueryParams->getIntArray('displayGroupIds'),
+            'faults' => $parsedQueryParams->getInt('faults'),
+            'status' => $parsedQueryParams->getString('status'),
         ];
     }
 
@@ -564,6 +568,20 @@ class Display extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\Parameter(
+        name: 'faults',
+        description: 'Filter by whether the Display has at least one player fault (1 or 0)',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'status',
+        description: 'Filter by overall health status',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['online', 'needsAttention'])
+    )]
+    #[OA\Parameter(
         name: 'sortBy',
         description: 'Specifies which field the results are sorted by. Used together with sortDir',
         in: 'query',
@@ -681,6 +699,57 @@ class Display extends Base
             ->withStatus(200)
             ->withHeader('X-Total-Count', $this->displayFactory->countLast())
             ->withJson($displays);
+    }
+
+    #[OA\Get(
+        path: '/display/overview/summary',
+        operationId: 'displayOverviewSummary',
+        description: 'Get aggregate health counts for the Displays visible to this User, for the Display Overview page', // phpcs:ignore
+        summary: 'Display Overview Summary',
+        tags: ['display']
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: 'total', type: 'integer'),
+                new OA\Property(property: 'faults', type: 'integer'),
+                new OA\Property(property: 'loggedIn', type: 'integer'),
+                new OA\Property(property: 'authorised', type: 'integer'),
+                new OA\Property(property: 'upToDate', type: 'integer'),
+                new OA\Property(
+                    property: 'faultsTrend',
+                    description: 'Player faults newly reported in the last 24 hours',
+                    type: 'integer'
+                ),
+                new OA\Property(property: 'online', type: 'integer'),
+                new OA\Property(property: 'needsAttention', type: 'integer'),
+            ],
+            type: 'object'
+        )
+    )]
+    /**
+     * Aggregate summary counts (Total/Logged In/Authorised/Up-to-date/Faults/Online/Needs
+     * Attention) for the Displays visible to this User. Computed as a single SQL aggregate
+     * query in DisplayFactory::getSummary() - not a fetch-all-then-loop - and scoped by the
+     * same viewPermissionSql restriction as the main Display grid.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return ResponseInterface|Response
+     */
+    public function overviewSummary(Request $request, Response $response): Response|ResponseInterface
+    {
+        $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
+
+        $summary = $this->displayFactory->getSummary([
+            'folderId' => $parsedQueryParams->getInt('folderId'),
+        ]);
+
+        return $response
+            ->withStatus(200)
+            ->withJson($summary);
     }
 
     #[OA\Get(
@@ -1383,22 +1452,41 @@ class Display extends Base
         $library = $this->getConfig()->getSetting('LIBRARY_LOCATION');
         $fileName = $library . $file;
 
+        $date = $display->getCurrentScreenShotTime($this->pool);
+
+        return $this->renderScreenshotFile($request, $response, $fileName, function ($img) use ($date) {
+            if ($date != '') {
+                $img
+                    ->drawRectangle(0, 0, function ($draw) {
+                        $draw->size(110, 15);
+                        $draw->background('#ffffff');
+                    })
+                    ->text($date, 10, 10, function ($font) {
+                    });
+            }
+        });
+    }
+
+    /**
+     * Reads an image file (falling back to the not-found placeholder), stamps no-cache headers and
+     * writes it to the response. Shared by screenShot() and screenShotFromHistory().
+     *
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    private function renderScreenshotFile(
+        Request $request,
+        Response $response,
+        string $fileName,
+        ?callable $decorate = null
+    ): ResponseInterface|Response {
         if (!file_exists($fileName)) {
             $fileName = $this->getConfig()->uri('forms/filenotfound.gif');
         }
 
         $img = ImageManager::gd()->read($fileName);
 
-        $date = $display->getCurrentScreenShotTime($this->pool);
-
-        if ($date != '') {
-            $img
-                ->drawRectangle(0, 0, function ($draw) {
-                    $draw->size(110, 15);
-                    $draw->background('#ffffff');
-                })
-                ->text($date, 10, 10, function ($font) {
-                });
+        if ($decorate !== null) {
+            $decorate($img);
         }
 
         // Cache headers
@@ -1414,6 +1502,43 @@ class Display extends Base
         $response->write($img->encode());
         $response = $response->withHeader('Content-Type', $img->origin()->mediaType());
         return $this->render($request, $response);
+    }
+
+
+    /**
+     * When the display's current screenshot was captured.
+     *
+     * screenShot() draws the capture time into the image rather than returning it in a header, so
+     * there is no cheap way to tell a new screenshot has arrived short of downloading the image
+     * and comparing it. This returns the same cached time that image is stamped with, for a client
+     * that wants to poll for a change.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws NotFoundException
+     */
+    public function screenShotTime(Request $request, Response $response, $id)
+    {
+        $display = $this->displayFactory->getById($id);
+
+        // Allow limited view access, matching screenShot()
+        if (!$this->getUser()->checkViewable($display)
+            && !$this->getUser()->featureEnabled('displays.limitedView')
+        ) {
+            throw new AccessDeniedException();
+        }
+
+        // Empty until the display has ever sent one.
+        $time = $display->getCurrentScreenShotTime($this->pool);
+
+        // withJson rather than the state envelope, the same way statusWindow() does it, so the
+        // body is just the one field and a client can compare it without unwrapping anything.
+        return $response->withJson([
+            'time' => empty($time) ? null : $time,
+        ]);
     }
 
     #[OA\Put(

@@ -48,6 +48,7 @@ interface DataGridProps<TData> {
   onRefresh?: () => void;
   viewMode: 'grid';
   onViewModeChange: (mode: ViewMode) => void;
+  availableViewModes?: ViewMode[];
   renderCard: (
     item: TData,
     isSelected: boolean,
@@ -69,6 +70,7 @@ export function DataGrid<TData>({
   onRefresh,
   viewMode,
   onViewModeChange,
+  availableViewModes = ['table', 'grid'],
   renderCard,
   bulkActions = [],
   getRowId,
@@ -126,7 +128,7 @@ export function DataGrid<TData>({
             onRefresh={onRefresh}
             viewMode={viewMode}
             onViewModeChange={onViewModeChange}
-            availableViewModes={['table', 'grid']}
+            availableViewModes={availableViewModes}
           />
         </div>
       </div>
@@ -142,9 +144,9 @@ export function DataGrid<TData>({
         )}
 
         {table.getRowModel().rows.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 overflow-y-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 overflow-y-auto pt-2">
             {table.getRowModel().rows.map((row) => (
-              <div key={row.id}>
+              <div key={row.id} className="min-w-0">
                 {renderCard(row.original, row.getIsSelected(), (checked) =>
                   row.toggleSelected(checked),
                 )}

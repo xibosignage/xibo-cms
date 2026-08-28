@@ -190,14 +190,48 @@ describe('Displays page — row action wiring', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // Manage — opens the ManageDisplayModal
+  // Manage — navigates to the newer Manage page. "Manage" is also a quick
+  // action rendered directly in the row (see DisplaysConfig.tsx), so once the
+  // dropdown is open there are two buttons named "Manage" — the menu item is
+  // the one with visible text, the quick action is icon-only (aria-label).
   // ---------------------------------------------------------------------------
-  test('clicking Manage opens the Manage Display modal', async () => {
+  test('clicking Manage navigates to the Manage page', async () => {
     const user = userEvent.setup();
     renderDisplaysPage();
 
     await openMoreActions(user);
+    const manageMenuItem = screen
+      .getAllByRole('button', { name: /^manage$/i })
+      .find((button) => button.textContent?.trim() === 'Manage');
+    await user.click(manageMenuItem!);
+
+    expect(mockNavigate).toHaveBeenCalledWith(`/displays/displays/${mockDisplay.displayId}`);
+  });
+
+  // ---------------------------------------------------------------------------
+  // Manage — the row's quick action button (icon-only) also navigates to the
+  // Manage page, without opening the "More actions" dropdown first.
+  // ---------------------------------------------------------------------------
+  test('clicking the Manage quick action navigates to the Manage page', async () => {
+    const user = userEvent.setup();
+    renderDisplaysPage();
+
+    await screen.findByText(mockDisplay.display);
     await user.click(screen.getByRole('button', { name: /^manage$/i }));
+
+    expect(mockNavigate).toHaveBeenCalledWith(`/displays/displays/${mockDisplay.displayId}`);
+  });
+
+  // ---------------------------------------------------------------------------
+  // Full Details — opens the full-detail ManageDisplayModal (Bandwidth,
+  // Connectivity, Dependencies, Layouts, Media, Widgets, Faults).
+  // ---------------------------------------------------------------------------
+  test('clicking Full Details opens the Manage Display modal', async () => {
+    const user = userEvent.setup();
+    renderDisplaysPage();
+
+    await openMoreActions(user);
+    await user.click(screen.getByRole('button', { name: /full details/i }));
 
     await screen.findByRole('dialog', { name: /manage display/i });
   });

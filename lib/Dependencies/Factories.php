@@ -164,13 +164,19 @@ class Factories
                     $c->get('configService'),
                     $c->get('displayGroupFactory'),
                     $c->get('displayProfileFactory'),
-                    $c->get('folderFactory')
+                    $c->get('folderFactory'),
+                    $c->get('displayScreenshotFactory')
                 );
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
             },
             'displayEventFactory' => function (ContainerInterface $c) {
                 $repository = new \Xibo\Factory\DisplayEventFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
+            },
+            'displayScreenshotFactory' => function (ContainerInterface $c) {
+                $repository = new \Xibo\Factory\DisplayScreenshotFactory();
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
             },

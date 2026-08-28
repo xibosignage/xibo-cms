@@ -21,21 +21,25 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import { Search, Plus } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
-import type { ModalType } from './DisplaysConfig';
+import type { DisplayActionsProps, ModalType } from './DisplaysConfig';
 import {
   getDisplayColumns,
+  getDisplayItemActions,
   getBulkActions,
   INITIAL_FILTER_STATE,
   type DisplayFilterInput,
 } from './DisplaysConfig';
-import type { AddDisplayPrefill } from './components/AddDisplayModal';
+import DisplayCard from './components/DisplayCard';
 import DisplayMap from './components/DisplayMap';
 import DisplayScreenshotPreviewer from './components/DisplayScreenshotPreviewer';
 import { DisplayModals } from './components/DisplaysModals';
+import KpiRow from './components/KpiRow';
+import StatusChipRow from './components/StatusChipRow';
+import { useDisplayOverviewSummary } from './hooks/useDisplayOverviewSummary';
 import { useDisplaysActions } from './hooks/useDisplaysActions';
 import { useDisplaysData } from './hooks/useDisplaysData';
 import { useDisplaysFilterOptions } from './hooks/useDisplaysFilterOptions';
@@ -48,6 +52,7 @@ import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
 import FolderSidebar from '@/components/ui/FolderSidebar';
 import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
+import { DataGrid } from '@/components/ui/table/DataGrid';
 import { DataMap } from '@/components/ui/table/DataMap';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
@@ -71,6 +76,7 @@ export default function Displays() {
   const { formatDateTime } = useDateFormatter();
   const { user } = useUserContext();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const canViewFolders = usePermissions()?.canViewFolders;
   const canSchedule = hasFeature(user, 'schedule.add');
   const canModify = hasFeature(user, 'displays.modify');
@@ -168,6 +174,13 @@ export default function Displays() {
     folderId: canViewFolders ? homeFolderId : null,
   });
 
+  const {
+    data: summary,
+    isLoading: isSummaryLoading,
+    isError: isSummaryError,
+    error: summaryError,
+  } = useDisplayOverviewSummary(true, canViewFolders ? selectedFolderId : null);
+
   const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
   const [showFolderSidebar, setShowFolderSidebar] = useState(false);
   const [openFilter, setOpenFilter] = useState(false);
@@ -175,7 +188,6 @@ export default function Displays() {
   const [activeModal, setActiveModal] = useState<ModalType | null>(null);
   const [itemsToDelete, setItemsToDelete] = useState<Display[]>([]);
   const [itemsToMove, setItemsToMove] = useState<Display[]>([]);
-  const [addDisplayPrefill, setAddDisplayPrefill] = useState<AddDisplayPrefill | null>(null);
   const [bulkActionItems, setBulkActionItems] = useState<Display[]>([]);
   const [selectedDisplayId, setSelectedDisplayId] = useState<number | null>(null);
   const [actionDisplay, setActionDisplay] = useState<Display | null>(null);
@@ -185,7 +197,30 @@ export default function Displays() {
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
 
-  const [searchParams, setSearchParams] = useSearchParams();
+  // The advanced Filters panel's own granular fields, each a component of what
+  // the `status` quick-filter chips already express — kept mutually exclusive
+  // with `status` (below and in the FilterInputs onChange handler) so the two
+  // can never combine into a contradictory, permanently-empty filter (e.g.
+  // status=online + authorised=0), which would otherwise get persisted to the
+  // user's saved preferences and show 0 results on every subsequent load.
+  const STATUS_FIELDS = ['loggedIn', 'authorised', 'mediaInventoryStatus', 'faults'] as const;
+
+  // Quick-filter chips (StatusChipRow) toggle a single `status` field
+  // ('online' | 'needsAttention' | null).
+  const handleStatusFilterChange = (value: string | null) => {
+    setFilterInputs((prev) => ({
+      ...prev,
+      status: value,
+      loggedIn: null,
+      authorised: null,
+      mediaInventoryStatus: null,
+      faults: null,
+    }));
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
+
+  const handleManagePage = (display: Display) =>
+    navigate(`/displays/displays/${display.displayId}`);
 
   const handleFolderChange = (folder: { id: number | null; text: string | '' }) => {
     setSelectedFolderId(folder.id);
@@ -224,7 +259,10 @@ export default function Displays() {
 
   const data = queryData?.rows;
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
-  const error = isError && queryError instanceof Error ? queryError.message : '';
+  const displaysErrorMessage = isError && queryError instanceof Error ? queryError.message : '';
+  const summaryErrorMessage =
+    isSummaryError && summaryError instanceof Error ? summaryError.message : '';
+  const error = displaysErrorMessage || summaryErrorMessage;
   const displayList = data ?? [];
 
   const {
@@ -289,32 +327,6 @@ export default function Displays() {
     openModal(modal);
   };
 
-  // A deep link, e.g. a scanned QR code, opens Add Display with the code already filled in.
-  useEffect(() => {
-    const code = searchParams.get('addCode');
-
-    if (!code) {
-      return;
-    }
-
-    setAddDisplayPrefill({ code, displayName: searchParams.get('displayName') ?? '' });
-    openModal('add');
-
-    // Drop the params so refreshing the page does not reopen the modal.
-    setSearchParams({}, { replace: true });
-  }, []);
-
-  /**
-   * Open Manage Display for a display that has just connected.
-   *
-   * ManageDisplayModal takes a Display, not an id, so we have to fetch it first.
-   */
-  const manageNewDisplay = (display: Display) => {
-    setActionDisplay(display);
-    setActionError(null);
-    openModal('manage');
-  };
-
   const handleDelete = (id: number) => {
     const display = displayList.find((d) => d.displayId === id);
     if (!display) {
@@ -345,7 +357,7 @@ export default function Displays() {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
-  const columns = getDisplayColumns({
+  const actionProps: DisplayActionsProps = {
     t,
     canModify,
     canTag,
@@ -372,6 +384,8 @@ export default function Displays() {
         () => openActionModal(display, 'authorise'),
       ),
     onManage: (display) => openActionModal(display, 'manage'),
+    onManagePage: handleManagePage,
+    onViewScreenshots: (display) => setPreviewDisplay(display),
     onCheckLicence: (display) =>
       guard(
         AUTO_SUBMIT_FORMS.displayLicenceCheck,
@@ -406,7 +420,10 @@ export default function Displays() {
     formatDateTime,
     onTagClick: handleTagClick,
     selectedTagIds: (filterInputs.tags ?? []).map((tag) => tag.tagId),
-  });
+  };
+
+  const columns = getDisplayColumns(actionProps);
+  const getCardActions = getDisplayItemActions(actionProps);
 
   const openBulkModal = (modal: ModalType) => {
     const allItems = getAllSelectedItems();
@@ -531,6 +548,9 @@ export default function Displays() {
               return {
                 ...prev,
                 [name]: value === undefined || value === '' ? null : value,
+                ...(STATUS_FIELDS.includes(name as (typeof STATUS_FIELDS)[number])
+                  ? { status: null }
+                  : {}),
               } as DisplayFilterInput;
             });
             setPagination((prev) => {
@@ -545,49 +565,94 @@ export default function Displays() {
 
         <QueryStatusBanner error={error} isPaused={isPaused} />
 
-        <div className={`min-h-0 flex flex-col ${viewMode === 'map' && 'flex-1'}`}>
-          {!isHydrated ? (
-            <div className="flex-1 flex items-center justify-center bg-gray-50 animate-pulse rounded-lg border border-gray-200">
-              <span className="text-gray-400 font-medium">{t('Loading your displays...')}</span>
-            </div>
-          ) : viewMode === 'map' ? (
-            <DataMap
-              onRefresh={handleRefresh}
-              viewMode="map"
-              onViewModeChange={setViewMode}
-              availableViewModes={['table', 'map']}
-            >
-              <DisplayMap
-                filters={filterInputs}
-                folderId={canViewFolders ? selectedFolderId : null}
+        <div className="flex flex-1 flex-col gap-4 min-h-0 mt-4 overflow-y-auto">
+          <KpiRow
+            total={summary?.total}
+            loggedIn={summary?.loggedIn}
+            authorised={summary?.authorised}
+            upToDate={summary?.upToDate}
+            faults={summary?.faults}
+            faultsTrend={summary?.faultsTrend}
+            isLoading={isSummaryLoading}
+          />
+
+          <StatusChipRow
+            summary={summary}
+            status={filterInputs.status}
+            onStatusChange={handleStatusFilterChange}
+          />
+
+          <div className="min-h-[60vh] flex flex-1 shrink-0 flex-col">
+            {!isHydrated ? (
+              <div className="flex-1 flex items-center justify-center bg-gray-50 animate-pulse rounded-lg border border-gray-200">
+                <span className="text-gray-400 font-medium">{t('Loading your displays...')}</span>
+              </div>
+            ) : viewMode === 'map' ? (
+              <DataMap
+                onRefresh={handleRefresh}
+                viewMode="map"
+                onViewModeChange={setViewMode}
+                availableViewModes={['table', 'map', 'grid']}
+              >
+                <DisplayMap
+                  filters={filterInputs}
+                  folderId={canViewFolders ? selectedFolderId : null}
+                />
+              </DataMap>
+            ) : viewMode === 'grid' ? (
+              <DataGrid
+                data={displayList}
+                pageCount={pageCount}
+                rowCount={queryData?.totalCount || 0}
+                pagination={pagination}
+                onPaginationChange={setPagination}
+                rowSelection={rowSelection}
+                onRowSelectionChange={handleRowSelectionChange}
+                loading={isFetching}
+                onRefresh={handleRefresh}
+                viewMode="grid"
+                onViewModeChange={setViewMode}
+                availableViewModes={['table', 'map', 'grid']}
+                bulkActions={bulkActions}
+                getRowId={getRowId}
+                renderCard={(display, isSelected, toggleSelect) => (
+                  <DisplayCard
+                    display={display}
+                    onManagePage={handleManagePage}
+                    onEdit={openEditModal}
+                    actions={getCardActions(display)}
+                    isSelected={isSelected}
+                    onToggleSelect={toggleSelect}
+                  />
+                )}
               />
-            </DataMap>
-          ) : (
-            <DataTable
-              columns={columns}
-              data={displayList}
-              pageCount={pageCount}
-              rowCount={queryData?.totalCount || 0}
-              pagination={pagination}
-              onPaginationChange={setPagination}
-              sorting={sorting}
-              onSortingChange={setSorting}
-              globalFilter={globalFilter}
-              onGlobalFilterChange={setGlobalFilter}
-              loading={isFetching}
-              rowSelection={rowSelection}
-              onRowSelectionChange={handleRowSelectionChange}
-              onRefresh={handleRefresh}
-              columnPinning={{ left: ['tableSelection'], right: ['tableActions'] }}
-              columnVisibility={columnVisibility}
-              onColumnVisibilityChange={setColumnVisibility}
-              bulkActions={bulkActions}
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
-              availableViewModes={['table', 'map']}
-              getRowId={getRowId}
-            />
-          )}
+            ) : (
+              <DataTable
+                columns={columns}
+                data={displayList}
+                pageCount={pageCount}
+                rowCount={queryData?.totalCount || 0}
+                pagination={pagination}
+                onPaginationChange={setPagination}
+                sorting={sorting}
+                onSortingChange={setSorting}
+                globalFilter={globalFilter}
+                onGlobalFilterChange={setGlobalFilter}
+                loading={isFetching}
+                rowSelection={rowSelection}
+                onRowSelectionChange={handleRowSelectionChange}
+                onRefresh={handleRefresh}
+                columnPinning={{ left: ['tableSelection'], right: ['tableActions'] }}
+                columnVisibility={columnVisibility}
+                onColumnVisibilityChange={setColumnVisibility}
+                bulkActions={bulkActions}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                availableViewModes={['table', 'map', 'grid']}
+                getRowId={getRowId}
+              />
+            )}
+          </div>
         </div>
       </div>
 
@@ -641,8 +706,6 @@ export default function Displays() {
           confirmBulkSetDefaultLayout,
           confirmSendCommand,
           confirmBulkMoveCms,
-          addDisplayPrefill,
-          manageNewDisplay,
         }}
       />
       {canViewFolders && <FolderActionModals folderActions={folderActions} />}

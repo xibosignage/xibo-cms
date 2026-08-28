@@ -119,6 +119,8 @@ $app->group('', function (RouteCollectorProxy $group) {
 $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/display/manage/{id}', ['\Xibo\Controller\Display', 'displayManage'])
         ->setName('display.manage.json');
+    $group->get('/display/overview/summary', ['\Xibo\Controller\Display', 'overviewSummary'])
+        ->setName('display.overview.summary');
     $group->get('/stats/data/bandwidth', ['\Xibo\Controller\Stats', 'bandwidthData'])
         ->setName('stats.bandwidth.data.json');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['displays.view']));

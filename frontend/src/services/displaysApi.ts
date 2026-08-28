@@ -26,6 +26,7 @@ import http from '@/lib/api';
 import type { Display } from '@/types/display';
 import type { DisplayGroup } from '@/types/displayGroup';
 import type { BandwidthResponse, DisplayManageData, PlayerFault } from '@/types/displayManage';
+import type { DisplayOverviewSummary } from '@/types/displayOverview';
 import type { Layout } from '@/types/layout';
 import type { Media } from '@/types/media';
 
@@ -41,7 +42,9 @@ export interface FetchDisplaysRequest {
   logicalOperatorName?: 'OR' | 'AND';
   mediaInventoryStatus?: number | string;
   loggedIn?: number | string;
+  faults?: number | string;
   authorised?: number | string;
+  status?: string;
   xmrRegistered?: number | string;
   clientType?: string;
   displayGroupId?: number | string;
@@ -81,6 +84,17 @@ export async function fetchDisplays(
   const totalCount = totalCountHeader ? parseInt(totalCountHeader, 10) : 0;
 
   return { rows, totalCount };
+}
+
+export async function fetchDisplayOverviewSummary(
+  signal?: AbortSignal,
+  folderId?: number | null,
+): Promise<DisplayOverviewSummary> {
+  const response = await http.get<DisplayOverviewSummary>('/display/overview/summary', {
+    params: folderId ? { folderId } : undefined,
+    signal,
+  });
+  return response.data;
 }
 
 export interface UpdateDisplayRequest {
@@ -429,6 +443,21 @@ export async function requestScreenShot(displayId: number | string): Promise<voi
   });
 }
 
+/**
+ * When the display's current screenshot was captured, as the CMS's own datetime string in CMS
+ * time, or null if it has never sent one.
+ *
+ * The image itself carries its capture time drawn into the pixels rather than in a header, so
+ * this is the only cheap way to notice a new one has landed.
+ */
+export async function fetchScreenshotTime(
+  displayId: number | string,
+  signal?: AbortSignal,
+): Promise<string | null> {
+  const response = await http.get(`/display/screenshot/${displayId}/time`, { signal });
+  return response.data?.time ?? null;
+}
+
 export async function fetchDisplayScreenshotBlob(
   displayId: number | string,
   signal?: AbortSignal,
@@ -630,8 +659,9 @@ export async function fetchDisplayManageData(
 export async function fetchPlayerFaults(
   displayId: number,
   signal?: AbortSignal,
+  params?: { activeOnly?: number },
 ): Promise<PlayerFault[]> {
-  const response = await http.get(`/display/faults/${displayId}`, { signal });
+  const response = await http.get(`/display/faults/${displayId}`, { signal, params });
   return response.data;
 }
 

@@ -282,6 +282,16 @@ export const APP_ROUTES: AppRoute[] = [
     icon: Monitor,
     subLinks: [
       {
+        path: 'displays/:displayId',
+        labelKey: 'Manage Display',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Displays/Displays/DisplayManagePage').then((m) => ({
+            Component: m.default,
+          })),
+        feature: 'displays.view',
+      },
+      {
         path: 'displays',
         labelKey: 'Displays',
         lazy: () =>

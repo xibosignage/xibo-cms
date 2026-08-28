@@ -56,7 +56,9 @@ export default function AddDisplayModeChooser({ onSelect }: AddDisplayModeChoose
 
   return (
     <div className="px-6 py-4 flex flex-col gap-4">
-      <h3 className="text-lg font-semibold text-gray-800 text-center">{t('How would you like to connect your display?')}</h3>
+      <h3 className="text-lg font-semibold text-gray-800 text-center">
+        {t('How would you like to connect your display?')}
+      </h3>
 
       <div className="flex flex-col gap-3">
         {options.map((option) => (
