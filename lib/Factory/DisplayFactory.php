@@ -177,6 +177,18 @@ class DisplayFactory extends BaseFactory
     }
 
     /**
+     * Count of currently licensed displays
+     * @return int
+     */
+    public function countLicensed(): int
+    {
+        return intval($this->getStore()->select(
+            'SELECT COUNT(DisplayID) AS CountLicensed FROM `display` WHERE licensed = 1',
+            []
+        )[0]['CountLicensed'] ?? 0);
+    }
+
+    /**
      * SQL fragment (correlated to `display` in the outer query) counting player faults
      * recorded against a Display. Shared by the `faults` filter in query() and by
      * getSummary(), so the definition only exists once.

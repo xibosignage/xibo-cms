@@ -475,6 +475,7 @@ try {
         $container->get('campaignFactory'),
         $container->get('syncGroupFactory'),
         $container->get('playerFaultFactory'),
+        $container->get('displayGroupFactory'),
         $container->get('displayScreenshotFactory')
     );
 
