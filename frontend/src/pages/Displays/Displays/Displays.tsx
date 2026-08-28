@@ -21,8 +21,9 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import { Search, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 
 import type { ModalType } from './DisplaysConfig';
 import {
@@ -31,6 +32,7 @@ import {
   INITIAL_FILTER_STATE,
   type DisplayFilterInput,
 } from './DisplaysConfig';
+import type { AddDisplayPrefill } from './components/AddDisplayModal';
 import DisplayMap from './components/DisplayMap';
 import DisplayScreenshotPreviewer from './components/DisplayScreenshotPreviewer';
 import { DisplayModals } from './components/DisplaysModals';
@@ -173,6 +175,7 @@ export default function Displays() {
   const [activeModal, setActiveModal] = useState<ModalType | null>(null);
   const [itemsToDelete, setItemsToDelete] = useState<Display[]>([]);
   const [itemsToMove, setItemsToMove] = useState<Display[]>([]);
+  const [addDisplayPrefill, setAddDisplayPrefill] = useState<AddDisplayPrefill | null>(null);
   const [bulkActionItems, setBulkActionItems] = useState<Display[]>([]);
   const [selectedDisplayId, setSelectedDisplayId] = useState<number | null>(null);
   const [actionDisplay, setActionDisplay] = useState<Display | null>(null);
@@ -181,6 +184,8 @@ export default function Displays() {
 
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
+
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const handleFolderChange = (folder: { id: number | null; text: string | '' }) => {
     setSelectedFolderId(folder.id);
@@ -282,6 +287,32 @@ export default function Displays() {
     setActionDisplay(display);
     setActionError(null);
     openModal(modal);
+  };
+
+  // A deep link, e.g. a scanned QR code, opens Add Display with the code already filled in.
+  useEffect(() => {
+    const code = searchParams.get('addCode');
+
+    if (!code) {
+      return;
+    }
+
+    setAddDisplayPrefill({ code, displayName: searchParams.get('displayName') ?? '' });
+    openModal('add');
+
+    // Drop the params so refreshing the page does not reopen the modal.
+    setSearchParams({}, { replace: true });
+  }, []);
+
+  /**
+   * Open Manage Display for a display that has just connected.
+   *
+   * ManageDisplayModal takes a Display, not an id, so we have to fetch it first.
+   */
+  const manageNewDisplay = (display: Display) => {
+    setActionDisplay(display);
+    setActionError(null);
+    openModal('manage');
   };
 
   const handleDelete = (id: number) => {
@@ -610,6 +641,8 @@ export default function Displays() {
           confirmBulkSetDefaultLayout,
           confirmSendCommand,
           confirmBulkMoveCms,
+          addDisplayPrefill,
+          manageNewDisplay,
         }}
       />
       {canViewFolders && <FolderActionModals folderActions={folderActions} />}

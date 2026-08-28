@@ -43,6 +43,10 @@ interface DisplayGroupSelectProps {
   value: number | null;
   valueLabel: string;
   onChange: (id: number | null, label: string) => void;
+  /** Render an "Optional" badge in the label, matching SelectFolder. */
+  optional?: boolean;
+  /** Hide dynamic groups - their membership is criteria-driven, so displays cannot be assigned. */
+  excludeDynamic?: boolean;
 }
 
 export default function DisplayGroupSelect({
@@ -51,6 +55,8 @@ export default function DisplayGroupSelect({
   value,
   valueLabel,
   onChange,
+  optional = false,
+  excludeDynamic = false,
 }: DisplayGroupSelectProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
@@ -91,6 +97,7 @@ export default function DisplayGroupSelect({
         start: 0,
         length: 20,
         displayGroup: term || undefined,
+        isDynamic: excludeDynamic ? 0 : undefined,
       });
       setOptions(result.rows.map((g) => ({ id: g.displayGroupId, label: g.displayGroup })));
     } finally {
@@ -117,7 +124,10 @@ export default function DisplayGroupSelect({
 
   return (
     <div className="flex flex-col gap-1 w-full">
-      <label className="text-sm font-semibold text-gray-500 leading-5">{label}</label>
+      <label className="flex items-center justify-between text-sm font-semibold text-gray-500 leading-4.5">
+        <span>{label}</span>
+        {optional && <span className="text-xs font-normal text-gray-500">{t('Optional')}</span>}
+      </label>
 
       <div className="flex gap-1">
         <div

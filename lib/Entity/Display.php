@@ -620,6 +620,34 @@ class Display implements \JsonSerializable, XmrTargetInterface
         return self::getCachePrefix() . $this->displayId;
     }
 
+    /**
+     * Cache key for display settings chosen on the Add Display (via code) form.
+     *
+     * Written by the addViaCode controller before the Player exists, and consumed by
+     * RegisterDisplay when the Player presents the same activation code alongside the CMS key.
+     * The code is hashed so that whatever the operator typed is safe to use in a cache key.
+     * @param string $userCode
+     * @return string
+     */
+    public static function getAddViaCodeCacheKey(string $userCode): string
+    {
+        return self::getCachePrefix() . 'addViaCode/' . md5($userCode);
+    }
+
+    /**
+     * Cache key for a pending manual-connect one-time code.
+     *
+     * The operator types this code into the Player in place of the display name, so RegisterDisplay
+     * can tell exactly which Add Display form a registration belongs to. Codes are short and
+     * case-insensitive to type, so they are upper-cased before keying.
+     * @param string $code
+     * @return string
+     */
+    public static function getManualConnectCacheKey(string $code): string
+    {
+        return self::getCachePrefix() . 'manualConnect/' . strtoupper($code);
+    }
+
     public function isHisensePlayer(): bool
     {
         return strcasecmp($this->manufacturer ?? '', 'hisense') === 0

@@ -334,13 +334,21 @@ $app->group('', function (RouteCollectorProxy $group) {
         ->setName('display.statusWindow');
     $group->get('/display/faults[/{displayId}]', ['\Xibo\Controller\PlayerFault','grid'])
         ->setName('display.faults.search');
-    $group->get('/display/{id:[0-9]+}', ['\Xibo\Controller\Display', 'searchById'])->setName('display.search.id');
+    $group->get('/display/licence/usage', ['\Xibo\Controller\Display','licenceUsage'])
+        ->setName('display.licence.usage');
+    $group->get('/display/{id}', ['\Xibo\Controller\Display', 'searchById'])->setName('display.search.id');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['displays.view']));
 
 $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/display/authorise/{id:[0-9]+}', ['\Xibo\Controller\Display','toggleAuthorise'])
         ->setName('display.authorise');
     $group->post('/display/addViaCode', ['\Xibo\Controller\Display','addViaCode'])->setName('display.addViaCode');
+    $group->get('/display/connect/details', ['\Xibo\Controller\Display','connectDetails'])
+        ->setName('display.connect.details');
+    $group->post('/display/connect/code', ['\Xibo\Controller\Display','connectCode'])
+        ->setName('display.connect.code');
+    $group->get('/display/connect/status', ['\Xibo\Controller\Display','connectStatus'])
+        ->setName('display.connect.status');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['displays.add']));
 
 $app->group('', function (RouteCollectorProxy $group) {

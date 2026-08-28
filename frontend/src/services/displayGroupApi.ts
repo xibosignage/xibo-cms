@@ -31,6 +31,7 @@ export interface FetchDisplayGroupRequest {
   displayGroupIds?: number[];
   displayId?: number;
   nestedDisplayId?: number;
+  isDynamic?: number;
   dynamicCriteria?: string;
   tags?: string;
   displayGroup?: string;

@@ -29,9 +29,13 @@ import {
   Wifi,
   XCircle,
 } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import AddDisplayModal from './AddDisplayModal';
+import { usePendingConnectToast } from '../hooks/usePendingConnect';
+
+import AddDisplayDock from './AddDisplayDock';
+import AddDisplayModal, { type AddDisplayPrefill } from './AddDisplayModal';
 import AssignLayoutModal from './AssignLayoutModal';
 import AssignMediaModal from './AssignMediaModal';
 import CollectNowModal from './CollectNowModal';
@@ -96,6 +100,10 @@ interface DisplayModalsProps {
     confirmBulkSetDefaultLayout: (items: Display[], layoutId: number) => void;
     confirmSendCommand: (items: DisplayCommandTarget[], commandId: number) => void;
     confirmBulkMoveCms: (items: Display[], data: MoveCmsData) => void;
+    /** Set when the customer arrived from a deep link, e.g. a scanned QR code. */
+    addDisplayPrefill?: AddDisplayPrefill | null;
+    /** Open the newly connected display straight from the Add Display success panel. */
+    manageNewDisplay?: (display: Display) => void;
   };
 }
 
@@ -117,10 +125,54 @@ export function DisplayModals({ actions, selection, handlers }: DisplayModalsPro
   const display = selection.actionDisplay;
   const bulkItems = selection.bulkActionItems;
 
+  // Minimize/maximize state for the Add Display flow.
+  // The modal stays mounted while minimized so it keeps its internal state (submitted, watermark,
+  // polling). Only `isOpen` toggles — the component is never unmounted mid-flow.
+  const [isAddMinimized, setIsAddMinimized] = useState(false);
+  const [minimizedDisplayName, setMinimizedDisplayName] = useState('');
+
+  // True when the add modal should be rendered (open OR minimized with state to preserve).
+  const addModalMounted = isModalOpen('add') || isAddMinimized;
+
+  // While the form is mounted it reports the outcome itself. Once it is closed, this is what tells
+  // the operator that a Player they were waiting on finally arrived - the CMS having already taken
+  // the matching "waiting" entry out of their notifications bell.
+  usePendingConnectToast(!addModalMounted, handlers.manageNewDisplay);
+
+  const handleMinimize = (displayName: string) => {
+    setMinimizedDisplayName(displayName);
+    setIsAddMinimized(true);
+  };
+
+  const handleMaximize = () => {
+    setIsAddMinimized(false);
+  };
+
+  const handleAddClose = () => {
+    setIsAddMinimized(false);
+    setMinimizedDisplayName('');
+    actions.closeModal();
+  };
+
   return (
     <>
-      {isModalOpen('add') && (
-        <AddDisplayModal onClose={actions.closeModal} onAdded={actions.handleRefresh} />
+      {/* Dock shown when Add Display is minimized */}
+      {isAddMinimized && (
+        <AddDisplayDock
+          displayName={minimizedDisplayName || t('New Display')}
+          onMaximize={handleMaximize}
+        />
+      )}
+
+      {addModalMounted && (
+        <AddDisplayModal
+          isOpen={isModalOpen('add') && !isAddMinimized}
+          onClose={handleAddClose}
+          onAdded={actions.handleRefresh}
+          prefill={handlers.addDisplayPrefill}
+          onManage={handlers.manageNewDisplay}
+          onMinimize={handleMinimize}
+        />
       )}
 
       {isModalOpen('manage') && display && (

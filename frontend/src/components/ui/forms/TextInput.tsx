@@ -36,6 +36,8 @@ interface TextInputProps {
   labelClassName?: string;
   wrapperClassName?: string;
   disabled?: boolean;
+  /** Value is shown for copying but cannot be edited. Unlike disabled, stays focusable. */
+  readOnly?: boolean;
   prefix?: React.ReactNode;
   suffix?: React.ReactNode;
   multiline?: boolean;
@@ -59,6 +61,7 @@ export default function TextInput({
   helpText,
   error,
   disabled = false,
+  readOnly = false,
   prefix,
   suffix,
   multiline = false,
@@ -125,6 +128,7 @@ export default function TextInput({
             name={name}
             value={value}
             disabled={disabled}
+            readOnly={readOnly}
             maxLength={maxLength}
             aria-required={required}
             onChange={(e) => onChange && onChange(e.target.value)}

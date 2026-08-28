@@ -316,11 +316,105 @@ export async function fetchDisplayLocales(): Promise<{ id: string; value: string
   return response.data;
 }
 
-export async function addDisplayViaCode(userCode: string): Promise<void> {
-  const params = new URLSearchParams({ user_code: userCode });
+export interface AddDisplayViaCodePayload {
+  userCode: string;
+  /** Cached by the CMS against the code and applied when the Player registers. */
+  displayName?: string;
+  folderId?: number | null;
+  displayGroupId?: number | null;
+  authorised?: boolean;
+}
+
+/**
+ * Submit an activation code. The CMS relays it to the authentication service; the Player picks the
+ * CMS details up moments later and registers itself, which is what actually creates the display.
+ *
+ * The optional settings are not applied here - the CMS caches them against the code and applies
+ * them itself when the Player registers. useConnectWatcher only exists so the UI can tell the
+ * operator when that has happened.
+ */
+export async function addDisplayViaCode(payload: AddDisplayViaCodePayload): Promise<void> {
+  const params = new URLSearchParams({ user_code: payload.userCode });
+
+  if (payload.displayName) {
+    params.set('displayName', payload.displayName);
+  }
+  if (payload.folderId) {
+    params.set('folderId', String(payload.folderId));
+  }
+  if (payload.displayGroupId) {
+    params.set('displayGroupId', String(payload.displayGroupId));
+  }
+  if (payload.authorised) {
+    params.set('authorised', '1');
+  }
+
   await http.post('/display/addViaCode', params.toString(), {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   });
+}
+
+export interface LicenceUsage {
+  /** 0 means unlimited. */
+  maxLicensed: number;
+  currentlyLicensed: number;
+  /** null means unlimited. */
+  available: number | null;
+}
+
+export async function fetchLicenceUsage(): Promise<LicenceUsage> {
+  // The state's data is emitted at the top level, not wrapped in a "data" envelope.
+  const response = await http.get('/display/licence/usage');
+  return response.data;
+}
+
+export interface ConnectDetails {
+  /** The address a Player must be pointed at, as the CMS itself resolves it. */
+  cmsAddress: string;
+  cmsKey: string;
+}
+
+/**
+ * The CMS Address and Key an operator types into a Player when configuring it by hand.
+ *
+ * Read from the CMS rather than derived from window.location, because WHITELIST_HOSTS decides the
+ * address a Player can actually reach, which is not necessarily the one the browser used.
+ */
+export async function fetchConnectDetails(): Promise<ConnectDetails> {
+  const response = await http.get('/display/connect/details');
+  return response.data;
+}
+
+export interface ConnectCode {
+  /** Four characters, unambiguous alphabet, single use. */
+  code: string;
+  expiresInMinutes: number;
+}
+
+/**
+ * Issue a one-time code identifying a Player about to be configured by hand.
+ *
+ * It is appended to the CMS key the operator copies into the Player. RegisterDisplay parses it,
+ * which is what lets the CMS say a given registration belongs to this form rather than guessing
+ * from whatever registered most recently.
+ */
+export async function fetchConnectCode(): Promise<ConnectCode> {
+  const response = await http.post('/display/connect/code');
+  return response.data;
+}
+
+export interface ConnectStatus {
+  /** The code was never issued, or has passed its 30 minute life. */
+  expired: boolean;
+  connected: boolean;
+  displayId: number | null;
+  display: string | null;
+}
+
+/** Has the Player holding this code registered yet? An identity check, not a search. */
+export async function fetchConnectStatus(code: string): Promise<ConnectStatus> {
+  const response = await http.get('/display/connect/status', { params: { code } });
+  return response.data;
 }
 
 export async function checkLicence(displayId: number | string): Promise<void> {

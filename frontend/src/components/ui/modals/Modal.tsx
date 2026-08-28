@@ -49,6 +49,8 @@ interface ModalProps {
   isOpen?: boolean;
   onClose: () => void;
   title?: string;
+  /** Accessible name for the dialog when a custom header is used instead of `title`. */
+  ariaLabel?: string;
   children: React.ReactNode;
   actions?: ModalAction[];
   size?: 'sm' | 'md' | 'lg' | 'xl';
@@ -67,6 +69,7 @@ export default function Modal({
   isOpen = true,
   onClose,
   title,
+  ariaLabel,
   children,
   actions,
   size = 'md',
@@ -124,6 +127,7 @@ export default function Modal({
       <dialog
         open
         aria-labelledby={titleId}
+        aria-label={ariaLabel}
         className={twMerge(
           'relative flex flex-col w-full bg-white rounded-xl overflow-hidden outline-none shadow-lg',
           variant === 'tabbed' ? 'h-[90vh]' : 'max-h-[90vh]',

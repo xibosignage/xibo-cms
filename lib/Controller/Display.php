@@ -1802,6 +1802,13 @@ class Display extends Base
             throw new InvalidArgumentException(__('Code cannot be empty'), 'code');
         }
 
+        // Settings chosen on the Add Display form cannot be applied yet, because the display does
+        // not exist until the Player registers. They are cached against the activation code, and
+        // the code rides along with the CMS key so that RegisterDisplay can recognise the Player
+        // this submission belongs to and apply them (see Soap5::RegisterDisplay). The Player
+        // strips the code from the key before storing it.
+        $claim = $this->buildDisplayClaim($sanitizedParams);
+
         $guzzle = SafeClient::getSafeClient();
 
         try {
@@ -1815,12 +1822,25 @@ class Display extends Base
                     'form_params' => [
                         'user_code' => $user_code,
                         'cmsAddress' => $cmsAddress,
-                        'cmsKey' => $cmsKey,
+                        'cmsKey' => $cmsKey . '||' . $user_code,
                     ]
                 ])
             );
 
             $data = json_decode($guzzleRequest->getBody(), true);
+
+            // Always cached, even when the operator chose no settings: the claim is what ties the
+            // registration back to this user, for ownership and the audit trail.
+            $claim['notificationId'] = $this->notifyPendingConnect(
+                $user_code,
+                Carbon::now()->addDay(),
+                $cmsAddress . '/displays/displays?addCode=' . urlencode($user_code)
+            );
+
+            $cache = $this->pool->getItem(\Xibo\Entity\Display::getAddViaCodeCacheKey($user_code));
+            $cache->set($claim);
+            $cache->expiresAfter(new \DateInterval('P1D'));
+            $this->pool->save($cache);
 
             $this->getState()->hydrate([
                 'message' => $data['message']
@@ -1832,6 +1852,368 @@ class Display extends Base
                 'user_code'
             );
         }
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Build the set of display settings to apply when the Player behind an activation code
+     * registers: a name, folder, display group and whether it should be authorised.
+     *
+     * Registration runs without a user, so entitlement is checked here at submission time: the
+     * fields are only honoured from users who could make the same changes after registration.
+     * Authorisation deliberately needs no extra feature - toggleAuthorise is available to this
+     * form's audience (displays.add) as well.
+     *
+     * @param SanitizerInterface $sanitizedParams
+     * @return array
+     * @throws NotFoundException
+     * @throws AccessDeniedException
+     */
+    private function buildDisplayClaim(SanitizerInterface $sanitizedParams): array
+    {
+        $claim = [];
+
+        // Remember who asked. Registration happens without a session, so this is the only record of
+        // which user's Add Display form a Player belongs to - needed for ownership and the audit.
+        $claim['userId'] = $this->getUser()->userId;
+
+        if ($sanitizedParams->getCheckbox('authorised')) {
+            $claim['licensed'] = 1;
+        }
+
+        if ($this->getUser()->featureEnabled('displays.modify')) {
+            $displayName = trim($sanitizedParams->getString('displayName') ?? '');
+            if ($displayName !== '') {
+                $claim['display'] = $displayName;
+            }
+
+            $folderId = $sanitizedParams->getInt('folderId');
+            if (!empty($folderId)) {
+                $claim['folderId'] = $folderId;
+            }
+
+            $displayGroupId = $sanitizedParams->getInt('displayGroupId');
+            if (!empty($displayGroupId)) {
+                // Unlike the name and folder, a bad group id would fail at registration where
+                // nobody can see the error, so check it while the operator is still watching.
+                $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+                if (!$this->getUser()->checkEditable($displayGroup)) {
+                    throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
+                }
+
+                if ($displayGroup->isDynamic == 1) {
+                    throw new InvalidArgumentException(
+                        __('Displays cannot be manually assigned to a Dynamic Group'),
+                        'displayGroupId'
+                    );
+                }
+
+                $claim['displayGroupId'] = $displayGroupId;
+            }
+        }
+
+        return $claim;
+    }
+
+    /**
+     * Raise a notification recording a connection the CMS is waiting on.
+     *
+     * Pending connections live in the cache, which cannot be enumerated or swept - once an entry
+     * expires there is nothing left to notice its absence. So the notice is raised up front and
+     * removed again when the Player arrives. One that is still sitting in the operator's
+     * notifications is therefore exactly the case worth telling them about: the setup never
+     * completed, and the pending connection has been (or is about to be) discarded.
+     *
+     * @param string $code the code the operator is working with
+     * @param \Carbon\Carbon $expiresAt when the pending connection is discarded
+     * @param string $resumeUrl where the operator can pick the setup back up
+     * @return int|null the notification id, so it can be cleared once the Player connects
+     */
+    private function notifyPendingConnect(string $code, Carbon $expiresAt, string $resumeUrl): ?int
+    {
+        try {
+            // Assigning the operator's own group keeps this out of everybody else's notifications:
+            // Notification::manageAssignments expands assigned groups into lknotificationuser.
+            $groups = $this->userGroupFactory->query(null, [
+                'disableUserCheck' => 1,
+                'userId' => $this->getUser()->userId,
+                'isUserSpecific' => 1,
+            ]);
+
+            if (count($groups) <= 0) {
+                return null;
+            }
+
+            $notification = $this->notificationFactory->createEmpty();
+            $notification->subject = __('Display setup waiting for a Player to connect');
+            $notification->body = sprintf(
+                __('A display setup using code %s is waiting for its Player to connect. It expires'
+                    . ' at %s, after which the pending connection is discarded and the setup has to'
+                    . ' be started again. <a href="%s">Return to Add Display</a>.'),
+                htmlspecialchars($code),
+                $expiresAt->format(DateFormatHelper::getSystemFormat()),
+                htmlspecialchars($resumeUrl)
+            );
+            $notification->createDt = Carbon::now()->format('U');
+            $notification->releaseDt = Carbon::now()->format('U');
+            $notification->isInterrupt = 0;
+            $notification->isSystem = 0;
+            $notification->userId = $this->getUser()->userId;
+            $notification->type = 'display';
+
+            foreach ($groups as $group) {
+                $notification->assignUserGroup($group);
+            }
+
+            $notification->save();
+
+            return $notification->notificationId;
+        } catch (\Exception $e) {
+            // A missing notification must never stop a display being added.
+            $this->getLog()->error('notifyPendingConnect: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    #[OA\Get(
+        path: '/display/licence/usage',
+        operationId: 'displayLicenceUsage',
+        description: 'How many display licences are in use, and how many remain',
+        summary: 'Display Licence Usage',
+        tags: ['display']
+    )]
+    #[OA\Response(response: 200, description: 'successful operation')]
+    /**
+     * Report display licence usage, so the Add Display form can show the operator where they stand
+     * before they commit to authorising another display.
+     *
+     * Deliberately available to anyone who can view displays: the count is a system-wide total and
+     * is not scoped to the displays this user happens to have permission to see, because a partial
+     * count measured against a system-wide cap would be misleading.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return ResponseInterface|Response
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function licenceUsage(Request $request, Response $response): Response|ResponseInterface
+    {
+        $maxLicensed = intval($this->getConfig()->getSetting('MAX_LICENSED_DISPLAYS'));
+        $currentlyLicensed = $this->displayFactory->countLicensed();
+
+        $this->getState()->hydrate([
+            'data' => [
+                // 0 means unlimited
+                'maxLicensed' => $maxLicensed,
+                'currentlyLicensed' => $currentlyLicensed,
+                // null means unlimited
+                'available' => $maxLicensed > 0 ? max(0, $maxLicensed - $currentlyLicensed) : null,
+            ]
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    #[OA\Get(
+        path: '/display/connect/details',
+        operationId: 'displayConnectDetails',
+        description: 'The CMS Address and Key a Player needs to be configured manually',
+        summary: 'Display Connect Details',
+        tags: ['display']
+    )]
+    #[OA\Response(response: 200, description: 'successful operation')]
+    /**
+     * The CMS Address and Key an operator has to type into a Player when configuring it by hand.
+     *
+     * Gated on displays.add rather than super admin: these are exactly the two values needed to
+     * connect a Player, so anyone entitled to add a Display needs to be able to read them. The
+     * activation-code path already sends the same pair to the authentication service on behalf of
+     * this audience - the difference here is only that the operator copies them across themselves.
+     *
+     * The address is derived server side rather than from the browser's location, because
+     * WHITELIST_HOSTS (when set) is what decides the address a Player can actually reach.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return ResponseInterface|Response
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function connectDetails(Request $request, Response $response): Response|ResponseInterface
+    {
+        $this->getState()->hydrate([
+            'data' => [
+                'cmsAddress' => (new HttpsDetect($this->getConfig()))->getBaseUrl($request),
+                'cmsKey' => $this->getConfig()->getSetting('SERVER_KEY'),
+            ]
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Characters used for manual-connect codes.
+     *
+     * Deliberately excludes 0/O/1/I to stop the operator mis-typing a code they are reading off
+     * one screen and keying into another, often with a remote control.
+     */
+    private const MANUAL_CODE_ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+
+    #[OA\Post(
+        path: '/display/connect/code',
+        operationId: 'displayConnectCode',
+        description: 'Issue a one-time code identifying a Player about to be configured by hand',
+        summary: 'Display Connect Code',
+        tags: ['display']
+    )]
+    #[OA\Response(response: 200, description: 'successful operation')]
+    /**
+     * Issue a one-time code for a manually configured Player.
+     *
+     * It is appended to the CMS key the operator copies into the Player. RegisterDisplay parses the
+     * code up, which is what lets the CMS say *this* registration belongs to *that* Add Display
+     * form - without it, correlation is a guess and two operators adding displays at the same
+     * moment can be confused for one another.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return ResponseInterface|Response
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function connectCode(Request $request, Response $response): Response|ResponseInterface
+    {
+        $code = null;
+
+        // Reissue on collision: a code already in flight belongs to somebody else's Player.
+        for ($attempt = 0; $attempt < 10; $attempt++) {
+            $candidate = '';
+            for ($i = 0; $i < 4; $i++) {
+                $candidate .= self::MANUAL_CODE_ALPHABET[random_int(0, strlen(self::MANUAL_CODE_ALPHABET) - 1)];
+            }
+
+            if ($this->pool->getItem(\Xibo\Entity\Display::getManualConnectCacheKey($candidate))->isMiss()) {
+                $code = $candidate;
+                break;
+            }
+        }
+
+        if ($code === null) {
+            throw new GeneralException(__('Unable to issue a connection code, please try again'));
+        }
+
+        $item = $this->pool->getItem(\Xibo\Entity\Display::getManualConnectCacheKey($code));
+        $item->set([
+            'displayId' => null,
+            'userId' => $this->getUser()->userId,
+            'notificationId' => $this->notifyPendingConnect(
+                $code,
+                Carbon::now()->addMinutes(30),
+                (new HttpsDetect($this->getConfig()))->getBaseUrl($request) . '/displays/displays'
+            ),
+        ]);
+        $item->expiresAfter(new \DateInterval('PT30M'));
+        $this->pool->save($item);
+
+        $this->getState()->hydrate([
+            'data' => [
+                'code' => $code,
+                // Minutes, so the UI can tell the operator how long they have.
+                'expiresInMinutes' => 30,
+            ]
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    #[OA\Get(
+        path: '/display/connect/status',
+        operationId: 'displayConnectStatus',
+        description: 'Has the Player holding this one-time code reached the CMS yet?',
+        summary: 'Display Connect Status',
+        tags: ['display']
+    )]
+    #[OA\Response(response: 200, description: 'successful operation')]
+    /**
+     * Report whether the Player holding a one-time code has registered.
+     *
+     * This is an identity check against a single cached code, not a search of the display list, so
+     * it cannot pick up somebody else's Player the way a "newest display wins" poll can.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return ResponseInterface|Response
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function connectStatus(Request $request, Response $response): Response|ResponseInterface
+    {
+        $code = $this->getSanitizer($request->getQueryParams())->getString('code');
+
+        if (empty($code)) {
+            throw new InvalidArgumentException(__('Code cannot be empty'), 'code');
+        }
+
+        $item = $this->pool->getItem(\Xibo\Entity\Display::getManualConnectCacheKey($code));
+        $pending = $item->get();
+
+        // The code is either one we issued for manual configuration, or the activation code the
+        // operator typed in. Both record which display claimed them, so both answer here.
+        if ($item->isMiss() || !is_array($pending)) {
+            $item = $this->pool->getItem(\Xibo\Entity\Display::getAddViaCodeCacheKey($code));
+            $pending = $item->get();
+        }
+
+        if ($item->isMiss() || !is_array($pending)) {
+            // Expired, or never issued. Either way there is nothing to wait for.
+            $this->getState()->hydrate([
+                'data' => [
+                    'expired' => true,
+                    'connected' => false,
+                ]
+            ]);
+
+            return $this->render($request, $response);
+        }
+
+        // A code belongs to the session that asked for it. Somebody else holding the string - guessed,
+        // shoulder-surfed, or shared - must not learn which display it produced.
+        if (intval($pending['userId'] ?? 0) !== $this->getUser()->userId) {
+            $this->getState()->hydrate([
+                'data' => [
+                    'expired' => true,
+                    'connected' => false,
+                ]
+            ]);
+
+            return $this->render($request, $response);
+        }
+
+        $displayId = intval($pending['displayId'] ?? 0);
+        $display = null;
+
+        if ($displayId > 0) {
+            try {
+                $display = $this->displayFactory->getById($displayId);
+            } catch (NotFoundException $e) {
+                // Registered, then deleted again before the operator saved. Report it as pending
+                // rather than handing back an id that no longer resolves.
+                $displayId = 0;
+            }
+        }
+
+        $this->getState()->hydrate([
+            'data' => [
+                'expired' => false,
+                'connected' => $displayId > 0,
+                'displayId' => $displayId > 0 ? $displayId : null,
+                'display' => $display?->display,
+            ]
+        ]);
 
         return $this->render($request, $response);
     }
