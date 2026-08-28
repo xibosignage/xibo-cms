@@ -57,7 +57,7 @@ class RemoveOldScreenshotsTask implements TaskInterface
 
                 $lastModified = DateFormatHelper::createFromTimestamp(filemtime($fileLocation));
                 $now = Carbon::now();
-                $diff = $now->diffInDays($lastModified);
+                $diff = $now->diffInDays($lastModified, true);
 
                 if ($diff > $screenshotTTL) {
                     unlink($fileLocation);

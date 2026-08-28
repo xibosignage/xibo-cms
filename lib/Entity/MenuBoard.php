@@ -269,15 +269,17 @@ class MenuBoard implements \JsonSerializable
 
     private function add(): void
     {
+        $this->modifiedDt = Carbon::now()->format('U');
+
         $this->menuId = $this->getStore()->insert(
-            'INSERT INTO `menu_board` (name, description, code, userId, modifiedDt, folderId, permissionsFolderId) 
+            'INSERT INTO `menu_board` (name, description, code, userId, modifiedDt, folderId, permissionsFolderId)
                     VALUES (:name, :description, :code, :userId, :modifiedDt, :folderId, :permissionsFolderId)',
             [
                 'name' => $this->name,
                 'description' => $this->description,
                 'code' => $this->code,
                 'userId' => $this->userId,
-                'modifiedDt' => Carbon::now()->format('U'),
+                'modifiedDt' => $this->modifiedDt,
                 'folderId' => ($this->folderId == null) ? 1 : $this->folderId,
                 'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this->permissionsFolderId
             ]

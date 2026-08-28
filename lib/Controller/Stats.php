@@ -922,8 +922,8 @@ class Stats extends Base
                 $end = $end->tz($timeZoneCache[$entry['displayId']]);
             }
             $entry['start'] = $start->format($returnDateFormat);
-            $entry['end'] = $entry['isFinished'] ? $end->format($returnDateFormat) : null;
-            $entry['duration'] = (int) $end->diffInSeconds($start);
+            $entry['end'] = $end->format($returnDateFormat);
+            $entry['duration'] = (int) $end->diffInSeconds($start, true);
             $rows[] = $entry;
         }
 
