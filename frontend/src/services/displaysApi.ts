@@ -331,7 +331,7 @@ export interface AddDisplayViaCodePayload {
  * CMS details up moments later and registers itself, which is what actually creates the display.
  *
  * The optional settings are not applied here - the CMS caches them against the code and applies
- * them itself when the Player registers. useNewDisplayDetector only exists so the UI can tell the
+ * them itself when the Player registers. useConnectWatcher only exists so the UI can tell the
  * operator when that has happened.
  */
 export async function addDisplayViaCode(payload: AddDisplayViaCodePayload): Promise<void> {
@@ -353,36 +353,6 @@ export async function addDisplayViaCode(payload: AddDisplayViaCodePayload): Prom
   await http.post('/display/addViaCode', params.toString(), {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   });
-}
-
-/**
- * The highest displayId this user can currently see.
- *
- * Captured before an activation code is submitted so that whatever registers afterwards can be
- * recognised as new. Returns 0 when the user can see no displays at all.
- */
-export async function fetchHighestDisplayId(): Promise<number> {
-  const response = await http.get('/display', {
-    params: { start: 0, length: 1, sortBy: 'displayId', sortDir: 'desc' },
-  });
-
-  const rows: Display[] = response.data ?? [];
-  return rows[0]?.displayId ?? 0;
-}
-
-/**
- * Displays with an id above the given watermark, newest first.
- *
- * Used to spot the Player that has just connected. More than one result means something else
- * registered at the same moment, and the operator is asked which display is theirs.
- */
-export async function fetchDisplaysNewerThan(highestSeenId: number, limit = 5): Promise<Display[]> {
-  const response = await http.get('/display', {
-    params: { start: 0, length: limit, sortBy: 'displayId', sortDir: 'desc' },
-  });
-
-  const rows: Display[] = response.data ?? [];
-  return rows.filter((row) => row.displayId > highestSeenId);
 }
 
 export interface LicenceUsage {
@@ -425,7 +395,7 @@ export interface ConnectCode {
 /**
  * Issue a one-time code identifying a Player about to be configured by hand.
  *
- * The operator types this into the Player in place of a display name. RegisterDisplay looks it up,
+ * It is appended to the CMS key the operator copies into the Player. RegisterDisplay parses it,
  * which is what lets the CMS say a given registration belongs to this form rather than guessing
  * from whatever registered most recently.
  */

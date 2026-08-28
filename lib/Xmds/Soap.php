@@ -381,7 +381,12 @@ class Soap
         $cache = $this->getPool()->getItem(Display::getAddViaCodeCacheKey($authCode));
         $claim = $cache->get();
 
-        return ($cache->isMiss() || !is_array($claim)) ? null : $claim;
+        // An applied claim is spent: its settings belong to the Player that already presented it.
+        if ($cache->isMiss() || !is_array($claim) || !empty($claim['applied'])) {
+            return null;
+        }
+
+        return $claim;
     }
 
     /**
@@ -393,6 +398,9 @@ class Soap
      */
     protected function completeDisplayClaim(Display $display, array $claim, string $authCode): void
     {
+        $this->recordDisplayAdded($display, intval($claim['userId'] ?? 0), 'activation code');
+        $this->clearPendingConnectNotification($claim['notificationId'] ?? null);
+
         $displayGroupId = intval($claim['displayGroupId'] ?? 0);
 
         if ($displayGroupId > 0 && $this->displayGroupFactory !== null) {
@@ -414,7 +422,16 @@ class Soap
             }
         }
 
-        $this->getPool()->deleteItem(Display::getAddViaCodeCacheKey($authCode));
+        // Keep the entry rather than dropping it, so the form that submitted this code can confirm
+        // exactly which display appeared - no guessing from the display list. Marked applied so a
+        // second Player presenting the same code cannot inherit these settings.
+        $item = $this->getPool()->getItem(Display::getAddViaCodeCacheKey($authCode));
+        $item->set(array_merge($claim, [
+            'applied' => true,
+            'displayId' => $display->displayId,
+        ]));
+        $item->expiresAfter(new \DateInterval('PT30M'));
+        $this->getPool()->save($item);
     }
 
     /**
@@ -431,7 +448,7 @@ class Soap
     {
         $code = strtoupper(trim($code ?? ''));
 
-        // Codes are always four characters. Anything else is an ordinary display name.
+        // Codes are always four characters. Anything else is not one of ours.
         if (strlen($code) !== 4 || !ctype_alnum($code)) {
             return;
         }
@@ -448,12 +465,87 @@ class Soap
             return;
         }
 
-        $item->set(['displayId' => $display->displayId]);
+        $item->set([
+            'displayId' => $display->displayId,
+            'userId' => $pending['userId'] ?? null,
+        ]);
         $item->expiresAfter(new \DateInterval('PT30M'));
         $this->getPool()->save($item);
 
         $this->getLog()->debug('claimManualConnectCode: code claimed by displayId '
             . $display->displayId);
+
+        $this->recordDisplayAdded($display, intval($pending['userId'] ?? 0), 'manual configuration');
+        $this->clearPendingConnectNotification($pending['notificationId'] ?? null);
+    }
+
+    /**
+     * Give a newly claimed display its owner, and record who added it.
+     *
+     * Registration runs with no session, so nothing about it reaches the audit trail: display->save
+     * uses $saveOptionsMinimum, which sets audit => false, and LogService would attribute the entry
+     * to user 0 anyway. The Add Display form is the only place that knows which user is responsible,
+     * so the claim carries that user through and it is applied here.
+     *
+     * @param Display $display the display that just registered
+     * @param int $userId the user whose Add Display form this Player came from
+     * @param string $via how it was connected, for the audit message
+     */
+    protected function recordDisplayAdded(Display $display, int $userId, string $via): void
+    {
+        if ($userId <= 0 || $this->displayGroupFactory === null) {
+            return;
+        }
+
+        try {
+            // Displays created by XMDS are owned by the system user, because there is nobody else
+            // to attribute them to. When we do know, hand the display to the person who added it.
+            foreach ($this->displayGroupFactory->getByDisplayId($display->displayId) as $displayGroup) {
+                if ($displayGroup->isDisplaySpecific === 1) {
+                    $displayGroup->userId = $userId;
+                    $displayGroup->save(['validate' => false, 'manageDisplayLinks' => false]);
+                }
+            }
+        } catch (GeneralException $e) {
+            $this->getLog()->error('recordDisplayAdded: cannot set owner for displayId '
+                . $display->displayId . ', e = ' . $e->getMessage());
+        }
+
+        // Attribute the audit entry to the operator rather than to nobody, then put the log service
+        // back as it was so nothing else in this request is mis-attributed.
+        $previousUserId = $this->getLog()->getUserId();
+
+        try {
+            $this->getLog()->setUserId($userId);
+            $this->getLog()->audit('Display', $display->displayId, 'Display Added', [
+                'display' => $display->display,
+                'via' => $via,
+            ]);
+        } finally {
+            $this->getLog()->setUserId($previousUserId);
+        }
+    }
+
+    /**
+     * Remove the "waiting for a Player" notice once the Player has arrived.
+     *
+     * The notice exists so that an abandoned setup leaves a trace the operator can find. A setup
+     * that completed should leave none, or every successful add would look like a failure.
+     *
+     * @param int|null $notificationId
+     */
+    protected function clearPendingConnectNotification(?int $notificationId): void
+    {
+        if (empty($notificationId)) {
+            return;
+        }
+
+        try {
+            $this->notificationFactory->getById($notificationId)->delete();
+        } catch (GeneralException $e) {
+            // Already gone, or never created. Nothing to tidy.
+            $this->getLog()->debug('clearPendingConnectNotification: ' . $e->getMessage());
+        }
     }
 
     /**

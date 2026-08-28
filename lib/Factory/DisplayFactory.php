@@ -172,6 +172,18 @@ class DisplayFactory extends BaseFactory
     }
 
     /**
+     * Count of currently licensed displays
+     * @return int
+     */
+    public function countLicensed(): int
+    {
+        return intval($this->getStore()->select(
+            'SELECT COUNT(DisplayID) AS CountLicensed FROM `display` WHERE licensed = 1',
+            []
+        )[0]['CountLicensed'] ?? 0);
+    }
+
+    /**
      * @param ?array $sortOrder
      * @param array $filterBy
      * @return Display[]

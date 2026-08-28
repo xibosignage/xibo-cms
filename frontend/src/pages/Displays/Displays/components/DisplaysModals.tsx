@@ -32,7 +32,7 @@ import {
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { ModalType } from '../DisplaysConfig';
+import { usePendingConnectToast } from '../hooks/usePendingConnect';
 
 import AddDisplayDock from './AddDisplayDock';
 import AddDisplayModal, { type AddDisplayPrefill } from './AddDisplayModal';
@@ -59,7 +59,6 @@ import type { Display, DisplayCommandTarget } from '@/types/display';
 interface DisplayModalsProps {
   actions: {
     activeModal: string | null;
-    openModal?: (name: ModalType) => void;
     closeModal: () => void;
     handleRefresh: () => void;
     deleteError: string | null;
@@ -132,10 +131,13 @@ export function DisplayModals({ actions, selection, handlers }: DisplayModalsPro
   // True when the add modal should be rendered (open OR minimized with state to preserve).
   const addModalMounted = isModalOpen('add') || isAddMinimized;
 
-  const handleMinimize = () => {
-    setMinimizedDisplayName(
-      document.querySelector<HTMLInputElement>('input[name="display_name"]')?.value ?? '',
-    );
+  // While the form is mounted it reports the outcome itself. Once it is closed, this is what tells
+  // the operator that a Player they were waiting on finally arrived - the CMS having already taken
+  // the matching "waiting" entry out of their notifications bell.
+  usePendingConnectToast(!addModalMounted, handlers.manageNewDisplay);
+
+  const handleMinimize = (displayName: string) => {
+    setMinimizedDisplayName(displayName);
     setIsAddMinimized(true);
   };
 

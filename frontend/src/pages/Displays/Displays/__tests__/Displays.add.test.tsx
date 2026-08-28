@@ -35,8 +35,6 @@ import {
   fetchConnectDetails,
   fetchConnectStatus,
   fetchDisplays,
-  fetchDisplaysNewerThan,
-  fetchHighestDisplayId,
   fetchLicenceUsage,
   updateDisplay,
 } from '@/services/displaysApi';
@@ -145,6 +143,8 @@ describe('Displays page - add display', () => {
   beforeEach(() => {
     testQueryClient.clear();
     vi.clearAllMocks();
+    // A pending code survives in localStorage by design, so it would otherwise leak between tests.
+    window.localStorage.clear();
     mockFetchDisplays(EMPTY_DISPLAY_TABLE);
 
     vi.mocked(fetchLicenceUsage).mockResolvedValue({
@@ -152,7 +152,6 @@ describe('Displays page - add display', () => {
       currentlyLicensed: 12,
       available: 38,
     });
-    vi.mocked(fetchHighestDisplayId).mockResolvedValue(98);
     vi.mocked(addDisplayViaCode).mockResolvedValue(undefined);
     vi.mocked(assignDisplayGroups).mockResolvedValue(undefined);
     vi.mocked(updateDisplay).mockResolvedValue(freshlyRegistered);
@@ -169,8 +168,6 @@ describe('Displays page - add display', () => {
       display: null,
     });
     vi.mocked(fetchDisplays).mockResolvedValue({ rows: [freshlyRegistered], totalCount: 1 });
-    // Default: the Player has not registered yet.
-    vi.mocked(fetchDisplaysNewerThan).mockResolvedValue([]);
   });
 
   // ---------------------------------------------------------------------------
@@ -218,11 +215,9 @@ describe('Displays page - add display', () => {
 
   // ---------------------------------------------------------------------------
   // Submitting sends the code together with the chosen settings, which the CMS
-  // caches against the code and applies itself when the Player registers. A
-  // watermark is recorded first so whatever registers afterwards can be
-  // recognised as new.
+  // caches against the code and applies itself when the Player registers.
   // ---------------------------------------------------------------------------
-  test('submits the code with the chosen settings, and takes a watermark first', async () => {
+  test('submits the code with the chosen settings', async () => {
     const user = userEvent.setup();
     await openCodeForm(user);
     await fillRequiredFields(user, 'VALID-CODE', 'Reception Screen');
@@ -232,14 +227,13 @@ describe('Displays page - add display', () => {
       expect(addDisplayViaCode).toHaveBeenCalledWith({
         userCode: 'VALID-CODE',
         displayName: 'Reception Screen',
-        // The new form holds these as null-initialised state, so an untouched
-        // form sends null rather than omitting the field.
-        folderId: null,
+        // The mock user has no home folder set, so the form falls back to
+        // folder 1 rather than leaving it unset.
+        folderId: 1,
         displayGroupId: null,
         authorised: true,
       });
     });
-    expect(fetchHighestDisplayId).toHaveBeenCalled();
   });
 
   test('sends the chosen display group along with the code', async () => {
@@ -286,7 +280,12 @@ describe('Displays page - add display', () => {
   // ---------------------------------------------------------------------------
   test('reports connected once the player registers', async () => {
     const user = userEvent.setup();
-    vi.mocked(fetchDisplaysNewerThan).mockResolvedValue([freshlyRegistered]);
+    vi.mocked(fetchConnectStatus).mockResolvedValue({
+      expired: false,
+      connected: true,
+      displayId: 99,
+      display: 'Reception Screen',
+    });
 
     await openCodeForm(user);
     await fillRequiredFields(user, 'VALID-CODE', 'Reception Screen');
@@ -306,7 +305,12 @@ describe('Displays page - add display', () => {
   // ---------------------------------------------------------------------------
   test('never edits the display from the browser', async () => {
     const user = userEvent.setup();
-    vi.mocked(fetchDisplaysNewerThan).mockResolvedValue([freshlyRegistered]);
+    vi.mocked(fetchConnectStatus).mockResolvedValue({
+      expired: false,
+      connected: true,
+      displayId: 99,
+      display: 'Reception Screen',
+    });
 
     await openCodeForm(user);
     await fillRequiredFields(user, 'VALID-CODE', 'Reception Screen');
@@ -317,24 +321,21 @@ describe('Displays page - add display', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // SKIPPED: the ambiguous-candidate picker was removed by the UI rework in
-  // 0d3254606 - AddDisplayModal now only adopts when exactly one display is
-  // found, so two simultaneous registrations leave the modal spinning until it
-  // times out. Re-enable once that flow has a UI again.
+  // Ambiguity is gone from BOTH routes: the CMS records which Player presented
+  // the code, so nothing else registering at the same moment can be mistaken
+  // for this one. Replaces the old "which one is yours?" picker.
   // ---------------------------------------------------------------------------
-  test.skip('asks which display is yours when more than one registers', async () => {
+  test('activation code identifies the player by its code, not the display list', async () => {
     const user = userEvent.setup();
-    vi.mocked(fetchDisplaysNewerThan).mockResolvedValue([
-      freshlyRegistered,
-      { ...freshlyRegistered, displayId: 100, license: 'hardware-key-other' },
-    ]);
 
     await openCodeForm(user);
     await fillRequiredFields(user, 'VALID-CODE', 'Reception Screen');
     await submit(user);
 
-    expect(await screen.findByText(/which one is yours/i)).toBeInTheDocument();
-    expect(updateDisplay).not.toHaveBeenCalled();
+    // The submitted code is what is watched - never the display list.
+    await waitFor(() => {
+      expect(fetchConnectStatus).toHaveBeenCalledWith('VALID-CODE');
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -346,17 +347,11 @@ describe('Displays page - add display', () => {
     const user = userEvent.setup();
     await openManualForm(user);
 
-    expect(await screen.findByRole('textbox', { name: /cms url/i })).toHaveValue(
-      'https://cms.example.org',
-    );
+    // The fields are read-only display text, not inputs - there is nothing for the
+    // operator to edit, only to copy.
+    expect(await screen.findByText('https://cms.example.org')).toBeInTheDocument();
     // The one-time code rides on the key, so there is a single value to copy.
-    expect(screen.getByRole('textbox', { name: /cms secret key/i })).toHaveValue(
-      'server-key-xyz||65A2',
-    );
-
-    // They are for copying into the Player, never for editing.
-    expect(screen.getByRole('textbox', { name: /cms url/i })).toHaveAttribute('readonly');
-    expect(screen.getByRole('textbox', { name: /cms secret key/i })).toHaveAttribute('readonly');
+    expect(screen.getByText('server-key-xyz||65A2')).toBeInTheDocument();
 
     // No activation code field is involved in this route.
     expect(screen.queryByRole('textbox', { name: /activation code/i })).not.toBeInTheDocument();
@@ -451,10 +446,6 @@ describe('Displays page - add display', () => {
   // ---------------------------------------------------------------------------
   test('manual configuration identifies the player by its code, not the display list', async () => {
     const user = userEvent.setup();
-    // Something else registers while we wait. The old watermark poll would have adopted it.
-    vi.mocked(fetchDisplaysNewerThan).mockResolvedValue([
-      { ...freshlyRegistered, displayId: 500, display: 'Someone Elses Screen' },
-    ]);
 
     await openManualForm(user);
     await user.type(await screen.findByRole('textbox', { name: /display name/i }), 'Foyer Screen');
@@ -462,8 +453,6 @@ describe('Displays page - add display', () => {
     expect(await screen.findByText(/waiting for display to connect/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
 
-    // Manual mode never consults the display list.
-    expect(fetchDisplaysNewerThan).not.toHaveBeenCalled();
     expect(fetchConnectStatus).toHaveBeenCalledWith('65A2');
   });
 
@@ -519,6 +508,27 @@ describe('Displays page - add display', () => {
       { timeout: 8000 },
     );
     expect(screen.getByRole('textbox', { name: /display name/i })).toHaveValue('Foyer Screen');
+  });
+
+  // ---------------------------------------------------------------------------
+  // REGRESSION GUARD. Both routes remember a pending code in the same place, but
+  // they are not interchangeable: resuming an activation code as a manual one
+  // would offer it as the CMS key, which is meaningless to a Player.
+  // ---------------------------------------------------------------------------
+  test('a pending activation code is never resumed as a manual one', async () => {
+    const user = userEvent.setup();
+
+    // Leave an activation code behind, exactly as submitting one does.
+    await openCodeForm(user);
+    await fillRequiredFields(user, 'LEFTOVER-ACTIVATION', 'Reception Screen');
+    await submit(user);
+    await screen.findByText(/waiting for display to connect/i);
+
+    await user.click(screen.getByRole('button', { name: /back/i }));
+    await user.click(await screen.findByRole('button', { name: /manually configure/i }));
+
+    // The manual route must issue its own code, not adopt the activation one.
+    expect(await screen.findByText('server-key-xyz||65A2')).toBeInTheDocument();
   });
   // ---------------------------------------------------------------------------
   // Failure paths.

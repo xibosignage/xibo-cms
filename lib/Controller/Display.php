@@ -1801,19 +1801,25 @@ class Display extends Base
                     'form_params' => [
                         'user_code' => $user_code,
                         'cmsAddress' => $cmsAddress,
-                        'cmsKey' => empty($claim) ? $cmsKey : $cmsKey . '||' . $user_code,
+                        'cmsKey' => $cmsKey . '||' . $user_code,
                     ]
                 ])
             );
 
             $data = json_decode($guzzleRequest->getBody(), true);
 
-            if (!empty($claim)) {
-                $cache = $this->pool->getItem(\Xibo\Entity\Display::getAddViaCodeCacheKey($user_code));
-                $cache->set($claim);
-                $cache->expiresAfter(new \DateInterval('P1D'));
-                $this->pool->save($cache);
-            }
+            // Always cached, even when the operator chose no settings: the claim is what ties the
+            // registration back to this user, for ownership and the audit trail.
+            $claim['notificationId'] = $this->notifyPendingConnect(
+                $user_code,
+                Carbon::now()->addDay(),
+                $cmsAddress . '/displays/displays?addCode=' . urlencode($user_code)
+            );
+
+            $cache = $this->pool->getItem(\Xibo\Entity\Display::getAddViaCodeCacheKey($user_code));
+            $cache->set($claim);
+            $cache->expiresAfter(new \DateInterval('P1D'));
+            $this->pool->save($cache);
 
             $this->getState()->hydrate([
                 'message' => $data['message']
@@ -1849,6 +1855,10 @@ class Display extends Base
     private function buildDisplayClaim(SanitizerInterface $sanitizedParams): array
     {
         $claim = [];
+
+        // Remember who asked. Registration happens without a session, so this is the only record of
+        // which user's Add Display form a Player belongs to - needed for ownership and the audit.
+        $claim['userId'] = $this->getUser()->userId;
 
         if ($sanitizedParams->getCheckbox('authorised')) {
             $claim['licensed'] = 1;
@@ -1889,6 +1899,66 @@ class Display extends Base
         return $claim;
     }
 
+    /**
+     * Raise a notification recording a connection the CMS is waiting on.
+     *
+     * Pending connections live in the cache, which cannot be enumerated or swept - once an entry
+     * expires there is nothing left to notice its absence. So the notice is raised up front and
+     * removed again when the Player arrives. One that is still sitting in the operator's
+     * notifications is therefore exactly the case worth telling them about: the setup never
+     * completed, and the pending connection has been (or is about to be) discarded.
+     *
+     * @param string $code the code the operator is working with
+     * @param \Carbon\Carbon $expiresAt when the pending connection is discarded
+     * @param string $resumeUrl where the operator can pick the setup back up
+     * @return int|null the notification id, so it can be cleared once the Player connects
+     */
+    private function notifyPendingConnect(string $code, Carbon $expiresAt, string $resumeUrl): ?int
+    {
+        try {
+            // Assigning the operator's own group keeps this out of everybody else's notifications:
+            // Notification::manageAssignments expands assigned groups into lknotificationuser.
+            $groups = $this->userGroupFactory->query(null, [
+                'disableUserCheck' => 1,
+                'userId' => $this->getUser()->userId,
+                'isUserSpecific' => 1,
+            ]);
+
+            if (count($groups) <= 0) {
+                return null;
+            }
+
+            $notification = $this->notificationFactory->createEmpty();
+            $notification->subject = __('Display setup waiting for a Player to connect');
+            $notification->body = sprintf(
+                __('A display setup using code %s is waiting for its Player to connect. It expires'
+                    . ' at %s, after which the pending connection is discarded and the setup has to'
+                    . ' be started again. <a href="%s">Return to Add Display</a>.'),
+                htmlspecialchars($code),
+                $expiresAt->format(DateFormatHelper::getSystemFormat()),
+                htmlspecialchars($resumeUrl)
+            );
+            $notification->createDt = Carbon::now()->format('U');
+            $notification->releaseDt = Carbon::now()->format('U');
+            $notification->isInterrupt = 0;
+            $notification->isSystem = 0;
+            $notification->userId = $this->getUser()->userId;
+            $notification->type = 'display';
+
+            foreach ($groups as $group) {
+                $notification->assignUserGroup($group);
+            }
+
+            $notification->save();
+
+            return $notification->notificationId;
+        } catch (\Exception $e) {
+            // A missing notification must never stop a display being added.
+            $this->getLog()->error('notifyPendingConnect: ' . $e->getMessage());
+            return null;
+        }
+    }
+
     #[OA\Get(
         path: '/display/licence/usage',
         operationId: 'displayLicenceUsage',
@@ -1914,12 +1984,7 @@ class Display extends Base
     public function licenceUsage(Request $request, Response $response): Response|ResponseInterface
     {
         $maxLicensed = intval($this->getConfig()->getSetting('MAX_LICENSED_DISPLAYS'));
-
-        $results = $this->store->select(
-            'SELECT COUNT(DisplayID) AS CountLicensed FROM `display` WHERE licensed = 1',
-            []
-        );
-        $currentlyLicensed = intval($results[0]['CountLicensed'] ?? 0);
+        $currentlyLicensed = $this->displayFactory->countLicensed();
 
         $this->getState()->hydrate([
             'data' => [
@@ -1990,7 +2055,7 @@ class Display extends Base
     /**
      * Issue a one-time code for a manually configured Player.
      *
-     * The operator types this into the Player instead of a display name. RegisterDisplay looks the
+     * It is appended to the CMS key the operator copies into the Player. RegisterDisplay parses the
      * code up, which is what lets the CMS say *this* registration belongs to *that* Add Display
      * form - without it, correlation is a guess and two operators adding displays at the same
      * moment can be confused for one another.
@@ -2023,7 +2088,15 @@ class Display extends Base
         }
 
         $item = $this->pool->getItem(\Xibo\Entity\Display::getManualConnectCacheKey($code));
-        $item->set(['displayId' => null]);
+        $item->set([
+            'displayId' => null,
+            'userId' => $this->getUser()->userId,
+            'notificationId' => $this->notifyPendingConnect(
+                $code,
+                Carbon::now()->addMinutes(30),
+                (new HttpsDetect($this->getConfig()))->getBaseUrl($request) . '/displays/displays'
+            ),
+        ]);
         $item->expiresAfter(new \DateInterval('PT30M'));
         $this->pool->save($item);
 
@@ -2070,8 +2143,28 @@ class Display extends Base
         $item = $this->pool->getItem(\Xibo\Entity\Display::getManualConnectCacheKey($code));
         $pending = $item->get();
 
+        // The code is either one we issued for manual configuration, or the activation code the
+        // operator typed in. Both record which display claimed them, so both answer here.
+        if ($item->isMiss() || !is_array($pending)) {
+            $item = $this->pool->getItem(\Xibo\Entity\Display::getAddViaCodeCacheKey($code));
+            $pending = $item->get();
+        }
+
         if ($item->isMiss() || !is_array($pending)) {
             // Expired, or never issued. Either way there is nothing to wait for.
+            $this->getState()->hydrate([
+                'data' => [
+                    'expired' => true,
+                    'connected' => false,
+                ]
+            ]);
+
+            return $this->render($request, $response);
+        }
+
+        // A code belongs to the session that asked for it. Somebody else holding the string - guessed,
+        // shoulder-surfed, or shared - must not learn which display it produced.
+        if (intval($pending['userId'] ?? 0) !== $this->getUser()->userId) {
             $this->getState()->hydrate([
                 'data' => [
                     'expired' => true,

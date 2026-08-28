@@ -47,8 +47,8 @@ import { useEffect, useRef, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useApplyDisplaySettings } from '../hooks/useApplyDisplaySettings';
-import { useManualConnectWatcher } from '../hooks/useManualConnectWatcher';
-import { useNewDisplayDetector } from '../hooks/useNewDisplayDetector';
+import { useConnectWatcher } from '../hooks/useConnectWatcher';
+import { readPendingCode, writePendingCode } from '../hooks/usePendingConnect';
 
 import AddDisplayModeChooser, { type ConnectMode } from './AddDisplayModeChooser';
 import AddDisplaySuccessModal, { type SubmittedDisplay } from './AddDisplaySuccessModal';
@@ -64,8 +64,8 @@ import {
   addDisplayViaCode,
   fetchConnectCode,
   fetchConnectDetails,
+  fetchConnectStatus,
   fetchDisplays,
-  fetchHighestDisplayId,
   fetchLicenceUsage,
   type ConnectDetails,
   type LicenceUsage,
@@ -90,7 +90,7 @@ interface AddDisplayModalProps {
   /** Called with the new display once the Player has connected and its settings are applied. */
   onManage?: (display: Display) => void;
   /** Called when the user minimizes the modal during the waiting state. */
-  onMinimize?: () => void;
+  onMinimize?: (displayName: string) => void;
 }
 
 /** Read-only credential field with optional hide/reveal toggle. */
@@ -173,20 +173,20 @@ export default function AddDisplayModal({
 
   const [licence, setLicence] = useState<LicenceUsage | null>(null);
   const [connect, setConnect] = useState<ConnectDetails | null>(null);
-  /** One-time code the operator types into the Player instead of a display name. */
+  /** One-time code appended to the CMS key the operator copies into the Player. */
   const [connectCode, setConnectCode] = useState<string | null>(null);
-  const [watermark, setWatermark] = useState<number | null>(null);
+  /** The activation code actually submitted, which the CMS matches at registration. */
+  const [submittedCode, setSubmittedCode] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState<SubmittedDisplay | null>(null);
   /** The Player has registered. In manual mode this only unlocks the form. */
   const [detected, setDetected] = useState<Display | null>(null);
   /** The flow is finished and the summary can be shown. */
   const [adopted, setAdopted] = useState<Display | null>(null);
 
-  const { state: detectState, candidates } = useNewDisplayDetector(watermark);
-
-  // Manual configuration identifies its Player by a one-time code rather than by watching for
-  // whatever registers next, so it asks about that code alone.
-  const manual = useManualConnectWatcher(step === 'manual' ? connectCode : null);
+  // Both routes identify their Player by a code the CMS matched at registration, rather than by
+  // watching for whatever registers next. Manual mode uses a code the CMS issued; activation mode
+  // uses the code the operator typed, which the Player carries back on its server key.
+  const watched = useConnectWatcher(step === 'manual' ? connectCode : submittedCode);
   const { apply, error: applyError } = useApplyDisplaySettings();
 
   // Authorising is available to the same audience as this form: displays.add also gates the
@@ -199,16 +199,21 @@ export default function AddDisplayModal({
 
   // Derived UI phases — show loading as soon as the user clicks Add (isPending)
   // and keep it while polling for the new display (submitted but not yet adopted).
-  const isWaiting = step === 'code' && (isPending || (submitted !== null && !adopted));
+  // Stops as soon as the watcher reports the code expired, or the display turned up but the
+  // account can't see it - both are terminal outcomes, not "still waiting".
+  const isWaiting =
+    step === 'code' &&
+    (isPending ||
+      (submitted !== null && !adopted && watched.state !== 'expired' && !apiError));
 
   /** Manual mode is still waiting for the coded Player to reach the CMS. */
-  const isConnecting = step === 'manual' && manual.state === 'waiting';
+  const isConnecting = step === 'manual' && watched.state === 'waiting';
 
   /**
    * Manual configuration cannot be saved until the Player has registered, because until then
    * there is no display to save the chosen settings against.
    */
-  const isConnected = step === 'manual' && manual.state === 'connected';
+  const isConnected = step === 'manual' && watched.state === 'connected';
 
   /** Manual flow completed: display saved successfully. */
   const isManualDone = step === 'manual' && adopted !== null && submitted !== null;
@@ -226,7 +231,7 @@ export default function AddDisplayModal({
     setApiError(undefined);
     setConnect(null);
     setConnectCode(null);
-    setWatermark(null);
+    setSubmittedCode(null);
     setSubmitted(null);
     setDetected(null);
     setAdopted(null);
@@ -315,10 +320,32 @@ export default function AddDisplayModal({
 
     startTransition(async () => {
       try {
-        const [details, issued] = await Promise.all([fetchConnectDetails(), fetchConnectCode()]);
-
+        const details = await fetchConnectDetails();
         setConnect(details);
+
+        // A code left over from a previous page load is still live on the CMS, and the Player may
+        // already be carrying it. Pick it back up rather than stranding it behind a fresh one.
+        // Only a manual code can be resumed here. An activation code is a different thing entirely -
+        // resuming one would offer it as the CMS key, which is meaningless for a manual setup.
+        const pending = readPendingCode();
+
+        if (pending?.mode === 'manual') {
+          const status = await fetchConnectStatus(pending.code);
+
+          if (!status.expired) {
+            setConnectCode(pending.code);
+            return;
+          }
+
+          writePendingCode(null);
+        }
+
+        // The code is issued before the form is usable: it is what the operator types into the
+        // Player, and what lets the CMS recognise that Player as this form's.
+        const issued = await fetchConnectCode();
+
         setConnectCode(issued.code);
+        writePendingCode({ code: issued.code, mode: 'manual' });
       } catch (err: unknown) {
         setApiError(
           isAxiosError(err) && err.response?.data?.message
@@ -336,10 +363,15 @@ export default function AddDisplayModal({
    * fills a blank field: whatever they typed in the CMS wins over whatever is on the Player.
    */
   useEffect(() => {
-    if (manual.state === 'connected' && manual.displayName && displayName.trim() === '') {
-      setDisplayName(manual.displayName);
+    if (
+      step === 'manual' &&
+      watched.state === 'connected' &&
+      watched.displayName &&
+      displayName.trim() === ''
+    ) {
+      setDisplayName(watched.displayName);
     }
-  }, [manual.state, manual.displayName]);
+  }, [step, watched.state, watched.displayName]);
 
   const handleSelectMode = (mode: ConnectMode) => {
     if (mode === 'manual') {
@@ -353,10 +385,12 @@ export default function AddDisplayModal({
   /** Leave a connection form and go back to the choice of route, abandoning any polling. */
   const handleBack = () => {
     setStep('choose');
+    // Deliberately abandoning this attempt, so the code should not be resumed later.
+    writePendingCode(null);
     setApiError(undefined);
     setConnect(null);
     setConnectCode(null);
-    setWatermark(null);
+    setSubmittedCode(null);
     setDetected(null);
   };
 
@@ -365,8 +399,8 @@ export default function AddDisplayModal({
       setApiError(undefined);
 
       try {
-        const highestSeenId = canApplySettings ? await fetchHighestDisplayId() : null;
-
+        // The CMS caches these settings against the code and applies them itself when the
+        // Player registers - nothing further needs to be sent once the display appears.
         await addDisplayViaCode({
           userCode: userCode.trim(),
           displayName: canApplySettings ? displayName.trim() : undefined,
@@ -377,9 +411,13 @@ export default function AddDisplayModal({
 
         setSubmitted(summarise());
 
-        if (highestSeenId !== null) {
-          setWatermark(highestSeenId);
-        }
+        // The CMS recorded this code against whichever Player presents it, so watching the code is
+        // an exact match rather than a guess at which display appeared next.
+        setSubmittedCode(userCode.trim());
+
+        // Remembered so that closing this form does not lose track of the Player: a background
+        // watcher picks it up and says when it arrives.
+        writePendingCode({ code: userCode.trim(), mode: 'code' });
 
         onAdded?.();
       } catch (err: unknown) {
@@ -412,7 +450,7 @@ export default function AddDisplayModal({
    * registration with and applied none of these settings itself. They are applied from here.
    */
   const handleManualSubmit = () => {
-    if (!manual.displayId) {
+    if (!watched.displayId) {
       return;
     }
 
@@ -423,12 +461,19 @@ export default function AddDisplayModal({
         const { rows } = await fetchDisplays({
           start: 0,
           length: 1,
-          displayId: manual.displayId ?? undefined,
+          displayId: watched.displayId ?? undefined,
         });
         const target = rows[0];
 
         if (!target) {
-          setApiError(t('That display could no longer be found.'));
+          // The Player has registered with the CMS at this point - it just isn't visible in this
+          // query, which for a non-admin account almost always means their user group has no view
+          // permission on the folder the display landed in, rather than the display being missing.
+          setApiError(
+            t(
+              'The display connected, but your account does not have permission to view it. Ask an administrator to grant your user group access to its folder.',
+            ),
+          );
           return;
         }
 
@@ -438,6 +483,11 @@ export default function AddDisplayModal({
           displayGroupId,
           authorise: canAuthorise && authorise,
         });
+
+        // The display exists whether or not the edit landed, so always finish the flow. The
+        // summary reports what was asked for, and applyError explains anything that did not stick.
+        // The code has done its job; a later Add Display should start clean.
+        writePendingCode(null);
 
         setSubmitted(summarise());
         setAdopted(updated ?? target);
@@ -457,6 +507,9 @@ export default function AddDisplayModal({
    * folder and authorisation when the Player registered, so this is only bookkeeping.
    */
   const adopt = (display: Display) => {
+    // This form saw it through, so there is nothing left for the background watcher to report.
+    writePendingCode(null);
+
     setAdopted(display);
     onAdded?.();
     if (!isOpenRef.current) {
@@ -472,23 +525,46 @@ export default function AddDisplayModal({
     }
   };
 
-  // Exactly one new display means it is ours.
+  // Activation-code mode finishes as soon as the CMS confirms which Player took the code: the
+  // settings were applied server side at registration, so nothing else is left to do.
   useEffect(() => {
-    const only = candidates[0];
-
-    if (detectState === 'found' && candidates.length === 1 && only && !detected) {
-      setDetected(only);
-
-      // Only activation-code mode watches the display list; manual mode matches its one-time code.
-      if (step === 'code') {
-        adopt(only);
-      }
+    if (step !== 'code' || watched.state !== 'connected' || !watched.displayId || detected) {
+      return;
     }
-  }, [detectState, candidates, detected, step]);
+
+    void (async () => {
+      const { rows } = await fetchDisplays({
+        start: 0,
+        length: 1,
+        displayId: watched.displayId ?? undefined,
+      });
+      const target = rows[0];
+
+      if (target) {
+        setDetected(target);
+        adopt(target);
+        return;
+      }
+
+      // The Player has registered at this point - it just isn't visible in this query, which for
+      // a non-admin account almost always means their user group has no view permission on the
+      // folder the display landed in, rather than the display being missing.
+      const message = t(
+        'The display connected, but your account does not have permission to view it. Ask an administrator to grant your user group access to its folder.',
+      );
+
+      setApiError(message);
+
+      if (!isOpenRef.current) {
+        notify.error(message);
+        onClose();
+      }
+    })();
+  }, [step, watched.state, watched.displayId, detected]);
 
   // Toast notifications for detection outcomes — only when minimized
   useEffect(() => {
-    if (!isOpenRef.current && detectState === 'timedOut') {
+    if (!isOpenRef.current && watched.state === 'expired') {
       notify.error(t('Connection timed out.'), {
         action: {
           label: t('Try Again'),
@@ -497,7 +573,7 @@ export default function AddDisplayModal({
       });
       onClose();
     }
-  }, [detectState, isOpen]);
+  }, [watched.state, isOpen]);
 
   const handleManage = () => {
     if (adopted && onManage) {
@@ -584,7 +660,8 @@ export default function AddDisplayModal({
       {
         label: t('Add'),
         onClick: handleSubmit,
-        disabled: isPending || isWaiting || !canSubmit,
+        // Once submitted, an expired code can't be retried as-is - the operator needs a fresh one.
+        disabled: isPending || isWaiting || !canSubmit || watched.state === 'expired',
         leftIcon: isPending || isWaiting ? Loader2 : undefined,
         className: isPending || isWaiting ? '[&_svg]:animate-spin' : undefined,
       },
@@ -662,7 +739,7 @@ export default function AddDisplayModal({
             <button
               type="button"
               aria-label={canMinimize ? t('Minimize') : t('Close')}
-              onClick={canMinimize && onMinimize ? onMinimize : onClose}
+              onClick={() => (canMinimize && onMinimize ? onMinimize(displayName) : onClose())}
               className="size-6 shrink-0 text-gray-500 cursor-pointer hover:text-gray-600 transition-colors"
             >
               {canMinimize ? (
@@ -778,7 +855,7 @@ export default function AddDisplayModal({
                           ? t('Your display settings have been saved.')
                           : isConnected
                             ? t('Connected to {{display}}. Save to apply your settings.', {
-                                display: manual.displayName ?? '',
+                                display: watched.displayName ?? '',
                               })
                             : t(
                                 'Press Connect on the Player once you have entered the details below.',
@@ -870,7 +947,46 @@ export default function AddDisplayModal({
               <p className="text-xs text-gray-400">{licenceHelpText()}</p>
             </div>
 
-            {step === 'manual' && manual.state === 'expired' && (
+            {/* Waiting panel — activation code mode */}
+            {isWaiting && (
+              <div
+                className="flex flex-col items-center gap-4 rounded-lg bg-slate-50 p-6"
+                role="status"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 border border-gray-200">
+                      <Monitor className="h-6 w-6 text-gray-400" />
+                    </div>
+                    <span className="text-xs text-gray-500">{t('Player')}</span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 pb-4">
+                    <span className="h-1.5 w-1.5 rounded-full bg-gray-300 animate-[pulse_1.4s_ease-in-out_infinite]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-gray-300 animate-[pulse_1.4s_ease-in-out_0.2s_infinite]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-gray-300 animate-[pulse_1.4s_ease-in-out_0.4s_infinite]" />
+                  </div>
+
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 border border-gray-200">
+                      <Server className="h-6 w-6 text-gray-400" />
+                    </div>
+                    <span className="text-xs text-gray-500">{t('CMS')}</span>
+                  </div>
+                </div>
+
+                <div className="text-center">
+                  <p className="text-sm font-semibold text-gray-800">
+                    {t('Waiting for display to connect...')}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {t('Verifying your activation code. Please do not close this window.')}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {(step === 'manual' || step === 'code') && watched.state === 'expired' && (
               <div
                 className="flex items-center justify-between gap-2 rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800"
                 role="alert"

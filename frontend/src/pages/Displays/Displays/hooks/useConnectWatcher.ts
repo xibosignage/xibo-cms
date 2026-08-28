@@ -23,7 +23,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { fetchConnectStatus } from '@/services/displaysApi';
 
-export type ManualConnectState = 'idle' | 'waiting' | 'connected' | 'expired';
+export type ConnectWatchState = 'idle' | 'waiting' | 'connected' | 'expired';
 
 /** How often to ask whether the coded Player has arrived. */
 const POLL_INTERVAL_MS = 3000;
@@ -31,14 +31,17 @@ const POLL_INTERVAL_MS = 3000;
 /** Ceiling for the backoff applied when a check itself fails. */
 const MAX_BACKOFF_MS = 15000;
 
-export interface ManualConnectResult {
-  state: ManualConnectState;
+export interface ConnectWatchResult {
+  state: ConnectWatchState;
   displayId: number | null;
   displayName: string | null;
 }
 
 /**
- * Watch for the Player holding a one-time manual-connect code.
+ * Watch for the Player holding a connection code.
+ *
+ * The code is either one the CMS issued for manual configuration or the activation code the
+ * operator typed in; both are recorded against the display that presents them at registration.
  *
  * This asks a single question - "has the Player with *this* code registered?" - rather than
  * watching the display list for anything new. That distinction is the whole point: a list watch
@@ -50,8 +53,8 @@ export interface ManualConnectResult {
  *
  * @param code The issued code, or null to stay idle.
  */
-export function useManualConnectWatcher(code: string | null): ManualConnectResult {
-  const [state, setState] = useState<ManualConnectState>('idle');
+export function useConnectWatcher(code: string | null): ConnectWatchResult {
+  const [state, setState] = useState<ConnectWatchState>('idle');
   const [displayId, setDisplayId] = useState<number | null>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
   const cancelledRef = useRef(false);
