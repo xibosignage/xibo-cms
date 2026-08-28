@@ -28,6 +28,7 @@ import { PanelCard } from './PanelCard';
 
 import { useUserContext } from '@/context/UserContext';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
+import { useIdle } from '@/hooks/useIdle';
 import {
   useCurrentScreenshotTime,
   useScreenshotAutoRequest,
@@ -60,6 +61,22 @@ const SECONDS_LABEL_FROM = 30;
 /** A minute in, formatRelative() changes wording by the minute, so counting seconds can stop. */
 const SECONDS_LABEL_UNTIL_MS = 60 * 1000;
 
+/**
+ * How long the page goes untouched before it stops asking for screenshots.
+ *
+ * Asking costs the player a capture and an upload each time, and the CMS an upload to decode and
+ * count against the display's bandwidth allowance, so it is only worth doing while someone is
+ * actually watching. A hidden tab counts as idle at once, which is what stops a page left open in
+ * a background tab from asking all day.
+ *
+ * Generous on purpose. Watching a screenshot update is passive, so a cursor can sit still for a
+ * long time while someone is genuinely reading the card, and pausing on them would be worse than
+ * the requests saved. The costly case, a page left open in a background tab, is already caught
+ * the moment the tab is hidden, so this timeout only has to cover a tab left in front of an empty
+ * chair.
+ */
+const IDLE_PAUSE_MS = 15 * 60 * 1000;
+
 // The Manage page's "Screenshot" card. While the page is open it asks the display for a new
 // screenshot every few seconds and swaps each one in as it lands, so the card tracks the player
 // rather than showing whatever was last captured.
@@ -82,7 +99,11 @@ export default function ScreenshotCard({ display, onOpen }: ScreenshotCardProps)
   // Kept separate from isOnline: an offline display has nothing running, but the viewer may not
   // have paused it. Live by default, so the control offered is Pause.
   const [isPaused, setIsPaused] = useState(false);
-  const isActive = isOnline && !isPaused;
+
+  // Kept apart from isPaused so the two cannot overwrite each other: going idle must not clear a
+  // deliberate pause, and coming back to the page must not undo one either.
+  const isIdle = useIdle(IDLE_PAUSE_MS, isOnline && !isPaused);
+  const isActive = isOnline && !isPaused && !isIdle;
 
   // Same field the page header reads for "last seen", so the two can't disagree.
   const lastSeenMs = display.lastAccessed ? Number(display.lastAccessed) * 1000 : null;
@@ -286,9 +307,13 @@ export default function ScreenshotCard({ display, onOpen }: ScreenshotCardProps)
         : t('Taken {{time}}', { time: formatRelative(takenAtDate) });
   }
 
+  // The button reports whether anything is running, not just whether it was pressed, so going
+  // idle flips it to Resume rather than being announced separately.
+  const isStopped = isPaused || isIdle;
+
   const pauseLabel = !isOnline
     ? t('Display is offline')
-    : isPaused
+    : isStopped
       ? t('Resume live screenshots')
       : t('Pause live screenshots');
 
@@ -297,6 +322,7 @@ export default function ScreenshotCard({ display, onOpen }: ScreenshotCardProps)
   // No spinner while offline (nothing is coming); prefer showing a recent capture over this,
   // and read isStaleOffline directly so the swap happens on the same render, no flash first.
   const showOffline = !isOnline && (shownUrl === null || isStaleOffline);
+
   const failed = (isError || loadFailed) && !showOffline;
   const isWaitingForFirst = shownUrl === null && !neverCaptured && !failed && !showOffline;
 
@@ -308,19 +334,21 @@ export default function ScreenshotCard({ display, onOpen }: ScreenshotCardProps)
       headerActions={
         <button
           type="button"
-          onClick={() => setIsPaused((current) => !current)}
+          // Reads the combined state rather than flipping isPaused blindly: pressing this while
+          // idle has to resume, and a blind flip would pause it instead.
+          onClick={() => setIsPaused(!isStopped)}
           disabled={!isOnline}
-          aria-pressed={isPaused}
+          aria-pressed={isStopped}
           aria-label={pauseLabel}
           title={pauseLabel}
           className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold text-gray-600 hover:bg-gray-200/70 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent"
         >
-          {isPaused ? (
+          {isStopped ? (
             <Play className="size-3.5 shrink-0" aria-hidden="true" />
           ) : (
             <Pause className="size-3.5 shrink-0" aria-hidden="true" />
           )}
-          {isPaused ? t('Resume') : t('Pause')}
+          {isStopped ? t('Resume') : t('Pause')}
         </button>
       }
     >
@@ -381,15 +409,6 @@ export default function ScreenshotCard({ display, onOpen }: ScreenshotCardProps)
           <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-black/55 px-2.5 py-1 text-[11px] text-white">
             {isLive && <span className="size-1.5 shrink-0 rounded-full bg-red-500" />}
             {takenLabel}
-          </span>
-        )}
-
-        {!isWaitingForFirst && !showOffline && (
-          <span
-            className="absolute bottom-3 left-3 max-w-[80%] truncate rounded-full bg-black/55 px-2.5 py-1 text-[11px] text-white"
-            title={display.currentLayout ?? undefined}
-          >
-            {display.currentLayout || t('No layout playing')}
           </span>
         )}
       </>
