@@ -31,14 +31,32 @@ trait LogoutTrait
     public function completeLogoutFlow(User $user, Session $session, LogServiceInterface $log, Request $request)
     {
         $user->touch();
-
-        unset($_SESSION['userid']);
-        unset($_SESSION['username']);
-        unset($_SESSION['password']);
         $session->setIsExpired(1);
 
         $log->audit('User', $user->userId, 'User logout', [
             'UserAgent' => $request->getHeader('User-Agent')
         ]);
+
+        $_SESSION = [];
+
+        if (ini_get('session.use_cookies')) {
+            $params = session_get_cookie_params();
+            setcookie(
+                session_name(),
+                '',
+                time() - 42000,
+                $params['path'],
+                $params['domain'],
+                $params['secure'],
+                $params['httponly']
+            );
+        }
+
+        session_destroy();
+
+        // Commit immediately - don't leave it to request shutdown, where a request already
+        // mid-flight for this session id could still overwrite the row with its own pre-logout
+        // in-memory state. See Session::persist().
+        $session->persist();
     }
 }
