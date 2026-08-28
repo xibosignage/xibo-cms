@@ -39,7 +39,6 @@ export function useUserAuth(initialUser: User | null): UserAuthType {
     // When SAML is active, /saml/logout performs the correct flow (real IdP
     // Single Logout when supported, or falls back to the local logout otherwise).
     const redirectUrl = user?.samlEnabled ? withPublicPath('saml/logout') : undefined;
-    setUser(null);
     globalLogout(redirectUrl);
   };
 
