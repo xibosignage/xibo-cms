@@ -29,6 +29,7 @@ import {
   Wifi,
   XCircle,
 } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { usePendingConnectToast } from '../hooks/usePendingConnect';

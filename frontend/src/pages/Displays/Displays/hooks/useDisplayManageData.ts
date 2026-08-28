@@ -106,7 +106,7 @@ export function useCurrentScreenshotTime(displayId: number | null, poll: boolean
   });
 }
 
-  /** Where one tab records that it is the one asking for a given display. */
+/** Where one tab records that it is the one asking for a given display. */
 const REQUEST_OWNER_KEY = 'xibo:screenshot-owner:';
 
 /**
