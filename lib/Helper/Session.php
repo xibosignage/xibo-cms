@@ -179,10 +179,15 @@ class Session implements \SessionHandlerInterface
             $this->beginTransaction();
 
             // Get this session
+            // FOR UPDATE holds this row locked for the life of the transaction (committed in
+            // close()), so a concurrent request for the same session_id blocks here until this
+            // request finishes, instead of reading stale data and later clobbering this request's
+            // write with its own (lost-update race - e.g. a background poll racing a logout).
             $sth = $dbh->getConnection()->prepare('
-                SELECT `session_data`, `isexpired`, `useragent`, `session_expiration`, `userId` 
+                SELECT `session_data`, `isexpired`, `useragent`, `session_expiration`, `userId`
                   FROM `session`
                  WHERE `session_id` = :session_id
+                   FOR UPDATE
             ');
             $sth->execute(['session_id' => $key]);
 
