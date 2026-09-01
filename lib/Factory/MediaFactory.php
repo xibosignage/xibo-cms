@@ -551,7 +551,8 @@ class MediaFactory extends BaseFactory
             'durationSeconds'   => '`duration`',
             'fileSizeFormatted' => '`fileSize`',
             'mediaType'         => 'media.`type`',
-            'resolution'        => '(media.`width` * media.`height`)'
+            'resolution'        => '(media.`width` * media.`height`)',
+            'expiresFormatted'  => '`expires`'
         ];
 
         $sortOrder = $this->buildSortQuery(

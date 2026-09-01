@@ -271,6 +271,7 @@ export default function Applications() {
               bulkActions={bulkActions}
               viewMode={null}
               getRowId={getRowId}
+              exportFileName={t('Applications')}
             />
           )}
         </div>

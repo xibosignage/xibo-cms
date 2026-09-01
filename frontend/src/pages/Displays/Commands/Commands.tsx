@@ -318,6 +318,7 @@ export default function Commands() {
                 bulkActions={bulkActions}
                 viewMode="table"
                 getRowId={getRowId}
+                tableLabel={t('Commands')}
               />
             )}
           </div>

@@ -1082,6 +1082,8 @@
                                 "command",
                                 "code",
                                 "description",
+                                "availableOn",
+                                "createAlertOn",
                                 "groupsWithPermissions"
                             ]
                         }
@@ -6037,6 +6039,7 @@
                                 "id",
                                 "name",
                                 "fileName",
+                                "familyName",
                                 "createdAt",
                                 "modifiedAt",
                                 "modifiedBy",
@@ -11779,7 +11782,7 @@
                     {
                         "name": "date",
                         "in": "query",
-                        "description": "Date in Y-m-d H:i:s",
+                        "description": "Date in Y-m-d H:i:s. Required when singlePointInTime=1, otherwise ignored. One of date, or startDate/endDate must be supplied, or a 422 is returned.",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -11788,7 +11791,7 @@
                     {
                         "name": "startDate",
                         "in": "query",
-                        "description": "Date in Y-m-d H:i:s",
+                        "description": "Date in Y-m-d H:i:s. Required together with endDate when singlePointInTime is not set. One of date, or startDate/endDate must be supplied, or a 422 is returned.",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -11797,7 +11800,7 @@
                     {
                         "name": "endDate",
                         "in": "query",
-                        "description": "Date in Y-m-d H:i:s",
+                        "description": "Date in Y-m-d H:i:s. Required together with startDate when singlePointInTime is not set. One of date, or startDate/endDate must be supplied, or a 422 is returned.",
                         "required": false,
                         "schema": {
                             "type": "string"
@@ -12487,7 +12490,7 @@
                     "session"
                 ],
                 "summary": "Session Logout",
-                "description": "Logs out all sessions for the given user",
+                "description": "Logs out sessions for the given user. If the caller is acting on their own account, every session other than the one making this request is ended; otherwise every session belonging to the given user is ended.",
                 "operationId": "sessionLogout",
                 "parameters": [
                     {
@@ -13512,6 +13515,79 @@
                 }
             }
         },
+        "/tag/{type}/multi": {
+            "put": {
+                "tags": [
+                    "tags"
+                ],
+                "summary": "Edit Tags on multiple items",
+                "description": "Add or remove Tags on multiple items of the same type at once",
+                "operationId": "tagEditMultiple",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "path",
+                        "description": "The type of item being tagged, e.g. layout, playlist, media, campaign, displayGroup, display",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "properties": {
+                                    "targetIds": {
+                                        "description": "A comma separated list of item IDs to edit",
+                                        "type": "string"
+                                    },
+                                    "addTags": {
+                                        "description": "A comma separated list of Tags to add",
+                                        "type": "string"
+                                    },
+                                    "removeTags": {
+                                        "description": "A comma separated list of Tags to remove",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "successful operation, all items updated"
+                    },
+                    "200": {
+                        "description": "successful operation, but one or more items failed to update",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "failedCount": {
+                                            "description": "The number of items that failed to update",
+                                            "type": "integer"
+                                        },
+                                        "failedNames": {
+                                            "description": "The names of the items that failed to update",
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/template": {
             "get": {
                 "tags": [
@@ -13866,10 +13942,10 @@
                                 "lastName",
                                 "email",
                                 "homeFolder",
-                                "libraryQuota",
+                                "libraryQuotaFormatted",
                                 "lastAccessed",
                                 "retired",
-                                "twoFactorTypeId",
+                                "twoFactorDescription",
                                 "phone",
                                 "ref1",
                                 "ref2",
@@ -14517,13 +14593,7 @@
                     "content": {
                         "application/x-www-form-urlencoded": {
                             "schema": {
-                                "required": [
-                                    "navigationMenuPosition"
-                                ],
                                 "properties": {
-                                    "navigationMenuPosition": {
-                                        "type": "string"
-                                    },
                                     "useLibraryDuration": {
                                         "type": "integer"
                                     },

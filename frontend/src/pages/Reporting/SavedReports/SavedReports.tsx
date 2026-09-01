@@ -302,6 +302,7 @@ export default function SavedReports() {
               bulkActions={bulkActions}
               viewMode={null}
               getRowId={getRowId}
+              exportFileName={t('Saved Reports')}
             />
           )}
         </div>

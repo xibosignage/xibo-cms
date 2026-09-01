@@ -307,7 +307,7 @@ trait EntityTrait
         $objectAsJson = $this->jsonSerialize();
 
         foreach ($objectAsJson as $key => $value) {
-            if (isset($this->datesToFormat) && in_array($key, $this->datesToFormat)) {
+            if (isset($this->datesToFormat) && in_array($key, $this->datesToFormat) && !empty($value)) {
                 $objectAsJson[$key] = DateFormatHelper::createFromTimestamp($value)
                     ->format(DateFormatHelper::getSystemFormat());
             }
