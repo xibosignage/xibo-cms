@@ -229,10 +229,12 @@ export default function MenuBoards() {
     canUserShare: hasFeature(user, 'user.sharing'),
     onDelete: handleDelete,
     openAddEditModal,
-    openMoveModal: (menuBoard) => {
-      setItemsToMove([menuBoard]);
-      openModal('move');
-    },
+    openMoveModal: canViewFolders
+      ? (menuBoard) => {
+          setItemsToMove([menuBoard]);
+          openModal('move');
+        }
+      : undefined,
     openShareModal: (menuBoardId) => {
       setShareEntityIds(menuBoardId);
       openModal('share');
