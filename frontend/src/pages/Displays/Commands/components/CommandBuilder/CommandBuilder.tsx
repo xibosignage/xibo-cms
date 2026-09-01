@@ -49,9 +49,10 @@ interface CommandBuilderProps {
   value: string;
   onChange: (value: string) => void;
   error?: string;
+  helpText?: string;
 }
 
-export default function CommandBuilder({ value, onChange, error }: CommandBuilderProps) {
+export default function CommandBuilder({ value, onChange, error, helpText }: CommandBuilderProps) {
   const { t } = useTranslation();
   const [parsed, setParsed] = useState<ParsedCommand>(() => parseCommandString(value));
   const [showPreview, setShowPreview] = useState(false);
@@ -156,6 +157,7 @@ export default function CommandBuilder({ value, onChange, error }: CommandBuilde
             </code>
           </div>
         )}
+        {helpText && <div className="text-xs text-gray-400 whitespace-pre-line">{helpText}</div>}
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}

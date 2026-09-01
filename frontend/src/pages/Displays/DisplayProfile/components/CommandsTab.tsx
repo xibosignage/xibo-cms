@@ -145,6 +145,7 @@ export default function CommandsTab({
                 <CommandBuilder
                   value={cmd.commandString}
                   onChange={(val) => updateDraft(cmd.commandId, 'commandString', val)}
+                  helpText={t('The Command String for this Command on this display')}
                 />
                 {cmd.baseValidationString && (
                   <div className="text-sm text-gray-400">
@@ -155,7 +156,7 @@ export default function CommandsTab({
                 <TextInput
                   name={`validationString_${cmd.commandId}`}
                   label={t('Validation String')}
-                  helpText={t('A regular expression to validate the output of the command.')}
+                  helpText={t('The Validation String for this Command on this display')}
                   placeholder={cmd.baseValidationString || undefined}
                   value={cmd.validationString}
                   onChange={(val) => updateDraft(cmd.commandId, 'validationString', val)}
@@ -167,6 +168,7 @@ export default function CommandsTab({
                 )}
                 <SelectDropdown
                   label={t('Create Alert On')}
+                  helpText={t('On command execution, when should a Display alert be created?')}
                   value={cmd.createAlertOn || cmd.baseCreateAlertOn || 'never'}
                   options={[
                     { value: 'never', label: t('Never') },
