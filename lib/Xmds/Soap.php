@@ -2764,17 +2764,12 @@ class Soap
     {
         $remoteAddr = $_SERVER['REMOTE_ADDR'] ?? '';
 
-        // Only consult forwarded-for style headers when REMOTE_ADDR (the immediate TCP peer) is on
-        // the operator's trusted-proxy list — otherwise they're fully client-controlled and unreliable.
         if ($remoteAddr !== ''
             && IpTrust::isTrusted($remoteAddr, $this->getConfig()->getTrustedProxyIpList())
+            && isset($_SERVER['HTTP_X_FORWARDED_FOR'])
+            && filter_var($_SERVER['HTTP_X_FORWARDED_FOR'], FILTER_VALIDATE_IP) !== false
         ) {
-            $keys = array('X_FORWARDED_FOR', 'HTTP_X_FORWARDED_FOR', 'CLIENT_IP');
-            foreach ($keys as $key) {
-                if (isset($_SERVER[$key]) && filter_var($_SERVER[$key], FILTER_VALIDATE_IP) !== false) {
-                    return $_SERVER[$key];
-                }
-            }
+            return $_SERVER['HTTP_X_FORWARDED_FOR'];
         }
 
         return filter_var($remoteAddr, FILTER_VALIDATE_IP) !== false ? $remoteAddr : '';

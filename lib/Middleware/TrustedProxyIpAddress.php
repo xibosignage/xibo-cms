@@ -32,17 +32,15 @@ use Xibo\Helper\IpTrust;
  * Resolves the client IP address into the `ip_address` request attribute.
  *
  * With an empty trusted-proxy list (the default), this is always REMOTE_ADDR — the immediate TCP
- * peer, which a client cannot spoof. Forwarded-for style headers are only consulted once REMOTE_ADDR,
+ * peer, which a client cannot spoof. The X-Forwarded-For header is only consulted once REMOTE_ADDR,
  * and each successive hop peeled off a multi-hop chain, is confirmed to be on the trusted list (see
  * IpTrust::isTrusted() — exact IP, IPv4 CIDR, and wildcard entries all supported).
  *
- * Replaces the third-party RKA\Middleware\IpAddress package (removed so this and the other
- * trusted-proxy consumers — HttpsDetect::isShouldIssueSts(), Session::getIp(), Xmds\Soap::getIp() —
- * share one matcher instead of two, keeping CIDR/wildcard behaviour consistent everywhere).
+ * Deliberately supports exactly one header — X-Forwarded-For, see SECURITY.md.
  */
 class TrustedProxyIpAddress implements Middleware
 {
-    private const HEADERS = ['Forwarded', 'X-Forwarded-For', 'X-Forwarded', 'X-Cluster-Client-Ip', 'Client-Ip'];
+    private const HEADER = 'X-Forwarded-For';
 
     /**
      * @param string[] $trustedProxyIps
@@ -68,26 +66,14 @@ class TrustedProxyIpAddress implements Middleware
             return $remoteAddr;
         }
 
-        foreach (self::HEADERS as $header) {
-            $value = $request->getHeaderLine($header);
-            if ($value !== '') {
-                return $this->resolveFromHeader($header, $value, $remoteAddr);
-            }
-        }
+        $value = $request->getHeaderLine(self::HEADER);
 
-        return $remoteAddr;
+        return $value !== '' ? $this->resolveFromHeader($value, $remoteAddr) : $remoteAddr;
     }
 
-    private function resolveFromHeader(string $header, string $value, string $remoteAddr): string
+    private function resolveFromHeader(string $value, string $remoteAddr): string
     {
-        if (strtolower($header) === 'forwarded') {
-            // Simple `for=` extraction — not the full RFC 7239 grammar.
-            preg_match_all('/for=([^,;]+)/i', $value, $matches);
-            $ips = $matches[1];
-        } else {
-            $ips = explode(',', $value);
-        }
-
+        $ips = explode(',', $value);
         $ips[] = $remoteAddr;
         $ips = array_map(fn ($ip) => $this->extractIp(trim($ip)), $ips);
 

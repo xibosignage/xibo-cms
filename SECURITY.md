@@ -105,6 +105,22 @@ IP recorded in session/display audit logs (`Xibo\Helper\IpTrust`) — so a
 CIDR range set for one purpose (e.g. HSTS) automatically covers the others
 too.
 
+**Only `X-Forwarded-For` is trusted for client-IP resolution — no other
+forwarded-for style header.** `TrustedProxyIpAddress`, `Session::getIp()`,
+and `Xmds\Soap::getIp()` deliberately check exactly this one header, not a
+priority list of several (`Forwarded`, `X-Forwarded`, `X-Cluster-Client-Ip`,
+`Client-Ip`, etc.). Checking several and using whichever is present first
+would let a client whose traffic genuinely passes through your real,
+correctly-configured trusted proxy still fully control the resolved IP —
+by simply also sending a raw header your proxy doesn't happen to manage
+(e.g. `Forwarded: for=<anything>`; most proxies never touch that header even
+when they correctly manage `X-Forwarded-For`). That header reaches the app
+unmodified, gets picked ahead of the correctly-set `X-Forwarded-For`, and
+is indistinguishable in shape from a genuine single-hop chain — the exploit
+doesn't require bypassing your proxy at all. Ensure your reverse proxy sets
+`X-Forwarded-For` correctly (appends, doesn't just relay the client's own
+value) — that's the only header this trust list needs to protect.
+
 **Upgrading an existing install that sits behind a reverse proxy?** If you
 haven't set either of these, every user behind that proxy will share a
 single resolved IP (the proxy's own address) after upgrading, which means
