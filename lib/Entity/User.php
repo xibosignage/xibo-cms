@@ -1266,9 +1266,8 @@ class User implements \JsonSerializable, UserEntityInterface
                 // Group Admin and group object in the user's array of groups
                 return $this->permissionFactory->getFullPermissions();
             }
-        } else if (
-            $this->userTypeId == 2
-            && count(array_intersect($this->groups, $this->userGroupFactory->getByUserId($object->getOwnerId())))
+        } else if ($this->userTypeId == 2 &&
+            count(array_intersect($this->groups, $this->userGroupFactory->getByUserId($object->getOwnerId())))
         ) {
             // Group Admin and in the same group as the owner.
             return $this->permissionFactory->getFullPermissions();
@@ -1276,12 +1275,18 @@ class User implements \JsonSerializable, UserEntityInterface
 
         // Get the permissions for that entity
         $permissions = $this->loadPermissions($object->permissionsClass());
+        $folderPermissions = $this->loadPermissions('Xibo\Entity\Folder');
 
         // Check to see if our object is in the list
-        if (array_key_exists($object->getId(), $permissions))
+        if (array_key_exists($object->getId(), $permissions)) {
             return $permissions[$object->getId()];
-        else
+        } elseif (method_exists($object, 'getPermissionFolderId') &&
+            array_key_exists($object->getPermissionFolderId(), $folderPermissions)
+        ) {
+            return $folderPermissions[$object->getPermissionFolderId()];
+        } else {
             return $this->permissionFactory->createEmpty();
+        }
     }
 
     /**

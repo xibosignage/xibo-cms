@@ -556,6 +556,7 @@ export default function Displays() {
               onViewModeChange={setViewMode}
               availableViewModes={['table', 'map']}
               getRowId={getRowId}
+              tableLabel={t('Displays')}
             />
           )}
         </div>

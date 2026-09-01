@@ -289,6 +289,7 @@ export default function UserGroups() {
               viewMode={null}
               getRowId={getRowId}
               bulkActions={bulkActions}
+              exportFileName={t('User Groups')}
             />
           )}
         </div>

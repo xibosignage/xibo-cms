@@ -430,6 +430,7 @@ export default function DatasetData() {
               onColumnVisibilityChange={setColumnVisibility}
               viewMode={null}
               getRowId={getRowId}
+              exportFileName={`${dataset?.dataSet ?? t('Dataset')} ${t('Data')}`}
             />
           )}
         </div>

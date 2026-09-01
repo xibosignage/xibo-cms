@@ -279,6 +279,7 @@ export default function NotificationCentre() {
               bulkActions={bulkActions}
               viewMode={null}
               getRowId={getRowId}
+              exportFileName={t('Notification Centre')}
             />
           )}
         </div>

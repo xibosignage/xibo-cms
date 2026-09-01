@@ -1213,16 +1213,23 @@ class Settings extends Base
             $this->getConfig()->changeSetting('audit', $newLogLevel);
         }
 
-        if ($this->getConfig()->isSettingEditable('ELEVATE_LOG_UNTIL')
-            && $sanitizedParams->getDate('ELEVATE_LOG_UNTIL') != null
-        ) {
-            $newElevateUntil = $sanitizedParams->getDate('ELEVATE_LOG_UNTIL')->format('U');
-            $this->handleChangedSettings('ELEVATE_LOG_UNTIL', $newElevateUntil, $changedSettings);
-            $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', $newElevateUntil);
+        $elevateUntilCleared = false;
+
+        if ($this->getConfig()->isSettingEditable('ELEVATE_LOG_UNTIL')) {
+            if ($sanitizedParams->getDate('ELEVATE_LOG_UNTIL') != null) {
+                $newElevateUntil = $sanitizedParams->getDate('ELEVATE_LOG_UNTIL')->format('U');
+                $this->handleChangedSettings('ELEVATE_LOG_UNTIL', $newElevateUntil, $changedSettings);
+                $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', $newElevateUntil);
+            } elseif ($sanitizedParams->getString('ELEVATE_LOG_UNTIL') === '') {
+                // The field was explicitly cleared by the user - record it and null it out.
+                $this->handleChangedSettings('ELEVATE_LOG_UNTIL', '', $changedSettings);
+                $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', null);
+                $elevateUntilCleared = true;
+            }
         }
 
         // Have we changed log level? If so, were we also provided the elevate until setting?
-        if ($newElevateUntil === null && $currentLogLevel != $newLogLevel) {
+        if ($newElevateUntil === null && !$elevateUntilCleared && $currentLogLevel != $newLogLevel) {
             // We haven't provided an elevate until (meaning it is not visible)
             $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', Carbon::now()->addHour()->format('U'));
         }
@@ -1349,11 +1356,13 @@ class Settings extends Base
                 );
             }
             if ($setting === 'ELEVATE_LOG_UNTIL') {
-                $changedSettings[$setting] = DateFormatHelper::createFromTimestamp($oldValue)
-                    ->format(DateFormatHelper::getSystemFormat())
-                    . ' > '
-                    . DateFormatHelper::createFromTimestamp($newValue)
-                        ->format(DateFormatHelper::getSystemFormat());
+                $oldFormatted = $oldValue
+                    ? DateFormatHelper::createFromTimestamp($oldValue)->format(DateFormatHelper::getSystemFormat())
+                    : __('Never');
+                $newFormatted = $newValue
+                    ? DateFormatHelper::createFromTimestamp($newValue)->format(DateFormatHelper::getSystemFormat())
+                    : __('Never');
+                $changedSettings[$setting] = $oldFormatted . ' > ' . $newFormatted;
             } else {
                 $changedSettings[$setting] = $oldValue . ' > ' . $newValue;
             }
