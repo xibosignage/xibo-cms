@@ -255,6 +255,7 @@ export default function Logs() {
               bulkActions={[]}
               viewMode={null}
               onRefresh={handleRefresh}
+              exportFileName={t('Log')}
             />
           )}
         </div>

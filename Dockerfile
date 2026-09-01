@@ -243,6 +243,7 @@ RUN rm /var/www/cms/composer.* && \
     rm /var/www/cms/package.json && \
     rm /var/www/cms/package-lock.json && \
     rm -r /var/www/cms/ui && \
+    rm -r /var/www/cms/frontend && \
     rm /var/www/cms/webpack.config.js
 
 # Map a volumes to this folder.

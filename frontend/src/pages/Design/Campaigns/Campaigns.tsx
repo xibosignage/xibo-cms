@@ -450,6 +450,7 @@ export default function Campaigns() {
               bulkActions={bulkActions}
               viewMode={null}
               getRowId={getRowId}
+              exportFileName={t('Campaigns')}
             />
           )}
         </div>

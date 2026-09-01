@@ -19,6 +19,13 @@
        Runs before the module scripts below (classic inline script executes at parse time). #}
     <script nonce="{{ cspNonce }}">window.__XIBO_ASSET_BASE__ = "{{ assetBase }}";</script>
 
+    {# Whether this instance is in the 'partial' suspension state (displays serve cached
+       content only, but the CMS itself stays fully usable). Read from the 'settings' global
+       that Xibo\Middleware\Theme already exposes to every Twig render — the same source
+       legacy authed.twig reads settings.INSTANCE_SUSPENDED from — so no controller change
+       is needed here. RootLayout.tsx reads this to show a warning banner. #}
+    <script nonce="{{ cspNonce }}">window.__XIBO_APP_CONFIG__ = { partiallySuspended: {{ settings.INSTANCE_SUSPENDED == "partial" ? 'true' : 'false' }} };</script>
+
     {# Brand assets are served at the domain-root /brand alias (preserved on alias installs). #}
     <link rel="shortcut icon" href="/brand/favicon.ico"/>
     <link rel="stylesheet" href="/brand/theme.css">

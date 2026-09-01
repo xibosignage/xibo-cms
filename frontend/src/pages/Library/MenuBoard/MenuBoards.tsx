@@ -381,6 +381,7 @@ export default function MenuBoards() {
               bulkActions={bulkActions}
               viewMode={null}
               getRowId={getRowId}
+              exportFileName={t('Menu Boards')}
             />
           )}
         </div>

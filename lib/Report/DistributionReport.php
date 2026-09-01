@@ -632,7 +632,7 @@ class DistributionReport implements ReportInterface
             $filterRangeStart = new UTCDateTime($fromDt->format('U') * 1000);
             $filterRangeEnd = new UTCDateTime($toDt->format('U') * 1000);
 
-            $diffInDays = (int) $toDt->diffInDays($fromDt);
+            $diffInDays = (int) $toDt->diffInDays($fromDt, true);
             if ($groupByFilter == 'byhour') {
                 $hour = 1;
                 $input = range(0, 24 * $diffInDays - 1); // subtract 1 as we start from 0

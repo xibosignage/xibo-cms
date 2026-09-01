@@ -328,6 +328,7 @@ export default function DisplayProfile() {
               bulkActions={bulkActions}
               viewMode={null}
               getRowId={getRowId}
+              exportFileName={t('Display Settings')}
             />
           )}
         </div>

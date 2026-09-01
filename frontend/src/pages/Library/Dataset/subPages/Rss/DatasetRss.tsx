@@ -357,6 +357,7 @@ export default function DatasetRss() {
               onColumnVisibilityChange={setColumnVisibility}
               viewMode={null}
               getRowId={getRowId}
+              exportFileName={dataset?.dataSet ? `${dataset.dataSet} ${t('RSS')}` : t('RSS')}
             />
           )}
         </div>
