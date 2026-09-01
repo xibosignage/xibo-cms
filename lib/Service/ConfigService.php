@@ -219,8 +219,16 @@ class ConfigService implements ConfigServiceInterface
      */
     public function getTrustedProxyIpList(): array
     {
+        return array_values(array_filter(array_map('trim', explode(',', $this->getTrustedProxyIps()))));
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getHttpsDetectionTrustedProxyIpList(): array
+    {
         return array_values(array_unique(array_merge(
-            array_filter(array_map('trim', explode(',', $this->getTrustedProxyIps()))),
+            $this->getTrustedProxyIpList(),
             array_filter(array_map('trim', explode(',', $this->getSetting('WHITELIST_LOAD_BALANCERS', ''))))
         )));
     }

@@ -205,7 +205,7 @@ class HttpsDetect
             return true;
         }
 
-        if ($config === null || empty($config->getTrustedProxyIpList())) {
+        if ($config === null || empty($config->getHttpsDetectionTrustedProxyIpList())) {
             return self::isHttps();
         }
 
@@ -230,8 +230,9 @@ class HttpsDetect
     /**
      * Used by isHttpsTrusted() and isShouldIssueSts(): is a forwarded "https" proto claim
      * trustworthy for the current request — i.e. does it come via a REMOTE_ADDR on the operator's
-     * trusted-proxy list? An empty list means nothing is trusted, not "trust everything" (see
-     * $trustedProxyIps / WHITELIST_LOAD_BALANCERS in SECURITY.md).
+     * HTTPS-detection trust list (getHttpsDetectionTrustedProxyIpList(), which includes
+     * WHITELIST_LOAD_BALANCERS — safe for this narrower purpose, see SECURITY.md)? An empty list
+     * means nothing is trusted, not "trust everything".
      * @param \Xibo\Service\ConfigServiceInterface $config
      * @return bool
      */
@@ -241,7 +242,7 @@ class HttpsDetect
 
         return strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https'
             && $originIp !== ''
-            && IpTrust::isTrusted($originIp, $config->getTrustedProxyIpList());
+            && IpTrust::isTrusted($originIp, $config->getHttpsDetectionTrustedProxyIpList());
     }
 
     /**

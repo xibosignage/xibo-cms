@@ -92,18 +92,19 @@ entirely.
 Like `$allowLocalNetworkRequests` and `$whitelistHosts`, this setting is
 deployment-time only and is not exposed via any CMS admin UI.
 
-This is combined with (not overridden by) the admin-editable **Settings >
-Network > Whitelist Load Balancers** field (`WHITELIST_LOAD_BALANCERS`),
-which serves the same purpose — the IPs from both are trusted together. If
-you already set that field (e.g. so HSTS headers are issued correctly behind
-your proxy), it now also covers client-IP resolution for rate limiting with
-no extra action.
+**This is the *only* setting that grants trust for rate limiting and
+audit-IP resolution.** The admin-editable **Settings > Network > Whitelist
+Load Balancers** field (`WHITELIST_LOAD_BALANCERS`) is deliberately *not*
+combined into this trust list — see "Why `WHITELIST_LOAD_BALANCERS` is
+HTTPS-detection only" below. If you're relying on rate limiting actually
+limiting anything behind your reverse proxy, `$trustedProxyIps` is the
+setting you need — configuring `WHITELIST_LOAD_BALANCERS` alone does not
+cover it, even though it did in a prior revision of this fix.
 
 Exact IPs, CIDR ranges, and wildcard entries all work consistently wherever
-this trust list is consulted — rate limiting, HSTS issuance, and the client
-IP recorded in session/display audit logs (`Xibo\Helper\IpTrust`) — so a
-CIDR range set for one purpose (e.g. HSTS) automatically covers the others
-too.
+a trust list is consulted (`Xibo\Helper\IpTrust`) — rate limiting, HSTS
+issuance, and the client IP recorded in session/display audit logs all use
+the same matcher, just against different source lists (see below).
 
 **Only `X-Forwarded-For` is trusted for client-IP resolution — no other
 forwarded-for style header.** `TrustedProxyIpAddress`, `Session::getIp()`,
@@ -122,13 +123,44 @@ doesn't require bypassing your proxy at all. Ensure your reverse proxy sets
 value) — that's the only header this trust list needs to protect.
 
 **Upgrading an existing install that sits behind a reverse proxy?** If you
-haven't set either of these, every user behind that proxy will share a
-single resolved IP (the proxy's own address) after upgrading, which means
-they'll also share one rate-limit bucket — one user's failed logins could
-cause others behind the same proxy to see login/2FA/password-reset requests
+haven't set `$trustedProxyIps`, every user behind that proxy will share a
+single resolved IP (the proxy's own address), which means they'll also
+share one rate-limit bucket — one user's failed logins could cause others
+behind the same proxy to see login/2FA/password-reset requests
 rate-limited. This isn't an outage and resolves itself as soon as you set
-`WHITELIST_LOAD_BALANCERS` (Settings > Network) or `$trustedProxyIps` to
-your proxy's address.
+`$trustedProxyIps` to your proxy's address — **this is true even if you
+already have `WHITELIST_LOAD_BALANCERS` set**, since that setting no longer
+covers rate limiting (see below).
+
+### Why `WHITELIST_LOAD_BALANCERS` is HTTPS-detection only
+
+`WHITELIST_LOAD_BALANCERS` (Settings > Network) predates this whole
+`$trustedProxyIps` mechanism and was originally used only to decide whether
+to trust `X-Forwarded-Proto` for HSTS header issuance. A prior revision of
+this fix folded it into the same trust list as `$trustedProxyIps`, so that
+an operator who'd already set it for HSTS got rate-limiting protection for
+free. That was reverted — `WHITELIST_LOAD_BALANCERS` now feeds only the
+HTTPS-detection trust list described below (`ConfigServiceInterface::
+getHttpsDetectionTrustedProxyIpList()`), never
+`getTrustedProxyIpList()`/rate limiting/audit-IP resolution.
+
+The reason is the same one that already keeps `$allowLocalNetworkRequests`
+and `$whitelistHosts` settings.php-only, stated explicitly above for
+`$whitelistHosts`: *"an attacker who compromises an admin account would
+otherwise simply whitelist their own host."* `WHITELIST_LOAD_BALANCERS` is
+editable from the Settings UI by any super-admin, with no filesystem access
+needed and no obvious connection — to an admin auditing it later — to
+rate-limit bypass. A compromised or malicious super-admin session (a stolen
+cookie, a since-patched privilege-escalation bug) is often transient, but
+setting this field is a one-time, quiet, durable action: once set, it grants
+a standing capability — bypass login/2FA/password-reset rate limiting and
+spoof the audit-IP for every user, usable at leisure from the attacker's own
+machine, independent of still holding the admin session. That turns a
+possibly-transient compromise into a persistent backdoor, and — since this
+is the exact protection this mechanism exists to provide — undermines it via
+a second, quieter, already-existing path. `$trustedProxyIps` doesn't have
+this problem: it requires filesystem access to the CMS host, the same bar
+already applied to `$allowLocalNetworkRequests`/`$whitelistHosts`.
 
 ### How `X-Forwarded-Proto` (HTTPS detection) is trusted
 
@@ -138,11 +170,15 @@ your proxy's address.
 password-reset link), HSTS issuance (`isShouldIssueSts()`), and
 `State.php`'s `FORCE_HTTPS` redirect. A real `$_SERVER['HTTPS']` always wins
 outright — that's not client-controlled. Otherwise, an `X-Forwarded-Proto:
-https` claim is honoured **only if the connecting address is on the same
-trusted-proxy list as above** (`$trustedProxyIps`/`WHITELIST_LOAD_BALANCERS`,
-matched via `Xibo\Helper\IpTrust`). Once you configure either setting, a
-source that isn't on it can no longer assert "https" here at all — the same
-hardening as the `X-Forwarded-For` case above.
+https` claim is honoured **only if the connecting address is on the
+HTTPS-detection trust list** — `$trustedProxyIps` *and*
+`WHITELIST_LOAD_BALANCERS` combined (unlike the rate-limiting/audit-IP list
+above, which excludes `WHITELIST_LOAD_BALANCERS` — see "Why
+`WHITELIST_LOAD_BALANCERS` is HTTPS-detection only"), matched via
+`Xibo\Helper\IpTrust`. Once you configure either setting, a source that
+isn't on it can no longer assert "https" here at all — the same hardening
+as the `X-Forwarded-For` case above, just with a slightly broader trust
+list appropriate to this lower-stakes purpose.
 
 **The one deliberate exception:** when neither setting is configured yet —
 there's nothing to verify a claim against — this falls back to trusting

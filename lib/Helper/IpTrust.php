@@ -37,6 +37,8 @@ class IpTrust
      */
     public static function isTrusted(string $ip, array $trustedList): bool
     {
+        $ip = self::normalize($ip);
+
         foreach ($trustedList as $entry) {
             if (str_contains($entry, '/')) {
                 if (self::matchesCidr($ip, $entry)) {
@@ -52,6 +54,29 @@ class IpTrust
         }
 
         return false;
+    }
+
+    /**
+     * Reduce an IPv4-mapped IPv6 address (::ffff:a.b.c.d, RFC 4291 §2.5.5.2) to its plain IPv4
+     * form, so it matches an IPv4 trusted-list entry the way an operator would expect. Some
+     * dual-stack network stacks (certain proxies, some container networking setups) can present a
+     * genuinely-IPv4 connection this way; without this, inet_pton()'s differing byte lengths
+     * (16 bytes vs 4) mean it could never match a plain IPv4 entry at all. This can only turn a
+     * false non-match into a correct match — never the reverse — so it's a correctness fix, not a
+     * security-relevant one: the previous behaviour already failed closed here, just incorrectly.
+     * Only the address being tested is normalised, not trusted-list entries — an operator
+     * authoring a trust list in mapped-IPv6 form for what they consider an IPv4 proxy is not a
+     * realistic case worth the extra complexity.
+     */
+    private static function normalize(string $ip): string
+    {
+        $packed = @inet_pton($ip);
+        $ipv4MappedPrefix = str_repeat("\0", 10) . "\xff\xff";
+        if ($packed !== false && strlen($packed) === 16 && str_starts_with($packed, $ipv4MappedPrefix)) {
+            return inet_ntop(substr($packed, 12));
+        }
+
+        return $ip;
     }
 
     /**

@@ -226,11 +226,24 @@ interface ConfigServiceInterface
     public function getTrustedProxyIps(): string;
 
     /**
-     * Get the combined, deduped list of trusted reverse-proxy IPs/CIDRs/wildcards — the union of
-     * the settings.php-only getTrustedProxyIps() and the admin-editable WHITELIST_LOAD_BALANCERS
-     * DB setting. Requires setDependencies() to have already been called. Match entries against
-     * an address with Xibo\Helper\IpTrust::isTrusted().
+     * Get the parsed, deduped trusted reverse-proxy IP/CIDR/wildcard list — the settings.php-only
+     * getTrustedProxyIps(), and nothing else. This is the list used to authorize trusting
+     * X-Forwarded-For for client-IP resolution (login/2FA/password-reset rate limiting,
+     * session/display audit logs) — deliberately excludes the admin-editable
+     * WHITELIST_LOAD_BALANCERS DB setting (see "Why WHITELIST_LOAD_BALANCERS is HTTPS-detection
+     * only" in SECURITY.md). Match entries against an address with Xibo\Helper\IpTrust::isTrusted().
      * @return string[]
      */
     public function getTrustedProxyIpList(): array;
+
+    /**
+     * Get the combined, deduped list of trusted reverse-proxy IPs/CIDRs/wildcards used ONLY for
+     * HTTPS/HSTS detection (HttpsDetect::isShouldIssueSts() / isHttpsTrusted()) — the union of
+     * getTrustedProxyIpList() and the admin-editable WHITELIST_LOAD_BALANCERS DB setting. Requires
+     * setDependencies() to have already been called. Do not use this for anything that grants a
+     * standing capability to bypass a security control (rate limiting, audit-IP resolution) — use
+     * getTrustedProxyIpList() for those.
+     * @return string[]
+     */
+    public function getHttpsDetectionTrustedProxyIpList(): array;
 }

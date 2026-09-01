@@ -48,6 +48,24 @@ class IpTrustTest extends TestCase
             ],
             'IPv6 different addresses still distinct' => ['::1', ['::2'], false],
             'IPv4 does not match an IPv6 entry' => ['10.0.0.5', ['::a00:5'], false],
+            // IPv4-mapped IPv6 (RFC 4291 §2.5.5.2) — some dual-stack proxies/container network
+            // stacks present a genuinely-IPv4 connection this way; it must still match a plain
+            // IPv4 trusted entry.
+            'IPv4-mapped IPv6 REMOTE_ADDR matches a plain IPv4 entry' => [
+                '::ffff:10.0.0.5',
+                ['10.0.0.5'],
+                true,
+            ],
+            'IPv4-mapped IPv6 REMOTE_ADDR non-match still correctly rejected' => [
+                '::ffff:10.0.0.6',
+                ['10.0.0.5'],
+                false,
+            ],
+            'genuine IPv6 address is not confused with an IPv4-mapped one' => [
+                '2001:db8::a00:5',
+                ['10.0.0.5'],
+                false,
+            ],
             'garbage entry does not match' => ['::1', ['not-an-ip'], false],
             'empty trust list' => ['10.0.0.5', [], false],
         ];
@@ -66,6 +84,11 @@ class IpTrustTest extends TestCase
             'IPv4 /16 non-match' => ['172.19.5.5', ['172.18.0.0/16'], false],
             'IPv4 /16 boundary low' => ['172.18.0.0', ['172.18.0.0/16'], true],
             'IPv4 /16 boundary high' => ['172.18.255.255', ['172.18.0.0/16'], true],
+            'IPv4-mapped IPv6 REMOTE_ADDR matches a plain IPv4 CIDR' => [
+                '::ffff:172.18.5.5',
+                ['172.18.0.0/16'],
+                true,
+            ],
             'IPv4 /16 just over boundary' => ['172.19.0.0', ['172.18.0.0/16'], false],
             'IPv4 /24' => ['10.0.0.200', ['10.0.0.0/24'], true],
             'IPv4 /24 non-match' => ['10.0.1.1', ['10.0.0.0/24'], false],
@@ -81,8 +104,10 @@ class IpTrustTest extends TestCase
             'IPv6 non-byte-aligned /48 non-match' => ['2001:db8:abce::1', ['2001:db8:abcd::/48'], false],
             'IPv6 non-byte-aligned /46 boundary match' => ['2001:db8:abcf::1', ['2001:db8:abcc::/46'], true],
             'IPv6 non-byte-aligned /46 boundary non-match' => ['2001:db8:abd0::1', ['2001:db8:abcc::/46'], false],
-            // Cross-family: a CIDR range must never match the other address family.
-            'IPv4 CIDR never matches an IPv6 address' => ['::ffff:172.18.5.5', ['172.18.0.0/16'], false],
+            // Cross-family: a CIDR range must never match a genuinely different address family
+            // (::ffff:172.18.5.5 is IPv4-mapped IPv6, not a different family — see the
+            // IPv4-mapped-IPv6 cases above/below, which correctly do match).
+            'IPv4 CIDR never matches a genuine IPv6 address' => ['2001:db8::1', ['172.18.0.0/16'], false],
             'IPv6 CIDR never matches an IPv4 address' => ['172.18.5.5', ['2001:db8::/32'], false],
             // Malformed entries fail closed, not fatally.
             'missing bits fails closed' => ['10.0.0.5', ['10.0.0.0/'], false],
