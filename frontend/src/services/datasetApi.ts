@@ -32,6 +32,7 @@ import type {
 } from '@/types/dataset';
 import type { DatasetColumn } from '@/types/datasetColumn';
 import type { DatasetRss } from '@/types/datasetRss';
+import { sanitizeFileName } from '@/utils/stringUtils';
 
 export type DatasetRowValue = string | number | boolean | null | undefined;
 export type DynamicRowData = Record<string | number, DatasetRowValue>;
@@ -265,7 +266,15 @@ export async function exportDatasetCsv(datasetId: number): Promise<void> {
   if (contentDisposition) {
     const fileNameMatch = contentDisposition.match(/filename="?(.+)"?/);
     if (fileNameMatch && fileNameMatch.length === 2) {
-      fileName = fileNameMatch[1];
+      const rawFileName = fileNameMatch[1];
+      const extensionMatch = rawFileName.match(/\.[^.]+$/);
+      const extension = extensionMatch ? extensionMatch[0] : '';
+      const base = extension ? rawFileName.slice(0, -extension.length) : rawFileName;
+      const sanitizedBase = sanitizeFileName(base);
+
+      if (sanitizedBase) {
+        fileName = `${sanitizedBase}${extension}`;
+      }
     }
   }
 
@@ -274,7 +283,7 @@ export async function exportDatasetCsv(datasetId: number): Promise<void> {
 
   const link = document.createElement('a');
   link.href = downloadUrl;
-  link.setAttribute('donwload', fileName);
+  link.setAttribute('download', fileName);
   document.body.appendChild(link);
 
   link.click();

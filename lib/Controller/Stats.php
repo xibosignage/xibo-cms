@@ -894,7 +894,7 @@ class Stats extends Base
             }
             $entry['start'] = $start->format($returnDateFormat);
             $entry['end'] = $end->format($returnDateFormat);
-            $entry['duration'] = (int) $end->diffInSeconds($start);
+            $entry['duration'] = (int) $end->diffInSeconds($start, true);
             $rows[] = $entry;
         }
 

@@ -311,6 +311,7 @@ export default function PlayerVersions() {
               bulkActions={bulkActions}
               viewMode={null}
               getRowId={getRowId}
+              exportFileName={t('Player Versions')}
             />
           )}
         </div>

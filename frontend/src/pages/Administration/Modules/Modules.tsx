@@ -234,6 +234,7 @@ export default function Modules() {
               onColumnVisibilityChange={setColumnVisibility}
               viewMode={null}
               getRowId={(row: Module) => row.moduleId}
+              exportFileName={t('Modules')}
             />
           )}
         </div>
