@@ -253,6 +253,7 @@ export default function Sessions() {
               bulkActions={bulkActions}
               viewMode={null}
               getRowId={getRowId}
+              exportFileName={t('Sessions')}
             />
           )}
         </div>

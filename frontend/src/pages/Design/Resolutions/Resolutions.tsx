@@ -313,6 +313,7 @@ export default function Resolution() {
               bulkActions={bulkActions}
               viewMode={null}
               getRowId={getRowId}
+              exportFileName={t('Resolutions')}
             />
           )}
         </div>

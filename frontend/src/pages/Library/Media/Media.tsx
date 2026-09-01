@@ -681,6 +681,7 @@ export default function Media() {
               onViewModeChange={setViewMode}
               availableViewModes={['table', 'grid']}
               getRowId={getRowId}
+              tableLabel={t('Media')}
             />
           ) : (
             <DataGrid
