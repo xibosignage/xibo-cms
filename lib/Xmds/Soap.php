@@ -1374,13 +1374,17 @@ class Soap
                     if ($isSyncTimezone) {
                         $fromDt = Carbon::createFromTimestamp($scheduleEvent->fromDt, $this->display->timeZone)
                             ->format(DateFormatHelper::getSystemFormat());
-                        $toDt = Carbon::createFromTimestamp($scheduleEvent->toDt, $this->display->timeZone)
-                            ->format(DateFormatHelper::getSystemFormat());
+                        $toDt = ($scheduleEvent->toDt === null)
+                            ? null
+                            : Carbon::createFromTimestamp($scheduleEvent->toDt, $this->display->timeZone)
+                                ->format(DateFormatHelper::getSystemFormat());
                     } else {
                         $fromDt = DateFormatHelper::createFromTimestamp($scheduleEvent->fromDt)
                             ->format(DateFormatHelper::getSystemFormat());
-                        $toDt = DateFormatHelper::createFromTimestamp($scheduleEvent->toDt)
-                            ->format(DateFormatHelper::getSystemFormat());
+                        $toDt = ($scheduleEvent->toDt === null)
+                            ? null
+                            : DateFormatHelper::createFromTimestamp($scheduleEvent->toDt)
+                                ->format(DateFormatHelper::getSystemFormat());
                     }
 
                     $scheduleId = $row['eventId'];
