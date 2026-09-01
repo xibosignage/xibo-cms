@@ -521,7 +521,7 @@ class StatsMigrationTask implements TaskInterface
                 $entry['mediaId'] = (int) $stat['mediaId'];
                 $entry['tag'] = $stat['tag'];
                 $entry['widgetId'] = (int) $stat['widgetId'];
-                $entry['duration'] = (int) $end->diffInSeconds($start);
+                $entry['duration'] = (int) $end->diffInSeconds($start, true);
                 $entry['count'] = isset($stat['count']) ? (int) $stat['count'] : 1;
 
                 // Add stats in store $this->stats

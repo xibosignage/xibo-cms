@@ -558,10 +558,8 @@ class ProofOfPlay implements ReportInterface
               stat.widgetId
         ';
 
-        // We get the ID and name - either by display, display group or tag
-        if ($groupBy === 'display') {
-            $select .= ', display.Display, stat.displayId ';
-        } elseif ($groupBy === 'displayGroup') {
+        // We get the ID and name - either by display (including no grouping), display group or tag
+        if ($groupBy === 'displayGroup') {
             $select .= ', displaydg.displayGroup, displaydg.displayGroupId ';
         } elseif ($groupBy === 'tag') {
             if ($tagsType === 'dg' || $tagsType === 'media') {
@@ -570,6 +568,8 @@ class ProofOfPlay implements ReportInterface
                 // For layouts, we need to manually select taglink.tag
                 $select .= ', taglink.tag AS value, taglink.tagId ';
             }
+        } else {
+            $select .= ', display.Display, stat.displayId ';
         }
 
         $body = '
@@ -821,12 +821,12 @@ class ProofOfPlay implements ReportInterface
         ';
 
         // Then add the optional groupings
-        if ($groupBy === 'display') {
-            $body .= ', display.Display, stat.displayId ';
-        } elseif ($groupBy === 'displayGroup') {
+        if ($groupBy === 'displayGroup') {
             $body .= ', displaydg.displayGroupId, displaydg.displayGroup ';
         } elseif ($groupBy === 'tag') {
             $body .= ', value, taglink.tagId ';
+        } else {
+            $body .= ', display.Display, stat.displayId ';
         }
 
         $order = '';

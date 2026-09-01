@@ -375,7 +375,7 @@ class Campaign implements \JsonSerializable
 
         // if start and end date are the same
         // set the daysTotal to 1, to avoid potential division by 0 later on.
-        $progress->daysTotal = ($this->startDt === $this->endDt) ? 1 : (int) $endDt->diffInDays($startDt);
+        $progress->daysTotal = ($this->startDt === $this->endDt) ? 1 : (int) $endDt->diffInDays($startDt, true);
 
         $progress->targetPerDay = $this->target / $progress->daysTotal;
 
@@ -388,11 +388,11 @@ class Campaign implements \JsonSerializable
                 $progress->daysIn = $progress->daysTotal;
                 $progress->progressTime = 100;
             } else {
-                $progress->daysIn = (int) $testDate->diffInDays($startDt);
+                $progress->daysIn = (int) $testDate->diffInDays($startDt, true);
 
                 // Use hours to calculate more accurate progress
                 $hoursTotal = $progress->daysTotal * 24;
-                $hoursIn = (int) $testDate->diffInHours($startDt);
+                $hoursIn = (int) $testDate->diffInHours($startDt, true);
                 $progress->progressTime = $hoursIn / $hoursTotal * 100;
             }
 

@@ -438,6 +438,7 @@ export default function DisplayGroupPage() {
               bulkActions={bulkActions}
               viewMode={null}
               getRowId={getRowId}
+              exportFileName={t('Display Groups')}
             />
           )}
         </div>

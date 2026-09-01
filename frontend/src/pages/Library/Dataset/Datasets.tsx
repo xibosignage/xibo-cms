@@ -469,6 +469,7 @@ export default function Dataset() {
               bulkActions={bulkActions}
               viewMode={null}
               getRowId={getRowId}
+              exportFileName={t('Datasets')}
             />
           )}
         </div>

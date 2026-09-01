@@ -628,7 +628,7 @@ class SummaryReport implements ReportInterface
         $reportFilter
     ) {
 
-        $diffInDays = (int) $toDt->diffInDays($fromDt);
+        $diffInDays = (int) $toDt->diffInDays($fromDt, true);
         if ($groupByFilter == 'byhour') {
             $hour = 1;
             $input = range(0, 23);
