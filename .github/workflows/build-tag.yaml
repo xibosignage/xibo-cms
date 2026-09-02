@@ -47,21 +47,51 @@ jobs:
         run: |
           docker pull ghcr.io/xibosignage/xibo-cms:release-${GITHUB_REF##*/}
 
-      - name: Generate SBOM (SPDX)
-        uses: anchore/sbom-action@v0
+      - name: Export JS dependency manifests for SBOM
+        uses: docker/build-push-action@v5
         with:
-          image: ghcr.io/xibosignage/xibo-cms:release-${{ github.ref_name }}
-          format: spdx-json
-          output-file: xibo-cms-${{ github.ref_name }}.spdx.json
-          artifact-name: sbom-spdx-${{ github.ref_name }}
+          context: .
+          target: sbom-context
+          cache-from: type=gha
+          outputs: type=local,dest=./sbom-context
 
-      - name: Generate SBOM (CycloneDX)
+      - name: Generate SBOM (Syft native)
         uses: anchore/sbom-action@v0
+        env:
+          SYFT_FILE_METADATA_SELECTION: none
         with:
           image: ghcr.io/xibosignage/xibo-cms:release-${{ github.ref_name }}
-          format: cyclonedx-json
-          output-file: xibo-cms-${{ github.ref_name }}.cdx.json
-          artifact-name: sbom-cyclonedx-${{ github.ref_name }}
+          format: json
+          output-file: xibo-cms-${{ github.ref_name }}.syft.json
+          artifact-name: sbom-syft-${{ github.ref_name }}
+
+      - name: Generate SBOM (CycloneDX, image)
+        uses: anchore/sbom-action@v0
+        env:
+          SYFT_FILE_METADATA_SELECTION: none
+        with:
+          image: ghcr.io/xibosignage/xibo-cms:release-${{ github.ref_name }}
+          format: cyclonedx-json@1.6
+          output-file: xibo-cms-${{ github.ref_name }}-image.cdx.json
+          artifact-name: sbom-cyclonedx-image-${{ github.ref_name }}
+
+      - name: Generate SBOM (CycloneDX, JS dependencies)
+        uses: anchore/sbom-action@v0
+        env:
+          SYFT_FILE_METADATA_SELECTION: none
+        with:
+          path: ./sbom-context/js
+          format: cyclonedx-json@1.6
+          output-file: xibo-cms-${{ github.ref_name }}-js.cdx.json
+          artifact-name: sbom-cyclonedx-js-${{ github.ref_name }}
+
+      - name: Merge SBOMs (CycloneDX)
+        run: |
+          docker run --rm -v "$PWD":/wrk -w /wrk cyclonedx/cyclonedx-cli:0.33.1 merge \
+            --input-files xibo-cms-${GITHUB_REF##*/}-image.cdx.json xibo-cms-${GITHUB_REF##*/}-js.cdx.json \
+            --output-file xibo-cms-${GITHUB_REF##*/}.cdx.json \
+            --output-format json \
+            --output-version v1_6
 
       - name: Build archive
         run: |
@@ -81,5 +111,5 @@ jobs:
           files: |
             **.tar.gz
             **.zip
-            xibo-cms-${{ github.ref_name }}.spdx.json
+            xibo-cms-${{ github.ref_name }}.syft.json
             xibo-cms-${{ github.ref_name }}.cdx.json

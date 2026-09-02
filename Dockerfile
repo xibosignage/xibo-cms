@@ -72,6 +72,16 @@ COPY locale /app/locale
 RUN npm run build
 
 # Stage 4
+# SBOM context
+# package.json/package-lock.json (root and frontend) are removed from the
+# final image below, so the resolved manifests are collected here — as
+# actually installed during the webpack/vite stages, not just as committed —
+# for the build pipeline to scan separately when generating the SBOM.
+FROM scratch AS sbom-context
+COPY --from=webpack /app/package.json /app/package-lock.json /js/
+COPY --from=vite /app/frontend/package.json /app/frontend/package-lock.json /js/frontend/
+
+# Stage 5
 # Build the CMS container
 FROM debian:trixie-slim
 MAINTAINER Xibo Signage <support@xibosignage.com>
