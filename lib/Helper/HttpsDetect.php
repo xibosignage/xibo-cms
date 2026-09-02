@@ -116,7 +116,7 @@ class HttpsDetect
      */
     public function getScheme(): string
     {
-        return ($this->isHttps()) ? 'https' : 'http';
+        return (self::isHttpsTrusted($this->config)) ? 'https' : 'http';
     }
 
     /**
@@ -170,11 +170,12 @@ class HttpsDetect
             return $hostParts[1];
         }
 
-        return ($this->isHttps() ? 443 : 80);
+        return (self::isHttpsTrusted($this->config) ? 443 : 80);
     }
 
     /**
-     * Is HTTPs?
+     * Is HTTPS? The permissive fallback: trusts a forwarded proto claim from ANY connecting
+     * address, unconditionally. Avoid calling this directly for anything security-relevant
      * @return bool
      */
     public static function isHttps(): bool
@@ -186,27 +187,62 @@ class HttpsDetect
     }
 
     /**
+     * Is HTTPS, verifying a forwarded proto claim against the operator's trusted-proxy list
+     * whenever one is configured. Used for the CSRF cookie's Secure flag
+     * (CsrfGuard::issueToken()), off-system URL generation (getScheme()/getPort(), and by
+     * extension getRootUrl()/getBaseUrl()), and State.php's FORCE_HTTPS redirect. See "Why
+     * isHttps() trusts X-Forwarded-Proto unconditionally" in SECURITY.md for more information.
+     *
+     * $config may be null — many call sites construct HttpsDetect without one (see this class's
+     * constructor) — in which case there's no trust list to check against either, so this also
+     * falls back to isHttps().
+     * @param \Xibo\Service\ConfigServiceInterface|null $config
+     * @return bool
+     */
+    public static function isHttpsTrusted(?ConfigServiceInterface $config): bool
+    {
+        if (isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on') {
+            return true;
+        }
+
+        if ($config === null || empty($config->getHttpsDetectionTrustedProxyIpList())) {
+            return self::isHttps();
+        }
+
+        return self::isForwardedHttpsTrusted($config);
+    }
+
+    /**
      * @param \Xibo\Service\ConfigServiceInterface $config
      * @param \Psr\Http\Message\RequestInterface $request
      * @return bool
      */
-    public static function isShouldIssueSts($config, $request): bool
-    {
-        // We might need to issue STS headers
-        $whiteListLoadBalancers = $config->getSetting('WHITELIST_LOAD_BALANCERS');
-        $originIp = $_SERVER['REMOTE_ADDR'] ?? '';
-        $forwardedProtoHttps = (
-            strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https'
-            && $originIp != ''
-            && (
-                $whiteListLoadBalancers === '' || in_array($originIp, explode(',', $whiteListLoadBalancers))
-            )
-        );
-
+    public static function isShouldIssueSts(
+        ConfigServiceInterface $config,
+        \Psr\Http\Message\RequestInterface $request,
+    ): bool {
         return (
-            ($request->getUri()->getScheme() == 'https' || $forwardedProtoHttps)
+            ($request->getUri()->getScheme() == 'https' || self::isForwardedHttpsTrusted($config))
             && $config->getSetting('ISSUE_STS', 0) == 1
         );
+    }
+
+    /**
+     * Used by isHttpsTrusted() and isShouldIssueSts(): is a forwarded "https" proto claim
+     * trustworthy for the current request — i.e. does it come via a REMOTE_ADDR on the operator's
+     * HTTPS-detection trust list (getHttpsDetectionTrustedProxyIpList(), which includes
+     * WHITELIST_LOAD_BALANCERS — safe for this narrower purpose, see SECURITY.md)? An empty list
+     * means nothing is trusted, not "trust everything".
+     * @param \Xibo\Service\ConfigServiceInterface $config
+     * @return bool
+     */
+    private static function isForwardedHttpsTrusted(ConfigServiceInterface $config): bool
+    {
+        $originIp = $_SERVER['REMOTE_ADDR'] ?? '';
+
+        return strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https'
+            && $originIp !== ''
+            && IpTrust::isTrusted($originIp, $config->getHttpsDetectionTrustedProxyIpList());
     }
 
     /**

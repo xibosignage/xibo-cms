@@ -58,7 +58,6 @@
     "ext-sockets": "*",
     "ext-simplexml": "*",
     "ext-zip": "*",
-    "akrabat/ip-address-middleware" : "2.6.*",
     "apereo/phpcas": "^1.6",
     "dragonmantank/cron-expression": "^3.4",
     "flynsarmy/slim-monolog": "~1.0",

@@ -336,7 +336,7 @@ class Handlers
             // the session by the time these exceptions are thrown, so a real token is available
             // here. Issuing it properly (rather than hardcoding blank) matters because
             // login/api.ts reads this meta tag for the login/tfa requests fired from this page.
-            'csrfToken'       => CsrfGuard::issueToken(),
+            'csrfToken'       => CsrfGuard::issueToken('csrfToken', $configService),
             'loginConfigJson' => json_encode(
                 $messageConfig,
                 JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
