@@ -491,6 +491,20 @@ class Login extends Base
     }
 
     /**
+     * Public JSON endpoint returning just the CMS version, wrapped in a `data` envelope.
+     * No authentication required. Consumed by external integrations (e.g. the Canva
+     * connector) that need to identify the CMS version without authenticating first.
+     */
+    public function about(Request $request, Response $response): \Psr\Http\Message\ResponseInterface
+    {
+        return $response->withJson([
+            'data' => [
+                'version' => Environment::$WEBSITE_VERSION_NAME,
+            ],
+        ]);
+    }
+
+    /**
      * Public JSON endpoint returning branding + version info for the About modal.
      * No authentication required.
      */
