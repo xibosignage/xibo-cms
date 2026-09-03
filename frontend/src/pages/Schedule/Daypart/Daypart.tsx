@@ -331,6 +331,7 @@ export default function Daypart() {
               bulkActions={bulkActions}
               viewMode={null}
               getRowId={getRowId}
+              exportFileName={t('Dayparting')}
             />
           )}
         </div>

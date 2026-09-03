@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -93,7 +93,7 @@ class State implements Middleware
         // Do we need SSL/STS?
         if (HttpsDetect::isShouldIssueSts($container->get('configService'), $request)) {
             $response = HttpsDetect::decorateWithSts($container->get('configService'), $response);
-        } else if (!HttpsDetect::isHttps()) {
+        } else if (!HttpsDetect::isHttpsTrusted($container->get('configService'))) {
             // We are not HTTPS, should we redirect?
             // Get the current route pattern
             $routeContext = RouteContext::fromRequest($request);
@@ -215,7 +215,10 @@ class State implements Middleware
                 || $container->get('name') == 'auth'
                 || $container->get('name') == 'json'
             ) {
-                return new Session($container->get('logService'));
+                return new Session(
+                    $container->get('logService'),
+                    $container->get('configService')->getTrustedProxyIpList()
+                );
             } else {
                 return new NullSession();
             }

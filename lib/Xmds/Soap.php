@@ -54,6 +54,7 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\IpTrust;
 use Xibo\Helper\LibraryFile;
 use Xibo\Helper\LinkSigner;
 use Xibo\Helper\SanitizerService;
@@ -377,13 +378,23 @@ class Soap
 
         $output = $cache->get();
 
-        // Required files are cached for 4 hours
+        // Required files are cached for 4 hours, but the cached document is only valid to serve as-is
+        // if it was generated under the same SENDFILE_MODE (httpDownloads) as the current request -
+        // otherwise the download="http"/"xmds" attributes it contains are stale.
+        $cachedDocument = null;
+        $cacheModeMatches = false;
         if ($cache->isHit()) {
+            $cachedDocument = new \DOMDocument('1.0');
+            $cachedDocument->loadXML($output);
+            $cacheModeMatches = $cachedDocument->documentElement->getAttribute('httpDownloads')
+                === ($httpDownloads ? '1' : '0');
+        }
+
+        if ($cacheModeMatches) {
             $this->getLog()->info('Returning required files from Cache for display ' . $this->display->display);
 
             // Resign HTTP links and extend expiry
-            $document = new \DOMDocument('1.0');
-            $document->loadXML($output);
+            $document = $cachedDocument;
 
             $cdnUrl = $this->configService->getSetting('CDN_URL');
 
@@ -436,7 +447,8 @@ class Soap
             return $output;
         }
 
-        // We need to regenerate
+        // We need to regenerate (true cache miss, or a mode mismatch against what's cached - e.g.
+        // SENDFILE_MODE was changed since this display's cache entry was generated)
         // Lock the cache
         $cache->lock(120);
 
@@ -461,6 +473,10 @@ class Soap
         $fileElements->setAttribute('generated', Carbon::now()->format(DateFormatHelper::getSystemFormat()));
         $fileElements->setAttribute('fitlerFrom', $this->fromFilter->format(DateFormatHelper::getSystemFormat()));
         $fileElements->setAttribute('fitlerTo', $this->toFilter->format(DateFormatHelper::getSystemFormat()));
+
+        // Record the mode this document was generated under, so a future cache hit can tell whether
+        // SENDFILE_MODE has changed since and needs to be regenerated rather than served stale.
+        $fileElements->setAttribute('httpDownloads', $httpDownloads ? '1' : '0');
 
         // Player dependencies
         // -------------------
@@ -1374,13 +1390,17 @@ class Soap
                     if ($isSyncTimezone) {
                         $fromDt = Carbon::createFromTimestamp($scheduleEvent->fromDt, $this->display->timeZone)
                             ->format(DateFormatHelper::getSystemFormat());
-                        $toDt = Carbon::createFromTimestamp($scheduleEvent->toDt, $this->display->timeZone)
-                            ->format(DateFormatHelper::getSystemFormat());
+                        $toDt = ($scheduleEvent->toDt === null)
+                            ? null
+                            : Carbon::createFromTimestamp($scheduleEvent->toDt, $this->display->timeZone)
+                                ->format(DateFormatHelper::getSystemFormat());
                     } else {
                         $fromDt = DateFormatHelper::createFromTimestamp($scheduleEvent->fromDt)
                             ->format(DateFormatHelper::getSystemFormat());
-                        $toDt = DateFormatHelper::createFromTimestamp($scheduleEvent->toDt)
-                            ->format(DateFormatHelper::getSystemFormat());
+                        $toDt = ($scheduleEvent->toDt === null)
+                            ? null
+                            : DateFormatHelper::createFromTimestamp($scheduleEvent->toDt)
+                                ->format(DateFormatHelper::getSystemFormat());
                     }
 
                     $scheduleId = $row['eventId'];
@@ -2053,7 +2073,7 @@ class Soap
 
                 // Do we need to set the duration of this record (we will do for older individually collected stats)
                 if ($duration == '') {
-                    $duration = (int) $toDt->diffInSeconds($fromDt);
+                    $duration = (int) $toDt->diffInSeconds($fromDt, true);
                 }
             } catch (\Exception $e) {
                 // Protect against the date format being unreadable
@@ -2761,17 +2781,17 @@ class Soap
      */
     protected function getIp()
     {
-        $clientIp = '';
+        $remoteAddr = $_SERVER['REMOTE_ADDR'] ?? '';
 
-        $keys = array('X_FORWARDED_FOR', 'HTTP_X_FORWARDED_FOR', 'CLIENT_IP', 'REMOTE_ADDR');
-        foreach ($keys as $key) {
-            if (isset($_SERVER[$key]) && filter_var($_SERVER[$key], FILTER_VALIDATE_IP) !== false) {
-                $clientIp = $_SERVER[$key];
-                break;
-            }
+        if ($remoteAddr !== ''
+            && IpTrust::isTrusted($remoteAddr, $this->getConfig()->getTrustedProxyIpList())
+            && isset($_SERVER['HTTP_X_FORWARDED_FOR'])
+            && filter_var($_SERVER['HTTP_X_FORWARDED_FOR'], FILTER_VALIDATE_IP) !== false
+        ) {
+            return $_SERVER['HTTP_X_FORWARDED_FOR'];
         }
 
-        return $clientIp;
+        return filter_var($remoteAddr, FILTER_VALIDATE_IP) !== false ? $remoteAddr : '';
     }
 
     /**

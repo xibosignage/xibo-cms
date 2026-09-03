@@ -72,6 +72,16 @@ COPY locale /app/locale
 RUN npm run build
 
 # Stage 4
+# SBOM context
+# package.json/package-lock.json (root and frontend) are removed from the
+# final image below, so the resolved manifests are collected here — as
+# actually installed during the webpack/vite stages, not just as committed —
+# for the build pipeline to scan separately when generating the SBOM.
+FROM scratch AS sbom-context
+COPY --from=webpack /app/package.json /app/package-lock.json /js/
+COPY --from=vite /app/frontend/package.json /app/frontend/package-lock.json /js/frontend/
+
+# Stage 5
 # Build the CMS container
 FROM debian:trixie-slim
 MAINTAINER Xibo Signage <support@xibosignage.com>
@@ -154,6 +164,7 @@ ARG GIT_COMMIT=prod
 
 # Setup persistent environment variables
 ENV CMS_DEV_MODE=false \
+    OPENSSL_CONF=/etc/ssl/openssl-legacy.cnf \
     INSTALL_TYPE=docker \
     XMR_HOST=xmr \
     CMS_SERVER_NAME=localhost \
@@ -243,6 +254,7 @@ RUN rm /var/www/cms/composer.* && \
     rm /var/www/cms/package.json && \
     rm /var/www/cms/package-lock.json && \
     rm -r /var/www/cms/ui && \
+    rm -r /var/www/cms/frontend && \
     rm /var/www/cms/webpack.config.js
 
 # Map a volumes to this folder.

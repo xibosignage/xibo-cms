@@ -1211,7 +1211,7 @@ export default function ScheduleEventModal({
     const eventTypeId = draft.eventTypeId!;
     const displayGroupIds =
       eventTypeId === EventTypeId.Sync
-        ? []
+        ? syncDisplays.map((d) => d.displayGroupId)
         : [...draft.displaySpecificGroupIds, ...draft.displayGroupIds];
 
     startTransition(async () => {
