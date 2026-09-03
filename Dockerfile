@@ -164,6 +164,7 @@ ARG GIT_COMMIT=prod
 
 # Setup persistent environment variables
 ENV CMS_DEV_MODE=false \
+    OPENSSL_CONF=/etc/ssl/openssl-legacy.cnf \
     INSTALL_TYPE=docker \
     XMR_HOST=xmr \
     CMS_SERVER_NAME=localhost \
