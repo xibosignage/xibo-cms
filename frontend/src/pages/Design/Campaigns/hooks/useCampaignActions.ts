@@ -30,6 +30,7 @@ import { notify } from '@/components/ui/Notification';
 import { copyCampaign, deleteCampaign } from '@/services/campaignApi';
 import { selectFolder, type ApiResult } from '@/services/folderApi';
 import type { Campaign } from '@/types/campaign';
+import { isAlreadyDeletedError } from '@/utils/errors';
 
 interface UseCampaignActionsProps {
   t: TFunction;
@@ -61,20 +62,30 @@ export function useCampaignActions({
         itemsToDelete.map((item) => deleteCampaign(item.campaignId)),
       );
 
-      const failed = results.filter((r) => r.status === 'rejected');
+      const trueFailed = results.filter(
+        (r) => r.status === 'rejected' && !isAlreadyDeletedError(r.reason),
+      );
+      const deletedCount = itemsToDelete.length - trueFailed.length;
 
-      if (failed.length > 0) {
-        const firstRejected = failed[0] as PromiseRejectedResult;
+      if (trueFailed.length > 0) {
+        const firstRejected = trueFailed[0] as PromiseRejectedResult;
         const reason = firstRejected.reason;
 
-        const message =
+        const specificMessage =
           isAxiosError(reason) && reason.response?.data?.message
             ? reason.response.data.message
-            : t('{{count}} campaign(s) could not be deleted.', {
-                count: failed.length,
-              });
+            : undefined;
+        const failurePart =
+          specificMessage ??
+          t('{{count}} campaign(s) could not be deleted.', {
+            count: trueFailed.length,
+          });
+        const successPart =
+          deletedCount > 0
+            ? t('{{count}} campaign(s) deleted successfully.', { count: deletedCount })
+            : '';
 
-        setDeleteError(message);
+        setDeleteError([successPart, failurePart].filter(Boolean).join(' '));
 
         setRowSelection({});
         handleRefresh();
@@ -82,8 +93,8 @@ export function useCampaignActions({
       }
 
       notify.success(
-        t('{{count}} campaign(s) deleted successfully', {
-          count: itemsToDelete.length,
+        t('{{count}} campaign(s) deleted successfully.', {
+          count: deletedCount,
         }),
       );
 
