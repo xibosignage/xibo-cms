@@ -190,6 +190,26 @@ server {
 
 ---
 
+## 9. Security settings
+
+Set these in `web/settings-custom.php`, which the `settings.php` from step 4 includes. [SECURITY.md](SECURITY.md) has the reasoning for each.
+
+| Setting | |
+|---|---|
+| `$whitelistHosts` | The hostnames the CMS is reachable under. Required in production. |
+| `$trustedProxyIps` | The address your reverse proxy connects to the CMS from. Needed for per-client rate limiting, correct audit IPs, and `X-Forwarded-Proto` to be trusted. Never a wildcard or public range. |
+| `$allowLocalNetworkRequests` | Leave unset. `true` disables SSRF protection on all outbound HTTP. |
+
+```php
+<?php
+$whitelistHosts = 'xibo.example.com';
+$trustedProxyIps = '10.0.0.5';
+```
+
+A reverse proxy terminating TLS must set `X-Forwarded-For` (its own value, not a relayed one) and `X-Forwarded-Proto`. Neither is trusted until the proxy's source address is in `$trustedProxyIps`. Get that address wrong with `FORCE_HTTPS` on and the CMS redirect-loops.
+
+---
+
 ## Accessing the CMS
 
 Navigate to your configured domain and log in with the admin credentials setup in step 6 of these instructions.
