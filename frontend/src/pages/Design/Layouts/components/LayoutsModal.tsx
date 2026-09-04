@@ -184,6 +184,7 @@ export function LayoutModals({
           isLoading={actions.isPublishing}
           onPublish={handlers.confirmPublish}
           layoutId={selection.selectedLayout?.layoutId}
+          publishedDate={selection.selectedLayout?.publishedDate}
         />
       )}
       {isModalOpen('discard') && (

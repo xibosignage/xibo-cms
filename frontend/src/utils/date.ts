@@ -123,6 +123,14 @@ export function expiresToExpiryValue(expires?: string): ExpiryValue {
   };
 }
 
+export function parseDateTimeString(value?: string | null): Date | undefined {
+  if (!value) return undefined;
+
+  const date = new Date(value.replace(' ', 'T'));
+
+  return isNaN(date.getTime()) ? undefined : date;
+}
+
 export const DATE_KEY_REGEX = /^(\d{4})-(\d{2})-(\d{2})/;
 
 // Reads back the Y/M/D a day-only picker produced. Pass timeZone only when `date` is a

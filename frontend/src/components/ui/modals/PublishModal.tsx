@@ -27,6 +27,7 @@ import type { PublishValue } from '../forms/PublishDateSelect';
 import PublishDateSelect from '../forms/PublishDateSelect';
 
 import Modal from '@/components/ui/modals/Modal';
+import { parseDateTimeString } from '@/utils/date';
 
 interface PublishModalProps {
   isOpen?: boolean;
@@ -37,6 +38,7 @@ interface PublishModalProps {
   titleText: string;
   onPublish: (id: number, value: PublishValue) => void;
   layoutId?: number;
+  publishedDate?: string | null;
 }
 
 export default function PublishModal({
@@ -48,11 +50,14 @@ export default function PublishModal({
   titleText,
   onPublish,
   layoutId,
+  publishedDate,
 }: PublishModalProps) {
   const { t } = useTranslation();
 
-  const [publishValue, setPublishValue] = useState<PublishValue>({
-    type: 'now',
+  const [publishValue, setPublishValue] = useState<PublishValue>(() => {
+    const date = parseDateTimeString(publishedDate);
+
+    return date ? { type: 'scheduled', date } : { type: 'now' };
   });
 
   const handlePublish = () => {
