@@ -29,13 +29,16 @@ import type { ModalAction } from '../ui/modals/Modal';
 import Modal from '../ui/modals/Modal';
 
 import { withPublicPath } from '@/config/publicPath';
+import { useUserContext } from '@/context/UserContext';
 import http from '@/lib/api';
 import { listenForLogout } from '@/lib/auth-broadcast';
 import { authEvents } from '@/lib/auth-events';
+import type { User } from '@/types/user';
 
 export function SessionExpiredModal() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { updateUser } = useUserContext();
   const [isOpen, setIsOpen] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
 
@@ -74,9 +77,12 @@ export function SessionExpiredModal() {
           setIsChecking(false);
         }
       } else if (document.visibilityState === 'visible') {
-        // If modal is closed, check silently
+        // If modal is closed, check silently — also refreshes features/permissions,
+        // which otherwise never update after the initial page load (e.g. an admin
+        // disabling a feature for this user's group while they have the SPA open).
         try {
-          await http.head('/user/me');
+          const res = await http.get<User>('/user/me');
+          updateUser(res.data);
         } catch {
           // Interceptor catches 401 and opens modal
         }
