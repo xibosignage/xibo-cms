@@ -26,8 +26,10 @@ import { Trans, useTranslation } from 'react-i18next';
 import type { PublishValue } from '../forms/PublishDateSelect';
 import PublishDateSelect from '../forms/PublishDateSelect';
 
+import { parseDateTimeString } from './utils/parseDateTimeString';
+
 import Modal from '@/components/ui/modals/Modal';
-import { parseDateTimeString } from '@/utils/date';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 
 interface PublishModalProps {
   isOpen?: boolean;
@@ -53,9 +55,10 @@ export default function PublishModal({
   publishedDate,
 }: PublishModalProps) {
   const { t } = useTranslation();
+  const { timeZone } = useDateFormatter();
 
   const [publishValue, setPublishValue] = useState<PublishValue>(() => {
-    const date = parseDateTimeString(publishedDate);
+    const date = parseDateTimeString(publishedDate, timeZone);
 
     return date ? { type: 'scheduled', date } : { type: 'now' };
   });
