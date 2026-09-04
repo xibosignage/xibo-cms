@@ -22,10 +22,11 @@
 import { createContext, useContext, useEffect, type ReactNode } from 'react';
 
 import type { BrandingConfig } from '@/types/user';
-import { resolveSidebarContrastMode } from '@/utils/contrastColor';
+import { resolveSidebarBg, resolveSidebarContrastMode } from '@/utils/contrastColor';
 
 const THEME_LINK_ID = 'xibo-theme-css';
 const SIDEBAR_CONTRAST_ATTR = 'data-sidebar-contrast';
+const SIDEBAR_BG_PROPERTY = '--sidebar-bg';
 
 // Fallback used only while the /user/me API call is in-flight.
 // Once the response arrives, BrandingProvider replaces these with server values.
@@ -59,19 +60,24 @@ export function BrandingProvider({ branding, children }: Props) {
     link.href = value.cssUrl;
     link.id = THEME_LINK_ID;
 
-    // Re-check contrast once theme.css applies, and once up-front for installs
-    // with no override.
-    const applyContrast = () => {
-      document.documentElement.setAttribute(SIDEBAR_CONTRAST_ATTR, resolveSidebarContrastMode());
+    // Value-guarded: writing --sidebar-bg mutates the [style] attribute the observer below watches.
+    const applyTheme = () => {
+      const root = document.documentElement;
+      const brandPrimary = getComputedStyle(root).getPropertyValue('--brand-primary').trim();
+      const sidebarBg = resolveSidebarBg(brandPrimary);
+      if (sidebarBg && root.style.getPropertyValue(SIDEBAR_BG_PROPERTY) !== sidebarBg) {
+        root.style.setProperty(SIDEBAR_BG_PROPERTY, sidebarBg);
+      }
+      root.setAttribute(SIDEBAR_CONTRAST_ATTR, resolveSidebarContrastMode());
     };
-    link.addEventListener('load', applyContrast);
-    link.addEventListener('error', applyContrast);
+    link.addEventListener('load', applyTheme);
+    link.addEventListener('error', applyTheme);
     document.head.appendChild(link);
-    applyContrast();
+    applyTheme();
 
     // CSS var changes fire no DOM event, so also watch for live edits (e.g.
     // devtools style.setProperty) via <html>'s inline style attribute.
-    const observer = new MutationObserver(applyContrast);
+    const observer = new MutationObserver(applyTheme);
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] });
 
     return () => {
