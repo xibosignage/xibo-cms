@@ -256,6 +256,8 @@ export interface LayoutActionsProps {
   canSaveTemplate?: boolean;
   canTag?: boolean;
   formatDateTime: (value: DateLike) => string;
+  timeZone?: string;
+  locale?: string;
   onPreview?: (row: Layout) => void;
   onMiniPreview?: (row: Layout, kind: 'published' | 'draft') => void;
   onDelete: (id: number) => void;
@@ -515,6 +517,8 @@ export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[]
     t,
     showDescriptionId,
     formatDateTime,
+    timeZone,
+    locale,
     canTag = false,
     onTagClick,
     selectedTagIds,
@@ -608,14 +612,16 @@ export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[]
         let extraInfo = '';
 
         if (row.publishedDate) {
-          const published = DateTime.fromSQL(row.publishedDate);
+          const published = DateTime.fromSQL(row.publishedDate, { zone: timeZone });
           const diffMinutes = published.diff(DateTime.now(), 'minutes').minutes;
 
           if (diffMinutes < -5) {
             extraInfo = t('Publish failed.');
             badgeType = 'danger';
           } else {
-            extraInfo = `${t('Publishing')} ${published.toRelative()}`;
+            extraInfo = t('Publishing {{time}}', {
+              time: published.setLocale(locale ?? 'en').toRelative(),
+            });
             badgeType = 'warning';
           }
         }
