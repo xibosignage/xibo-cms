@@ -435,6 +435,7 @@ export default function Templates() {
               bulkActions={bulkActions}
               viewMode={null}
               getRowId={getRowId}
+              exportFileName={t('Templates')}
             />
           )}
         </div>

@@ -27,8 +27,16 @@ import '@fontsource/inter/500.css';
 import '@fontsource/inter/600.css';
 import './styles.css';
 import { LoginApp } from './LoginApp';
+import { SuspendedView } from './components/SuspendedView';
 import { UpgradePendingView } from './components/UpgradePendingView';
+import type { LoginConfig } from './types';
 import { publicPath } from './utils';
+
+function resolveComponent(config: LoginConfig) {
+  if (config.upgradeInProgress) return UpgradePendingView;
+  if (config.instanceSuspended) return SuspendedView;
+  return LoginApp;
+}
 
 // Guard: if window.__LOGIN_CONFIG__ is absent the page was not served by PHP
 // (e.g. Vite served login.html directly). Redirect to the real login page so
@@ -38,7 +46,7 @@ if (!window.__LOGIN_CONFIG__) {
 } else {
   const root = document.getElementById('login-root');
   if (root) {
-    const Component = window.__LOGIN_CONFIG__.upgradeInProgress ? UpgradePendingView : LoginApp;
+    const Component = resolveComponent(window.__LOGIN_CONFIG__);
     createRoot(root).render(
       <React.StrictMode>
         <Component />

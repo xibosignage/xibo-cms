@@ -795,7 +795,8 @@ class Schedule extends Base
         // assigning. Mirrors isEventEditable() semantics: view is sufficient when
         // SCHEDULE_WITH_VIEW_PERMISSION is enabled, otherwise edit is required.
         $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
-        foreach ($sanitizedParams->getIntArray('displayGroupIds', ['default' => []]) as $displayGroupId) {
+        $displayGroupIds = $sanitizedParams->getIntArray('displayGroupIds', ['default' => []]);
+        foreach ($displayGroupIds as $displayGroupId) {
             $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
             if ($scheduleWithView && !$this->getUser()->checkViewable($displayGroup)) {
@@ -806,6 +807,14 @@ class Schedule extends Base
             }
 
             $schedule->assignDisplayGroup($displayGroup);
+        }
+
+        // Defensive fallback for Synchronised Events: only needed when the caller omits
+        // displayGroupIds entirely (older client, API integration) - the UI itself always
+        // submits each Sync Group member's display-specific display group via
+        // displayGroupIds, handled by the loop above.
+        if (empty($displayGroupIds)) {
+            $this->assignSyncGroupDisplayGroups($schedule, $scheduleWithView);
         }
 
         if (!$schedule->isAlwaysDayPart()) {
@@ -1430,7 +1439,8 @@ class Schedule extends Base
         // cleared) lets the user re-save already-assigned groups without view/edit
         // access on each — mirrors the Campaign::edit() pattern.
         $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
-        foreach ($sanitizedParams->getIntArray('displayGroupIds', ['default' => []]) as $displayGroupId) {
+        $displayGroupIds = $sanitizedParams->getIntArray('displayGroupIds', ['default' => []]);
+        foreach ($displayGroupIds as $displayGroupId) {
             $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
             $isExisting = in_array($displayGroupId, $originalDisplayGroupIds);
 
@@ -1442,6 +1452,14 @@ class Schedule extends Base
             }
 
             $schedule->assignDisplayGroup($displayGroup);
+        }
+
+        // Defensive fallback for Synchronised Events: only needed when the caller omits
+        // displayGroupIds entirely (older client, API integration) - the UI itself always
+        // submits each Sync Group member's display-specific display group via
+        // displayGroupIds, handled by the loop above.
+        if (empty($displayGroupIds)) {
+            $this->assignSyncGroupDisplayGroups($schedule, $scheduleWithView);
         }
 
         if (!$schedule->isAlwaysDayPart()) {
@@ -2015,6 +2033,39 @@ class Schedule extends Base
             ->withStatus(200)
             ->withJson($schedule);
     }
+
+    /**
+     * Assign each Sync Group member's display-specific display group to the provided Sync
+     * Event. Without lkscheduledisplaygroup populated for a Sync Event, it would never be
+     * returned via XMDS, see ScheduleFactory::getForXmds(). assignDisplayGroup() is
+     * idempotent, so this is safe to call even where some groups are already assigned.
+     * @param \Xibo\Entity\Schedule $schedule
+     * @param bool $scheduleWithView mirrors isEventEditable() semantics: view is sufficient
+     *  when SCHEDULE_WITH_VIEW_PERMISSION is enabled, otherwise edit is required.
+     * @throws AccessDeniedException
+     * @throws NotFoundException
+     */
+    private function assignSyncGroupDisplayGroups(\Xibo\Entity\Schedule $schedule, bool $scheduleWithView): void
+    {
+        if (!$schedule->isSyncEvent() || empty($schedule->syncGroupId)) {
+            return;
+        }
+
+        $syncGroup = $this->syncGroupFactory->getById($schedule->syncGroupId);
+        foreach ($syncGroup->getSyncGroupMembers() as $syncDisplay) {
+            $syncDisplayGroup = $this->displayGroupFactory->getById($syncDisplay->displayGroupId);
+
+            if ($scheduleWithView && !$this->getUser()->checkViewable($syncDisplayGroup)) {
+                throw new AccessDeniedException(__('Access to one or more display groups denied'));
+            }
+            if (!$scheduleWithView && !$this->getUser()->checkEditable($syncDisplayGroup)) {
+                throw new AccessDeniedException(__('Access to one or more display groups denied'));
+            }
+
+            $schedule->assignDisplayGroup($syncDisplayGroup);
+        }
+    }
+
     /**
      * @param \Xibo\Entity\Schedule $schedule
      * @param ScheduleReminder $scheduleReminder

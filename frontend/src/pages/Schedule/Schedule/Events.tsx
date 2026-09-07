@@ -541,6 +541,7 @@ export default function Events() {
               onViewModeChange={setViewMode}
               availableViewModes={['table', 'calendar']}
               getRowId={getRowId}
+              tableLabel={t('Schedule')}
             />
           )}
         </div>

@@ -1419,8 +1419,24 @@ class DataSet extends Base
             $response,
             $this->getConfig()->getSetting('SENDFILE_MODE'),
             $tempFileName,
-            $dataSet->dataSet.'.csv'
+            $this->sanitizeFileName($dataSet->dataSet) . '.csv'
         )->withHeader('Content-Type', 'text/csv;charset=utf-8'));
+    }
+
+    /**
+     * Strip characters that are invalid in a filename and any trailing dots,
+     * so the value is safe to use as a download filename base (before the extension).
+     * @param string $name
+     * @return string
+     */
+    private function sanitizeFileName(string $name): string
+    {
+        $name = preg_replace('/[\x00-\x1F\x7F]/', ' ', $name);
+        $name = preg_replace('/[\/\\\\:*?"<>|]/', '', $name);
+        $name = trim(preg_replace('/\s+/', ' ', $name));
+        $name = rtrim($name, ' .');
+
+        return $name !== '' ? $name : 'dataset';
     }
 
     /**

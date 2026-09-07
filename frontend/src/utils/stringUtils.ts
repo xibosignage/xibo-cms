@@ -56,3 +56,14 @@ export function incrementFileName(fileName: string): string {
 
   return `${incrementName(name)}${ext}`;
 }
+
+// Strips characters invalid in filenames and trailing dots, so a name is safe
+// to use as a download filename base (before the extension is appended).
+export function sanitizeFileName(name: string): string {
+  return name
+    .replace(/[/\\:*?"<>|]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\.+$/, '')
+    .trim();
+}

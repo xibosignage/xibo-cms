@@ -302,6 +302,7 @@ export default function Fonts() {
               bulkActions={bulkActions}
               viewMode={null}
               getRowId={getRowId}
+              exportFileName={t('Fonts')}
             />
           )}
         </div>

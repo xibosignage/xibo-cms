@@ -440,6 +440,7 @@ export default function Playlist() {
               bulkActions={bulkActions}
               viewMode={null}
               getRowId={getRowId}
+              exportFileName={t('Playlists')}
             />
           )}
         </div>

@@ -28,7 +28,6 @@ use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Psr\Log\LoggerInterface;
 use Slim\App as App;
-use Slim\Routing\RouteContext;
 use Xibo\Helper\RouteLogProcessor;
 
 /**
@@ -65,25 +64,16 @@ class Log implements Middleware
     /**
      * @param LoggerInterface $logger
      * @param Request $request
-     * @param string $basePath Fallback base path to strip when no route is matched (e.g. on 404s)
+     * @param string $basePath Base path to strip from the request path, if present
      */
     public static function addLogProcessorToLogger(
         LoggerInterface $logger,
         Request $request,
         string $basePath = '',
     ): void {
-        try {
-            $route = RouteContext::fromRequest($request)->getRoute();
-            $path = $route?->getPattern();
-        } catch (\RuntimeException $e) {
-            $path = null;
-        }
-
-        if ($path === null) {
-            $path = $request->getUri()->getPath();
-            if ($basePath !== '' && str_starts_with($path, $basePath)) {
-                $path = substr($path, strlen($basePath)) ?: '/';
-            }
+        $path = $request->getUri()->getPath();
+        if ($basePath !== '' && str_starts_with($path, $basePath)) {
+            $path = substr($path, strlen($basePath)) ?: '/';
         }
 
         $logger->pushProcessor(new RouteLogProcessor(

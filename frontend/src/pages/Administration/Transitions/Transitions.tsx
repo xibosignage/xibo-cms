@@ -146,6 +146,7 @@ export default function Transitions() {
               columnVisibility={columnVisibility}
               onColumnVisibilityChange={setColumnVisibility}
               viewMode={null}
+              exportFileName={t('Transitions')}
             />
           )}
         </div>

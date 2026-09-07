@@ -171,6 +171,7 @@ export default function ProofOfPlayResults({
             columnVisibility={columnVisibility}
             onColumnVisibilityChange={onColumnVisibilityChange}
             getRowId={(row, index) => `${row.displayId}-${row.layoutId}-${row.widgetId}-${index}`}
+            exportFileName={t('Proof of Play')}
           />
         )}
       </div>

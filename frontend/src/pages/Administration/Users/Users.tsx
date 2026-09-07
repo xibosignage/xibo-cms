@@ -301,6 +301,7 @@ export default function Users() {
               viewMode={null}
               getRowId={getRowId}
               bulkActions={bulkActions}
+              exportFileName={t('Users')}
             />
           )}
         </div>

@@ -300,6 +300,7 @@ export default function Tasks() {
               bulkActions={bulkActions}
               viewMode={null}
               getRowId={getRowId}
+              exportFileName={t('Tasks')}
             />
           )}
         </div>

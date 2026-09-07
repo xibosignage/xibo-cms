@@ -252,9 +252,9 @@ textarea {
 }
 
 /* ------------------ *
- * Upgrade-pending    *
+ * Message view       *
  * ------------------ */
-.login-upgrade {
+.login-message {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -262,26 +262,29 @@ textarea {
   gap: 16px;
 }
 
-.login-upgrade-icon {
+.login-message-icon {
   width: 44px;
   height: 44px;
   color: var(--brand-primary, #0e70f6);
 }
 
-.login-upgrade-icon svg {
+.login-message-icon svg {
   width: 100%;
   height: 100%;
+}
+
+.login-message-icon--spin svg {
   animation: spin 1.2s linear infinite;
 }
 
-.login-upgrade-title {
+.login-message-title {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
   color: #1f2937;
 }
 
-.login-upgrade-message {
+.login-message-message {
   margin: 0;
   font-size: 14px;
   line-height: 1.5;

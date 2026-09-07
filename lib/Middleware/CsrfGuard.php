@@ -31,6 +31,7 @@ use Slim\App as App;
 use Slim\Routing\RouteContext;
 use Xibo\Helper\Environment;
 use Xibo\Helper\HttpsDetect;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Support\Exception\ExpiredException;
 
 class CsrfGuard implements Middleware
@@ -73,7 +74,7 @@ class CsrfGuard implements Middleware
     {
         $container = $this->app->getContainer();
 
-        $token = self::issueToken($this->key);
+        $token = self::issueToken($this->key, $container->get('configService'));
 
         // Validate the CSRF token.
         if (in_array($request->getMethod(), ['POST', 'PUT', 'DELETE'])) {
@@ -151,9 +152,15 @@ class CsrfGuard implements Middleware
      * that ahead of routing/CsrfGuard).
      *
      * @param string $key Session key the token is stored under.
+     * @param ConfigServiceInterface|null $config Used to verify a forwarded-https claim against
+     *                                             the trusted-proxy list for the cookie's Secure
+     *                                             flag (see HttpsDetect::isHttpsTrusted()) — omit
+     *                                             only when genuinely unavailable (e.g. a render
+     *                                             path with no container access), never as a
+     *                                             shortcut.
      * @return string
      */
-    public static function issueToken(string $key = 'csrfToken'): string
+    public static function issueToken(string $key = 'csrfToken', ?ConfigServiceInterface $config = null): string
     {
         $token = $_SESSION[$key] ?? null;
 
@@ -171,7 +178,7 @@ class CsrfGuard implements Middleware
                     'expires' => 0,
                     'path' => '/',
                     'domain' => '',
-                    'secure' => HttpsDetect::isHttps(),
+                    'secure' => HttpsDetect::isHttpsTrusted($config),
                     'httponly' => false,
                     'samesite' => 'Lax',
                 ]

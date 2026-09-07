@@ -23,8 +23,15 @@ declare global {
   interface Window {
     // Base where built assets + public files (locales) are served, injected by the PHP shell.
     __XIBO_ASSET_BASE__?: string;
+    // App-shell config injected by the PHP shell (app-spa.twig) — currently just the
+    // 'partial' instance-suspension flag; see RootLayout.tsx's suspension banner.
+    __XIBO_APP_CONFIG__?: { partiallySuspended?: boolean };
   }
 }
+
+// Whether the instance is in the 'partial' suspension state (see window.__XIBO_APP_CONFIG__
+// above). Not present on the raw Vite dev server (no shell → no global), so defaults to false.
+export const partiallySuspended: boolean = window.__XIBO_APP_CONFIG__?.partiallySuspended ?? false;
 
 // Root URI injected by PHP via <meta name="public-path"> (login-spa.twig / app-spa.twig).
 // e.g. '/' for a root install, '/cms/' for a subfolder install.

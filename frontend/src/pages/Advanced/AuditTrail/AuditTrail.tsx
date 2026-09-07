@@ -179,6 +179,7 @@ export default function AuditTrail() {
               bulkActions={[]}
               viewMode={null}
               onRefresh={handleRefresh}
+              exportFileName={t('Audit Trail')}
             />
           )}
         </div>

@@ -30,6 +30,7 @@ import Modal from '../ui/modals/Modal';
 
 import { withPublicPath } from '@/config/publicPath';
 import http from '@/lib/api';
+import { listenForLogout } from '@/lib/auth-broadcast';
 import { authEvents } from '@/lib/auth-events';
 
 export function SessionExpiredModal() {
@@ -45,6 +46,12 @@ export function SessionExpiredModal() {
     const handleExpired = () => setIsOpen(true);
     authEvents.addEventListener('session-expired', handleExpired);
     return () => authEvents.removeEventListener('session-expired', handleExpired);
+  }, []);
+
+  // Listen for a sibling tab logging out, so this tab stops looking authenticated
+  // immediately instead of waiting for its own next poll/focus check.
+  useEffect(() => {
+    return listenForLogout(() => setIsOpen(true));
   }, []);
 
   const checkSession = async () => {

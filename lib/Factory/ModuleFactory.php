@@ -28,6 +28,7 @@ use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Module;
 use Xibo\Entity\ModuleTemplate;
 use Xibo\Entity\Widget;
+use Xibo\Helper\GeoHelper;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Widget\DataType\DataTypeInterface;
@@ -171,6 +172,10 @@ class ModuleFactory extends BaseFactory
                     $latitude = $dataProvider->getDisplayLatitude() ?: $latitude;
                     $longitude = $dataProvider->getDisplayLongitude() ?: $longitude;
                 }
+
+                // Round the coordinates so that nearby displays share the same cache key.
+                $latitude = GeoHelper::roundCoordinate($latitude) ?? $latitude;
+                $longitude = GeoHelper::roundCoordinate($longitude) ?? $longitude;
 
                 // Parse the cache key for variables.
                 $matches = [];

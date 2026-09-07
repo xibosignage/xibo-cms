@@ -363,6 +363,7 @@ export default function ModuleTemplates() {
               onColumnVisibilityChange={setColumnVisibility}
               viewMode={null}
               getRowId={getRowId}
+              exportFileName={t('Module Templates')}
             />
           )}
         </div>

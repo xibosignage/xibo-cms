@@ -276,6 +276,7 @@ export default function Tags() {
               bulkActions={bulkActions}
               viewMode={null}
               getRowId={getRowId}
+              exportFileName={t('Tags')}
             />
           )}
         </div>

@@ -2211,28 +2211,39 @@ class Layout implements \JsonSerializable
 
             // Layout auto Publish
             if ($this->config->getSetting('DEFAULT_LAYOUT_AUTO_PUBLISH_CHECKB') == 1 && $this->isChild()) {
-                // we are editing a draft layout, the published date is set on the original layout, therefore we
-                // need our parent.
-                $parent = $this->layoutFactory->loadById($this->parentId);
+                try {
+                    // we are editing a draft layout, the published date is set on the original layout, therefore we
+                    // need our parent.
+                    $parent = $this->layoutFactory->loadById($this->parentId);
 
-                $layoutCurrentPublishedDate = DateFormatHelper::createFromTimestamp($parent->publishedDate);
-                $newPublishDateString =  Carbon::now()->addMinutes(30)->format(DateFormatHelper::getSystemFormat());
-                $newPublishDate = Carbon::createFromTimeString($newPublishDateString);
+                    // publishedDate is only set when the parent has an explicit manual/scheduled publish date -
+                    // a layout published "now" leaves it null, which we treat as "nothing scheduled yet".
+                    $layoutCurrentPublishedDate = $parent->publishedDate === null
+                        ? null
+                        : DateFormatHelper::createFromTimestamp($parent->publishedDate);
+                    $newPublishDateString = Carbon::now()->addMinutes(30)->format(DateFormatHelper::getSystemFormat());
+                    $newPublishDate = Carbon::createFromTimeString($newPublishDateString);
 
-                if ($layoutCurrentPublishedDate > $newPublishDate) {
-                    // Layout is set to Publish manually on a date further than 30 min from now, we don't touch it in
-                    // this case.
-                    $this->getLog()->debug('Layout is set to Publish manually on a date further than 30 min'
-                        . ' from now, do not update');
-                } else if ($parent->publishedDate != null
-                    && $layoutCurrentPublishedDate < Carbon::now()->subMinutes(5)
-                ) {
-                    // Layout is set to Publish manually at least 5 min in the past at the moment, we expect the
-                    // Regular Maintenance to build it before that happens
-                    $this->getLog()->debug('Layout should be built by Regular Maintenance');
-                } else {
-                    $parent->setPublishedDate($newPublishDateString);
-                    $this->getLog()->debug('Layout set to automatically Publish on ' . $newPublishDateString);
+                    if ($layoutCurrentPublishedDate !== null && $layoutCurrentPublishedDate > $newPublishDate) {
+                        // Layout is set to Publish manually on a date further than 30 min from now, we don't
+                        // touch it in this case.
+                        $this->getLog()->debug('Layout is set to Publish manually on a date further than 30 min'
+                            . ' from now, do not update');
+                    } else if ($layoutCurrentPublishedDate !== null
+                        && $layoutCurrentPublishedDate < Carbon::now()->subMinutes(5)
+                    ) {
+                        // Layout is set to Publish manually at least 5 min in the past at the moment, we expect the
+                        // Regular Maintenance to build it before that happens
+                        $this->getLog()->debug('Layout should be built by Regular Maintenance');
+                    } else {
+                        $parent->setPublishedDate($newPublishDateString);
+                        $this->getLog()->debug('Layout set to automatically Publish on ' . $newPublishDateString);
+                    }
+                } catch (\Exception $e) {
+                    // This is an ancillary feature relative to the XLF build itself - never let a failure here
+                    // abort the build (and strand the caller's concurrency lock, which is only released on success).
+                    $this->getLog()->error('Layout auto Publish failed for Layout ' . $this->layoutId
+                        . ', parentId ' . $this->parentId . '. error: ' . $e->getMessage());
                 }
             }
 
