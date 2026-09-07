@@ -533,7 +533,10 @@ lD.selectObject =
             );
           } else {
             // Add media queue to playlist
-            lD.addMediaToPlaylist(playlistId, res);
+            lD.addMediaToPlaylist(
+              playlistId, res, null, false,
+              true,
+            );
           }
         });
       });
@@ -1914,6 +1917,9 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
      * @param {*} draggable - Dragged object
      * @param {string} mediaId - Media id
      * @param {boolean} drawerWidget - Is a drawer widget
+     * @param {boolean} chainRegionCreate
+     *  - If reverting this add should also revert the region
+     *  it was just created for
      * @return {Promise}
      */
     const importOrAddMedia = function(
@@ -1921,6 +1927,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
       draggable,
       mediaId,
       drawerWidget = false,
+      chainRegionCreate = false,
     ) {
       return new Promise((resolve, reject) => {
         if (fromProvider) {
@@ -1931,14 +1938,18 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             if (res.length === 0) {
               reject(res);
             } else {
-              lD.addMediaToPlaylist(playlistId, res, null, drawerWidget)
+              lD.addMediaToPlaylist(
+                playlistId, res, null, drawerWidget, chainRegionCreate,
+              )
                 .then((_res) => {
                   resolve(_res);
                 });
             }
           });
         } else {
-          lD.addMediaToPlaylist(playlistId, mediaId, null, drawerWidget)
+          lD.addMediaToPlaylist(
+            playlistId, mediaId, null, drawerWidget, chainRegionCreate,
+          )
             .then((_res) => {
               resolve(_res);
             });
@@ -2130,6 +2141,8 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             res.data.regionPlaylist.playlistId,
             draggable,
             mediaId,
+            false,
+            true,
           ).catch((_error) => {
             // Delete new region
             lD.layout.deleteObject('region', res.data.regionPlaylist.regionId);
@@ -2945,7 +2958,8 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
               false,
               true,
               true,
-              false,
+              true,
+              true,
             ).then(itemAdded);
           } else {
             // If we're adding a specific playlist, we need to create a
@@ -2995,6 +3009,9 @@ lD.getUploadDialogClassName = function() {
  * @param {boolean} reloadData If the layout should be reloaded
  * @param {boolean} selectNewWidget Select the new widget after being added
  * @param {boolean} addToHistory Add change to history?
+ * @param {boolean} chainRegionCreate
+ *  - If reverting this add should also revert the region
+ *  it was just created for
  * @return {Promise} Promise
  */
 lD.addModuleToPlaylist = function(
@@ -3008,6 +3025,7 @@ lD.addModuleToPlaylist = function(
   reloadData = true,
   selectNewWidget = true,
   addToHistory = true,
+  chainRegionCreate = false,
 ) {
   if (moduleData.regionSpecific == 0) {
     // Upload form if not region specific
@@ -3118,6 +3136,7 @@ lD.addModuleToPlaylist = function(
           type: linkToAPI.type,
         },
         addToHistory: addToHistory,
+        chainRevertWithPrevious: chainRegionCreate,
       },
     ).then((res) => { // Success
       // Check if we added a element
@@ -3250,6 +3269,9 @@ lD.openUploadForm = function({
  * @param {Array.<number>} media
  * @param {number=} addToPosition
  * @param {boolean} drawerWidget If the widget is in the drawer
+ * @param {boolean} chainRegionCreate
+ *  - If reverting this add should also revert the region
+ *  it was just created for
  * @return {Promise} Promise
  */
 lD.addMediaToPlaylist = function(
@@ -3257,6 +3279,7 @@ lD.addMediaToPlaylist = function(
   media,
   addToPosition = null,
   drawerWidget = false,
+  chainRegionCreate = false,
 ) {
   // Get media Id
   let mediaToAdd = {};
@@ -3298,6 +3321,7 @@ lD.addMediaToPlaylist = function(
     {
       updateTargetId: true,
       updateTargetType: 'widget',
+      chainRevertWithPrevious: chainRegionCreate,
     },
   ).then((res) => { // Success
     // Save the new widget as temporary
