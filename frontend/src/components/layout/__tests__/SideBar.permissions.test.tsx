@@ -44,10 +44,15 @@ import {
   superAdminUser,
 } from './sidebarTestUtils';
 
+import { testQueryClient } from '@/setupTests';
 import { type User } from '@/types/user';
 import { hasFeature } from '@/utils/permissions';
 
 describe('SidebarMenu — Permissions', () => {
+  beforeEach(() => {
+    testQueryClient.clear();
+  });
+
   // ====================================================================
   // Integration tests: render the full SidebarMenu component and verify
   // that the correct nav items are visible/hidden for each user role.
