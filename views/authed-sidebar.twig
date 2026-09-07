@@ -54,7 +54,7 @@
         {% if countViewable > 0 %}
             <li class="sidebar-title"><a>{% trans "Displays" %}</a></li>
             {% if currentUser.featureEnabled("displays.view") %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}displays/displays">{% trans "Displays" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}displays/all-displays">{% trans "Displays" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("displaygroup.view") %}
