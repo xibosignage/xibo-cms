@@ -106,8 +106,7 @@ class ResolutionFactory extends BaseFactory
     public function getClosestMatchingResolution($width, $height): Resolution
     {
         $area = $width * $height;
-        $sort = ['ABS(' . $area . ' - (`intended_width` * `intended_height`))'];
-        $sort[] = $width > $height ? '`intended_width` DESC' : '`intended_height` DESC';
+        $sort = ['areaDiff', $width > $height ? 'intendedWidth DESC' : 'intendedHeight DESC'];
 
         $resolutions = $this->query(
             $sort,
@@ -116,6 +115,11 @@ class ResolutionFactory extends BaseFactory
                 'enabled' => 1,
                 'start' => 0,
                 'length' => 1
+            ],
+            [
+                'areaDiff' => 'ABS(' . $area . ' - (`intended_width` * `intended_height`))',
+                'intendedWidth' => '`intended_width`',
+                'intendedHeight' => '`intended_height`',
             ]
         );
 
@@ -148,7 +152,7 @@ class ResolutionFactory extends BaseFactory
         return $resolutions[0];
     }
 
-    public function query($sortOrder = null, $filterBy = [])
+    public function query($sortOrder = null, $filterBy = [], $customColumns = [])
     {
         $parsedFilter = $this->getSanitizer($filterBy);
 
@@ -157,6 +161,7 @@ class ResolutionFactory extends BaseFactory
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
+            $customColumns,
             defaultSort: ['resolution ASC'],
             uniqueColumn: 'resolutionId'
         );
