@@ -207,42 +207,31 @@ describe('ScheduleEventModal - Optional tab state after switching daypart back t
     expect(screen.queryByRole('button', { name: 'Repeats' })).not.toBeInTheDocument();
   });
 
-  // The Repeats tab button correctly disappears (see test above) - but
-  // nothing ever resets `optionalTab` away from 'repeats', so the Repeats
-  // tab's own form controls are left rendered with no active tab button
-  // pointing at them. See
-  // bugs-found-merged/schedule-modal-stale-repeat-reminder-survives-daypart-switch-to-always.md.
-  // Kept as test.fails (not test.skip) so a real fix surfaces here immediately.
-  test.fails(
-    'the Repeats tab body should not remain rendered once its tab button is hidden',
-    async () => {
-      const user = userEvent.setup();
-      await walkToOptionalWithStaleWeeklyRepeat(user);
+  // Fixed: switching the daypart back to Always now clears the recurrence
+  // fields on the draft (see the Dayparting `onSelect` handler in
+  // ScheduleEventModal.tsx), so the Repeats tab body no longer stays
+  // rendered once its tab button is hidden.
+  test('the Repeats tab body should not remain rendered once its tab button is hidden', async () => {
+    const user = userEvent.setup();
+    await walkToOptionalWithStaleWeeklyRepeat(user);
 
-      expect(screen.queryByRole('combobox', { name: 'Repeats' })).not.toBeInTheDocument();
-    },
-  );
+    expect(screen.queryByRole('combobox', { name: 'Repeats' })).not.toBeInTheDocument();
+  });
 
-  // The stale weekly repeat set while on the Custom daypart should not
-  // survive switching back to Always - the user has no way left in the UI
-  // to see or clear it, so it must not be part of the saved event. See
-  // bugs-found-merged/schedule-modal-stale-repeat-reminder-survives-daypart-switch-to-always.md.
-  // Kept as test.fails (not test.skip) so a real fix surfaces here immediately.
-  test.fails(
-    'a repeat configured before switching back to Always must not be sent to createEvent',
-    async () => {
-      const user = userEvent.setup();
-      await walkToOptionalWithStaleWeeklyRepeat(user);
+  // Fixed alongside the above - the recurrence fields are cleared on the
+  // draft itself, so the stale weekly repeat no longer reaches createEvent.
+  test('a repeat configured before switching back to Always must not be sent to createEvent', async () => {
+    const user = userEvent.setup();
+    await walkToOptionalWithStaleWeeklyRepeat(user);
 
-      await user.click(screen.getByRole('button', { name: 'Finish' }));
+    await user.click(screen.getByRole('button', { name: 'Finish' }));
 
-      expect(createEvent).toHaveBeenCalledTimes(1);
-      const payload = vi.mocked(createEvent).mock.calls[0]![0];
+    expect(createEvent).toHaveBeenCalledTimes(1);
+    const payload = vi.mocked(createEvent).mock.calls[0]![0];
 
-      expect(payload.recurrenceType).toBeUndefined();
-      expect(payload.recurrenceDetail).toBeUndefined();
-    },
-  );
+    expect(payload.recurrenceType).toBeUndefined();
+    expect(payload.recurrenceDetail).toBeUndefined();
+  });
 
   // Same already-correct half of the gate as the Repeats button test above,
   // for the Reminder tab. Kept as a normal test for the same reason.
@@ -253,8 +242,10 @@ describe('ScheduleEventModal - Optional tab state after switching daypart back t
     expect(screen.queryByRole('button', { name: 'Reminder' })).not.toBeInTheDocument();
   });
 
-  // The Reminder tab is gated by the same condition as Repeats, so it has
-  // the identical bug: its body keeps rendering with no active tab button.
+  // The Reminder tab is gated by the same condition as Repeats, and had the
+  // identical bug - but only the Repeats side has been fixed so far (the
+  // Dayparting `onSelect` handler in ScheduleEventModal.tsx clears the
+  // recurrence fields, not `draft.reminders`), so this half is still open.
   // See bugs-found-merged/schedule-modal-stale-repeat-reminder-survives-daypart-switch-to-always.md.
   // Kept as test.fails (not test.skip) so a real fix surfaces here immediately.
   test.fails(
@@ -268,7 +259,8 @@ describe('ScheduleEventModal - Optional tab state after switching daypart back t
   );
 
   // A reminder configured while on the Custom daypart should not survive
-  // switching back to Always - same data-integrity issue as the repeat. See
+  // switching back to Always - same data-integrity issue as the repeat, but
+  // still unfixed for reminders (see comment above). See
   // bugs-found-merged/schedule-modal-stale-repeat-reminder-survives-daypart-switch-to-always.md.
   // Kept as test.fails (not test.skip) so a real fix surfaces here immediately.
   test.fails(
