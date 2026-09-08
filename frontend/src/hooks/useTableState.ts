@@ -79,12 +79,7 @@ export function useTableState<TFilters>(
     // swallowed and isFolderIdHydrated is always set in .finally().
     fetchUserPreference<number | null>(folderIdKey)
       .then((stored) => {
-        if (
-          isActive &&
-          !hasInteractedWithFolderRef.current &&
-          stored !== null &&
-          stored !== undefined
-        ) {
+        if (isActive && !hasInteractedWithFolderRef.current && stored !== undefined) {
           setFolderIdState(stored);
         }
       })

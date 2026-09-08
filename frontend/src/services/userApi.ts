@@ -113,23 +113,23 @@ export interface FetchPreferenceResponse {
 
 export async function fetchUserPreference<T = Record<string, unknown>>(
   preferenceKey: string,
-): Promise<T | null> {
+): Promise<T | undefined> {
   const response = await http.get<FetchPreferenceResponse>('/user/pref', {
     params: { preference: preferenceKey },
   });
 
   const valueString = response.data?.value;
 
-  if (valueString) {
-    try {
-      return JSON.parse(valueString);
-    } catch (error) {
-      console.error('Failed to parse user preference:', error);
-      return null;
-    }
+  if (valueString === undefined) {
+    return undefined;
   }
 
-  return null;
+  try {
+    return JSON.parse(valueString);
+  } catch (error) {
+    console.error('Failed to parse user preference:', error);
+    return undefined;
+  }
 }
 
 export function autoSubmitPrefKey(formId: string): string {
