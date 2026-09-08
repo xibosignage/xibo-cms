@@ -594,7 +594,7 @@ class MediaFactory extends BaseFactory
                `user`.email AS userEmail,
                `folder`.folderName,
             ';
-        $select .= '     (SELECT GROUP_CONCAT(DISTINCT `group`.group)
+        $select .= '     (SELECT GROUP_CONCAT(DISTINCT `group`.group SEPARATOR \'|~|\')
                               FROM `permission`
                                 INNER JOIN `permissionentity`
                                 ON `permissionentity`.entityId = permission.entityId

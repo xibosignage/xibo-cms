@@ -2316,7 +2316,7 @@ class LayoutFactory extends BaseFactory
             $select .= ' NULL as displayOrder, ';
         }
 
-        $select .= '     (SELECT GROUP_CONCAT(DISTINCT `group`.group)
+        $select .= '     (SELECT GROUP_CONCAT(DISTINCT `group`.group SEPARATOR \'|~|\')
                           FROM `permission`
                             INNER JOIN `permissionentity`
                             ON `permissionentity`.entityId = permission.entityId

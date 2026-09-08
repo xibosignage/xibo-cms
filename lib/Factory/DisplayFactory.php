@@ -353,7 +353,7 @@ class DisplayFactory extends BaseFactory
                   `display`.lanIpAddress,
                   `display`.syncGroupId,
                   (SELECT COUNT(*) FROM player_faults WHERE player_faults.displayId = display.displayId) AS countFaults,
-                  (SELECT GROUP_CONCAT(DISTINCT `group`.group)
+                  (SELECT GROUP_CONCAT(DISTINCT `group`.group SEPARATOR \'|~|\')
                     FROM `permission`
                         INNER JOIN `permissionentity`
                             ON `permissionentity`.entityId = permission.entityId

@@ -117,7 +117,7 @@ class CommandFactory extends BaseFactory
                 `lkcommanddisplayprofile`.createAlertOn AS createAlertOnDisplayProfile ';
         }
 
-        $select .= ' , (SELECT GROUP_CONCAT(DISTINCT `group`.group)
+        $select .= ' , (SELECT GROUP_CONCAT(DISTINCT `group`.group SEPARATOR \'|~|\')
                           FROM `permission`
                             INNER JOIN `permissionentity`
                             ON `permissionentity`.entityId = permission.entityId

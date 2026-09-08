@@ -232,7 +232,7 @@ class DataSetFactory extends BaseFactory
             user.userName AS owner,
             folder.folderName,
             (
-              SELECT GROUP_CONCAT(DISTINCT `group`.group)
+              SELECT GROUP_CONCAT(DISTINCT `group`.group SEPARATOR \'|~|\')
                   FROM `permission`
                     INNER JOIN `permissionentity`
                     ON `permissionentity`.entityId = permission.entityId

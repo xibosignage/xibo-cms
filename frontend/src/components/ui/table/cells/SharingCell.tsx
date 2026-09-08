@@ -44,6 +44,7 @@ interface SharingCellProps {
 }
 
 const GAP_PX = 4;
+const GROUP_SEPARATOR = '|~|';
 
 function parseGroups(groups?: string | null) {
   if (!groups) {
@@ -51,7 +52,7 @@ function parseGroups(groups?: string | null) {
   }
 
   return groups
-    .split(',')
+    .split(GROUP_SEPARATOR)
     .map((entry) => entry.trim())
     .filter(Boolean);
 }

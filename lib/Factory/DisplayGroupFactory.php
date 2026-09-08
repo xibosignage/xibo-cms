@@ -328,7 +328,7 @@ class DisplayGroupFactory extends BaseFactory
                 `displaygroup`.ref4,
                 `displaygroup`.ref5,
                 (
-                    SELECT GROUP_CONCAT(DISTINCT `group`.group)
+                    SELECT GROUP_CONCAT(DISTINCT `group`.group SEPARATOR \'|~|\')
                         FROM `permission`
                         INNER JOIN `permissionentity`
                             ON `permissionentity`.entityId = permission.entityId
