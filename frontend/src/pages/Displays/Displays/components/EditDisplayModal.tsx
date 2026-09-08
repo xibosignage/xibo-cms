@@ -894,6 +894,7 @@ export default function EditDisplayModal({
       const schema = getEditDisplaySchema(t);
       const result = schema.safeParse({
         display: draft.display,
+        license: draft.license,
         description: draft.description || undefined,
         latitude: draft.latitude ?? undefined,
         longitude: draft.longitude ?? undefined,
@@ -1221,6 +1222,7 @@ export default function EditDisplayModal({
                 placeholder=" "
                 value={draft.license}
                 onChange={(v) => set('license', v)}
+                error={fieldErrors.license}
               />
               <TextInput
                 name="description"
