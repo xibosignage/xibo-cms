@@ -62,6 +62,7 @@ interface DisplayModalsProps {
     handleRefresh: () => Promise<unknown>;
     deleteError: string | null;
     isDeleting: boolean;
+    isMoving: boolean;
     isActionPending: boolean;
     actionError: string | null;
   };
@@ -156,6 +157,7 @@ export function DisplayModals({ actions, selection, handlers }: DisplayModalsPro
           onConfirm={handlers.handleConfirmMove}
           items={selection.itemsToMove.map((d) => ({ ...d, folderId: d.folderId ?? 0 }))}
           entityLabel={t('Displays')}
+          isLoading={actions.isMoving}
         />
       )}
 

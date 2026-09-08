@@ -68,6 +68,7 @@ export function useDisplaysActions({
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
+  const [isMoving, setIsMoving] = useState(false);
   const [isActionPending, setIsActionPending] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -112,6 +113,7 @@ export function useDisplaysActions({
       return;
     }
 
+    setIsMoving(true);
     try {
       const results: ApiResult[] = [];
       for (const item of itemsToMove) {
@@ -148,6 +150,8 @@ export function useDisplaysActions({
           ? error.response.data.message
           : t('Failed to move one or more displays.'),
       );
+    } finally {
+      setIsMoving(false);
     }
   };
 
@@ -345,6 +349,7 @@ export function useDisplaysActions({
     confirmDelete,
     confirmAuthorise,
     handleConfirmMove,
+    isMoving,
     isActionPending,
     actionError,
     setActionError,
