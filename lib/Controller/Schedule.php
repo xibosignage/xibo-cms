@@ -690,7 +690,8 @@ class Schedule extends Base
         $schedule->syncGroupId = $sanitizedParams->getInt('syncGroupId');
         $schedule->name = $sanitizedParams->getString('name');
 
-        // Verify the caller has the appropriate permission on the supplied Campaign/Display Group.
+        // $scheduleWithView gates the Display Group permission checks further below -
+        // SCHEDULE_WITH_VIEW_PERMISSION is a Display-scoped setting, it does not apply to Campaigns.
         $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
 
         // Set the parentCampaignId for campaign events
@@ -700,36 +701,33 @@ class Schedule extends Base
             // getById() is fetched with permission checking disabled (its default), so the
             // DB lookup alone does not gate access - the campaign must be checked explicitly.
             $campaign = $this->campaignFactory->getById($schedule->campaignId);
+
+            // Check permission before any business-rule check on the campaign
+            if (!$this->getUser()->checkViewable($campaign)) {
+                throw new AccessDeniedException(__('Access to the Campaign denied'));
+            }
+
             if ($campaign->type === 'ad') {
                 throw new InvalidArgumentException(
                     __('Direct scheduling of an Ad Campaign is not allowed'),
                     'campaignId'
                 );
             }
-
-            if ($scheduleWithView && !$this->getUser()->checkViewable($campaign)) {
-                throw new AccessDeniedException(__('Access to the Campaign denied'));
-            }
-            if (!$scheduleWithView && !$this->getUser()->checkEditable($campaign)) {
-                throw new AccessDeniedException(__('Access to the Campaign denied'));
-            }
         } else {
             $schedule->parentCampaignId = null;
             if (!empty($schedule->campaignId)) {
                 // e.g. Layout events, which also reference a (layout-specific) Campaign directly.
                 $campaign = $this->campaignFactory->getById($schedule->campaignId);
+
+                if (!$this->getUser()->checkViewable($campaign)) {
+                    throw new AccessDeniedException(__('Access to the Campaign denied'));
+                }
+
                 if ($campaign->isLayoutSpecific === 0) {
                     throw new InvalidArgumentException(
                         __('Cannot schedule Campaign in selected event type, please select a Layout instead.'),
                         'campaignId'
                     );
-                }
-
-                if ($scheduleWithView && !$this->getUser()->checkViewable($campaign)) {
-                    throw new AccessDeniedException(__('Access to the Campaign denied'));
-                }
-                if (!$scheduleWithView && !$this->getUser()->checkEditable($campaign)) {
-                    throw new AccessDeniedException(__('Access to the Campaign denied'));
                 }
             }
         }
@@ -1347,7 +1345,8 @@ class Schedule extends Base
             $schedule->campaignId = null;
         }
 
-        // Verify the caller has the appropriate permission on the supplied Campaign/Display Group.
+        // $scheduleWithView gates the Display Group permission checks further below -
+        // SCHEDULE_WITH_VIEW_PERMISSION is a Display-scoped setting, it does not apply to Campaigns.
         $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
         $isCampaignUnchanged = ($oldSchedule->campaignId == $schedule->campaignId);
 
@@ -1360,6 +1359,12 @@ class Schedule extends Base
             // getById() is fetched with permission checking disabled (its default), so the
             // DB lookup alone does not gate access - the campaign must be checked explicitly.
             $campaign = $this->campaignFactory->getById($schedule->campaignId);
+
+            // Check permission before any business-rule check on the campaign
+            if (!$isCampaignUnchanged && !$this->getUser()->checkViewable($campaign)) {
+                throw new AccessDeniedException(__('Access to the Campaign denied'));
+            }
+
             if ($campaign->type === 'ad') {
                 throw new InvalidArgumentException(
                     __('Direct scheduling of an Ad Campaign is not allowed'),
@@ -1373,29 +1378,20 @@ class Schedule extends Base
                     'campaignId'
                 );
             }
-
-            if ($scheduleWithView && !$isCampaignUnchanged && !$this->getUser()->checkViewable($campaign)) {
-                throw new AccessDeniedException(__('Access to the Campaign denied'));
-            }
-            if (!$scheduleWithView && !$isCampaignUnchanged && !$this->getUser()->checkEditable($campaign)) {
-                throw new AccessDeniedException(__('Access to the Campaign denied'));
-            }
         } else {
             $schedule->parentCampaignId = null;
             if (!empty($schedule->campaignId)) {
                 $campaign = $this->campaignFactory->getById($schedule->campaignId);
+
+                if (!$isCampaignUnchanged && !$this->getUser()->checkViewable($campaign)) {
+                    throw new AccessDeniedException(__('Access to the Campaign denied'));
+                }
+
                 if ($campaign->isLayoutSpecific === 0) {
                     throw new InvalidArgumentException(
                         __('Cannot schedule Campaign in selected event type, please select a Layout instead.'),
                         'campaignId'
                     );
-                }
-
-                if ($scheduleWithView && !$isCampaignUnchanged && !$this->getUser()->checkViewable($campaign)) {
-                    throw new AccessDeniedException(__('Access to the Campaign denied'));
-                }
-                if (!$scheduleWithView && !$isCampaignUnchanged && !$this->getUser()->checkEditable($campaign)) {
-                    throw new AccessDeniedException(__('Access to the Campaign denied'));
                 }
             }
         }
