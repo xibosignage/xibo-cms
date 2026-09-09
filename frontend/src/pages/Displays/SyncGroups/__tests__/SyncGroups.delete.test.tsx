@@ -284,7 +284,9 @@ describe('Sync Groups page - bulk delete', () => {
     await user.click(screen.getByRole('button', { name: /yes, delete/i }));
 
     // Error surfaces in the modal and the modal stays open.
-    expect(await screen.findByText('Sync group 2 is in use.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('1 sync group(s) deleted successfully. Sync group 2 is in use.'),
+    ).toBeInTheDocument();
     expect(screen.getByText('Delete Sync Groups?')).toBeInTheDocument();
 
     // Both rows were attempted and the table was refreshed (handleRefresh
