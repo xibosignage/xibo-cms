@@ -34,7 +34,6 @@ use Xibo\Support\Exception\NotFoundException;
 class DisplayGroupFactory extends BaseFactory
 {
     use TagTrait;
-    use GroupsWithPermissionsTrait;
 
     /**
      * @var PermissionFactory
@@ -103,8 +102,9 @@ class DisplayGroupFactory extends BaseFactory
             'isDisplaySpecific' => -1
         ]);
 
-        if (count($groups) <= 0)
+        if (count($groups) <= 0) {
             throw new NotFoundException();
+        }
 
         return $groups[0];
     }
@@ -328,8 +328,20 @@ class DisplayGroupFactory extends BaseFactory
                 `displaygroup`.ref3,
                 `displaygroup`.ref4,
                 `displaygroup`.ref5,
-                `folder`.folderName
+                `folder`.folderName,
+                (SELECT JSON_ARRAYAGG(g) FROM (
+                    SELECT DISTINCT `group`.group AS g
+                    FROM `permission`
+                        INNER JOIN `permissionentity` ON `permissionentity`.entityId = permission.entityId
+                        INNER JOIN `group` ON `group`.groupId = `permission`.groupId
+                    WHERE entity = :entity
+                        AND objectId = `displaygroup`.displayGroupId
+                        AND view = 1
+                    ORDER BY g
+                ) t) AS groupsWithPermissionsListJson
         ';
+
+        $params['entity'] = 'Xibo\\Entity\\DisplayGroup';
 
         $body = '
             FROM `displaygroup`
@@ -544,16 +556,6 @@ class DisplayGroupFactory extends BaseFactory
             'groupsWithPermissions',
             'groupsWithPermissionsList',
         ];
-        $customColumns = [
-            'groupsWithPermissions' =>
-                $this->groupsWithPermissionsSortSql('Xibo\\Entity\\DisplayGroup', '`displaygroup`.displayGroupId'),
-            'groupsWithPermissionsList' => $this->groupsWithPermissionsSortSql(
-                'Xibo\\Entity\\DisplayGroup',
-                '`displaygroup`.displayGroupId',
-                separator: '|~|'
-            ),
-        ];
-
         // Capture member sort direction before buildSortQuery strips the virtual column
         $memberSortDir = null;
 
@@ -589,7 +591,10 @@ class DisplayGroupFactory extends BaseFactory
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            customColumns: $customColumns,
+            customColumns: [
+                'groupsWithPermissions' => '`groupsWithPermissionsListJson`',
+                'groupsWithPermissionsList' => '`groupsWithPermissionsListJson`',
+            ],
             defaultSort: ['displayGroupId ASC'],
             uniqueColumn: 'displayGroupId'
         );
@@ -618,11 +623,22 @@ class DisplayGroupFactory extends BaseFactory
         $displayGroupIds = [];
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $displayGroup = $this->createEmpty()->hydrate($row, ['intProperties' => ['isDisplaySpecific', 'isDynamic']]);
+            $displayGroup = $this->createEmpty()->hydrate($row, [
+                'intProperties' => ['isDisplaySpecific', 'isDynamic'],
+            ]);
             $displayGroup->excludeProperty('displays');
             $displayGroup->excludeProperty('media');
             $displayGroup->excludeProperty('events');
             $displayGroup->excludeProperty('layouts');
+
+            $names = null;
+            if ($row['groupsWithPermissionsListJson'] !== null) {
+                $decoded = json_decode($row['groupsWithPermissionsListJson'], true);
+                $names = is_array($decoded) ? $decoded : null;
+            }
+            $displayGroup->groupsWithPermissionsList = $names ?? [];
+            $displayGroup->groupsWithPermissions = $names !== null ? implode(',', $names) : null;
+            $displayGroup->excludeProperty('groupsWithPermissionsListJson');
 
             $entries[] = $displayGroup;
             $displayGroupIds[] = $displayGroup->displayGroupId;
@@ -631,16 +647,11 @@ class DisplayGroupFactory extends BaseFactory
         // decorate with TagLinks
         if (count($entries) > 0) {
             $this->decorateWithTagLinks('lktagdisplaygroup', 'displayGroupId', $displayGroupIds, $entries);
-            $this->decorateWithGroupsWithPermissions(
-                'Xibo\\Entity\\DisplayGroup',
-                'displayGroupId',
-                $displayGroupIds,
-                $entries
-            );
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
+            unset($params['entity']);
             $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);
         }

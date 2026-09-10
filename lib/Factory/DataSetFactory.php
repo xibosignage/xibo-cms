@@ -42,8 +42,6 @@ use Xibo\Support\Sanitizer\RespectSanitizer;
  */
 class DataSetFactory extends BaseFactory
 {
-    use GroupsWithPermissionsTrait;
-
     /** @var  ConfigServiceInterface */
     private $config;
 
@@ -232,8 +230,19 @@ class DataSetFactory extends BaseFactory
             dataset.`folderId`,
             dataset.`permissionsFolderId`,
             user.userName AS owner,
-            folder.folderName
+            folder.folderName,
+            (SELECT JSON_ARRAYAGG(g) FROM (
+                SELECT DISTINCT `group`.group AS g
+                FROM `permission`
+                    INNER JOIN `permissionentity` ON `permissionentity`.entityId = permission.entityId
+                    INNER JOIN `group` ON `group`.groupId = `permission`.groupId
+                WHERE entity = :groupsWithPermissionsEntity
+                    AND objectId = dataset.dataSetId
+                ORDER BY g
+            ) t) AS groupsWithPermissionsListJson
         ';
+
+        $params['groupsWithPermissionsEntity'] = 'Xibo\\Entity\\DataSet';
 
         $body = '
               FROM dataset
@@ -332,17 +341,8 @@ class DataSetFactory extends BaseFactory
             $allowedColumns,
             [
                 'dataLastModified' => '`lastDataEdit`',
-                'groupsWithPermissions' => $this->groupsWithPermissionsSortSql(
-                    'Xibo\\Entity\\DataSet',
-                    'dataset.dataSetId',
-                    viewOnly: false
-                ),
-                'groupsWithPermissionsList' => $this->groupsWithPermissionsSortSql(
-                    'Xibo\\Entity\\DataSet',
-                    'dataset.dataSetId',
-                    viewOnly: false,
-                    separator: '|~|'
-                ),
+                'groupsWithPermissions' => '`groupsWithPermissionsListJson`',
+                'groupsWithPermissionsList' => '`groupsWithPermissionsListJson`',
             ],
             ['dataSetId ASC'],
             'dataSetId'
@@ -363,7 +363,6 @@ class DataSetFactory extends BaseFactory
 
         $sql = $select . $body . $order . $limit;
 
-        $dataSetIds = [];
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $dataSet = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
@@ -379,22 +378,20 @@ class DataSetFactory extends BaseFactory
                     'ignoreFirstRow',
                 ],
             ]);
+            $names = null;
+            if ($row['groupsWithPermissionsListJson'] !== null) {
+                $decoded = json_decode($row['groupsWithPermissionsListJson'], true);
+                $names = is_array($decoded) ? $decoded : null;
+            }
+            $dataSet->groupsWithPermissionsList = $names ?? [];
+            $dataSet->groupsWithPermissions = $names !== null ? implode(',', $names) : null;
+            $dataSet->excludeProperty('groupsWithPermissionsListJson');
             $entries[] = $dataSet;
-            $dataSetIds[] = $dataSet->dataSetId;
-        }
-
-        if (count($entries) > 0) {
-            $this->decorateWithGroupsWithPermissions(
-                'Xibo\\Entity\\DataSet',
-                'dataSetId',
-                $dataSetIds,
-                $entries,
-                false
-            );
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
+            unset($params['groupsWithPermissionsEntity']);
             $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);
         }

@@ -98,7 +98,7 @@ class DataSet implements \JsonSerializable
      * @var string[]
      */
     #[OA\Property(
-        description: "An array of Groups/Users that have permission to this DataSet (safe for group names containing commas)",
+        description: "An array of Groups/Users that have permission to this DataSet",
         type: 'array',
         items: new OA\Items(type: 'string')
     )]

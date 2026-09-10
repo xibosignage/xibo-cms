@@ -51,7 +51,6 @@ use Xibo\Widget\SubPlaylistItem;
 class LayoutFactory extends BaseFactory
 {
     use TagTrait;
-    use GroupsWithPermissionsTrait;
 
     /**
      * @var ConfigServiceInterface
@@ -2270,10 +2269,8 @@ class LayoutFactory extends BaseFactory
         $customColumns = [
             'orientation' => 'CASE WHEN layout.`width` < layout.`height` THEN 1 ELSE 0 END',
             'valid' => '`status`',
-            'groupsWithPermissions' =>
-                $this->groupsWithPermissionsSortSql('Xibo\\Entity\\Campaign', 'campaign.CampaignID'),
-            'groupsWithPermissionsList' =>
-                $this->groupsWithPermissionsSortSql('Xibo\\Entity\\Campaign', 'campaign.CampaignID', separator: '|~|'),
+            'groupsWithPermissions' => '`groupsWithPermissionsListJson`',
+            'groupsWithPermissionsList' => '`groupsWithPermissionsListJson`',
         ];
 
         $sortOrder = $this->buildSortQuery(
@@ -2316,10 +2313,22 @@ class LayoutFactory extends BaseFactory
                    ';
 
         if ($parsedFilter->getInt('campaignId') !== null) {
-            $select .= ' lkcl.displayOrder ';
+            $select .= ' lkcl.displayOrder, ';
         } else {
-            $select .= ' NULL as displayOrder ';
+            $select .= ' NULL as displayOrder, ';
         }
+
+        $select .= '     (SELECT JSON_ARRAYAGG(g) FROM (
+                            SELECT DISTINCT `group`.group AS g
+                            FROM `permission`
+                                INNER JOIN `permissionentity` ON `permissionentity`.entityId = permission.entityId
+                                INNER JOIN `group` ON `group`.groupId = `permission`.groupId
+                            WHERE entity = :permissionEntityForGroup
+                                AND objectId = campaign.CampaignID
+                                AND view = 1
+                            ORDER BY g
+                        ) t) AS groupsWithPermissionsListJson ';
+        $params['permissionEntityForGroup'] = 'Xibo\\Entity\\Campaign';
 
         $body  = '  FROM layout
                     INNER JOIN status 
@@ -2833,7 +2842,6 @@ class LayoutFactory extends BaseFactory
         // The final statements
         $sql = $select . $body . $order . $limit;
         $layoutIds = [];
-        $campaignIds = [];
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $layout = $this->createEmpty();
@@ -2872,21 +2880,29 @@ class LayoutFactory extends BaseFactory
             $layout->permissionsFolderId = $parsedRow->getInt('permissionsFolderId');
             $layout->folderName = $parsedRow->getString('folderName');
             $layout->setUnmatchedProperty('campaignType', $parsedRow->getString('type'));
+
+            $names = null;
+            if ($row['groupsWithPermissionsListJson'] !== null) {
+                $decoded = json_decode($row['groupsWithPermissionsListJson'], true);
+                $names = is_array($decoded) ? $decoded : null;
+            }
+            $layout->groupsWithPermissionsList = $names ?? [];
+            $layout->groupsWithPermissions = $names !== null ? implode(',', $names) : null;
+
             $layout->setOriginals();
 
             $entries[] = $layout;
             $layoutIds[] = $layout->layoutId;
-            $campaignIds[] = $layout->campaignId;
         }
 
         // decorate with TagLinks
         if (count($entries) > 0) {
             $this->decorateWithTagLinks('lktaglayout', 'layoutId', $layoutIds, $entries);
-            $this->decorateWithGroupsWithPermissions('Xibo\\Entity\\Campaign', 'campaignId', $campaignIds, $entries);
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
+            unset($params['permissionEntityForGroup']);
             $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);
         }

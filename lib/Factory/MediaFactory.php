@@ -41,7 +41,6 @@ use Xibo\Support\Exception\NotFoundException;
 class MediaFactory extends BaseFactory
 {
     use TagTrait;
-    use GroupsWithPermissionsTrait;
 
     /** @var Media[] */
     private $remoteDownloadQueue = [];
@@ -555,10 +554,8 @@ class MediaFactory extends BaseFactory
             'mediaType'         => 'media.`type`',
             'resolution'        => '(media.`width` * media.`height`)',
             'expiresFormatted'  => '`expires`',
-            'groupsWithPermissions' =>
-                $this->groupsWithPermissionsSortSql('Xibo\\Entity\\Media', 'media.mediaId'),
-            'groupsWithPermissionsList' =>
-                $this->groupsWithPermissionsSortSql('Xibo\\Entity\\Media', 'media.mediaId', separator: '|~|'),
+            'groupsWithPermissions' => '`groupsWithPermissionsListJson`',
+            'groupsWithPermissionsList' => '`groupsWithPermissionsListJson`',
         ];
 
         $sortOrder = $this->buildSortQuery(
@@ -600,6 +597,18 @@ class MediaFactory extends BaseFactory
                `user`.email AS userEmail,
                `folder`.folderName,
             ';
+        $select .= '     (SELECT JSON_ARRAYAGG(g) FROM (
+                                SELECT DISTINCT `group`.group AS g
+                                FROM `permission`
+                                    INNER JOIN `permissionentity` ON `permissionentity`.entityId = permission.entityId
+                                    INNER JOIN `group` ON `group`.groupId = `permission`.groupId
+                                WHERE entity = :entity
+                                    AND objectId = media.mediaId
+                                    AND view = 1
+                                ORDER BY g
+                            ) t) AS groupsWithPermissionsListJson, ';
+        $params['entity'] = 'Xibo\\Entity\\Media';
+
         $select .= '   media.originalFileName AS fileName ';
 
         $body = ' FROM media ';
@@ -1026,17 +1035,26 @@ class MediaFactory extends BaseFactory
             $media->excludeProperty('widgets');
             $media->excludeProperty('displayGroups');
 
+            $names = null;
+            if ($row['groupsWithPermissionsListJson'] !== null) {
+                $decoded = json_decode($row['groupsWithPermissionsListJson'], true);
+                $names = is_array($decoded) ? $decoded : null;
+            }
+            $media->groupsWithPermissionsList = $names ?? [];
+            $media->groupsWithPermissions = $names !== null ? implode(',', $names) : null;
+            $media->excludeProperty('groupsWithPermissionsListJson');
+
             $entries[] = $media;
         }
 
         // decorate with TagLinks
         if (count($entries) > 0) {
             $this->decorateWithTagLinks('lktagmedia', 'mediaId', $mediaIds, $entries);
-            $this->decorateWithGroupsWithPermissions('Xibo\\Entity\\Media', 'mediaId', $mediaIds, $entries);
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
+            unset($params['entity']);
             $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);
         }

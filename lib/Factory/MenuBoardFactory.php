@@ -33,8 +33,6 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class MenuBoardFactory extends BaseFactory
 {
-    use GroupsWithPermissionsTrait;
-
     public function __construct(
         User $user,
         UserFactory $userFactory,
@@ -149,8 +147,19 @@ class MenuBoardFactory extends BaseFactory
                `user`.UserName AS owner,
                `menu_board`.folderId,
                `menu_board`.permissionsFolderId,
-               `folder`.folderName
+               `folder`.folderName,
+               (SELECT JSON_ARRAYAGG(g) FROM (
+                            SELECT DISTINCT `group`.group AS g
+                            FROM `permission`
+                                INNER JOIN `permissionentity` ON `permissionentity`.entityId = permission.entityId
+                                INNER JOIN `group` ON `group`.groupId = `permission`.groupId
+                            WHERE entity = :permissionEntityForGroup
+                                AND objectId = menu_board.menuId
+                                AND view = 1
+                            ORDER BY g
+                        ) t) AS groupsWithPermissionsListJson
             ';
+        $params['permissionEntityForGroup'] = 'Xibo\\Entity\\MenuBoard';
 
         $body = ' FROM menu_board
                      INNER JOIN `user` ON `user`.userId = `menu_board`.userId
@@ -226,10 +235,8 @@ class MenuBoardFactory extends BaseFactory
             'groupsWithPermissions', 'groupsWithPermissionsList',
         ];
         $customColumns = [
-            'groupsWithPermissions' =>
-                $this->groupsWithPermissionsSortSql('Xibo\\Entity\\MenuBoard', 'menu_board.menuId'),
-            'groupsWithPermissionsList' =>
-                $this->groupsWithPermissionsSortSql('Xibo\\Entity\\MenuBoard', 'menu_board.menuId', separator: '|~|'),
+            'groupsWithPermissions' => '`groupsWithPermissionsListJson`',
+            'groupsWithPermissionsList' => '`groupsWithPermissionsListJson`',
         ];
         $sortOrder = $this->buildSortQuery($sortOrder, $allowedColumns, $customColumns, ['name ASC'], 'menuId');
         $order = empty($sortOrder) ? '' : ' ORDER BY ' . implode(', ', $sortOrder);
@@ -243,18 +250,23 @@ class MenuBoardFactory extends BaseFactory
 
         $sql = $select . $body . $order . $limit;
 
-        $menuIds = [];
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $menuBoard = $this->createEmpty()->hydrate($row);
-            $entries[] = $menuBoard;
-            $menuIds[] = $menuBoard->menuId;
-        }
 
-        if (count($entries) > 0) {
-            $this->decorateWithGroupsWithPermissions('Xibo\\Entity\\MenuBoard', 'menuId', $menuIds, $entries);
+            $names = null;
+            if ($row['groupsWithPermissionsListJson'] !== null) {
+                $decoded = json_decode($row['groupsWithPermissionsListJson'], true);
+                $names = is_array($decoded) ? $decoded : null;
+            }
+            $menuBoard->groupsWithPermissionsList = $names ?? [];
+            $menuBoard->groupsWithPermissions = $names !== null ? implode(',', $names) : null;
+            $menuBoard->excludeProperty('groupsWithPermissionsListJson');
+
+            $entries[] = $menuBoard;
         }
 
         if ($limit != '' && count($entries) > 0) {
+            unset($params['permissionEntityForGroup']);
             $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);
         }

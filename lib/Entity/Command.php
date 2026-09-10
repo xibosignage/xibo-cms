@@ -123,7 +123,7 @@ class Command implements \JsonSerializable
      * @var string[]
      */
     #[OA\Property(
-        description: 'An array of groups/users with permissions to this Command (safe for group names containing commas)',
+        description: 'An array of groups/users with permissions to this Command',
         type: 'array',
         items: new OA\Items(type: 'string')
     )]

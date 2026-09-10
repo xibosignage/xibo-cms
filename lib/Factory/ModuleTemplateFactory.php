@@ -37,7 +37,6 @@ use Xibo\Widget\Definition\Asset;
 class ModuleTemplateFactory extends BaseFactory
 {
     use ModuleXmlTrait;
-    use GroupsWithPermissionsTrait;
 
     /**
      * @var ModuleTemplate[]|null
@@ -300,7 +299,19 @@ class ModuleTemplateFactory extends BaseFactory
 
         $filter = $this->getSanitizer($filterBy);
 
-        $select = 'SELECT *';
+        $select = 'SELECT *,
+                (SELECT JSON_ARRAYAGG(g) FROM (
+                            SELECT DISTINCT `group`.group AS g
+                            FROM `permission`
+                                INNER JOIN `permissionentity` ON `permissionentity`.entityId = permission.entityId
+                                INNER JOIN `group` ON `group`.groupId = `permission`.groupId
+                            WHERE entity = :permissionEntityGroups
+                                AND objectId = `module_templates`.id
+                                AND view = 1
+                            ORDER BY g
+                ) t) AS groupsWithPermissionsListJson';
+
+        $params['permissionEntityGroups'] = 'Xibo\\Entity\\ModuleTemplate';
 
         $body = ' FROM `module_templates`
                 WHERE 1 = 1 ';
@@ -339,20 +350,13 @@ class ModuleTemplateFactory extends BaseFactory
             'groupsWithPermissions',
             'groupsWithPermissionsList',
         ];
-        $customColumns = [
-            'groupsWithPermissions' =>
-                $this->groupsWithPermissionsSortSql('Xibo\\Entity\\ModuleTemplate', '`module_templates`.id'),
-            'groupsWithPermissionsList' => $this->groupsWithPermissionsSortSql(
-                'Xibo\\Entity\\ModuleTemplate',
-                '`module_templates`.id',
-                separator: '|~|'
-            ),
-        ];
-
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            customColumns: $customColumns,
+            customColumns: [
+                'groupsWithPermissions' => '`groupsWithPermissionsListJson`',
+                'groupsWithPermissionsList' => '`groupsWithPermissionsListJson`',
+            ],
             defaultSort: ['id ASC'],
             uniqueColumn: 'id'
         );
@@ -370,7 +374,6 @@ class ModuleTemplateFactory extends BaseFactory
 
         $sql = $select . $body . $order. $limit;
 
-        $templateIds = [];
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $template = $this->createUserTemplate($row['xml']);
             $template->id = intval($row['id']);
@@ -378,21 +381,21 @@ class ModuleTemplateFactory extends BaseFactory
             $template->dataType = $row['dataType'];
             $template->isEnabled = $row['enabled'] == 1;
             $template->ownerId = intval($row['ownerId'] ?? 0);
-            $templates[] = $template;
-            $templateIds[] = $template->id;
-        }
 
-        if (count($templates) > 0) {
-            $this->decorateWithGroupsWithPermissions(
-                'Xibo\\Entity\\ModuleTemplate',
-                'id',
-                $templateIds,
-                $templates
-            );
+            $names = null;
+            if ($row['groupsWithPermissionsListJson'] !== null) {
+                $decoded = json_decode($row['groupsWithPermissionsListJson'], true);
+                $names = is_array($decoded) ? $decoded : null;
+            }
+            $template->groupsWithPermissionsList = $names ?? [];
+            $template->groupsWithPermissions = $names !== null ? implode(',', $names) : null;
+
+            $templates[] = $template;
         }
 
         // Paging
         if (!empty($limit) && count($templates) > 0) {
+            unset($params['permissionEntityGroups']);
             $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);
         }
