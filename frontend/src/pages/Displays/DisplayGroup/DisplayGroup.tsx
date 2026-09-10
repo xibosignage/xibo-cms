@@ -100,7 +100,7 @@ export default function DisplayGroupPage() {
       dynamicCriteria: true,
       dynamicCriteriaTags: true,
       tags: true,
-      groupsWithPermissions: false,
+      groupsWithPermissionsList: false,
       ref1: false,
       ref2: false,
       ref3: false,

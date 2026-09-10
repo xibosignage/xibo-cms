@@ -41,6 +41,7 @@ use Xibo\Support\Exception\NotFoundException;
 class MediaFactory extends BaseFactory
 {
     use TagTrait;
+    use GroupsWithPermissionsTrait;
 
     /** @var Media[] */
     private $remoteDownloadQueue = [];
@@ -543,7 +544,8 @@ class MediaFactory extends BaseFactory
         $sanitizedFilter = $this->getSanitizer($filterBy);
         $allowedColumns = [
             'mediaId', 'name', 'type', 'duration', 'fileSize', 'owner', 'sharing', 'released', 'fileName',
-            'enableStat', 'createdDt', 'modifiedDt', 'expires', 'groupsWithPermissions'
+            'enableStat', 'createdDt', 'modifiedDt', 'expires', 'groupsWithPermissions',
+            'groupsWithPermissionsList'
         ];
         $customColumns = [
             'revised'           => '`parentId`',
@@ -552,7 +554,11 @@ class MediaFactory extends BaseFactory
             'fileSizeFormatted' => '`fileSize`',
             'mediaType'         => 'media.`type`',
             'resolution'        => '(media.`width` * media.`height`)',
-            'expiresFormatted'  => '`expires`'
+            'expiresFormatted'  => '`expires`',
+            'groupsWithPermissions' =>
+                $this->groupsWithPermissionsSortSql('Xibo\\Entity\\Media', 'media.mediaId'),
+            'groupsWithPermissionsList' =>
+                $this->groupsWithPermissionsSortSql('Xibo\\Entity\\Media', 'media.mediaId', separator: '|~|'),
         ];
 
         $sortOrder = $this->buildSortQuery(
@@ -594,18 +600,6 @@ class MediaFactory extends BaseFactory
                `user`.email AS userEmail,
                `folder`.folderName,
             ';
-        $select .= '     (SELECT GROUP_CONCAT(DISTINCT `group`.group SEPARATOR \'|~|\')
-                              FROM `permission`
-                                INNER JOIN `permissionentity`
-                                ON `permissionentity`.entityId = permission.entityId
-                                INNER JOIN `group`
-                                ON `group`.groupId = `permission`.groupId
-                             WHERE entity = :entity
-                                AND objectId = media.mediaId
-                                AND view = 1
-                            ) AS groupsWithPermissions, ';
-        $params['entity'] = 'Xibo\\Entity\\Media';
-
         $select .= '   media.originalFileName AS fileName ';
 
         $body = ' FROM media ';
@@ -1038,11 +1032,11 @@ class MediaFactory extends BaseFactory
         // decorate with TagLinks
         if (count($entries) > 0) {
             $this->decorateWithTagLinks('lktagmedia', 'mediaId', $mediaIds, $entries);
+            $this->decorateWithGroupsWithPermissions('Xibo\\Entity\\Media', 'mediaId', $mediaIds, $entries);
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
-            unset($params['entity']);
             $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);
         }

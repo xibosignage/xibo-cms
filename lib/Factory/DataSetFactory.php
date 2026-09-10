@@ -42,6 +42,8 @@ use Xibo\Support\Sanitizer\RespectSanitizer;
  */
 class DataSetFactory extends BaseFactory
 {
+    use GroupsWithPermissionsTrait;
+
     /** @var  ConfigServiceInterface */
     private $config;
 
@@ -230,20 +232,8 @@ class DataSetFactory extends BaseFactory
             dataset.`folderId`,
             dataset.`permissionsFolderId`,
             user.userName AS owner,
-            folder.folderName,
-            (
-              SELECT GROUP_CONCAT(DISTINCT `group`.group SEPARATOR \'|~|\')
-                  FROM `permission`
-                    INNER JOIN `permissionentity`
-                    ON `permissionentity`.entityId = permission.entityId
-                    INNER JOIN `group`
-                    ON `group`.groupId = `permission`.groupId
-                 WHERE entity = :groupsWithPermissionsEntity
-                    AND objectId = dataset.dataSetId
-            ) AS groupsWithPermissions
+            folder.folderName
         ';
-
-        $params['groupsWithPermissionsEntity'] = 'Xibo\\Entity\\DataSet';
 
         $body = '
               FROM dataset
@@ -333,13 +323,27 @@ class DataSetFactory extends BaseFactory
             'isRealTime',
             'owner',
             'lastSync',
-            'groupsWithPermissions'
+            'groupsWithPermissions',
+            'groupsWithPermissionsList'
         ];
 
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            ['dataLastModified' => '`lastDataEdit`'],
+            [
+                'dataLastModified' => '`lastDataEdit`',
+                'groupsWithPermissions' => $this->groupsWithPermissionsSortSql(
+                    'Xibo\\Entity\\DataSet',
+                    'dataset.dataSetId',
+                    viewOnly: false
+                ),
+                'groupsWithPermissionsList' => $this->groupsWithPermissionsSortSql(
+                    'Xibo\\Entity\\DataSet',
+                    'dataset.dataSetId',
+                    viewOnly: false,
+                    separator: '|~|'
+                ),
+            ],
             ['dataSetId ASC'],
             'dataSetId'
         );
@@ -359,8 +363,9 @@ class DataSetFactory extends BaseFactory
 
         $sql = $select . $body . $order . $limit;
 
+        $dataSetIds = [];
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row, [
+            $dataSet = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
                     'isLookup',
                     'isRemote',
@@ -374,11 +379,22 @@ class DataSetFactory extends BaseFactory
                     'ignoreFirstRow',
                 ],
             ]);
+            $entries[] = $dataSet;
+            $dataSetIds[] = $dataSet->dataSetId;
+        }
+
+        if (count($entries) > 0) {
+            $this->decorateWithGroupsWithPermissions(
+                'Xibo\\Entity\\DataSet',
+                'dataSetId',
+                $dataSetIds,
+                $entries,
+                false
+            );
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
-            unset($params['groupsWithPermissionsEntity']);
             $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);
         }

@@ -87,6 +87,7 @@ export interface ModuleTemplate {
   ownership: 'system' | 'custom' | 'user';
   ownerId: number;
   groupsWithPermissions: string;
+  groupsWithPermissionsList?: string[] | null;
   onTemplateRender: string | null;
   onTemplateVisible: string | null;
   stencil: ModuleTemplateStencil | null;

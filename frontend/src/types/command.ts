@@ -37,5 +37,6 @@ export interface Command {
   availableOn: string | null;
   createAlertOn: string;
   groupsWithPermissions: string | null;
+  groupsWithPermissionsList?: string[] | null;
   userPermissions?: CommandPermissions;
 }

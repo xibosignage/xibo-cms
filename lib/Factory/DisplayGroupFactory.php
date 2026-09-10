@@ -34,6 +34,7 @@ use Xibo\Support\Exception\NotFoundException;
 class DisplayGroupFactory extends BaseFactory
 {
     use TagTrait;
+    use GroupsWithPermissionsTrait;
 
     /**
      * @var PermissionFactory
@@ -327,21 +328,8 @@ class DisplayGroupFactory extends BaseFactory
                 `displaygroup`.ref3,
                 `displaygroup`.ref4,
                 `displaygroup`.ref5,
-                (
-                    SELECT GROUP_CONCAT(DISTINCT `group`.group SEPARATOR \'|~|\')
-                        FROM `permission`
-                        INNER JOIN `permissionentity`
-                            ON `permissionentity`.entityId = permission.entityId
-                        INNER JOIN `group`
-                            ON `group`.groupId = `permission`.groupId
-                        WHERE entity = :entity
-                            AND objectId = `displaygroup`.displayGroupId
-                            AND view = 1
-                ) AS groupsWithPermissions,
                 `folder`.folderName
         ';
-
-        $params['entity'] = 'Xibo\\Entity\\DisplayGroup';
 
         $body = '
             FROM `displaygroup`
@@ -554,6 +542,16 @@ class DisplayGroupFactory extends BaseFactory
             'createdDt',
             'modifiedDt',
             'groupsWithPermissions',
+            'groupsWithPermissionsList',
+        ];
+        $customColumns = [
+            'groupsWithPermissions' =>
+                $this->groupsWithPermissionsSortSql('Xibo\\Entity\\DisplayGroup', '`displaygroup`.displayGroupId'),
+            'groupsWithPermissionsList' => $this->groupsWithPermissionsSortSql(
+                'Xibo\\Entity\\DisplayGroup',
+                '`displaygroup`.displayGroupId',
+                separator: '|~|'
+            ),
         ];
 
         // Capture member sort direction before buildSortQuery strips the virtual column
@@ -591,6 +589,7 @@ class DisplayGroupFactory extends BaseFactory
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
+            customColumns: $customColumns,
             defaultSort: ['displayGroupId ASC'],
             uniqueColumn: 'displayGroupId'
         );
@@ -632,11 +631,16 @@ class DisplayGroupFactory extends BaseFactory
         // decorate with TagLinks
         if (count($entries) > 0) {
             $this->decorateWithTagLinks('lktagdisplaygroup', 'displayGroupId', $displayGroupIds, $entries);
+            $this->decorateWithGroupsWithPermissions(
+                'Xibo\\Entity\\DisplayGroup',
+                'displayGroupId',
+                $displayGroupIds,
+                $entries
+            );
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
-            unset($params['entity']);
             $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);
         }

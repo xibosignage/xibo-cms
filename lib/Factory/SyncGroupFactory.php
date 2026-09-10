@@ -144,7 +144,7 @@ class SyncGroupFactory extends BaseFactory
                 modifiedBy.userName AS modifiedByName,
                 `folder`.folderName,
                 (
-                    SELECT GROUP_CONCAT(DISTINCT `group`.group SEPARATOR \'|~|\')
+                    SELECT GROUP_CONCAT(DISTINCT `group`.group)
                         FROM `permission`
                         INNER JOIN `permissionentity`
                             ON `permissionentity`.entityId = permission.entityId

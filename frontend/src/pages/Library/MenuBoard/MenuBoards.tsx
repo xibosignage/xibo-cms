@@ -87,7 +87,7 @@ export default function MenuBoards() {
       description: true,
       code: true,
       owner: true,
-      groupsWithPermissions: true,
+      groupsWithPermissionsList: true,
       modifiedDt: true,
     },
     viewMode: 'table',

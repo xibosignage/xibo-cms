@@ -37,6 +37,7 @@ use Xibo\Widget\Definition\Asset;
 class ModuleTemplateFactory extends BaseFactory
 {
     use ModuleXmlTrait;
+    use GroupsWithPermissionsTrait;
 
     /**
      * @var ModuleTemplate[]|null
@@ -299,19 +300,7 @@ class ModuleTemplateFactory extends BaseFactory
 
         $filter = $this->getSanitizer($filterBy);
 
-        $select = 'SELECT *,
-                (SELECT GROUP_CONCAT(DISTINCT `group`.group SEPARATOR \'|~|\')
-                          FROM `permission`
-                            INNER JOIN `permissionentity`
-                            ON `permissionentity`.entityId = permission.entityId
-                            INNER JOIN `group`
-                            ON `group`.groupId = `permission`.groupId
-                         WHERE entity = :permissionEntityGroups
-                            AND objectId = `module_templates`.id
-                            AND view = 1
-                ) AS groupsWithPermissions';
-
-        $params['permissionEntityGroups'] = 'Xibo\\Entity\\ModuleTemplate';
+        $select = 'SELECT *';
 
         $body = ' FROM `module_templates`
                 WHERE 1 = 1 ';
@@ -348,11 +337,22 @@ class ModuleTemplateFactory extends BaseFactory
             'templateId',
             'dataType',
             'groupsWithPermissions',
+            'groupsWithPermissionsList',
+        ];
+        $customColumns = [
+            'groupsWithPermissions' =>
+                $this->groupsWithPermissionsSortSql('Xibo\\Entity\\ModuleTemplate', '`module_templates`.id'),
+            'groupsWithPermissionsList' => $this->groupsWithPermissionsSortSql(
+                'Xibo\\Entity\\ModuleTemplate',
+                '`module_templates`.id',
+                separator: '|~|'
+            ),
         ];
 
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
+            customColumns: $customColumns,
             defaultSort: ['id ASC'],
             uniqueColumn: 'id'
         );
@@ -370,6 +370,7 @@ class ModuleTemplateFactory extends BaseFactory
 
         $sql = $select . $body . $order. $limit;
 
+        $templateIds = [];
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $template = $this->createUserTemplate($row['xml']);
             $template->id = intval($row['id']);
@@ -377,13 +378,21 @@ class ModuleTemplateFactory extends BaseFactory
             $template->dataType = $row['dataType'];
             $template->isEnabled = $row['enabled'] == 1;
             $template->ownerId = intval($row['ownerId'] ?? 0);
-            $template->groupsWithPermissions = $row['groupsWithPermissions'];
             $templates[] = $template;
+            $templateIds[] = $template->id;
+        }
+
+        if (count($templates) > 0) {
+            $this->decorateWithGroupsWithPermissions(
+                'Xibo\\Entity\\ModuleTemplate',
+                'id',
+                $templateIds,
+                $templates
+            );
         }
 
         // Paging
         if (!empty($limit) && count($templates) > 0) {
-            unset($params['permissionEntityGroups']);
             $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);
         }

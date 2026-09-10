@@ -39,23 +39,11 @@ import Badge from '../../Badge';
 import { TextCell } from './TextCell';
 
 interface SharingCellProps {
-  groups?: string | null;
+  groups?: string[] | null;
   privatePlaceholder?: string;
 }
 
 const GAP_PX = 4;
-const GROUP_SEPARATOR = '|~|';
-
-function parseGroups(groups?: string | null) {
-  if (!groups) {
-    return [];
-  }
-
-  return groups
-    .split(GROUP_SEPARATOR)
-    .map((entry) => entry.trim())
-    .filter(Boolean);
-}
 
 interface VisibleCountState {
   visibleCount: number;
@@ -70,26 +58,29 @@ interface VisibleCountState {
 // works out how many visible pills fit the current column width, leaving room
 // for the "+N" chip. Recomputes whenever the column is resized.
 //
-// Depends on the raw `groups` string rather than a pre-parsed entries array:
-// `parseGroups` builds a new array every call, so an array dependency would
-// never be considered stable across renders and would re-run this effect (and
-// its setState) on every render, regardless of whether `groups` actually
-// changed. `groups` itself is a primitive and compares by value, so it's safe
-// to depend on directly with no memoization needed.
+// Depends on `groupsKey` (a joined string built from `groups` by the caller)
+// rather than `groups` itself: an array prop isn't guaranteed to keep the same
+// reference across renders even when its contents haven't changed, which would
+// re-run this effect (and its setState) unnecessarily. `groupsKey` is a
+// primitive and compares by value, so it's safe to depend on directly with no
+// memoization needed. It's only ever used as a change-detection key here, never
+// split back apart, so it carries none of the delimiter-collision risk that a
+// display-facing joined string would.
 function useVisibleCount(
-  groups: string | null | undefined,
+  groups: string[],
+  groupsKey: string,
   containerRef: React.RefObject<HTMLDivElement | null>,
   pillRefs: React.RefObject<(HTMLSpanElement | null)[]>,
   plusRef: React.RefObject<HTMLSpanElement | null>,
 ): VisibleCountState {
   const [state, setState] = useState<VisibleCountState>(() => ({
-    visibleCount: parseGroups(groups).length > 0 ? 1 : 0,
+    visibleCount: groups.length > 0 ? 1 : 0,
     firstEntryOverflows: false,
   }));
 
   useLayoutEffect(() => {
     const container = containerRef.current;
-    const entries = parseGroups(groups);
+    const entries = groups;
 
     if (!container || entries.length === 0) {
       return;
@@ -132,19 +123,23 @@ function useVisibleCount(
     const observer = new ResizeObserver(recompute);
     observer.observe(container);
     return () => observer.disconnect();
-  }, [groups, containerRef, pillRefs, plusRef]);
+  }, [groupsKey, containerRef, pillRefs, plusRef]);
 
   return state;
 }
 
 export function SharingCell({ groups, privatePlaceholder = '' }: SharingCellProps) {
-  const entries = parseGroups(groups);
+  const entries = groups ?? [];
+  // Change-detection key for useVisibleCount — see the comment there. Never parsed back, so no
+  // delimiter-collision risk; only used to tell whether the array's contents actually changed.
+  const groupsKey = entries.join('');
 
   const containerRef = useRef<HTMLDivElement>(null);
   const pillRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const plusRef = useRef<HTMLSpanElement | null>(null);
   const { visibleCount, firstEntryOverflows } = useVisibleCount(
-    groups,
+    entries,
+    groupsKey,
     containerRef,
     pillRefs,
     plusRef,
@@ -266,15 +261,15 @@ export function SharingCell({ groups, privatePlaceholder = '' }: SharingCellProp
   );
 }
 
-/** Shared "Sharing" column definition for list pages whose rows carry a `groupsWithPermissions` field. */
+/** Shared "Sharing" column definition for list pages whose rows carry a `groupsWithPermissionsList` field. */
 export function getSharingColumn<T>(t: TFunction): ColumnDef<T> {
   return {
-    accessorKey: 'groupsWithPermissions',
+    accessorKey: 'groupsWithPermissionsList',
     header: t('Sharing'),
     size: 200,
     minSize: 200,
     cell: (info) => (
-      <SharingCell groups={info.getValue<string | null>()} privatePlaceholder={t('Private')} />
+      <SharingCell groups={info.getValue<string[] | null>()} privatePlaceholder={t('Private')} />
     ),
   };
 }

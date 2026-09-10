@@ -37,6 +37,7 @@ use Xibo\Support\Exception\NotFoundException;
 class PlaylistFactory extends BaseFactory
 {
     use TagTrait;
+    use GroupsWithPermissionsTrait;
 
     private PermissionFactory $permissionFactory;
 
@@ -186,12 +187,19 @@ class PlaylistFactory extends BaseFactory
         $parsedFilter = $this->getSanitizer($filterBy);
         $allowedColumns = [
             'playlistId', 'name', 'duration', 'owner', 'isDynamic', 'enableStat', 'createdDt', 'modifiedDt',
-            'groupsWithPermissions'
+            'groupsWithPermissions', 'groupsWithPermissionsList'
+        ];
+        $customColumns = [
+            'groupsWithPermissions' =>
+                $this->groupsWithPermissionsSortSql('Xibo\\Entity\\Playlist', 'playlist.playlistId'),
+            'groupsWithPermissionsList' =>
+                $this->groupsWithPermissionsSortSql('Xibo\\Entity\\Playlist', 'playlist.playlistId', separator: '|~|'),
         ];
 
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
+            customColumns: $customColumns,
             defaultSort: ['name ASC'],
             uniqueColumn: 'playlistId'
         );
@@ -220,23 +228,10 @@ class PlaylistFactory extends BaseFactory
                 `playlist`.enableStat,
                 `playlist`.folderId,
                 `playlist`.permissionsFolderId,
-                `folder`.folderName,
-                (
-                SELECT GROUP_CONCAT(DISTINCT `group`.group SEPARATOR \'|~|\')
-                  FROM `permission`
-                    INNER JOIN `permissionentity`
-                    ON `permissionentity`.entityId = permission.entityId
-                    INNER JOIN `group`
-                    ON `group`.groupId = `permission`.groupId
-                 WHERE entity = :permissionEntityForGroup
-                    AND objectId = playlist.playlistId
-                    AND view = 1
-                ) AS groupsWithPermissions
+                `folder`.folderName
         ';
 
-        $params['permissionEntityForGroup'] = 'Xibo\\Entity\\Playlist';
-
-        $body = '  
+        $body = '
               FROM `playlist` 
                 LEFT OUTER JOIN `user` 
                 ON `user`.userId = `playlist`.ownerId
@@ -547,11 +542,11 @@ class PlaylistFactory extends BaseFactory
         // decorate with TagLinks
         if (count($entries) > 0) {
             $this->decorateWithTagLinks('lktagplaylist', 'playlistId', $playlistIds, $entries);
+            $this->decorateWithGroupsWithPermissions('Xibo\\Entity\\Playlist', 'playlistId', $playlistIds, $entries);
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
-            unset($params['permissionEntityForGroup']);
             $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);
         }
