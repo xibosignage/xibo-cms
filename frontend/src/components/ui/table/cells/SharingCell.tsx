@@ -58,14 +58,14 @@ interface VisibleCountState {
 // works out how many visible pills fit the current column width, leaving room
 // for the "+N" chip. Recomputes whenever the column is resized.
 //
-// Depends on `groupsKey` (a joined string built from `groups` by the caller)
-// rather than `groups` itself: an array prop isn't guaranteed to keep the same
-// reference across renders even when its contents haven't changed, which would
-// re-run this effect (and its setState) unnecessarily. `groupsKey` is a
-// primitive and compares by value, so it's safe to depend on directly with no
-// memoization needed. It's only ever used as a change-detection key here, never
-// split back apart, so it carries none of the delimiter-collision risk that a
-// display-facing joined string would.
+// Depends on `groupsKey` (a JSON-serialized string built from `groups` by the
+// caller) rather than `groups` itself: an array prop isn't guaranteed to keep
+// the same reference across renders even when its contents haven't changed,
+// which would re-run this effect (and its setState) unnecessarily. `groupsKey`
+// is a primitive and compares by value, so it's safe to depend on directly
+// with no memoization needed. JSON.stringify (rather than e.g. `join`, which
+// isn't injective — `['A','B']` and `['AB']` can join to the same string) so
+// distinct group lists never collide onto the same key and go stale.
 function useVisibleCount(
   groups: string[],
   groupsKey: string,
@@ -130,9 +130,8 @@ function useVisibleCount(
 
 export function SharingCell({ groups, privatePlaceholder = '' }: SharingCellProps) {
   const entries = groups ?? [];
-  // Change-detection key for useVisibleCount — see the comment there. Never parsed back, so no
-  // delimiter-collision risk; only used to tell whether the array's contents actually changed.
-  const groupsKey = entries.join('');
+  // Change-detection key for useVisibleCount — see the comment there.
+  const groupsKey = JSON.stringify(entries);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const pillRefs = useRef<(HTMLSpanElement | null)[]>([]);
