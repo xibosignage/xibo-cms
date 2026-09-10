@@ -33,7 +33,6 @@ export interface Layout {
   logicalOperator?: string;
   ownerUserGroupId?: number;
   publishedStatusId?: number;
-  publishedDate?: string | null;
   embed?: string;
   campaignId: number;
   folderId: number;
