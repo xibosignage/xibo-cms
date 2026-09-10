@@ -34,6 +34,7 @@ import type { SelectOption } from '@/components/ui/forms/SelectDropdown';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
 import TextInput from '@/components/ui/forms/TextInput';
 import { useUserContext } from '@/context/UserContext';
+import { useDebounce } from '@/hooks/useDebounce';
 import { usePermissions } from '@/hooks/usePermissions';
 import { getDatasetSchema } from '@/schema/dataset';
 import type { UpdateDatasetRequest } from '@/services/datasetApi';
@@ -62,6 +63,8 @@ interface AddAndEditDatasetModalProps {
   onClose: () => void;
   onSave: (updated: Dataset) => void;
 }
+
+const RUNS_AFTER_PAGE_SIZE = 10;
 
 type DatasetFormErrors = {
   dataSet?: string;
@@ -173,6 +176,11 @@ export default function AddAndEditDatasetModal({
     [],
   );
   const [runsAfterOptions, setRunsAfterOptions] = useState<SelectOption[]>([]);
+  const [runsAfterPage, setRunsAfterPage] = useState(0);
+  const [hasMoreRunsAfter, setHasMoreRunsAfter] = useState(false);
+  const [isLoadingMoreRunsAfter, setIsLoadingMoreRunsAfter] = useState(false);
+  const [runsAfterSearch, setRunsAfterSearch] = useState('');
+  const debouncedRunsAfterSearch = useDebounce(runsAfterSearch, 300);
 
   useEffect(() => {
     fetchDataConnectorSource()
@@ -185,7 +193,13 @@ export default function AddAndEditDatasetModal({
   }, [isOpen]);
 
   useEffect(() => {
-    fetchDataset({ start: 0, length: 10000 })
+    setRunsAfterOptions([]);
+    setRunsAfterPage(0);
+    fetchDataset({
+      start: 0,
+      length: RUNS_AFTER_PAGE_SIZE,
+      dataSet: debouncedRunsAfterSearch || undefined,
+    })
       .then(({ rows }) => {
         setRunsAfterOptions([
           { label: t('None'), value: '0' },
@@ -193,11 +207,47 @@ export default function AddAndEditDatasetModal({
             .filter((ds) => ds.dataSetId !== data?.dataSetId)
             .map((ds) => ({ label: ds.dataSet, value: String(ds.dataSetId) })),
         ]);
+        setHasMoreRunsAfter(rows.length === RUNS_AFTER_PAGE_SIZE);
       })
       .catch((err) => {
         console.error('Failed to fetch datasets:', err);
+        setRunsAfterOptions([{ label: t('None'), value: '0' }]);
+        setHasMoreRunsAfter(false);
       });
-  }, [isOpen, data?.dataSetId, t]);
+  }, [isOpen, data?.dataSetId, debouncedRunsAfterSearch, t]);
+
+  const handleLoadMoreRunsAfter = () => {
+    if (isLoadingMoreRunsAfter || !hasMoreRunsAfter) {
+      return;
+    }
+    const nextPage = runsAfterPage + 1;
+    setIsLoadingMoreRunsAfter(true);
+    fetchDataset({
+      start: nextPage * RUNS_AFTER_PAGE_SIZE,
+      length: RUNS_AFTER_PAGE_SIZE,
+      dataSet: debouncedRunsAfterSearch || undefined,
+    })
+      .then(({ rows }) => {
+        setRunsAfterOptions((prev) => [
+          ...prev,
+          ...rows
+            .filter((ds) => ds.dataSetId !== data?.dataSetId)
+            .map((ds) => ({ label: ds.dataSet, value: String(ds.dataSetId) })),
+        ]);
+        setRunsAfterPage(nextPage);
+        setHasMoreRunsAfter(rows.length === RUNS_AFTER_PAGE_SIZE);
+      })
+      .catch(() => {})
+      .finally(() => setIsLoadingMoreRunsAfter(false));
+  };
+
+  const resolveRunsAfterLabel = async (value: string): Promise<string> => {
+    if (value === '0') {
+      return t('None');
+    }
+    const res = await fetchDataset({ start: 0, length: 1, dataSetId: Number(value) });
+    return res.rows[0]?.dataSet ?? '';
+  };
 
   const handleTestRemoteData = () => {
     setTestResult(t('Testing...'));
@@ -789,7 +839,12 @@ export default function AddAndEditDatasetModal({
                 label={t('Depends on Dataset')}
                 value={draft.runsAfter.toString()}
                 options={runsAfterOptions}
+                resolveLabel={resolveRunsAfterLabel}
+                onLoadMore={handleLoadMoreRunsAfter}
+                hasMore={hasMoreRunsAfter}
+                isLoadingMore={isLoadingMoreRunsAfter}
                 searchable
+                onSearch={setRunsAfterSearch}
                 helpText={t(
                   'The DataSet you select here will be processed in advance and have its values available for substitution in the data to add to this request on the Remote tab.',
                 )}

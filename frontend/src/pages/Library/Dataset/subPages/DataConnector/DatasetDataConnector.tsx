@@ -95,7 +95,23 @@ export default function DatasetDataConnector() {
 
   const { data: columnsData } = useQuery({
     queryKey: ['datasetColumns', datasetId],
-    queryFn: () => fetchDatasetColumns(datasetId!, { start: 0, length: 100 }),
+    queryFn: async () => {
+      const pageSize = 100;
+      const first = await fetchDatasetColumns(datasetId!, { start: 0, length: pageSize });
+      let rows = first.rows;
+      const totalCount = first.totalCount;
+      while (rows.length < totalCount) {
+        const next = await fetchDatasetColumns(datasetId!, {
+          start: rows.length,
+          length: pageSize,
+        });
+        if (next.rows.length === 0) {
+          break;
+        }
+        rows = [...rows, ...next.rows];
+      }
+      return { rows, totalCount };
+    },
     enabled: !!datasetId,
   });
 

@@ -31,7 +31,7 @@ import {
 } from '@floating-ui/react';
 import { isAxiosError } from 'axios';
 import type { TFunction } from 'i18next';
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Button from '@/components/ui/Button';
@@ -61,7 +61,7 @@ import { PICTURE_PROPERTY_DEFS } from '@/pages/Displays/DisplayProfile/component
 import type { FieldMeta } from '@/pages/Displays/DisplayProfile/components/fields/fieldMetadata';
 import { getFieldMetaForType } from '@/pages/Displays/DisplayProfile/components/fields/fieldMetadata';
 import { getEditDisplaySchema } from '@/schema/display';
-import { fetchDaypart } from '@/services/daypartApi';
+import { fetchDaypart, fetchDaypartById } from '@/services/daypartApi';
 import { fetchDisplayProfileById, fetchDisplayProfile } from '@/services/displayProfileApi';
 import { updateDisplay, fetchDisplayVenues, fetchDisplayLocales } from '@/services/displaysApi';
 import type { DisplayVenue } from '@/services/displaysApi';
@@ -292,6 +292,30 @@ function normalizeOverridesForSave(overrides: Record<string, string>): Record<st
   return { ...overrides, elevateLogsUntil: formatted };
 }
 
+async function findDefaultProfileId(type: string): Promise<number | null> {
+  const pageSize = 200;
+  let start = 0;
+  let fallbackId: number | null = null;
+  while (true) {
+    const res = await fetchDisplayProfile({ start, length: pageSize, type: type as never });
+    if (res.rows.length === 0) {
+      break;
+    }
+    if (fallbackId === null) {
+      fallbackId = res.rows[0]?.displayProfileId ?? null;
+    }
+    const found = res.rows.find((p) => p.isDefault === 1);
+    if (found) {
+      return found.displayProfileId;
+    }
+    start += res.rows.length;
+    if (start >= res.totalCount) {
+      break;
+    }
+  }
+  return fallbackId;
+}
+
 function resolveLabel(
   raw: string | number | null | undefined,
   meta: FieldMeta,
@@ -299,6 +323,7 @@ function resolveLabel(
   dayparts: Daypart[],
   t: TFunction,
   formatDateTime: (value: DateLike) => string,
+  daypartNameCache: Record<string, string> = {},
 ): string {
   if (raw === null || raw === undefined) {
     return '—';
@@ -311,7 +336,7 @@ function resolveLabel(
     return playerVersions.find((v) => String(v.versionId) === str)?.playerShowVersion ?? str;
   }
   if (meta.inputType === 'daypart') {
-    return dayparts.find((d) => String(d.dayPartId) === str)?.name ?? str;
+    return dayparts.find((d) => String(d.dayPartId) === str)?.name ?? daypartNameCache[str] ?? str;
   }
   if (meta.inputType === 'timers') {
     return summarizeTimers(str, t);
@@ -347,6 +372,16 @@ interface OverrideCellProps {
   playerType: string | undefined;
   onCommit: (name: string, value: string) => void;
   onRemove: (name: string) => void;
+  resolveDaypartLabel: (value: string) => Promise<string>;
+  daypartNameCache: Record<string, string>;
+  daypartsHasMore: boolean;
+  onLoadMoreDayparts: () => void;
+  isLoadingMoreDayparts: boolean;
+  onSearchDayparts: (term: string) => void;
+  playerVersionsHasMore: boolean;
+  onLoadMorePlayerVersions: () => void;
+  isLoadingMorePlayerVersions: boolean;
+  onSearchPlayerVersions: (term: string) => void;
 }
 
 function OverrideCell({
@@ -359,6 +394,16 @@ function OverrideCell({
   playerType,
   onCommit,
   onRemove,
+  resolveDaypartLabel,
+  daypartNameCache,
+  daypartsHasMore,
+  onLoadMoreDayparts,
+  isLoadingMoreDayparts,
+  onSearchDayparts,
+  playerVersionsHasMore,
+  onLoadMorePlayerVersions,
+  isLoadingMorePlayerVersions,
+  onSearchPlayerVersions,
 }: OverrideCellProps) {
   const { t } = useTranslation();
   const { formatDateTime } = useDateFormatter();
@@ -394,7 +439,15 @@ function OverrideCell({
 
   const displayText =
     overrideVal !== undefined
-      ? resolveLabel(overrideVal, meta, playerVersions, dayparts, t, formatDateTime)
+      ? resolveLabel(
+          overrideVal,
+          meta,
+          playerVersions,
+          dayparts,
+          t,
+          formatDateTime,
+          daypartNameCache,
+        )
       : undefined;
 
   return (
@@ -435,7 +488,20 @@ function OverrideCell({
                 meta={meta}
                 value={editValue}
                 onChange={(val) => setEditValue(val !== null ? String(val) : '')}
-                contextData={{ dayparts, playerVersions, playerType }}
+                contextData={{
+                  dayparts,
+                  playerVersions,
+                  playerType,
+                  resolveDaypartLabel,
+                  daypartsHasMore,
+                  onLoadMoreDayparts,
+                  isLoadingMoreDayparts,
+                  onSearchDayparts,
+                  playerVersionsHasMore,
+                  onLoadMorePlayerVersions,
+                  isLoadingMorePlayerVersions,
+                  onSearchPlayerVersions,
+                }}
               />
             </div>
             <div className="flex justify-end gap-2 px-4 py-3 border-t border-gray-100">
@@ -512,6 +578,9 @@ interface EditDisplayModalProps {
 }
 
 const LAYOUT_PAGE_SIZE = 10;
+const DAYPART_PAGE_SIZE = 10;
+const PLAYER_VERSION_PAGE_SIZE = 10;
+const DISPLAY_PROFILE_PAGE_SIZE = 10;
 
 export default function EditDisplayModal({
   isOpen = true,
@@ -588,9 +657,27 @@ export default function EditDisplayModal({
   });
 
   const [profiles, setProfiles] = useState<DisplayProfile[]>([]);
+  const [profilePage, setProfilePage] = useState(0);
+  const [hasMoreProfiles, setHasMoreProfiles] = useState(false);
+  const [isLoadingMoreProfiles, setIsLoadingMoreProfiles] = useState(false);
+  const [profileSearch, setProfileSearch] = useState('');
+  const debouncedProfileSearch = useDebounce(profileSearch, 300);
   const [activeProfile, setActiveProfile] = useState<DisplayProfile | null>(null);
   const [dayparts, setDayparts] = useState<Daypart[]>([]);
+  const [daypartPage, setDaypartPage] = useState(0);
+  const [hasMoreDayparts, setHasMoreDayparts] = useState(false);
+  const [isLoadingMoreDayparts, setIsLoadingMoreDayparts] = useState(false);
+  const [daypartSearch, setDaypartSearch] = useState('');
+  const debouncedDaypartSearch = useDebounce(daypartSearch, 300);
+  const [daypartNameCache, setDaypartNameCache] = useState<Record<string, string>>({});
+  const daypartResolveAttemptedRef = useRef<Set<string>>(new Set());
   const [playerVersions, setPlayerVersions] = useState<PlayerSoftware[]>([]);
+  const [playerVersionPage, setPlayerVersionPage] = useState(0);
+  const [hasMorePlayerVersions, setHasMorePlayerVersions] = useState(false);
+  const [isLoadingMorePlayerVersions, setIsLoadingMorePlayerVersions] = useState(false);
+  const [playerVersionSearch, setPlayerVersionSearch] = useState('');
+  const debouncedPlayerVersionSearch = useDebounce(playerVersionSearch, 300);
+  const playerVersionTypeRef = useRef<string | null>(null);
   const [profileFlat, setProfileFlat] = useState<Record<string, string | number | null>>({});
   const [profileDefaults, setProfileDefaults] = useState<Record<string, string | number | null>>(
     {},
@@ -730,37 +817,15 @@ export default function EditDisplayModal({
 
     setOverrides(initOverrides);
 
-    fetchDisplayProfile({
-      start: 0,
-      length: 200,
-      ...((data.displayProfileType ?? data.clientType)
-        ? { type: (data.displayProfileType ?? data.clientType) as never }
-        : {}),
-    })
-      .then((res) => setProfiles(res.rows))
-      .catch(() => setProfiles([]));
-
-    fetchDaypart({ start: 0, length: 100, isAlways: 0, isCustom: 0 })
-      .then((res) => setDayparts(res.rows))
-      .catch(() => setDayparts([]));
-
-    const playerVersionType =
-      data.clientType === 'chromeOS'
-        ? 'chromeOS'
-        : data.clientType === 'android' || data.clientType === 'lg' || data.clientType === 'sssp'
-          ? data.clientType
-          : null;
-    if (playerVersionType) {
-      fetchPlayerSoftware({ playerType: playerVersionType, start: 0, length: 100 })
-        .then((res) => setPlayerVersions(res.rows))
-        .catch(() => setPlayerVersions([]));
-    }
-
     fetchDisplayVenues()
       .then((v) => setVenues(v))
       .catch(() => setVenues([]));
 
+    setProfileSearch('');
+
     setLayoutSearch('');
+    setPlayerVersionSearch('');
+    setDaypartSearch('');
   }, [isOpen, data]);
 
   useEffect(() => {
@@ -788,6 +853,85 @@ export default function EditDisplayModal({
   }, [isOpen, data, debouncedLayoutSearch]);
 
   useEffect(() => {
+    if (!isOpen || !data) {
+      return;
+    }
+    setDayparts([]);
+    setDaypartPage(0);
+    fetchDaypart({
+      start: 0,
+      length: DAYPART_PAGE_SIZE,
+      isAlways: 0,
+      isCustom: 0,
+      name: debouncedDaypartSearch || undefined,
+    })
+      .then((res) => {
+        setDayparts(res.rows);
+        setHasMoreDayparts(res.rows.length === DAYPART_PAGE_SIZE);
+      })
+      .catch(() => {
+        setDayparts([]);
+        setHasMoreDayparts(false);
+      });
+  }, [isOpen, data, debouncedDaypartSearch]);
+
+  useEffect(() => {
+    if (!isOpen || !data) {
+      return;
+    }
+    const playerVersionType =
+      data.clientType === 'chromeOS'
+        ? 'chromeOS'
+        : data.clientType === 'android' || data.clientType === 'lg' || data.clientType === 'sssp'
+          ? data.clientType
+          : null;
+    playerVersionTypeRef.current = playerVersionType;
+    setPlayerVersions([]);
+    setPlayerVersionPage(0);
+    if (!playerVersionType) {
+      setHasMorePlayerVersions(false);
+      return;
+    }
+    fetchPlayerSoftware({
+      playerType: playerVersionType,
+      start: 0,
+      length: PLAYER_VERSION_PAGE_SIZE,
+      playerShowVersion: debouncedPlayerVersionSearch || undefined,
+    })
+      .then((res) => {
+        setPlayerVersions(res.rows);
+        setHasMorePlayerVersions(res.rows.length === PLAYER_VERSION_PAGE_SIZE);
+      })
+      .catch(() => {
+        setPlayerVersions([]);
+        setHasMorePlayerVersions(false);
+      });
+  }, [isOpen, data, debouncedPlayerVersionSearch]);
+
+  useEffect(() => {
+    if (!isOpen || !data) {
+      return;
+    }
+    setProfiles([]);
+    setProfilePage(0);
+    const profileType = data.displayProfileType ?? data.clientType;
+    fetchDisplayProfile({
+      start: 0,
+      length: DISPLAY_PROFILE_PAGE_SIZE,
+      ...(profileType ? { type: profileType as never } : {}),
+      ...(debouncedProfileSearch ? { displayProfile: debouncedProfileSearch } : {}),
+    })
+      .then((res) => {
+        setProfiles(res.rows);
+        setHasMoreProfiles(res.rows.length === DISPLAY_PROFILE_PAGE_SIZE);
+      })
+      .catch(() => {
+        setProfiles([]);
+        setHasMoreProfiles(false);
+      });
+  }, [isOpen, data, debouncedProfileSearch]);
+
+  useEffect(() => {
     if (!isOpen) {
       return;
     }
@@ -798,12 +942,9 @@ export default function EditDisplayModal({
     const load: Promise<DisplayProfile | null> = draft.displayProfileId
       ? fetchDisplayProfileById(draft.displayProfileId)
       : clientType
-        ? fetchDisplayProfile({
-            start: 0,
-            length: 200,
-            type: clientType as never,
-            embed: 'config,commands,configWithDefault',
-          }).then((res) => res.rows.find((p) => p.isDefault === 1) ?? res.rows[0] ?? null)
+        ? findDefaultProfileId(clientType).then((id) =>
+            id !== null ? fetchDisplayProfileById(id) : null,
+          )
         : Promise.resolve(null);
 
     load
@@ -883,6 +1024,77 @@ export default function EditDisplayModal({
       })
       .catch(() => {})
       .finally(() => setIsLoadingMoreLayouts(false));
+  };
+
+  const handleLoadMoreDayparts = () => {
+    if (isLoadingMoreDayparts || !hasMoreDayparts) {
+      return;
+    }
+    const nextPage = daypartPage + 1;
+    setIsLoadingMoreDayparts(true);
+    fetchDaypart({
+      start: nextPage * DAYPART_PAGE_SIZE,
+      length: DAYPART_PAGE_SIZE,
+      isAlways: 0,
+      isCustom: 0,
+      name: debouncedDaypartSearch || undefined,
+    })
+      .then((res) => {
+        setDayparts((prev) => [...prev, ...res.rows]);
+        setDaypartPage(nextPage);
+        setHasMoreDayparts(res.rows.length === DAYPART_PAGE_SIZE);
+      })
+      .catch(() => {})
+      .finally(() => setIsLoadingMoreDayparts(false));
+  };
+
+  const handleLoadMorePlayerVersions = () => {
+    const playerVersionType = playerVersionTypeRef.current;
+    if (!playerVersionType || isLoadingMorePlayerVersions || !hasMorePlayerVersions) {
+      return;
+    }
+    const nextPage = playerVersionPage + 1;
+    setIsLoadingMorePlayerVersions(true);
+    fetchPlayerSoftware({
+      playerType: playerVersionType,
+      start: nextPage * PLAYER_VERSION_PAGE_SIZE,
+      length: PLAYER_VERSION_PAGE_SIZE,
+      playerShowVersion: debouncedPlayerVersionSearch || undefined,
+    })
+      .then((res) => {
+        setPlayerVersions((prev) => [...prev, ...res.rows]);
+        setPlayerVersionPage(nextPage);
+        setHasMorePlayerVersions(res.rows.length === PLAYER_VERSION_PAGE_SIZE);
+      })
+      .catch(() => {})
+      .finally(() => setIsLoadingMorePlayerVersions(false));
+  };
+
+  const handleLoadMoreProfiles = () => {
+    if (isLoadingMoreProfiles || !hasMoreProfiles || !data) {
+      return;
+    }
+    const nextPage = profilePage + 1;
+    setIsLoadingMoreProfiles(true);
+    const profileType = data.displayProfileType ?? data.clientType;
+    fetchDisplayProfile({
+      start: nextPage * DISPLAY_PROFILE_PAGE_SIZE,
+      length: DISPLAY_PROFILE_PAGE_SIZE,
+      ...(profileType ? { type: profileType as never } : {}),
+      ...(debouncedProfileSearch ? { displayProfile: debouncedProfileSearch } : {}),
+    })
+      .then((res) => {
+        setProfiles((prev) => [...prev, ...res.rows]);
+        setProfilePage(nextPage);
+        setHasMoreProfiles(res.rows.length === DISPLAY_PROFILE_PAGE_SIZE);
+      })
+      .catch(() => {})
+      .finally(() => setIsLoadingMoreProfiles(false));
+  };
+
+  const resolveProfileLabel = async (value: string): Promise<string> => {
+    const profile = await fetchDisplayProfileById(Number(value));
+    return profile?.name ?? '';
   };
 
   const handleSave = () => {
@@ -1047,6 +1259,67 @@ export default function EditDisplayModal({
       return next;
     });
   };
+
+  const resolveDaypartLabel = async (value: string): Promise<string> => {
+    const daypart = await fetchDaypartById(value);
+    return daypart?.name ?? '';
+  };
+
+  useEffect(() => {
+    const daypartFieldNames = profileSettingNames.filter(
+      (name) => fieldMeta[name]?.inputType === 'daypart',
+    );
+    if (daypartFieldNames.length === 0) {
+      return;
+    }
+    const knownIds = new Set(dayparts.map((d) => String(d.dayPartId)));
+    const candidates = new Set<string>();
+    daypartFieldNames.forEach((name) => {
+      const profileVal = getProfileValue(name);
+      if (profileVal !== null && profileVal !== undefined && profileVal !== '') {
+        candidates.add(String(profileVal));
+      }
+      const overrideVal = overrides[name];
+      if (overrideVal !== undefined && overrideVal !== '') {
+        candidates.add(overrideVal);
+      }
+    });
+    const missing = [...candidates].filter(
+      (id) =>
+        !knownIds.has(id) &&
+        daypartNameCache[id] === undefined &&
+        !daypartResolveAttemptedRef.current.has(id),
+    );
+    if (missing.length === 0) {
+      return;
+    }
+    missing.forEach((id) => daypartResolveAttemptedRef.current.add(id));
+
+    let cancelled = false;
+    Promise.all(
+      missing.map((id) =>
+        fetchDaypartById(id)
+          .then((d) => [id, d?.name ?? ''] as const)
+          .catch(() => [id, ''] as const),
+      ),
+    ).then((results) => {
+      if (cancelled) {
+        return;
+      }
+      setDaypartNameCache((prev) => {
+        const next = { ...prev };
+        results.forEach(([id, name]) => {
+          if (name) {
+            next[id] = name;
+          }
+        });
+        return next;
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [dayparts, overrides, profileSettingNames, fieldMeta, daypartNameCache, getProfileValue]);
 
   const layoutOptions: SelectOption[] = [
     ...(layoutSearch ? [] : [{ value: '', label: t('Global default') }]),
@@ -1517,6 +1790,11 @@ export default function EditDisplayModal({
                   value: String(p.displayProfileId),
                   label: p.name,
                 }))}
+                resolveLabel={resolveProfileLabel}
+                onLoadMore={handleLoadMoreProfiles}
+                hasMore={hasMoreProfiles}
+                isLoadingMore={isLoadingMoreProfiles}
+                onSearch={setProfileSearch}
                 onSelect={(v) => set('displayProfileId', v ? Number(v) : null)}
               />
 
@@ -1568,6 +1846,7 @@ export default function EditDisplayModal({
                           dayparts,
                           t,
                           formatDateTime,
+                          daypartNameCache,
                         );
 
                         return (
@@ -1588,6 +1867,16 @@ export default function EditDisplayModal({
                                 dayparts={dayparts}
                                 playerVersions={playerVersions}
                                 playerType={data?.clientType ?? undefined}
+                                resolveDaypartLabel={resolveDaypartLabel}
+                                daypartNameCache={daypartNameCache}
+                                daypartsHasMore={hasMoreDayparts}
+                                onLoadMoreDayparts={handleLoadMoreDayparts}
+                                isLoadingMoreDayparts={isLoadingMoreDayparts}
+                                onSearchDayparts={setDaypartSearch}
+                                playerVersionsHasMore={hasMorePlayerVersions}
+                                onLoadMorePlayerVersions={handleLoadMorePlayerVersions}
+                                isLoadingMorePlayerVersions={isLoadingMorePlayerVersions}
+                                onSearchPlayerVersions={setPlayerVersionSearch}
                                 onCommit={commitOverride}
                                 onRemove={removeOverride}
                               />

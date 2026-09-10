@@ -31,6 +31,7 @@ import SelectFolder from '@/components/ui/forms/SelectFolder';
 import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
 import { useUserContext } from '@/context/UserContext';
+import { useDebounce } from '@/hooks/useDebounce';
 import { getTemplateSchema } from '@/schema/templates';
 import { fetchResolution } from '@/services/resolutionApi';
 import { createTemplate, updateTemplate } from '@/services/templatesApi';
@@ -59,6 +60,8 @@ type TemplateDraft = {
 
 type TemplateFormErrors = Partial<Record<keyof TemplateDraft, string>>;
 
+const RESOLUTION_PAGE_SIZE = 10;
+
 const DEFAULT_DRAFT: TemplateDraft = {
   name: '',
   folderId: null,
@@ -85,6 +88,11 @@ export default function AddAndEditTemplateModal({
   const [hasTagPendingValue, setHasTagPendingValue] = useState(false);
   const [resolutions, setResolutions] = useState<Resolution[]>([]);
   const [loadingResolutions, setLoadingResolutions] = useState(false);
+  const [resolutionPage, setResolutionPage] = useState(0);
+  const [hasMoreResolutions, setHasMoreResolutions] = useState(false);
+  const [isLoadingMoreResolutions, setIsLoadingMoreResolutions] = useState(false);
+  const [resolutionSearch, setResolutionSearch] = useState('');
+  const debouncedResolutionSearch = useDebounce(resolutionSearch, 300);
 
   const [draft, setDraft] = useState<TemplateDraft>(() => {
     if (type === 'edit' && data) {
@@ -103,16 +111,18 @@ export default function AddAndEditTemplateModal({
   useEffect(() => {
     if (!isOpen) return;
 
-    const loadResolutions = async () => {
-      setLoadingResolutions(true);
-      try {
-        const res = await fetchResolution({
-          start: 0,
-          length: 100,
-          enabled: 1,
-        });
-
+    setLoadingResolutions(true);
+    setResolutions([]);
+    setResolutionPage(0);
+    fetchResolution({
+      start: 0,
+      length: RESOLUTION_PAGE_SIZE,
+      enabled: 1,
+      resolution: debouncedResolutionSearch || undefined,
+    })
+      .then((res) => {
         setResolutions(res.rows);
+        setHasMoreResolutions(res.rows.length === RESOLUTION_PAGE_SIZE);
 
         const [firstResolution] = res.rows;
         if (type === 'add' && firstResolution) {
@@ -122,15 +132,35 @@ export default function AddAndEditTemplateModal({
               : prev,
           );
         }
-      } catch (err) {
+      })
+      .catch((err) => {
         console.error(err);
-      } finally {
-        setLoadingResolutions(false);
-      }
-    };
+        setResolutions([]);
+        setHasMoreResolutions(false);
+      })
+      .finally(() => setLoadingResolutions(false));
+  }, [isOpen, type, debouncedResolutionSearch]);
 
-    loadResolutions();
-  }, [isOpen, type]);
+  const handleLoadMoreResolutions = () => {
+    if (isLoadingMoreResolutions || !hasMoreResolutions) {
+      return;
+    }
+    const nextPage = resolutionPage + 1;
+    setIsLoadingMoreResolutions(true);
+    fetchResolution({
+      start: nextPage * RESOLUTION_PAGE_SIZE,
+      length: RESOLUTION_PAGE_SIZE,
+      enabled: 1,
+      resolution: debouncedResolutionSearch || undefined,
+    })
+      .then((res) => {
+        setResolutions((prev) => [...prev, ...res.rows]);
+        setResolutionPage(nextPage);
+        setHasMoreResolutions(res.rows.length === RESOLUTION_PAGE_SIZE);
+      })
+      .catch(() => {})
+      .finally(() => setIsLoadingMoreResolutions(false));
+  };
 
   useEffect(() => {
     setPendingTagInput('');
@@ -303,6 +333,11 @@ export default function AddAndEditTemplateModal({
               value={draft.resolutionId ? String(draft.resolutionId) : undefined}
               placeholder={loadingResolutions ? 'Loading...' : 'Select resolution'}
               options={resolutionOptions}
+              searchable
+              onSearch={setResolutionSearch}
+              onLoadMore={handleLoadMoreResolutions}
+              hasMore={hasMoreResolutions}
+              isLoadingMore={isLoadingMoreResolutions}
               onSelect={(value) => {
                 setDraft((prev) => ({
                   ...prev,

@@ -41,6 +41,7 @@ export interface WindowsFieldProps {
   onLoadMoreDayparts?: () => void;
   isLoadingMoreDayparts?: boolean;
   onSearchDayparts?: (term: string) => void;
+  resolveDaypartLabel?: (value: string) => Promise<string>;
   settings?: Record<string, unknown> | null;
 }
 
@@ -58,6 +59,7 @@ export function WindowsFields({
   onLoadMoreDayparts,
   isLoadingMoreDayparts,
   onSearchDayparts,
+  resolveDaypartLabel,
   settings,
 }: WindowsFieldProps) {
   const metaMap = getFieldMetaForType('windows', t);
@@ -97,6 +99,7 @@ export function WindowsFields({
     onLoadMoreDayparts,
     isLoadingMoreDayparts,
     onSearchDayparts,
+    resolveDaypartLabel,
   };
 
   return (

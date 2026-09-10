@@ -41,6 +41,7 @@ export type SelectOption = {
   label: string;
   value: string;
   disabled?: boolean;
+  isDivider?: boolean;
 };
 
 interface BaseSelectDropdownProps {
@@ -199,7 +200,9 @@ export default function SelectDropdown({
   }, [isOpen, hasMore, isLoadingMore]);
 
   for (const o of options) {
-    labelCache.current.set(o.value, o.label);
+    if (!o.isDivider) {
+      labelCache.current.set(o.value, o.label);
+    }
   }
   const selectedLabel =
     options.find((o) => o.value === value)?.label ??
@@ -340,38 +343,46 @@ export default function SelectDropdown({
               {isLoading && visibleOptions.length === 0 && (
                 <p className="text-sm text-gray-400 text-center py-2">{t('Loading...')}</p>
               )}
-              {visibleOptions.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  role="option"
-                  aria-selected={option.value === value}
-                  disabled={option.disabled}
-                  className={twMerge(
-                    'text-left p-2 rounded-lg font-medium flex gap-2 items-center min-w-0',
-                    option.disabled
-                      ? 'text-gray-300 cursor-not-allowed'
-                      : 'hover:bg-gray-100 cursor-pointer',
-                  )}
-                  onClick={() => {
-                    if (option.disabled) {
-                      return;
-                    }
+              {visibleOptions.map((option) =>
+                option.isDivider ? (
+                  <div
+                    key={option.value}
+                    role="separator"
+                    className="my-1 border-t border-gray-100"
+                  />
+                ) : (
+                  <button
+                    key={option.value}
+                    type="button"
+                    role="option"
+                    aria-selected={option.value === value}
+                    disabled={option.disabled}
+                    className={twMerge(
+                      'text-left p-2 rounded-lg font-medium flex gap-2 items-center min-w-0',
+                      option.disabled
+                        ? 'text-gray-300 cursor-not-allowed'
+                        : 'hover:bg-gray-100 cursor-pointer',
+                    )}
+                    onClick={() => {
+                      if (option.disabled) {
+                        return;
+                      }
 
-                    onSelect(option.value);
-                    handleOpenChange(false);
-                  }}
-                >
-                  {addOptionAvatar && (
-                    <div className="bg-xibo-blue-100 h-6.5 w-6.5 text-xs center rounded-full text-xibo-blue-800 font-semibold flex items-center justify-center">
-                      {option.label.slice(0, 1)}
-                    </div>
-                  )}
-                  <span className="truncate" title={option.label}>
-                    {t(option.label)}
-                  </span>
-                </button>
-              ))}
+                      onSelect(option.value);
+                      handleOpenChange(false);
+                    }}
+                  >
+                    {addOptionAvatar && (
+                      <div className="bg-xibo-blue-100 h-6.5 w-6.5 text-xs center rounded-full text-xibo-blue-800 font-semibold flex items-center justify-center">
+                        {option.label.slice(0, 1)}
+                      </div>
+                    )}
+                    <span className="truncate" title={option.label}>
+                      {t(option.label)}
+                    </span>
+                  </button>
+                ),
+              )}
               {hasMore && <div ref={sentinelRef} className="h-1" />}
               {isLoadingMore && (
                 <div className="text-xs text-gray-400 text-center py-1">{t('Loading…')}</div>
