@@ -35,6 +35,7 @@ import type { FeatureDefinition } from '../config/featureDefinitions';
 import Modal from '@/components/ui/modals/Modal';
 import { fetchUserGroupById, fetchUserGroups, updateGroupFeatures } from '@/services/userGroupApi';
 import type { User } from '@/types/user';
+import type { UserGroup } from '@/types/userGroup';
 
 type FeatureTab = string;
 
@@ -77,19 +78,46 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
     }
 
     setIsLoading(true);
+    let cancelled = false;
+
+    const loadAllMemberGroups = async (): Promise<UserGroup[]> => {
+      const pageSize = 200;
+      const first = await fetchUserGroups({
+        start: 0,
+        length: pageSize,
+        userIdMember: user.userId,
+      });
+      let rows = first.rows;
+      const totalCount = first.totalCount;
+      while (rows.length < totalCount) {
+        const next = await fetchUserGroups({
+          start: rows.length,
+          length: pageSize,
+          userIdMember: user.userId,
+        });
+        if (next.rows.length === 0) {
+          break;
+        }
+        rows = [...rows, ...next.rows];
+      }
+      return rows;
+    };
 
     Promise.all([
       // Fetch the user-specific group features (directly assigned)
       fetchUserGroupById(user.groupId),
       // Fetch the groups this user actually belongs to
-      fetchUserGroups({ start: 0, length: 1000, userIdMember: user.userId }),
+      loadAllMemberGroups(),
     ])
       .then(([userGroup, memberGroups]) => {
+        if (cancelled) {
+          return;
+        }
         setEnabledFeatures(new Set(userGroup.features ?? []));
 
         // Inherited = features from non-user-specific groups the user belongs to
         const inherited = new Set<string>();
-        for (const group of memberGroups.rows) {
+        for (const group of memberGroups) {
           if (group.isUserSpecific !== 1 && group.features) {
             group.features.forEach((f) => inherited.add(f));
           }
@@ -97,10 +125,21 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
         setInheritedFeatures(inherited);
       })
       .catch(() => {
+        if (cancelled) {
+          return;
+        }
         setEnabledFeatures(new Set());
         setInheritedFeatures(new Set());
       })
-      .finally(() => setIsLoading(false));
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [user.groupId, user.userId]);
 
   const toggleFeature = (feature: string) => {

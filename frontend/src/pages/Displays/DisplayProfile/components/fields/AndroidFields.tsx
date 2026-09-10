@@ -43,6 +43,7 @@ export interface AndroidFieldProps {
   onLoadMoreDayparts?: () => void;
   isLoadingMoreDayparts?: boolean;
   onSearchDayparts?: (term: string) => void;
+  resolveDaypartLabel?: (value: string) => Promise<string>;
   playerVersions: PlayerSoftware[];
   playerVersionsHasMore?: boolean;
   onLoadMorePlayerVersions?: () => void;
@@ -65,6 +66,7 @@ export function AndroidFields({
   onLoadMoreDayparts,
   isLoadingMoreDayparts,
   onSearchDayparts,
+  resolveDaypartLabel,
   playerVersions,
   playerVersionsHasMore,
   onLoadMorePlayerVersions,
@@ -116,6 +118,7 @@ export function AndroidFields({
     onLoadMoreDayparts,
     isLoadingMoreDayparts,
     onSearchDayparts,
+    resolveDaypartLabel,
     playerVersions,
     playerVersionsHasMore,
     onLoadMorePlayerVersions,

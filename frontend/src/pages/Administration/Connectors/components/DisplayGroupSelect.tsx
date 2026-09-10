@@ -58,6 +58,31 @@ export default function DisplayGroupSelect({
   const debouncedSearch = useDebounce(search, 300);
   const [options, setOptions] = useState<{ id: number; label: string }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [resolvedLabel, setResolvedLabel] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!value || valueLabel) {
+      setResolvedLabel(null);
+      return;
+    }
+    let cancelled = false;
+    fetchDisplayGroups({ start: 0, length: 1, displayGroupId: value })
+      .then((res) => {
+        if (!cancelled) {
+          setResolvedLabel(res.rows[0]?.displayGroup ?? String(value));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setResolvedLabel(String(value));
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [value, valueLabel]);
+
+  const displayLabel = valueLabel || resolvedLabel || '';
 
   const { refs, floatingStyles, context } = useFloating({
     open: isOpen,
@@ -131,7 +156,7 @@ export default function DisplayGroupSelect({
           <span
             className={`py-2 px-3 flex-1 text-sm truncate ${value ? 'text-gray-800' : 'text-gray-400'}`}
           >
-            {value ? valueLabel : t('None')}
+            {value ? displayLabel || t('Loading…') : t('None')}
           </span>
           <span className="p-3 text-gray-500 shrink-0">
             <ChevronDown size={14} />

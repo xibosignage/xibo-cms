@@ -55,20 +55,41 @@ export default function ImportDatasetCsvModal({
   const [mappings, setMappings] = useState<Record<string, number>>({});
 
   useEffect(() => {
-    if (isOpen && datasetId) {
-      fetchDatasetColumns(datasetId, { start: 0, length: 100 })
-        .then((res) => {
-          const valueCols = res.rows.filter((c) => c.dataSetColumnTypeId === 1);
-          setColumns(valueCols);
-
-          const initialMap: Record<string, number> = {};
-          valueCols.forEach((col, index) => {
-            initialMap[col.dataSetColumnId] = index + 1;
-          });
-          setMappings(initialMap);
-        })
-        .catch(() => notify.error(t('Failed to load dataset columns')));
+    if (!isOpen || !datasetId) {
+      return;
     }
+    let cancelled = false;
+
+    const loadAllColumns = async () => {
+      const pageSize = 100;
+      const first = await fetchDatasetColumns(datasetId, { start: 0, length: pageSize });
+      let rows = first.rows;
+      const totalCount = first.totalCount;
+      while (rows.length < totalCount) {
+        const next = await fetchDatasetColumns(datasetId, { start: rows.length, length: pageSize });
+        if (next.rows.length === 0) {
+          break;
+        }
+        rows = [...rows, ...next.rows];
+      }
+      if (cancelled) {
+        return;
+      }
+      const valueCols = rows.filter((c) => c.dataSetColumnTypeId === 1);
+      setColumns(valueCols);
+
+      const initialMap: Record<string, number> = {};
+      valueCols.forEach((col, index) => {
+        initialMap[col.dataSetColumnId] = index + 1;
+      });
+      setMappings(initialMap);
+    };
+
+    loadAllColumns().catch(() => notify.error(t('Failed to load dataset columns')));
+
+    return () => {
+      cancelled = true;
+    };
   }, [isOpen, datasetId, t]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
