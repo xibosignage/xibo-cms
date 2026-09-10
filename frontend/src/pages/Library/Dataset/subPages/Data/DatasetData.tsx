@@ -49,6 +49,7 @@ import {
   getDatasetById,
   type DynamicRowData,
 } from '@/services/datasetApi';
+import { isAlreadyDeletedError } from '@/utils/errors';
 import { countActiveFilters } from '@/utils/filters';
 import { hasFeature } from '@/utils/permissions';
 
@@ -218,19 +219,48 @@ export default function DatasetData() {
 
   const deleteMutation = useMutation({
     mutationFn: async (items: DynamicRowData[]) => {
-      for (const item of items) {
-        const rowId = getRowId(item);
-        if (rowId) await deleteDatasetRow(datasetId!, rowId);
-      }
-      return items;
+      const deletable = items.filter((item) => !!getRowId(item));
+      const results = await Promise.allSettled(
+        deletable.map((item) => deleteDatasetRow(datasetId!, getRowId(item))),
+      );
+      return { items: deletable, results };
     },
-    onSuccess: (deletedItems) => {
+    onSuccess: ({ items, results }) => {
+      const deletedItems = items.filter((_, i) => {
+        const r = results[i];
+        if (!r) return false;
+        return r.status === 'fulfilled' || isAlreadyDeletedError(r.reason);
+      });
+      const trueFailed = results.filter(
+        (r) => r.status === 'rejected' && !isAlreadyDeletedError(r.reason),
+      );
+
       const newSelection = { ...rowSelection };
       deletedItems.forEach((item) => {
         const rowId = getRowId(item);
         if (rowId) delete newSelection[rowId];
       });
       setRowSelection(newSelection);
+
+      if (trueFailed.length > 0) {
+        const firstRejected = trueFailed[0] as PromiseRejectedResult;
+        const reason = firstRejected.reason;
+        const specificMessage =
+          isAxiosError(reason) && reason.response?.data?.message
+            ? reason.response.data.message
+            : undefined;
+        const failurePart =
+          specificMessage ??
+          t('{{count}} row(s) could not be deleted.', { count: trueFailed.length });
+        const successPart =
+          deletedItems.length > 0
+            ? t('{{count}} row(s) deleted successfully.', { count: deletedItems.length })
+            : '';
+
+        setDeleteError([successPart, failurePart].filter(Boolean).join(' '));
+        handleRefresh();
+        return;
+      }
 
       closeModal();
       handleRefresh();
