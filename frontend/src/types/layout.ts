@@ -56,6 +56,7 @@ export interface Layout {
   width: number;
   height: number;
   publishedStatus: string;
+  publishedDate?: string | null;
 }
 
 export interface LayoutPermissions {
