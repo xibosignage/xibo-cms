@@ -15,6 +15,7 @@ containers/
 web/dist
 web/app
 modules/bundle*.js*
+modules/vendor-*.min.js*
 modules/assets/pdfjs
 
 # The OpenOOH specification

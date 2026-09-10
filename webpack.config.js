@@ -169,6 +169,8 @@ const moduleConfig = function(env) {
   return Object.assign({}, config, {
     entry: {
       bundle: './modules/src/player_bundle.js',
+      'vendor-hls': './modules/src/vendor-hls.js',
+      'vendor-pdfjs': './modules/src/vendor-pdfjs.js',
     },
     output: {
       path: path.resolve(__dirname, 'modules'),

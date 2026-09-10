@@ -52,11 +52,8 @@ require('moment-timezone');
 window.Handlebars = require('handlebars/dist/handlebars.min.js');
 require('./handlebars-helpers.js');
 
-// Include HLS.js
-window.Hls = require('hls.js');
-
-// Include PDFjs
-window.pdfjsLib = require('pdfjs-dist/es5/build/pdf.js');
+// HLS.js and PDFjs are shipped per-module via <assets> in hls.xml / pdf.xml,
+// so they only load on pages that actually need them.
 
 // Include common helpers/transformer
 window.transformer = require('../../ui/src/helpers/transformer.js');
