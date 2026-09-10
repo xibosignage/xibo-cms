@@ -1284,7 +1284,8 @@ export default function EditDisplayModal({
                 helpText={t('The Latitude of this display')}
                 placeholder=" "
                 value={draft.latitude ?? undefined}
-                onChange={(v) => set('latitude', v || null)}
+                onChange={(v) => set('latitude', v)}
+                onClear={() => set('latitude', null)}
                 error={fieldErrors.latitude}
               />
               <NumberInput
@@ -1293,7 +1294,8 @@ export default function EditDisplayModal({
                 helpText={t('The Longitude of this Display')}
                 placeholder=" "
                 value={draft.longitude ?? undefined}
-                onChange={(v) => set('longitude', v || null)}
+                onChange={(v) => set('longitude', v)}
+                onClear={() => set('longitude', null)}
                 error={fieldErrors.longitude}
               />
               <TimezoneSelect
@@ -1354,7 +1356,8 @@ export default function EditDisplayModal({
                 placeholder=" "
                 min={0}
                 value={draft.screenSize ?? undefined}
-                onChange={(v) => set('screenSize', v || null)}
+                onChange={(v) => set('screenSize', v)}
+                onClear={() => set('screenSize', null)}
                 error={fieldErrors.screenSize}
               />
               <Checkbox
