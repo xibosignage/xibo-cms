@@ -60,9 +60,10 @@ import { toggleTag } from '@/utils/tags';
 
 export default function Layouts() {
   const { t } = useTranslation();
-  const { formatDateTime } = useDateFormatter();
+  const { formatDateTime, timeZone } = useDateFormatter();
   const queryClient = useQueryClient();
   const { user } = useUserContext();
+  const locale = user?.settings?.translate?.jsLocale;
   const canViewFolders = usePermissions()?.canViewFolders;
   const canSchedule = hasFeature(user, 'schedule.add');
   const canViewPlaylist = hasFeature(user, 'playlist.view');
@@ -346,6 +347,8 @@ export default function Layouts() {
     canSaveTemplate,
     canTag,
     formatDateTime,
+    timeZone,
+    locale,
     onDelete: handleDelete,
     openEditModal,
     openMoveModal: canViewFolders

@@ -23,7 +23,7 @@ import type { ColumnDef, PaginationState, SortingState } from '@tanstack/react-t
 import type { TFunction } from 'i18next';
 import { ArrowLeft, PenSquare, Trash2 } from 'lucide-react';
 import type { ComponentProps } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -223,6 +223,7 @@ export default function CampaignEditor() {
   const [pendingTagInput, setPendingTagInput] = useState('');
   const [hasTagPendingValue, setHasTagPendingValue] = useState(false);
   const [dateErrors, setDateErrors] = useState<{ startDt?: string; endDt?: string }>({});
+  const draftInitializedForRef = useRef<number | null>(null);
 
   const [displayTargets, setDisplayTargets] = useState<DisplayGroupMultiSelectValue>({
     displaySpecificGroupIds: [],
@@ -252,10 +253,11 @@ export default function CampaignEditor() {
   } | null>(null);
 
   useEffect(() => {
-    if (campaign) {
+    if (campaign && draftInitializedForRef.current !== campaignId) {
       setDraft(buildDraft(campaign));
+      draftInitializedForRef.current = campaignId;
     }
-  }, [campaign]);
+  }, [campaign, campaignId]);
 
   useEffect(() => {
     const ids = campaign?.displayGroupIds ?? [];
