@@ -53,7 +53,7 @@ export default function Folders() {
   // Restore selected folder from user preference
   const { data: savedPrefs, isSuccess: hasLoadedPrefs } = useQuery({
     queryKey: ['userPref', PAGE_KEY],
-    queryFn: () => fetchUserPreference<{ folderId?: number }>(PAGE_KEY),
+    queryFn: () => fetchUserPreference<{ folderId?: number }>(PAGE_KEY).then((v) => v ?? null),
     staleTime: Infinity,
   });
 

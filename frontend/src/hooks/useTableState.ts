@@ -79,12 +79,7 @@ export function useTableState<TFilters>(
     // swallowed and isFolderIdHydrated is always set in .finally().
     fetchUserPreference<number | null>(folderIdKey)
       .then((stored) => {
-        if (
-          isActive &&
-          !hasInteractedWithFolderRef.current &&
-          stored !== null &&
-          stored !== undefined
-        ) {
+        if (isActive && !hasInteractedWithFolderRef.current && stored !== undefined) {
           setFolderIdState(stored);
         }
       })
@@ -110,7 +105,8 @@ export function useTableState<TFilters>(
 
   const { data: savedPrefs, isSuccess: hasLoadedPrefs } = useQuery({
     queryKey: ['userPref', pageKey],
-    queryFn: () => fetchUserPreference<Partial<TablePreferences<TFilters>>>(pageKey),
+    queryFn: () =>
+      fetchUserPreference<Partial<TablePreferences<TFilters>>>(pageKey).then((v) => v ?? null),
     staleTime: Infinity,
   });
 

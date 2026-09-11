@@ -63,7 +63,7 @@ export function useSidebarCollapsed(): [boolean, (value: boolean) => void] {
 
   const { data: savedPref, isSuccess } = useQuery({
     queryKey: ['userPref', COLLAPSED_PREF_KEY],
-    queryFn: () => fetchUserPreference<boolean>(COLLAPSED_PREF_KEY),
+    queryFn: () => fetchUserPreference<boolean>(COLLAPSED_PREF_KEY).then((v) => v ?? null),
     staleTime: Infinity,
   });
 
@@ -117,7 +117,7 @@ export function useSidebarOpenMenus(): [Set<string>, Dispatch<SetStateAction<Set
     isError,
   } = useQuery({
     queryKey: ['userPref', OPEN_MENUS_PREF_KEY],
-    queryFn: () => fetchUserPreference<string[]>(OPEN_MENUS_PREF_KEY),
+    queryFn: () => fetchUserPreference<string[]>(OPEN_MENUS_PREF_KEY).then((v) => v ?? null),
     staleTime: Infinity,
   });
 
