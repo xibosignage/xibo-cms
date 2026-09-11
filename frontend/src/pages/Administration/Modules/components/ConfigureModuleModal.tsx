@@ -193,6 +193,7 @@ export default function ConfigureModuleModal({
           label={t('Default Duration')}
           value={defaultDuration}
           type="number"
+          placeholder={t('Add number')}
           helpText={t(
             'The default duration for Widgets of this Module when the user has elected to not set a specific duration.',
           )}

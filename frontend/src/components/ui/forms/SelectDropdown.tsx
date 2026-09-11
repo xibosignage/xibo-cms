@@ -231,11 +231,11 @@ export default function SelectDropdown({
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
 
   return (
-    <div className={twMerge('relative overflow-visible', className)}>
+    <div className={twMerge('relative overflow-visible flex flex-col gap-1', className)}>
       {label && (
         <label
           id={`${id}-label`}
-          className="flex items-center justify-between text-sm font-semibold text-gray-500 leading-5"
+          className="flex items-center justify-between text-sm font-semibold text-gray-500 leading-4.5"
         >
           <span>{t(label)}</span>
           {optional && <span className="text-xs font-normal text-gray-500">{t('Optional')}</span>}
