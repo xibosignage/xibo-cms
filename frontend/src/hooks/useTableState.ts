@@ -105,7 +105,8 @@ export function useTableState<TFilters>(
 
   const { data: savedPrefs, isSuccess: hasLoadedPrefs } = useQuery({
     queryKey: ['userPref', pageKey],
-    queryFn: () => fetchUserPreference<Partial<TablePreferences<TFilters>>>(pageKey),
+    queryFn: () =>
+      fetchUserPreference<Partial<TablePreferences<TFilters>>>(pageKey).then((v) => v ?? null),
     staleTime: Infinity,
   });
 
