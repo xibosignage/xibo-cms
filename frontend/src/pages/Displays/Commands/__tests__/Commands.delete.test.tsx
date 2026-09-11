@@ -239,7 +239,9 @@ describe('Commands page - bulk delete', () => {
     await user.click(screen.getByRole('button', { name: /yes, delete/i }));
 
     // Error surfaces and the modal stays open.
-    expect(await screen.findByText('Command 2 is in use.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('1 command(s) deleted successfully. Command 2 is in use.'),
+    ).toBeInTheDocument();
     expect(screen.getByText('Delete Commands?')).toBeInTheDocument();
 
     // Both rows were attempted and the table was refreshed.
