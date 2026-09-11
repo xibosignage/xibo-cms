@@ -186,12 +186,15 @@ class PlaylistFactory extends BaseFactory
         $parsedFilter = $this->getSanitizer($filterBy);
         $allowedColumns = [
             'playlistId', 'name', 'duration', 'owner', 'isDynamic', 'enableStat', 'createdDt', 'modifiedDt',
-            'groupsWithPermissions'
+            'groupsWithPermissions', 'groupsWithPermissionsList'
         ];
-
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
+            customColumns: [
+                'groupsWithPermissions' => '`groupsWithPermissionsListJson`',
+                'groupsWithPermissionsList' => '`groupsWithPermissionsListJson`',
+            ],
             defaultSort: ['name ASC'],
             uniqueColumn: 'playlistId'
         );
@@ -221,22 +224,21 @@ class PlaylistFactory extends BaseFactory
                 `playlist`.folderId,
                 `playlist`.permissionsFolderId,
                 `folder`.folderName,
-                (
-                SELECT GROUP_CONCAT(DISTINCT `group`.group)
-                  FROM `permission`
-                    INNER JOIN `permissionentity`
-                    ON `permissionentity`.entityId = permission.entityId
-                    INNER JOIN `group`
-                    ON `group`.groupId = `permission`.groupId
-                 WHERE entity = :permissionEntityForGroup
-                    AND objectId = playlist.playlistId
-                    AND view = 1
-                ) AS groupsWithPermissions
+                (SELECT JSON_ARRAYAGG(g) FROM (
+                    SELECT DISTINCT `group`.group AS g
+                    FROM `permission`
+                        INNER JOIN `permissionentity` ON `permissionentity`.entityId = permission.entityId
+                        INNER JOIN `group` ON `group`.groupId = `permission`.groupId
+                    WHERE entity = :permissionEntityForGroup
+                        AND objectId = playlist.playlistId
+                        AND view = 1
+                    ORDER BY g
+                ) t) AS groupsWithPermissionsListJson
         ';
 
         $params['permissionEntityForGroup'] = 'Xibo\\Entity\\Playlist';
 
-        $body = '  
+        $body = '
               FROM `playlist` 
                 LEFT OUTER JOIN `user` 
                 ON `user`.userId = `playlist`.ownerId
@@ -540,6 +542,15 @@ class PlaylistFactory extends BaseFactory
                     'duration'
                 ]
             ]);
+            $names = null;
+            if ($row['groupsWithPermissionsListJson'] !== null) {
+                $decoded = json_decode($row['groupsWithPermissionsListJson'], true);
+                $names = is_array($decoded) ? $decoded : null;
+            }
+            $playlist->groupsWithPermissionsList = $names ?? [];
+            $playlist->groupsWithPermissions = $names !== null ? implode(',', $names) : null;
+            $playlist->excludeProperty('groupsWithPermissionsListJson');
+
             $playlistIds[] = $playlist->playlistId;
             $entries[] = $playlist;
         }

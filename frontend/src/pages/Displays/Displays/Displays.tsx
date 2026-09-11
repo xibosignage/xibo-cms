@@ -139,7 +139,7 @@ export default function Displays() {
       xmrRegistered: false,
       commercialLicence: false,
       remote: false,
-      groupsWithPermissions: false,
+      groupsWithPermissionsList: false,
       screenSize: false,
       isMobile: false,
       isOutdoor: false,

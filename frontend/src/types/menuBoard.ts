@@ -39,6 +39,7 @@ export interface MenuBoard {
   folderId: number;
   permissionsFolderId: number;
   groupsWithPermissions: string;
+  groupsWithPermissionsList?: string[] | null;
   permissions?: MenuBoardPermissions[];
   userPermissions?: MenuBoardPermissions;
   categories?: MenuBoardCategory[];

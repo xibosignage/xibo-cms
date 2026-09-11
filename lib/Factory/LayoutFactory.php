@@ -2264,11 +2264,13 @@ class LayoutFactory extends BaseFactory
 
         // Sorting
         $allowedColumns = ['layoutId', 'layout', 'publishedStatus', 'enableStat', 'duration', 'owner', 'modifiedDt',
-            'campaignId', 'displayOrder', 'groupsWithPermissions'
+            'campaignId', 'displayOrder', 'groupsWithPermissions', 'groupsWithPermissionsList'
         ];
         $customColumns = [
             'orientation' => 'CASE WHEN layout.`width` < layout.`height` THEN 1 ELSE 0 END',
-            'valid' => '`status`'
+            'valid' => '`status`',
+            'groupsWithPermissions' => '`groupsWithPermissionsListJson`',
+            'groupsWithPermissionsList' => '`groupsWithPermissionsListJson`',
         ];
 
         $sortOrder = $this->buildSortQuery(
@@ -2316,19 +2318,19 @@ class LayoutFactory extends BaseFactory
             $select .= ' NULL as displayOrder, ';
         }
 
-        $select .= '     (SELECT GROUP_CONCAT(DISTINCT `group`.group)
-                          FROM `permission`
-                            INNER JOIN `permissionentity`
-                            ON `permissionentity`.entityId = permission.entityId
-                            INNER JOIN `group`
-                            ON `group`.groupId = `permission`.groupId
-                         WHERE entity = :permissionEntityForGroup
-                            AND objectId = campaign.CampaignID
-                            AND view = 1
-                        ) AS groupsWithPermissions ';
+        $select .= '     (SELECT JSON_ARRAYAGG(g) FROM (
+                            SELECT DISTINCT `group`.group AS g
+                            FROM `permission`
+                                INNER JOIN `permissionentity` ON `permissionentity`.entityId = permission.entityId
+                                INNER JOIN `group` ON `group`.groupId = `permission`.groupId
+                            WHERE entity = :permissionEntityForGroup
+                                AND objectId = campaign.CampaignID
+                                AND view = 1
+                            ORDER BY g
+                        ) t) AS groupsWithPermissionsListJson ';
         $params['permissionEntityForGroup'] = 'Xibo\\Entity\\Campaign';
 
-        $body  = '  FROM layout 
+        $body  = '  FROM layout
                     INNER JOIN status 
                         ON status.id = layout.publishedStatusId
                     INNER JOIN `lkcampaignlayout`
@@ -2877,8 +2879,16 @@ class LayoutFactory extends BaseFactory
             $layout->folderId = $parsedRow->getInt('folderId');
             $layout->permissionsFolderId = $parsedRow->getInt('permissionsFolderId');
             $layout->folderName = $parsedRow->getString('folderName');
-            $layout->groupsWithPermissions = $row['groupsWithPermissions'];
             $layout->setUnmatchedProperty('campaignType', $parsedRow->getString('type'));
+
+            $names = null;
+            if ($row['groupsWithPermissionsListJson'] !== null) {
+                $decoded = json_decode($row['groupsWithPermissionsListJson'], true);
+                $names = is_array($decoded) ? $decoded : null;
+            }
+            $layout->groupsWithPermissionsList = $names ?? [];
+            $layout->groupsWithPermissions = $names !== null ? implode(',', $names) : null;
+
             $layout->setOriginals();
 
             $entries[] = $layout;

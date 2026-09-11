@@ -90,7 +90,7 @@ export default function Templates() {
       tags: true,
       description: true,
       publishedStatus: true,
-      groupsWithPermissions: false,
+      groupsWithPermissionsList: false,
       modifiedDt: true,
       orientation: true,
       ownerId: true,

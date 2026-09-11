@@ -95,6 +95,16 @@ class DataSet implements \JsonSerializable
     public $groupsWithPermissions;
 
     /**
+     * @var string[]
+     */
+    #[OA\Property(
+        description: "An array of Groups/Users that have permission to this DataSet",
+        type: 'array',
+        items: new OA\Items(type: 'string')
+    )]
+    public $groupsWithPermissionsList = [];
+
+    /**
      * @var string
      */
     #[OA\Property(description: "A code for this Data Set")]

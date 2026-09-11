@@ -49,6 +49,7 @@ export interface Template {
   ownerId: number;
   owner: string;
   groupsWithPermissions: string | null;
+  groupsWithPermissionsList?: string[] | null;
   folderId: number;
   permissionsFolderId: number;
 

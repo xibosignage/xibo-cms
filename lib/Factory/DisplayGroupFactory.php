@@ -102,8 +102,9 @@ class DisplayGroupFactory extends BaseFactory
             'isDisplaySpecific' => -1
         ]);
 
-        if (count($groups) <= 0)
+        if (count($groups) <= 0) {
             throw new NotFoundException();
+        }
 
         return $groups[0];
     }
@@ -327,18 +328,17 @@ class DisplayGroupFactory extends BaseFactory
                 `displaygroup`.ref3,
                 `displaygroup`.ref4,
                 `displaygroup`.ref5,
-                (
-                    SELECT GROUP_CONCAT(DISTINCT `group`.group)
-                        FROM `permission`
-                        INNER JOIN `permissionentity`
-                            ON `permissionentity`.entityId = permission.entityId
-                        INNER JOIN `group`
-                            ON `group`.groupId = `permission`.groupId
-                        WHERE entity = :entity
-                            AND objectId = `displaygroup`.displayGroupId
-                            AND view = 1
-                ) AS groupsWithPermissions,
-                `folder`.folderName
+                `folder`.folderName,
+                (SELECT JSON_ARRAYAGG(g) FROM (
+                    SELECT DISTINCT `group`.group AS g
+                    FROM `permission`
+                        INNER JOIN `permissionentity` ON `permissionentity`.entityId = permission.entityId
+                        INNER JOIN `group` ON `group`.groupId = `permission`.groupId
+                    WHERE entity = :entity
+                        AND objectId = `displaygroup`.displayGroupId
+                        AND view = 1
+                    ORDER BY g
+                ) t) AS groupsWithPermissionsListJson
         ';
 
         $params['entity'] = 'Xibo\\Entity\\DisplayGroup';
@@ -554,8 +554,8 @@ class DisplayGroupFactory extends BaseFactory
             'createdDt',
             'modifiedDt',
             'groupsWithPermissions',
+            'groupsWithPermissionsList',
         ];
-
         // Capture member sort direction before buildSortQuery strips the virtual column
         $memberSortDir = null;
 
@@ -591,6 +591,10 @@ class DisplayGroupFactory extends BaseFactory
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
+            customColumns: [
+                'groupsWithPermissions' => '`groupsWithPermissionsListJson`',
+                'groupsWithPermissionsList' => '`groupsWithPermissionsListJson`',
+            ],
             defaultSort: ['displayGroupId ASC'],
             uniqueColumn: 'displayGroupId'
         );
@@ -619,11 +623,22 @@ class DisplayGroupFactory extends BaseFactory
         $displayGroupIds = [];
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $displayGroup = $this->createEmpty()->hydrate($row, ['intProperties' => ['isDisplaySpecific', 'isDynamic']]);
+            $displayGroup = $this->createEmpty()->hydrate($row, [
+                'intProperties' => ['isDisplaySpecific', 'isDynamic'],
+            ]);
             $displayGroup->excludeProperty('displays');
             $displayGroup->excludeProperty('media');
             $displayGroup->excludeProperty('events');
             $displayGroup->excludeProperty('layouts');
+
+            $names = null;
+            if ($row['groupsWithPermissionsListJson'] !== null) {
+                $decoded = json_decode($row['groupsWithPermissionsListJson'], true);
+                $names = is_array($decoded) ? $decoded : null;
+            }
+            $displayGroup->groupsWithPermissionsList = $names ?? [];
+            $displayGroup->groupsWithPermissions = $names !== null ? implode(',', $names) : null;
+            $displayGroup->excludeProperty('groupsWithPermissionsListJson');
 
             $entries[] = $displayGroup;
             $displayGroupIds[] = $displayGroup->displayGroupId;
