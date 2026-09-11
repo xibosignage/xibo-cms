@@ -129,6 +129,10 @@ export function useTableState<TFilters>(
         if (savedPrefs.filterInputs) {
           setFilterInputs(savedPrefs.filterInputs);
         }
+        if (savedPrefs.globalFilter !== undefined) {
+          setGlobalFilter(savedPrefs.globalFilter);
+          setDebouncedFilter(savedPrefs.globalFilter);
+        }
       }
       setIsHydrated(true);
     }
@@ -153,6 +157,7 @@ export function useTableState<TFilters>(
     columnVisibility,
     viewMode,
     filterInputs,
+    globalFilter,
   };
 
   const prefsString = JSON.stringify(currentPrefs);
