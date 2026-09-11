@@ -267,10 +267,12 @@ export default function Dataset() {
     canUserShare: hasFeature(user, 'user.sharing'),
     onDelete: handleDelete,
     openAddEditModal,
-    openMoveModal: (dataset) => {
-      setItemsToMove([dataset] as Dataset[]);
-      openModal('move');
-    },
+    openMoveModal: canViewFolders
+      ? (dataset) => {
+          setItemsToMove([dataset] as Dataset[]);
+          openModal('move');
+        }
+      : undefined,
     openShareModal: (datasetId) => {
       setShareEntityIds(datasetId);
       openModal('share');
