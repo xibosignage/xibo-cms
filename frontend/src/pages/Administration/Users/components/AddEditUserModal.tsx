@@ -503,7 +503,7 @@ export default function AddEditUserModal({
           await saveFolderPermissions(savedUser.groupId);
         }
 
-        notify.success(t('Settings Updated'));
+        notify.success(t('User saved'));
         onSuccess();
         onClose();
       } catch (err: unknown) {
