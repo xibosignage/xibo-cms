@@ -1680,9 +1680,15 @@ class Schedule extends Base
             $this->saveReminder($schedule, $scheduleReminder);
         }
 
-        // If this is a recurring event delete all schedule exclusions
-        if ($schedule->recurrenceType != '') {
-            // Delete schedule exclusions
+        // If recurrence-affecting fields changed, delete all schedule exclusions
+        // because the occurrence dates have shifted and the old exclusions no longer apply.
+        if ($schedule->recurrenceType != ''
+            && ($oldSchedule->recurrenceType !== $schedule->recurrenceType
+                || $oldSchedule->recurrenceDetail !== $schedule->recurrenceDetail
+                || $oldSchedule->recurrenceRepeatsOn !== $schedule->recurrenceRepeatsOn
+                || $oldSchedule->recurrenceMonthlyRepeatsOn !== $schedule->recurrenceMonthlyRepeatsOn
+                || $oldSchedule->fromDt !== $schedule->fromDt)
+        ) {
             $scheduleExclusions = $this->scheduleExclusionFactory->query(null, ['eventId' => $schedule->eventId]);
             foreach ($scheduleExclusions as $exclusion) {
                 $exclusion->delete();
