@@ -3422,10 +3422,29 @@ class LayoutFactory extends BaseFactory
                     $media->height
                 )->resolutionId;
             } else if ($type === 'playlist') {
-                $resolutionId = $this->resolutionFactory->getClosestMatchingResolution(
-                    1920,
-                    1080
-                )->resolutionId;
+                // Adopt the orientation of the lead media in the playlist; otherwise, fallback to default
+                $derivedDimension = null;
+                foreach ($playlist->widgets as $widget) {
+                    $primaryMediaIds = $widget->getPrimaryMedia();
+                    if (count($primaryMediaIds) > 0) {
+                        try {
+                            $primaryMedia = $this->mediaFactory->getById($primaryMediaIds[0]);
+                            if ($primaryMedia->width > 0 && $primaryMedia->height > 0) {
+                                $derivedDimension = $primaryMedia;
+                                break;
+                            }
+                        } catch (NotFoundException $e) {
+                            continue;
+                        }
+                    }
+                }
+
+                $resolutionId = $derivedDimension !== null
+                    ? $this->resolutionFactory->getClosestMatchingResolution(
+                        $derivedDimension->width,
+                        $derivedDimension->height
+                    )->resolutionId
+                    : $this->resolutionFactory->getClosestMatchingResolution(1920, 1080)->resolutionId;
             }
         }
 

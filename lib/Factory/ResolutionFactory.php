@@ -107,21 +107,41 @@ class ResolutionFactory extends BaseFactory
     {
         $area = $width * $height;
         $sort = ['areaDiff', $width > $height ? 'intendedWidth DESC' : 'intendedHeight DESC'];
+        $customColumns = [
+            'areaDiff' => 'ABS(' . $area . ' - (`intended_width` * `intended_height`))',
+            'intendedWidth' => '`intended_width`',
+            'intendedHeight' => '`intended_height`',
+        ];
 
+        // Prefer a resolution in the same orientation as the requested dimensions,
+        // so a portrait input doesn't match a landscape resolution (or vice versa)
+        // purely because its total pixel area happens to be numerically closer.
         $resolutions = $this->query(
             $sort,
             [
                 'disableUserCheck' => 1,
                 'enabled' => 1,
+                'orientation' => $width <= $height ? 'portrait' : 'landscape',
                 'start' => 0,
                 'length' => 1
             ],
-            [
-                'areaDiff' => 'ABS(' . $area . ' - (`intended_width` * `intended_height`))',
-                'intendedWidth' => '`intended_width`',
-                'intendedHeight' => '`intended_height`',
-            ]
+            $customColumns
         );
+
+        if (count($resolutions) <= 0) {
+            // No enabled resolution exists in the requested orientation - fall back
+            // to the closest match across all orientations.
+            $resolutions = $this->query(
+                $sort,
+                [
+                    'disableUserCheck' => 1,
+                    'enabled' => 1,
+                    'start' => 0,
+                    'length' => 1
+                ],
+                $customColumns
+            );
+        }
 
         if (count($resolutions) <= 0) {
             throw new NotFoundException(__('Resolution not found'));
