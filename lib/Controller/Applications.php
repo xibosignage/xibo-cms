@@ -447,10 +447,6 @@ class Applications extends Base
         // Delete all the redirect urls and add them again
         $client->load();
 
-        // Snapshot the pre-change redirect URIs so the entity can audit what changed -
-        // the loop below deletes them before save() runs, so this is the only chance to see the "before" state.
-        $client->setOriginalValue('redirectUris', array_map(fn($uri) => $uri->redirectUri, $client->redirectUris));
-
         foreach ($client->redirectUris as $uri) {
             $uri->delete();
         }
@@ -469,10 +465,6 @@ class Applications extends Base
             $redirect->redirectUri = $redirectUri;
             $client->assignRedirectUri($redirect);
         }
-
-        // Snapshot the pre-change scope IDs so the entity can audit what changed, without
-        // needing a second DB round-trip - $client->scopes was already loaded above.
-        $client->setOriginalValue('scopeIds', array_map(fn($scope) => $scope->id, $client->scopes));
 
         // clear scopes
         $client->scopes = [];

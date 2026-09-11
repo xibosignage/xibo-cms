@@ -183,13 +183,16 @@ class Application implements \JsonSerializable, ClientEntityInterface
         // Get scopes
         $this->scopes = $this->applicationScopeFactory->getByClientId($this->key);
 
+        // Snapshot so save() can audit what changed, regardless of caller.
+        $this->setOriginalValue('redirectUris', array_map(fn($uri) => $uri->redirectUri, $this->redirectUris));
+        $this->setOriginalValue('scopeIds', array_map(fn($scope) => $scope->id, $this->scopes));
+
         $this->loaded = true;
         return $this;
     }
 
     /**
      * @return $this
-     * @note Redirect-URI/scope "assigned" audits need setOriginalValue('redirectUris'/'scopeIds', ...) snapshotted first (see Applications::edit()), or they're silently skipped.
      * @throws NotFoundException
      */
     public function save(): static
@@ -202,7 +205,7 @@ class Application implements \JsonSerializable, ClientEntityInterface
 
             // Add
             $this->add();
-            $this->audit(0, 'Added', ['name' => $this->name]);
+            $this->audit(0, 'Added', $this->auditContext());
         } else {
             // Work out what's changed before we overwrite the row - strip the secret out
             // immediately so it never sits in a loggable array any longer than necessary.
@@ -214,10 +217,13 @@ class Application implements \JsonSerializable, ClientEntityInterface
             $this->edit();
 
             if ($keyChanged) {
-                $this->audit(0, 'Key changed', ['name' => $this->name]);
+                $this->audit(0, 'Key changed', $this->auditContext());
             }
             if (count($changedProperties) > 0) {
-                $this->audit(0, 'Saved', $changedProperties);
+                $this->audit(0, 'Saved', array_merge(
+                    $this->auditContext(),
+                    $changedProperties
+                ));
             }
         }
 
@@ -241,10 +247,13 @@ class Application implements \JsonSerializable, ClientEntityInterface
             sort($currentSorted);
 
             if ($currentSorted != $originalSorted) {
-                $this->audit(0, 'Redirect URIs updated', [
-                    'from' => implode(', ', $originalRedirectUris),
-                    'to' => implode(', ', $currentRedirectUris),
-                ]);
+                $this->audit(0, 'Redirect URIs updated', array_merge(
+                    $this->auditContext(),
+                    [
+                        'from' => implode(', ', $originalRedirectUris),
+                        'to' => implode(', ', $currentRedirectUris),
+                    ]
+                ));
             }
         }
 
@@ -271,7 +280,19 @@ class Application implements \JsonSerializable, ClientEntityInterface
         $this->getStore()->update('DELETE FROM `oauth_client_scopes` WHERE `clientId` = :id', ['id' => $this->key]);
         $this->getStore()->update('DELETE FROM `oauth_clients` WHERE `id` = :id', ['id' => $this->key]);
 
-        $this->audit(0, 'Deleted', ['name' => $this->name]);
+        $this->audit(0, 'Deleted', $this->auditContext());
+    }
+
+    /**
+     * Identifying context for audit log entries
+     * @return array
+     */
+    private function auditContext(): array
+    {
+        return [
+            'Application identifier ends with' => substr($this->key, -8),
+            'Application Name' => $this->name,
+        ];
     }
 
     /**
@@ -383,10 +404,16 @@ class Application implements \JsonSerializable, ClientEntityInterface
             $unassigned = array_diff($existingScopeIds, $newScopeIds);
 
             if (count($assigned) > 0) {
-                $this->audit(0, 'Scopes assigned', ['scopeIds' => implode(',', $assigned)]);
+                $this->audit(0, 'Scopes assigned', array_merge(
+                    $this->auditContext(),
+                    ['scopeIds' => implode(',', $assigned)]
+                ));
             }
             if (count($unassigned) > 0) {
-                $this->audit(0, 'Scopes unassigned', ['scopeIds' => implode(',', $unassigned)]);
+                $this->audit(0, 'Scopes unassigned', array_merge(
+                    $this->auditContext(),
+                    ['scopeIds' => implode(',', $unassigned)]
+                ));
             }
         }
     }
