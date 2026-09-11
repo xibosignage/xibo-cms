@@ -228,7 +228,9 @@ describe('Dayparting page - bulk delete', () => {
     await screen.findByText('Delete Dayparts?');
     await user.click(screen.getByRole('button', { name: /yes, delete/i }));
 
-    expect(await screen.findByText('Daypart 2 is in use.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('1 daypart(s) deleted successfully. Daypart 2 is in use.'),
+    ).toBeInTheDocument();
     expect(screen.getByText('Delete Dayparts?')).toBeInTheDocument();
 
     expect(deleteDaypart).toHaveBeenCalledTimes(2);

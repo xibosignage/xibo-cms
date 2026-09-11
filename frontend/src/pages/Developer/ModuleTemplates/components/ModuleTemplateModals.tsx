@@ -41,6 +41,7 @@ import {
   fetchTemplatesByDataType,
 } from '@/services/moduleTemplatesApi';
 import type { ModuleTemplate } from '@/types/moduleTemplates';
+import { isAlreadyDeletedError } from '@/utils/errors';
 
 interface ModuleTemplateModalsProps {
   activeModal: ModalType;
@@ -275,28 +276,48 @@ function DeleteModal({
       const results = await Promise.allSettled(
         templates.map((template) => deleteModuleTemplate(template.id)),
       );
-      const failed = results.filter((r) => r.status === 'rejected');
-      if (failed.length > 0) {
+      const trueFailed = results.filter(
+        (r) => r.status === 'rejected' && !isAlreadyDeletedError(r.reason),
+      );
+      // A 404 means the template was already deleted (e.g. by another user/tab) — that
+      // counts as deleted here too, same as a fulfilled result.
+      const deletedIds = templates
+        .filter((_, i) => {
+          const r = results[i];
+          return (
+            r?.status === 'fulfilled' ||
+            (r?.status === 'rejected' && isAlreadyDeletedError(r.reason))
+          );
+        })
+        .map((template) => template.id);
+
+      if (trueFailed.length > 0) {
         // Deleted templates are already gone server-side even though the batch as a
         // whole "failed" — reflect that in the table/selection now, rather than only
         // on the next full onSuccess (which never fires until every item succeeds).
-        const deletedIds = templates
-          .filter((_, i) => results[i]?.status === 'fulfilled')
-          .map((template) => template.id);
         if (deletedIds.length > 0) {
           onPartialSuccess?.(deletedIds);
         }
 
-        const firstRejected = failed[0] as PromiseRejectedResult;
+        const firstRejected = trueFailed[0] as PromiseRejectedResult;
         const reason = firstRejected.reason;
-        setError(
+        const specificMessage =
           (isAxiosError(reason) && reason.response?.data?.message) ||
-            (reason instanceof Error && reason.message) ||
-            t('{{count}} template(s) could not be deleted.', { count: failed.length }),
-        );
+          (reason instanceof Error && reason.message);
+        const failurePart =
+          specificMessage ||
+          t('{{count}} template(s) could not be deleted.', { count: trueFailed.length });
+        const successPart =
+          deletedIds.length > 0
+            ? t('{{count}} template(s) deleted successfully.', { count: deletedIds.length })
+            : '';
+
+        setError([successPart, failurePart].filter(Boolean).join(' '));
         return;
       }
-      notify.success(t('{{count}} template(s) deleted successfully.', { count: templates.length }));
+      notify.success(
+        t('{{count}} template(s) deleted successfully.', { count: deletedIds.length }),
+      );
       onSuccess();
     } finally {
       setIsPending(false);

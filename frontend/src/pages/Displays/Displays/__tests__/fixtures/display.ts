@@ -33,6 +33,7 @@ import type { User } from '@/types/user';
 // display: 'Test Display' — asserted in render and modal tests
 // displayGroupId: 1 — required by action hooks
 // folderId / permissionsFolderId: 1 — required by SelectFolder stub
+// license: non-empty — required by the edit form schema (Hardware Key)
 // -----------------------------------------------------------------------------
 export const buildDisplay = (overrides: Partial<Display> = {}): Display => ({
   displayId: 1,
@@ -56,7 +57,7 @@ export const buildDisplay = (overrides: Partial<Display> = {}): Display => ({
   ref5: null,
   auditingUntil: null,
   defaultLayoutId: 1,
-  license: '',
+  license: 'TEST-HARDWARE-KEY',
   licensed: 1,
   loggedIn: 0,
   lastAccessed: null,

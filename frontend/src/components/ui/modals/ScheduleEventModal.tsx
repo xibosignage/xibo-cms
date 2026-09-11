@@ -586,7 +586,10 @@ export default function ScheduleEventModal({
 
   // Fall back to 'general' tab when the currently active tab is no longer visible
   useEffect(() => {
-    if ((optionalTab === 'repeats' || optionalTab === 'reminder') && !canSetReminders) {
+    if (
+      (optionalTab === 'repeats' || optionalTab === 'reminder') &&
+      (!canSetReminders || !showRepeatReminder)
+    ) {
       setOptionalTab('general');
     }
     if (optionalTab === 'geoLocation' && !canGeoSchedule) {
@@ -595,7 +598,7 @@ export default function ScheduleEventModal({
     if (optionalTab === 'criteria' && !canSetCriteria) {
       setOptionalTab('general');
     }
-  }, [canGeoSchedule, canSetReminders, canSetCriteria, optionalTab]);
+  }, [canGeoSchedule, canSetReminders, canSetCriteria, showRepeatReminder, optionalTab]);
 
   // Command events are always forced to the Custom daypart (no toDt, no relative time)
   useEffect(() => {
@@ -1922,7 +1925,19 @@ export default function ScheduleEventModal({
                   value={draft.dayPartId}
                   options={daypartOptions}
                   onSelect={(value) => {
-                    updateDraft('dayPartId', value);
+                    if (!!alwaysDayPartId && value === alwaysDayPartId) {
+                      setDraft((prev) => ({
+                        ...prev,
+                        dayPartId: value,
+                        recurrenceType: '',
+                        recurrenceDetail: 1,
+                        recurrenceRepeatsOn: [],
+                        recurrenceMonthlyRepeatsOn: 0,
+                        recurrenceRange: '',
+                      }));
+                    } else {
+                      updateDraft('dayPartId', value);
+                    }
                     clearDaypartTimeErrors();
                   }}
                   placeholder={t('Select Daypart')}

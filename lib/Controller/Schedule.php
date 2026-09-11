@@ -690,17 +690,45 @@ class Schedule extends Base
         $schedule->syncGroupId = $sanitizedParams->getInt('syncGroupId');
         $schedule->name = $sanitizedParams->getString('name');
 
+        // $scheduleWithView gates the Display Group permission checks further below -
+        // SCHEDULE_WITH_VIEW_PERMISSION is a Display-scoped setting, it does not apply to Campaigns.
+        $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
+
         // Set the parentCampaignId for campaign events
         if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$CAMPAIGN_EVENT) {
             $schedule->parentCampaignId = $schedule->campaignId;
 
-            // Make sure we're not directly scheduling an ad campaign
+            // getById() is fetched with permission checking disabled (its default), so the
+            // DB lookup alone does not gate access - the campaign must be checked explicitly.
             $campaign = $this->campaignFactory->getById($schedule->campaignId);
+
+            // Check permission before any business-rule check on the campaign
+            if (!$this->getUser()->checkViewable($campaign)) {
+                throw new AccessDeniedException(__('Access to the Campaign denied'));
+            }
+
             if ($campaign->type === 'ad') {
                 throw new InvalidArgumentException(
                     __('Direct scheduling of an Ad Campaign is not allowed'),
                     'campaignId'
                 );
+            }
+        } else {
+            $schedule->parentCampaignId = null;
+            if (!empty($schedule->campaignId)) {
+                // e.g. Layout events, which also reference a (layout-specific) Campaign directly.
+                $campaign = $this->campaignFactory->getById($schedule->campaignId);
+
+                if (!$this->getUser()->checkViewable($campaign)) {
+                    throw new AccessDeniedException(__('Access to the Campaign denied'));
+                }
+
+                if ($campaign->isLayoutSpecific === 0) {
+                    throw new InvalidArgumentException(
+                        __('Cannot schedule Campaign in selected event type, please select a Layout instead.'),
+                        'campaignId'
+                    );
+                }
             }
         }
 
@@ -792,9 +820,7 @@ class Schedule extends Base
         );
 
         // Verify the caller has the appropriate permission on each display group they're
-        // assigning. Mirrors isEventEditable() semantics: view is sufficient when
-        // SCHEDULE_WITH_VIEW_PERMISSION is enabled, otherwise edit is required.
-        $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
+        // assigning (see $scheduleWithView above).
         $displayGroupIds = $sanitizedParams->getIntArray('displayGroupIds', ['default' => []]);
         foreach ($displayGroupIds as $displayGroupId) {
             $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
@@ -1319,14 +1345,26 @@ class Schedule extends Base
             $schedule->campaignId = null;
         }
 
+        // $scheduleWithView gates the Display Group permission checks further below -
+        // SCHEDULE_WITH_VIEW_PERMISSION is a Display-scoped setting, it does not apply to Campaigns.
+        $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
+        $isCampaignUnchanged = ($oldSchedule->campaignId == $schedule->campaignId);
+
         // Set the parentCampaignId for campaign events
         // null parentCampaignId on other events
         // make sure correct Layout/Campaign is selected for relevant event.
         if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$CAMPAIGN_EVENT) {
             $schedule->parentCampaignId = $schedule->campaignId;
 
-            // Make sure we're not directly scheduling an ad campaign
+            // getById() is fetched with permission checking disabled (its default), so the
+            // DB lookup alone does not gate access - the campaign must be checked explicitly.
             $campaign = $this->campaignFactory->getById($schedule->campaignId);
+
+            // Check permission before any business-rule check on the campaign
+            if (!$isCampaignUnchanged && !$this->getUser()->checkViewable($campaign)) {
+                throw new AccessDeniedException(__('Access to the Campaign denied'));
+            }
+
             if ($campaign->type === 'ad') {
                 throw new InvalidArgumentException(
                     __('Direct scheduling of an Ad Campaign is not allowed'),
@@ -1344,6 +1382,11 @@ class Schedule extends Base
             $schedule->parentCampaignId = null;
             if (!empty($schedule->campaignId)) {
                 $campaign = $this->campaignFactory->getById($schedule->campaignId);
+
+                if (!$isCampaignUnchanged && !$this->getUser()->checkViewable($campaign)) {
+                    throw new AccessDeniedException(__('Access to the Campaign denied'));
+                }
+
                 if ($campaign->isLayoutSpecific === 0) {
                     throw new InvalidArgumentException(
                         __('Cannot schedule Campaign in selected event type, please select a Layout instead.'),
@@ -1433,12 +1476,10 @@ class Schedule extends Base
         }
 
         // Verify the caller has the appropriate permission on each display group they're
-        // assigning. Mirrors isEventEditable() semantics: view is sufficient when
-        // SCHEDULE_WITH_VIEW_PERMISSION is enabled, otherwise edit is required. The
-        // $originalDisplayGroupIds bypass (captured before the assignment list was
-        // cleared) lets the user re-save already-assigned groups without view/edit
-        // access on each — mirrors the Campaign::edit() pattern.
-        $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
+        // assigning (see $scheduleWithView above). The $originalDisplayGroupIds bypass
+        // (captured before the assignment list was cleared) lets the user re-save
+        // already-assigned groups without view/edit access on each — mirrors the
+        // Campaign::edit() pattern.
         $displayGroupIds = $sanitizedParams->getIntArray('displayGroupIds', ['default' => []]);
         foreach ($displayGroupIds as $displayGroupId) {
             $displayGroup = $this->displayGroupFactory->getById($displayGroupId);

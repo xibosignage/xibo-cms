@@ -43,6 +43,17 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class Settings extends Base
 {
+    // Hardening: Consumed elsewhere via entity lookups or required for core function
+    // (XMDS auth, library path) — saving these empty crashes or silently breaks the CMS.
+    private const REQUIRED_SETTINGS = [
+        'DEFAULT_LAYOUT',
+        'SYSTEM_USER',
+        'DEFAULT_USERGROUP',
+        'SERVER_KEY',
+        'HELP_BASE',
+        'DATE_FORMAT',
+    ];
+
     public function __construct(
         private readonly LayoutFactory $layoutFactory,
         private readonly UserGroupFactory $userGroupFactory,
@@ -79,52 +90,61 @@ class Settings extends Base
         }
 
         $defaultLayout = null;
-        try {
-            $layout = $this->layoutFactory->getById($this->getConfig()->getSetting('DEFAULT_LAYOUT'));
-            $defaultLayout = ['layoutId' => $layout->layoutId, 'layout' => $layout->layout];
-        } catch (NotFoundException $e) {
+        $defaultLayoutId = $this->getConfig()->getSetting('DEFAULT_LAYOUT');
+        if (!empty($defaultLayoutId)) {
+            try {
+                $layout = $this->layoutFactory->getById($defaultLayoutId);
+                $defaultLayout = ['layoutId' => $layout->layoutId, 'layout' => $layout->layout];
+            } catch (NotFoundException $e) {
+            }
         }
 
         $systemUser = null;
-        try {
-            $user = $this->userFactory->getById($this->getConfig()->getSetting('SYSTEM_USER'));
-            $systemUser = ['userId' => $user->userId, 'userName' => $user->userName];
-        } catch (NotFoundException $e) {
+        $systemUserId = $this->getConfig()->getSetting('SYSTEM_USER');
+        if (!empty($systemUserId)) {
+            try {
+                $user = $this->userFactory->getById($systemUserId);
+                $systemUser = ['userId' => $user->userId, 'userName' => $user->userName];
+            } catch (NotFoundException $e) {
+            }
         }
 
         $defaultUserGroup = null;
-        try {
-            $group = $this->userGroupFactory->getById(
-                $this->getConfig()->getSetting('DEFAULT_USERGROUP')
-            );
-            $defaultUserGroup = ['groupId' => $group->groupId, 'group' => $group->group];
-        } catch (NotFoundException $e) {
+        $defaultUserGroupId = $this->getConfig()->getSetting('DEFAULT_USERGROUP');
+        if (!empty($defaultUserGroupId)) {
+            try {
+                $group = $this->userGroupFactory->getById($defaultUserGroupId);
+                $defaultUserGroup = ['groupId' => $group->groupId, 'group' => $group->group];
+            } catch (NotFoundException $e) {
+            }
         }
 
         $defaultTransitionIn = null;
-        try {
-            $transition = $this->transitionFactory->getByCode(
-                $this->getConfig()->getSetting('DEFAULT_TRANSITION_IN')
-            );
-            $defaultTransitionIn = [
-                'transitionId' => $transition->transitionId,
-                'transition' => $transition->transition,
-                'code' => $transition->code,
-            ];
-        } catch (NotFoundException $e) {
+        $defaultTransitionInCode = $this->getConfig()->getSetting('DEFAULT_TRANSITION_IN');
+        if (!empty($defaultTransitionInCode)) {
+            try {
+                $transition = $this->transitionFactory->getByCode($defaultTransitionInCode);
+                $defaultTransitionIn = [
+                    'transitionId' => $transition->transitionId,
+                    'transition' => $transition->transition,
+                    'code' => $transition->code,
+                ];
+            } catch (NotFoundException $e) {
+            }
         }
 
         $defaultTransitionOut = null;
-        try {
-            $transition = $this->transitionFactory->getByCode(
-                $this->getConfig()->getSetting('DEFAULT_TRANSITION_OUT')
-            );
-            $defaultTransitionOut = [
-                'transitionId' => $transition->transitionId,
-                'transition' => $transition->transition,
-                'code' => $transition->code,
-            ];
-        } catch (NotFoundException $e) {
+        $defaultTransitionOutCode = $this->getConfig()->getSetting('DEFAULT_TRANSITION_OUT');
+        if (!empty($defaultTransitionOutCode)) {
+            try {
+                $transition = $this->transitionFactory->getByCode($defaultTransitionOutCode);
+                $defaultTransitionOut = [
+                    'transitionId' => $transition->transitionId,
+                    'transition' => $transition->transition,
+                    'code' => $transition->code,
+                ];
+            } catch (NotFoundException $e) {
+            }
         }
 
         $elevateLogUntil = $this->getConfig()->getSetting('ELEVATE_LOG_UNTIL');
@@ -178,6 +198,13 @@ class Settings extends Base
 
         if ($this->getConfig()->isSettingEditable('LIBRARY_LOCATION')) {
             $libraryLocation = $sanitizedParams->getString('LIBRARY_LOCATION');
+
+            if (empty($libraryLocation) && !empty($this->getConfig()->getSetting('LIBRARY_LOCATION'))) {
+                throw new InvalidArgumentException(
+                    __('Library Location cannot be set to empty.'),
+                    'LIBRARY_LOCATION'
+                );
+            }
 
             // Check for a trailing slash and add it if its not there
             $libraryLocation = rtrim($libraryLocation, '/');
@@ -1342,7 +1369,18 @@ class Settings extends Base
         $oldValue = $this->getConfig()->getSetting($setting);
 
         if ($oldValue != $newValue) {
-            if ($setting === 'SYSTEM_USER') {
+            if (empty($newValue) && !empty($oldValue) && in_array($setting, self::REQUIRED_SETTINGS, true)) {
+                throw new InvalidArgumentException(match ($setting) {
+                    'DEFAULT_LAYOUT' => __('Please select a Default Layout.'),
+                    'SYSTEM_USER' => __('Please select a System User.'),
+                    'DEFAULT_USERGROUP' => __('Please select a Default User Group.'),
+                    'SERVER_KEY' => __('Server Key cannot be set to empty.'),
+                    'HELP_BASE' => __('Help Base cannot be set to empty.'),
+                    'DATE_FORMAT' => __('Date Format cannot be set to empty.'),
+                }, $setting);
+            }
+
+            if ($setting === 'SYSTEM_USER' && !empty($newValue) && !empty($oldValue)) {
                 $newSystemUser = $this->userFactory->getById($newValue);
                 $oldSystemUser = $this->userFactory->getById($oldValue);
                 $this->getDispatcher()->dispatch(

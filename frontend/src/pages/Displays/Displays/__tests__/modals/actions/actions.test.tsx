@@ -116,6 +116,7 @@ const renderModals = ({
         handleRefresh: vi.fn(),
         deleteError: null,
         isDeleting: false,
+        isMoving: false,
         isActionPending: false,
         actionError: null,
       }}

@@ -244,6 +244,7 @@ export default function Displays() {
     confirmDelete,
     confirmAuthorise,
     handleConfirmMove,
+    isMoving,
     isActionPending,
     actionError,
     setActionError,
@@ -577,6 +578,7 @@ export default function Displays() {
           handleRefresh,
           deleteError,
           isDeleting,
+          isMoving,
           isActionPending,
           actionError,
         }}
