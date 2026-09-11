@@ -38,6 +38,7 @@ import {
 } from '@/services/layoutsApi';
 import type { Template } from '@/types/templates';
 import { formatDateTime } from '@/utils/date';
+import { isAlreadyDeletedError } from '@/utils/errors';
 
 interface UseTemplateActionsProps {
   t: TFunction;
@@ -76,29 +77,37 @@ export function useTemplateActions({
         itemsToDelete.map((item) => deleteLayout(item.layoutId)),
       );
 
-      const failed = results.filter((r) => r.status === 'rejected');
+      const trueFailed = results.filter(
+        (r) => r.status === 'rejected' && !isAlreadyDeletedError(r.reason),
+      );
+      const deletedCount = itemsToDelete.length - trueFailed.length;
 
-      if (failed.length > 0) {
-        const firstRejected = failed[0] as PromiseRejectedResult;
+      if (trueFailed.length > 0) {
+        const firstRejected = trueFailed[0] as PromiseRejectedResult;
         const reason = firstRejected.reason;
 
-        const message =
+        const specificMessage =
           isAxiosError(reason) && reason.response?.data?.message
             ? reason.response.data.message
-            : t('{{count}} item(s) could not be deleted because they are in use.', {
-                count: failed.length,
-              });
+            : undefined;
+        const failurePart =
+          specificMessage ??
+          t('{{count}} item(s) could not be deleted because they are in use.', {
+            count: trueFailed.length,
+          });
+        const successPart =
+          deletedCount > 0
+            ? t('{{count}} template(s) deleted successfully.', { count: deletedCount })
+            : '';
 
-        setDeleteError(message);
+        setDeleteError([successPart, failurePart].filter(Boolean).join(' '));
 
         setRowSelection({});
         handleRefresh();
         return;
       }
 
-      notify.success(
-        t('{{count}} template(s) deleted successfully.', { count: itemsToDelete.length }),
-      );
+      notify.success(t('{{count}} template(s) deleted successfully.', { count: deletedCount }));
       setRowSelection({});
       handleRefresh();
       closeModal();

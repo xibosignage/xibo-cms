@@ -142,7 +142,6 @@ export default function PublishDateSelect({
                   {t('Publish Now')}
                 </button>
 
-                {/* TODO: Schedule publish date is still not implemented in the BE */}
                 <button
                   type="button"
                   className="text-left p-2 rounded-lg hover:bg-gray-100 font-medium flex justify-between items-center"

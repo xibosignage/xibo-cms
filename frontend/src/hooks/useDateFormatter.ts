@@ -45,7 +45,7 @@ export function useDateFormatter(): DateFormatter {
   // The CMS-wide `defaultTimezone` setting, mirrored per-request via /user/me
   // (see User::myDetails() in lib/Controller/User.php) - not a personal
   // per-user preference and not the browser's local timezone.
-  const timeZone = settings?.defaultTimezone || undefined;
+  const timeZone = settings?.defaultTimezone || 'UTC';
   const dateFormat = settings?.DATE_FORMAT_JS || DEFAULT_CMS_DATE_FORMAT;
   const timeFormat = settings?.TIME_FORMAT_JS || DEFAULT_CMS_TIME_FORMAT;
   const locale = settings?.translate?.jsLocale || undefined;

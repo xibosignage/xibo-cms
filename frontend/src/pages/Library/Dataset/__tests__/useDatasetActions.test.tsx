@@ -107,7 +107,9 @@ describe('useDatasetActions', () => {
         );
       });
 
-      expect(result.current.deleteError).toBe('{{count}} item(s) could not be deleted.');
+      expect(result.current.deleteError).toBe(
+        '{{count}} dataset(s) deleted successfully. {{count}} dataset(s) could not be deleted.',
+      );
       expect(mockHandleRefresh).toHaveBeenCalled();
       expect(mockCloseModal).not.toHaveBeenCalled();
     });
