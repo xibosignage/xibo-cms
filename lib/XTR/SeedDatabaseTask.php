@@ -151,6 +151,9 @@ class SeedDatabaseTask implements TaskInterface
         $this->createFolders();
         $this->createCommands();
 
+        // Create a repeating Command event. Must run after createCommands().
+        $this->createCommandSchedules();
+
         // Create bandwidth data display 1
         $this->createBandwidthReportData();
 
@@ -677,6 +680,77 @@ class SeedDatabaseTask implements TaskInterface
                 $this->store->commitIfNecessary();
             } catch (GeneralException $e) {
                 $this->log->error('Error creating schedule : '. $e->getMessage());
+            }
+        }
+    }
+
+    /**
+     * Seed a *repeating* Command event.
+     *
+     * Command events are the only event type that legitimately stores a NULL `toDt` - a command
+     * fires at a point in time and has no end. Schedule::validate() skips the event-duration check
+     * for them precisely because of that.
+     *
+     * That combination - a NULL toDt on a recurring event - is what broke XMDS Schedule in 4.5.1
+     * (xibosignage/xibo#3931). It was not caught before release because the seed created only
+     * Layout and Sync events, so the command branch of Soap::doSchedule() was never reached by any
+     * test. Keep this fixture in the seed so that branch stays covered.
+     *
+     * @see \Xibo\Tests\Xmds\ScheduleTest
+     */
+    private function createCommandSchedules(): void
+    {
+        // This runs after createCommands(), so look the seeded command up by name.
+        $commands = $this->commandFactory->query(null, ['command' => 'Set Timezone']);
+        if (count($commands) <= 0) {
+            $this->log->error('Error creating command schedule: seeded command not found');
+            return;
+        }
+
+        // Don't create if the schedule exists. ScheduleFactory has no commandId filter, so pull the
+        // command events and look for ours - anything else on this CMS must not satisfy the guard.
+        $existing = array_filter(
+            $this->scheduleFactory->query(null, ['eventTypeId' => Schedule::$COMMAND_EVENT]),
+            fn($schedule) => $schedule->commandId == $commands[0]->commandId
+                && $schedule->recurrenceType === 'Week'
+        );
+
+        if (count($existing) <= 0) {
+            try {
+                $schedule = $this->scheduleFactory->createEmpty();
+                $schedule->userId = $this->userFactory->getSystemUser()->getId();
+                $schedule->eventTypeId = Schedule::$COMMAND_EVENT;
+
+                // Command events are always on a custom daypart.
+                $schedule->dayPartId = 1;
+                $schedule->displayOrder = 0;
+                $schedule->isPriority = 0;
+                $schedule->campaignId = null;
+                $schedule->commandId = $commands[0]->commandId;
+                $schedule->syncTimezone = 0;
+                $schedule->syncEvent = 0;
+                $schedule->isGeoAware = 0;
+                $schedule->maxPlaysPerHour = 0;
+
+                // Start yesterday so the first occurrence is already in the past and the recurrence
+                // is live now, and leave toDt NULL - the shape a real Command event has.
+                $schedule->fromDt = Carbon::now()->startOfDay()->subDay()->format('U');
+                $schedule->toDt = null;
+
+                // Repeat weekly for the next year.
+                $schedule->recurrenceType = 'Week';
+                $schedule->recurrenceDetail = 1;
+                $schedule->recurrenceRange = Carbon::now()->addYear()->format('U');
+
+                $displays = $this->displayFactory->query(null, ['display' => 'phpunitv']);
+                foreach ($displays as $display) {
+                    $schedule->assignDisplayGroup($this->displayGroupFactory->getById($display->displayGroupId));
+                }
+
+                $schedule->save(['notify' => false]);
+                $this->store->commitIfNecessary();
+            } catch (GeneralException $e) {
+                $this->log->error('Error creating command schedule : '. $e->getMessage());
             }
         }
     }
