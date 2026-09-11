@@ -32,6 +32,7 @@ use Xibo\Helper\Random;
 use Xibo\OAuth\ScopeEntity;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Application
@@ -182,30 +183,78 @@ class Application implements \JsonSerializable, ClientEntityInterface
         // Get scopes
         $this->scopes = $this->applicationScopeFactory->getByClientId($this->key);
 
+        // Snapshot so save() can audit what changed, regardless of caller.
+        $this->setOriginalValue('redirectUris', array_map(fn($uri) => $uri->redirectUri, $this->redirectUris));
+        $this->setOriginalValue('scopeIds', array_map(fn($scope) => $scope->id, $this->scopes));
+
         $this->loaded = true;
         return $this;
     }
 
     /**
      * @return $this
+     * @throws NotFoundException
      */
     public function save(): static
     {
-        if ($this->key == null || $this->key == '') {
+        $isNew = ($this->key == null || $this->key == '');
+
+        if ($isNew) {
             // Make a new secret.
             $this->resetSecret();
 
             // Add
             $this->add();
+            $this->audit(0, 'Added', $this->auditContext());
         } else {
+            // Work out what's changed before we overwrite the row - strip the secret out
+            // immediately so it never sits in a loggable array any longer than necessary.
+            $keyChanged = $this->hasPropertyChanged('secret');
+            $changedProperties = $this->getChangedProperties();
+            unset($changedProperties['secret']);
+
             // Edit
             $this->edit();
+
+            if ($keyChanged) {
+                $this->audit(0, 'Key changed', $this->auditContext());
+            }
+            if (count($changedProperties) > 0) {
+                $this->audit(0, 'Saved', array_merge(
+                    $this->auditContext(),
+                    $changedProperties
+                ));
+            }
         }
 
         $this->getLog()->debug('Saving redirect uris: ' . json_encode($this->redirectUris));
 
         foreach ($this->redirectUris as $redirectUri) {
             $redirectUri->save();
+        }
+
+        // originalRedirectUris is only populated by the controller ahead of an edit,
+        // via setOriginalValue(), so this is null (and skipped) on a fresh add().
+        $originalRedirectUris = $this->getOriginalValue('redirectUris');
+        if ($originalRedirectUris !== null) {
+            $currentRedirectUris = array_map(fn($uri) => $uri->redirectUri, $this->redirectUris);
+
+            // Compare as sets, not sequences - re-saving the same URIs in a different order
+            // shouldn't be reported as a change.
+            $originalSorted = $originalRedirectUris;
+            $currentSorted = $currentRedirectUris;
+            sort($originalSorted);
+            sort($currentSorted);
+
+            if ($currentSorted != $originalSorted) {
+                $this->audit(0, 'Redirect URIs updated', array_merge(
+                    $this->auditContext(),
+                    [
+                        'from' => implode(', ', $originalRedirectUris),
+                        'to' => implode(', ', $currentRedirectUris),
+                    ]
+                ));
+            }
         }
 
         $this->manageScopeAssignments();
@@ -230,6 +279,20 @@ class Application implements \JsonSerializable, ClientEntityInterface
         // Clear out everything owned by this client
         $this->getStore()->update('DELETE FROM `oauth_client_scopes` WHERE `clientId` = :id', ['id' => $this->key]);
         $this->getStore()->update('DELETE FROM `oauth_clients` WHERE `id` = :id', ['id' => $this->key]);
+
+        $this->audit(0, 'Deleted', $this->auditContext());
+    }
+
+    /**
+     * Identifying context for audit log entries
+     * @return array
+     */
+    private function auditContext(): array
+    {
+        return [
+            'Application identifier ends with' => substr($this->key, -8),
+            'Application Name' => $this->name,
+        ];
     }
 
     /**
@@ -303,6 +366,7 @@ class Application implements \JsonSerializable, ClientEntityInterface
 
     /**
      * Compare the original assignments with the current assignments and delete any that are missing, add any new ones
+     * @throws NotFoundException
      */
     private function manageScopeAssignments(): void
     {
@@ -325,11 +389,33 @@ class Application implements \JsonSerializable, ClientEntityInterface
 
         // Unlink any NOT in the collection
         $sql = 'DELETE FROM `oauth_client_scopes`
-                    WHERE clientId = :clientId 
+                    WHERE clientId = :clientId
                       AND scopeId NOT IN (\'0\'' . $unassignIn . ')
         ';
 
         $this->getStore()->update($sql, $params);
+
+        // existingScopeIds is only populated by the controller ahead of an edit, via
+        // setOriginalValue('scopeIds', ...), so this is null (and skipped) on a fresh add().
+        $existingScopeIds = $this->getOriginalValue('scopeIds');
+        if ($existingScopeIds !== null) {
+            $newScopeIds = array_map(fn($scope) => $scope->id, $this->scopes);
+            $assigned = array_diff($newScopeIds, $existingScopeIds);
+            $unassigned = array_diff($existingScopeIds, $newScopeIds);
+
+            if (count($assigned) > 0) {
+                $this->audit(0, 'Scopes assigned', array_merge(
+                    $this->auditContext(),
+                    ['scopeIds' => implode(',', $assigned)]
+                ));
+            }
+            if (count($unassigned) > 0) {
+                $this->audit(0, 'Scopes unassigned', array_merge(
+                    $this->auditContext(),
+                    ['scopeIds' => implode(',', $unassigned)]
+                ));
+            }
+        }
     }
 
     /** @inheritDoc */
