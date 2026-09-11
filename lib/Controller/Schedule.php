@@ -906,6 +906,10 @@ class Schedule extends Base
                 'Processed times are: FromDt=' . $fromDt->format(DateFormatHelper::getSystemFormat())
                 . '. ToDt=' . $logToDt . '. recurrenceRange=' . $logRecurrenceRange
             );
+        } else {
+            // Always daypart cannot be recurring — clear recurrence fields
+            $schedule->recurrenceType = null;
+            $schedule->recurrenceRange = null;
         }
 
         // Schedule Criteria
@@ -1555,6 +1559,7 @@ class Schedule extends Base
         } else {
             // This is an always day part, which cannot be recurring, make sure we clear the recurring type if it has been set
             $schedule->recurrenceType = null;
+            $schedule->recurrenceRange = null;
         }
 
         // Schedule Criteria
