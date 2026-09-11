@@ -356,7 +356,7 @@ export default function MenuBoards() {
 
         <div className="min-h-0 flex flex-col">
           {!isHydrated ? (
-            <div className="flex-1 flex items-center justify-center bg-gray-50 animate-pulse rounded-lg border border-gray-200">
+            <div className="flex-1 min-h-64 flex items-center justify-center bg-gray-50 animate-pulse rounded-lg border border-gray-200">
               <span className="text-gray-400 font-medium">{t('Loading your preferences...')}</span>
             </div>
           ) : (
