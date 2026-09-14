@@ -508,6 +508,7 @@ class Folder implements \JsonSerializable
         // if we had permissions set on this folder, then permissionsFolderId stays as it was
         if ($this->getPermissionFolderId() !== null) {
             $this->permissionsFolderId = $newParentFolder->getPermissionFolderIdOrThis();
+            $this->updateChildObjects($this->permissionsFolderId, $this->id);
             $this->manageChildPermissions($this->permissionsFolderId);
         }
 
