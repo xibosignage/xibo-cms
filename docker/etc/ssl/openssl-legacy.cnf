@@ -1,0 +1,19 @@
+# Activates OpenSSL's "legacy" provider (RC4 and other older ciphers), which is
+# not loaded by default from OpenSSL 3.x onwards. Required so that
+# lib/XMR/PlayerAction.php::getEncryptedMessage() can still openssl_seal() with
+# RC4 for the legacy (non-WebSocket) XMR wire protocol, which older player
+# firmware expects and cannot be changed.
+openssl_conf = openssl_init
+
+[openssl_init]
+providers = provider_sect
+
+[provider_sect]
+default = default_sect
+legacy = legacy_sect
+
+[default_sect]
+activate = 1
+
+[legacy_sect]
+activate = 1

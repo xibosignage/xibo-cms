@@ -36,6 +36,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Support\Exception\DeadlockException;
+use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -777,6 +778,17 @@ class Display implements \JsonSerializable, XmrTargetInterface
 
         if (!v::stringType()->notEmpty()->validate($this->license)) {
             throw new InvalidArgumentException(__('Can not have a display without a hardware key'), 'license');
+        }
+
+        try {
+            $existing = $this->displayFactory->getByLicence($this->license);
+            if ($this->displayId == null || $this->displayId != $existing->displayId) {
+                throw new DuplicateEntityException(
+                    __('This hardware key is already in use by another display.'),
+                    'license'
+                );
+            }
+        } catch (NotFoundException $ignored) {
         }
 
         if ($this->wakeOnLanEnabled == 1 && $this->wakeOnLanTime == '') {

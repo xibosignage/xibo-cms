@@ -86,7 +86,17 @@ $app->add(new \Xibo\Middleware\ConnectorMiddleware($app));
 $app->add(new \Xibo\Middleware\ListenersMiddleware($app));
 $app->add(new \Xibo\Middleware\CsrfGuard($app));
 $app->add(new \Xibo\Middleware\Csp($container));
-$app->add(new RKA\Middleware\IpAddress(true, []));
+
+// Trusted reverse-proxy list for X-Forwarded-For client IP resolution (used for login/2FA/password-reset
+// rate limiting and audit logging). Combines the settings.php-only $trustedProxyIps (supports CIDR/wildcard)
+// with the admin-editable WHITELIST_LOAD_BALANCERS setting (Settings > Network), so operators who already
+// listed their load balancer there (e.g. for HSTS trust) get it trusted here too.
+// setDependencies() must be called explicitly here (mirroring web/xmds.php) because getSetting() requires
+// it, and State::setState() only calls it per-request — too late, since this list is fixed at bootstrap.
+$configService = $container->get('configService');
+$configService->setDependencies($container->get('store'), $container->get('rootUri'));
+$trustedProxyIps = $configService->getTrustedProxyIpList();
+$app->add(new \Xibo\Middleware\TrustedProxyIpAddress($trustedProxyIps));
 
 // Authentication
 $authentication = ($container->get('configService')->authentication != null)

@@ -31,6 +31,7 @@ use Xibo\Event\ScheduleCriteriaRequestInterface;
 use Xibo\Event\WidgetDataRequestEvent;
 use Xibo\Event\XmdsWeatherRequestEvent;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\GeoHelper;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
@@ -235,6 +236,10 @@ class OpenWeatherMapConnector implements ConnectorInterface
             $providedLat = $dataProvider->getDisplayLatitude();
             $providedLon = $dataProvider->getDisplayLongitude();
         }
+
+        // Round the coordinates so that nearby displays share the same cache entry and API call.
+        $providedLat = GeoHelper::roundCoordinate($providedLat);
+        $providedLon = GeoHelper::roundCoordinate($providedLon);
 
         // Map Moment.js locale codes to OWM language codes where they differ
         $owmLangMap = [
@@ -993,8 +998,9 @@ class OpenWeatherMapConnector implements ConnectorInterface
             );
         }
 
-        $latitude = $event->getLatitude();
-        $longitude = $event->getLongitude();
+        // Round the coordinates so that nearby displays share the same cache entry and API call.
+        $latitude = GeoHelper::roundCoordinate($event->getLatitude());
+        $longitude = GeoHelper::roundCoordinate($event->getLongitude());
 
         // Cache expiry date
         $cacheExpire = Carbon::now()->addHours((int) $this->getSetting('xmdsCachePeriod'));

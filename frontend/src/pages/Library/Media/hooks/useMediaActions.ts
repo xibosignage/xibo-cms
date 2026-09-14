@@ -30,6 +30,7 @@ import { selectFolder, type ApiResult } from '@/services/folderApi';
 import { cloneMedia, deleteMedia, tidyLibrary, updateMedia } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
 import type { Tag } from '@/types/tag';
+import { isAlreadyDeletedError } from '@/utils/errors';
 
 interface UseMediaActionsProps {
   t: TFunction;
@@ -75,25 +76,37 @@ export function useMediaActions({
         ),
       );
 
-      const stillFailed = itemsToDelete.filter((_, index) => results[index]?.status === 'rejected');
+      const stillFailed = itemsToDelete.filter((_, index) => {
+        const result = results[index];
+        return result?.status === 'rejected' && !isAlreadyDeletedError(result.reason);
+      });
+      const deletedCount = itemsToDelete.length - stillFailed.length;
 
       if (stillFailed.length > 0) {
-        const firstRejected = results.find((r) => r.status === 'rejected') as PromiseRejectedResult;
+        const firstRejected = results.find(
+          (r) => r.status === 'rejected' && !isAlreadyDeletedError(r.reason),
+        ) as PromiseRejectedResult;
         const reason = firstRejected.reason;
-        const message =
+        const specificMessage =
           isAxiosError(reason) && reason.response?.data?.message
             ? reason.response.data.message
-            : t('{{count}} item(s) could not be deleted.', { count: stillFailed.length });
-        setDeleteError(message);
+            : undefined;
+        const failurePart =
+          specificMessage ??
+          t('{{count}} item(s) could not be deleted.', { count: stillFailed.length });
+        const successPart =
+          deletedCount > 0
+            ? t('{{count}} media item(s) deleted successfully.', { count: deletedCount })
+            : '';
+
+        setDeleteError([successPart, failurePart].filter(Boolean).join(' '));
         setItemsToDelete(stillFailed);
         setRowSelection({});
         handleRefresh();
         return;
       }
 
-      notify.success(
-        t('{{count}} media item(s) deleted successfully.', { count: itemsToDelete.length }),
-      );
+      notify.success(t('{{count}} media item(s) deleted successfully.', { count: deletedCount }));
       setRowSelection({});
       handleRefresh();
       closeModal();

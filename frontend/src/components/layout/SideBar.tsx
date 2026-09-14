@@ -30,6 +30,7 @@ import { SidebarSubLinks } from '../ui/sidebar/SidebarSublinks';
 
 import { APP_ROUTES } from '@/config/appRoutes';
 import { useUserContext } from '@/context/UserContext';
+import { useSidebarOpenMenus } from '@/hooks/useSidebarPreferences';
 import { filterRoutesByUser } from '@/utils/permissions';
 import { isRouteActive } from '@/utils/sidebar';
 
@@ -45,7 +46,7 @@ export default function SidebarMenu({ isCollapsed, closeMobileDrawer }: SidebarM
   const { t } = useTranslation();
   const { user } = useUserContext();
   const location = useLocation();
-  const [openMenus, setOpenMenus] = useState<Set<string>>(new Set());
+  const [openMenus, setOpenMenus] = useSidebarOpenMenus();
 
   // Hides text labels, logo, chevrons, and sublinks.
   // On collapse: hides immediately. On expand: delays until container finishes animating.

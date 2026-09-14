@@ -87,6 +87,7 @@ ARG GIT_COMMIT=dev
 
 # Set some environment variables
 ENV CMS_DEV_MODE=true \
+    OPENSSL_CONF=/etc/ssl/openssl-legacy.cnf \
     INSTALL_TYPE=dev \
     XMR_HOST=xmr \
     MYSQL_HOST=db \

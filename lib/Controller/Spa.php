@@ -121,6 +121,8 @@ class Spa extends Base
             'viteRefreshUrl' => ViteManifest::getRefreshUrl(),
         ]);
 
-        return $this->render($request, $response);
+        // The shell is identical for authed and unauthed users (auth is enforced client-side
+        // by requireAuthLoader), so it must never be cached or replayed from bfcache after logout.
+        return $this->render($request, $response)->withHeader('Cache-Control', 'no-store');
     }
 }

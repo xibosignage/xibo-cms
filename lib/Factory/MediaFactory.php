@@ -695,7 +695,8 @@ class MediaFactory extends BaseFactory
                     $dataSetId = $sanitizedDataSet->getInt('dataSetId');
                     $heading = $sanitizedDataSet->getString('heading');
 
-                    $body .= ' SELECT `' .  $heading . '` AS mediaId FROM `dataset_' . $dataSetId . '`';
+                    $body .= ' SELECT `' .  $heading . '` AS mediaId FROM `dataset_' . $dataSetId
+                        . '` WHERE `' . $heading . '` IS NOT NULL';
                 }
 
                 $body .= ') ';

@@ -491,6 +491,20 @@ class Login extends Base
     }
 
     /**
+     * Public JSON endpoint returning just the CMS version, wrapped in a `data` envelope.
+     * No authentication required. Consumed by external integrations (e.g. the Canva
+     * connector) that need to identify the CMS version without authenticating first.
+     */
+    public function about(Request $request, Response $response): \Psr\Http\Message\ResponseInterface
+    {
+        return $response->withJson([
+            'data' => [
+                'version' => Environment::$WEBSITE_VERSION_NAME,
+            ],
+        ]);
+    }
+
+    /**
      * Public JSON endpoint returning branding + version info for the About modal.
      * No authentication required.
      */
@@ -650,11 +664,9 @@ class Login extends Base
 
             foreach (json_decode($codes) as $code) {
                 // if the provided recovery code matches one stored in the database, we want to log in the user
-                if ($code === $sanitizedParams->getString('recoveryCode')) {
+                if (hash_equals($code, $sanitizedParams->getString('recoveryCode'))) {
                     $result = true;
-                }
-
-                if ($code !== $sanitizedParams->getString('recoveryCode')) {
+                } else {
                     $updatedCodes[] = $code;
                 }
             }

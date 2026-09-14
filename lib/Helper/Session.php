@@ -82,12 +82,22 @@ class Session implements \SessionHandlerInterface
     private LogServiceInterface $log;
 
     /**
+     * Operator-configured trusted reverse-proxy IPs (exact matches only), used to decide whether
+     * to trust forwarded-for style headers when recording the client IP. See
+     * ConfigServiceInterface::getTrustedProxyIpList().
+     * @var string[]
+     */
+    private array $trustedProxyIps;
+
+    /**
      * Session constructor.
      * @param LogServiceInterface $log
+     * @param string[] $trustedProxyIps
      */
-    public function __construct(LogServiceInterface $log)
+    public function __construct(LogServiceInterface $log, array $trustedProxyIps = [])
     {
         $this->log = $log;
+        $this->trustedProxyIps = $trustedProxyIps;
 
         session_set_save_handler($this, true);
 
@@ -179,10 +189,15 @@ class Session implements \SessionHandlerInterface
             $this->beginTransaction();
 
             // Get this session
+            // FOR UPDATE holds this row locked for the life of the transaction (committed in
+            // close()), so a concurrent request for the same session_id blocks here until this
+            // request finishes, instead of reading stale data and later clobbering this request's
+            // write with its own (lost-update race - e.g. a background poll racing a logout).
             $sth = $dbh->getConnection()->prepare('
-                SELECT `session_data`, `isexpired`, `useragent`, `session_expiration`, `userId` 
+                SELECT `session_data`, `isexpired`, `useragent`, `session_expiration`, `userId`
                   FROM `session`
                  WHERE `session_id` = :session_id
+                   FOR UPDATE
             ');
             $sth->execute(['session_id' => $key]);
 
@@ -557,15 +572,17 @@ class Session implements \SessionHandlerInterface
      */
     private function getIp(): string
     {
-        $ipHeaderKeys = ['X_FORWARDED_FOR', 'HTTP_X_FORWARDED_FOR', 'CLIENT_IP', 'REMOTE_ADDR'];
+        $remoteAddr = $_SERVER['REMOTE_ADDR'] ?? '';
 
-        foreach ($ipHeaderKeys as $ipHeaderKey) {
-            if (isset($_SERVER[$ipHeaderKey]) && filter_var($_SERVER[$ipHeaderKey], FILTER_VALIDATE_IP) !== false) {
-                return $_SERVER[$ipHeaderKey];
-            }
+        if ($remoteAddr !== ''
+            && IpTrust::isTrusted($remoteAddr, $this->trustedProxyIps)
+            && isset($_SERVER['HTTP_X_FORWARDED_FOR'])
+            && filter_var($_SERVER['HTTP_X_FORWARDED_FOR'], FILTER_VALIDATE_IP) !== false
+        ) {
+            return $_SERVER['HTTP_X_FORWARDED_FOR'];
         }
 
-        return '';
+        return filter_var($remoteAddr, FILTER_VALIDATE_IP) !== false ? $remoteAddr : '';
     }
 
     /**

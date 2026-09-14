@@ -21,23 +21,28 @@
 
 import { ChevronLeftSquare, ChevronRightSquare } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Outlet, useLocation, useLoaderData } from 'react-router-dom';
 
 import { SessionExpiredModal } from '@/components/auth/SessionExpiredModal';
 import HelpPane from '@/components/help/HelpPane';
 import SideBar from '@/components/layout/SideBar';
 import TopNav from '@/components/layout/TopNav';
+import InfoBanner from '@/components/ui/InfoBanner';
+import { partiallySuspended } from '@/config/publicPath';
 import { BrandingProvider } from '@/context/BrandingContext';
 import { FolderRefreshProvider } from '@/context/FolderRefreshContext';
 import { UserProvider } from '@/context/UserContext';
 import { usePreline } from '@/hooks/usePreline';
+import { useSidebarCollapsed } from '@/hooks/useSidebarPreferences';
 import { UploadProgressDock } from '@/pages/Library/Media/components/UploadProgressDock';
 import NotificationInterruptCheck from '@/pages/Notification/components/NotificationInterruptCheck';
 import type { User } from '@/types/user';
 
 export default function RootLayout() {
   const { pathname } = useLocation();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { t } = useTranslation();
+  const [isCollapsed, setIsCollapsed] = useSidebarCollapsed();
   const [openMobileDrawer, setOpenMobileDrawer] = useState(false);
   const { user } = useLoaderData() as { user: User | null };
 
@@ -94,6 +99,13 @@ export default function RootLayout() {
                 pathName={pathname}
                 onToggleMobileDrawer={() => setOpenMobileDrawer(!openMobileDrawer)}
               />
+              {partiallySuspended && (
+                <InfoBanner type="warning" className="w-full mx-0 rounded-none">
+                  {t(
+                    'CMS suspended. Displays will show cached content. Please contact your administrator.',
+                  )}
+                </InfoBanner>
+              )}
               <main className="flex-1 flex flex-col min-h-0 bg-white overflow-auto dark:bg-black">
                 <Outlet />
               </main>

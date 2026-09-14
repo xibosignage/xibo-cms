@@ -114,6 +114,10 @@ const HistoryManager = function(parent, container, visible) {
 *   - Custom Request Path ( url and type )
  * @param {object=} [options.customRequestReplace = null]
  *  - Custom Request replace ( tag and replace )
+ * @param {bool=} [options.chainRevertWithPrevious = false]
+ *  - When this change is reverted, also immediately revert the change
+ *  that precedes it in the history array ( f.e. the region a widget
+ *  was just added into )
  * @return {Promise} - Promise that resolves when the change is uploaded
 */
 HistoryManager.prototype.addChange = function(
@@ -128,6 +132,7 @@ HistoryManager.prototype.addChange = function(
     targetSubType = null,
     skipUpload = false,
     auxTarget = {},
+    chainRevertWithPrevious = false,
   } = {},
 ) {
   const changeId = this.changeUniqueId++;
@@ -146,6 +151,11 @@ HistoryManager.prototype.addChange = function(
 
   // If we want to skip upload and only use it for revert locally
   newChange.skipUpload = skipUpload;
+
+  // If reverting this change should also revert the previous
+  // change in the history array ( f.e. deleting a widget added
+  // to a region that was just created for it )
+  newChange.chainRevertWithPrevious = chainRevertWithPrevious;
 
   // If we skip upload, mark it as uploaded
   if (skipUpload) {
@@ -308,6 +318,22 @@ HistoryManager.prototype.revertChange = function() {
   const parseData = inverseChangeMap[lastChange.type].parseData;
 
   return new Promise(function(resolve, reject) {
+    // Remove the change from history and, if it's flagged to chain
+    // its revert with the previous change ( f.e. a widget added to a
+    // region created just for it ), revert that change too
+    const finishRevert = function(result) {
+      self.removeLastChange();
+
+      if (
+        lastChange.chainRevertWithPrevious &&
+        self.changeHistory.length > 0
+      ) {
+        self.revertChange().then(resolve).catch(reject);
+      } else {
+        resolve(result);
+      }
+    };
+
     // Revert element save
     if (lastChange.type === 'saveElements') {
       const widget =
@@ -325,10 +351,7 @@ HistoryManager.prototype.revertChange = function() {
           addToHistory: false,
           updateEditor: true,
         }).then(function() {
-          // Remove change from history
-          self.removeLastChange();
-
-          resolve({
+          finishRevert({
             localRevert: true,
           });
         });
@@ -355,10 +378,7 @@ HistoryManager.prototype.revertChange = function() {
       // Apply inverse operation to the object
       object[inverseOperation](data, false);
 
-      // Remove change from history
-      self.removeLastChange();
-
-      resolve({
+      finishRevert({
         type: inverseOperation,
         target: lastChange.target.type,
         message: 'Change reverted',
@@ -405,17 +425,13 @@ HistoryManager.prototype.revertChange = function() {
               ) ||
               !isNaN(lastChange.target.id)
             ) {
-              // Remove change from history
-              self.removeLastChange();
-
               // If the operation is a deletion, unselect object before deleting
               if (inverseOperation === 'delete') {
                 // Unselect selected object before deleting
                 app.selectObject();
               }
 
-              // Resolve promise
-              resolve(data);
+              finishRevert(data);
             } else {
               // Revert next change
               revertObject();

@@ -14,51 +14,100 @@ possible depending on complexity but historically within a few days.
 
 ## Operator notes — security-relevant settings
 
-These notes cover deployment-time configuration that affects the CMS's security posture.
-For developer-facing security architecture (boundary sanitisers, the widget sandbox model,
-the SafeClient HTTP wrapper, etc.), see the "Security-sensitive patterns" section in
-`CLAUDE.md`.
+Deployment-time configuration that affects the CMS's security posture.
+
+Every setting below is a PHP variable, set at deployment time and never in the admin UI:
+
+- **Docker** (the supported install): `/var/www/cms/custom/settings-custom.php`. The
+  `custom/` directory is a persisted volume. `web/settings.php` lives inside the container
+  and is recreated on a fresh one, so edits there are lost.
+- **Manual installs**: `web/settings.php`, or `web/settings-custom.php` if your
+  `settings.php` includes it — see `MANUAL_INSTALL.md`.
 
 ### `$allowLocalNetworkRequests` — leave at the default (`false`)
 
-The `SafeClient` HTTP wrapper (`lib/Helper/Guzzle/SafeClient.php`) blocks outbound HTTP
-requests to RFC 1918 / link-local / IPv6 ULA / cloud-metadata IPs to defend the CMS
-against SSRF attacks (e.g. malicious connector URLs, malicious upload URLs).
+`SafeClient` (`lib/Helper/Guzzle/SafeClient.php`) blocks outbound HTTP to RFC 1918,
+link-local, IPv6 ULA and cloud-metadata addresses. That is the CMS's SSRF defence.
 
-You can disable that protection by setting `$allowLocalNetworkRequests = true;` in
-`web/settings.php` or `web/settings-custom.php`. **Do not do this in production unless
-you fully understand the consequences** — it allows the CMS to issue HTTP requests to
-internal IP ranges, the AWS / GCP / Azure metadata endpoints, and other internal services
-that an attacker controlling any admin-settable URL (connector service URL, news feed
-URL, XMR address, etc.) could pivot to.
-
-The setting is intentionally not exposed via any CMS admin UI — flipping it requires
-filesystem access to the CMS host. There is no DB-backed override.
+Setting `$allowLocalNetworkRequests = true;` removes it for every outbound request. The CMS
+can then reach internal services and the AWS/GCP/Azure metadata endpoints, which makes any
+admin-settable URL — connector service URL, news feed URL, XMR address — a pivot into your
+internal network. Don't enable it in production.
 
 ### `$whitelistHosts` — strongly recommended for production
 
-When the CMS sends URLs off-system (the password-reset email link, the
-`cmsAddress` registration call to the Xibo auth service, the PWA player manifest
-embedded in player software packages, etc.), it constructs those URLs from the
-incoming request's `Host` header. Without an allow-list, an attacker who can set
-that header — e.g. by sending a `POST /login/forgotten-password` with
-`Host: attacker.com` — can poison the URL that ends up in the victim's inbox,
-turning a password-reset email into a phishing vector that leaks the reset
-nonce to attacker-controlled infrastructure.
+The CMS builds off-system URLs from the request's `Host` header: password-reset links, the
+`cmsAddress` sent to the Xibo auth service, the PWA player manifest. A forged `Host` gives a
+forged link.
 
-Set `$whitelistHosts` in `web/settings.php` (or `web/settings-custom.php`) to a
-comma-separated list of canonical hostnames that the CMS is reachable under:
+Set it to the hostnames the CMS is reachable under:
 
 ```php
 $whitelistHosts = 'cms.example.com,cms-staging.example.com';
 ```
 
-When set, `HttpsDetect::getHost()` rejects any `Host` header that isn't on the
-list and falls back to the first listed hostname instead. When unset (the
-default), the legacy behaviour is preserved for backward compatibility — but
-this leaves the off-system URL construction sites open to Host-header
-injection, so production deployments should treat this as a required setting.
+`HttpsDetect::getHost()` then rejects any other `Host` and substitutes the first entry. Treat
+this as required in production.
 
-Like `$allowLocalNetworkRequests`, this setting is deployment-time only and is
-not exposed via any CMS admin UI — an attacker who compromises an admin account
-would otherwise simply whitelist their own host.
+### `$trustedProxyIps` — required if the CMS sits behind a reverse proxy
+
+The client IP keys login/2FA/password-reset rate limiting and is recorded in audit logs,
+session history and XMDS display logs. By default it is the TCP peer address; no
+forwarded-for header is trusted, so a direct client cannot spoof it.
+
+Behind a TLS-terminating reverse proxy, load balancer or CDN, set `$trustedProxyIps` to
+**the address your proxy connects to the CMS from** — its source address, not the backend
+addresses configured in the proxy:
+
+```php
+$trustedProxyIps = '10.0.0.5,172.18.0.0/16';
+```
+
+Exact IPs, CIDR ranges and wildcards all work, comma-separated, matched by
+`Xibo\Helper\IpTrust`. The first field (`%h`) of the CMS web server's access log is the
+address to use.
+
+Never use a wildcard or a public range. Every listed address may assert any client IP, so
+widening the list hands out an unlimited rate-limit bypass and lets audit IPs be chosen
+freely.
+
+Only `X-Forwarded-For` is trusted — not `Forwarded`, `X-Real-IP` or `X-Cluster-Client-Ip`.
+Make sure your proxy sets `X-Forwarded-For` itself rather than relaying the client's value.
+
+This is the only setting that grants trust for rate limiting and audit IPs.
+`WHITELIST_LOAD_BALANCERS` does not — see below.
+
+**Unset, behind a proxy:** every user resolves to the proxy's address and shares one
+rate-limit bucket, so one user's failed logins can rate-limit the rest. Setting the correct
+value fixes it. `WHITELIST_LOAD_BALANCERS` makes no difference here.
+
+**Wrong value, with `FORCE_HTTPS` on:** the CMS reads the request as plain HTTP and
+redirects to `https://`, the proxy forwards that back over HTTP, and the browser loops.
+Correct the address rather than widening the list.
+
+### Why `WHITELIST_LOAD_BALANCERS` is HTTPS-detection only
+
+`WHITELIST_LOAD_BALANCERS` (Settings > Network) predates `$trustedProxyIps` and only ever
+decided whether to trust `X-Forwarded-Proto` for HSTS. It still feeds only
+`getHttpsDetectionTrustedProxyIpList()`, never `getTrustedProxyIpList()`, rate limiting or
+audit IPs.
+
+It is editable by any super-admin.
+
+### How `X-Forwarded-Proto` (HTTPS detection) is trusted
+
+`HttpsDetect::isHttpsTrusted()` decides the CSRF cookie's `Secure` flag, off-system URL
+generation (`getScheme()`/`getPort()`/`getRootUrl()`/`getBaseUrl()`), HSTS issuance and the
+`FORCE_HTTPS` redirect in `State.php`.
+
+A real `$_SERVER['HTTPS']` always wins. Otherwise `X-Forwarded-Proto: https` is honoured
+only from an address on `$trustedProxyIps` **or** `WHITELIST_LOAD_BALANCERS`. Set either,
+and no other address can assert `https`.
+
+**With neither set** there is nothing to check a claim against, so `https` is trusted from
+any address rather than the install being read as plain HTTP. Each caller fails safe if that
+claim is forged: browsers reject a `Secure` cookie over non-TLS, an `https://` link is never
+weaker than `http://`, browsers ignore HSTS over non-TLS, and skipping the `FORCE_HTTPS`
+redirect only affects the attacker's own request.
+
+This fallback covers HTTPS detection only.

@@ -23,7 +23,7 @@ import type { ColumnDef, PaginationState, SortingState } from '@tanstack/react-t
 import type { TFunction } from 'i18next';
 import { ArrowLeft, PenSquare, Trash2 } from 'lucide-react';
 import type { ComponentProps } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -223,6 +223,7 @@ export default function CampaignEditor() {
   const [pendingTagInput, setPendingTagInput] = useState('');
   const [hasTagPendingValue, setHasTagPendingValue] = useState(false);
   const [dateErrors, setDateErrors] = useState<{ startDt?: string; endDt?: string }>({});
+  const draftInitializedForRef = useRef<number | null>(null);
 
   const [displayTargets, setDisplayTargets] = useState<DisplayGroupMultiSelectValue>({
     displaySpecificGroupIds: [],
@@ -252,10 +253,11 @@ export default function CampaignEditor() {
   } | null>(null);
 
   useEffect(() => {
-    if (campaign) {
+    if (campaign && draftInitializedForRef.current !== campaignId) {
       setDraft(buildDraft(campaign));
+      draftInitializedForRef.current = campaignId;
     }
-  }, [campaign]);
+  }, [campaign, campaignId]);
 
   useEffect(() => {
     const ids = campaign?.displayGroupIds ?? [];
@@ -527,7 +529,7 @@ export default function CampaignEditor() {
               {(
                 [
                   { key: 'general', label: t('General') },
-                  { key: 'reference', label: t('References') },
+                  { key: 'reference', label: t('Reference') },
                 ] as const
               ).map(({ key, label }) => (
                 <button
@@ -552,7 +554,7 @@ export default function CampaignEditor() {
                 <TextInput
                   name="name"
                   label={t('Name')}
-                  placeholder=" "
+                  placeholder={t('Enter name')}
                   helpText={t('The Name for this Campaign')}
                   value={draft.name}
                   onChange={(val) => setDraft((prev) => prev && { ...prev, name: val })}
@@ -611,6 +613,7 @@ export default function CampaignEditor() {
                     name="target"
                     type="number"
                     label={t('Target')}
+                    placeholder={t('Add number')}
                     helpText={t(
                       'What is the target number for this Campaign over its entire playtime',
                     )}
@@ -645,7 +648,7 @@ export default function CampaignEditor() {
                     key={ref}
                     name={ref}
                     label={t('Reference {{n}}', { n: i + 1 })}
-                    placeholder={t('Enter here')}
+                    placeholder={t('Enter reference {{n}}', { n: i + 1 })}
                     value={draft[ref]}
                     onChange={(val) => setDraft((prev) => prev && { ...prev, [ref]: val })}
                   />

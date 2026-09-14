@@ -137,23 +137,26 @@ export default function CommandsTab({
               <div className="border-t border-gray-200 px-4 py-3 space-y-3">
                 {cmd.description && <p className="text-sm text-gray-400">{cmd.description}</p>}
                 {cmd.baseCommandString && (
-                  <p className="text-sm text-gray-400">
-                    {t('This Command has a default Command String.')}
-                  </p>
+                  <div className="text-sm text-gray-400">
+                    <p>{t('This Command has a default Command String.')}</p>
+                    <p className="mt-1">{cmd.baseCommandString}</p>
+                  </div>
                 )}
                 <CommandBuilder
                   value={cmd.commandString}
                   onChange={(val) => updateDraft(cmd.commandId, 'commandString', val)}
+                  helpText={t('The Command String for this Command on this display')}
                 />
                 {cmd.baseValidationString && (
-                  <p className="text-sm text-gray-400">
-                    {t('This Command has a default Validation String.')}
-                  </p>
+                  <div className="text-sm text-gray-400">
+                    <p>{t('This Command has a default Validation String.')}</p>
+                    <p className="mt-1">{cmd.baseValidationString}</p>
+                  </div>
                 )}
                 <TextInput
                   name={`validationString_${cmd.commandId}`}
                   label={t('Validation String')}
-                  helpText={t('A regular expression to validate the output of the command.')}
+                  helpText={t('The Validation String for this Command on this display')}
                   placeholder={cmd.baseValidationString || undefined}
                   value={cmd.validationString}
                   onChange={(val) => updateDraft(cmd.commandId, 'validationString', val)}
@@ -165,6 +168,7 @@ export default function CommandsTab({
                 )}
                 <SelectDropdown
                   label={t('Create Alert On')}
+                  helpText={t('On command execution, when should a Display alert be created?')}
                   value={cmd.createAlertOn || cmd.baseCreateAlertOn || 'never'}
                   options={[
                     { value: 'never', label: t('Never') },

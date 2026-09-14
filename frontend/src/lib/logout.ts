@@ -19,8 +19,11 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { broadcastLogout } from './auth-broadcast';
+
 import { withPublicPath } from '@/config/publicPath';
 
 export function logout(redirectUrl: string = withPublicPath('logout')) {
+  broadcastLogout();
   window.location.href = redirectUrl;
 }
