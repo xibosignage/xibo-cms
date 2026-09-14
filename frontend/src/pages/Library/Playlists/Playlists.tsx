@@ -271,10 +271,12 @@ export default function Playlist() {
     formatDateTime,
     onDelete: handleDelete,
     openAddEditModal,
-    openMoveModal: (playlist) => {
-      setItemsToMove([playlist] as Playlist[]);
-      openModal('move');
-    },
+    openMoveModal: canViewFolders
+      ? (playlist) => {
+          setItemsToMove([playlist] as Playlist[]);
+          openModal('move');
+        }
+      : undefined,
     openShareModal: (playlistId) => {
       setShareEntityIds(playlistId);
       openModal('share');
