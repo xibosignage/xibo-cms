@@ -157,6 +157,16 @@ class Media implements \JsonSerializable
     public $groupsWithPermissions;
 
     /**
+     * @var string[]
+     */
+    #[OA\Property(
+        description: 'An array of groups/users with permissions to this Media',
+        type: 'array',
+        items: new OA\Items(type: 'string')
+    )]
+    public $groupsWithPermissionsList = [];
+
+    /**
      * @var int
      */
     #[OA\Property(description: 'A flag indicating whether this media has been released')]

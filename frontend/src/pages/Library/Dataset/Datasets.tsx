@@ -92,7 +92,7 @@ export default function Dataset() {
       isRemote: true,
       isRealTime: true,
       owner: true,
-      groupsWithPermissions: false,
+      groupsWithPermissionsList: false,
       dataLastModified: false,
       lastSync: false,
     },

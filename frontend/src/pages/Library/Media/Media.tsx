@@ -109,7 +109,7 @@ export default function Media() {
       fileSize: false,
       createdDt: false,
       modifiedDt: false,
-      groupsWithPermissions: false,
+      groupsWithPermissionsList: false,
       revised: false,
       released: false,
       fileName: false,

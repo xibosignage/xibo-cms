@@ -102,7 +102,7 @@ export default function Layouts() {
       description: true,
       thumbnail: true,
       owner: true,
-      groupsWithPermissions: false,
+      groupsWithPermissionsList: false,
       valid: true,
       status: true,
       modifiedDt: false,

@@ -100,7 +100,7 @@ export default function Playlist() {
       createdDt: false,
       modifiedDt: true,
       enableStat: true,
-      groupsWithPermissions: false,
+      groupsWithPermissionsList: false,
       revised: false,
       released: false,
       ownerId: true,

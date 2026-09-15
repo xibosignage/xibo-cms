@@ -86,7 +86,7 @@ export default function ModuleTemplates() {
       dataType: true,
       title: true,
       type: true,
-      groupsWithPermissions: true,
+      groupsWithPermissionsList: true,
     },
     viewMode: 'table',
     globalFilter: '',

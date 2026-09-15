@@ -300,16 +300,16 @@ class ModuleTemplateFactory extends BaseFactory
         $filter = $this->getSanitizer($filterBy);
 
         $select = 'SELECT *,
-                (SELECT GROUP_CONCAT(DISTINCT `group`.group)
-                          FROM `permission`
-                            INNER JOIN `permissionentity`
-                            ON `permissionentity`.entityId = permission.entityId
-                            INNER JOIN `group`
-                            ON `group`.groupId = `permission`.groupId
-                         WHERE entity = :permissionEntityGroups
-                            AND objectId = `module_templates`.id
-                            AND view = 1
-                ) AS groupsWithPermissions';
+                (SELECT JSON_ARRAYAGG(g) FROM (
+                            SELECT DISTINCT `group`.group AS g
+                            FROM `permission`
+                                INNER JOIN `permissionentity` ON `permissionentity`.entityId = permission.entityId
+                                INNER JOIN `group` ON `group`.groupId = `permission`.groupId
+                            WHERE entity = :permissionEntityGroups
+                                AND objectId = `module_templates`.id
+                                AND view = 1
+                            ORDER BY g
+                ) t) AS groupsWithPermissionsListJson';
 
         $params['permissionEntityGroups'] = 'Xibo\\Entity\\ModuleTemplate';
 
@@ -348,11 +348,15 @@ class ModuleTemplateFactory extends BaseFactory
             'templateId',
             'dataType',
             'groupsWithPermissions',
+            'groupsWithPermissionsList',
         ];
-
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
+            customColumns: [
+                'groupsWithPermissions' => '`groupsWithPermissionsListJson`',
+                'groupsWithPermissionsList' => '`groupsWithPermissionsListJson`',
+            ],
             defaultSort: ['id ASC'],
             uniqueColumn: 'id'
         );
@@ -377,7 +381,15 @@ class ModuleTemplateFactory extends BaseFactory
             $template->dataType = $row['dataType'];
             $template->isEnabled = $row['enabled'] == 1;
             $template->ownerId = intval($row['ownerId'] ?? 0);
-            $template->groupsWithPermissions = $row['groupsWithPermissions'];
+
+            $names = null;
+            if ($row['groupsWithPermissionsListJson'] !== null) {
+                $decoded = json_decode($row['groupsWithPermissionsListJson'], true);
+                $names = is_array($decoded) ? $decoded : null;
+            }
+            $template->groupsWithPermissionsList = $names ?? [];
+            $template->groupsWithPermissions = $names !== null ? implode(',', $names) : null;
+
             $templates[] = $template;
         }
 

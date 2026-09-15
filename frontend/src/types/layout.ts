@@ -44,6 +44,7 @@ export interface Layout {
   campaignType?: string;
   owner: string;
   groupsWithPermissions?: string;
+  groupsWithPermissionsList?: string[] | null;
   enableStat: boolean;
   modifiedDt: string;
   code?: string | number;
