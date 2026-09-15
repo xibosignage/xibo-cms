@@ -59,13 +59,50 @@ export default function UserGroupsModal({ user, onClose, onSuccess }: UserGroups
 
   // Load currently assigned groups fresh from the API
   useEffect(() => {
+    let cancelled = false;
     setIsLoadingAssigned(true);
     setToAdd([]);
     setToRemove([]);
-    fetchUserGroups({ start: 0, length: 1000, userIdMember: user.userId })
-      .then((res) => setAssignedGroups(res.rows.filter((g) => g.isUserSpecific !== 1)))
-      .catch(() => setAssignedGroups([]))
-      .finally(() => setIsLoadingAssigned(false));
+
+    const loadAllAssigned = async () => {
+      const pageSize = 200;
+      try {
+        const first = await fetchUserGroups({
+          start: 0,
+          length: pageSize,
+          userIdMember: user.userId,
+        });
+        let rows = first.rows;
+        const totalCount = first.totalCount;
+        while (!cancelled && rows.length < totalCount) {
+          const next = await fetchUserGroups({
+            start: rows.length,
+            length: pageSize,
+            userIdMember: user.userId,
+          });
+          if (next.rows.length === 0) {
+            break;
+          }
+          rows = [...rows, ...next.rows];
+        }
+        if (!cancelled) {
+          setAssignedGroups(rows.filter((g) => g.isUserSpecific !== 1));
+        }
+      } catch {
+        if (!cancelled) {
+          setAssignedGroups([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingAssigned(false);
+        }
+      }
+    };
+
+    loadAllAssigned();
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
   // Search available groups

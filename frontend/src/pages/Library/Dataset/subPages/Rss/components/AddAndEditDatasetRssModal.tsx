@@ -19,7 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useQuery } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
 import { Minus, Plus } from 'lucide-react';
 import { useEffect, useState, useTransition } from 'react';
@@ -32,7 +31,10 @@ import TextInput from '@/components/ui/forms/TextInput';
 import Modal from '@/components/ui/modals/Modal';
 import { getDatasetRssSchema } from '@/schema/dataset';
 import { createDatasetRss, fetchDatasetColumns, updateDatasetRss } from '@/services/datasetApi';
+import type { DatasetColumn } from '@/types/datasetColumn';
 import type { DatasetRss } from '@/types/datasetRss';
+
+const COLUMN_FETCH_BATCH_SIZE = 100;
 
 export interface DatasetRssPayload {
   title: string;
@@ -126,28 +128,63 @@ export function AddAndEditDatasetRssModal({
     { operator: 'AND', column: '', criteria: 'starts-with', value: '' },
   ]);
 
-  const { data: columnsResponse } = useQuery({
-    queryKey: ['datasetColumns', datasetId],
-    queryFn: () => fetchDatasetColumns(datasetId, { start: 0, length: 100 }),
-    enabled: isOpen && !!datasetId,
-  });
+  const [columnRows, setColumnRows] = useState<DatasetColumn[]>([]);
+
+  useEffect(() => {
+    if (!isOpen || !datasetId) {
+      return;
+    }
+    let cancelled = false;
+
+    const loadAllColumns = async () => {
+      const first = await fetchDatasetColumns(datasetId, {
+        start: 0,
+        length: COLUMN_FETCH_BATCH_SIZE,
+      });
+      let rows = first.rows;
+      const totalCount = first.totalCount;
+      while (rows.length < totalCount) {
+        const next = await fetchDatasetColumns(datasetId, {
+          start: rows.length,
+          length: COLUMN_FETCH_BATCH_SIZE,
+        });
+        if (next.rows.length === 0) {
+          break;
+        }
+        rows = [...rows, ...next.rows];
+      }
+      if (!cancelled) {
+        setColumnRows(rows);
+      }
+    };
+
+    loadAllColumns().catch(() => {
+      if (!cancelled) {
+        setColumnRows([]);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, datasetId]);
 
   const columnOptions = [
     { value: '', label: t('Select Column') },
-    ...(columnsResponse?.rows.map((c) => ({
+    ...columnRows.map((c) => ({
       value: String(c.dataSetColumnId),
       label: c.heading,
-    })) || []),
+    })),
   ];
 
   const dateColumnOptions = [
     { value: '', label: t('Select Column') },
-    ...(columnsResponse?.rows
+    ...columnRows
       .filter((c) => c.dataTypeId === 3)
       .map((c) => ({
         value: String(c.dataSetColumnId),
         label: c.heading,
-      })) || []),
+      })),
   ];
 
   useEffect(() => {

@@ -391,6 +391,7 @@ export interface LgSsspFieldProps {
   onLoadMoreDayparts?: () => void;
   isLoadingMoreDayparts?: boolean;
   onSearchDayparts?: (term: string) => void;
+  resolveDaypartLabel?: (value: string) => Promise<string>;
   playerType?: string;
   playerVersions: PlayerSoftware[];
   playerVersionsHasMore?: boolean;
@@ -420,6 +421,7 @@ export function LgSsspFields({
   onLoadMoreDayparts,
   isLoadingMoreDayparts,
   onSearchDayparts,
+  resolveDaypartLabel,
   playerType,
   playerVersions,
   playerVersionsHasMore,
@@ -524,6 +526,7 @@ export function LgSsspFields({
     onLoadMoreDayparts,
     isLoadingMoreDayparts,
     onSearchDayparts,
+    resolveDaypartLabel,
     playerVersions,
     playerVersionsHasMore,
     onLoadMorePlayerVersions,

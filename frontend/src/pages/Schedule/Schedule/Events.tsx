@@ -41,7 +41,7 @@ import { DisplayGroupMultiSelect } from './components/DisplayGroupMultiSelect';
 import { EventCalendar } from './components/EventCalendar';
 import { EventModals } from './components/EventModals';
 import { useEventActions } from './hooks/useEventActions';
-import { useEventData } from './hooks/useEventData';
+import { useAllEventData, useEventData } from './hooks/useEventData';
 import { useEventFilterOptions } from './hooks/useEventFilterOptions';
 import { expandRecurringEvents } from './utils/expandRecurringEvents';
 
@@ -210,10 +210,7 @@ export default function Events() {
         }
       : null;
 
-  const { data: dayViewQueryData, isFetching: isDayViewFetching } = useEventData({
-    pagination: { pageIndex: 0, pageSize: 500 },
-    sorting: [],
-    filter: '',
+  const { data: dayViewQueryData, isFetching: isDayViewFetching } = useAllEventData({
     advancedFilters: filterInputs,
     enabled: isHydrated && viewMode === 'table' && dayViewRange !== null,
   });
@@ -239,10 +236,7 @@ export default function Events() {
     ? Math.max(1, Math.ceil(dayViewOccurrences.length / pagination.pageSize))
     : pageCount;
 
-  const { data: calendarQueryData, isFetching: isCalendarFetching } = useEventData({
-    pagination: { pageIndex: 0, pageSize: 500 },
-    sorting: [],
-    filter: '',
+  const { data: calendarQueryData, isFetching: isCalendarFetching } = useAllEventData({
     advancedFilters: filterInputs,
     enabled: isHydrated && viewMode === 'calendar',
   });
