@@ -119,7 +119,8 @@ export default function Events() {
 
   const { data: dateRangePrefs, isSuccess: dateRangeReady } = useQuery({
     queryKey: ['userPref', DATE_RANGE_PREF_KEY],
-    queryFn: () => fetchUserPreference<DateRangeControllerState>(DATE_RANGE_PREF_KEY),
+    queryFn: () =>
+      fetchUserPreference<DateRangeControllerState>(DATE_RANGE_PREF_KEY).then((v) => v ?? null),
     staleTime: Infinity,
   });
 
