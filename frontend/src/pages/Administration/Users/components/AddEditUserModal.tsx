@@ -33,6 +33,7 @@ import OptionsTab from './tabs/OptionsTab';
 import ReferencesTab from './tabs/ReferencesTab';
 
 import type { PermissionLevel } from '@/components/ui/FolderPermissionTree';
+import { notify } from '@/components/ui/Notification';
 import type { SelectOption } from '@/components/ui/forms/SelectDropdown';
 import Modal from '@/components/ui/modals/Modal';
 import { useUserContext } from '@/context/UserContext';
@@ -502,6 +503,7 @@ export default function AddEditUserModal({
           await saveFolderPermissions(savedUser.groupId);
         }
 
+        notify.success(t('User saved'));
         onSuccess();
         onClose();
       } catch (err: unknown) {

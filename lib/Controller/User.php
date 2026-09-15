@@ -1510,7 +1510,7 @@ class User extends Base
                     ]
                 ];
             } else {
-                $newPermissions[$permission->groupId]['permissions'][] = [
+                $newPermissions[$permission->groupId]['permissions'][$permission->objectId] = [
                     'permissionId' => $permission->permissionId,
                     'view' => $permission->view,
                     'edit' => $permission->edit,
