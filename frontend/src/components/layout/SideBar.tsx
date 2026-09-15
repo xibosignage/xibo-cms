@@ -96,7 +96,9 @@ export default function SidebarMenu({ isCollapsed, closeMobileDrawer }: SidebarM
     });
 
     if (activeParent) {
-      setOpenMenus((prev) => new Set([...prev, activeParent.path]));
+      setOpenMenus((prev) =>
+        prev.has(activeParent.path) ? prev : new Set([...prev, activeParent.path]),
+      );
     }
   }, [location.pathname, visibleRoutes]);
 
