@@ -345,7 +345,16 @@ class DayPart implements \JsonSerializable
 
                 // Adjusting the fromdt on the new event
                 $newSchedule->fromDt = Carbon::now()->addDay()->format('U');
-                $newSchedule->save();
+
+                // If the recurrence window has already passed relative to the new start date,
+                // there are no future occurrences to create.
+                if (!empty($newSchedule->recurrenceRange)
+                    && $newSchedule->recurrenceRange <= $newSchedule->fromDt
+                ) {
+                    $this->getLog()->debug('New split schedule recurrence range has already passed, skipping.');
+                } else {
+                    $newSchedule->save();
+                }
             } else {
                 $this->getLog()->debug('Schedule is for a single event');
 

@@ -586,10 +586,10 @@ export default function ScheduleEventModal({
 
   // Fall back to 'general' tab when the currently active tab is no longer visible
   useEffect(() => {
-    if (
-      (optionalTab === 'repeats' || optionalTab === 'reminder') &&
-      (!canSetReminders || !showRepeatReminder)
-    ) {
+    if (optionalTab === 'repeats' && !showRepeatReminder) {
+      setOptionalTab('general');
+    }
+    if (optionalTab === 'reminder' && (!canSetReminders || !showRepeatReminder)) {
       setOptionalTab('general');
     }
     if (optionalTab === 'geoLocation' && !canGeoSchedule) {
@@ -2126,23 +2126,23 @@ export default function ScheduleEventModal({
                 >
                   {t('General')}
                 </button>
+                {showRepeatReminder && (
+                  <button
+                    type="button"
+                    className={getTabClass('repeats')}
+                    onClick={() => setOptionalTab('repeats')}
+                  >
+                    {t('Repeats')}
+                  </button>
+                )}
                 {showRepeatReminder && canSetReminders && (
-                  <>
-                    <button
-                      type="button"
-                      className={getTabClass('repeats')}
-                      onClick={() => setOptionalTab('repeats')}
-                    >
-                      {t('Repeats')}
-                    </button>
-                    <button
-                      type="button"
-                      className={getTabClass('reminder')}
-                      onClick={() => setOptionalTab('reminder')}
-                    >
-                      {t('Reminder')}
-                    </button>
-                  </>
+                  <button
+                    type="button"
+                    className={getTabClass('reminder')}
+                    onClick={() => setOptionalTab('reminder')}
+                  >
+                    {t('Reminder')}
+                  </button>
                 )}
                 {canGeoSchedule && (
                   <button
