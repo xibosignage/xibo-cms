@@ -2318,16 +2318,14 @@ class LayoutFactory extends BaseFactory
             $select .= ' NULL as displayOrder, ';
         }
 
-        $select .= '     (SELECT JSON_ARRAYAGG(g) FROM (
-                            SELECT DISTINCT `group`.group AS g
+        $select .= '     (SELECT GROUP_CONCAT(DISTINCT `group`.group ORDER BY `group`.group SEPARATOR \'#@\')
                             FROM `permission`
                                 INNER JOIN `permissionentity` ON `permissionentity`.entityId = permission.entityId
                                 INNER JOIN `group` ON `group`.groupId = `permission`.groupId
                             WHERE entity = :permissionEntityForGroup
                                 AND objectId = campaign.CampaignID
                                 AND view = 1
-                            ORDER BY g
-                        ) t) AS groupsWithPermissionsListJson ';
+                        ) AS groupsWithPermissionsListJson ';
         $params['permissionEntityForGroup'] = 'Xibo\\Entity\\Campaign';
 
         $body  = '  FROM layout
@@ -2883,7 +2881,7 @@ class LayoutFactory extends BaseFactory
 
             $names = null;
             if ($row['groupsWithPermissionsListJson'] !== null) {
-                $decoded = json_decode($row['groupsWithPermissionsListJson'], true);
+                $decoded = explode('#@', $row['groupsWithPermissionsListJson']);
                 $names = is_array($decoded) ? $decoded : null;
             }
             $layout->groupsWithPermissionsList = $names ?? [];
