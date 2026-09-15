@@ -184,16 +184,22 @@ class DisplayProfile implements \JsonSerializable
             $default = $this->getSetting($setting, null, false);
         }
 
+        // A null value means the field was cleared, which always means "no override" - regardless of
+        // what the current default happens to be - so it must always unset any existing override entry.
+        // Comparing a cleared (null) value against a non-null default would otherwise persist an explicit
+        // `value => null` override, which then wins over the real default when configs are merged.
+        $isUnset = $value === null;
+
         // Check to see if we have this setting already
         for ($i = 0; $i < count($config); $i++) {
             if ($config[$i]['name'] == $setting || $config[$i]['name'] == ucfirst($setting)) {
                 // We found the setting - is the value different to the default?
-                if ($value !== $default) {
+                if (!$isUnset && $value !== $default) {
                     $config[$i]['value'] = $value;
                     $config[$i]['name'] = lcfirst($setting);
                 } else {
-                    // the value is the same as the default - unset it
-                    $this->getLog()->debug('Setting [' . $setting . '] identical to the default, unsetting.');
+                    // the value is unset, or the same as the default - unset it
+                    $this->getLog()->debug('Setting [' . $setting . '] identical to the default, or unset. Unsetting.');
                     unset($config[$i]);
                     $config = array_values($config);
                 }
@@ -202,7 +208,7 @@ class DisplayProfile implements \JsonSerializable
             }
         }
 
-        if (!$found && $value !== $default) {
+        if (!$found && !$isUnset && $value !== $default) {
             $this->getLog()->debug(
                 'Setting [%s] not yet in the profile config, and different to the default. %s --- %s',
                 $setting,
