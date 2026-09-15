@@ -267,6 +267,7 @@ export interface MediaActionsProps {
   onPreview?: (row: Media) => void;
   onDelete: (id: number) => void;
   onDownload: (row: Media) => void;
+  downloadingMediaId?: number | null;
   openEditModal: (row: Media) => void;
   openShareModal?: (id: number) => void;
   openMoveModal?: (row: Media | Media[]) => void;
@@ -287,6 +288,7 @@ export const getMediaItemActions = ({
   canUserShare = false,
   onDelete,
   onDownload,
+  downloadingMediaId,
   openEditModal,
   openShareModal,
   openMoveModal,
@@ -305,6 +307,7 @@ export const getMediaItemActions = ({
     const canEdit = !!media.userPermissions?.edit;
     const canDelete = !!media.userPermissions?.delete;
     const canShare = !!media.userPermissions?.modifyPermissions;
+    const isDownloading = downloadingMediaId === media.mediaId;
 
     if (canEdit && canModify) {
       actions.push({
@@ -321,6 +324,8 @@ export const getMediaItemActions = ({
       icon: Download,
       onClick: () => onDownload(media),
       isQuickAction: true,
+      disabled: isDownloading,
+      loading: isDownloading,
     });
 
     if (canEdit && canModify) {
@@ -367,6 +372,8 @@ export const getMediaItemActions = ({
       label: t('Download'),
       icon: Download,
       onClick: () => onDownload(media),
+      disabled: isDownloading,
+      loading: isDownloading,
     });
 
     const canScheduleMedia =
