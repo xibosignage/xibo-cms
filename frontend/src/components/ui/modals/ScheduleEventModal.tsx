@@ -1207,6 +1207,9 @@ export default function ScheduleEventModal({
         mapped.shareOfVoice
       ) {
         setCurrentStep(timeStepIndex);
+      } else if (mapped.recurrenceDetail || mapped.recurrenceRange) {
+        setCurrentStep(optionalStepIndex);
+        setOptionalTab('repeats');
       }
       return;
     }
@@ -2358,6 +2361,7 @@ export default function ScheduleEventModal({
                         value={draft.recurrenceRange}
                         onChange={(value) => updateDraft('recurrenceRange', value)}
                         helpText={t('Optionally select the date this event should stop repeating.')}
+                        error={formErrors.recurrenceRange}
                       />
                     </>
                   )}
