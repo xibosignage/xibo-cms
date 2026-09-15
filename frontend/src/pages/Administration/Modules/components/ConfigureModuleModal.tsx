@@ -44,7 +44,7 @@ type DraftSettings = Record<string, string | number>;
 function buildInitialDraft(module: Module): DraftSettings {
   const draft: DraftSettings = {};
   (module.settings ?? []).forEach((setting) => {
-    draft[setting.id] = setting.value ?? '';
+    draft[setting.id] = setting.value ?? setting.default ?? '';
   });
   return draft;
 }
