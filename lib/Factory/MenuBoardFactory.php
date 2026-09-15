@@ -148,16 +148,14 @@ class MenuBoardFactory extends BaseFactory
                `menu_board`.folderId,
                `menu_board`.permissionsFolderId,
                `folder`.folderName,
-               (SELECT JSON_ARRAYAGG(g) FROM (
-                            SELECT DISTINCT `group`.group AS g
+               (SELECT GROUP_CONCAT(DISTINCT `group`.group ORDER BY `group`.group SEPARATOR \'#@\')
                             FROM `permission`
                                 INNER JOIN `permissionentity` ON `permissionentity`.entityId = permission.entityId
                                 INNER JOIN `group` ON `group`.groupId = `permission`.groupId
                             WHERE entity = :permissionEntityForGroup
                                 AND objectId = menu_board.menuId
                                 AND view = 1
-                            ORDER BY g
-                        ) t) AS groupsWithPermissionsListJson
+                        ) AS groupsWithPermissionsListJson
             ';
         $params['permissionEntityForGroup'] = 'Xibo\\Entity\\MenuBoard';
 
@@ -255,7 +253,7 @@ class MenuBoardFactory extends BaseFactory
 
             $names = null;
             if ($row['groupsWithPermissionsListJson'] !== null) {
-                $decoded = json_decode($row['groupsWithPermissionsListJson'], true);
+                $decoded = explode('#@', $row['groupsWithPermissionsListJson']);
                 $names = is_array($decoded) ? $decoded : null;
             }
             $menuBoard->groupsWithPermissionsList = $names ?? [];

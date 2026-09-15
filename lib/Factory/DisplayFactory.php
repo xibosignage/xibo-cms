@@ -356,16 +356,14 @@ class DisplayFactory extends BaseFactory
                   `display`.lanIpAddress,
                   `display`.syncGroupId,
                   (SELECT COUNT(*) FROM player_faults WHERE player_faults.displayId = display.displayId) AS countFaults,
-                  (SELECT JSON_ARRAYAGG(g) FROM (
-                    SELECT DISTINCT `group`.group AS g
+                  (SELECT GROUP_CONCAT(DISTINCT `group`.group ORDER BY `group`.group SEPARATOR \'#@\')
                     FROM `permission`
                         INNER JOIN `permissionentity` ON `permissionentity`.entityId = permission.entityId
                         INNER JOIN `group` ON `group`.groupId = `permission`.groupId
                     WHERE entity = :entity
                         AND objectId = `displaygroup`.displayGroupId
                         AND view = 1
-                    ORDER BY g
-                  ) t) AS groupsWithPermissionsListJson
+                  ) AS groupsWithPermissionsListJson
               ';
 
         $params['entity'] = 'Xibo\\Entity\\DisplayGroup';
@@ -774,7 +772,7 @@ class DisplayFactory extends BaseFactory
 
             $names = null;
             if ($row['groupsWithPermissionsListJson'] !== null) {
-                $decoded = json_decode($row['groupsWithPermissionsListJson'], true);
+                $decoded = explode('#@', $row['groupsWithPermissionsListJson']);
                 $names = is_array($decoded) ? $decoded : null;
             }
             $display->groupsWithPermissionsList = $names ?? [];

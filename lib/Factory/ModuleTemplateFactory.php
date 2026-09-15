@@ -300,16 +300,14 @@ class ModuleTemplateFactory extends BaseFactory
         $filter = $this->getSanitizer($filterBy);
 
         $select = 'SELECT *,
-                (SELECT JSON_ARRAYAGG(g) FROM (
-                            SELECT DISTINCT `group`.group AS g
+                (SELECT GROUP_CONCAT(DISTINCT `group`.group ORDER BY `group`.group SEPARATOR \'#@\')
                             FROM `permission`
                                 INNER JOIN `permissionentity` ON `permissionentity`.entityId = permission.entityId
                                 INNER JOIN `group` ON `group`.groupId = `permission`.groupId
                             WHERE entity = :permissionEntityGroups
                                 AND objectId = `module_templates`.id
                                 AND view = 1
-                            ORDER BY g
-                ) t) AS groupsWithPermissionsListJson';
+                ) AS groupsWithPermissionsListJson';
 
         $params['permissionEntityGroups'] = 'Xibo\\Entity\\ModuleTemplate';
 
@@ -384,7 +382,7 @@ class ModuleTemplateFactory extends BaseFactory
 
             $names = null;
             if ($row['groupsWithPermissionsListJson'] !== null) {
-                $decoded = json_decode($row['groupsWithPermissionsListJson'], true);
+                $decoded = explode('#@', $row['groupsWithPermissionsListJson']);
                 $names = is_array($decoded) ? $decoded : null;
             }
             $template->groupsWithPermissionsList = $names ?? [];
