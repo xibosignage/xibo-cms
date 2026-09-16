@@ -150,6 +150,7 @@ export default function Media() {
   const [bulkItems, setBulkItems] = useState<Media[]>([]);
   const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
   const [selectedMediaId, setSelectedMediaId] = useState<number | null>(null);
+  const [downloadingMediaId, setDownloadingMediaId] = useState<number | null>(null);
 
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
@@ -280,11 +281,14 @@ export default function Media() {
   };
 
   const handleDownload = async (row: Media) => {
+    setDownloadingMediaId(row.mediaId);
     try {
-      await downloadMedia(row.mediaId, row.storedAs);
+      await downloadMedia(row.mediaId, row.fileName);
       notify.success(t('Download started!'));
     } catch (error) {
       console.error('Download failed', error);
+    } finally {
+      setDownloadingMediaId(null);
     }
   };
 
@@ -342,6 +346,7 @@ export default function Media() {
     onPreview: handlePreviewClick,
     onDelete: handleDelete,
     onDownload: handleDownload,
+    downloadingMediaId,
     openEditModal,
     openMoveModal: canViewFolders
       ? (media) => {
@@ -495,6 +500,7 @@ export default function Media() {
     canUserShare: hasFeature(user, 'user.sharing'),
     formatDateTime,
     onDelete: handleDelete,
+    downloadingMediaId,
     onDownload: handleDownload,
     openEditModal,
     onPreview: handlePreviewClick,
@@ -719,6 +725,7 @@ export default function Media() {
         fileName={previewItem?.name}
         mediaData={previewItem}
         onDownload={() => previewItem && handleDownload(previewItem)}
+        isDownloading={previewItem?.mediaId === downloadingMediaId}
         onClose={() => {
           setPreviewItem(null);
         }}
