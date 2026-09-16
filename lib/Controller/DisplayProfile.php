@@ -369,9 +369,11 @@ class DisplayProfile extends Base
         }
 
         // If we are chromeOS and the default profile, has the player version changed?
+        // (a cleared player version has nothing to repoint the symlink to, so there's nothing to do)
         if ($displayProfile->type === 'chromeOS'
             && ($displayProfile->isDefault || $displayProfile->hasPropertyChanged('isDefault'))
             && ($originalPlayerVersionId !== $displayProfile->getSetting('playerVersionId'))
+            && $displayProfile->getSetting('playerVersionId') !== null
         ) {
             $this->getLog()->debug('edit: updating symlink to the latest chromeOS version');
 
