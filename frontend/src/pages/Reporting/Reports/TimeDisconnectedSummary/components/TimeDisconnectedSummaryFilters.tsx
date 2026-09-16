@@ -99,6 +99,7 @@ export default function TimeDisconnectedSummaryFilters({
             placeholder={t('All Displays')}
             searchable
             clearable
+            translateLabels={false}
             resolveLabel={displaySelect.resolveLabel}
             options={displaySelect.options}
             isLoading={displaySelect.isLoading}

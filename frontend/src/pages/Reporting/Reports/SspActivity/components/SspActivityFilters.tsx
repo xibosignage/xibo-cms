@@ -75,6 +75,7 @@ export default function SspActivityFilters({
             placeholder={t('Select Display')}
             searchable
             clearable
+            translateLabels={false}
             resolveLabel={displaySelect.resolveLabel}
             options={displaySelect.options}
             isLoading={displaySelect.isLoading}

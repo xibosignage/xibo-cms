@@ -557,14 +557,14 @@ export default function ScheduleEventModal({
       const custom = customResult.rows[0];
       if (always) {
         setAlwaysDayPartId(String(always.dayPartId));
-        setAlwaysDaypartOption({ value: String(always.dayPartId), label: always.name });
+        setAlwaysDaypartOption({ value: String(always.dayPartId), label: t(always.name) });
         setDraft((prev) =>
           prev.dayPartId === '' ? { ...prev, dayPartId: String(always.dayPartId) } : prev,
         );
       }
       if (custom) {
         setCustomDayPartId(String(custom.dayPartId));
-        setCustomDaypartOption({ value: String(custom.dayPartId), label: custom.name });
+        setCustomDaypartOption({ value: String(custom.dayPartId), label: t(custom.name) });
       }
     });
 
@@ -1966,6 +1966,7 @@ export default function ScheduleEventModal({
                   label={t('Dayparting')}
                   value={draft.dayPartId}
                   options={daypartDropdownOptions}
+                  translateLabels={false}
                   resolveLabel={resolveDaypartLabel}
                   onSelect={(value) => {
                     if (!!alwaysDayPartId && value === alwaysDayPartId) {

@@ -393,6 +393,7 @@ export function AddAndEditDatasetRssModal({
                 <SelectDropdown
                   label={t('Title Column')}
                   options={columnOptions}
+                  translateLabels={false}
                   value={String(draft.titleColumnId || '')}
                   onSelect={(val: string) => {
                     updateDraft('titleColumnId', val ? Number(val) : undefined);
@@ -401,6 +402,7 @@ export function AddAndEditDatasetRssModal({
                 <SelectDropdown
                   label={t('Summary Column')}
                   options={columnOptions}
+                  translateLabels={false}
                   value={String(draft.summaryColumnId || '')}
                   onSelect={(val: string) => {
                     updateDraft('summaryColumnId', val ? Number(val) : undefined);
@@ -409,6 +411,7 @@ export function AddAndEditDatasetRssModal({
                 <SelectDropdown
                   label={t('Content Column')}
                   options={columnOptions}
+                  translateLabels={false}
                   value={String(draft.contentColumnId || '')}
                   onSelect={(val: string) => {
                     updateDraft('contentColumnId', val ? Number(val) : undefined);
@@ -417,6 +420,7 @@ export function AddAndEditDatasetRssModal({
                 <SelectDropdown
                   label={t('Published Date Column')}
                   options={dateColumnOptions}
+                  translateLabels={false}
                   value={String(draft.publishedDateColumnId || '')}
                   onSelect={(val: string) => {
                     updateDraft('publishedDateColumnId', val ? Number(val) : undefined);
@@ -465,6 +469,7 @@ export function AddAndEditDatasetRssModal({
                         <SelectDropdown
                           label=""
                           options={columnOptions}
+                          translateLabels={false}
                           value={row.column}
                           onSelect={(val: string) => {
                             setOrderRows((prev) =>
@@ -582,6 +587,7 @@ export function AddAndEditDatasetRssModal({
                         <SelectDropdown
                           label=""
                           options={columnOptions}
+                          translateLabels={false}
                           value={row.column}
                           onSelect={(val: string) => {
                             setFilterRows((prev) =>

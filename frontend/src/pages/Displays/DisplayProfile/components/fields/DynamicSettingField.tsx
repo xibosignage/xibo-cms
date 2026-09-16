@@ -211,7 +211,10 @@ export function DynamicSettingField({
   }
   if (meta.inputType === 'daypart') {
     const daypartOptions =
-      contextData.dayparts?.map((d) => ({ value: String(d.dayPartId), label: d.name })) ?? [];
+      contextData.dayparts?.map((d) => ({
+        value: String(d.dayPartId),
+        label: d.isAlways || d.isCustom ? t(d.name) : d.name,
+      })) ?? [];
     if (contextData.onLoadMoreDayparts && contextData.onSearchDayparts) {
       return (
         <SelectDropdown
@@ -219,6 +222,7 @@ export function DynamicSettingField({
           helpText={meta.helpText}
           value={value ? String(value) : ''}
           options={daypartOptions}
+          translateLabels={false}
           resolveLabel={contextData.resolveDaypartLabel}
           placeholder=" "
           searchable
@@ -236,6 +240,7 @@ export function DynamicSettingField({
         helpText={meta.helpText}
         value={value ? String(value) : ''}
         options={daypartOptions}
+        translateLabels={false}
         resolveLabel={contextData.resolveDaypartLabel}
         placeholder=" "
         searchable

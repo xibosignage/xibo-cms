@@ -333,6 +333,7 @@ export default function AddAndEditTemplateModal({
               value={draft.resolutionId ? String(draft.resolutionId) : undefined}
               placeholder={loadingResolutions ? 'Loading...' : 'Select resolution'}
               options={resolutionOptions}
+              translateLabels={false}
               searchable
               onSearch={setResolutionSearch}
               onLoadMore={handleLoadMoreResolutions}

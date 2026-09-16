@@ -116,6 +116,7 @@ export default function AssignCampaignModal({
           }
           value={selectedCampaign}
           options={campaignOptions}
+          translateLabels={false}
           onSelect={(value) => {
             setSelectedCampaign(value);
             setError(undefined);

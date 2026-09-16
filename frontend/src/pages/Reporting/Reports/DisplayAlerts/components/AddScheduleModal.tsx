@@ -91,6 +91,7 @@ export default function AddScheduleModal({
           placeholder={t('All Displays')}
           searchable
           clearable
+          translateLabels={false}
           resolveLabel={displaySelect.resolveLabel}
           options={displaySelect.options}
           isLoading={displaySelect.isLoading}

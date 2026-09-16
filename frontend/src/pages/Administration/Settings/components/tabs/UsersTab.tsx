@@ -159,6 +159,7 @@ export default function UsersTab({
               value={formValues.SYSTEM_USER ?? ''}
               initialLabel={relatedEntities.systemUser?.userName}
               options={userOptions.options}
+              translateLabels={false}
               onSelect={(v) => updateField('SYSTEM_USER', v ?? '')}
               isLoading={userOptions.isLoading}
               onLoadMore={userOptions.loadMore}

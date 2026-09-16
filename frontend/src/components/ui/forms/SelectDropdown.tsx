@@ -65,6 +65,7 @@ interface BaseSelectDropdownProps {
   clearable?: boolean;
   optional?: boolean;
   disabled?: boolean;
+  translateLabels?: boolean;
 }
 
 /** Static list: search is optional and runs client-side. */
@@ -110,6 +111,7 @@ export default function SelectDropdown({
   clearable,
   optional = false,
   disabled = false,
+  translateLabels = true,
 }: SelectDropdownProps) {
   const { t } = useTranslation();
   const id = useId();
@@ -378,7 +380,7 @@ export default function SelectDropdown({
                       </div>
                     )}
                     <span className="truncate" title={option.label}>
-                      {t(option.label)}
+                      {translateLabels ? t(option.label) : option.label}
                     </span>
                   </button>
                 ),

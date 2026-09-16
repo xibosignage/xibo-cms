@@ -90,6 +90,7 @@ export function useMenuBoardFilterOptions(t: TFunction) {
       return {
         ...item,
         options: ownerOptions,
+        translateLabels: false,
         onLoadMore: handleLoadMoreOwners,
         hasMore: hasMoreOwners,
         isLoadingMore: isLoadingMoreOwners,

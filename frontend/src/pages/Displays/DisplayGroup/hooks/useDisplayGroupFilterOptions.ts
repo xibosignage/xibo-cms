@@ -146,6 +146,7 @@ export function useDisplayGroupFilterOptions(t: TFunction, canTag = false) {
       return {
         ...item,
         options: displayOptions,
+        translateLabels: false,
         onLoadMore: handleLoadMoreDisplays,
         hasMore: hasMoreDisplays,
         isLoadingMore: isLoadingMoreDisplays,
@@ -161,6 +162,7 @@ export function useDisplayGroupFilterOptions(t: TFunction, canTag = false) {
       return {
         ...item,
         options: nestedDisplayOptions,
+        translateLabels: false,
         onLoadMore: handleLoadMoreNestedDisplays,
         hasMore: hasMoreNestedDisplays,
         isLoadingMore: isLoadingMoreNestedDisplays,

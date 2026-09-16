@@ -37,6 +37,7 @@ export function useLogsFilterOptions(t: TFunction) {
       return {
         ...item,
         options: userSelect.options,
+        translateLabels: false,
         isLoading: userSelect.isLoading,
         isLoadingMore: userSelect.isLoadingMore,
         hasMore: userSelect.hasMore,
@@ -50,6 +51,7 @@ export function useLogsFilterOptions(t: TFunction) {
       return {
         ...item,
         options: displaySelect.options,
+        translateLabels: false,
         isLoading: displaySelect.isLoading,
         isLoadingMore: displaySelect.isLoadingMore,
         hasMore: displaySelect.hasMore,
@@ -63,6 +65,7 @@ export function useLogsFilterOptions(t: TFunction) {
       return {
         ...item,
         options: displayGroupSelect.options,
+        translateLabels: false,
         isLoading: displayGroupSelect.isLoading,
         isLoadingMore: displayGroupSelect.isLoadingMore,
         hasMore: displayGroupSelect.hasMore,

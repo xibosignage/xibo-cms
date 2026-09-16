@@ -428,6 +428,7 @@ export default function ShareModal({
               value={user as string}
               placeholder={ownerLoading ? t('Loading...') : t('Select Owner')}
               options={ownerOptions}
+              translateLabels={false}
               resolveLabel={resolveOwnerLabel}
               onLoadMore={handleLoadMoreOwners}
               hasMore={hasMoreOwners}

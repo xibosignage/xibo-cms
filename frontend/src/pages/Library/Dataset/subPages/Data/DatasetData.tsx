@@ -150,6 +150,7 @@ export default function DatasetData() {
           name: col.heading,
           type: 'select' as const,
           options: listOptions.map((opt) => ({ label: opt, value: opt })),
+          translateLabels: false,
         };
       }
 
