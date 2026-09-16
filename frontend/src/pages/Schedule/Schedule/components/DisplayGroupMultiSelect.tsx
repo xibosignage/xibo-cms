@@ -120,6 +120,16 @@ export function DisplayGroupMultiSelect({
     missingDisplayIds.forEach((id) => fetchedIdsRef.current.add(`${DISPLAY_PREFIX}${id}`));
     missingGroupIds.forEach((id) => fetchedIdsRef.current.add(`${GROUP_PREFIX}${id}`));
 
+    const fillMissing = (prev: Record<string, string>, prefix: string, ids: number[]) => {
+      const next = { ...prev };
+      ids.forEach((id) => {
+        if (!next[`${prefix}${id}`]) {
+          next[`${prefix}${id}`] = `${id}`;
+        }
+      });
+      return next;
+    };
+
     if (missingDisplayIds.length > 0) {
       fetchDisplays({
         displayGroupIds: missingDisplayIds,
@@ -132,10 +142,12 @@ export function DisplayGroupMultiSelect({
             res.rows.forEach((d) => {
               next[`${DISPLAY_PREFIX}${d.displayGroupId}`] = d.display;
             });
-            return next;
+            return fillMissing(next, DISPLAY_PREFIX, missingDisplayIds);
           });
         })
-        .catch(() => {});
+        .catch(() => {
+          setLabelsCache((prev) => fillMissing(prev, DISPLAY_PREFIX, missingDisplayIds));
+        });
     }
 
     if (missingGroupIds.length > 0) {
@@ -150,10 +162,12 @@ export function DisplayGroupMultiSelect({
             res.rows.forEach((g) => {
               next[`${GROUP_PREFIX}${g.displayGroupId}`] = g.displayGroup;
             });
-            return next;
+            return fillMissing(next, GROUP_PREFIX, missingGroupIds);
           });
         })
-        .catch(() => {});
+        .catch(() => {
+          setLabelsCache((prev) => fillMissing(prev, GROUP_PREFIX, missingGroupIds));
+        });
     }
   }, [displayIdsKey, groupIdsKey]);
 

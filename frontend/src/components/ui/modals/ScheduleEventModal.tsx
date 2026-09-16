@@ -1564,7 +1564,7 @@ export default function ScheduleEventModal({
         label: isPending ? t('Saving...') : isEditMode ? t('Save') : t('Finish'),
         onClick: handleFinish,
         variant: 'primary',
-        disabled: isPending || !isStepValid,
+        disabled: isPending || isEnriching || !isStepValid,
       });
     }
 
