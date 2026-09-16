@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent, { type UserEvent } from '@testing-library/user-event';
 import { vi, beforeEach, afterEach, describe, test, expect } from 'vitest';
 
@@ -72,12 +72,33 @@ const renderWithOneEvent = async () => {
   await screen.findByRole('row', { name: /Morning Welcome/ });
 };
 
-/** The layout names currently shown, in render order (the Name column). */
-const rowLayoutNames = () =>
-  screen
+/**
+ * The layout names currently shown, in render order.
+ *
+ * The Name column is found by its header text, not by a fixed index: a column
+ * inserted before it would otherwise make this read a neighbouring cell and
+ * compare the wrong values, which passes or fails for reasons that have nothing
+ * to do with sorting. Rows and headers are read from the same table so the two
+ * halves cannot drift apart.
+ */
+const rowLayoutNames = () => {
+  const table = screen.getAllByRole('table')[0]!;
+  const headers = within(table).getAllByRole('columnheader');
+  const nameIndex = headers.findIndex((header) => header.textContent?.trim() === 'Name');
+
+  if (nameIndex === -1) {
+    throw new Error(
+      `No "Name" column in the agenda table. Columns: ${headers
+        .map((header) => header.textContent?.trim())
+        .join(', ')}`,
+    );
+  }
+
+  return within(table)
     .getAllByRole('row')
     .slice(1)
-    .map((row) => (row as HTMLTableRowElement).cells[1]?.textContent?.trim() ?? '');
+    .map((row) => (row as HTMLTableRowElement).cells[nameIndex]?.textContent?.trim() ?? '');
+};
 
 /**
  * The sort control lives in a bare <div onClick> inside the <th> (AgendaModal.tsx
