@@ -291,6 +291,62 @@ textarea {
   color: #6b7280;
 }
 
+/* ------------------------------------------------------------------ *
+ * Not-found view — full-page centered layout (no card)               *
+ * Mirrors the SPA's NotFound / ErrorPage spacing and sizing.         *
+ * ------------------------------------------------------------------ */
+.not-found-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px; /* gap-3 */
+}
+
+/* size-15.5 (62px) + border-7 (7px) + rounded-full — matches the SPA icon circle */
+.not-found-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 62px;
+  height: 62px;
+  border-radius: 9999px;
+  background-color: #dbeafe; /* bg-xibo-blue-100 */
+  border: 7px solid #eff6ff; /* border-xibo-blue-50 */
+  color: #1e40af; /* text-xibo-blue-800 */
+}
+
+.not-found-icon svg {
+  flex-shrink: 0;
+  width: 24px; /* size-6 */
+  height: 24px;
+}
+
+/* text-4xl / font-bold / text-gray-800 / Maven Pro */
+.not-found-title {
+  margin: 0;
+  font-family: 'Maven Pro', sans-serif;
+  font-size: 36px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+/* mt-3 / text-gray-500 */
+.not-found-message {
+  margin: 12px 0 0;
+  font-size: 16px;
+  color: #6b7280;
+}
+
+.not-found-button {
+  width: auto;
+  margin-top: 4px;
+  padding: 12px 24px;
+  font-size: 14px;
+  text-decoration: none;
+  border-radius: 8px;
+}
+
 /* ------------------ *
  * Version / footer   *
  * ------------------ */

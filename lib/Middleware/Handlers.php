@@ -180,9 +180,27 @@ class Handlers
                         'message' => __('Sorry we could not find that page.')
                     ], 404);
                 } else {
-                    // No server route matched - a genuine 404. React SPA pages are served by
-                    // explicit routes registered in lib/routes-spa.php (Xibo\Controller\Spa),
-                    // which run through the normal middleware stack, so they never reach here.
+                    // Serve the branded React not-found page via the login shell (which
+                    // does not require authentication). Falls back to the legacy Twig
+                    // template when the Vite build is not available.
+                    $reactResponse = self::renderReactMessagePage(
+                        $twig,
+                        $response,
+                        $viewParams,
+                        $configService,
+                        ['notFound' => true],
+                        [
+                            'notFoundTitle' => __('Page not found'),
+                            'notFoundMessage' => __(
+                                'Sorry, the page you are looking for could not be found.'
+                            ),
+                            'notFoundAction' => __('Go to Homepage'),
+                        ],
+                        404,
+                    );
+                    if ($reactResponse !== null) {
+                        return $reactResponse;
+                    }
                     try {
                         return $twig->render($response, 'not-found.twig', $viewParams)->withStatus(404);
                     } catch (\Exception) {
