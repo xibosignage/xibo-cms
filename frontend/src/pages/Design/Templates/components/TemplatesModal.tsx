@@ -167,6 +167,7 @@ export function TemplateModals({
           isLoading={actions.isPublishing}
           onPublish={handlers.confirmPublish}
           layoutId={selection.selectedTemplate?.layoutId}
+          publishedDate={selection.selectedTemplate?.publishedDate}
         />
       )}
       {isModalOpen('discard') && (

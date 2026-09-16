@@ -212,6 +212,7 @@ class DisplayFactory extends BaseFactory
             'lastCommandSuccess',
             'commercialLicence',
             'groupsWithPermissions',
+            'groupsWithPermissionsList',
             'screenSize',
             'isMobile',
             'isOutdoor',
@@ -237,6 +238,8 @@ class DisplayFactory extends BaseFactory
             'cmsTransfer' => '`newCmsAddress`',
             'isPlayerSupported' => '`clientCode`',
             'xmrRegistered' => '`xmrChannel`',
+            'groupsWithPermissions' => '`groupsWithPermissionsListJson`',
+            'groupsWithPermissionsList' => '`groupsWithPermissionsListJson`',
         ];
 
         // Capture member sort direction before buildSortQuery strips the virtual column
@@ -353,16 +356,14 @@ class DisplayFactory extends BaseFactory
                   `display`.lanIpAddress,
                   `display`.syncGroupId,
                   (SELECT COUNT(*) FROM player_faults WHERE player_faults.displayId = display.displayId) AS countFaults,
-                  (SELECT GROUP_CONCAT(DISTINCT `group`.group)
+                  (SELECT GROUP_CONCAT(DISTINCT `group`.group ORDER BY `group`.group SEPARATOR \'#@\')
                     FROM `permission`
-                        INNER JOIN `permissionentity`
-                            ON `permissionentity`.entityId = permission.entityId
-                        INNER JOIN `group`
-                            ON `group`.groupId = `permission`.groupId
-                        WHERE entity = :entity
-                            AND objectId = `displaygroup`.displayGroupId
-                            AND view = 1
-                  ) AS groupsWithPermissions
+                        INNER JOIN `permissionentity` ON `permissionentity`.entityId = permission.entityId
+                        INNER JOIN `group` ON `group`.groupId = `permission`.groupId
+                    WHERE entity = :entity
+                        AND objectId = `displaygroup`.displayGroupId
+                        AND view = 1
+                  ) AS groupsWithPermissionsListJson
               ';
 
         $params['entity'] = 'Xibo\\Entity\\DisplayGroup';
@@ -768,6 +769,16 @@ class DisplayFactory extends BaseFactory
             $display->overrideConfig = ($display->overrideConfig == '')
                 ? []
                 : json_decode($display->overrideConfig, true);
+
+            $names = null;
+            if ($row['groupsWithPermissionsListJson'] !== null) {
+                $decoded = explode('#@', $row['groupsWithPermissionsListJson']);
+                $names = is_array($decoded) ? $decoded : null;
+            }
+            $display->groupsWithPermissionsList = $names ?? [];
+            $display->groupsWithPermissions = $names !== null ? implode(',', $names) : null;
+            $display->excludeProperty('groupsWithPermissionsListJson');
+
             $displayGroupIds[] = $display->displayGroupId;
             $entries[] = $display;
         }

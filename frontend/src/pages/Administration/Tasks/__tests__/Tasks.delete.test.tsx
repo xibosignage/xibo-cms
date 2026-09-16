@@ -234,7 +234,9 @@ describe('Tasks page - bulk delete', () => {
     await user.click(screen.getByRole('button', { name: /yes, delete/i }));
 
     // Error surfaces and the modal stays open.
-    expect(await screen.findByText('Task 2 is in use.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('1 task(s) deleted successfully. Task 2 is in use.'),
+    ).toBeInTheDocument();
     expect(screen.getByText('Delete Tasks?')).toBeInTheDocument();
 
     // Both rows were attempted and the table was refreshed.

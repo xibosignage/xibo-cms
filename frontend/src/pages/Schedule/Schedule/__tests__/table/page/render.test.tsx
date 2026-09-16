@@ -50,7 +50,10 @@ vi.mock('@/services/eventApi');
 
 // Replace the data and action hooks with fake versions the tests can
 // control directly.
-vi.mock('../../../hooks/useEventData', () => ({ useEventData: vi.fn() }));
+vi.mock('../../../hooks/useEventData', () => ({
+  useEventData: vi.fn(),
+  useAllEventData: vi.fn(() => ({ data: { rows: [], totalCount: 0 }, isFetching: false })),
+}));
 vi.mock('../../../hooks/useEventActions', () => ({ useEventActions: vi.fn() }));
 vi.mock('../../../hooks/useEventFilterOptions', () => ({
   useEventFilterOptions: vi.fn(() => ({ filterOptions: [] })),

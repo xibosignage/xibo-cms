@@ -27,7 +27,10 @@ import Checkbox from '@/components/ui/forms/Checkbox';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import type { SelectOption } from '@/components/ui/forms/SelectDropdown';
 import Modal from '@/components/ui/modals/Modal';
+import { useDebounce } from '@/hooks/useDebounce';
 import { fetchUsers } from '@/services/userApi';
+
+const REASSIGN_PAGE_SIZE = 10;
 
 interface DeleteUserModalProps {
   isOpen?: boolean;
@@ -54,24 +57,61 @@ export default function DeleteUserModal({
   const [deleteAllItems, setDeleteAllItems] = useState(false);
   const [reassignUserId, setReassignUserId] = useState<string | null>(null);
   const [userOptions, setUserOptions] = useState<SelectOption[]>([]);
+  const [userPage, setUserPage] = useState(0);
+  const [hasMoreUsers, setHasMoreUsers] = useState(false);
+  const [isLoadingMoreUsers, setIsLoadingMoreUsers] = useState(false);
+  const [userSearch, setUserSearch] = useState('');
+  const debouncedUserSearch = useDebounce(userSearch, 300);
 
   useEffect(() => {
     if (!isOpen) {
       setDeleteAllItems(false);
       setReassignUserId(null);
+      setUserSearch('');
       return;
     }
 
-    fetchUsers({ start: 0, length: 1000 })
+    setUserOptions([]);
+    setUserPage(0);
+    fetchUsers({ start: 0, length: REASSIGN_PAGE_SIZE, userName: debouncedUserSearch || undefined })
       .then((res) => {
         setUserOptions(
           res.rows
             .filter((u) => u.userId !== userId)
             .map((u) => ({ label: u.userName, value: String(u.userId) })),
         );
+        setHasMoreUsers(res.rows.length === REASSIGN_PAGE_SIZE);
       })
-      .catch(() => setUserOptions([]));
-  }, [isOpen, userId]);
+      .catch(() => {
+        setUserOptions([]);
+        setHasMoreUsers(false);
+      });
+  }, [isOpen, userId, debouncedUserSearch]);
+
+  const handleLoadMoreUsers = () => {
+    if (isLoadingMoreUsers || !hasMoreUsers) {
+      return;
+    }
+    const nextPage = userPage + 1;
+    setIsLoadingMoreUsers(true);
+    fetchUsers({
+      start: nextPage * REASSIGN_PAGE_SIZE,
+      length: REASSIGN_PAGE_SIZE,
+      userName: debouncedUserSearch || undefined,
+    })
+      .then((res) => {
+        setUserOptions((prev) => [
+          ...prev,
+          ...res.rows
+            .filter((u) => u.userId !== userId)
+            .map((u) => ({ label: u.userName, value: String(u.userId) })),
+        ]);
+        setUserPage(nextPage);
+        setHasMoreUsers(res.rows.length === REASSIGN_PAGE_SIZE);
+      })
+      .catch(() => {})
+      .finally(() => setIsLoadingMoreUsers(false));
+  };
 
   return (
     <Modal
@@ -141,6 +181,10 @@ export default function DeleteUserModal({
               options={userOptions}
               searchable
               searchPlaceholder={t('Search users...')}
+              onSearch={setUserSearch}
+              onLoadMore={handleLoadMoreUsers}
+              hasMore={hasMoreUsers}
+              isLoadingMore={isLoadingMoreUsers}
               onSelect={(val) => setReassignUserId(val)}
               optional
             />

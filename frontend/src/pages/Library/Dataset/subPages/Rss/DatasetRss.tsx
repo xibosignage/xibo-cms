@@ -39,6 +39,7 @@ import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import { createDatasetRss, deleteDatasetRss, getDatasetById } from '@/services/datasetApi';
 import type { DatasetRss } from '@/types/datasetRss';
+import { isAlreadyDeletedError } from '@/utils/errors';
 
 type RssModalType = 'edit' | 'delete' | 'copy' | null;
 
@@ -161,15 +162,44 @@ export default function DatasetRss() {
 
   const deleteMutation = useMutation({
     mutationFn: async (items: DatasetRss[]) => {
-      for (const item of items) {
-        await deleteDatasetRss(datasetId!, item.id);
-      }
-      return items;
+      const results = await Promise.allSettled(
+        items.map((item) => deleteDatasetRss(datasetId!, item.id)),
+      );
+      return { items, results };
     },
-    onSuccess: (deletedItems) => {
+    onSuccess: ({ items, results }) => {
+      const deletedItems = items.filter((_, i) => {
+        const r = results[i];
+        if (!r) return false;
+        return r.status === 'fulfilled' || isAlreadyDeletedError(r.reason);
+      });
+      const trueFailed = results.filter(
+        (r) => r.status === 'rejected' && !isAlreadyDeletedError(r.reason),
+      );
+
       const newSelection = { ...rowSelection };
       deletedItems.forEach((item) => delete newSelection[item.id.toString()]);
       setRowSelection(newSelection);
+
+      if (trueFailed.length > 0) {
+        const firstRejected = trueFailed[0] as PromiseRejectedResult;
+        const reason = firstRejected.reason;
+        const specificMessage =
+          isAxiosError(reason) && reason.response?.data?.message
+            ? reason.response.data.message
+            : undefined;
+        const failurePart =
+          specificMessage ??
+          t('{{count}} RSS feed(s) could not be deleted.', { count: trueFailed.length });
+        const successPart =
+          deletedItems.length > 0
+            ? t('{{count}} RSS feed(s) deleted successfully.', { count: deletedItems.length })
+            : '';
+
+        setDeleteError([successPart, failurePart].filter(Boolean).join(' '));
+        handleRefresh();
+        return;
+      }
 
       closeModal();
       handleRefresh();

@@ -19,24 +19,16 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export interface CommandPermissions {
-  view?: number;
-  edit?: number;
-  delete?: number;
-  modifyPermissions?: number;
-}
+import { DateTime } from 'luxon';
 
-export interface Command {
-  commandId: number;
-  command: string;
-  code: string;
-  description: string | null;
-  userId: number;
-  commandString: string | null;
-  validationString: string | null;
-  availableOn: string | null;
-  createAlertOn: string;
-  groupsWithPermissions: string | null;
-  groupsWithPermissionsList?: string[] | null;
-  userPermissions?: CommandPermissions;
+// Parses a CMS "system format" datetime string (Y-m-d H:i:s, see
+// DateFormatHelper::getSystemFormat()) as wall-clock time in the CMS's configured
+// timezone - not the browser's local timezone, which may differ and shift the
+// resulting instant onto the wrong calendar day.
+export function parseDateTimeString(value?: string | null, timeZone?: string): Date | undefined {
+  if (!value) return undefined;
+
+  const dt = DateTime.fromFormat(value, 'yyyy-MM-dd HH:mm:ss', { zone: timeZone });
+
+  return dt.isValid ? dt.toJSDate() : undefined;
 }

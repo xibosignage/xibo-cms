@@ -69,10 +69,19 @@ export const setupDaypartMocks = (): void => {
   vi.mocked(fetchDaypart).mockResolvedValue({ rows: [], totalCount: 0 });
 };
 
+// Honors start/length/isAlways/isCustom/name like the real /daypart endpoint, so the separate
+// Always/Custom filtered fetches don't collapse to the same row.
 export const mockDaypartRows = (rows: DaypartRow[]): void => {
-  vi.mocked(fetchDaypart).mockResolvedValue({
-    rows: rows as unknown as Daypart[],
-    totalCount: rows.length,
+  vi.mocked(fetchDaypart).mockImplementation(async (options = { start: 0, length: 10 }) => {
+    const { start = 0, length = 10, isAlways, isCustom, name } = options;
+    let filtered = rows;
+    if (isAlways != null) filtered = filtered.filter((d) => d.isAlways === isAlways);
+    if (isCustom != null) filtered = filtered.filter((d) => d.isCustom === isCustom);
+    if (name) filtered = filtered.filter((d) => d.name.toLowerCase().includes(name.toLowerCase()));
+    return {
+      rows: filtered.slice(start, start + length) as unknown as Daypart[],
+      totalCount: filtered.length,
+    };
   });
 };
 

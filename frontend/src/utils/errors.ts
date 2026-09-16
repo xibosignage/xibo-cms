@@ -19,24 +19,14 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export interface CommandPermissions {
-  view?: number;
-  edit?: number;
-  delete?: number;
-  modifyPermissions?: number;
-}
+import { isAxiosError } from 'axios';
 
-export interface Command {
-  commandId: number;
-  command: string;
-  code: string;
-  description: string | null;
-  userId: number;
-  commandString: string | null;
-  validationString: string | null;
-  availableOn: string | null;
-  createAlertOn: string;
-  groupsWithPermissions: string | null;
-  groupsWithPermissionsList?: string[] | null;
-  userPermissions?: CommandPermissions;
+/**
+ * A 404 from a delete request means the item was already gone by the time this
+ * request reached the server - e.g. another tab/user deleted it first in a
+ * concurrent bulk-delete. Bulk-delete flows treat this as an implicit success
+ * rather than a failure to report to the user.
+ */
+export function isAlreadyDeletedError(reason: unknown): boolean {
+  return isAxiosError(reason) && reason.response?.status === 404;
 }

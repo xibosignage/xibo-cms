@@ -72,7 +72,7 @@ export const useDatasetData = ({
       const sortBy = sorting?.[0]?.id;
       const sortDir = sorting?.[0]?.desc ? 'desc' : 'asc';
 
-      const { lastModified, useRegexForName, logicalOperatorName, ...restFilters } =
+      const { lastModified, useRegexForName, logicalOperatorName, dataSetId, ...restFilters } =
         advancedFilters;
 
       const request: FetchDatasetRequest = {
@@ -82,13 +82,14 @@ export const useDatasetData = ({
         sortDir: sorting.length ? sortDir : undefined,
         signal,
         ...restFilters,
+        ...(dataSetId ? { dataSetId: Number(dataSetId) } : {}),
         ...((restFilters.dataSet || filter) && { dataSet: restFilters.dataSet || filter }),
         ...resolveLastModified(lastModified, timeZone),
         ...(useRegexForName && advancedFilters.dataSet && isValidRegex(advancedFilters.dataSet)
           ? { useRegexForName: 1 }
           : {}),
         ...(logicalOperatorName ? { logicalOperatorName } : {}),
-      } as FetchDatasetRequest;
+      };
 
       if (typeof folderId === 'number') {
         request.folderId = folderId;

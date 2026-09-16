@@ -46,7 +46,7 @@ import TextInput from '@/components/ui/forms/TextInput';
 import Modal from '@/components/ui/modals/Modal';
 import { useUserContext } from '@/context/UserContext';
 import { getEditDisplayProfileSchema } from '@/schema/displayProfile';
-import { fetchDaypart } from '@/services/daypartApi';
+import { fetchDaypart, fetchDaypartById } from '@/services/daypartApi';
 import { fetchDisplayProfileById, updateDisplayProfile } from '@/services/displayProfileApi';
 import { fetchPlayerSoftware } from '@/services/playerSoftwareApi';
 import type { PlayerSoftware } from '@/services/playerSoftwareApi';
@@ -425,6 +425,11 @@ export default function EditDisplayProfileModal({
       .finally(() => setIsLoadingMoreDayparts(false));
   };
 
+  const resolveDaypartLabel = async (value: string): Promise<string> => {
+    const daypart = await fetchDaypartById(value);
+    return daypart?.name ?? '';
+  };
+
   const handleLoadMorePlayerVersions = () => {
     const playerVersionType = playerVersionTypeRef.current;
     if (
@@ -620,6 +625,7 @@ export default function EditDisplayProfileModal({
     onLoadMoreDayparts: handleLoadMoreDayparts,
     isLoadingMoreDayparts,
     onSearchDayparts: handleDaypartSearch,
+    resolveDaypartLabel,
     playerVersions,
     playerVersionsHasMore: playerVersions.length < playerVersionsTotalCount,
     onLoadMorePlayerVersions: handleLoadMorePlayerVersions,

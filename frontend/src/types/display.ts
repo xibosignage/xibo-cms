@@ -110,6 +110,7 @@ export interface Display {
   teamViewerSerial: string | null;
   webkeySerial: string | null;
   groupsWithPermissions: string | null;
+  groupsWithPermissionsList?: string[] | null;
   isPlayerSupported: number | null;
   createdDt: string | null;
   modifiedDt: string | null;

@@ -472,6 +472,16 @@ class Display implements \JsonSerializable, XmrTargetInterface
     public $groupsWithPermissions;
 
     /**
+     * @var string[]
+     */
+    #[OA\Property(
+        description: 'An array of groups/users with permissions to this Display',
+        type: 'array',
+        items: new OA\Items(type: 'string')
+    )]
+    public $groupsWithPermissionsList = [];
+
+    /**
      * @var string
      */
     #[OA\Property(description: 'The datetime this entity was created')]

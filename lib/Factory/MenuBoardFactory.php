@@ -148,16 +148,14 @@ class MenuBoardFactory extends BaseFactory
                `menu_board`.folderId,
                `menu_board`.permissionsFolderId,
                `folder`.folderName,
-               (SELECT GROUP_CONCAT(DISTINCT `group`.group)
-                          FROM `permission`
-                            INNER JOIN `permissionentity`
-                            ON `permissionentity`.entityId = permission.entityId
-                            INNER JOIN `group`
-                            ON `group`.groupId = `permission`.groupId
-                         WHERE entity = :permissionEntityForGroup
-                            AND objectId = menu_board.menuId
-                            AND view = 1
-                        ) AS groupsWithPermissions
+               (SELECT GROUP_CONCAT(DISTINCT `group`.group ORDER BY `group`.group SEPARATOR \'#@\')
+                            FROM `permission`
+                                INNER JOIN `permissionentity` ON `permissionentity`.entityId = permission.entityId
+                                INNER JOIN `group` ON `group`.groupId = `permission`.groupId
+                            WHERE entity = :permissionEntityForGroup
+                                AND objectId = menu_board.menuId
+                                AND view = 1
+                        ) AS groupsWithPermissionsListJson
             ';
         $params['permissionEntityForGroup'] = 'Xibo\\Entity\\MenuBoard';
 
@@ -230,8 +228,15 @@ class MenuBoardFactory extends BaseFactory
             $params['modifiedDateTo'] = strtotime($sanitizedFilter->getDate('modifiedDateTo'));
         }
 
-        $allowedColumns = ['menuId', 'name', 'code', 'modifiedDt', 'owner', 'folderName', 'groupsWithPermissions'];
-        $sortOrder = $this->buildSortQuery($sortOrder, $allowedColumns, [], ['name ASC'], 'menuId');
+        $allowedColumns = [
+            'menuId', 'name', 'code', 'modifiedDt', 'owner', 'folderName',
+            'groupsWithPermissions', 'groupsWithPermissionsList',
+        ];
+        $customColumns = [
+            'groupsWithPermissions' => '`groupsWithPermissionsListJson`',
+            'groupsWithPermissionsList' => '`groupsWithPermissionsListJson`',
+        ];
+        $sortOrder = $this->buildSortQuery($sortOrder, $allowedColumns, $customColumns, ['name ASC'], 'menuId');
         $order = empty($sortOrder) ? '' : ' ORDER BY ' . implode(', ', $sortOrder);
 
         $limit = '';
@@ -244,7 +249,18 @@ class MenuBoardFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row);
+            $menuBoard = $this->createEmpty()->hydrate($row);
+
+            $names = null;
+            if ($row['groupsWithPermissionsListJson'] !== null) {
+                $decoded = explode('#@', $row['groupsWithPermissionsListJson']);
+                $names = is_array($decoded) ? $decoded : null;
+            }
+            $menuBoard->groupsWithPermissionsList = $names ?? [];
+            $menuBoard->groupsWithPermissions = $names !== null ? implode(',', $names) : null;
+            $menuBoard->excludeProperty('groupsWithPermissionsListJson');
+
+            $entries[] = $menuBoard;
         }
 
         if ($limit != '' && count($entries) > 0) {

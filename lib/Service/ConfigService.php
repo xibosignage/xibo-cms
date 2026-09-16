@@ -637,6 +637,17 @@ class ConfigService implements ConfigServiceInterface
                 'userChange' => intval($setting['userChange']),
             ];
         }
+
+        // Synthesise a default so the field is visible/editable from the first login;
+        // changeSetting() already inserts the row the first time it's actually saved.
+        if (!isset($result['DISPLAY_DEFAULT_FOLDER'])) {
+            $result['DISPLAY_DEFAULT_FOLDER'] = [
+                'value' => 1,
+                'userSee' => 1,
+                'userChange' => 1,
+            ];
+        }
+
         return $result;
     }
 

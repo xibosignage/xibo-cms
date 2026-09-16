@@ -77,7 +77,7 @@ import { getScheduleEventSchema } from '@/schema/scheduleEvent';
 import { fetchCampaigns } from '@/services/campaignApi';
 import { fetchCommands } from '@/services/commandApi';
 import { fetchDataset } from '@/services/datasetApi';
-import { fetchDaypart } from '@/services/daypartApi';
+import { fetchDaypart, fetchDaypartById } from '@/services/daypartApi';
 import { createEvent, fetchEventById, updateEvent } from '@/services/eventApi';
 import { fetchLayouts, fetchLayoutCodes } from '@/services/layoutsApi';
 import { fetchMedia } from '@/services/mediaApi';
@@ -88,7 +88,6 @@ import {
   type ScheduleCriteriaResponse,
 } from '@/services/scheduleCriteriaApi';
 import { fetchSyncGroups, fetchSyncGroupDisplays } from '@/services/syncGroupApi';
-import type { Daypart } from '@/types/daypart';
 import { EventTypeId, type Event } from '@/types/event';
 import type { Media } from '@/types/media';
 import type { SyncGroupDisplay } from '@/types/syncGroup';
@@ -213,6 +212,8 @@ export default function ScheduleEventModal({
 
   const [alwaysDayPartId, setAlwaysDayPartId] = useState<string>('');
   const [customDayPartId, setCustomDayPartId] = useState<string>('');
+  const [alwaysDaypartOption, setAlwaysDaypartOption] = useState<SelectOption | null>(null);
+  const [customDaypartOption, setCustomDaypartOption] = useState<SelectOption | null>(null);
   const [shareOfVoicePercentInput, setShareOfVoicePercentInput] = useState<string | null>(null);
 
   const [syncDisplays, setSyncDisplays] = useState<SyncGroupDisplay[]>([]);
@@ -451,6 +452,24 @@ export default function ScheduleEventModal({
   const isCustomDaypart = !!customDayPartId && draft.dayPartId === customDayPartId;
   const isNamedDaypart = draft.dayPartId !== '' && !isAlwaysDaypart && !isCustomDaypart;
   const showRepeatReminder = !isAlwaysDaypart && draft.dayPartId !== '';
+  const pinnedDaypartOptions = [alwaysDaypartOption, customDaypartOption].filter(
+    (o): o is SelectOption => o !== null,
+  );
+  const daypartDropdownOptions = (() => {
+    if (pinnedDaypartOptions.length === 0) {
+      return daypartOptions;
+    }
+    const pinnedIds = new Set(pinnedDaypartOptions.map((o) => o.value));
+    const rest = daypartOptions.filter((o) => !pinnedIds.has(o.value));
+    if (rest.length === 0) {
+      return pinnedDaypartOptions;
+    }
+    return [
+      ...pinnedDaypartOptions,
+      { value: '__daypart-divider__', label: '', isDivider: true },
+      ...rest,
+    ];
+  })();
 
   const isTimeStepValid = (() => {
     if (isCustomDaypart && draft.useRelativeTime) {
@@ -521,6 +540,40 @@ export default function ScheduleEventModal({
   }, [isOpen, resolutionDebouncedSearch]);
 
   useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    let cancelled = false;
+
+    Promise.all([
+      fetchDaypart({ start: 0, length: 1, isAlways: 1 }),
+      fetchDaypart({ start: 0, length: 1, isCustom: 1 }),
+    ]).then(([alwaysResult, customResult]) => {
+      if (cancelled) {
+        return;
+      }
+      const always = alwaysResult.rows[0];
+      const custom = customResult.rows[0];
+      if (always) {
+        setAlwaysDayPartId(String(always.dayPartId));
+        setAlwaysDaypartOption({ value: String(always.dayPartId), label: always.name });
+        setDraft((prev) =>
+          prev.dayPartId === '' ? { ...prev, dayPartId: String(always.dayPartId) } : prev,
+        );
+      }
+      if (custom) {
+        setCustomDayPartId(String(custom.dayPartId));
+        setCustomDaypartOption({ value: String(custom.dayPartId), label: custom.name });
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
     loadVersionRef.current.daypart += 1;
     if (!isOpen) return;
 
@@ -537,24 +590,8 @@ export default function ScheduleEventModal({
         if (cancelled) {
           return;
         }
-        const sortWeight = (dp: Daypart) => (dp.isAlways === 1 ? 0 : dp.isCustom === 1 ? 1 : 2);
-        const sorted = [...rows].sort((a, b) => sortWeight(a) - sortWeight(b));
-        setDaypartOptions(sorted.map((dp) => ({ value: String(dp.dayPartId), label: dp.name })));
+        setDaypartOptions(rows.map((dp) => ({ value: String(dp.dayPartId), label: dp.name })));
         setPagination((prev) => ({ ...prev, daypart: { ...prev.daypart, totalCount } }));
-
-        if (!daypartDebouncedSearch) {
-          const always = rows.find((dp) => dp.isAlways === 1);
-          const custom = rows.find((dp) => dp.isCustom === 1);
-          if (always) {
-            setAlwaysDayPartId(String(always.dayPartId));
-            setDraft((prev) =>
-              prev.dayPartId === '' ? { ...prev, dayPartId: String(always.dayPartId) } : prev,
-            );
-          }
-          if (custom) {
-            setCustomDayPartId(String(custom.dayPartId));
-          }
-        }
       })
       .finally(() => {
         if (!cancelled) {
@@ -1389,6 +1426,11 @@ export default function ScheduleEventModal({
     return rows[0]?.layout ?? '';
   };
 
+  const resolveDaypartLabel = async (value: string): Promise<string> => {
+    const daypart = await fetchDaypartById(value);
+    return daypart?.name ?? '';
+  };
+
   const setSyncDisplayLayout = (displayId: number, layoutId: number, isLead: boolean) => {
     if (!isLead && syncMirror) {
       setSyncMirror(false);
@@ -1923,7 +1965,8 @@ export default function ScheduleEventModal({
                 <SelectDropdown
                   label={t('Dayparting')}
                   value={draft.dayPartId}
-                  options={daypartOptions}
+                  options={daypartDropdownOptions}
+                  resolveLabel={resolveDaypartLabel}
                   onSelect={(value) => {
                     if (!!alwaysDayPartId && value === alwaysDayPartId) {
                       setDraft((prev) => ({
