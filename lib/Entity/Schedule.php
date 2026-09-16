@@ -1301,8 +1301,7 @@ class Schedule implements \JsonSerializable
                 // Find the excluded recurring events
                 $exclude = false;
                 foreach ($scheduleExclusions as $exclusion) {
-                    if ($scheduleEvent->fromDt == $exclusion->fromDt &&
-                        $scheduleEvent->toDt == $exclusion->toDt) {
+                    if ($scheduleEvent->fromDt == $exclusion->fromDt) {
                         $exclude = true;
                         continue;
                     }
