@@ -92,9 +92,15 @@ export function SessionExpiredModal() {
     }
   };
 
-  // Pro active check - focus and auto-resume
+  const lastTriggerRef = useRef(0);
+
   useEffect(() => {
     const handleTrigger = () => {
+      const now = Date.now();
+      if (now - lastTriggerRef.current < 1000) {
+        return;
+      }
+      lastTriggerRef.current = now;
       checkSession();
     };
 
