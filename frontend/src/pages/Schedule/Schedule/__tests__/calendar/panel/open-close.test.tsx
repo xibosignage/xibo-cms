@@ -218,4 +218,45 @@ describe('EventCalendar — panel open/close/navigation', () => {
     expect(screen.queryByText('1 Event')).not.toBeInTheDocument();
     expect(screen.queryByText(/\d+ Events/)).not.toBeInTheDocument();
   });
+  // ---------------------------------------------------------------------------
+  // The Agenda button in the day panel. It is the only way into the Agenda View,
+  // and the page gates it on the `schedule.agenda` feature by passing (or not
+  // passing) onAgenda.
+  // ---------------------------------------------------------------------------
+
+  // The day and the event list handed back are what the page turns into the
+  // agenda's display group tabs - give it the wrong day's events and the agenda
+  // opens against the wrong screens.
+  test("the Agenda button hands back the panel's day and that day's events", async () => {
+    const user = userEvent.setup();
+    const onAgenda = vi.fn();
+    const onApr14 = buildEvent({ name: 'On The 14th', fromDt: APR14_10H, toDt: APR14_10H + 3600 });
+    const onApr20 = buildEvent({ name: 'On The 20th', fromDt: APR20_10H, toDt: APR20_10H + 3600 });
+
+    renderCalendar({ date: CALENDAR_DATE, events: [onApr14, onApr20], onAgenda });
+
+    await user.click(getDayCell(14));
+    await waitFor(() => screen.getByText('1 Event'));
+
+    await user.click(within(getPanel()).getByRole('button', { name: 'Agenda' }));
+
+    expect(onAgenda).toHaveBeenCalledTimes(1);
+    const [day, events] = onAgenda.mock.calls[0]!;
+    expect(day.toISODate()).toBe('2026-04-14');
+    expect(events).toEqual([expect.objectContaining({ name: 'On The 14th' })]);
+  });
+
+  test('there is no Agenda button when the agenda feature is off', async () => {
+    const user = userEvent.setup();
+    const event = buildEvent({ name: 'No Agenda', fromDt: APR14_10H, toDt: APR14_10H + 3600 });
+
+    // No onAgenda passed - exactly what Events.tsx does when the user lacks the
+    // schedule.agenda feature.
+    renderCalendar({ date: CALENDAR_DATE, events: [event] });
+
+    await user.click(getDayCell(14));
+    await waitFor(() => screen.getByText('1 Event'));
+
+    expect(within(getPanel()).queryByRole('button', { name: 'Agenda' })).not.toBeInTheDocument();
+  });
 });
