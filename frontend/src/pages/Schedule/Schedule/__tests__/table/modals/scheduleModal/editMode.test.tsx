@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
@@ -130,21 +130,60 @@ describe('ScheduleEventModal - edit mode (pre-fill & save)', () => {
     expect(screen.getByDisplayValue('Morning Promo')).toBeInTheDocument();
   });
 
+  // name, dayPartId, etc. already come from the `event` prop (the table-row data),
+  // so ScheduleEventModal's background fetchEventById call (in the edit-mode
+  // useEffect) deliberately leaves those fields alone when it resolves. It only
+  // merges in fields the table row doesn't have: reminders, criteria, geoLocation,
+  // mediaId, playlistId, resolutionId, backgroundColor, layoutDuration.
   test('uses values fetched from the API for fields not in the table row', async () => {
     const user = userEvent.setup();
     const enrichedEvent = buildEvent({
       eventId: mockEvent.eventId,
       campaignId: mockEvent.campaignId,
-      name: 'Name From API',
       dayPartId: 1,
       displayGroups: mockEvent.displayGroups,
+      criteria: [
+        {
+          id: 1,
+          eventId: mockEvent.eventId,
+          type: 'custom',
+          metric: 'Metric From API',
+          condition: 'set',
+          value: '',
+        },
+      ],
     });
     vi.mocked(fetchEventById).mockResolvedValueOnce(enrichedEvent);
 
     renderScheduleModal({ mode: 'edit', event: mockEvent });
 
     await user.click(await screen.findByText('Optional'));
-    await screen.findByDisplayValue('Name From API');
+    await user.click(screen.getByRole('button', { name: 'Criteria' }));
+    await screen.findByDisplayValue('Metric From API');
+
+    // Boundary check: not enough that it renders — make sure it's actually in the
+    // save payload too.
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    expect(updateEvent).toHaveBeenCalledWith(
+      mockEvent.eventId,
+      expect.objectContaining({
+        criteria: [expect.objectContaining({ metric: 'Metric From API' })],
+      }),
+      expect.any(String),
+    );
+  });
+
+  test('Save stays blocked after the enrichment fetch fails, so stale reminder/criteria data cannot be silently submitted', async () => {
+    vi.mocked(fetchEventById).mockRejectedValueOnce(new Error('network error'));
+
+    renderScheduleModal({ mode: 'edit', event: mockEvent });
+
+    // Wait for the failed fetchEventById call to fully settle before checking
+    // Save — the error toast fires from inside .catch(), just before .finally()
+    // re-enables the button.
+    await waitFor(() => expect(notify.error).toHaveBeenCalled());
+
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
   });
 
   // Edit mode hits the updateEvent endpoint, not createEvent. The first

@@ -154,9 +154,21 @@ class PlayerVersion implements \JsonSerializable
             unlink($libraryLocation  . 'playersoftware/' . $this->fileName);
         }
 
-        // delete unpacked file
-        if (is_dir($libraryLocation . 'playersoftware/chromeos/' . $this->versionId)) {
-            (new Filesystem())->remove($libraryLocation . 'playersoftware/chromeos/' . $this->versionId);
+        if ($this->type === 'chromeOS') {
+            $chromeLocation = $libraryLocation . 'playersoftware/chromeos';
+
+            // If the "latest" symlink points at the version we're about to remove, take it down first -
+            // otherwise it's left dangling at a folder that no longer exists.
+            if (is_link($chromeLocation . '/latest')
+                && readlink($chromeLocation . '/latest') === $chromeLocation . '/' . $this->versionId
+            ) {
+                $this->unsetActive();
+            }
+
+            // delete unpacked file
+            if (is_dir($chromeLocation . '/' . $this->versionId)) {
+                (new Filesystem())->remove($chromeLocation . '/' . $this->versionId);
+            }
         }
     }
 
@@ -300,6 +312,24 @@ class PlayerVersion implements \JsonSerializable
                 unlink($chromeLocation . '/latest');
             }
             symlink($chromeLocation . '/' . $this->versionId, $chromeLocation . '/latest');
+        }
+
+        return $this;
+    }
+
+    /**
+     * The counterpart to setActive() - removes the "latest" symlink so that no version is served,
+     * rather than leaving it pointing at whichever version was last made active.
+     */
+    public function unsetActive(): static
+    {
+        if ($this->type === 'chromeOS') {
+            $this->getLog()->debug('unsetActive: no version is active for this type any more');
+
+            $chromeLocation = $this->config->getSetting('LIBRARY_LOCATION') . 'playersoftware/chromeos';
+            if (is_link($chromeLocation . '/latest')) {
+                unlink($chromeLocation . '/latest');
+            }
         }
 
         return $this;

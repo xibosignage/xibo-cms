@@ -224,8 +224,9 @@ export function DynamicSettingField({
           options={daypartOptions}
           translateLabels={false}
           resolveLabel={contextData.resolveDaypartLabel}
-          placeholder=" "
+          placeholder={t('None')}
           searchable
+          clearable
           onSelect={onChange}
           onLoadMore={contextData.onLoadMoreDayparts}
           hasMore={contextData.daypartsHasMore ?? false}
@@ -242,8 +243,9 @@ export function DynamicSettingField({
         options={daypartOptions}
         translateLabels={false}
         resolveLabel={contextData.resolveDaypartLabel}
-        placeholder=" "
+        placeholder={t('None')}
         searchable
+        clearable
         onSelect={onChange}
       />
     );
@@ -262,8 +264,9 @@ export function DynamicSettingField({
           value={value ? String(value) : ''}
           options={playerVersionOptions}
           translateLabels={false}
-          placeholder=" "
+          placeholder={t('None')}
           searchable
+          clearable
           onSelect={onChange}
           onLoadMore={contextData.onLoadMorePlayerVersions}
           hasMore={contextData.playerVersionsHasMore ?? false}
@@ -279,8 +282,9 @@ export function DynamicSettingField({
         value={value ? String(value) : ''}
         options={playerVersionOptions}
         translateLabels={false}
-        placeholder=" "
+        placeholder={t('None')}
         searchable
+        clearable
         onSelect={onChange}
       />
     );

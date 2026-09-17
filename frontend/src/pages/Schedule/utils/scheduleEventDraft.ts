@@ -40,6 +40,7 @@ export interface DraftCriterion {
 }
 
 export interface DraftReminder {
+  scheduleReminderId?: number | null;
   value: number;
   type: ReminderType;
   option: ReminderOption;
@@ -534,6 +535,7 @@ export function createDraftFromEvent(scheduleEvent: Event): ScheduleEventDraft {
     reminders:
       (scheduleEvent.scheduleReminders ?? []).length > 0
         ? scheduleEvent.scheduleReminders.map((r) => ({
+            scheduleReminderId: r.scheduleReminderId ?? null,
             value: Number(r.value),
             type: Number(r.type),
             option: Number(r.option),

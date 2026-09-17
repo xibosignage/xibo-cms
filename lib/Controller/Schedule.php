@@ -1278,7 +1278,7 @@ class Schedule extends Base
         $oldSchedule = clone $schedule;
 
         $schedule->load([
-            'loadScheduleReminders' => in_array('scheduleReminders', $embed),
+            'loadScheduleReminders' => true,
         ]);
 
         if (!$this->isEventEditable($schedule)) {
@@ -1685,9 +1685,35 @@ class Schedule extends Base
             $this->saveReminder($schedule, $scheduleReminder);
         }
 
-        // If this is a recurring event delete all schedule exclusions
-        if ($schedule->recurrenceType != '') {
-            // Delete schedule exclusions
+        // If the recurrence pattern changed, the old exclusions no longer correspond to
+        // real occurrences — delete them. Only do this when a recurrence-defining field
+        // actually changed; cosmetic edits (name, priority, etc.) must not discard exclusions.
+        // Timestamps are compared at minute granularity because the UI trims seconds from
+        // API-created events on save — that rounding must not count as a user change.
+        // recurrenceRepeatsOn is sorted before comparison so that "4,5" == "5,4".
+        $oldRepeatsOn = $oldSchedule->recurrenceRepeatsOn;
+        $newRepeatsOn = $schedule->recurrenceRepeatsOn;
+        if ($oldRepeatsOn !== null) {
+            $parts = explode(',', $oldRepeatsOn);
+            sort($parts);
+            $oldRepeatsOn = implode(',', $parts);
+        }
+        if ($newRepeatsOn !== null) {
+            $parts = explode(',', $newRepeatsOn);
+            sort($parts);
+            $newRepeatsOn = implode(',', $parts);
+        }
+
+        if ($schedule->recurrenceType != ''
+            && ($oldSchedule->recurrenceType !== $schedule->recurrenceType
+                || $oldSchedule->recurrenceDetail != $schedule->recurrenceDetail
+                || $oldRepeatsOn !== $newRepeatsOn
+                || $oldSchedule->recurrenceMonthlyRepeatsOn != $schedule->recurrenceMonthlyRepeatsOn
+                || intdiv((int)$oldSchedule->fromDt, 60) !== intdiv((int)$schedule->fromDt, 60)
+                || intdiv((int)$oldSchedule->toDt, 60) !== intdiv((int)$schedule->toDt, 60)
+                || $oldSchedule->dayPartId != $schedule->dayPartId)
+        ) {
+            // Delete schedule exclusions — the occurrence grid has shifted
             $scheduleExclusions = $this->scheduleExclusionFactory->query(null, ['eventId' => $schedule->eventId]);
             foreach ($scheduleExclusions as $exclusion) {
                 $exclusion->delete();
@@ -1768,6 +1794,11 @@ class Schedule extends Base
         $schedule = clone $originalSchedule;
         $schedule->name = $sanitizedParams->getString('name');
         $schedule->userId = $this->getUser()->userId;
+
+        // Clear an invalid recurrence range inherited from the original event
+        if (!empty($schedule->recurrenceRange) && $schedule->recurrenceRange <= $schedule->fromDt) {
+            $schedule->recurrenceRange = 0;
+        }
 
         $schedule->setDisplayNotifyService($this->displayFactory->getDisplayNotifyService());
 
@@ -2042,6 +2073,7 @@ class Schedule extends Base
     public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $schedule = $this->scheduleFactory->getById($id, false);
+        $schedule->load(['loadScheduleReminders' => true]);
         $this->decorateEventProperties($schedule);
 
         if (!$this->getUser()->isSuperAdmin()) {

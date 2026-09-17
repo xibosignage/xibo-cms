@@ -88,6 +88,12 @@ class WidgetDownloader
 
         $this->logger->debug('widgetDownloader::download: ' . $libraryPath . ', ' . $contentType);
 
+        if (!file_exists($libraryPath)) {
+            $this->logger->error('widgetDownloader::download: Library file missing for mediaId '
+                . $media->mediaId . ' at ' . $libraryPath);
+            throw new NotFoundException(__('The requested media file could not be found in the library.'));
+        }
+
         // Set some headers
         $headers = [];
         $fileSize = filesize($libraryPath);

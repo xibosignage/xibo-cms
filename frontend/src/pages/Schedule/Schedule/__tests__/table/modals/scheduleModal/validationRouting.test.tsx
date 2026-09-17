@@ -34,7 +34,7 @@ import {
 
 import { renderScheduleModal } from './helpers/renderScheduleModal';
 
-import { fetchEventById } from '@/services/eventApi';
+import { createEvent, updateEvent } from '@/services/eventApi';
 import { testQueryClient } from '@/setupTests';
 import { EventTypeId } from '@/types/event';
 
@@ -140,15 +140,19 @@ describe('ScheduleEventModal - validation step-routing', () => {
   test('clicking Save in edit mode with a missing campaign jumps the user back to the Content step', async () => {
     const user = userEvent.setup();
 
-    vi.mocked(fetchEventById).mockResolvedValueOnce(
-      buildEvent({
-        ...mockEvent,
-        campaignId: undefined,
-        fullScreenCampaignId: undefined,
-      }),
-    );
+    // Don't swap this for mockFetchEventById() like the sibling tests do —
+    // campaignId comes from the `event` prop directly, not the fetch response, so
+    // mocking the API call alone wouldn't produce a missing-campaign event. The
+    // mockFetchEventById(mockEvent) call in beforeEach still has to stay, though:
+    // without it, the mocked fetchEventById returns undefined instead of a
+    // promise, and the modal's background fetch would throw.
+    const eventWithoutCampaign = buildEvent({
+      ...mockEvent,
+      campaignId: undefined,
+      fullScreenCampaignId: undefined,
+    });
 
-    renderScheduleModal({ mode: 'edit', event: mockEvent });
+    renderScheduleModal({ mode: 'edit', event: eventWithoutCampaign });
 
     await user.click(await screen.findByText('Optional'));
 
@@ -157,6 +161,11 @@ describe('ScheduleEventModal - validation step-routing', () => {
     await user.click(screen.getByRole('button', { name: 'Save' }));
     expect(screen.getByRole('combobox', { name: 'Event Type' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'General' })).not.toBeInTheDocument();
+
+    // Boundary check: landing back on the Content step only proves the UI reacted
+    // to the validation error — it doesn't prove the save request was blocked.
+    // Confirm updateEvent (the API call that would persist the change) was never made.
+    expect(updateEvent).not.toHaveBeenCalled();
   });
 
   test('clicking Finish in add mode with a missing daypart jumps the user to the Time step', async () => {
@@ -176,25 +185,29 @@ describe('ScheduleEventModal - validation step-routing', () => {
     expect(screen.getByRole('combobox', { name: 'Dayparting' })).toBeInTheDocument();
 
     expect(screen.queryByRole('button', { name: 'Pick a display group' })).not.toBeInTheDocument();
+
+    // Boundary check: same reasoning as the test above — a validation failure
+    // should stop the request from being sent, not just redirect the UI.
+    expect(createEvent).not.toHaveBeenCalled();
   });
 
   test('the field-level error message is exposed as the accessible description of the content input', async () => {
     const user = userEvent.setup();
 
-    vi.mocked(fetchEventById).mockResolvedValueOnce(
-      buildEvent({
-        ...mockEvent,
-        campaignId: undefined,
-        fullScreenCampaignId: undefined,
-      }),
-    );
+    const eventWithoutCampaign = buildEvent({
+      ...mockEvent,
+      campaignId: undefined,
+      fullScreenCampaignId: undefined,
+    });
 
-    renderScheduleModal({ mode: 'edit', event: mockEvent });
+    renderScheduleModal({ mode: 'edit', event: eventWithoutCampaign });
 
     await user.click(await screen.findByText('Optional'));
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
     const contentCombobox = screen.getByRole('combobox', { name: 'Layout' });
     expect(contentCombobox).toHaveAccessibleDescription('Please select a Layout or Campaign');
+
+    expect(updateEvent).not.toHaveBeenCalled();
   });
 });

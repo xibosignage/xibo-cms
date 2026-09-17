@@ -214,11 +214,27 @@ export default function DatePicker({
     return d;
   };
 
+  const anchorDateOnly = (date: Date): Date => {
+    if (!timeZone) return date;
+    return DateTime.fromObject(
+      {
+        year: date.getFullYear(),
+        month: date.getMonth() + 1,
+        day: date.getDate(),
+        hour: 12,
+        minute: 0,
+        second: 0,
+        millisecond: 0,
+      },
+      { zone: timeZone },
+    ).toJSDate();
+  };
+
   const getRangeValues = () => {
     if (!range?.from || !range?.to) return null;
     return {
-      from: effectiveShowTimePicker ? applyTime(range.from, fromTime) : new Date(range.from),
-      to: effectiveShowTimePicker ? applyTime(range.to, toTime) : new Date(range.to),
+      from: effectiveShowTimePicker ? applyTime(range.from, fromTime) : anchorDateOnly(range.from),
+      to: effectiveShowTimePicker ? applyTime(range.to, toTime) : anchorDateOnly(range.to),
     };
   };
 
@@ -233,7 +249,7 @@ export default function DatePicker({
     if (mode === 'single' && single) {
       onApply({
         type: 'single',
-        date: effectiveShowTimePicker ? applyTime(single, time) : single,
+        date: effectiveShowTimePicker ? applyTime(single, time) : anchorDateOnly(single),
       });
     }
 
@@ -316,7 +332,9 @@ export default function DatePicker({
       {/* Footer */}
       <div className="flex justify-between items-center p-4 border-t border-gray-200">
         <p className="text-xs text-gray-600" data-testid="datepicker-selected">
-          {mode === 'single' && single && formatDate(single)}
+          {mode === 'single' &&
+            single &&
+            formatDate(effectiveShowTimePicker ? applyTime(single, time) : anchorDateOnly(single))}
 
           {mode === 'range' && range?.from && (
             <>

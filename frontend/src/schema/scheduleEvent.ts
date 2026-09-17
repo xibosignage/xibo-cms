@@ -210,6 +210,19 @@ export const getScheduleEventSchema = (
         });
       }
 
+      if (
+        data.recurrenceType &&
+        data.recurrenceRange &&
+        data.fromDt &&
+        new Date(data.recurrenceRange) <= new Date(data.fromDt)
+      ) {
+        ctx.addIssue({
+          path: ['recurrenceRange'],
+          code: z.ZodIssueCode.custom,
+          message: t('Recurrence end must be after the event start date'),
+        });
+      }
+
       const isCustomDaypart = !!customDayPartId && data.dayPartId === customDayPartId;
       const isAlwaysDaypart = !!alwaysDayPartId && data.dayPartId === alwaysDayPartId;
       const isNamedDaypart = data.dayPartId !== '' && !isCustomDaypart && !isAlwaysDaypart;
