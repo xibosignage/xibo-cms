@@ -189,6 +189,7 @@ export default function ScheduleEventModal({
   const [contentOptions, setContentOptions] = useState<SelectOption[]>([]);
   const [isLoadingContent, setIsLoadingContent] = useState(false);
   const [isEnriching, setIsEnriching] = useState(false);
+  const [enrichmentFailed, setEnrichmentFailed] = useState(false);
   const [previewMedia, setPreviewMedia] = useState<Media | null>(null);
   const [isLoadingMediaPreview, setIsLoadingMediaPreview] = useState(false);
   const [showDisplayBanner, setShowDisplayBanner] = useState(false);
@@ -576,6 +577,7 @@ export default function ScheduleEventModal({
     }
 
     setIsEnriching(true);
+    setEnrichmentFailed(false);
     fetchEventById(event.eventId)
       .then((enriched) => {
         const enrichedDraft = createDraftFromEvent(enriched);
@@ -593,6 +595,7 @@ export default function ScheduleEventModal({
         }));
       })
       .catch(() => {
+        setEnrichmentFailed(true);
         notify.error(t('Failed to load event details.'));
       })
       .finally(() => setIsEnriching(false));
@@ -1564,7 +1567,7 @@ export default function ScheduleEventModal({
         label: isPending ? t('Saving...') : isEditMode ? t('Save') : t('Finish'),
         onClick: handleFinish,
         variant: 'primary',
-        disabled: isPending || isEnriching || !isStepValid,
+        disabled: isPending || isEnriching || enrichmentFailed || !isStepValid,
       });
     }
 

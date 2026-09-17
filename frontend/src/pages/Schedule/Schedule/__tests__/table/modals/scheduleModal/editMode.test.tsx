@@ -173,26 +173,18 @@ describe('ScheduleEventModal - edit mode (pre-fill & save)', () => {
     );
   });
 
-  // Bug: if the background request for the event's full details fails after opening
-  // Edit, the reminder/criteria fields are left blank - but Save doesn't stay
-  // blocked, it becomes clickable again as soon as that failed request settles. So
-  // the user can submit a save with blank reminders/criteria, which deletes the
-  // event's real ones on the server.
-  test.fails(
-    'Save stays blocked after the enrichment fetch fails, so stale reminder/criteria data cannot be silently submitted',
-    async () => {
-      vi.mocked(fetchEventById).mockRejectedValueOnce(new Error('network error'));
+  test('Save stays blocked after the enrichment fetch fails, so stale reminder/criteria data cannot be silently submitted', async () => {
+    vi.mocked(fetchEventById).mockRejectedValueOnce(new Error('network error'));
 
-      renderScheduleModal({ mode: 'edit', event: mockEvent });
+    renderScheduleModal({ mode: 'edit', event: mockEvent });
 
-      // Wait for the failed fetchEventById call to fully settle before checking
-      // Save — the error toast fires from inside .catch(), just before .finally()
-      // re-enables the button.
-      await waitFor(() => expect(notify.error).toHaveBeenCalled());
+    // Wait for the failed fetchEventById call to fully settle before checking
+    // Save — the error toast fires from inside .catch(), just before .finally()
+    // re-enables the button.
+    await waitFor(() => expect(notify.error).toHaveBeenCalled());
 
-      expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
-    },
-  );
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+  });
 
   // Edit mode hits the updateEvent endpoint, not createEvent. The first
   // argument has to be the existing event's id so the server knows
