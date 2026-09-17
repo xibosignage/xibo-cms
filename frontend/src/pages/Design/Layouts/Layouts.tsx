@@ -60,9 +60,10 @@ import { toggleTag } from '@/utils/tags';
 
 export default function Layouts() {
   const { t } = useTranslation();
-  const { formatDateTime } = useDateFormatter();
+  const { formatDateTime, timeZone } = useDateFormatter();
   const queryClient = useQueryClient();
   const { user } = useUserContext();
+  const locale = user?.settings?.translate?.jsLocale;
   const canViewFolders = usePermissions()?.canViewFolders;
   const canSchedule = hasFeature(user, 'schedule.add');
   const canViewPlaylist = hasFeature(user, 'playlist.view');
@@ -101,7 +102,7 @@ export default function Layouts() {
       description: true,
       thumbnail: true,
       owner: true,
-      groupsWithPermissions: false,
+      groupsWithPermissionsList: false,
       valid: true,
       status: true,
       modifiedDt: false,
@@ -346,6 +347,8 @@ export default function Layouts() {
     canSaveTemplate,
     canTag,
     formatDateTime,
+    timeZone,
+    locale,
     onDelete: handleDelete,
     openEditModal,
     openMoveModal: canViewFolders
@@ -525,7 +528,7 @@ export default function Layouts() {
 
         <div className="min-h-0 flex flex-col">
           {!isHydrated ? (
-            <div className="flex-1 flex items-center justify-center bg-gray-50 animate-pulse rounded-lg border border-gray-200">
+            <div className="flex-1 min-h-64 flex items-center justify-center bg-gray-50 animate-pulse rounded-lg border border-gray-200">
               <span className="text-gray-400 font-medium">
                 {t('Loading your layout preferences...')}
               </span>

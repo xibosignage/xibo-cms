@@ -179,6 +179,8 @@ class Playlist implements \JsonSerializable
     // Read only properties
     public $owner;
     public $groupsWithPermissions;
+    /** @var string[] */
+    public $groupsWithPermissionsList = [];
 
     /**
      * @var int

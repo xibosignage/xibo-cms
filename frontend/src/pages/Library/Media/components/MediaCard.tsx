@@ -30,7 +30,7 @@ import {
   useInteractions,
   FloatingPortal,
 } from '@floating-ui/react';
-import { Check, MoreVertical, Play } from 'lucide-react';
+import { Check, Loader2, MoreVertical, Play } from 'lucide-react';
 import { useState } from 'react';
 import { twMerge } from 'tailwind-merge';
 
@@ -165,12 +165,14 @@ export default function MediaCard({
                 return (
                   <button
                     key={idx}
+                    disabled={action.disabled}
                     onClick={() => {
+                      if (action.disabled) return;
                       setIsMenuOpen(false);
                       action.onClick?.();
                     }}
                     className={twMerge(
-                      'flex items-center w-full gap-3 rounded-lg text-left px-3 py-2 text-sm transition-colors cursor-pointer',
+                      'flex items-center w-full gap-3 rounded-lg text-left px-3 py-2 text-sm transition-colors cursor-pointer disabled:opacity-50 disabled:pointer-events-none',
                       action.variant === 'danger'
                         ? 'text-red-800 hover:bg-red-50 focus:bg-red-100'
                         : action.variant === 'primary'
@@ -178,7 +180,11 @@ export default function MediaCard({
                           : 'text-gray-800 hover:bg-gray-50 focus:bg-gray-100',
                     )}
                   >
-                    {Icon && <Icon className="size-4 opacity-70" />}
+                    {action.loading ? (
+                      <Loader2 className="size-4 opacity-70 animate-spin" />
+                    ) : (
+                      Icon && <Icon className="size-4 opacity-70" />
+                    )}
                     <span className="truncate">{action.label}</span>
                   </button>
                 );

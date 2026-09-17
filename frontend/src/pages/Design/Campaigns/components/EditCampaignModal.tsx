@@ -131,14 +131,32 @@ export default function EditCampaignModal({
 
   const { data: assignedData } = useQuery({
     queryKey: ['layouts', 'campaign', campaign?.campaignId],
-    queryFn: () =>
-      fetchLayouts({
+    queryFn: async () => {
+      const pageSize = 200;
+      const first = await fetchLayouts({
         start: 0,
-        length: 200,
+        length: pageSize,
         campaignId: campaign!.campaignId,
         sortBy: 'displayOrder',
         sortDir: 'asc',
-      }),
+      });
+      let rows = first.rows;
+      const totalCount = first.totalCount;
+      while (rows.length < totalCount) {
+        const next = await fetchLayouts({
+          start: rows.length,
+          length: pageSize,
+          campaignId: campaign!.campaignId,
+          sortBy: 'displayOrder',
+          sortDir: 'asc',
+        });
+        if (next.rows.length === 0) {
+          break;
+        }
+        rows = [...rows, ...next.rows];
+      }
+      return { rows, totalCount };
+    },
     enabled: isOpen && !!campaign,
     staleTime: 0,
   });

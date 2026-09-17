@@ -74,6 +74,13 @@ class MenuBoard implements \JsonSerializable
     #[OA\Property(description: 'A comma separated list of Groups/Users that have permission to this menu Board')]
     public $groupsWithPermissions;
 
+    #[OA\Property(
+        description: 'An array of Groups/Users that have permission to this menu Board',
+        type: 'array',
+        items: new OA\Items(type: 'string')
+    )]
+    public $groupsWithPermissionsList = [];
+
     /** @var Permission[] */
     private array $permissions = [];
     private $categories;

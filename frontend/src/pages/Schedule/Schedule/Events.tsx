@@ -41,7 +41,7 @@ import { DisplayGroupMultiSelect } from './components/DisplayGroupMultiSelect';
 import { EventCalendar } from './components/EventCalendar';
 import { EventModals } from './components/EventModals';
 import { useEventActions } from './hooks/useEventActions';
-import { useEventData } from './hooks/useEventData';
+import { useAllEventData, useEventData } from './hooks/useEventData';
 import { useEventFilterOptions } from './hooks/useEventFilterOptions';
 import { expandRecurringEvents } from './utils/expandRecurringEvents';
 
@@ -119,7 +119,8 @@ export default function Events() {
 
   const { data: dateRangePrefs, isSuccess: dateRangeReady } = useQuery({
     queryKey: ['userPref', DATE_RANGE_PREF_KEY],
-    queryFn: () => fetchUserPreference<DateRangeControllerState>(DATE_RANGE_PREF_KEY),
+    queryFn: () =>
+      fetchUserPreference<DateRangeControllerState>(DATE_RANGE_PREF_KEY).then((v) => v ?? null),
     staleTime: Infinity,
   });
 
@@ -209,10 +210,7 @@ export default function Events() {
         }
       : null;
 
-  const { data: dayViewQueryData, isFetching: isDayViewFetching } = useEventData({
-    pagination: { pageIndex: 0, pageSize: 500 },
-    sorting: [],
-    filter: '',
+  const { data: dayViewQueryData, isFetching: isDayViewFetching } = useAllEventData({
     advancedFilters: filterInputs,
     enabled: isHydrated && viewMode === 'table' && dayViewRange !== null,
   });
@@ -238,10 +236,7 @@ export default function Events() {
     ? Math.max(1, Math.ceil(dayViewOccurrences.length / pagination.pageSize))
     : pageCount;
 
-  const { data: calendarQueryData, isFetching: isCalendarFetching } = useEventData({
-    pagination: { pageIndex: 0, pageSize: 500 },
-    sorting: [],
-    filter: '',
+  const { data: calendarQueryData, isFetching: isCalendarFetching } = useAllEventData({
     advancedFilters: filterInputs,
     enabled: isHydrated && viewMode === 'calendar',
   });
@@ -488,7 +483,7 @@ export default function Events() {
 
         <div className={`min-h-0 flex flex-col ${viewMode === 'calendar' && 'flex-1'}`}>
           {!isHydrated ? (
-            <div className="flex-1 flex items-center justify-center bg-gray-50 animate-pulse rounded-lg border border-gray-200">
+            <div className="flex-1 min-h-64 flex items-center justify-center bg-gray-50 animate-pulse rounded-lg border border-gray-200">
               <span className="text-gray-400 font-medium">
                 {t('Loading your events preferences...')}
               </span>

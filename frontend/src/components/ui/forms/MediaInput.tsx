@@ -63,6 +63,7 @@ export default function MediaInput({
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [nameCache, setNameCache] = useState<Record<string, string>>({});
   const observerTarget = useRef<HTMLDivElement>(null);
+  const resolveAttemptedRef = useRef<Set<string>>(new Set());
 
   const selectedIds = value ? String(value).split(',').filter(Boolean) : [];
 
@@ -157,6 +158,38 @@ export default function MediaInput({
       });
     }
   }, [mediaItems]);
+
+  useEffect(() => {
+    const missing = selectedIds.filter(
+      (id) => nameCache[id] === undefined && !resolveAttemptedRef.current.has(id),
+    );
+    if (missing.length === 0) {
+      return;
+    }
+    missing.forEach((id) => resolveAttemptedRef.current.add(id));
+    let cancelled = false;
+    Promise.all(
+      missing.map((id) =>
+        fetchMedia({ start: 0, length: 1, mediaId: Number(id) })
+          .then((res) => [id, res.rows[0]?.name] as const)
+          .catch(() => [id, undefined] as const),
+      ),
+    ).then((results) => {
+      if (cancelled) {
+        return;
+      }
+      setNameCache((prev) => {
+        const next = { ...prev };
+        results.forEach(([id, name]) => {
+          if (name) next[id] = name;
+        });
+        return next;
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedIds.join(','), nameCache]);
 
   const handleSelect = (id: string) => {
     if (isMulti) {
