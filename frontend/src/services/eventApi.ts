@@ -164,6 +164,7 @@ export interface CreateEventRequest {
   }[];
 
   scheduleReminders?: {
+    reminder_scheduleReminderId?: number | null;
     reminder_value: number;
     reminder_type: number;
     reminder_option: number;
@@ -335,7 +336,10 @@ export async function updateEvent(
 
   if (data.scheduleReminders && data.scheduleReminders.length > 0) {
     data.scheduleReminders.forEach((r, i) => {
-      params.append(`reminder_scheduleReminderId[${i}]`, '0');
+      params.append(
+        `reminder_scheduleReminderId[${i}]`,
+        String(r.reminder_scheduleReminderId ?? 0),
+      );
       params.append(`reminder_value[${i}]`, String(r.reminder_value));
       params.append(`reminder_type[${i}]`, String(r.reminder_type));
       params.append(`reminder_option[${i}]`, String(r.reminder_option));

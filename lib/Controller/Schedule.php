@@ -1278,7 +1278,7 @@ class Schedule extends Base
         $oldSchedule = clone $schedule;
 
         $schedule->load([
-            'loadScheduleReminders' => in_array('scheduleReminders', $embed),
+            'loadScheduleReminders' => true,
         ]);
 
         if (!$this->isEventEditable($schedule)) {
@@ -2073,6 +2073,7 @@ class Schedule extends Base
     public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $schedule = $this->scheduleFactory->getById($id, false);
+        $schedule->load(['loadScheduleReminders' => true]);
         $this->decorateEventProperties($schedule);
 
         if (!$this->getUser()->isSuperAdmin()) {
