@@ -303,7 +303,8 @@ textarea {
   gap: 12px; /* gap-3 */
 }
 
-/* size-15.5 (62px) + border-7 (7px) + rounded-full — matches the SPA icon circle */
+/* size-15.5 (62px) + border-7 (7px) + rounded-full — matches the SPA icon circle.
+   Derives tints from --brand-primary so re-branded installs stay consistent. */
 .not-found-icon {
   display: inline-flex;
   align-items: center;
@@ -311,9 +312,9 @@ textarea {
   width: 62px;
   height: 62px;
   border-radius: 9999px;
-  background-color: #dbeafe; /* bg-xibo-blue-100 */
-  border: 7px solid #eff6ff; /* border-xibo-blue-50 */
-  color: #1e40af; /* text-xibo-blue-800 */
+  background-color: color-mix(in srgb, var(--brand-primary, #0e70f6) 12%, white);
+  border: 7px solid color-mix(in srgb, var(--brand-primary, #0e70f6) 6%, white);
+  color: color-mix(in srgb, var(--brand-primary, #0e70f6) 75%, #1e293b);
 }
 
 .not-found-icon svg {

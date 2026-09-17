@@ -197,6 +197,7 @@ class Handlers
                             'notFoundAction' => __('Go to Homepage'),
                         ],
                         404,
+                        false, // No CSRF — session hasn't started (routing throws before State middleware)
                     );
                     if ($reactResponse !== null) {
                         return $reactResponse;
@@ -322,6 +323,10 @@ class Handlers
      * @param array $configFlags extra boolean flag(s) merged into the login config, e.g. ['upgradeInProgress' => true]
      * @param array $i18n message/title strings merged into the login config's i18n block
      * @param int $statusCode
+     * @param bool $issueCsrf whether to issue a CSRF token cookie — set to false when
+     *     the PHP session has not been started (e.g. 404 errors, which are thrown by
+     *     routing before the State middleware runs), otherwise the new token overwrites
+     *     the browser's existing XSRF-TOKEN cookie and invalidates the real session token
      * @return Response|null null if the Vite build isn't available, or rendering the React shell failed -
      *     the caller should fall back to its own legacy Twig page in that case
      */
@@ -332,7 +337,8 @@ class Handlers
         $configService,
         array $configFlags,
         array $i18n,
-        int $statusCode
+        int $statusCode,
+        bool $issueCsrf = true
     ): ?Response {
         $rootUri = $configService->rootUri();
         $loginJsUrl = \Xibo\Helper\ViteManifest::getJsUrl('login.html', $rootUri);
@@ -351,10 +357,16 @@ class Handlers
         $messageParams = array_merge($viewParams, [
             // This render runs outside the normal middleware stack, so unlike a normal request
             // we have to issue the CSRF token ourselves. State::setState() has already started
-            // the session by the time these exceptions are thrown, so a real token is available
-            // here. Issuing it properly (rather than hardcoding blank) matters because
-            // login/api.ts reads this meta tag for the login/tfa requests fired from this page.
-            'csrfToken'       => CsrfGuard::issueToken('csrfToken', $configService),
+            // the session by the time UpgradePending/InstanceSuspended are thrown, so a real
+            // token is available. Issuing it properly (rather than hardcoding blank) matters
+            // because login/api.ts reads this meta tag for the login/tfa requests fired from
+            // this page.
+            // For 404 errors the session has NOT been started (routing throws before the State
+            // middleware runs), so issuing a token would create an orphaned one that overwrites
+            // the browser's existing XSRF-TOKEN cookie.
+            'csrfToken'       => $issueCsrf
+                ? CsrfGuard::issueToken('csrfToken', $configService)
+                : '',
             'loginConfigJson' => json_encode(
                 $messageConfig,
                 JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
