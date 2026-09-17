@@ -1519,6 +1519,13 @@ class Display implements \JsonSerializable, XmrTargetInterface
         foreach ($default as &$defaultItem) {
             for ($i = 0; $i < count($override); $i++) {
                 if ($defaultItem['name'] == $override[$i]['name']) {
+                    // A null override value means "no override" (the display override was cleared), so
+                    // the profile default should win. This can occur for overrideConfig entries persisted
+                    // before this was corrected at the point they're set - guard against it here too.
+                    if (array_key_exists('value', $override[$i]) && $override[$i]['value'] === null) {
+                        break;
+                    }
+
                     // For special json fields, we need to decode, merge, encode and save instead
                     if (in_array($defaultItem['name'], ['timers', 'pictureOptions', 'lockOptions'])
                         && isset($defaultItem['value']) && isset($override[$i]['value'])
