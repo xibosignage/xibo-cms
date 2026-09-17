@@ -179,6 +179,7 @@ export default function UsersTab({
               value={formValues.DEFAULT_USERGROUP ?? ''}
               initialLabel={relatedEntities.defaultUserGroup?.group}
               options={userGroupOptions.options}
+              translateLabels={false}
               onSelect={(v) => updateField('DEFAULT_USERGROUP', v ?? '')}
               isLoading={userGroupOptions.isLoading}
               onLoadMore={userGroupOptions.loadMore}

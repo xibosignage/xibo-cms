@@ -107,6 +107,7 @@ export default function SspActivityFilters({
             optional
             isLoading={partnersLoading}
             options={partnerOptions}
+            translateLabels={false}
             onSelect={(val) => onFilterChange({ partnerId: val })}
           />
         </div>

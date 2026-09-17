@@ -261,6 +261,7 @@ export function DynamicSettingField({
           helpText={meta.helpText}
           value={value ? String(value) : ''}
           options={playerVersionOptions}
+          translateLabels={false}
           placeholder=" "
           searchable
           onSelect={onChange}
@@ -277,6 +278,7 @@ export function DynamicSettingField({
         helpText={meta.helpText}
         value={value ? String(value) : ''}
         options={playerVersionOptions}
+        translateLabels={false}
         placeholder=" "
         searchable
         onSelect={onChange}

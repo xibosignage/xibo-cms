@@ -1517,6 +1517,7 @@ export default function ScheduleEventModal({
                 <SelectDropdown
                   value={leadLayoutId ? String(leadLayoutId) : ''}
                   options={rowOptions}
+                  translateLabels={false}
                   onSelect={(value) =>
                     meta.setSyncDisplayLayout(row.original.displayId, Number(value), isLead)
                   }
@@ -1727,6 +1728,7 @@ export default function ScheduleEventModal({
                   label={contentField.label}
                   value={getContentValue(draft)}
                   options={mergedContentOptions}
+                  translateLabels={false}
                   onSearch={handleContentSearch}
                   onSelect={(value) => {
                     const typeId = draft.eventTypeId;
@@ -1888,6 +1890,7 @@ export default function ScheduleEventModal({
                       label={t('Layout Code')}
                       value={draft.actionLayoutCode}
                       options={layoutCodeOptions}
+                      translateLabels={false}
                       onSelect={(value) => updateDraft('actionLayoutCode', value)}
                       placeholder={t('Select Layout Code')}
                       helpText={t(
@@ -1907,6 +1910,7 @@ export default function ScheduleEventModal({
                       label={t('Command')}
                       value={draft.commandId ? String(draft.commandId) : ''}
                       options={commandOptions}
+                      translateLabels={false}
                       onSelect={(value) => updateDraft('commandId', Number(value))}
                       placeholder={t('Select Command')}
                       searchable
@@ -2235,6 +2239,7 @@ export default function ScheduleEventModal({
                         label={t('Resolution')}
                         value={draft.resolutionId}
                         options={resolutionOptions}
+                        translateLabels={false}
                         onSelect={(value) => updateDraft('resolutionId', value)}
                         placeholder={t('Select Resolution')}
                         helpText={t(
@@ -2544,6 +2549,7 @@ export default function ScheduleEventModal({
                           <SelectDropdown
                             value={criterion.type}
                             options={getCriteriaTypeOptions(t, scheduleCriteria)}
+                            translateLabels={false}
                             onSelect={(value) => {
                               setDraft((prev) => {
                                 const isCustom = value === 'custom';
@@ -2588,6 +2594,7 @@ export default function ScheduleEventModal({
                             <SelectDropdown
                               value={criterion.metric}
                               options={metricOptions}
+                              translateLabels={false}
                               onSelect={(value) => {
                                 setDraft((prev) => {
                                   const newMetricConfig = getCriteriaMetricConfig(
@@ -2616,6 +2623,7 @@ export default function ScheduleEventModal({
                           <SelectDropdown
                             value={criterion.condition}
                             options={conditionOptions}
+                            translateLabels={false}
                             onSelect={(value) => updateCriterion(index, 'condition', value)}
                             placeholder={t('Is set')}
                             className="w-full"
@@ -2624,6 +2632,7 @@ export default function ScheduleEventModal({
                             <SelectDropdown
                               value={criterion.value}
                               options={valueOptions}
+                              translateLabels={false}
                               onSelect={(value) => updateCriterion(index, 'value', value)}
                               placeholder={t('Select Value')}
                               className="w-full"
