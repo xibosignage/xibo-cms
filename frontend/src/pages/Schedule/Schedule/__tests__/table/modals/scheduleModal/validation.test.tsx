@@ -34,7 +34,7 @@ import {
 
 import { renderScheduleModal } from './helpers/renderScheduleModal';
 
-import { createEvent } from '@/services/eventApi';
+import { createEvent, updateEvent } from '@/services/eventApi';
 import { testQueryClient } from '@/setupTests';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
@@ -129,17 +129,25 @@ describe('ScheduleEventModal - validation', () => {
     const user = userEvent.setup();
 
     mockDaypartRows(ALWAYS_ONLY);
+    mockFetchEventById(mockEvent);
 
-    mockFetchEventById(
-      buildEvent({
-        ...mockEvent,
-        recurrenceType: 'Week',
-        recurrenceDetail: 0,
-      }),
-    );
+    // Don't just fold the recurrence override into the mockFetchEventById() call
+    // above — recurrenceType/recurrenceDetail come from the `event` prop directly,
+    // not the fetch response. That mockFetchEventById() call still has to stay,
+    // though: without it, the mocked fetchEventById returns undefined instead of a
+    // promise, and the modal's background fetch would throw.
+    const eventWithRepeat = buildEvent({
+      ...mockEvent,
+      recurrenceType: 'Week',
+      recurrenceDetail: 0,
+    });
 
-    renderScheduleModal({ mode: 'edit', event: mockEvent });
+    renderScheduleModal({ mode: 'edit', event: eventWithRepeat });
     await user.click(await screen.findByRole('button', { name: 'Save' }));
     expect(await screen.findByRole('alert')).toHaveTextContent(/Repeat every must be at least 1/i);
+
+    // Boundary check: the alert isn't proof enough on its own — confirm the
+    // invalid draft never actually reached the API.
+    expect(updateEvent).not.toHaveBeenCalled();
   });
 });
