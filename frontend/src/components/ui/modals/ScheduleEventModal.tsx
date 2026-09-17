@@ -1978,6 +1978,13 @@ export default function ScheduleEventModal({
                         recurrenceMonthlyRepeatsOn: 0,
                         recurrenceRange: '',
                       }));
+                    } else if (!!alwaysDayPartId && draft.dayPartId === alwaysDayPartId) {
+                      setDraft((prev) => ({
+                        ...prev,
+                        dayPartId: value,
+                        fromDt: '',
+                        toDt: '',
+                      }));
                     } else {
                       updateDraft('dayPartId', value);
                     }
