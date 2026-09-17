@@ -32,6 +32,7 @@ import Checkbox from '@/components/ui/forms/Checkbox';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import Modal from '@/components/ui/modals/Modal';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { useDebounce } from '@/hooks/useDebounce';
 import type { UserType } from '@/services/permissionsApi';
 import {
   fetchPermissions,
@@ -73,6 +74,8 @@ type OwnerOption = {
   value: string;
 };
 
+const OWNER_PAGE_SIZE = 10;
+
 export default function ShareModal({
   title,
   isOpen = true,
@@ -98,6 +101,11 @@ export default function ShareModal({
 
   const [ownerOptions, setOwnerOptions] = useState<OwnerOption[]>([]);
   const [ownerLoading, setOwnerLoading] = useState(false);
+  const [ownerPage, setOwnerPage] = useState(0);
+  const [hasMoreOwners, setHasMoreOwners] = useState(false);
+  const [isLoadingMoreOwners, setIsLoadingMoreOwners] = useState(false);
+  const [ownerSearch, setOwnerSearch] = useState('');
+  const debouncedOwnerSearch = useDebounce(ownerSearch, 300);
 
   const [serverData, setServerData] = useState<UserRow[]>([]);
   const [modifiedPermissions, setModifiedPermissions] = useState<Record<number, PermissionChange>>(
@@ -116,6 +124,7 @@ export default function ShareModal({
       setPagination({ pageIndex: 0, pageSize: 10 });
       setNameFilter('');
       setFilter('all');
+      setOwnerSearch('');
     }
   }, [isOpen]);
 
@@ -348,22 +357,51 @@ export default function ShareModal({
   useEffect(() => {
     if (!isOpen) return;
 
-    const loadOwners = async () => {
-      setOwnerLoading(true);
-      try {
-        const res = await fetchUsers({ start: 0, length: 100 });
+    setOwnerLoading(true);
+    setOwnerOptions([]);
+    setOwnerPage(0);
+    fetchUsers({ start: 0, length: OWNER_PAGE_SIZE, userName: debouncedOwnerSearch || undefined })
+      .then((res) => {
         const rows = (Array.isArray(res) ? res : res.rows || []) as User[];
-        const options: OwnerOption[] = rows.map((u) => ({
-          label: u.userName,
-          value: String(u.userId),
-        }));
-        setOwnerOptions(options);
-      } finally {
-        setOwnerLoading(false);
-      }
-    };
-    loadOwners();
-  }, [isOpen]);
+        setOwnerOptions(rows.map((u) => ({ label: u.userName, value: String(u.userId) })));
+        setHasMoreOwners(rows.length === OWNER_PAGE_SIZE);
+      })
+      .catch(() => {
+        setOwnerOptions([]);
+        setHasMoreOwners(false);
+      })
+      .finally(() => setOwnerLoading(false));
+  }, [isOpen, debouncedOwnerSearch]);
+
+  const handleLoadMoreOwners = () => {
+    if (isLoadingMoreOwners || !hasMoreOwners) {
+      return;
+    }
+    const nextPage = ownerPage + 1;
+    setIsLoadingMoreOwners(true);
+    fetchUsers({
+      start: nextPage * OWNER_PAGE_SIZE,
+      length: OWNER_PAGE_SIZE,
+      userName: debouncedOwnerSearch || undefined,
+    })
+      .then((res) => {
+        const rows = (Array.isArray(res) ? res : res.rows || []) as User[];
+        setOwnerOptions((prev) => [
+          ...prev,
+          ...rows.map((u) => ({ label: u.userName, value: String(u.userId) })),
+        ]);
+        setOwnerPage(nextPage);
+        setHasMoreOwners(rows.length === OWNER_PAGE_SIZE);
+      })
+      .catch(() => {})
+      .finally(() => setIsLoadingMoreOwners(false));
+  };
+
+  const resolveOwnerLabel = async (value: string): Promise<string> => {
+    const res = await fetchUsers({ start: 0, length: 1, userId: Number(value) });
+    const rows = (Array.isArray(res) ? res : res.rows || []) as User[];
+    return rows[0]?.userName ?? '';
+  };
 
   return (
     <div>
@@ -390,6 +428,12 @@ export default function ShareModal({
               value={user as string}
               placeholder={ownerLoading ? t('Loading...') : t('Select Owner')}
               options={ownerOptions}
+              resolveLabel={resolveOwnerLabel}
+              onLoadMore={handleLoadMoreOwners}
+              hasMore={hasMoreOwners}
+              isLoadingMore={isLoadingMoreOwners}
+              searchable
+              onSearch={setOwnerSearch}
               onSelect={(value) => {
                 setUser(value);
               }}

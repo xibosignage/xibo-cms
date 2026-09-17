@@ -352,36 +352,37 @@ class OpenWeatherMapConnector implements ConnectorInterface
             ->format('Y-m-d');
         $this->getLogger()->debug('getWeatherData: currentDay date=' . $currentDayDate);
         // Process each day into a forecast
+        $todayForecast = null;
         foreach ($data['daily'] as $dayItem) {
-            // Skip any item that falls on the same date as currentDay
+            // Skip any item that falls on the same date as currentDay, but keep hold of its
+            // own max/min so we can use it to enhance the currently, below - it must not be
+            // sourced from the first *remaining* forecast day (tomorrow) once today is skipped.
             $dayDate = DateFormatHelper::createFromTimestamp($dayItem['dt'])->setTimezone($locationTz)->format('Y-m-d');
             if ($dayDate === $currentDayDate) {
+                $todayForecast = $this->buildForecastFromDailyItem($dayItem, $units);
                 continue;
             }
 
-            $day = new Forecast();
-            $day->temperatureUnit = $this->currentDay->temperatureUnit;
-            $day->windSpeedUnit = $this->currentDay->windSpeedUnit;
-            $day->visibilityDistanceUnit = $this->currentDay->visibilityDistanceUnit;
-            $day->location = $this->currentDay->location;
-            $this->processItemIntoDay($day, $dayItem, $units);
-
-            $forecasts[] = $day;
+            $forecasts[] = $this->buildForecastFromDailyItem($dayItem, $units);
         }
 
-        // Enhance the currently with the high/low from the first daily forecast
-        $this->currentDay->temperatureHigh = $forecasts[0]->temperatureHigh;
-        $this->currentDay->temperatureMaxRound = $forecasts[0]->temperatureMaxRound;
-        $this->currentDay->temperatureLow = $forecasts[0]->temperatureLow;
-        $this->currentDay->temperatureMinRound = $forecasts[0]->temperatureMinRound;
-        $this->currentDay->temperatureMorning = $forecasts[0]->temperatureMorning;
-        $this->currentDay->temperatureMorningRound = $forecasts[0]->temperatureMorningRound;
-        $this->currentDay->temperatureNight = $forecasts[0]->temperatureNight;
-        $this->currentDay->temperatureNightRound = $forecasts[0]->temperatureNightRound;
-        $this->currentDay->temperatureEvening = $forecasts[0]->temperatureEvening;
-        $this->currentDay->temperatureEveningRound = $forecasts[0]->temperatureEveningRound;
-        $this->currentDay->temperatureMean = $forecasts[0]->temperatureMean;
-        $this->currentDay->temperatureMeanRound = $forecasts[0]->temperatureMeanRound;
+        // Enhance the currently with the high/low from today's own daily forecast (falling back
+        // to the first remaining forecast day only if today's entry wasn't present at all).
+        $enhanceFrom = $todayForecast ?? ($forecasts[0] ?? null);
+        if ($enhanceFrom !== null) {
+            $this->currentDay->temperatureHigh = $enhanceFrom->temperatureHigh;
+            $this->currentDay->temperatureMaxRound = $enhanceFrom->temperatureMaxRound;
+            $this->currentDay->temperatureLow = $enhanceFrom->temperatureLow;
+            $this->currentDay->temperatureMinRound = $enhanceFrom->temperatureMinRound;
+            $this->currentDay->temperatureMorning = $enhanceFrom->temperatureMorning;
+            $this->currentDay->temperatureMorningRound = $enhanceFrom->temperatureMorningRound;
+            $this->currentDay->temperatureNight = $enhanceFrom->temperatureNight;
+            $this->currentDay->temperatureNightRound = $enhanceFrom->temperatureNightRound;
+            $this->currentDay->temperatureEvening = $enhanceFrom->temperatureEvening;
+            $this->currentDay->temperatureEveningRound = $enhanceFrom->temperatureEveningRound;
+            $this->currentDay->temperatureMean = $enhanceFrom->temperatureMean;
+            $this->currentDay->temperatureMeanRound = $enhanceFrom->temperatureMeanRound;
+        }
 
         if ($dataProvider->getProperty('dayConditionsOnly', 0) == 1) {
             // Swap the night icons for their day equivalents
@@ -477,7 +478,25 @@ class OpenWeatherMapConnector implements ConnectorInterface
     }
 
     /**
-     * @param \Xibo\Weather\Forecast $day
+     * Build a Forecast for one entry from the daily[] response, sharing currentDay's units/location.
+     * @param array $dayItem
+     * @param $units
+     * @return \Xibo\Widget\DataType\Forecast
+     */
+    private function buildForecastFromDailyItem(array $dayItem, $units): Forecast
+    {
+        $day = new Forecast();
+        $day->temperatureUnit = $this->currentDay->temperatureUnit;
+        $day->windSpeedUnit = $this->currentDay->windSpeedUnit;
+        $day->visibilityDistanceUnit = $this->currentDay->visibilityDistanceUnit;
+        $day->location = $this->currentDay->location;
+        $this->processItemIntoDay($day, $dayItem, $units);
+
+        return $day;
+    }
+
+    /**
+     * @param \Xibo\Widget\DataType\Forecast $day
      * @param array $item
      * @param $requestUnit
      * @param bool $isCurrent

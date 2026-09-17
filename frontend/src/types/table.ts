@@ -30,6 +30,8 @@ export type ActionItem =
       variant?: never;
       isQuickAction?: never;
       rightIcon?: never;
+      disabled?: never;
+      loading?: never;
     }
   | {
       isSeparator?: false | undefined;
@@ -40,6 +42,8 @@ export type ActionItem =
       isQuickAction?: boolean;
       isNavigation?: boolean;
       rightIcon?: ElementType;
+      disabled?: boolean;
+      loading?: boolean;
     };
 
 export type BaseModalType =

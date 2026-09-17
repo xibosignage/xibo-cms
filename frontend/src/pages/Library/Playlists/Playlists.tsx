@@ -100,7 +100,7 @@ export default function Playlist() {
       createdDt: false,
       modifiedDt: true,
       enableStat: true,
-      groupsWithPermissions: false,
+      groupsWithPermissionsList: false,
       revised: false,
       released: false,
       ownerId: true,
@@ -271,10 +271,12 @@ export default function Playlist() {
     formatDateTime,
     onDelete: handleDelete,
     openAddEditModal,
-    openMoveModal: (playlist) => {
-      setItemsToMove([playlist] as Playlist[]);
-      openModal('move');
-    },
+    openMoveModal: canViewFolders
+      ? (playlist) => {
+          setItemsToMove([playlist] as Playlist[]);
+          openModal('move');
+        }
+      : undefined,
     openShareModal: (playlistId) => {
       setShareEntityIds(playlistId);
       openModal('share');
@@ -413,9 +415,9 @@ export default function Playlist() {
 
         <div className="min-h-0 flex flex-col">
           {!isHydrated ? (
-            <div className="flex-1 flex items-center justify-center bg-gray-50 animate-pulse rounded-lg border border-gray-200">
+            <div className="flex-1 min-h-64 flex items-center justify-center bg-gray-50 animate-pulse rounded-lg border border-gray-200">
               <span className="text-gray-400 font-medium">
-                {t('Loading your layout preferences...')}
+                {t('Loading your playlist preferences...')}
               </span>
             </div>
           ) : (

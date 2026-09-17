@@ -29,6 +29,7 @@ import Checkbox from '@/components/ui/forms/Checkbox';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import TextInput from '@/components/ui/forms/TextInput';
 import Modal from '@/components/ui/modals/Modal';
+import { useDebounce } from '@/hooks/useDebounce';
 import { fetchApplicationDetails, fetchScopes, updateApplication } from '@/services/applicationApi';
 import { fetchUsers } from '@/services/userApi';
 import type { Application, ApplicationScope } from '@/types/application';
@@ -62,6 +63,8 @@ type OwnerOption = {
 };
 
 type Tab = 'general' | 'advanced' | 'sharing';
+
+const OWNER_PAGE_SIZE = 10;
 
 function tabClass(activeTab: Tab, tab: Tab): string {
   const isActive = activeTab === tab;
@@ -106,6 +109,11 @@ export default function EditApplicationModal({
   const [ownerOptions, setOwnerOptions] = useState<OwnerOption[]>([]);
   const [ownerLoading, setOwnerLoading] = useState(false);
   const [selectedOwner, setSelectedOwner] = useState<string | null>(null);
+  const [ownerPage, setOwnerPage] = useState(0);
+  const [hasMoreOwners, setHasMoreOwners] = useState(false);
+  const [isLoadingMoreOwners, setIsLoadingMoreOwners] = useState(false);
+  const [ownerSearch, setOwnerSearch] = useState('');
+  const debouncedOwnerSearch = useDebounce(ownerSearch, 300);
 
   const [copiedKey, setCopiedKey] = useState(false);
   const [copiedSecret, setCopiedSecret] = useState(false);
@@ -159,18 +167,43 @@ export default function EditApplicationModal({
       return;
     }
 
-    const loadOwners = async () => {
-      setOwnerLoading(true);
-      try {
-        const { rows } = await fetchUsers({ start: 0, length: 100 });
+    setOwnerLoading(true);
+    setOwnerOptions([]);
+    setOwnerPage(0);
+    fetchUsers({ start: 0, length: OWNER_PAGE_SIZE, userName: debouncedOwnerSearch || undefined })
+      .then(({ rows }) => {
         setOwnerOptions(rows.map((u) => ({ label: u.userName, value: String(u.userId) })));
-      } finally {
-        setOwnerLoading(false);
-      }
-    };
+        setHasMoreOwners(rows.length === OWNER_PAGE_SIZE);
+      })
+      .catch(() => {
+        setOwnerOptions([]);
+        setHasMoreOwners(false);
+      })
+      .finally(() => setOwnerLoading(false));
+  }, [isOpen, debouncedOwnerSearch]);
 
-    loadOwners();
-  }, [isOpen]);
+  const handleLoadMoreOwners = () => {
+    if (isLoadingMoreOwners || !hasMoreOwners) {
+      return;
+    }
+    const nextPage = ownerPage + 1;
+    setIsLoadingMoreOwners(true);
+    fetchUsers({
+      start: nextPage * OWNER_PAGE_SIZE,
+      length: OWNER_PAGE_SIZE,
+      userName: debouncedOwnerSearch || undefined,
+    })
+      .then(({ rows }) => {
+        setOwnerOptions((prev) => [
+          ...prev,
+          ...rows.map((u) => ({ label: u.userName, value: String(u.userId) })),
+        ]);
+        setOwnerPage(nextPage);
+        setHasMoreOwners(rows.length === OWNER_PAGE_SIZE);
+      })
+      .catch(() => {})
+      .finally(() => setIsLoadingMoreOwners(false));
+  };
 
   useEffect(() => {
     if (!draft.authCode && activeTab === 'advanced') {
@@ -543,6 +576,11 @@ export default function EditApplicationModal({
                 value={selectedOwner as string}
                 placeholder={ownerLoading ? t('Loading...') : t('Select Owner')}
                 options={ownerOptions}
+                searchable
+                onSearch={setOwnerSearch}
+                onLoadMore={handleLoadMoreOwners}
+                hasMore={hasMoreOwners}
+                isLoadingMore={isLoadingMoreOwners}
                 onSelect={(value) => setSelectedOwner(value)}
                 addLeftLabel
                 leftLabelContent={

@@ -245,33 +245,26 @@ describe('Playlists page - row actions', () => {
     expect(screen.queryByRole('button', { name: 'Timeline' })).not.toBeInTheDocument();
   });
 
-  // Known bug — the bulk Move button is correctly gated on the Folders
-  // feature, but this per-row one isn't. See
-  // bugs-found/playlist-bugs/permission-gating/playlist-move-row-action-not-folder-view-gated.md.
-  // Kept as test.fails (not test.skip) so a real fix surfaces here immediately.
-  test.fails(
-    'Move is absent from the row dropdown for a user lacking the Folders feature',
-    async () => {
-      testQueryClient.setQueryData(['userPref', 'playlist_page'], null);
-      render(
-        <QueryClientProvider client={testQueryClient}>
-          <UserProvider
-            initialUser={{ ...mockUser, features: { ...mockUser.features, 'folder.view': false } }}
-          >
-            <MemoryRouter>
-              <Playlists />
-            </MemoryRouter>
-          </UserProvider>
-        </QueryClientProvider>,
-      );
+  test('Move is absent from the row dropdown for a user lacking the Folders feature', async () => {
+    testQueryClient.setQueryData(['userPref', 'playlist_page'], null);
+    render(
+      <QueryClientProvider client={testQueryClient}>
+        <UserProvider
+          initialUser={{ ...mockUser, features: { ...mockUser.features, 'folder.view': false } }}
+        >
+          <MemoryRouter>
+            <Playlists />
+          </MemoryRouter>
+        </UserProvider>
+      </QueryClientProvider>,
+    );
 
-      await screen.findByText(mockPlaylist.name);
-      fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+    await screen.findByText(mockPlaylist.name);
+    fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
 
-      await screen.findAllByRole('button', { name: 'Edit' });
-      expect(screen.queryByRole('button', { name: 'Move' })).not.toBeInTheDocument();
-    },
-  );
+    await screen.findAllByRole('button', { name: 'Edit' });
+    expect(screen.queryByRole('button', { name: 'Move' })).not.toBeInTheDocument();
+  });
 
   test('Delete is absent when the user lacks delete permission on the row', async () => {
     mockFetchPlaylists({

@@ -8,7 +8,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import Events from '../../Events';
-import { useEventData } from '../../hooks/useEventData';
+import { useAllEventData, useEventData } from '../../hooks/useEventData';
 
 import { UserProvider } from '@/context/UserContext';
 import { testQueryClient } from '@/setupTests';
@@ -28,6 +28,7 @@ vi.mock('@/services/campaignApi', () => ({
 
 vi.mock('../../hooks/useEventData', () => ({
   useEventData: vi.fn(),
+  useAllEventData: vi.fn(() => ({ data: { rows: [], totalCount: 0 }, isFetching: false })),
 }));
 
 vi.mock('@/hooks/useDebounce');
@@ -135,10 +136,11 @@ describe('Events page – calendar view toggle', () => {
 
   test('loading overlay appears while calendar data is fetching', async () => {
     const user = userEvent.setup();
-    vi.mocked(useEventData).mockReturnValue({
+    // Calendar's loading state comes from useAllEventData (isCalendarFetching), not useEventData.
+    vi.mocked(useAllEventData).mockReturnValue({
       ...EMPTY_EVENT_TABLE,
       isFetching: true,
-    } as unknown as ReturnType<typeof useEventData>);
+    } as unknown as ReturnType<typeof useAllEventData>);
 
     renderPage();
     await waitForHydration();

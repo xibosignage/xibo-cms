@@ -28,7 +28,7 @@ import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import type { SelectOption } from '@/components/ui/forms/SelectDropdown';
 import Modal from '@/components/ui/modals/Modal';
 import { useDebounce } from '@/hooks/useDebounce';
-import { fetchDaypart } from '@/services/daypartApi';
+import { fetchDaypart, fetchDaypartById } from '@/services/daypartApi';
 
 const DAYPART_PAGE_SIZE = 10;
 
@@ -144,6 +144,11 @@ export default function AddLayoutModal({
       .finally(() => setIsLoadingMoreDayparts(false));
   };
 
+  const resolveDaypartLabel = async (value: string): Promise<string> => {
+    const daypart = await fetchDaypartById(value);
+    return daypart?.name ?? '';
+  };
+
   const handleSave = () => {
     onSave({
       daysOfWeek: daysOfWeek.map(Number),
@@ -197,6 +202,7 @@ export default function AddLayoutModal({
           label={t('Dayparting')}
           value={dayPartId != null ? String(dayPartId) : ''}
           options={dayparts}
+          resolveLabel={resolveDaypartLabel}
           onSelect={(v) => setDayPartId(v ? Number(v) : null)}
           placeholder={t('Select Dayparting')}
           isLoading={isLoadingDayparts}

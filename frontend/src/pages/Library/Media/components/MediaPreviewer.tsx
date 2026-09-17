@@ -37,6 +37,7 @@ interface MediaPreviewerProps {
   onMove?: () => void;
   onShare?: (id: number) => void;
   onDownload?: () => void;
+  isDownloading?: boolean;
   onClose: () => void;
   mediaData?: Media | null;
   folderName?: string;
@@ -49,6 +50,7 @@ export default function MediaPreviewer({
   onMove,
   onShare,
   onDownload,
+  isDownloading = false,
   onClose,
   mediaData,
   folderName,
@@ -196,10 +198,16 @@ export default function MediaPreviewer({
           {onDownload && (
             <button
               onClick={onDownload}
-              className="flex justify-center items-center cursor-pointer rounded-lg hover:bg-white/10"
+              disabled={isDownloading}
+              className="flex justify-center items-center cursor-pointer rounded-lg hover:bg-white/10 disabled:opacity-50 disabled:pointer-events-none"
               title={t('Download')}
+              aria-label={t('Download')}
             >
-              <Download className="p-1" />
+              {isDownloading ? (
+                <Loader2 className="p-1 animate-spin" />
+              ) : (
+                <Download className="p-1" />
+              )}
             </button>
           )}
           {mediaData && (

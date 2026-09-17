@@ -38,6 +38,7 @@ export interface Media {
   createdDt: string;
   modifiedDt: string;
   ownerId: string;
+  groupsWithPermissionsList?: string[] | null;
   width?: number;
   height?: number;
   valid: boolean;

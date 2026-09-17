@@ -32,7 +32,7 @@ import {
   size,
 } from '@floating-ui/react';
 import type { LucideIcon } from 'lucide-react';
-import { ChevronRight, MoreVertical } from 'lucide-react';
+import { ChevronRight, Loader2, MoreVertical } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
@@ -46,6 +46,8 @@ export interface DataTableRowAction<TData> {
   variant?: 'default' | 'primary' | 'danger';
   isSeparator?: boolean;
   isQuickAction?: boolean;
+  disabled?: boolean;
+  loading?: boolean;
 }
 
 interface DataTableRowActionsProps<TData> {
@@ -112,13 +114,15 @@ export default function DataTableRowActions<TData>({
                 return (
                   <button
                     key={idx}
+                    disabled={action.disabled}
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (action.disabled) return;
                       if (action.onClick) action.onClick(row);
                       setOpen(false);
                     }}
                     className={twMerge(
-                      'flex items-center w-full gap-3 rounded-lg text-left px-3 py-2 text-sm transition-colors cursor-pointer',
+                      'flex items-center w-full gap-3 rounded-lg text-left px-3 py-2 text-sm transition-colors cursor-pointer disabled:opacity-50 disabled:pointer-events-none',
                       action.variant === 'danger'
                         ? 'text-red-800 hover:bg-red-50 focus:bg-red-100'
                         : action.variant === 'primary'
@@ -126,10 +130,16 @@ export default function DataTableRowActions<TData>({
                           : 'text-gray-800 hover:bg-gray-50 focus:bg-gray-100',
                     )}
                   >
-                    {action.icon && (
+                    {action.loading ? (
                       <span className="w-4 h-4 flex items-center justify-center">
-                        <action.icon />
+                        <Loader2 className="w-4 h-4 animate-spin" />
                       </span>
+                    ) : (
+                      action.icon && (
+                        <span className="w-4 h-4 flex items-center justify-center">
+                          <action.icon />
+                        </span>
+                      )
                     )}
                     <span className="flex-1 text-left truncate">{action.label}</span>
                     {action.isNavigation && (

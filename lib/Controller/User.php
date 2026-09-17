@@ -368,6 +368,8 @@ class User extends Base
     public function searchById(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $user = $this->userFactory->getById($id, false);
+        $user->setChildAclDependencies($this->userGroupFactory);
+        $user->load();
         $this->decorateUserProperties($user);
 
         return $response
@@ -1510,7 +1512,7 @@ class User extends Base
                     ]
                 ];
             } else {
-                $newPermissions[$permission->groupId]['permissions'][] = [
+                $newPermissions[$permission->groupId]['permissions'][$permission->objectId] = [
                     'permissionId' => $permission->permissionId,
                     'view' => $permission->view,
                     'edit' => $permission->edit,

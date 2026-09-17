@@ -92,7 +92,7 @@ export default function Dataset() {
       isRemote: true,
       isRealTime: true,
       owner: true,
-      groupsWithPermissions: false,
+      groupsWithPermissionsList: false,
       dataLastModified: false,
       lastSync: false,
     },
@@ -267,10 +267,12 @@ export default function Dataset() {
     canUserShare: hasFeature(user, 'user.sharing'),
     onDelete: handleDelete,
     openAddEditModal,
-    openMoveModal: (dataset) => {
-      setItemsToMove([dataset] as Dataset[]);
-      openModal('move');
-    },
+    openMoveModal: canViewFolders
+      ? (dataset) => {
+          setItemsToMove([dataset] as Dataset[]);
+          openModal('move');
+        }
+      : undefined,
     openShareModal: (datasetId) => {
       setShareEntityIds(datasetId);
       openModal('share');
@@ -440,9 +442,9 @@ export default function Dataset() {
 
         <div className="min-h-0 flex flex-col">
           {!isHydrated ? (
-            <div className="flex-1 flex items-center justify-center bg-gray-50 animate-pulse rounded-lg border border-gray-200">
+            <div className="flex-1 min-h-64 flex items-center justify-center bg-gray-50 animate-pulse rounded-lg border border-gray-200">
               <span className="text-gray-400 font-medium">
-                {t('Loading your layout preferences...')}
+                {t('Loading your dataset preferences...')}
               </span>
             </div>
           ) : (

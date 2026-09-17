@@ -53,6 +53,7 @@ export interface DynamicSettingFieldProps {
     onLoadMoreDayparts?: () => void;
     isLoadingMoreDayparts?: boolean;
     onSearchDayparts?: (term: string) => void;
+    resolveDaypartLabel?: (value: string) => Promise<string>;
     playerVersions?: PlayerSoftware[];
     playerVersionsHasMore?: boolean;
     onLoadMorePlayerVersions?: () => void;
@@ -218,6 +219,7 @@ export function DynamicSettingField({
           helpText={meta.helpText}
           value={value ? String(value) : ''}
           options={daypartOptions}
+          resolveLabel={contextData.resolveDaypartLabel}
           placeholder=" "
           searchable
           onSelect={onChange}
@@ -234,6 +236,7 @@ export function DynamicSettingField({
         helpText={meta.helpText}
         value={value ? String(value) : ''}
         options={daypartOptions}
+        resolveLabel={contextData.resolveDaypartLabel}
         placeholder=" "
         searchable
         onSelect={onChange}

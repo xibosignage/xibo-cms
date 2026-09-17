@@ -529,7 +529,7 @@ export default function CampaignEditor() {
               {(
                 [
                   { key: 'general', label: t('General') },
-                  { key: 'reference', label: t('References') },
+                  { key: 'reference', label: t('Reference') },
                 ] as const
               ).map(({ key, label }) => (
                 <button
@@ -554,7 +554,7 @@ export default function CampaignEditor() {
                 <TextInput
                   name="name"
                   label={t('Name')}
-                  placeholder=" "
+                  placeholder={t('Enter name')}
                   helpText={t('The Name for this Campaign')}
                   value={draft.name}
                   onChange={(val) => setDraft((prev) => prev && { ...prev, name: val })}
@@ -613,6 +613,7 @@ export default function CampaignEditor() {
                     name="target"
                     type="number"
                     label={t('Target')}
+                    placeholder={t('Add number')}
                     helpText={t(
                       'What is the target number for this Campaign over its entire playtime',
                     )}
@@ -647,7 +648,7 @@ export default function CampaignEditor() {
                     key={ref}
                     name={ref}
                     label={t('Reference {{n}}', { n: i + 1 })}
-                    placeholder={t('Enter here')}
+                    placeholder={t('Enter reference {{n}}', { n: i + 1 })}
                     value={draft[ref]}
                     onChange={(val) => setDraft((prev) => prev && { ...prev, [ref]: val })}
                   />

@@ -120,6 +120,16 @@ class Command implements \JsonSerializable
     public $groupsWithPermissions;
 
     /**
+     * @var string[]
+     */
+    #[OA\Property(
+        description: 'An array of groups/users with permissions to this Command',
+        type: 'array',
+        items: new OA\Items(type: 'string')
+    )]
+    public $groupsWithPermissionsList = [];
+
+    /**
      * Command constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log

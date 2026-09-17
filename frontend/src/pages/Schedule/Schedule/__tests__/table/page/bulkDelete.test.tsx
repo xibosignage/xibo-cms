@@ -39,7 +39,10 @@ vi.mock('@/services/userApi', () => ({
 }));
 vi.mock('@/services/eventApi');
 
-vi.mock('../../../hooks/useEventData', () => ({ useEventData: vi.fn() }));
+vi.mock('../../../hooks/useEventData', () => ({
+  useEventData: vi.fn(),
+  useAllEventData: vi.fn(() => ({ data: { rows: [], totalCount: 0 }, isFetching: false })),
+}));
 vi.mock('../../../hooks/useEventActions', () => ({ useEventActions: vi.fn() }));
 vi.mock('../../../hooks/useEventFilterOptions', () => ({
   useEventFilterOptions: vi.fn(() => ({ filterOptions: [] })),
