@@ -824,6 +824,14 @@ class Schedule implements \JsonSerializable
                 );
             }
 
+            // Check that the recurrence end date is after the event start date
+            if (!empty($this->recurrenceRange) && $this->recurrenceRange <= $this->fromDt) {
+                throw new InvalidArgumentException(
+                    __('Recurrence end must be after the event start date'),
+                    'recurrenceRange'
+                );
+            }
+
             // Make sure that we don't repeat more frequently than the duration of the event as this is a common
             // misconfiguration which results in overlapping repeats
             if ($this->eventTypeId !== Schedule::$COMMAND_EVENT) {

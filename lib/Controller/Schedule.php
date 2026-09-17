@@ -1769,6 +1769,11 @@ class Schedule extends Base
         $schedule->name = $sanitizedParams->getString('name');
         $schedule->userId = $this->getUser()->userId;
 
+        // Clear an invalid recurrence range inherited from the original event
+        if (!empty($schedule->recurrenceRange) && $schedule->recurrenceRange <= $schedule->fromDt) {
+            $schedule->recurrenceRange = 0;
+        }
+
         $schedule->setDisplayNotifyService($this->displayFactory->getDisplayNotifyService());
 
         if ($schedule->campaignId != null) {
