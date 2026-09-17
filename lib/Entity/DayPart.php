@@ -334,6 +334,17 @@ class DayPart implements \JsonSerializable
                 ->setDisplayNotifyService($this->displayNotifyService)
                 ->load();
 
+            // Clean up pre-existing invalid schedules where the recurrence window has already
+            // passed relative to the start date (leftovers from earlier daypart splits).
+            if (!empty($schedule->recurrenceRange)
+                && $schedule->recurrenceRange <= $schedule->fromDt
+            ) {
+                $this->getLog()->debug('Schedule ' . $schedule->eventId
+                    . ' has an expired recurrence range, deleting.');
+                $schedule->delete();
+                continue;
+            }
+
             // Is this schedule a recurring event?
             if ($schedule->recurrenceType != '' && $schedule->fromDt < $now) {
                 $this->getLog()->debug('Schedule is for a recurring event which has already recurred');
