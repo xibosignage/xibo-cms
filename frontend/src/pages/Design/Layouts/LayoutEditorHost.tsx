@@ -20,6 +20,7 @@
  */
 
 import { useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Navigate,
@@ -32,11 +33,13 @@ import {
 
 import EditorHost from '@/components/editor/EditorHost';
 import HelpPane from '@/components/help/HelpPane';
+import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
 import { withPublicPath } from '@/config/publicPath';
 import { BrandingProvider } from '@/context/BrandingContext';
 import { UserProvider } from '@/context/UserContext';
 import { layoutQueryKeys } from '@/pages/Design/Layouts/hooks/useLayoutData';
 import { templateQueryKeys } from '@/pages/Design/Templates/hooks/useTemplatesData';
+import { EventTypeId } from '@/types/event';
 import type { User } from '@/types/user';
 
 export default function LayoutEditorHost() {
@@ -48,6 +51,10 @@ export default function LayoutEditorHost() {
   const queryClient = useQueryClient();
   const { user } = useLoaderData() as { user: User | null };
   const isTemplateEditor = searchParams.get('isTemplateEditor') === '1';
+  const [scheduleRequest, setScheduleRequest] = useState<{
+    campaignId: number;
+    layoutName?: string;
+  } | null>(null);
 
   const from = (location.state as { from?: string } | null)?.from;
   const returnPath = from ?? (isTemplateEditor ? '/design/templates' : '/design/layout');
@@ -84,12 +91,25 @@ export default function LayoutEditorHost() {
           stayPathPrefix="/layout/designer"
           onExit={handleExit}
           onEditorNavigate={handleEditorNavigate}
+          onScheduleRequest={(campaignId, layoutName) =>
+            setScheduleRequest({ campaignId, layoutName })
+          }
           forwardQuery={isTemplateEditor ? 'isTemplateEditor=1' : undefined}
           title={isTemplateEditor ? t('Template Editor') : t('Layout Editor')}
           readySelector="#layout-editor"
           showChrome
         />
         <HelpPane />
+        {scheduleRequest && (
+          <ScheduleEventModal
+            isOpen
+            onClose={() => setScheduleRequest(null)}
+            mode="schedule"
+            eventTypeId={EventTypeId.Layout}
+            contentId={scheduleRequest.campaignId}
+            contentName={scheduleRequest.layoutName}
+          />
+        )}
       </UserProvider>
     </BrandingProvider>
   );

@@ -35,6 +35,7 @@ interface EditorHostProps {
   returnPath?: string;
   onExit?: () => void;
   onEditorNavigate?: (newId: string) => void;
+  onScheduleRequest?: (campaignId: number, layoutName?: string) => void;
   title: string;
   forwardQuery?: string;
   readySelector?: string;
@@ -66,6 +67,7 @@ export default function EditorHost({
   returnPath,
   onExit,
   onEditorNavigate,
+  onScheduleRequest,
   title,
   forwardQuery,
   readySelector,
@@ -94,11 +96,15 @@ export default function EditorHost({
       if (event.data?.type === 'xibo:editor-fullscreen') {
         setFullscreen(Boolean(event.data.fullscreen));
       }
+
+      if (event.data?.type === 'xibo:editor-schedule') {
+        onScheduleRequest?.(event.data.campaignId, event.data.layoutName);
+      }
     };
 
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
-  }, [navigate, returnPath, onExit]);
+  }, [navigate, returnPath, onExit, onScheduleRequest]);
 
   useEffect(() => {
     return () => {

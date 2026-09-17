@@ -257,6 +257,18 @@ $(() => {
             inactiveCheckClass: 'd-none',
           },
           {
+            id: 'scheduleLayout',
+            title: layoutEditorTrans.scheduleTitle,
+            logo: 'fa fa-clock-o',
+            action: lD.showScheduleScreen,
+            inactiveCheck: function() {
+              return lD.templateEditMode ||
+                lD.layout.editable ||
+                !lD.layout.scheduleNowPermission;
+            },
+            inactiveCheckClass: 'd-none',
+          },
+          {
             id: 'discardLayout',
             title: layoutEditorTrans.discardTitle,
             logo: 'fa fa-times-circle-o',
@@ -1064,7 +1076,16 @@ lD.showDiscardScreen = function() {
  * Layout schedule screen
  */
 lD.showScheduleScreen = function() {
-  lD.loadFormFromAPI('schedule', lD.layout.campaignId);
+  if (window.parent !== window) {
+    window.parent.postMessage(
+      {
+        type: 'xibo:editor-schedule',
+        campaignId: lD.layout.campaignId,
+        layoutName: lD.layout.name,
+      },
+      window.location.origin,
+    );
+  }
 };
 
 /**
