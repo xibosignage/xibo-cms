@@ -82,6 +82,7 @@ export default function AddScheduleModal({
           placeholder={t('All Users')}
           searchable
           clearable
+          translateLabels={false}
           resolveLabel={userSelect.resolveLabel}
           options={userSelect.options}
           isLoading={userSelect.isLoading}

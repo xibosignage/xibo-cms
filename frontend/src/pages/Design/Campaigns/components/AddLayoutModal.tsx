@@ -202,6 +202,7 @@ export default function AddLayoutModal({
           label={t('Dayparting')}
           value={dayPartId != null ? String(dayPartId) : ''}
           options={dayparts}
+          translateLabels={false}
           resolveLabel={resolveDaypartLabel}
           onSelect={(v) => setDayPartId(v ? Number(v) : null)}
           placeholder={t('Select Dayparting')}

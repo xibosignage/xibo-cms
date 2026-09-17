@@ -195,6 +195,7 @@ export default function StatsReportFilters({
               value={itemValue}
               placeholder={t('Select')}
               searchable
+              translateLabels={false}
               resolveLabel={resolveItemLabel}
               options={itemSelect.options}
               isLoading={itemSelect.isLoading}
@@ -212,6 +213,7 @@ export default function StatsReportFilters({
             placeholder={t('All Displays')}
             searchable
             clearable
+            translateLabels={false}
             resolveLabel={displaySelect.resolveLabel}
             options={displaySelect.options}
             isLoading={displaySelect.isLoading}
@@ -228,6 +230,7 @@ export default function StatsReportFilters({
             placeholder={t('All Groups')}
             searchable
             clearable
+            translateLabels={false}
             resolveLabel={displayGroupSelect.resolveLabel}
             options={displayGroupSelect.options}
             isLoading={displayGroupSelect.isLoading}

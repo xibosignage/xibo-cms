@@ -144,6 +144,7 @@ export function useMediaFilterOptions(t: TFunction, canTag = false) {
       return {
         ...item,
         options: ownerOptions,
+        translateLabels: false,
         onLoadMore: handleLoadMoreOwners,
         hasMore: hasMoreOwners,
         isLoadingMore: isLoadingMoreOwners,
@@ -160,6 +161,7 @@ export function useMediaFilterOptions(t: TFunction, canTag = false) {
       return {
         ...item,
         options: groupOptions,
+        translateLabels: false,
         onLoadMore: handleLoadMoreGroups,
         hasMore: hasMoreGroups,
         isLoadingMore: isLoadingMoreGroups,

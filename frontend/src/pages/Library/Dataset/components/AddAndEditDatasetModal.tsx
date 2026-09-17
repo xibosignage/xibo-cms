@@ -839,6 +839,7 @@ export default function AddAndEditDatasetModal({
                 label={t('Depends on Dataset')}
                 value={draft.runsAfter.toString()}
                 options={runsAfterOptions}
+                translateLabels={false}
                 resolveLabel={resolveRunsAfterLabel}
                 onLoadMore={handleLoadMoreRunsAfter}
                 hasMore={hasMoreRunsAfter}

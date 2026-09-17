@@ -72,7 +72,7 @@ export function useUserGroupOptions() {
   const groups = usePaginatedOptions({ loader: groupLoader });
 
   return {
-    users: { ...users, resolveLabel: resolveUserLabel },
-    groups: { ...groups, resolveLabel: resolveGroupLabel },
+    users: { ...users, resolveLabel: resolveUserLabel, translateLabels: false },
+    groups: { ...groups, resolveLabel: resolveGroupLabel, translateLabels: false },
   };
 }

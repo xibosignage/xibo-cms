@@ -1531,6 +1531,7 @@ export default function EditDisplayModal({
                 placeholder={t('Global default')}
                 initialLabel={data?.defaultLayout ?? undefined}
                 options={layoutOptions}
+                translateLabels={false}
                 onSelect={(v) => set('defaultLayoutId', v ? Number(v) : null)}
                 isLoading={isLoadingLayouts}
                 onLoadMore={handleLoadMoreLayouts}
@@ -1610,6 +1611,7 @@ export default function EditDisplayModal({
                 value={draft.venueId ? String(draft.venueId) : ''}
                 placeholder=" "
                 options={venueOptions}
+                translateLabels={false}
                 onSelect={(v) => set('venueId', v ? Number(v) : null)}
                 searchable
                 searchPlaceholder={t('Search venues…')}
@@ -1790,6 +1792,7 @@ export default function EditDisplayModal({
                   value: String(p.displayProfileId),
                   label: p.name,
                 }))}
+                translateLabels={false}
                 resolveLabel={resolveProfileLabel}
                 onLoadMore={handleLoadMoreProfiles}
                 hasMore={hasMoreProfiles}

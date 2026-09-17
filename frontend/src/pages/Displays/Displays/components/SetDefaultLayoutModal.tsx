@@ -147,6 +147,7 @@ export default function SetDefaultLayoutModal({
           label={t('Default Layout')}
           value={selectedLayoutId ? String(selectedLayoutId) : ''}
           options={layouts}
+          translateLabels={false}
           onSelect={(v) => setSelectedLayoutId(v ? Number(v) : null)}
           isLoading={isLoadingLayouts}
           onLoadMore={handleLoadMore}

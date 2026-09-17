@@ -179,6 +179,7 @@ export default function DeleteUserModal({
               label={t('Reassign content to')}
               value={reassignUserId ?? ''}
               options={userOptions}
+              translateLabels={false}
               searchable
               searchPlaceholder={t('Search users...')}
               onSearch={setUserSearch}

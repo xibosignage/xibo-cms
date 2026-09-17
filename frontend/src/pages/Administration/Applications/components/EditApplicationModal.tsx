@@ -576,6 +576,7 @@ export default function EditApplicationModal({
                 value={selectedOwner as string}
                 placeholder={ownerLoading ? t('Loading...') : t('Select Owner')}
                 options={ownerOptions}
+                translateLabels={false}
                 searchable
                 onSearch={setOwnerSearch}
                 onLoadMore={handleLoadMoreOwners}

@@ -677,6 +677,7 @@ export default function CampaignEditor() {
             label={t('Layout')}
             value=""
             options={layoutOptions}
+            translateLabels={false}
             onSelect={handlePickLayout}
             placeholder={t('Select Layout')}
             helpText={t('Select a Layout to add to this Campaign.')}

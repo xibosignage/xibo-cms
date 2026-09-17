@@ -154,12 +154,11 @@ export const getConditionOptions = (
   t: TFunction,
   criteria?: ScheduleCriteriaResponse | null,
 ): SelectOption[] => {
-  const conditions =
-    criteria?.defaultCondition && criteria.defaultCondition.length > 0
-      ? criteria.defaultCondition
-      : FALLBACK_DEFAULT_CONDITIONS;
+  if (criteria?.defaultCondition && criteria.defaultCondition.length > 0) {
+    return criteria.defaultCondition.map((c) => ({ value: c.id, label: c.name }));
+  }
 
-  return conditions.map((c) => ({ value: c.id, label: t(c.name) }));
+  return FALLBACK_DEFAULT_CONDITIONS.map((c) => ({ value: c.id, label: t(c.name) }));
 };
 
 export const getCriteriaTypeOptions = (

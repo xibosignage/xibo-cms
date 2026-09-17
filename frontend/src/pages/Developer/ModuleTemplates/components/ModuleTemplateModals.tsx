@@ -158,6 +158,7 @@ function AddModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () =
           label={t('Data Type')}
           value={dataType}
           options={dataTypeOptions}
+          translateLabels={false}
           placeholder={isLoadingDataTypes ? t('Loading...') : t('Select data type...')}
           isLoading={isLoadingDataTypes}
           onSelect={(v: string) => {
@@ -170,6 +171,7 @@ function AddModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () =
             label={t('Template')}
             value={copyTemplateId}
             options={copyTemplateOptions}
+            translateLabels={false}
             placeholder={
               isLoadingCopyTemplates
                 ? t('Loading...')

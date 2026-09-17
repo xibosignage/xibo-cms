@@ -72,6 +72,7 @@ export default function GeneralTab({
               label={t('Initial User Group')}
               value={draft.groupId !== null ? String(draft.groupId) : ''}
               options={groupOptions}
+              translateLabels={false}
               searchable
               searchPlaceholder={t('Search groups...')}
               onSearch={onGroupSearch}
