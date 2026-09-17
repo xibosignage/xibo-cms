@@ -51,6 +51,27 @@ interface Option {
   label: string;
 }
 
+function seedLabelsCache(
+  value: DisplayGroupMultiSelectValue,
+  initialLabels: Record<number, string> | undefined,
+): Record<string, string> {
+  if (!initialLabels) {
+    return {};
+  }
+  const seeded: Record<string, string> = {};
+  value.displaySpecificGroupIds.forEach((id) => {
+    if (initialLabels[id]) {
+      seeded[`${DISPLAY_PREFIX}${id}`] = initialLabels[id];
+    }
+  });
+  value.displayGroupIds.forEach((id) => {
+    if (initialLabels[id]) {
+      seeded[`${GROUP_PREFIX}${id}`] = initialLabels[id];
+    }
+  });
+  return seeded;
+}
+
 export interface DisplayGroupMultiSelectValue {
   displaySpecificGroupIds: number[];
   displayGroupIds: number[];
@@ -60,6 +81,7 @@ interface DisplayGroupMultiSelectProps {
   value: DisplayGroupMultiSelectValue;
   onChange: (value: DisplayGroupMultiSelectValue) => void;
   onLabelsChange?: (labels: Record<number, string>) => void;
+  initialLabels?: Record<number, string>;
   disabled?: boolean;
   className?: string;
   triggerClassName?: string;
@@ -70,6 +92,7 @@ export function DisplayGroupMultiSelect({
   value,
   onChange,
   onLabelsChange,
+  initialLabels,
   disabled = false,
   className,
   triggerClassName,
@@ -93,8 +116,10 @@ export function DisplayGroupMultiSelect({
   const [isLoadingGroups, setIsLoadingGroups] = useState(false);
   const [isLoadingMoreGroups, setIsLoadingMoreGroups] = useState(false);
 
-  const [labelsCache, setLabelsCache] = useState<Record<string, string>>({});
-  const fetchedIdsRef = useRef<Set<string>>(new Set());
+  const [labelsCache, setLabelsCache] = useState<Record<string, string>>(() =>
+    seedLabelsCache(value, initialLabels),
+  );
+  const fetchedIdsRef = useRef<Set<string>>(new Set(Object.keys(labelsCache)));
 
   const displaySentinelRef = useRef<HTMLDivElement>(null);
   const groupSentinelRef = useRef<HTMLDivElement>(null);
@@ -171,8 +196,11 @@ export function DisplayGroupMultiSelect({
     }
   }, [displayIdsKey, groupIdsKey]);
 
+  const onLabelsChangeRef = useRef(onLabelsChange);
+  onLabelsChangeRef.current = onLabelsChange;
+
   useEffect(() => {
-    if (!onLabelsChange) {
+    if (!onLabelsChangeRef.current) {
       return;
     }
     const allKeys = [
@@ -194,8 +222,8 @@ export function DisplayGroupMultiSelect({
         labelsMap[id] = label;
       }
     }
-    onLabelsChange(labelsMap);
-  }, [labelsCache, onLabelsChange, displayIdsKey, groupIdsKey]);
+    onLabelsChangeRef.current(labelsMap);
+  }, [labelsCache, displayIdsKey, groupIdsKey]);
 
   useEffect(() => {
     setIsLoadingDisplays(true);

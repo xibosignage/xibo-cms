@@ -63,6 +63,7 @@ export interface ScheduleEventDraft {
   shareOfVoice: number;
   displaySpecificGroupIds: number[];
   displayGroupIds: number[];
+  displayGroupLabels: Record<number, string>;
   dayPartId: string;
   fromDt: string;
   toDt: string;
@@ -95,7 +96,7 @@ export type ScheduleFormErrors = Partial<
   Record<
     Exclude<
       keyof ScheduleEventDraft,
-      'displaySpecificGroupIds' | 'displayGroupIds' | 'syncDisplayLayouts'
+      'displaySpecificGroupIds' | 'displayGroupIds' | 'displayGroupLabels' | 'syncDisplayLayouts'
     >,
     string
   > & {
@@ -460,6 +461,7 @@ export function createInitialDraft(
     shareOfVoice: 0,
     displaySpecificGroupIds: prefilledDisplaySpecificGroupIds ?? [],
     displayGroupIds: prefilledDisplayGroupIds ?? [],
+    displayGroupLabels: {},
     dayPartId: '',
     fromDt: '',
     toDt: '',
@@ -508,6 +510,13 @@ export function createDraftFromEvent(scheduleEvent: Event): ScheduleEventDraft {
     displayGroupIds: (scheduleEvent.displayGroups ?? [])
       .filter((dg) => dg.isDisplaySpecific !== 1)
       .map((dg) => dg.displayGroupId),
+    displayGroupLabels: (scheduleEvent.displayGroups ?? []).reduce<Record<number, string>>(
+      (acc, dg) => {
+        acc[dg.displayGroupId] = dg.displayGroup;
+        return acc;
+      },
+      {},
+    ),
     dayPartId: String(scheduleEvent.dayPartId),
     fromDt: scheduleEvent.fromDt ? new Date(scheduleEvent.fromDt * 1000).toISOString() : '',
     toDt: scheduleEvent.toDt ? new Date(scheduleEvent.toDt * 1000).toISOString() : '',

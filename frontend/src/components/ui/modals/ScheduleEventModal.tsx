@@ -1961,6 +1961,10 @@ export default function ScheduleEventModal({
                     displaySpecificGroupIds: draft.displaySpecificGroupIds,
                     displayGroupIds: draft.displayGroupIds,
                   }}
+                  initialLabels={draft.displayGroupLabels}
+                  onLabelsChange={(displayGroupLabels) => {
+                    setDraft((prev) => ({ ...prev, displayGroupLabels }));
+                  }}
                   onChange={({ displaySpecificGroupIds, displayGroupIds }) => {
                     setDraft((prev) => ({ ...prev, displaySpecificGroupIds, displayGroupIds }));
                     setShowDisplayBanner(
