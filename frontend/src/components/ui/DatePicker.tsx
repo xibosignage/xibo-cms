@@ -214,21 +214,6 @@ export default function DatePicker({
     return d;
   };
 
-  const getRangeValues = () => {
-    if (!range?.from || !range?.to) return null;
-    return {
-      from: effectiveShowTimePicker ? applyTime(range.from, fromTime) : anchorDateOnly(range.from),
-      to: effectiveShowTimePicker ? applyTime(range.to, toTime) : anchorDateOnly(range.to),
-    };
-  };
-
-  const rangeValues = getRangeValues();
-  const isRangeInvalid =
-    mode === 'range' &&
-    effectiveShowTimePicker &&
-    !!rangeValues &&
-    rangeValues.from > rangeValues.to;
-
   const anchorDateOnly = (date: Date): Date => {
     if (!timeZone) return date;
     return DateTime.fromObject(
@@ -244,6 +229,21 @@ export default function DatePicker({
       { zone: timeZone },
     ).toJSDate();
   };
+
+  const getRangeValues = () => {
+    if (!range?.from || !range?.to) return null;
+    return {
+      from: effectiveShowTimePicker ? applyTime(range.from, fromTime) : anchorDateOnly(range.from),
+      to: effectiveShowTimePicker ? applyTime(range.to, toTime) : anchorDateOnly(range.to),
+    };
+  };
+
+  const rangeValues = getRangeValues();
+  const isRangeInvalid =
+    mode === 'range' &&
+    effectiveShowTimePicker &&
+    !!rangeValues &&
+    rangeValues.from > rangeValues.to;
 
   const handleApply = () => {
     if (mode === 'single' && single) {
