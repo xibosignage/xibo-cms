@@ -1688,13 +1688,29 @@ class Schedule extends Base
         // If the recurrence pattern changed, the old exclusions no longer correspond to
         // real occurrences — delete them. Only do this when a recurrence-defining field
         // actually changed; cosmetic edits (name, priority, etc.) must not discard exclusions.
+        // Timestamps are compared at minute granularity because the UI trims seconds from
+        // API-created events on save — that rounding must not count as a user change.
+        // recurrenceRepeatsOn is sorted before comparison so that "4,5" == "5,4".
+        $oldRepeatsOn = $oldSchedule->recurrenceRepeatsOn;
+        $newRepeatsOn = $schedule->recurrenceRepeatsOn;
+        if ($oldRepeatsOn !== null) {
+            $parts = explode(',', $oldRepeatsOn);
+            sort($parts);
+            $oldRepeatsOn = implode(',', $parts);
+        }
+        if ($newRepeatsOn !== null) {
+            $parts = explode(',', $newRepeatsOn);
+            sort($parts);
+            $newRepeatsOn = implode(',', $parts);
+        }
+
         if ($schedule->recurrenceType != ''
             && ($oldSchedule->recurrenceType !== $schedule->recurrenceType
                 || $oldSchedule->recurrenceDetail != $schedule->recurrenceDetail
-                || $oldSchedule->recurrenceRepeatsOn !== $schedule->recurrenceRepeatsOn
+                || $oldRepeatsOn !== $newRepeatsOn
                 || $oldSchedule->recurrenceMonthlyRepeatsOn != $schedule->recurrenceMonthlyRepeatsOn
-                || $oldSchedule->fromDt != $schedule->fromDt
-                || $oldSchedule->toDt != $schedule->toDt
+                || intdiv((int)$oldSchedule->fromDt, 60) !== intdiv((int)$schedule->fromDt, 60)
+                || intdiv((int)$oldSchedule->toDt, 60) !== intdiv((int)$schedule->toDt, 60)
                 || $oldSchedule->dayPartId != $schedule->dayPartId)
         ) {
             // Delete schedule exclusions — the occurrence grid has shifted
