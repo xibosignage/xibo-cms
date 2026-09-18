@@ -45,14 +45,18 @@ class DataSetRssFactory extends BaseFactory
     }
 
     /**
-     * Get DataSets by ID
+     * Get DataSet RSS by ID
      * @param $id
+     * @param bool $disableUserCheck
      * @return DataSetRss
      * @throws NotFoundException
      */
-    public function getById($id)
+    public function getById($id, bool $disableUserCheck = true)
     {
-        $feeds = $this->query(null, ['disableUserCheck' => 1, 'id' => $id]);
+        $feeds = $this->query(null, [
+            'disableUserCheck' => $disableUserCheck ? 1 : 0,
+            'id' => $id
+        ]);
 
         if (count($feeds) <= 0) {
             throw new NotFoundException();

@@ -178,7 +178,7 @@ class DataSetRss extends Base
     }
 
     #[OA\Get(
-        path: '/dataset/{id}/rss/{rssId}}',
+        path: '/dataset/{id}/rss/{rssId}',
         operationId: 'datasetRssSearchById',
         description: 'Get the DataSet RSS object specified by the provided datasetId and rssId',
         summary: 'DataSet RSS Search by ID',
@@ -215,7 +215,13 @@ class DataSetRss extends Base
     public function searchById(Request $request, Response $response, int $id, int $rssId): Response|ResponseInterface
     {
         $dataset = $this->dataSetFactory->getById($id, false);
-        $datasetRss = $this->dataSetRssFactory->getById($rssId);
+        $datasetRss = $this->dataSetRssFactory->getById($rssId, false);
+
+        // $id authorizes the parent DataSet, but the feed was fetched by its own id alone, thus, we need to check this
+        // as well so a feed from a different dataset can't be substituted.
+        if ($datasetRss->dataSetId != $id) {
+            throw new NotFoundException();
+        }
 
         $datasetRss->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($dataset));
 
@@ -480,6 +486,13 @@ class DataSetRss extends Base
         }
 
         $feed = $this->dataSetRssFactory->getById($rssId);
+
+        // $id authorizes the parent DataSet, but the feed was fetched by its own id alone, thus, we need to check this
+        // as well so a feed from a different dataset can't be substituted.
+        if ($feed->dataSetId != $id) {
+            throw new NotFoundException();
+        }
+
         $feed->title = $sanitizedParams->getString('title');
         $feed->author = $sanitizedParams->getString('author');
         $feed->titleColumnId = $sanitizedParams->getInt('titleColumnId');
@@ -550,6 +563,13 @@ class DataSetRss extends Base
         }
 
         $feed = $this->dataSetRssFactory->getById($rssId);
+
+        // $id authorizes the parent DataSet, but the feed was fetched by its own id alone, thus, we need to check this
+        // as well so a feed from a different dataset can't be substituted.
+        if ($feed->dataSetId != $id) {
+            throw new NotFoundException();
+        }
+
         $feed->delete();
 
         // Delete from the cache
@@ -566,7 +586,7 @@ class DataSetRss extends Base
 
     /**
      * Output feed
-     *  this is a public route (no authentication requried)
+     *  this is a public route (no authentication required)
      * @param Request $request
      * @param Response $response
      * @param $psk
