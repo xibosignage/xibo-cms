@@ -397,9 +397,9 @@ class Folder implements \JsonSerializable
         foreach ($children as $child) {
             $childObject = $this->folderFactory->getById($child);
 
-            // If this child folder has its own sharing (permissionsFolderId is null),
+            // If this child folder has its own sharing (permissionsFolderId is null/0),
             // it is its own permissions boundary — skip it and everything beneath it.
-            if ($childObject->permissionsFolderId === null) {
+            if (empty($childObject->permissionsFolderId)) {
                 continue;
             }
 
@@ -512,8 +512,8 @@ class Folder implements \JsonSerializable
             'children' => $oldParentUpdatedChildren
         ]);
 
-        // if we had permissions set on this folder, then permissionsFolderId stays as it was
-        if ($this->getPermissionFolderId() !== null) {
+        // if this folder does not have its own sharing (inherits permissions), update it
+        if (!empty($this->getPermissionFolderId())) {
             $this->permissionsFolderId = $newParentFolder->getPermissionFolderIdOrThis();
             $this->updateChildObjects($this->permissionsFolderId, $this->id);
             $this->manageChildPermissions($this->permissionsFolderId);
