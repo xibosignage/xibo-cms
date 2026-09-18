@@ -219,7 +219,7 @@ class DataSetRss extends Base
 
         // $id authorizes the parent DataSet, but the feed was fetched by its own id alone, thus, we need to check this
         // as well so a feed from a different dataset can't be substituted.
-        if ($datasetRss->dataSetId !== $id) {
+        if ($datasetRss->dataSetId != $id) {
             throw new NotFoundException();
         }
 
@@ -489,7 +489,7 @@ class DataSetRss extends Base
 
         // $id authorizes the parent DataSet, but the feed was fetched by its own id alone, thus, we need to check this
         // as well so a feed from a different dataset can't be substituted.
-        if ($feed->dataSetId !== $id) {
+        if ($feed->dataSetId != $id) {
             throw new NotFoundException();
         }
 
@@ -566,7 +566,7 @@ class DataSetRss extends Base
 
         // $id authorizes the parent DataSet, but the feed was fetched by its own id alone, thus, we need to check this
         // as well so a feed from a different dataset can't be substituted.
-        if ($feed->dataSetId !== $id) {
+        if ($feed->dataSetId != $id) {
             throw new NotFoundException();
         }
 
@@ -586,7 +586,7 @@ class DataSetRss extends Base
 
     /**
      * Output feed
-     *  this is a public route (no authentication requried)
+     *  this is a public route (no authentication required)
      * @param Request $request
      * @param Response $response
      * @param $psk
