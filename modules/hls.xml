@@ -122,4 +122,7 @@ video {
 }
         ]]></style>
     </stencil>
+    <assets>
+        <asset id="hlsLib" type="path" mimeType="text/javascript" isAutoInclude="true" path="/modules/vendor-hls.min.js"></asset>
+    </assets>
 </module>
