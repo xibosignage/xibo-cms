@@ -395,9 +395,15 @@ class Folder implements \JsonSerializable
         $children = array_filter(explode(',', $this->children ?? ''));
 
         foreach ($children as $child) {
-            $this->updateChildObjects($permissionFolderId, $child);
-
             $childObject = $this->folderFactory->getById($child);
+
+            // If this child folder has its own sharing (permissionsFolderId is null),
+            // it is its own permissions boundary — skip it and everything beneath it.
+            if ($childObject->permissionsFolderId === null) {
+                continue;
+            }
+
+            $this->updateChildObjects($permissionFolderId, $child);
             $childObject->manageChildPermissions($permissionFolderId);
         }
     }
@@ -405,7 +411,8 @@ class Folder implements \JsonSerializable
     private function updateChildObjects($permissionFolderId, $folderId): void
     {
         $this->getStore()->update(
-            'UPDATE `folder` SET permissionsFolderId = :permissionsFolderId WHERE parentId = :folderId',
+            'UPDATE `folder` SET permissionsFolderId = :permissionsFolderId
+                WHERE parentId = :folderId AND permissionsFolderId IS NOT NULL',
             [
                 'permissionsFolderId' => $permissionFolderId,
                 'folderId' => $folderId
