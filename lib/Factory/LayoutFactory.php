@@ -42,6 +42,7 @@ use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\ValueTooLargeException;
 use Xibo\Widget\SubPlaylistItem;
 
 /**
@@ -3551,7 +3552,19 @@ class LayoutFactory extends BaseFactory
         $layout->folderId = ($type === 'media') ? $media->folderId : $playlist->folderId;
 
         // Media files have their own validation so we can skip
-        $layout->save(['validate' => false]);
+        try {
+            $layout->save(['validate' => false]);
+        } catch (\PDOException $exception) {
+            if ($exception->getCode() === '22001') {
+                throw new ValueTooLargeException(
+                    __('Unable to create the Layout for this schedule, please contact your administrator.'),
+                    0,
+                    $exception
+                );
+            }
+
+            throw $exception;
+        }
 
         $draft = $this->checkoutLayout($layout);
 
