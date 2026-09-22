@@ -52,6 +52,7 @@ use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\ValueTooLargeException;
 
 /**
  * Class Layout
@@ -863,7 +864,7 @@ class Layout implements \JsonSerializable
 
         // New or existing layout
         if ($this->layoutId == null || $this->layoutId == 0) {
-            $this->add();
+            $this->saveGuardingAgainstStaleSchema(fn () => $this->add());
 
             if ($options['audit']) {
                 if ($this->parentId === null) {
@@ -889,7 +890,7 @@ class Layout implements \JsonSerializable
                 }
             }
         } else if (($this->hash() != $this->hash && $options['saveLayout']) || $options['setBuildRequired']) {
-            $this->update($options);
+            $this->saveGuardingAgainstStaleSchema(fn () => $this->update($options));
 
             if ($options['audit'] && count($this->getChangedProperties()) > 0) {
                 $change = $this->getChangedProperties();
@@ -2512,6 +2513,29 @@ class Layout implements \JsonSerializable
     //
     // Add / Update
     //
+
+    /**
+     * Run an add()/update() call, converting a "data too long" SQL error into a friendly
+     * exception. This is usually caused by a database column that's narrower than the
+     * application expects (a stale/legacy schema), rather than genuinely invalid input.
+     * @throws ValueTooLargeException
+     */
+    private function saveGuardingAgainstStaleSchema(callable $save): void
+    {
+        try {
+            $save();
+        } catch (\PDOException $exception) {
+            if ($exception->getCode() === '22001') {
+                throw new ValueTooLargeException(
+                    __('Unable to save this Layout, please contact your administrator.'),
+                    0,
+                    $exception
+                );
+            }
+
+            throw $exception;
+        }
+    }
 
     /**
      * Add
