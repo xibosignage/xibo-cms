@@ -28,6 +28,7 @@ export const getScheduleEventSchema = (
   t: TFunction,
   customDayPartId?: string,
   alwaysDayPartId?: string,
+  original?: { fromDt?: string; recurrenceType: string; recurrenceRange: string },
 ) =>
   z
     .object({
@@ -210,10 +211,17 @@ export const getScheduleEventSchema = (
         });
       }
 
+      const isUnchangedLegacyRange =
+        !!original?.recurrenceType &&
+        !!original.recurrenceRange &&
+        data.recurrenceRange === original.recurrenceRange &&
+        data.fromDt === original.fromDt;
+
       if (
         data.recurrenceType &&
         data.recurrenceRange &&
         data.fromDt &&
+        !isUnchangedLegacyRange &&
         new Date(data.recurrenceRange) <= new Date(data.fromDt)
       ) {
         ctx.addIssue({

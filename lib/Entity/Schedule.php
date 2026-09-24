@@ -825,7 +825,10 @@ class Schedule implements \JsonSerializable
             }
 
             // Check that the recurrence end date is after the event start date
-            if (!empty($this->recurrenceRange) && $this->recurrenceRange <= $this->fromDt) {
+            if (!empty($this->recurrenceRange)
+                && $this->recurrenceRange <= $this->fromDt
+                && !$this->isUnchangedLegacyRecurrenceRange()
+            ) {
                 throw new InvalidArgumentException(
                     __('Recurrence end must be after the event start date'),
                     'recurrenceRange'
@@ -857,6 +860,29 @@ class Schedule implements \JsonSerializable
                 }
             }
         }
+    }
+
+    /**
+     * Events saved before the recurrence range validation existed can end on or before their start.
+     * They stay saveable while their start and recurrence range are unchanged (compared to the minute,
+     * as the edit form trims seconds).
+     * @return bool
+     */
+    private function isUnchangedLegacyRecurrenceRange(): bool
+    {
+        $originalFromDt = $this->getOriginalValue('fromDt');
+        $originalRange = $this->getOriginalValue('recurrenceRange');
+
+        if (empty($this->eventId)
+            || empty($this->getOriginalValue('recurrenceType'))
+            || empty($originalRange)
+            || $originalRange > $originalFromDt
+        ) {
+            return false;
+        }
+
+        return intdiv((int)$originalFromDt, 60) === intdiv((int)$this->fromDt, 60)
+            && intdiv((int)$originalRange, 60) === intdiv((int)$this->recurrenceRange, 60);
     }
 
     /**
