@@ -1795,9 +1795,16 @@ class Schedule extends Base
         $schedule->name = $sanitizedParams->getString('name');
         $schedule->userId = $this->getUser()->userId;
 
-        // Clear an invalid recurrence range inherited from the original event
-        if (!empty($schedule->recurrenceRange) && $schedule->recurrenceRange <= $schedule->fromDt) {
-            $schedule->recurrenceRange = 0;
+        // A recurrence ending on or before the start only plays once, so copy it as a single event
+        if (!empty($schedule->recurrenceType)
+            && !empty($schedule->recurrenceRange)
+            && $schedule->recurrenceRange <= $schedule->fromDt
+        ) {
+            $schedule->recurrenceType = null;
+            $schedule->recurrenceDetail = null;
+            $schedule->recurrenceRange = null;
+            $schedule->recurrenceRepeatsOn = null;
+            $schedule->recurrenceMonthlyRepeatsOn = 0;
         }
 
         $schedule->setDisplayNotifyService($this->displayFactory->getDisplayNotifyService());
