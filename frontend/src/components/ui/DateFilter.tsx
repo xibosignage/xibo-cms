@@ -63,7 +63,7 @@ export default function DateFilter({
   tooltip,
 }: DateFilterProps) {
   const { t } = useTranslation();
-  const { formatDate, dateFormat } = useDateFormatter();
+  const { formatDate, dateFormat, timeZone } = useDateFormatter();
   const [open, setOpen] = useState(false);
 
   const { refs, floatingStyles, context } = useFloating({
@@ -164,7 +164,7 @@ export default function DateFilter({
                   if (v.type === 'single') {
                     onChange(
                       name,
-                      showTimePicker ? formatDateTime(v.date) : toLocalDateKey(v.date),
+                      showTimePicker ? formatDateTime(v.date) : toLocalDateKey(v.date, timeZone),
                     );
                   }
                   setOpen(false);

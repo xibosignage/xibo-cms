@@ -219,11 +219,8 @@ export default function DateRangeFilter({
                     onCancel={() => setOpenDatePicker(false)}
                     onApply={(v) => {
                       if (v.type === 'range') {
-                        const fromKey = toLocalDateKey(
-                          v.from,
-                          showTimePicker ? timeZone : undefined,
-                        );
-                        const toKey = toLocalDateKey(v.to, showTimePicker ? timeZone : undefined);
+                        const fromKey = toLocalDateKey(v.from, timeZone);
+                        const toKey = toLocalDateKey(v.to, timeZone);
                         const rangeValue = showTimePicker
                           ? `range:${fromKey}T${formatTime(v.from, timeZone)}` +
                             `|${toKey}T${formatTime(v.to, timeZone)}`
