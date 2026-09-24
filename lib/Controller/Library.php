@@ -526,9 +526,6 @@ class Library extends Base
     {
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
 
-        // Variables used for link signing
-        $isReturnPublicUrls = $parsedQueryParams->getCheckbox('isReturnPublicUrls') == 1;
-
         // Construct the SQL
         $mediaSortQuery = $this->gridRenderSort($parsedQueryParams, $this->isJson($request));
         $mediaFilterQuery = $this->getMediaFilters($parsedQueryParams);
@@ -2621,7 +2618,6 @@ class Library extends Base
     {
         // Variables used for link signing/thumbnail generation
         $isReturnPublicUrls = $parsedQueryParams->getCheckbox('isReturnPublicUrls') == 1;
-        $thumbnailRouteName = $isReturnPublicUrls ? 'library.public.thumbnail' : 'library.thumbnail';
 
         $thumbnailUrl = '';
 
@@ -2637,10 +2633,6 @@ class Library extends Base
                 }
 
                 if ($renderThumbnail) {
-                    $thumbnailUrl = $this->urlFor($request, $thumbnailRouteName, [
-                        'id' => $media->mediaId,
-                    ]);
-
                     if ($isReturnPublicUrls) {
                         // Sign the link.
                         $thumbnailUrl = TokenAuthMiddleware::sign(
@@ -2649,6 +2641,10 @@ class Library extends Base
                             time() + 3600,
                             $this->getConfig()->getApiKeyDetails()['encryptionKey'],
                         );
+                    } else {
+                        $thumbnailUrl = $this->urlFor($request, 'library.thumbnail', [
+                            'id' => $media->mediaId,
+                        ]);
                     }
                 }
             }
