@@ -2533,11 +2533,11 @@ class Library extends Base
                 }
             },
             function (string $message, Media $media) use ($importQueue) {
-                // Rejected, the media record has already been removed
+                // Rejected, the media record has already been removed and the reason logged
                 foreach ($importQueue as $import) {
                     /** @var ProviderImport $import */
                     if ($import->media?->getId() === $media->getId()) {
-                        $import->setError(sprintf(__('Download rejected due to %s'), $message));
+                        $import->setError(__('Download failed'));
                     }
                 }
             }

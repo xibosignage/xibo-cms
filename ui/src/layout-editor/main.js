@@ -5069,7 +5069,7 @@ lD.importFromProvider = function(items) {
           let addFlag = true;
           if (newElement.isError) {
             addFlag = false;
-            toastr.error(newElement.error, newElement.item.id);
+            toastr.error(newElement.error, newElement.item.provider?.id);
           }
 
           itemsResult.forEach((oldElement, key) => {
