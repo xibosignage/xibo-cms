@@ -535,9 +535,9 @@ lD.selectObject =
       lD.addRegion(clickPosition, 'frame').then((res) => {
         const playlistId = res.data.regionPlaylist.playlistId;
         // Add media to new region
-        lD.importFromProvider(selectedQueue).then((res) => {
-          // If res is empty, it means that the import failed
-          if (res.length === 0) {
+        lD.importFromProvider(selectedQueue).then((mediaIds) => {
+          // If empty, it means that the import failed
+          if (mediaIds.length === 0) {
             // Delete new region
             lD.layout.deleteObject(
               'region',
@@ -546,7 +546,7 @@ lD.selectObject =
           } else {
             // Add media queue to playlist
             lD.addMediaToPlaylist(
-              playlistId, res, null, false,
+              playlistId, mediaIds, null, false,
               true,
             );
           }
@@ -1915,11 +1915,12 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
   if (self.addItemPromise != null) {
     self.pendingAddedItems++;
 
-    // Run when last promise ends
-    self.addItemPromise.then(() => {
+    // Run when last promise settles
+    const runPendingItem = () => {
       self.pendingAddedItems--;
       lD.dropItemAdd(droppable, draggable, dropPosition);
-    });
+    };
+    self.addItemPromise.then(runPendingItem, runPendingItem);
 
     // Stop for now
     return false;
@@ -2100,7 +2101,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           true,
         ).then((_res) => {
           itemAdded(_res);
-        });
+        }).catch(() => itemAdded());
       } else if (droppableIsZone || droppableIsPlaylist) {
         // Get region
         const region =
@@ -2121,7 +2122,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           }
 
           itemAdded();
-        });
+        }).catch(() => itemAdded());
       } else if (droppableIsPlaylist) {
         // Get playlist id
         const playlistId = $(droppable).data('playlistId');
@@ -2136,7 +2137,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           lD.openPlaylistEditor(res.data.regionPlaylist.playlistId);
 
           itemAdded();
-        });
+        }).catch(() => itemAdded());
       } else {
         // Calculate dimensions with original ratio
         const [startWidth, startHeight] =
@@ -2167,8 +2168,6 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           ).catch((_error) => {
             // Delete new region
             lD.layout.deleteObject('region', res.data.regionPlaylist.regionId);
-
-            reject();
           }).then(itemAdded);
         });
       }
@@ -2714,6 +2713,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
                 // If res is empty, it means that the import failed
                 if (res.length === 0) {
                   console.error(errorMessagesTrans.failedToImportMedia);
+                  itemAdded();
                 } else {
                   // Add media to draggableData
                   draggableData.mediaId = res[0];
@@ -3001,10 +3001,11 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
     }
   });
 
-  // When promise resolves, always mark it as done
-  this.addItemPromise.then(() => {
+  // When promise settles, always mark it as done
+  const clearAddItemPromise = () => {
     self.addItemPromise = null;
-  });
+  };
+  this.addItemPromise.then(clearAddItemPromise, clearAddItemPromise);
 
   // Return promise
   return this.addItemPromise;
@@ -5068,7 +5069,7 @@ lD.importFromProvider = function(items) {
           let addFlag = true;
           if (newElement.isError) {
             addFlag = false;
-            toastr.error(newElement.error, newElement.item.id);
+            toastr.error(newElement.error, newElement.item.provider?.id);
           }
 
           itemsResult.forEach((oldElement, key) => {
@@ -5110,6 +5111,7 @@ lD.importFromProvider = function(items) {
     });
   }).catch(function() {
     toastr.error(errorMessagesTrans.importingMediaFailed);
+    return [];
   });
 };
 
