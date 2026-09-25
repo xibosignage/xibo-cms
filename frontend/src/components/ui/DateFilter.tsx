@@ -63,7 +63,7 @@ export default function DateFilter({
   tooltip,
 }: DateFilterProps) {
   const { t } = useTranslation();
-  const { formatDate, dateFormat, timeZone } = useDateFormatter();
+  const { dateFormat, timeZone } = useDateFormatter();
   const [open, setOpen] = useState(false);
 
   const { refs, floatingStyles, context } = useFloating({
@@ -93,13 +93,7 @@ export default function DateFilter({
   const getDisplayLabel = () => {
     if (!value) return t('Any time');
 
-    if (!showTimePicker) {
-      return formatCmsDate(value, { format: dateFormat, timeZone: 'UTC' });
-    }
-
-    const date = new Date(value.replace(' ', 'T'));
-    if (isNaN(date.getTime())) return value;
-    return formatDate(date);
+    return formatCmsDate(value.slice(0, 10), { format: dateFormat, timeZone: 'UTC' }) || value;
   };
 
   return (
@@ -164,7 +158,9 @@ export default function DateFilter({
                   if (v.type === 'single') {
                     onChange(
                       name,
-                      showTimePicker ? formatDateTime(v.date) : toLocalDateKey(v.date, timeZone),
+                      showTimePicker
+                        ? formatDateTime(v.date, timeZone)
+                        : toLocalDateKey(v.date, timeZone),
                     );
                   }
                   setOpen(false);
