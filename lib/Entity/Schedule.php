@@ -865,7 +865,7 @@ class Schedule implements \JsonSerializable
     /**
      * Events saved before the recurrence range validation existed can end on or before their start.
      * They stay saveable while their start and recurrence range are unchanged (compared to the minute,
-     * as the edit form trims seconds).
+     * as the edit form trims seconds; daypart starts by day, as the edit form resets them to midnight).
      * @return bool
      */
     private function isUnchangedLegacyRecurrenceRange(): bool
@@ -881,7 +881,13 @@ class Schedule implements \JsonSerializable
             return false;
         }
 
-        return intdiv((int)$originalFromDt, 60) === intdiv((int)$this->fromDt, 60)
+        $isSameStart = $this->isCustomDayPart()
+            ? intdiv((int)$originalFromDt, 60) === intdiv((int)$this->fromDt, 60)
+            : DateFormatHelper::createFromTimestamp($originalFromDt)->isSameDay(
+                DateFormatHelper::createFromTimestamp($this->fromDt)
+            );
+
+        return $isSameStart
             && intdiv((int)$originalRange, 60) === intdiv((int)$this->recurrenceRange, 60);
     }
 
