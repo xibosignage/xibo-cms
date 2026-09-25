@@ -1213,7 +1213,12 @@ export default function ScheduleEventModal({
     setApiError(undefined);
     setFormErrors({});
 
-    const schema = getScheduleEventSchema(t, customDayPartId, alwaysDayPartId);
+    const schema = getScheduleEventSchema(
+      t,
+      customDayPartId,
+      alwaysDayPartId,
+      isEditMode ? createDraftFromEvent(event) : undefined,
+    );
     const result = schema.safeParse(draft);
 
     if (!result.success) {

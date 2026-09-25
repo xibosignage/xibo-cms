@@ -825,7 +825,10 @@ class Schedule implements \JsonSerializable
             }
 
             // Check that the recurrence end date is after the event start date
-            if (!empty($this->recurrenceRange) && $this->recurrenceRange <= $this->fromDt) {
+            if (!empty($this->recurrenceRange)
+                && $this->recurrenceRange <= $this->fromDt
+                && !$this->isUnchangedLegacyRecurrenceRange()
+            ) {
                 throw new InvalidArgumentException(
                     __('Recurrence end must be after the event start date'),
                     'recurrenceRange'
@@ -857,6 +860,47 @@ class Schedule implements \JsonSerializable
                 }
             }
         }
+    }
+
+    /**
+     * Does this event start at the same time as the given start?
+     * Compared to the minute, as the edit form trims seconds. Named daypart starts are compared by day:
+     * their times come from the daypart, the edit form resets them to midnight, and daypart splits give
+     * them the current time of day.
+     * @param int|string|null $fromDt
+     * @return bool
+     */
+    public function isSameStartAs($fromDt): bool
+    {
+        if ($this->isCustomDayPart()) {
+            return intdiv((int)$fromDt, 60) === intdiv((int)$this->fromDt, 60);
+        }
+
+        return DateFormatHelper::createFromTimestamp($fromDt)->isSameDay(
+            DateFormatHelper::createFromTimestamp($this->fromDt)
+        );
+    }
+
+    /**
+     * Events saved before the recurrence range validation existed can end on or before their start.
+     * They stay saveable while their start and recurrence range are unchanged.
+     * @return bool
+     */
+    private function isUnchangedLegacyRecurrenceRange(): bool
+    {
+        $originalFromDt = $this->getOriginalValue('fromDt');
+        $originalRange = $this->getOriginalValue('recurrenceRange');
+
+        if (empty($this->eventId)
+            || empty($this->getOriginalValue('recurrenceType'))
+            || empty($originalRange)
+            || $originalRange > $originalFromDt
+        ) {
+            return false;
+        }
+
+        return $this->isSameStartAs($originalFromDt)
+            && intdiv((int)$originalRange, 60) === intdiv((int)$this->recurrenceRange, 60);
     }
 
     /**
