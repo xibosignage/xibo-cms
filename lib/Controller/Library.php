@@ -66,6 +66,7 @@ use Xibo\Service\MediaService;
 use Xibo\Service\MediaServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\LibraryFullException;
@@ -525,9 +526,6 @@ class Library extends Base
     public function grid(Request $request, Response $response)
     {
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
-
-        // Variables used for link signing
-        $isReturnPublicUrls = $parsedQueryParams->getCheckbox('isReturnPublicUrls') == 1;
 
         // Construct the SQL
         $mediaSortQuery = $this->gridRenderSort($parsedQueryParams, $this->isJson($request));
@@ -1451,17 +1449,18 @@ class Library extends Base
         )
     )]
     /**
-     * Thumbnail for the libary page
+     * Thumbnail for a Library media file.
      *  this is called by library-page datatable
      *
      * @param Request $request
      * @param Response $response
-     * @param $id
-     * @param bool $isForceGrantAccess
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\GeneralException
+     * @param int|string $id Media ID or media name
+     * @return ResponseInterface|Response
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws ControllerNotImplemented
      */
-    public function thumbnail(Request $request, Response $response, $id)
+    public function thumbnail(Request $request, Response $response, int|string $id): Response|ResponseInterface
     {
         $this->setNoOutput();
 
@@ -2621,7 +2620,6 @@ class Library extends Base
     {
         // Variables used for link signing/thumbnail generation
         $isReturnPublicUrls = $parsedQueryParams->getCheckbox('isReturnPublicUrls') == 1;
-        $thumbnailRouteName = $isReturnPublicUrls ? 'library.public.thumbnail' : 'library.thumbnail';
 
         $thumbnailUrl = '';
 
@@ -2637,10 +2635,6 @@ class Library extends Base
                 }
 
                 if ($renderThumbnail) {
-                    $thumbnailUrl = $this->urlFor($request, $thumbnailRouteName, [
-                        'id' => $media->mediaId,
-                    ]);
-
                     if ($isReturnPublicUrls) {
                         // Sign the link.
                         $thumbnailUrl = TokenAuthMiddleware::sign(
@@ -2649,6 +2643,10 @@ class Library extends Base
                             time() + 3600,
                             $this->getConfig()->getApiKeyDetails()['encryptionKey'],
                         );
+                    } else {
+                        $thumbnailUrl = $this->urlFor($request, 'library.thumbnail', [
+                            'id' => $media->mediaId,
+                        ]);
                     }
                 }
             }
