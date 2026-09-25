@@ -1709,7 +1709,7 @@ class Schedule extends Base
                 || $oldSchedule->recurrenceDetail != $schedule->recurrenceDetail
                 || $oldRepeatsOn !== $newRepeatsOn
                 || $oldSchedule->recurrenceMonthlyRepeatsOn != $schedule->recurrenceMonthlyRepeatsOn
-                || intdiv((int)$oldSchedule->fromDt, 60) !== intdiv((int)$schedule->fromDt, 60)
+                || !$schedule->isSameStartAs($oldSchedule->fromDt)
                 || intdiv((int)$oldSchedule->toDt, 60) !== intdiv((int)$schedule->toDt, 60)
                 || $oldSchedule->dayPartId != $schedule->dayPartId)
         ) {

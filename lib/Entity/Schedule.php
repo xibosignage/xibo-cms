@@ -863,9 +863,27 @@ class Schedule implements \JsonSerializable
     }
 
     /**
+     * Does this event start at the same time as the given start?
+     * Compared to the minute, as the edit form trims seconds. Named daypart starts are compared by day:
+     * their times come from the daypart, the edit form resets them to midnight, and daypart splits give
+     * them the current time of day.
+     * @param int|string|null $fromDt
+     * @return bool
+     */
+    public function isSameStartAs($fromDt): bool
+    {
+        if ($this->isCustomDayPart()) {
+            return intdiv((int)$fromDt, 60) === intdiv((int)$this->fromDt, 60);
+        }
+
+        return DateFormatHelper::createFromTimestamp($fromDt)->isSameDay(
+            DateFormatHelper::createFromTimestamp($this->fromDt)
+        );
+    }
+
+    /**
      * Events saved before the recurrence range validation existed can end on or before their start.
-     * They stay saveable while their start and recurrence range are unchanged (compared to the minute,
-     * as the edit form trims seconds; daypart starts by day, as the edit form resets them to midnight).
+     * They stay saveable while their start and recurrence range are unchanged.
      * @return bool
      */
     private function isUnchangedLegacyRecurrenceRange(): bool
@@ -881,13 +899,7 @@ class Schedule implements \JsonSerializable
             return false;
         }
 
-        $isSameStart = $this->isCustomDayPart()
-            ? intdiv((int)$originalFromDt, 60) === intdiv((int)$this->fromDt, 60)
-            : DateFormatHelper::createFromTimestamp($originalFromDt)->isSameDay(
-                DateFormatHelper::createFromTimestamp($this->fromDt)
-            );
-
-        return $isSameStart
+        return $this->isSameStartAs($originalFromDt)
             && intdiv((int)$originalRange, 60) === intdiv((int)$this->recurrenceRange, 60);
     }
 
