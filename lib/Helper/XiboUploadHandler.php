@@ -192,6 +192,9 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 if ($updateInLayouts) {
                     $this->getLogger()->debug('Replace in all Layouts selected. Getting associated widgets');
 
+                    // Playlists containing a widget we've updated, used to notify displays of affected Layouts
+                    $updatedPlaylistIds = [];
+
                     foreach ($controller->getWidgetFactory()->getByMediaId($oldMedia->mediaId, 0) as $widget) {
                         $this->getLogger()->debug('Found widgetId ' . $widget->widgetId
                                 . ' to assess, type is ' . $widget->type);
@@ -220,6 +223,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                             $widget->unassignAudioById($oldMedia->mediaId);
                             $widget->assignAudioById($media->mediaId);
                             $widget->save();
+                            $updatedPlaylistIds[$widget->playlistId] = $widget->playlistId;
                         } else if ($widget->type !== 'global'
                             && count($widget->getPrimaryMedia()) > 0
                             && $widget->getPrimaryMediaId() == $oldMedia->mediaId
@@ -268,6 +272,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                             // Save
                             $widget->save(['alwaysUpdate' => true]);
+                            $updatedPlaylistIds[$widget->playlistId] = $widget->playlistId;
                         }
 
                         // Does this widget have any elements?
@@ -332,7 +337,35 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                                 // Save
                                 $widget->save(['alwaysUpdate' => true]);
+                                $updatedPlaylistIds[$widget->playlistId] = $widget->playlistId;
                             }
+                        }
+                    }
+
+                    // Notify displays showing the published Layouts containing the updated widgets.
+                    // Saving the Layout notifies its Campaign, which clears the display cache and asks them to collect.
+                    // This is done before the background image update so that we don't save a stale backgroundImageId
+                    $notifiedLayoutIds = [];
+                    foreach ($updatedPlaylistIds as $playlistId) {
+                        foreach ($controller->getLayoutFactory()->query(null, [
+                            'disableUserCheck' => 1,
+                            'playlistId' => $playlistId,
+                            'excludeTemplates' => -1,
+                        ]) as $layout) {
+                            /* @var Layout $layout */
+                            if (in_array($layout->layoutId, $notifiedLayoutIds)) {
+                                continue;
+                            }
+                            $notifiedLayoutIds[] = $layout->layoutId;
+
+                            $this->getLogger()->debug('Notifying displays of layoutId ' . $layout->layoutId);
+
+                            $layout->save([
+                                'saveRegions' => false,
+                                'saveTags' => false,
+                                'validate' => false,
+                                'audit' => false,
+                            ]);
                         }
                     }
 
