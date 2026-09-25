@@ -358,7 +358,7 @@ class MediaFactory extends BaseFactory
                             ? $reason->getPrevious()->getMessage()
                             : $reason->getMessage();
 
-                        call_user_func($rejected, $reasonMessage);
+                        call_user_func($rejected, $reasonMessage, $queue[$index]);
                     }
                 }
             ]);

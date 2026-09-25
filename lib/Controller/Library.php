@@ -2492,7 +2492,7 @@ class Library extends Base
                 // if we have video thumbnail url from provider, download it now
                 foreach ($importQueue as $import) {
                     /** @var ProviderImport $import */
-                    if ($import->media->getId() === $media->getId()
+                    if ($import->media?->getId() === $media->getId()
                         && $media->mediaType === 'video'
                         && !empty($import->searchResult->videoThumbnailUrl)
                     ) {
@@ -2527,8 +2527,17 @@ class Library extends Base
                 // Pull out the import which failed.
                 foreach ($importQueue as $import) {
                     /** @var ProviderImport $import */
-                    if ($import->media->getId() === $media->getId()) {
+                    if ($import->media?->getId() === $media->getId()) {
                         $import->setError(__('Download failed'));
+                    }
+                }
+            },
+            function (string $message, Media $media) use ($importQueue) {
+                // Rejected, the media record has already been removed
+                foreach ($importQueue as $import) {
+                    /** @var ProviderImport $import */
+                    if ($import->media?->getId() === $media->getId()) {
+                        $import->setError(sprintf(__('Download rejected due to %s'), $message));
                     }
                 }
             }
