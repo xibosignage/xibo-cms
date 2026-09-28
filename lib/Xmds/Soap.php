@@ -832,7 +832,8 @@ class Soap
                     $layout->loadPlaylists();
 
                     // Make sure its XLF is up-to-date
-                    $path = $layout->xlfToDisk(['notify' => false]);
+                    // if we build it, notify so other displays drop their cached required files
+                    $path = $layout->xlfToDisk(['notify' => true, 'collectNow' => false]);
                 } finally {
                     $this->layoutFactory->concurrentRequestRelease($layout);
                 }
