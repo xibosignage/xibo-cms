@@ -170,9 +170,8 @@ class Preview extends Base
                 throw new AccessDeniedException();
             }
 
-            // If we build the Layout here, notify so displays pick up the change on next collect
             $response->getBody()->write(file_get_contents($layout->xlfToDisk([
-                'notify' => true,
+                'notify' => false,
                 'collectNow' => false,
             ])));
 
