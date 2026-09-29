@@ -39,8 +39,11 @@ use Xibo\Factory\ScheduleExclusionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\ScheduleReminderFactory;
 use Xibo\Factory\SyncGroupFactory;
+use Xibo\Factory\TaskFactory;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\LayoutDescription;
 use Xibo\Helper\Session;
+use Xibo\Helper\Status;
 use Xibo\Service\JwtServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ControllerNotImplemented;
@@ -75,7 +78,8 @@ class Schedule extends Base
         private readonly ScheduleExclusionFactory $scheduleExclusionFactory,
         private readonly SyncGroupFactory $syncGroupFactory,
         private readonly ScheduleCriteriaFactory $scheduleCriteriaFactory,
-        private readonly JwtServiceInterface $jwtService
+        private readonly JwtServiceInterface $jwtService,
+        private readonly TaskFactory $taskFactory
     ) {
     }
 
@@ -176,6 +180,7 @@ class Schedule extends Base
         $events = [];
         $displayGroups = [];
         $layouts = [];
+        $maintenanceTask = false;
         $campaigns = [];
 
         // Add the displayGroupId I am filtering for to the displayGroup object
@@ -290,6 +295,18 @@ class Schedule extends Base
                         );
                     }
                     if ($showLayoutName || $this->getUser()->checkViewable($layout)) {
+                        // Say when Displays are notified about a Layout built without notifying them
+                        if ($layout->status === Status::$STATUS_PENDING_NOTIFY) {
+                            if ($maintenanceTask === false) {
+                                $maintenanceTask = $this->taskFactory->getRegularMaintenanceTask();
+                            }
+
+                            $layout->setUnmatchedProperty(
+                                'statusDescription',
+                                LayoutDescription::getPendingNotifyDescription($maintenanceTask)
+                            );
+                        }
+
                         $layouts[$layoutId] = $layout;
                     } else {
                         $layouts[$layoutId] = [

@@ -824,12 +824,13 @@ function sortEventRows(
 
 interface LayoutStatusIconProps {
   status?: number;
+  statusDescription?: string;
 }
 
-function LayoutStatusIcon({ status }: LayoutStatusIconProps) {
+function LayoutStatusIcon({ status, statusDescription }: LayoutStatusIconProps) {
   const { t } = useTranslation();
   if (isPendingNotifyLayoutStatus(status)) {
-    return <LayoutPendingNotifyIcon className="w-6.5 h-6.5 shrink-0" />;
+    return <LayoutPendingNotifyIcon className="w-6.5 h-6.5 shrink-0" title={statusDescription} />;
   }
   if (status === 1) {
     return (
@@ -1090,7 +1091,10 @@ function EventTypeTable({
                     </div>
                   </td>
                   <td className="px-3 py-2">
-                    <LayoutStatusIcon status={layout?.status} />
+                    <LayoutStatusIcon
+                      status={layout?.status}
+                      statusDescription={layout?.statusDescription}
+                    />
                   </td>
                   <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
                     {event.isAlways ? (

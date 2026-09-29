@@ -24,14 +24,24 @@ import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
 // A Layout which has been built, but displays are waiting for Regular Maintenance to notify them
-export default function LayoutPendingNotifyIcon({ className }: { className?: string }) {
+// title: the CMS status description, which says when the next Regular Maintenance run is
+export default function LayoutPendingNotifyIcon({
+  className,
+  title,
+}: {
+  className?: string;
+  title?: string;
+}) {
   const { t } = useTranslation();
 
   return (
     <span
-      title={t(
-        'This Layout has been built and Displays will be updated at the next Regular Maintenance run',
-      )}
+      title={
+        title ||
+        t(
+          'This Layout has been built and Displays will be updated at the next Regular Maintenance run',
+        )
+      }
       className={twMerge(
         'inline-flex items-center justify-center rounded-lg bg-yellow-100 text-yellow-800',
         className,

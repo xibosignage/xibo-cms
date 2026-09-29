@@ -666,7 +666,10 @@ export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[]
       cell: (info) =>
         isPendingNotifyLayoutStatus((info.row.original as Layout).status) ? (
           <div className="flex items-center justify-center">
-            <LayoutPendingNotifyIcon className="size-6" />
+            <LayoutPendingNotifyIcon
+              className="size-6"
+              title={(info.row.original as Layout).statusDescription}
+            />
           </div>
         ) : (
           <CheckMarkCell active={info.getValue<number>() <= 2} />

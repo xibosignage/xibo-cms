@@ -37,6 +37,7 @@ export interface Layout {
   campaignId: number;
   folderId: number;
   status: number;
+  statusDescription?: string;
   duration: number;
   thumbnail?: string;
   previewUrl?: string;

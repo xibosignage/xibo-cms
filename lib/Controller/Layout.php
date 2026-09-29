@@ -33,6 +33,7 @@ use Stash\Interfaces\PoolInterface;
 use Stash\Item;
 use Xibo\Entity\Region;
 use Xibo\Entity\Session;
+use Xibo\Entity\Task;
 use Xibo\Event\FolderTouchEvent;
 use Xibo\Event\TemplateProviderImportEvent;
 use Xibo\Factory\CampaignFactory;
@@ -44,6 +45,7 @@ use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\ResolutionFactory;
 use Xibo\Factory\TagFactory;
+use Xibo\Factory\TaskFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetDataFactory;
@@ -128,6 +130,9 @@ class Layout extends Base
     private WidgetFactory $widgetFactory;
     private PlaylistFactory $playlistFactory;
 
+    /** @var Task|false|null Regular Maintenance task, looked up once when a pending Layout needs it */
+    private $maintenanceTask = false;
+
     /**
      * Set common dependencies.
      * @param Session $session
@@ -160,6 +165,7 @@ class Layout extends Base
         private readonly WidgetDataFactory $widgetDataFactory,
         PlaylistFactory $playlistFactory,
         private readonly JwtServiceInterface $jwtService,
+        private readonly TaskFactory $taskFactory,
     ) {
         $this->session = $session;
         $this->userFactory = $userFactory;
@@ -2085,15 +2091,7 @@ class Layout extends Base
 
         $statusCode = $layout->status;
 
-        $status = match ($statusCode) {
-            Status::$STATUS_VALID => __('This Layout is ready to play'),
-            Status::$STATUS_PLAYER => __('There are items on this Layout that can only be assessed by the Display'),
-            Status::$STATUS_NOT_BUILT => __('This Layout has not been built yet'),
-            Status::$STATUS_PENDING_NOTIFY => __(
-                'This Layout has been built and Displays will be updated at the next Regular Maintenance run'
-            ),
-            default => __('This Layout is invalid and should not be scheduled'),
-        };
+        $status = LayoutDescription::getLayoutStatusDescription($statusCode, $this->getMaintenanceTask($statusCode));
 
         // We want a different return depending on whether we are arriving through the API or WEB routes
         if ($this->isApi($request)) {
@@ -3229,11 +3227,32 @@ class Layout extends Base
             ));
         }
 
-        $statusDescription = LayoutDescription::getLayoutStatusDescription($layout->status);
+        $statusDescription = LayoutDescription::getLayoutStatusDescription(
+            $layout->status,
+            $this->getMaintenanceTask($layout->status)
+        );
         $enableStatDescription = LayoutDescription::getLayoutEnableStatDescription($layout->enableStat);
 
         $layout->setUnmatchedProperty('statusDescription', $statusDescription);
         $layout->setUnmatchedProperty('enableStatDescription', $enableStatDescription);
+    }
+
+    /**
+     * Get the Regular Maintenance task, only when the status needs it to describe when Displays are notified
+     * @param int $status
+     * @return Task|null
+     */
+    private function getMaintenanceTask(int $status): ?Task
+    {
+        if ($status !== Status::$STATUS_PENDING_NOTIFY) {
+            return null;
+        }
+
+        if ($this->maintenanceTask === false) {
+            $this->maintenanceTask = $this->taskFactory->getRegularMaintenanceTask();
+        }
+
+        return $this->maintenanceTask;
     }
 
     private function touchFolder(int $folderId, ?int $oldFolderId = null): void
