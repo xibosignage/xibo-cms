@@ -375,6 +375,7 @@ export interface AgendaLayout {
   layout: string;
   link?: string;
   status?: number;
+  statusDescription?: string;
   duration?: number;
   previewJwt?: string;
 }

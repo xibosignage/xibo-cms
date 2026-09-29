@@ -137,7 +137,7 @@ class Playlist implements \JsonSerializable
     /**
      * @var int
      */
-    #[OA\Property(description: "A read-only estimate of this Layout's total duration in seconds. This is equal to the longest region duration and is valid when the layout status is 1 or 2.")]
+    #[OA\Property(description: "A read-only estimate of this Layout's total duration in seconds. This is equal to the longest region duration and is valid when the layout status is 1, 2 or 5.")]
     public $duration = 0;
 
     /**

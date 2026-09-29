@@ -92,6 +92,19 @@ class TaskFactory extends BaseFactory
     }
 
     /**
+     * Get the Regular Maintenance task
+     * @return Task|null null if it has not been installed
+     */
+    public function getRegularMaintenanceTask(): ?Task
+    {
+        try {
+            return $this->getByClass('\Xibo\XTR\MaintenanceRegularTask');
+        } catch (NotFoundException) {
+            return null;
+        }
+    }
+
+    /**
      * @param array|null $sortOrder
      * @param array $filterBy
      * @return array

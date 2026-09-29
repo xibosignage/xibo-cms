@@ -247,6 +247,7 @@ class Controllers
                     $c->get('widgetDataFactory'),
                     $c->get('playlistFactory'),
                     $c->get('jwtService'),
+                    $c->get('taskFactory'),
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
@@ -484,6 +485,7 @@ class Controllers
                     $c->get('syncGroupFactory'),
                     $c->get('scheduleCriteriaFactory'),
                     $c->get('jwtService'),
+                    $c->get('taskFactory'),
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;

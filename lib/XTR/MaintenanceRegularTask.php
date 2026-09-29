@@ -41,6 +41,7 @@ use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Profiler;
 use Xibo\Helper\Status;
 use Xibo\Helper\WakeOnLan;
+use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Service\MediaServiceInterface;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
@@ -87,6 +88,9 @@ class MaintenanceRegularTask implements TaskInterface
      */
     private $scheduleFactory;
 
+    /** @var DisplayNotifyServiceInterface */
+    private $displayNotifyService;
+
     /** @inheritdoc */
     public function setFactories($container)
     {
@@ -102,6 +106,7 @@ class MaintenanceRegularTask implements TaskInterface
         $this->moduleFactory = $container->get('moduleFactory');
         $this->sanitizerService = $container->get('sanitizerService');
         $this->scheduleFactory = $container->get('scheduleFactory');
+        $this->displayNotifyService = $container->get('displayNotifyService');
         return $this;
     }
 
@@ -121,6 +126,8 @@ class MaintenanceRegularTask implements TaskInterface
         $this->updatePlaylistDurations();
 
         $this->buildLayouts();
+
+        $this->notifyPendingLayouts();
 
         $this->tidyLibrary();
 
@@ -323,6 +330,65 @@ class MaintenanceRegularTask implements TaskInterface
         }
 
         $this->runMessage .= ' - Done' . PHP_EOL . PHP_EOL;
+    }
+
+    /**
+     * Notify displays of Layouts which have been built without notifying them (e.g. by preview or required files)
+     */
+    private function notifyPendingLayouts(): void
+    {
+        $this->runMessage .= '## ' . __('Notify Pending Layouts') . PHP_EOL;
+
+        $count = 0;
+
+        $pendingLayouts = $this->store->select('
+            SELECT `layout`.layoutId, `campaign`.campaignId, `layout`.code
+              FROM `layout`
+                INNER JOIN `lkcampaignlayout`
+                ON `lkcampaignlayout`.layoutId = `layout`.layoutId
+                INNER JOIN `campaign`
+                ON `campaign`.campaignId = `lkcampaignlayout`.campaignId
+                    AND `campaign`.isLayoutSpecific = 1
+             WHERE `layout`.parentId IS NULL
+                AND `layout`.status = :pending
+        ', [
+            'pending' => Status::$STATUS_PENDING_NOTIFY,
+        ]);
+
+        foreach ($pendingLayouts as $row) {
+            try {
+                // Only if it is still pending, a new change will have set it to build required
+                $affected = $this->store->update('
+                    UPDATE `layout` SET `status` = :valid WHERE layoutId = :layoutId AND `status` = :pending
+                ', [
+                    'valid' => Status::$STATUS_VALID,
+                    'layoutId' => $row['layoutId'],
+                    'pending' => Status::$STATUS_PENDING_NOTIFY,
+                ]);
+
+                if ($affected > 0) {
+                    // Commit after each Layout so that we don't hold these rows for the rest of the task
+                    $this->store->commitIfNecessary();
+
+                    $notify = $this->displayNotifyService->init()->collectNow();
+                    $notify->notifyByCampaignId((int)$row['campaignId']);
+
+                    if (!empty($row['code'])) {
+                        $notify->notifyByLayoutCode($row['code']);
+                    }
+
+                    $count++;
+                }
+            } catch (\Exception $e) {
+                $this->log->error(sprintf(
+                    'Maintenance cannot notify pending Layout %d, %s.',
+                    $row['layoutId'],
+                    $e->getMessage()
+                ));
+            }
+        }
+
+        $this->runMessage .= ' - ' . sprintf(__('%d Layouts notified'), $count) . PHP_EOL . PHP_EOL;
     }
 
     /**

@@ -151,7 +151,10 @@ class Layout implements \JsonSerializable
     /**
      * @var int
      */
-    #[OA\Property(description: "Flag indicating the Layout status")]
+    #[OA\Property(
+        description: 'Flag indicating the Layout status. 1 = valid, 2 = valid with items only assessed by the Display, '
+            . '3 = build required, 4 = invalid, 5 = built and valid, displays pending notification'
+    )]
     public $status;
 
     /**
@@ -193,7 +196,7 @@ class Layout implements \JsonSerializable
     /**
      * @var int
      */
-    #[OA\Property(description: "A read-only estimate of this Layout's total duration in seconds. This is equal to the longest region duration and is valid when the layout status is 1 or 2.")]
+    #[OA\Property(description: "A read-only estimate of this Layout's total duration in seconds. This is equal to the longest region duration and is valid when the layout status is 1, 2 or 5.")]
     public $duration;
 
     /**
@@ -2300,6 +2303,14 @@ class Layout implements \JsonSerializable
                 $this->pushStatusMessage(__('Empty Region'));
             }
 
+            // Built without notifying (e.g. preview or required files), leave it pending so that Regular Maintenance
+            // notifies displays
+            if (!$options['notify'] && $this->parentId === null
+                && ($this->status === Status::$STATUS_VALID || $this->status === Status::$STATUS_PLAYER)
+            ) {
+                $this->status = Status::$STATUS_PENDING_NOTIFY;
+            }
+
             $this->save([
                 'saveRegions' => true,
                 'saveRegionOptions' => false,
@@ -3193,6 +3204,6 @@ class Layout implements \JsonSerializable
             $i++;
         }
 
-        return $i === 0 ? $this->layout : $this->layout . " ($i)";
+        return $i === 0 ? $this->layout : $this->layout . ' (' . $i . ')';
     }
 }

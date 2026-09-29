@@ -58,12 +58,14 @@ import {
   getSharingColumn,
 } from '@/components/ui/table/cells';
 import { getCommonFormOptions } from '@/config/commonForms';
+import LayoutPendingNotifyIcon from '@/pages/Design/Layouts/components/LayoutPendingNotifyIcon';
 import type { Layout } from '@/types/layout';
 import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
 import type { UIStatus } from '@/types/uiStatus';
 import type { DateLike } from '@/utils/date';
 import { formatDuration } from '@/utils/formatters';
+import { isPendingNotifyLayoutStatus, toNotifiedLayoutStatus } from '@/utils/layoutStatus';
 import { formatTagsForExport } from '@/utils/tags';
 
 export interface LayoutFilterInput {
@@ -660,8 +662,18 @@ export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[]
       id: 'valid',
       header: t('Valid?'),
       size: 100,
-      accessorFn: (row) => (row as Layout).status,
-      cell: (info) => <CheckMarkCell active={info.getValue<number>() <= 2} />,
+      accessorFn: (row) => toNotifiedLayoutStatus((row as Layout).status),
+      cell: (info) =>
+        isPendingNotifyLayoutStatus((info.row.original as Layout).status) ? (
+          <div className="flex items-center justify-center">
+            <LayoutPendingNotifyIcon
+              className="size-6"
+              title={(info.row.original as Layout).statusDescription}
+            />
+          </div>
+        ) : (
+          <CheckMarkCell active={info.getValue<number>() <= 2} />
+        ),
     },
 
     {
