@@ -3204,6 +3204,6 @@ class Layout implements \JsonSerializable
             $i++;
         }
 
-        return $i === 0 ? $this->layout : $this->layout . " ($i)";
+        return $i === 0 ? $this->layout : $this->layout . ' (' . $i . ')';
     }
 }
