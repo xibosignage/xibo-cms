@@ -35,6 +35,7 @@ use Xibo\Entity\User;
 use Xibo\Entity\Widget;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
+use Xibo\Helper\Status;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\MediaServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -2268,7 +2269,9 @@ class LayoutFactory extends BaseFactory
         ];
         $customColumns = [
             'orientation' => 'CASE WHEN layout.`width` < layout.`height` THEN 1 ELSE 0 END',
-            'valid' => '`status`',
+            // A Layout pending display notification sorts as valid
+            'valid' => 'CASE WHEN `layout`.`status` = ' . Status::$STATUS_PENDING_NOTIFY
+                . ' THEN ' . Status::$STATUS_VALID . ' ELSE `layout`.`status` END',
             'groupsWithPermissions' => '`groupsWithPermissionsListJson`',
             'groupsWithPermissionsList' => '`groupsWithPermissionsListJson`',
         ];

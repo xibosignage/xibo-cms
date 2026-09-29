@@ -2083,35 +2083,30 @@ class Layout extends Base
             $this->layoutFactory->concurrentRequestRelease($layout);
         }
 
-        switch ($layout->status) {
-            case Status::$STATUS_VALID:
-                $status = __('This Layout is ready to play');
-                break;
+        $statusCode = $layout->status;
 
-            case Status::$STATUS_PLAYER:
-                $status = __('There are items on this Layout that can only be assessed by the Display');
-                break;
-
-            case Status::$STATUS_NOT_BUILT:
-                $status = __('This Layout has not been built yet');
-                break;
-
-            default:
-                $status = __('This Layout is invalid and should not be scheduled');
-        }
+        $status = match ($statusCode) {
+            Status::$STATUS_VALID => __('This Layout is ready to play'),
+            Status::$STATUS_PLAYER => __('There are items on this Layout that can only be assessed by the Display'),
+            Status::$STATUS_NOT_BUILT => __('This Layout has not been built yet'),
+            Status::$STATUS_PENDING_NOTIFY => __(
+                'This Layout has been built and Displays will be updated at the next Regular Maintenance run'
+            ),
+            default => __('This Layout is invalid and should not be scheduled'),
+        };
 
         // We want a different return depending on whether we are arriving through the API or WEB routes
         if ($this->isApi($request)) {
             $this->getState()->hydrate([
                 'httpStatus' => 200,
                 'message' => $status,
-                'id' => $layout->status,
+                'id' => $statusCode,
                 'data' => $layout
             ]);
         } else {
             $this->getState()->html = $status;
             $this->getState()->extra = [
-                'status' => $layout->status,
+                'status' => $statusCode,
                 'duration' => $layout->duration,
                 'statusMessage' => $layout->getStatusMessage(),
                 'isLocked' => $layout->isLocked

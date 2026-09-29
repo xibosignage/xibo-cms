@@ -125,7 +125,7 @@ class Region implements \JsonSerializable
      */
     public $permissions = [];
 
-    #[OA\Property(description: 'A read-only estimate of this Regions\'s total duration in seconds. This is valid when the parent layout status is 1 or 2.')]
+    #[OA\Property(description: 'A read-only estimate of this Regions\'s total duration in seconds. This is valid when the parent layout status is 1, 2 or 5.')]
     /**
      * @var int
      */
