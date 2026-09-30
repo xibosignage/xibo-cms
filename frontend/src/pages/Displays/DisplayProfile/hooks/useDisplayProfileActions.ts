@@ -28,6 +28,7 @@ import { useState } from 'react';
 import { notify } from '@/components/ui/Notification';
 import { copyDisplayProfile, deleteDisplayProfile } from '@/services/displayProfileApi';
 import type { DisplayProfile } from '@/types/displayProfile';
+import { isAlreadyDeletedError } from '@/utils/errors';
 
 interface UseDisplayProfileActionsProps {
   t: TFunction;
@@ -57,20 +58,27 @@ export function useDisplayProfileActions({
         itemsToDelete.map((item) => deleteDisplayProfile(item.displayProfileId)),
       );
 
-      // A 404 means the item was already deleted (e.g. by another user/tab) — that's the
-      // outcome we wanted anyway, so treat it as success rather than a hard failure.
-      const failed = results.filter(
-        (r) =>
-          r.status === 'rejected' && !(isAxiosError(r.reason) && r.reason.response?.status === 404),
+      const trueFailed = results.filter(
+        (r) => r.status === 'rejected' && !isAlreadyDeletedError(r.reason),
       );
-      if (failed.length > 0) {
-        const firstRejected = failed[0] as PromiseRejectedResult;
+      const deletedCount = itemsToDelete.length - trueFailed.length;
+
+      if (trueFailed.length > 0) {
+        const firstRejected = trueFailed[0] as PromiseRejectedResult;
         const reason = firstRejected.reason;
-        const message =
+        const specificMessage =
           isAxiosError(reason) && reason.response?.data?.message
             ? reason.response.data.message
-            : t('{{count}} item(s) could not be deleted.', { count: failed.length });
-        setDeleteError(message);
+            : undefined;
+        const failurePart =
+          specificMessage ??
+          t('{{count}} display profile(s) could not be deleted.', { count: trueFailed.length });
+        const successPart =
+          deletedCount > 0
+            ? t('{{count}} display profile(s) deleted successfully.', { count: deletedCount })
+            : '';
+
+        setDeleteError([successPart, failurePart].filter(Boolean).join(' '));
         setRowSelection({});
         handleRefresh();
         return;
@@ -78,7 +86,7 @@ export function useDisplayProfileActions({
 
       notify.success(
         t('{{count}} display profile(s) deleted successfully.', {
-          count: itemsToDelete.length,
+          count: deletedCount,
         }),
       );
       setRowSelection({});

@@ -387,13 +387,12 @@ describe('Display - edit form: Details tab', () => {
   // store null. The `?? null` pattern avoids this.
   // ---------------------------------------------------------------------------
 
-  // BUG: onChange uses `v || null` which treats 0 as falsy — typing 0 stores
-  // null in the draft, so the save payload contains null instead of 0.
-  // The DOM shows 0 (uncontrolled input) so the input value alone cannot
-  // catch this; we check the updateDisplay payload instead.
-  // Marked test.fails until the bug is fixed (change `v || null` to `v ?? null`).
+  // onChange uses `v` directly (paired with an explicit onClear for the
+  // empty-input case) so typing 0 stores 0 in the draft, not null. The DOM
+  // shows 0 (uncontrolled input) so the input value alone cannot catch a
+  // regression here; we check the updateDisplay payload instead.
 
-  test.fails('typing 0 into latitude saves 0, not null', async () => {
+  test('typing 0 into latitude saves 0, not null', async () => {
     const user = userEvent.setup();
     vi.mocked(updateDisplay).mockResolvedValue(undefined as never);
     await renderEditModal({ data: buildDisplay({ latitude: null }) });
@@ -410,7 +409,7 @@ describe('Display - edit form: Details tab', () => {
     });
   });
 
-  test.fails('typing 0 into longitude saves 0, not null', async () => {
+  test('typing 0 into longitude saves 0, not null', async () => {
     const user = userEvent.setup();
     vi.mocked(updateDisplay).mockResolvedValue(undefined as never);
     await renderEditModal({ data: buildDisplay({ longitude: null }) });
@@ -427,7 +426,7 @@ describe('Display - edit form: Details tab', () => {
     });
   });
 
-  test.fails('typing 0 into screen size saves 0, not null', async () => {
+  test('typing 0 into screen size saves 0, not null', async () => {
     const user = userEvent.setup();
     vi.mocked(updateDisplay).mockResolvedValue(undefined as never);
     await renderEditModal({ data: buildDisplay({ screenSize: null }) });

@@ -117,16 +117,14 @@ class CommandFactory extends BaseFactory
                 `lkcommanddisplayprofile`.createAlertOn AS createAlertOnDisplayProfile ';
         }
 
-        $select .= ' , (SELECT GROUP_CONCAT(DISTINCT `group`.group)
-                          FROM `permission`
-                            INNER JOIN `permissionentity`
-                            ON `permissionentity`.entityId = permission.entityId
-                            INNER JOIN `group`
-                            ON `group`.groupId = `permission`.groupId
-                         WHERE entity = :permissionEntityForGroup
-                            AND objectId = command.commandId
-                            AND view = 1
-                        ) AS groupsWithPermissions ';
+        $select .= ' , (SELECT GROUP_CONCAT(DISTINCT `group`.group ORDER BY `group`.group SEPARATOR \'#@\')
+                            FROM `permission`
+                                INNER JOIN `permissionentity` ON `permissionentity`.entityId = permission.entityId
+                                INNER JOIN `group` ON `group`.groupId = `permission`.groupId
+                            WHERE entity = :permissionEntityForGroup
+                                AND objectId = command.commandId
+                                AND view = 1
+                        ) AS groupsWithPermissionsListJson ';
         $params['permissionEntityForGroup'] = 'Xibo\\Entity\\Command';
 
         $body = ' FROM `command` ';
@@ -203,8 +201,13 @@ class CommandFactory extends BaseFactory
             'availableOn',
             'createAlertOn',
             'groupsWithPermissions',
+            'groupsWithPermissionsList',
         ];
-        $sortOrder = $this->buildSortQuery($sortOrder, $allowedColumns, [], ['command ASC'], 'commandId');
+        $customColumns = [
+            'groupsWithPermissions' => '`groupsWithPermissionsListJson`',
+            'groupsWithPermissionsList' => '`groupsWithPermissionsListJson`',
+        ];
+        $sortOrder = $this->buildSortQuery($sortOrder, $allowedColumns, $customColumns, ['command ASC'], 'commandId');
         $order = empty($sortOrder) ? '' : ' ORDER BY ' . implode(', ', $sortOrder);
 
         $limit = '';
@@ -216,7 +219,18 @@ class CommandFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row);
+            $command = $this->createEmpty()->hydrate($row);
+
+            $names = null;
+            if ($row['groupsWithPermissionsListJson'] !== null) {
+                $decoded = explode('#@', $row['groupsWithPermissionsListJson']);
+                $names = is_array($decoded) ? $decoded : null;
+            }
+            $command->groupsWithPermissionsList = $names ?? [];
+            $command->groupsWithPermissions = $names !== null ? implode(',', $names) : null;
+            $command->excludeProperty('groupsWithPermissionsListJson');
+
+            $entries[] = $command;
         }
 
         if ($limit != '' && count($entries) > 0) {

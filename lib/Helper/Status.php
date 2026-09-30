@@ -32,4 +32,17 @@ class Status
     public static $STATUS_PLAYER = 2;
     public static $STATUS_NOT_BUILT = 3;
     public static $STATUS_INVALID = 4;
+
+    // Layout built without notifying displays (e.g. by preview or required files), Regular Maintenance notifies them
+    public static $STATUS_PENDING_NOTIFY = 5;
+
+    /**
+     * Can a Layout with this status be played?
+     * @param int $status
+     * @return bool
+     */
+    public static function isPlayable(int $status): bool
+    {
+        return $status != self::$STATUS_INVALID;
+    }
 }

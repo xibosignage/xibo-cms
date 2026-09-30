@@ -138,6 +138,6 @@ describe('Delete Playlist', () => {
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeInTheDocument();
     });
-    expect(screen.getByText('1 item(s) could not be deleted.')).toBeInTheDocument();
+    expect(screen.getByText('1 playlist(s) could not be deleted.')).toBeInTheDocument();
   });
 });

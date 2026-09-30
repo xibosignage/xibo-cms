@@ -41,6 +41,7 @@ import {
 } from '@/services/layoutsApi';
 import type { Layout } from '@/types/layout';
 import { formatDateTime } from '@/utils/date';
+import { isAlreadyDeletedError } from '@/utils/errors';
 
 interface UsePlaylistActionsProps {
   t: TFunction;
@@ -84,23 +85,33 @@ export function useLayoutActions({
         itemsToDelete.map((item) => deleteLayout(item.layoutId)),
       );
 
-      const failed = results.filter((r) => r.status === 'rejected');
-      if (failed.length > 0) {
-        const firstRejected = failed[0] as PromiseRejectedResult;
+      const trueFailed = results.filter(
+        (r) => r.status === 'rejected' && !isAlreadyDeletedError(r.reason),
+      );
+      const deletedCount = itemsToDelete.length - trueFailed.length;
+
+      if (trueFailed.length > 0) {
+        const firstRejected = trueFailed[0] as PromiseRejectedResult;
         const reason = firstRejected.reason;
-        const message =
+        const specificMessage =
           isAxiosError(reason) && reason.response?.data?.message
             ? reason.response.data.message
-            : t('{{count}} item(s) could not be deleted.', { count: failed.length });
-        setDeleteError(message);
+            : undefined;
+        const failurePart =
+          specificMessage ??
+          t('{{count}} layout(s) could not be deleted.', { count: trueFailed.length });
+        const successPart =
+          deletedCount > 0
+            ? t('{{count}} layout(s) deleted successfully.', { count: deletedCount })
+            : '';
+
+        setDeleteError([successPart, failurePart].filter(Boolean).join(' '));
         setRowSelection({});
         handleRefresh();
         return;
       }
 
-      notify.success(
-        t('{{count}} layout(s) deleted successfully.', { count: itemsToDelete.length }),
-      );
+      notify.success(t('{{count}} layout(s) deleted successfully.', { count: deletedCount }));
       setRowSelection({});
       handleRefresh();
       closeModal();

@@ -52,6 +52,7 @@ use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\ValueTooLargeException;
 
 /**
  * Class Layout
@@ -150,7 +151,10 @@ class Layout implements \JsonSerializable
     /**
      * @var int
      */
-    #[OA\Property(description: "Flag indicating the Layout status")]
+    #[OA\Property(
+        description: 'Flag indicating the Layout status. 1 = valid, 2 = valid with items only assessed by the Display, '
+            . '3 = build required, 4 = invalid, 5 = built and valid, displays pending notification'
+    )]
     public $status;
 
     /**
@@ -192,7 +196,7 @@ class Layout implements \JsonSerializable
     /**
      * @var int
      */
-    #[OA\Property(description: "A read-only estimate of this Layout's total duration in seconds. This is equal to the longest region duration and is valid when the layout status is 1 or 2.")]
+    #[OA\Property(description: "A read-only estimate of this Layout's total duration in seconds. This is equal to the longest region duration and is valid when the layout status is 1, 2 or 5.")]
     public $duration;
 
     /**
@@ -253,6 +257,8 @@ class Layout implements \JsonSerializable
     // Read only properties
     public $owner;
     public $groupsWithPermissions;
+    /** @var string[] */
+    public $groupsWithPermissionsList = [];
     public string $folderName;
 
     /**
@@ -861,7 +867,7 @@ class Layout implements \JsonSerializable
 
         // New or existing layout
         if ($this->layoutId == null || $this->layoutId == 0) {
-            $this->add();
+            $this->saveGuardingAgainstStaleSchema(fn () => $this->add());
 
             if ($options['audit']) {
                 if ($this->parentId === null) {
@@ -887,7 +893,7 @@ class Layout implements \JsonSerializable
                 }
             }
         } else if (($this->hash() != $this->hash && $options['saveLayout']) || $options['setBuildRequired']) {
-            $this->update($options);
+            $this->saveGuardingAgainstStaleSchema(fn () => $this->update($options));
 
             if ($options['audit'] && count($this->getChangedProperties()) > 0) {
                 $change = $this->getChangedProperties();
@@ -2297,6 +2303,14 @@ class Layout implements \JsonSerializable
                 $this->pushStatusMessage(__('Empty Region'));
             }
 
+            // Built without notifying (e.g. preview or required files), leave it pending so that Regular Maintenance
+            // notifies displays
+            if (!$options['notify'] && $this->parentId === null
+                && ($this->status === Status::$STATUS_VALID || $this->status === Status::$STATUS_PLAYER)
+            ) {
+                $this->status = Status::$STATUS_PENDING_NOTIFY;
+            }
+
             $this->save([
                 'saveRegions' => true,
                 'saveRegionOptions' => false,
@@ -2510,6 +2524,29 @@ class Layout implements \JsonSerializable
     //
     // Add / Update
     //
+
+    /**
+     * Run an add()/update() call, converting a "data too long" SQL error into a friendly
+     * exception. This is usually caused by a database column that's narrower than the
+     * application expects (a stale/legacy schema), rather than genuinely invalid input.
+     * @throws ValueTooLargeException
+     */
+    private function saveGuardingAgainstStaleSchema(callable $save): void
+    {
+        try {
+            $save();
+        } catch (\PDOException $exception) {
+            if ($exception->getCode() === '22001') {
+                throw new ValueTooLargeException(
+                    __('Unable to save this Layout, please contact your administrator.'),
+                    0,
+                    $exception
+                );
+            }
+
+            throw $exception;
+        }
+    }
 
     /**
      * Add
@@ -3167,6 +3204,6 @@ class Layout implements \JsonSerializable
             $i++;
         }
 
-        return $i === 0 ? $this->layout : $this->layout . " ($i)";
+        return $i === 0 ? $this->layout : $this->layout . ' (' . $i . ')';
     }
 }

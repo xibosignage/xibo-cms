@@ -1848,8 +1848,8 @@ Viewer.prototype.renderElement = function(
 ) {
   const self = this;
 
-  // If element is not viewable, don't render
-  if (!element.isViewable) {
+  // If element is missing or not viewable, don't render
+  if (!element?.isViewable) {
     return;
   }
 

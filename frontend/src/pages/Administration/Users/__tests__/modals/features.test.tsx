@@ -55,17 +55,32 @@ const setupFetches = (
     isEveryone: 0,
     features: ownFeatures,
   });
-  vi.mocked(fetchUserGroups).mockResolvedValue({
-    rows: allGroups.rows.map((g) => ({
-      groupId: g.groupId,
-      group: `Group ${g.groupId}`,
-      isUserSpecific: g.isUserSpecific,
-      isEveryone: 0,
-      features: g.features,
-    })),
-    totalCount: allGroups.rows.length,
+
+  // Honors start/length like the real /group endpoint, so pagination bugs are actually observable.
+  const allRows = allGroups.rows.map((g) => ({
+    groupId: g.groupId,
+    group: `Group ${g.groupId}`,
+    isUserSpecific: g.isUserSpecific,
+    isEveryone: 0,
+    features: g.features,
+  }));
+  vi.mocked(fetchUserGroups).mockImplementation(async (options = { start: 0, length: 10 }) => {
+    const { start = 0, length = 10 } = options;
+    return { rows: allRows.slice(start, start + length), totalCount: allRows.length };
   });
 };
+
+// N groups, all featureless except the last (carries the given features).
+const buildManyGroups = (
+  count: number,
+  lastGroupFeatures: string[],
+): { rows: { groupId: number; isUserSpecific: number; features: string[] }[] } => ({
+  rows: Array.from({ length: count }, (_, i) => ({
+    groupId: i + 1,
+    isUserSpecific: 0,
+    features: i === count - 1 ? lastGroupFeatures : [],
+  })),
+});
 
 const expandGroup = async (user: ReturnType<typeof userEvent.setup>, groupLabel: string) => {
   await user.click(screen.getByRole('button', { name: new RegExp(`^${groupLabel}`, 'i') }));
@@ -82,17 +97,63 @@ describe('FeaturesModal', () => {
   });
 
   test("loads the user's group features and inherited features on mount", async () => {
-    const memberGroupUser: User = { ...mockUser, groupId: 2, groups: [{ groupId: 5 } as never] };
     setupFetches(['folder.view'], {
       rows: [{ groupId: 5, isUserSpecific: 0, features: ['folder.add'] }],
     });
 
-    render(<FeaturesModal user={memberGroupUser} onClose={vi.fn()} onSuccess={vi.fn()} />);
+    render(<FeaturesModal user={mockUser} onClose={vi.fn()} onSuccess={vi.fn()} />);
 
     await waitFor(() => {
       expect(fetchUserGroupById).toHaveBeenCalledWith(2);
-      expect(fetchUserGroups).toHaveBeenCalledWith({ start: 0, length: 1000, userIdMember: 2 });
+      expect(fetchUserGroups).toHaveBeenCalledWith({ start: 0, length: 200, userIdMember: 2 });
     });
+  });
+
+  test('pages through more than 200 member groups and still picks up a feature from the last page', async () => {
+    const user = userEvent.setup();
+    // Only the 205th group (past the first 200-row page) carries 'folder.add'.
+    setupFetches([], buildManyGroups(205, ['folder.add']));
+
+    render(<FeaturesModal user={mockUser} onClose={vi.fn()} onSuccess={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(fetchUserGroups).toHaveBeenCalledWith({ start: 0, length: 200, userIdMember: 2 });
+      expect(fetchUserGroups).toHaveBeenCalledWith({ start: 200, length: 200, userIdMember: 2 });
+    });
+    expect(fetchUserGroups).toHaveBeenCalledTimes(2);
+
+    await expandGroup(user, 'Folders');
+
+    const inheritedCheckbox = await screen.findByRole('checkbox', {
+      name: /allow users to create sub-folders under folders they have access to.*inherited/i,
+    });
+    expect(inheritedCheckbox).toBeChecked();
+  });
+
+  test('stops paging and finishes loading if the server reports more groups than it actually returns', async () => {
+    const first200 = buildManyGroups(200, []).rows;
+    vi.mocked(fetchUserGroups).mockImplementation(async (options = { start: 0, length: 10 }) => {
+      const { start = 0 } = options;
+      if (start === 0) {
+        // Claims 250 exist, but only 200 are actually returned.
+        return {
+          rows: first200.map((g) => ({
+            groupId: g.groupId,
+            group: `Group ${g.groupId}`,
+            isUserSpecific: g.isUserSpecific,
+            isEveryone: 0,
+            features: g.features,
+          })),
+          totalCount: 250,
+        };
+      }
+      return { rows: [], totalCount: 250 };
+    });
+
+    render(<FeaturesModal user={mockUser} onClose={vi.fn()} onSuccess={vi.fn()} />);
+
+    await waitFor(() => expect(screen.queryByText('Loading...')).not.toBeInTheDocument());
+    expect(fetchUserGroups).toHaveBeenCalledTimes(2);
   });
 
   test('shows "Loading..." while fetching', async () => {

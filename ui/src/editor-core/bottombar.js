@@ -70,6 +70,54 @@ Bottombar.prototype.render = function(object, renderMultiple = true) {
     return;
   }
 
+  const finishRender = function() {
+    // If read only mode is enabled
+    if (app?.readOnlyMode === true) {
+      // Create the read only alert message
+      const $readOnlyMessage =
+        $('<div id="read-only-message" class="alert alert-warning' +
+        'text-center navbar-nav" data-container=".editor-bottom-bar"' +
+        'data-toggle="tooltip" data-placement="bottom" data-title="' +
+        layoutEditorTrans.readOnlyModeMessage +
+        '" role="alert"><strong>' + layoutEditorTrans.readOnlyModeTitle +
+        '</strong>:&nbsp;' + layoutEditorTrans.readOnlyModeMessage + '</div>');
+
+      // Prepend the element to the bottom toolbar's content
+      $readOnlyMessage.insertAfter(self.DOMObject.find('.pull-left'))
+        .on('click', lD.checkoutLayout);
+    }
+
+    // Button handlers
+    self.DOMObject.find('#delete-btn').on('click', function() {
+      lD.deleteSelectedObject();
+    });
+
+    self.DOMObject.find('#undo-btn').on('click', function() {
+      app.undoLastAction();
+    });
+
+    self.DOMObject.find('.properties-btn').on('click', function(e) {
+      const buttonData = $(e.currentTarget).data();
+      let targetObj = object;
+
+      if ($(e.currentTarget).hasClass('properties-widget')) {
+        targetObj = lD.getObjectByTypeAndId(
+          'widget',
+          'widget_' + object.regionId + '_' + object.widgetId,
+          'canvas',
+        );
+      }
+
+      targetObj.editPropertyForm(
+        buttonData['property'],
+        buttonData['propertyType'],
+      );
+    });
+
+    // Reload tooltips
+    app.common.reloadTooltips(self.DOMObject);
+  };
+
   if (multipleSelected) {
     // Render toolbar for multiple
     this.DOMObject.html(bottomBarViewerTemplate(
@@ -94,6 +142,8 @@ Bottombar.prototype.render = function(object, renderMultiple = true) {
           trashActive: trashBinActive,
         },
       ));
+
+      finishRender();
     };
 
     // Check if we have datatype
@@ -108,6 +158,8 @@ Bottombar.prototype.render = function(object, renderMultiple = true) {
     } else {
       renderBottomBar();
     }
+
+    return;
   } else if (object.type == 'layout') {
     // Render layout toolbar
     this.DOMObject.html(bottomBarViewerTemplate(
@@ -177,51 +229,7 @@ Bottombar.prototype.render = function(object, renderMultiple = true) {
     ));
   }
 
-  // If read only mode is enabled
-  if (app?.readOnlyMode === true) {
-    // Create the read only alert message
-    const $readOnlyMessage =
-      $('<div id="read-only-message" class="alert alert-warning' +
-      'text-center navbar-nav" data-container=".editor-bottom-bar"' +
-      'data-toggle="tooltip" data-placement="bottom" data-title="' +
-      layoutEditorTrans.readOnlyModeMessage +
-      '" role="alert"><strong>' + layoutEditorTrans.readOnlyModeTitle +
-      '</strong>:&nbsp;' + layoutEditorTrans.readOnlyModeMessage + '</div>');
-
-    // Prepend the element to the bottom toolbar's content
-    $readOnlyMessage.insertAfter(this.DOMObject.find('.pull-left'))
-      .on('click', lD.checkoutLayout);
-  }
-
-  // Button handlers
-  this.DOMObject.find('#delete-btn').on('click', function() {
-    lD.deleteSelectedObject();
-  });
-
-  this.DOMObject.find('#undo-btn').on('click', function() {
-    app.undoLastAction();
-  });
-
-  this.DOMObject.find('.properties-btn').on('click', function(e) {
-    const buttonData = $(e.currentTarget).data();
-    let targetObj = object;
-
-    if ($(e.currentTarget).hasClass('properties-widget')) {
-      targetObj = lD.getObjectByTypeAndId(
-        'widget',
-        'widget_' + object.regionId + '_' + object.widgetId,
-        'canvas',
-      );
-    }
-
-    targetObj.editPropertyForm(
-      buttonData['property'],
-      buttonData['propertyType'],
-    );
-  });
-
-  // Reload tooltips
-  app.common.reloadTooltips(this.DOMObject);
+  finishRender();
 };
 
 /**

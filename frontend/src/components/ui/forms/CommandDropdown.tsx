@@ -122,6 +122,7 @@ export default function CommandDropdown({
       helpText={helpText}
       value={value ? String(value) : ''}
       options={options}
+      translateLabels={false}
       onSelect={(v) => onSelect(v ? Number(v) : null)}
       isLoading={isLoading}
       onLoadMore={handleLoadMore}

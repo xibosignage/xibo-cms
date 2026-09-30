@@ -19,7 +19,13 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { oklchToRgb, rgbToOklch } from './oklch';
+
 export type ContrastMode = 'light' | 'dark';
+
+// Must match the curve in global.css's --sidebar-bg.
+const SIDEBAR_LIGHTNESS_EXPONENT = 1.826;
+const SIDEBAR_MAX_CHROMA = 0.155;
 
 /** Returns whichever of black/white text gets the higher WCAG contrast ratio against cssColor. */
 export function getContrastMode(cssColor: string): ContrastMode {
@@ -46,7 +52,7 @@ function relativeLuminance({ r, g, b }: { r: number; g: number; b: number }): nu
 // Canvas fill normalizes any CSS colour notation to sRGB bytes, needed because
 // getComputedStyle can return a resolved colour in its original notation (e.g.
 // a literal "oklch(...)" string), not always rgb().
-function resolveToRgb(cssColor: string): { r: number; g: number; b: number } | null {
+export function resolveToRgb(cssColor: string): { r: number; g: number; b: number } | null {
   const canvas = document.createElement('canvas');
   canvas.width = 1;
   canvas.height = 1;
@@ -63,6 +69,21 @@ function resolveToRgb(cssColor: string): { r: number; g: number; b: number } | n
   }
 
   return { r, g, b };
+}
+
+// Mirrors global.css's --sidebar-bg curve in JS — Firefox ESR 140 miscomputes it via CSS.
+export function resolveSidebarBg(brandPrimary: string): string | null {
+  const rgb = resolveToRgb(brandPrimary);
+  if (!rgb) {
+    return null;
+  }
+
+  const { l, c, h } = rgbToOklch(rgb);
+  const sidebarL = Math.min(1, Math.max(0, Math.pow(l, SIDEBAR_LIGHTNESS_EXPONENT)));
+  const sidebarC = Math.min(c, SIDEBAR_MAX_CHROMA);
+  const { r, g, b } = oklchToRgb({ l: sidebarL, c: sidebarC, h });
+
+  return `rgb(${r} ${g} ${b})`;
 }
 
 // Probes --sidebar-bg's actual resolved colour (var() doesn't resolve directly

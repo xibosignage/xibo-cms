@@ -40,6 +40,7 @@ import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import { createDatasetColumn, deleteDatasetColumn, getDatasetById } from '@/services/datasetApi';
 import type { DatasetColumn } from '@/types/datasetColumn';
+import { isAlreadyDeletedError } from '@/utils/errors';
 import { hasFeature } from '@/utils/permissions';
 
 type ColumnModalType = 'edit' | 'delete' | 'copy' | null;
@@ -171,15 +172,44 @@ export default function DatasetColumns() {
 
   const deleteMutation = useMutation({
     mutationFn: async (items: DatasetColumn[]) => {
-      for (const item of items) {
-        await deleteDatasetColumn(datasetId!, item.dataSetColumnId);
-      }
-      return items;
+      const results = await Promise.allSettled(
+        items.map((item) => deleteDatasetColumn(datasetId!, item.dataSetColumnId)),
+      );
+      return { items, results };
     },
-    onSuccess: (deletedItems) => {
+    onSuccess: ({ items, results }) => {
+      const deletedItems = items.filter((_, i) => {
+        const r = results[i];
+        if (!r) return false;
+        return r.status === 'fulfilled' || isAlreadyDeletedError(r.reason);
+      });
+      const trueFailed = results.filter(
+        (r) => r.status === 'rejected' && !isAlreadyDeletedError(r.reason),
+      );
+
       const newSelection = { ...rowSelection };
       deletedItems.forEach((item) => delete newSelection[item.dataSetColumnId.toString()]);
       setRowSelection(newSelection);
+
+      if (trueFailed.length > 0) {
+        const firstRejected = trueFailed[0] as PromiseRejectedResult;
+        const reason = firstRejected.reason;
+        const specificMessage =
+          isAxiosError(reason) && reason.response?.data?.message
+            ? reason.response.data.message
+            : undefined;
+        const failurePart =
+          specificMessage ??
+          t('{{count}} column(s) could not be deleted.', { count: trueFailed.length });
+        const successPart =
+          deletedItems.length > 0
+            ? t('{{count}} column(s) deleted successfully.', { count: deletedItems.length })
+            : '';
+
+        setDeleteError([successPart, failurePart].filter(Boolean).join(' '));
+        handleRefresh();
+        return;
+      }
 
       closeModal();
       handleRefresh();

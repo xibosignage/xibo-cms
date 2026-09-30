@@ -159,6 +159,7 @@ export default function UsersTab({
               value={formValues.SYSTEM_USER ?? ''}
               initialLabel={relatedEntities.systemUser?.userName}
               options={userOptions.options}
+              translateLabels={false}
               onSelect={(v) => updateField('SYSTEM_USER', v ?? '')}
               isLoading={userOptions.isLoading}
               onLoadMore={userOptions.loadMore}
@@ -178,6 +179,7 @@ export default function UsersTab({
               value={formValues.DEFAULT_USERGROUP ?? ''}
               initialLabel={relatedEntities.defaultUserGroup?.group}
               options={userGroupOptions.options}
+              translateLabels={false}
               onSelect={(v) => updateField('DEFAULT_USERGROUP', v ?? '')}
               isLoading={userGroupOptions.isLoading}
               onLoadMore={userGroupOptions.loadMore}

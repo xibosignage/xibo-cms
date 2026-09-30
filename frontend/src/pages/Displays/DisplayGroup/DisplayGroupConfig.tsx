@@ -206,13 +206,24 @@ export const getDisplayGroupItemActions = ({
       }
     };
 
+    if (canModify && canEdit && Number(displayGroup.isDynamic) === 0) {
+      actions.push({
+        label: t('Members'),
+        icon: Users,
+        onClick: () => openMembersModal(displayGroup),
+        isQuickAction: true,
+        variant: 'primary' as const,
+      });
+    }
+
     if (canModify && canEdit) {
       actions.push({
         label: t('Edit'),
         icon: Edit,
         onClick: () => openEditModal(displayGroup),
-        isQuickAction: true,
-        variant: 'primary' as const,
+        ...(Number(displayGroup.isDynamic) !== 0
+          ? { isQuickAction: true, variant: 'primary' as const }
+          : {}),
       });
     }
 
@@ -223,9 +234,7 @@ export const getDisplayGroupItemActions = ({
         onClick: () => openMembersModal(displayGroup),
       });
       actions.push({ isSeparator: true });
-    }
-
-    if (canModify && canEdit) {
+    } else if (canModify && canEdit) {
       actions.push({
         label: t('Edit'),
         icon: Edit,

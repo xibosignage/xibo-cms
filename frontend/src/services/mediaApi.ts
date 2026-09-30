@@ -22,7 +22,7 @@
 import { withPublicPath } from '@/config/publicPath';
 import http from '@/lib/api';
 import type { Media } from '@/types/media';
-import ZipWorker from '@/workers/zipWorker?worker';
+import zipWorkerUrl from '@/workers/zipWorker?worker&url';
 
 export interface FetchMediaRequest {
   start: number;
@@ -307,6 +307,16 @@ export async function downloadMedia(mediaId: number | string, fileName: string):
   window.URL.revokeObjectURL(url);
 }
 
+function createZipWorker(): Worker {
+  const blob = new Blob([`import ${JSON.stringify(zipWorkerUrl)};`], {
+    type: 'application/javascript',
+  });
+  const blobUrl = URL.createObjectURL(blob);
+  const worker = new Worker(blobUrl, { type: 'module' });
+  URL.revokeObjectURL(blobUrl);
+  return worker;
+}
+
 export async function downloadMediaAsZip(
   items: Array<{ mediaId: number | string; fileName: string }>,
   zipFileName: string = 'media_export.zip',
@@ -321,7 +331,7 @@ export async function downloadMediaAsZip(
   // Wrap the worker in a promise
   return new Promise((resolve, reject) => {
     // Init the worker
-    const worker = new ZipWorker();
+    const worker = createZipWorker();
 
     // Listen for the response
     worker.onmessage = (e: MessageEvent) => {

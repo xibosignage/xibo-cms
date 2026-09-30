@@ -389,6 +389,7 @@ Topbar.prototype.updateLayoutStatus = function() {
     1: 'success',
     2: 'warning',
     3: 'info',
+    5: 'warning',
     '': 'danger',
   };
 
@@ -396,6 +397,7 @@ Topbar.prototype.updateLayoutStatus = function() {
     1: 'check',
     2: 'exclamation',
     3: 'cogs',
+    5: 'clock-o',
     '': 'times',
   };
 

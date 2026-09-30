@@ -20,6 +20,7 @@
  */
 
 import { render } from '@testing-library/react';
+import type { DateTime } from 'luxon';
 
 import { EventCalendar } from '../../../components/EventCalendar';
 
@@ -33,10 +34,22 @@ interface RenderCalendarOptions {
   isLoading?: boolean;
   onEditEvent?: (event: Event) => void;
   onDeleteEvent?: (event: Event) => void;
+  /**
+   * Omitted by default, mirroring the Events page: the day panel's Agenda
+   * button only exists when the user has the `schedule.agenda` feature.
+   */
+  onAgenda?: (day: DateTime, events: Event[]) => void;
 }
 
 export function renderCalendar(options: RenderCalendarOptions = {}) {
-  const { date = CALENDAR_DATE, events = [], isLoading, onEditEvent, onDeleteEvent } = options;
+  const {
+    date = CALENDAR_DATE,
+    events = [],
+    isLoading,
+    onEditEvent,
+    onDeleteEvent,
+    onAgenda,
+  } = options;
 
   return render(
     <EventCalendar
@@ -45,6 +58,7 @@ export function renderCalendar(options: RenderCalendarOptions = {}) {
       isLoading={isLoading}
       onEditEvent={onEditEvent}
       onDeleteEvent={onDeleteEvent}
+      onAgenda={onAgenda}
     />,
   );
 }

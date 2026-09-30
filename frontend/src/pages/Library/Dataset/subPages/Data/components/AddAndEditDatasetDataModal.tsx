@@ -241,6 +241,7 @@ export function AddAndEditDataModal({
                   label={label}
                   value={String(currentValue || '')}
                   options={options}
+                  translateLabels={false}
                   helpText={col.tooltip}
                   clearable
                   onSelect={(val) => {

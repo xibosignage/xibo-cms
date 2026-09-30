@@ -622,13 +622,22 @@ class DistributionReport implements ReportInterface
         }
     }
 
-    private function getDistributionReportMongoDb($fromDt, $toDt, $groupByFilter, $displayIds, $displayGroupIds, $type, $layoutId, $mediaId, $eventTag)
-    {
+    private function getDistributionReportMongoDb(
+        $fromDt,
+        $toDt,
+        $groupByFilter,
+        $displayIds,
+        $displayGroupIds,
+        $type,
+        $layoutId,
+        $mediaId,
+        $eventTag
+    ): array {
         if ((($type == 'media') && ($mediaId != '')) ||
             (($type == 'layout') && ($layoutId != '')) ||
             (($type == 'event') && ($eventTag != ''))) {
             // Get the timezone
-            $timezone = Carbon::parse()->getTimezone()->getName();
+            $timezone = Carbon::now()->getTimezone()->getName();
             $filterRangeStart = new UTCDateTime($fromDt->format('U') * 1000);
             $filterRangeEnd = new UTCDateTime($toDt->format('U') * 1000);
 

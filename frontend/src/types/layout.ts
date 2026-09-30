@@ -37,6 +37,7 @@ export interface Layout {
   campaignId: number;
   folderId: number;
   status: number;
+  statusDescription?: string;
   duration: number;
   thumbnail?: string;
   previewUrl?: string;
@@ -44,6 +45,7 @@ export interface Layout {
   campaignType?: string;
   owner: string;
   groupsWithPermissions?: string;
+  groupsWithPermissionsList?: string[] | null;
   enableStat: boolean;
   modifiedDt: string;
   code?: string | number;
@@ -56,6 +58,7 @@ export interface Layout {
   width: number;
   height: number;
   publishedStatus: string;
+  publishedDate?: string | null;
 }
 
 export interface LayoutPermissions {

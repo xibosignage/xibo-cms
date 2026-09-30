@@ -275,7 +275,9 @@ describe('Player Versions page - bulk delete', () => {
     await user.click(screen.getByRole('button', { name: /yes, delete/i }));
 
     // Error surfaces and the modal stays open.
-    expect(await screen.findByText('Version 2 is in use.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('1 player version(s) deleted successfully. Version 2 is in use.'),
+    ).toBeInTheDocument();
     expect(screen.getByText('Delete Player Versions?')).toBeInTheDocument();
 
     // Both rows were attempted and the table was refreshed.

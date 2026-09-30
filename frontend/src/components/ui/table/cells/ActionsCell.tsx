@@ -20,6 +20,7 @@
  */
 
 import type { Row } from '@tanstack/react-table';
+import { Loader2 } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
 
 import DataTableRowActions from '../DataTableRowActions';
@@ -43,8 +44,10 @@ export function ActionsCell<TData>({ row, actions }: ActionsProps<TData>) {
       {quickActions.map((action, index) => (
         <button
           key={index}
+          disabled={action.disabled}
           onClick={(e) => {
             e.stopPropagation();
+            if (action.disabled) return;
             if (action.onClick) action.onClick(row.original);
           }}
           className={twMerge(
@@ -58,7 +61,11 @@ export function ActionsCell<TData>({ row, actions }: ActionsProps<TData>) {
           aria-label={action.label}
           title={action.label}
         >
-          {action.icon && <action.icon className="w-4 h-4" />}
+          {action.loading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            action.icon && <action.icon className="w-4 h-4" />
+          )}
         </button>
       ))}
 

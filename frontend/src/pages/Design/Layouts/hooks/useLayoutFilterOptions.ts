@@ -208,6 +208,7 @@ export function useLayoutFilterOptions(t: TFunction, canTag = false) {
       return {
         ...item,
         options: ownerOptions,
+        translateLabels: false,
         onLoadMore: handleLoadMoreOwners,
         hasMore: hasMoreOwners,
         isLoadingMore: isLoadingMoreOwners,
@@ -224,6 +225,7 @@ export function useLayoutFilterOptions(t: TFunction, canTag = false) {
       return {
         ...item,
         options: groupOptions,
+        translateLabels: false,
         onLoadMore: handleLoadMoreGroups,
         hasMore: hasMoreGroups,
         isLoadingMore: isLoadingMoreGroups,
@@ -240,6 +242,7 @@ export function useLayoutFilterOptions(t: TFunction, canTag = false) {
       return {
         ...item,
         options: displayGroupOptions,
+        translateLabels: false,
         onLoadMore: handleLoadMoreDisplayGroups,
         hasMore: hasMoreDisplayGroups,
         isLoadingMore: isLoadingMoreDisplayGroups,

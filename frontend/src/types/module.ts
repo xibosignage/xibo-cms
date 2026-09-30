@@ -30,6 +30,7 @@ export interface ModuleSetting {
   title: string;
   helpText?: string;
   value?: string | number;
+  default?: string | number | null;
   options?: ModuleSettingOption[];
 }
 

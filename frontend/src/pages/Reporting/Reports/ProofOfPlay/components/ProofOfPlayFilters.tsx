@@ -104,6 +104,7 @@ export default function ProofOfPlayFilters({
             placeholder={t('All Displays')}
             searchable
             clearable
+            translateLabels={false}
             resolveLabel={displaySelect.resolveLabel}
             options={displaySelect.options}
             isLoading={displaySelect.isLoading}
@@ -142,6 +143,7 @@ export default function ProofOfPlayFilters({
             value={filter.parentCampaignId ? String(filter.parentCampaignId) : ''}
             options={campaignOpts.options}
             searchable
+            translateLabels={false}
             isLoading={campaignOpts.isLoading}
             isLoadingMore={campaignOpts.isLoadingMore}
             hasMore={campaignOpts.hasMore}

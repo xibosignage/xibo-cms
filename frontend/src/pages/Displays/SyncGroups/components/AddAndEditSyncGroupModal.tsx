@@ -249,6 +249,7 @@ export default function AddAndEditSyncGroupModal({
             }
             value={draft.leadDisplayId ? String(draft.leadDisplayId) : ''}
             options={memberDisplayOptions}
+            translateLabels={false}
             onSelect={(val) =>
               setDraft((prev) => ({ ...prev, leadDisplayId: val ? Number(val) : null }))
             }

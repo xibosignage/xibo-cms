@@ -26,7 +26,10 @@ import type { EventFilterInput } from '../EventsConfig';
 
 import type { FetchEventRequest } from '@/services/eventApi';
 import { fetchEvent } from '@/services/eventApi';
+import type { Event } from '@/types/event';
 import { isValidRegex } from '@/utils/regex';
+
+const ALL_EVENTS_PAGE_SIZE = 200;
 
 export const eventQueryKeys = {
   all: ['event'] as const,
@@ -96,6 +99,64 @@ export const useEventData = ({
     enabled,
 
     placeholderData: keepPreviousData,
+    staleTime: 1000 * 60 * 1,
+  });
+};
+
+interface UseAllEventParams {
+  advancedFilters: EventFilterInput;
+  enabled?: boolean;
+}
+
+export const useAllEventData = ({ advancedFilters, enabled = true }: UseAllEventParams) => {
+  const queryParams = { all: true, ...advancedFilters };
+
+  return useQuery({
+    queryKey: eventQueryKeys.list(queryParams),
+
+    queryFn: async ({ signal }) => {
+      const { useRegexForName, logicalOperatorName } = advancedFilters;
+
+      const baseRequest: Omit<FetchEventRequest, 'start' | 'length' | 'signal'> = {
+        name: advancedFilters.name || undefined,
+        eventTypeId: advancedFilters.eventTypeId ?? undefined,
+        campaignId: advancedFilters.layoutCampaignId ?? advancedFilters.campaignId ?? undefined,
+        displaySpecificGroupIds: advancedFilters.displaySpecificGroupIds ?? undefined,
+        displayGroupIds: advancedFilters.displayGroupIds ?? undefined,
+        geoAware: advancedFilters.geoAware ?? undefined,
+        recurring: advancedFilters.recurring ?? undefined,
+        directSchedule: advancedFilters.directSchedule ?? undefined,
+        sharedSchedule: advancedFilters.sharedSchedule ?? undefined,
+        fromDt: advancedFilters.fromDt ?? undefined,
+        toDt: advancedFilters.toDt ?? undefined,
+        ...(useRegexForName && advancedFilters.name && isValidRegex(advancedFilters.name)
+          ? { useRegexForName: 1 }
+          : {}),
+        ...(logicalOperatorName ? { logicalOperatorName } : {}),
+      };
+
+      let rows: Event[] = [];
+      let totalCount = 0;
+
+      do {
+        const response = await fetchEvent({
+          ...baseRequest,
+          start: rows.length,
+          length: ALL_EVENTS_PAGE_SIZE,
+          signal,
+        });
+        totalCount = response.totalCount;
+        if (response.rows.length === 0) {
+          break;
+        }
+        rows = rows.concat(response.rows);
+      } while (rows.length < totalCount);
+
+      return { rows, totalCount };
+    },
+
+    enabled,
+
     staleTime: 1000 * 60 * 1,
   });
 };

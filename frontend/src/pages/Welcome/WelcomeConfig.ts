@@ -71,7 +71,7 @@ export const SERVICE_CARDS: ServiceCard[] = [
     imageUrl: displaysImg,
     featureFlags: ['displays.view'],
     links: [
-      { labelKey: 'Get Started', to: '/displays/displays', variant: 'primary' },
+      { labelKey: 'Get Started', to: '/displays/all-displays', variant: 'primary' },
       {
         labelKey: 'Learn More',
         to: 'https://xibosignage.com/manual/en/displays',

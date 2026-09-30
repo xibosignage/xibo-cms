@@ -28,6 +28,7 @@
  * 3. Check if sidebar is closed if hamburger icon is clicked
  * 4. Check if no main menus are present when sidebar is closed
  */
+import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
@@ -35,6 +36,7 @@ import { describe, it, expect, vi } from 'vitest';
 import SidebarMenu from '../SideBar';
 
 import { UserProvider } from '@/context/UserContext';
+import { testQueryClient } from '@/setupTests';
 
 // --- DEFINE DATA (Just a regular variable now) ---
 const mockSettings = {
@@ -88,16 +90,19 @@ const superAdminUser = {
 describe('Sidebar Menu (The Navigation Bar)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    testQueryClient.clear();
   });
 
   it('should show the correct menu names when open', () => {
     render(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      <UserProvider initialUser={superAdminUser as any}>
-        <MemoryRouter>
-          <SidebarMenu isCollapsed={false} />
-        </MemoryRouter>
-      </UserProvider>,
+      <QueryClientProvider client={testQueryClient}>
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <UserProvider initialUser={superAdminUser as any}>
+          <MemoryRouter>
+            <SidebarMenu isCollapsed={false} />
+          </MemoryRouter>
+        </UserProvider>
+      </QueryClientProvider>,
     );
 
     const expectedMenuItems = [
@@ -121,12 +126,14 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
 
   it('should expand the main menus and display the submenus and its corresponding links', () => {
     render(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      <UserProvider initialUser={superAdminUser as any}>
-        <MemoryRouter>
-          <SidebarMenu isCollapsed={false} />
-        </MemoryRouter>
-      </UserProvider>,
+      <QueryClientProvider client={testQueryClient}>
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <UserProvider initialUser={superAdminUser as any}>
+          <MemoryRouter>
+            <SidebarMenu isCollapsed={false} />
+          </MemoryRouter>
+        </UserProvider>
+      </QueryClientProvider>,
     );
 
     // Representative sample — one link per group, mixing React Router and external URL types.
@@ -174,12 +181,14 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
 
   it('should hide the text labels when collapsed', () => {
     render(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      <UserProvider initialUser={superAdminUser as any}>
-        <MemoryRouter>
-          <SidebarMenu isCollapsed={true} />
-        </MemoryRouter>
-      </UserProvider>,
+      <QueryClientProvider client={testQueryClient}>
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <UserProvider initialUser={superAdminUser as any}>
+          <MemoryRouter>
+            <SidebarMenu isCollapsed={true} />
+          </MemoryRouter>
+        </UserProvider>
+      </QueryClientProvider>,
     );
 
     const mainLabel = screen.queryByText((content, element) => {

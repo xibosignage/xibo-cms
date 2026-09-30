@@ -257,6 +257,18 @@ $(() => {
             inactiveCheckClass: 'd-none',
           },
           {
+            id: 'scheduleLayout',
+            title: layoutEditorTrans.scheduleTitle,
+            logo: 'fa fa-clock-o',
+            action: lD.showScheduleScreen,
+            inactiveCheck: function() {
+              return lD.templateEditMode ||
+                lD.layout.editable ||
+                !lD.layout.scheduleNowPermission;
+            },
+            inactiveCheckClass: 'd-none',
+          },
+          {
             id: 'discardLayout',
             title: layoutEditorTrans.discardTitle,
             logo: 'fa fa-times-circle-o',
@@ -523,9 +535,9 @@ lD.selectObject =
       lD.addRegion(clickPosition, 'frame').then((res) => {
         const playlistId = res.data.regionPlaylist.playlistId;
         // Add media to new region
-        lD.importFromProvider(selectedQueue).then((res) => {
-          // If res is empty, it means that the import failed
-          if (res.length === 0) {
+        lD.importFromProvider(selectedQueue).then((mediaIds) => {
+          // If empty, it means that the import failed
+          if (mediaIds.length === 0) {
             // Delete new region
             lD.layout.deleteObject(
               'region',
@@ -533,7 +545,10 @@ lD.selectObject =
             );
           } else {
             // Add media queue to playlist
-            lD.addMediaToPlaylist(playlistId, res);
+            lD.addMediaToPlaylist(
+              playlistId, mediaIds, null, false,
+              true,
+            );
           }
         });
       });
@@ -1061,7 +1076,16 @@ lD.showDiscardScreen = function() {
  * Layout schedule screen
  */
 lD.showScheduleScreen = function() {
-  lD.loadFormFromAPI('schedule', lD.layout.campaignId);
+  if (window.parent !== window) {
+    window.parent.postMessage(
+      {
+        type: 'xibo:editor-schedule',
+        campaignId: lD.layout.campaignId,
+        layoutName: lD.layout.name,
+      },
+      window.location.origin,
+    );
+  }
 };
 
 /**
@@ -1891,11 +1915,12 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
   if (self.addItemPromise != null) {
     self.pendingAddedItems++;
 
-    // Run when last promise ends
-    self.addItemPromise.then(() => {
+    // Run when last promise settles
+    const runPendingItem = () => {
       self.pendingAddedItems--;
       lD.dropItemAdd(droppable, draggable, dropPosition);
-    });
+    };
+    self.addItemPromise.then(runPendingItem, runPendingItem);
 
     // Stop for now
     return false;
@@ -1914,6 +1939,9 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
      * @param {*} draggable - Dragged object
      * @param {string} mediaId - Media id
      * @param {boolean} drawerWidget - Is a drawer widget
+     * @param {boolean} chainRegionCreate
+     *  - If reverting this add should also revert the region
+     *  it was just created for
      * @return {Promise}
      */
     const importOrAddMedia = function(
@@ -1921,6 +1949,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
       draggable,
       mediaId,
       drawerWidget = false,
+      chainRegionCreate = false,
     ) {
       return new Promise((resolve, reject) => {
         if (fromProvider) {
@@ -1931,14 +1960,18 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             if (res.length === 0) {
               reject(res);
             } else {
-              lD.addMediaToPlaylist(playlistId, res, null, drawerWidget)
+              lD.addMediaToPlaylist(
+                playlistId, res, null, drawerWidget, chainRegionCreate,
+              )
                 .then((_res) => {
                   resolve(_res);
                 });
             }
           });
         } else {
-          lD.addMediaToPlaylist(playlistId, mediaId, null, drawerWidget)
+          lD.addMediaToPlaylist(
+            playlistId, mediaId, null, drawerWidget, chainRegionCreate,
+          )
             .then((_res) => {
               resolve(_res);
             });
@@ -2068,7 +2101,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           true,
         ).then((_res) => {
           itemAdded(_res);
-        });
+        }).catch(() => itemAdded());
       } else if (droppableIsZone || droppableIsPlaylist) {
         // Get region
         const region =
@@ -2089,7 +2122,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           }
 
           itemAdded();
-        });
+        }).catch(() => itemAdded());
       } else if (droppableIsPlaylist) {
         // Get playlist id
         const playlistId = $(droppable).data('playlistId');
@@ -2104,7 +2137,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           lD.openPlaylistEditor(res.data.regionPlaylist.playlistId);
 
           itemAdded();
-        });
+        }).catch(() => itemAdded());
       } else {
         // Calculate dimensions with original ratio
         const [startWidth, startHeight] =
@@ -2130,11 +2163,11 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             res.data.regionPlaylist.playlistId,
             draggable,
             mediaId,
+            false,
+            true,
           ).catch((_error) => {
             // Delete new region
             lD.layout.deleteObject('region', res.data.regionPlaylist.regionId);
-
-            reject();
           }).then(itemAdded);
         });
       }
@@ -2680,6 +2713,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
                 // If res is empty, it means that the import failed
                 if (res.length === 0) {
                   console.error(errorMessagesTrans.failedToImportMedia);
+                  itemAdded();
                 } else {
                   // Add media to draggableData
                   draggableData.mediaId = res[0];
@@ -2945,7 +2979,8 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
               false,
               true,
               true,
-              false,
+              true,
+              true,
             ).then(itemAdded);
           } else {
             // If we're adding a specific playlist, we need to create a
@@ -2966,10 +3001,11 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
     }
   });
 
-  // When promise resolves, always mark it as done
-  this.addItemPromise.then(() => {
+  // When promise settles, always mark it as done
+  const clearAddItemPromise = () => {
     self.addItemPromise = null;
-  });
+  };
+  this.addItemPromise.then(clearAddItemPromise, clearAddItemPromise);
 
   // Return promise
   return this.addItemPromise;
@@ -2995,6 +3031,9 @@ lD.getUploadDialogClassName = function() {
  * @param {boolean} reloadData If the layout should be reloaded
  * @param {boolean} selectNewWidget Select the new widget after being added
  * @param {boolean} addToHistory Add change to history?
+ * @param {boolean} chainRegionCreate
+ *  - If reverting this add should also revert the region
+ *  it was just created for
  * @return {Promise} Promise
  */
 lD.addModuleToPlaylist = function(
@@ -3008,6 +3047,7 @@ lD.addModuleToPlaylist = function(
   reloadData = true,
   selectNewWidget = true,
   addToHistory = true,
+  chainRegionCreate = false,
 ) {
   if (moduleData.regionSpecific == 0) {
     // Upload form if not region specific
@@ -3118,6 +3158,7 @@ lD.addModuleToPlaylist = function(
           type: linkToAPI.type,
         },
         addToHistory: addToHistory,
+        chainRevertWithPrevious: chainRegionCreate,
       },
     ).then((res) => { // Success
       // Check if we added a element
@@ -3250,6 +3291,9 @@ lD.openUploadForm = function({
  * @param {Array.<number>} media
  * @param {number=} addToPosition
  * @param {boolean} drawerWidget If the widget is in the drawer
+ * @param {boolean} chainRegionCreate
+ *  - If reverting this add should also revert the region
+ *  it was just created for
  * @return {Promise} Promise
  */
 lD.addMediaToPlaylist = function(
@@ -3257,6 +3301,7 @@ lD.addMediaToPlaylist = function(
   media,
   addToPosition = null,
   drawerWidget = false,
+  chainRegionCreate = false,
 ) {
   // Get media Id
   let mediaToAdd = {};
@@ -3298,6 +3343,7 @@ lD.addMediaToPlaylist = function(
     {
       updateTargetId: true,
       updateTargetType: 'widget',
+      chainRevertWithPrevious: chainRegionCreate,
     },
   ).then((res) => { // Success
     // Save the new widget as temporary
@@ -5023,7 +5069,7 @@ lD.importFromProvider = function(items) {
           let addFlag = true;
           if (newElement.isError) {
             addFlag = false;
-            toastr.error(newElement.error, newElement.item.id);
+            toastr.error(newElement.error, newElement.item.provider?.id);
           }
 
           itemsResult.forEach((oldElement, key) => {
@@ -5065,6 +5111,7 @@ lD.importFromProvider = function(items) {
     });
   }).catch(function() {
     toastr.error(errorMessagesTrans.importingMediaFailed);
+    return [];
   });
 };
 

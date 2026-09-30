@@ -111,6 +111,7 @@ export default function DisplaysTab({
             value={formValues.DEFAULT_LAYOUT ?? ''}
             initialLabel={relatedEntities.defaultLayout?.layout}
             options={layoutOptions.options}
+            translateLabels={false}
             onSelect={(v) => updateField('DEFAULT_LAYOUT', v ?? '')}
             isLoading={layoutOptions.isLoading}
             onLoadMore={layoutOptions.loadMore}

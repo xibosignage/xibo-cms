@@ -368,19 +368,35 @@ class DisplayProfile extends Base
             }
         }
 
-        // If we are chromeOS and the default profile, has the player version changed?
-        if ($displayProfile->type === 'chromeOS'
-            && ($displayProfile->isDefault || $displayProfile->hasPropertyChanged('isDefault'))
-            && ($originalPlayerVersionId !== $displayProfile->getSetting('playerVersionId'))
-        ) {
-            $this->getLog()->debug('edit: updating symlink to the latest chromeOS version');
+        if ($displayProfile->type === 'chromeOS') {
+            $newPlayerVersionId = $displayProfile->getSetting('playerVersionId');
 
-            // Update a symlink to the new player version.
-            try {
-                $version = $this->playerVersionFactory->getById($displayProfile->getSetting('playerVersionId'));
-                $version->setActive();
-            } catch (NotFoundException) {
-                $this->getLog()->error('edit: Player version does not exist');
+            // Does this edit change who is responsible for the shared "latest" symlink (this
+            // profile becoming/ceasing to be the default), or what the responsible (default)
+            // profile's version now is? Only one profile can be default per type at a time
+            // (enforced in validate()), so whichever of those two things changed here is authoritative.
+            if ($displayProfile->hasPropertyChanged('isDefault')
+                || ($displayProfile->isDefault && $originalPlayerVersionId !== $newPlayerVersionId)
+            ) {
+                if (!$displayProfile->isDefault) {
+                    // No longer the default - nothing is authoritative for chromeOS right now.
+                    $this->getLog()->debug('edit: no longer the default chromeOS profile, clearing symlink');
+                    $this->clearActiveChromeOsVersion();
+                } elseif ($newPlayerVersionId === null) {
+                    // Cleared - stop serving whichever version was previously made active.
+                    $this->getLog()->debug('edit: clearing symlink to the latest chromeOS version');
+                    $this->clearActiveChromeOsVersion();
+                } else {
+                    $this->getLog()->debug('edit: updating symlink to the latest chromeOS version');
+
+                    // Update a symlink to the new player version.
+                    try {
+                        $version = $this->playerVersionFactory->getById($newPlayerVersionId);
+                        $version->setActive();
+                    } catch (NotFoundException) {
+                        $this->getLog()->error('edit: Player version does not exist');
+                    }
+                }
             }
         }
 
@@ -540,6 +556,17 @@ class DisplayProfile extends Base
     public function getDisplayProfileTypes(Response $response): Response
     {
         return $response->withJson($this->displayProfileFactory->getAvailableTypes());
+    }
+
+    /**
+     * Stop serving any chromeOS player version - used when there is no longer a default chromeOS
+     * profile with a version configured to be authoritative for the shared "latest" symlink.
+     */
+    private function clearActiveChromeOsVersion(): void
+    {
+        $version = $this->playerVersionFactory->createEmpty();
+        $version->type = 'chromeOS';
+        $version->unsetActive();
     }
 
     /**

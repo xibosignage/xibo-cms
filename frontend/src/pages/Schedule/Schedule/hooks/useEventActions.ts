@@ -29,6 +29,7 @@ import { notify } from '@/components/ui/Notification';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { cloneEvent, deleteEvent, deleteEventOccurrence } from '@/services/eventApi';
 import type { Event } from '@/types/event';
+import { isAlreadyDeletedError } from '@/utils/errors';
 
 interface UseEventActionsProps {
   t: TFunction;
@@ -59,15 +60,27 @@ export function useEventActions({
         itemsToDelete.map((item) => deleteEvent(item.eventId)),
       );
 
-      const failed = results.filter((r) => r.status === 'rejected');
-      if (failed.length > 0) {
-        const firstRejected = failed[0] as PromiseRejectedResult;
+      const trueFailed = results.filter(
+        (r) => r.status === 'rejected' && !isAlreadyDeletedError(r.reason),
+      );
+      const deletedCount = itemsToDelete.length - trueFailed.length;
+
+      if (trueFailed.length > 0) {
+        const firstRejected = trueFailed[0] as PromiseRejectedResult;
         const reason = firstRejected.reason;
-        const message =
+        const specificMessage =
           isAxiosError(reason) && reason.response?.data?.message
             ? reason.response.data.message
-            : t('{{count}} item(s) could not be deleted.', { count: failed.length });
-        setDeleteError(message);
+            : undefined;
+        const failurePart =
+          specificMessage ??
+          t('{{count}} event(s) could not be deleted.', { count: trueFailed.length });
+        const successPart =
+          deletedCount > 0
+            ? t('{{count}} event(s) deleted successfully.', { count: deletedCount })
+            : '';
+
+        setDeleteError([successPart, failurePart].filter(Boolean).join(' '));
         setRowSelection({});
         handleRefresh();
         return;
@@ -79,7 +92,7 @@ export function useEventActions({
       notify.success(
         isSingleRecurringSeries
           ? t('The entire recurring event series was deleted successfully.')
-          : t('{{count}} event(s) deleted successfully.', { count: itemsToDelete.length }),
+          : t('{{count}} event(s) deleted successfully.', { count: deletedCount }),
       );
       setRowSelection({});
       handleRefresh();

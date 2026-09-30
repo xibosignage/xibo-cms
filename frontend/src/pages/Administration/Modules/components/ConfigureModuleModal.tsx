@@ -44,7 +44,7 @@ type DraftSettings = Record<string, string | number>;
 function buildInitialDraft(module: Module): DraftSettings {
   const draft: DraftSettings = {};
   (module.settings ?? []).forEach((setting) => {
-    draft[setting.id] = setting.value ?? '';
+    draft[setting.id] = setting.value ?? setting.default ?? '';
   });
   return draft;
 }
@@ -193,6 +193,7 @@ export default function ConfigureModuleModal({
           label={t('Default Duration')}
           value={defaultDuration}
           type="number"
+          placeholder={t('Add number')}
           helpText={t(
             'The default duration for Widgets of this Module when the user has elected to not set a specific duration.',
           )}

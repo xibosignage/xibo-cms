@@ -138,6 +138,7 @@ export function useEventFilterOptions(t: TFunction) {
       return {
         ...item,
         options: layoutOptions,
+        translateLabels: false,
         onLoadMore: handleLoadMoreLayouts,
         hasMore: hasMoreLayouts,
         isLoadingMore: isLoadingMoreLayouts,
@@ -151,6 +152,7 @@ export function useEventFilterOptions(t: TFunction) {
       return {
         ...item,
         options: campaignOptions,
+        translateLabels: false,
         onLoadMore: handleLoadMoreCampaigns,
         hasMore: hasMoreCampaigns,
         isLoadingMore: isLoadingMoreCampaigns,

@@ -358,7 +358,7 @@ class MediaFactory extends BaseFactory
                             ? $reason->getPrevious()->getMessage()
                             : $reason->getMessage();
 
-                        call_user_func($rejected, $reasonMessage);
+                        call_user_func($rejected, $reasonMessage, $queue[$index]);
                     }
                 }
             ]);
@@ -543,7 +543,8 @@ class MediaFactory extends BaseFactory
         $sanitizedFilter = $this->getSanitizer($filterBy);
         $allowedColumns = [
             'mediaId', 'name', 'type', 'duration', 'fileSize', 'owner', 'sharing', 'released', 'fileName',
-            'enableStat', 'createdDt', 'modifiedDt', 'expires', 'groupsWithPermissions'
+            'enableStat', 'createdDt', 'modifiedDt', 'expires', 'groupsWithPermissions',
+            'groupsWithPermissionsList'
         ];
         $customColumns = [
             'revised'           => '`parentId`',
@@ -552,7 +553,9 @@ class MediaFactory extends BaseFactory
             'fileSizeFormatted' => '`fileSize`',
             'mediaType'         => 'media.`type`',
             'resolution'        => '(media.`width` * media.`height`)',
-            'expiresFormatted'  => '`expires`'
+            'expiresFormatted'  => '`expires`',
+            'groupsWithPermissions' => '`groupsWithPermissionsListJson`',
+            'groupsWithPermissionsList' => '`groupsWithPermissionsListJson`',
         ];
 
         $sortOrder = $this->buildSortQuery(
@@ -594,16 +597,14 @@ class MediaFactory extends BaseFactory
                `user`.email AS userEmail,
                `folder`.folderName,
             ';
-        $select .= '     (SELECT GROUP_CONCAT(DISTINCT `group`.group)
-                              FROM `permission`
-                                INNER JOIN `permissionentity`
-                                ON `permissionentity`.entityId = permission.entityId
-                                INNER JOIN `group`
-                                ON `group`.groupId = `permission`.groupId
-                             WHERE entity = :entity
-                                AND objectId = media.mediaId
-                                AND view = 1
-                            ) AS groupsWithPermissions, ';
+        $select .= '     (SELECT GROUP_CONCAT(DISTINCT `group`.group ORDER BY `group`.group SEPARATOR \'#@\')
+                                FROM `permission`
+                                    INNER JOIN `permissionentity` ON `permissionentity`.entityId = permission.entityId
+                                    INNER JOIN `group` ON `group`.groupId = `permission`.groupId
+                                WHERE entity = :entity
+                                    AND objectId = media.mediaId
+                                    AND view = 1
+                            ) AS groupsWithPermissionsListJson, ';
         $params['entity'] = 'Xibo\\Entity\\Media';
 
         $select .= '   media.originalFileName AS fileName ';
@@ -695,7 +696,8 @@ class MediaFactory extends BaseFactory
                     $dataSetId = $sanitizedDataSet->getInt('dataSetId');
                     $heading = $sanitizedDataSet->getString('heading');
 
-                    $body .= ' SELECT `' .  $heading . '` AS mediaId FROM `dataset_' . $dataSetId . '`';
+                    $body .= ' SELECT `' .  $heading . '` AS mediaId FROM `dataset_' . $dataSetId
+                        . '` WHERE `' . $heading . '` IS NOT NULL';
                 }
 
                 $body .= ') ';
@@ -1030,6 +1032,15 @@ class MediaFactory extends BaseFactory
             $media->excludeProperty('layoutBackgroundImages');
             $media->excludeProperty('widgets');
             $media->excludeProperty('displayGroups');
+
+            $names = null;
+            if ($row['groupsWithPermissionsListJson'] !== null) {
+                $decoded = explode('#@', $row['groupsWithPermissionsListJson']);
+                $names = is_array($decoded) ? $decoded : null;
+            }
+            $media->groupsWithPermissionsList = $names ?? [];
+            $media->groupsWithPermissions = $names !== null ? implode(',', $names) : null;
+            $media->excludeProperty('groupsWithPermissionsListJson');
 
             $entries[] = $media;
         }

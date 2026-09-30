@@ -231,16 +231,13 @@ class DataSetFactory extends BaseFactory
             dataset.`permissionsFolderId`,
             user.userName AS owner,
             folder.folderName,
-            (
-              SELECT GROUP_CONCAT(DISTINCT `group`.group)
-                  FROM `permission`
-                    INNER JOIN `permissionentity`
-                    ON `permissionentity`.entityId = permission.entityId
-                    INNER JOIN `group`
-                    ON `group`.groupId = `permission`.groupId
-                 WHERE entity = :groupsWithPermissionsEntity
+            (SELECT GROUP_CONCAT(DISTINCT `group`.group ORDER BY `group`.group SEPARATOR \'#@\')
+                FROM `permission`
+                    INNER JOIN `permissionentity` ON `permissionentity`.entityId = permission.entityId
+                    INNER JOIN `group` ON `group`.groupId = `permission`.groupId
+                WHERE entity = :groupsWithPermissionsEntity
                     AND objectId = dataset.dataSetId
-            ) AS groupsWithPermissions
+            ) AS groupsWithPermissionsListJson
         ';
 
         $params['groupsWithPermissionsEntity'] = 'Xibo\\Entity\\DataSet';
@@ -333,13 +330,18 @@ class DataSetFactory extends BaseFactory
             'isRealTime',
             'owner',
             'lastSync',
-            'groupsWithPermissions'
+            'groupsWithPermissions',
+            'groupsWithPermissionsList'
         ];
 
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            ['dataLastModified' => '`lastDataEdit`'],
+            [
+                'dataLastModified' => '`lastDataEdit`',
+                'groupsWithPermissions' => '`groupsWithPermissionsListJson`',
+                'groupsWithPermissionsList' => '`groupsWithPermissionsListJson`',
+            ],
             ['dataSetId ASC'],
             'dataSetId'
         );
@@ -360,7 +362,7 @@ class DataSetFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row, [
+            $dataSet = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
                     'isLookup',
                     'isRemote',
@@ -374,6 +376,15 @@ class DataSetFactory extends BaseFactory
                     'ignoreFirstRow',
                 ],
             ]);
+            $names = null;
+            if ($row['groupsWithPermissionsListJson'] !== null) {
+                $decoded = explode('#@', $row['groupsWithPermissionsListJson']);
+                $names = is_array($decoded) ? $decoded : null;
+            }
+            $dataSet->groupsWithPermissionsList = $names ?? [];
+            $dataSet->groupsWithPermissions = $names !== null ? implode(',', $names) : null;
+            $dataSet->excludeProperty('groupsWithPermissionsListJson');
+            $entries[] = $dataSet;
         }
 
         // Paging

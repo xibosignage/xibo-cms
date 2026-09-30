@@ -274,6 +274,7 @@ export default function SavedReportViewer() {
   const periodEnd = metadata?.periodEnd;
 
   const firstRow = tableRows[0];
+  const hasColumnConfig = !!(reportName && REPORT_COLUMN_CONFIG[reportName]);
   const resolvedColumns: ColumnDef[] = (() => {
     const config = reportName ? REPORT_COLUMN_CONFIG[reportName] : undefined;
     if (config) {
@@ -407,7 +408,7 @@ export default function SavedReportViewer() {
                               key={col.id ?? col.key}
                               className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap bg-slate-50"
                             >
-                              {col.label ? t(col.label) : ''}
+                              {col.label ? (hasColumnConfig ? t(col.label) : col.label) : ''}
                             </th>
                           ))}
                         </tr>

@@ -82,6 +82,7 @@ export default function AddScheduleModal({
           options={displaySelect.options}
           searchable
           clearable
+          translateLabels={false}
           isLoading={displaySelect.isLoading}
           onSearch={displaySelect.onSearch}
           onLoadMore={displaySelect.onLoadMore}

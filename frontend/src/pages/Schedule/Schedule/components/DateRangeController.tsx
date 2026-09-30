@@ -48,9 +48,8 @@ interface DateRangeControllerProps {
   onStateChange?: (state: DateRangeControllerState) => void;
 }
 
-function toLocalISO(d: Date): string {
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+function toZonedISO(d: Date, timezone: string): string {
+  return DateTime.fromJSDate(d, { zone: timezone }).toFormat("yyyy-MM-dd'T'HH:mm:ss");
 }
 
 function computeRange(
@@ -369,8 +368,8 @@ export function DateRangeController({
                 }
                 onApply={(result) => {
                   if (result.type === 'range') {
-                    setCustomFrom(toLocalISO(result.from));
-                    setCustomTo(toLocalISO(result.to));
+                    setCustomFrom(toZonedISO(result.from, timezone));
+                    setCustomTo(toZonedISO(result.to, timezone));
                     setViewMode('custom');
                   }
                   setShowDatePicker(false);

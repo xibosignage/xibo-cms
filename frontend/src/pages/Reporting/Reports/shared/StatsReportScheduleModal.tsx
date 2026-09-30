@@ -164,6 +164,7 @@ export default function StatsReportScheduleModal({
         placeholder={t('All Displays')}
         searchable
         clearable
+        translateLabels={false}
         resolveLabel={displaySelect.resolveLabel}
         options={displaySelect.options}
         isLoading={displaySelect.isLoading}
@@ -188,6 +189,7 @@ export default function StatsReportScheduleModal({
           placeholder={t('All Groups')}
           searchable
           clearable
+          translateLabels={false}
           resolveLabel={displayGroupSelect.resolveLabel}
           options={displayGroupSelect.options}
           isLoading={displayGroupSelect.isLoading}

@@ -1151,7 +1151,7 @@ pE.importFromProvider = function(items) {
           let addFlag = true;
           if (newItem.isError) {
             addFlag = false;
-            toastr.error(newItem.error, newItem.item.id);
+            toastr.error(newItem.error, newItem.item.provider?.id);
           }
 
           itemsResult.forEach((oldItem, key) => {

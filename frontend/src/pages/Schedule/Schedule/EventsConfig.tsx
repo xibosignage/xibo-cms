@@ -555,7 +555,7 @@ export const getEventColumns = (props: EventActionsProps): ColumnDef<Event>[] =>
       accessorKey: 'isPriority',
       header: t('Priority'),
       size: 90,
-      cell: (info) => <CheckMarkCell active={info.getValue<number>() === 1} />,
+      cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
     },
     {
       id: 'criteria',

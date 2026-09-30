@@ -36,3 +36,24 @@ export const mockUser: User = buildCurrentUser(PERSONAS.superAdmin, {
     TIME_FORMAT_JS: 'HH:mm',
   },
 });
+
+// -----------------------------------------------------------------------------
+// A viewer in a +11 timezone whose date format carries a time.
+//
+// mockUser above is UTC with a date-only DATE_FORMAT_JS, which makes it useless
+// for checking that a timestamp is converted rather than merely printed: UTC is
+// the identity conversion, and without a time token in the format there is no
+// time on screen to be wrong. Use this user wherever a rendered timestamp is the
+// thing under test.
+// -----------------------------------------------------------------------------
+export const mockUserInSydney: User = buildCurrentUser(PERSONAS.superAdmin, {
+  userId: 1,
+  userName: 'TestUser',
+  groupId: 1,
+  settings: {
+    defaultTimezone: 'Australia/Sydney',
+    defaultLanguage: 'en',
+    DATE_FORMAT_JS: 'DD/MM/YYYY HH:mm',
+    TIME_FORMAT_JS: 'HH:mm',
+  },
+});

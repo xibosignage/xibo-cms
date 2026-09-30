@@ -137,6 +137,6 @@ describe('Delete Layout', () => {
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeInTheDocument();
     });
-    expect(screen.getByText('1 item(s) could not be deleted.')).toBeInTheDocument();
+    expect(screen.getByText('1 layout(s) could not be deleted.')).toBeInTheDocument();
   });
 });

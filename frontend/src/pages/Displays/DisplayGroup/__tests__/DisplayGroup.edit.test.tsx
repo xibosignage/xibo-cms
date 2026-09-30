@@ -111,7 +111,14 @@ describe('DisplayGroup page - edit', () => {
     // than the default 1000ms, causing intermittent flakes.
     await screen.findByText(mockDisplayGroup.displayGroup, {}, { timeout: 5000 });
 
-    const editButton = await screen.findByRole('button', { name: /edit/i }, { timeout: 5000 });
+    const moreActionsButton = await screen.findByRole(
+      'button',
+      { name: /more actions/i },
+      { timeout: 5000 },
+    );
+    await user.click(moreActionsButton);
+
+    const editButton = await screen.findByRole('button', { name: /^edit$/i }, { timeout: 5000 });
     await user.click(editButton);
 
     expect(await screen.findByRole('dialog', { name: /edit display group/i })).toBeInTheDocument();
@@ -133,7 +140,14 @@ describe('DisplayGroup page - edit', () => {
       await screen.findByText(mockDisplayGroup.displayGroup, {}, { timeout: 5000 }),
     ).toBeInTheDocument();
 
-    const editButton = await screen.findByRole('button', { name: /edit/i }, { timeout: 5000 });
+    const moreActionsButton = await screen.findByRole(
+      'button',
+      { name: /more actions/i },
+      { timeout: 5000 },
+    );
+    await user.click(moreActionsButton);
+
+    const editButton = await screen.findByRole('button', { name: /^edit$/i }, { timeout: 5000 });
     await user.click(editButton);
 
     // Queue the updated data so the table gets it when it re-fetches after save.

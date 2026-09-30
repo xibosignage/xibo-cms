@@ -49,7 +49,7 @@ export default function PlaylistDashboard() {
   // Load saved playlist selection
   const { data: savedPref, isSuccess: hasLoadedPref } = useQuery({
     queryKey: ['userPref', PREF_KEY],
-    queryFn: () => fetchUserPreference<PlaylistDashboardPref>(PREF_KEY),
+    queryFn: () => fetchUserPreference<PlaylistDashboardPref>(PREF_KEY).then((v) => v ?? null),
     staleTime: Infinity,
   });
 

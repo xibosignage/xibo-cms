@@ -43,6 +43,7 @@ export interface DisplayGroup {
   tags: Tag[];
   bandwidthLimit: number;
   groupsWithPermissions: string;
+  groupsWithPermissionsList?: string[] | null;
   createdDt: string;
   modifiedDt: string;
   folderId: number;

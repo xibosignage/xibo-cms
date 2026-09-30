@@ -81,12 +81,25 @@ export function SidebarPopup({ route, isCollapsed, children }: SidebarPopupProps
             className="z-100 min-w-50 text-(--sidebar-fg) bg-(--sidebar-bg) rounded-e-md shadow-lg"
           >
             {/* Parent label */}
-            <a
-              href={!route.subLinks ? route.externalURL || route.path : ''}
-              className={`block px-4 py-2 text-sm bg-(--sidebar-overlay) ${route.subLinks ? 'pointer-events-none' : 'cursor-pointer'}`}
-            >
-              {t(route.labelKey)}
-            </a>
+            {route.subLinks ? (
+              <span className="block px-4 py-2 text-sm bg-(--sidebar-overlay)">
+                {t(route.labelKey)}
+              </span>
+            ) : route.externalURL ? (
+              <a
+                href={route.externalURL}
+                className="block px-4 py-2 text-sm bg-(--sidebar-overlay) cursor-pointer"
+              >
+                {t(route.labelKey)}
+              </a>
+            ) : (
+              <NavLink
+                to={`/${route.path}`}
+                className="block px-4 py-2 text-sm bg-(--sidebar-overlay) cursor-pointer"
+              >
+                {t(route.labelKey)}
+              </NavLink>
+            )}
 
             {route.subLinks && (
               <div className="flex flex-col w-full gap-1 px-6 py-2 bg-black/10 border-(--sidebar-overlay-strong)">

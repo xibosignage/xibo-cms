@@ -32,7 +32,7 @@ import {
   useInteractions,
 } from '@floating-ui/react';
 import { ChevronDown, Search, X } from 'lucide-react';
-import { useId, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
@@ -58,6 +58,11 @@ interface MultiSelectDropdownProps {
   showTags?: boolean;
   onDropdownClose?: () => void;
   optional?: boolean;
+  resolveLabel?: (value: string) => Promise<string>;
+  onSearch?: (term: string) => void;
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
 }
 
 export default function MultiSelectDropdown({
@@ -75,19 +80,99 @@ export default function MultiSelectDropdown({
   showTags = false,
   onDropdownClose,
   optional = false,
+  resolveLabel,
+  onSearch,
+  onLoadMore,
+  hasMore,
+  isLoadingMore,
 }: MultiSelectDropdownProps) {
   const { t } = useTranslation();
   const id = useId();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const listboxRef = useRef<HTMLDivElement>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const isLoadingMoreRef = useRef(isLoadingMore);
+  isLoadingMoreRef.current = isLoadingMore;
+  const onLoadMoreRef = useRef(onLoadMore);
+  onLoadMoreRef.current = onLoadMore;
+  const labelCache = useRef<Map<string, string>>(new Map());
+  const resolvingRef = useRef<Set<string>>(new Set());
+  const resolveAttemptedRef = useRef<Set<string>>(new Set());
+  const [resolveVersion, setResolveVersion] = useState(0);
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
     if (!open) {
       setSearchTerm('');
+      onSearch?.('');
       onDropdownClose?.();
     }
   };
+
+  useEffect(() => {
+    if (!resolveLabel || value.length === 0) {
+      return;
+    }
+    const missing = value.filter(
+      (v) =>
+        !options.some((o) => o.value === v) &&
+        !labelCache.current.has(v) &&
+        !resolvingRef.current.has(v) &&
+        !resolveAttemptedRef.current.has(v),
+    );
+    if (missing.length === 0) {
+      return;
+    }
+    missing.forEach((v) => {
+      resolvingRef.current.add(v);
+      resolveAttemptedRef.current.add(v);
+    });
+    Promise.all(
+      missing.map((v) =>
+        resolveLabel(v)
+          .then((resolved) => {
+            labelCache.current.set(v, resolved);
+          })
+          .catch(() => {})
+          .finally(() => {
+            resolvingRef.current.delete(v);
+          }),
+      ),
+    ).then(() => setResolveVersion((n) => n + 1));
+  }, [value, options, resolveLabel]);
+
+  useEffect(() => {
+    if (
+      !isOpen ||
+      !hasMore ||
+      !onLoadMoreRef.current ||
+      !sentinelRef.current ||
+      !listboxRef.current
+    ) {
+      return;
+    }
+
+    const el = sentinelRef.current;
+    let requested = false;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0]?.isIntersecting || isLoadingMoreRef.current) {
+          requested = false;
+          return;
+        }
+        if (requested) {
+          return;
+        }
+        requested = true;
+        onLoadMoreRef.current?.();
+      },
+      { threshold: 0.1, root: listboxRef.current },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [isOpen, hasMore, isLoadingMore]);
 
   const { refs, floatingStyles, context } = useFloating({
     open: isOpen,
@@ -122,9 +207,10 @@ export default function MultiSelectDropdown({
     }
   };
 
-  const visibleOptions = searchTerm
-    ? options.filter((o) => o.label.toLowerCase().includes(searchTerm.toLowerCase()))
-    : options;
+  const visibleOptions =
+    !onSearch && searchTerm
+      ? options.filter((o) => o.label.toLowerCase().includes(searchTerm.toLowerCase()))
+      : options;
 
   const labelSpanRef = useRef<HTMLSpanElement>(null);
   const [selectedLabel, setSelectedLabel] = useState(
@@ -145,7 +231,9 @@ export default function MultiSelectDropdown({
         return;
       }
 
-      const labels = value.map((v) => options.find((o) => o.value === v)?.label ?? v);
+      const labels = value.map(
+        (v) => options.find((o) => o.value === v)?.label ?? labelCache.current.get(v) ?? v,
+      );
       const style = getComputedStyle(el);
       const availableWidth =
         el.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
@@ -179,7 +267,7 @@ export default function MultiSelectDropdown({
     const ro = new ResizeObserver(compute);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [value, options, placeholder, t]);
+  }, [value, options, placeholder, t, resolveVersion]);
 
   return (
     <div className={twMerge('flex flex-col gap-1 relative w-full', className)}>
@@ -214,7 +302,7 @@ export default function MultiSelectDropdown({
                   key={v}
                   className="flex items-center gap-1.5 px-2 py-0.5 text-sm border text-gray-800 border-gray-400 rounded-full"
                 >
-                  {opt?.label ?? v}
+                  {opt?.label ?? labelCache.current.get(v) ?? v}
                   <button
                     type="button"
                     onClick={(e) => {
@@ -266,7 +354,10 @@ export default function MultiSelectDropdown({
                 className="flex-1 text-sm outline-none border-none bg-transparent"
                 placeholder={searchPlaceholder ?? t('Search…')}
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  onSearch?.(e.target.value);
+                }}
                 onClick={(e) => e.stopPropagation()}
               />
             </div>
@@ -274,6 +365,7 @@ export default function MultiSelectDropdown({
               id={`${id}-listbox`}
               role="listbox"
               aria-multiselectable="true"
+              ref={listboxRef}
               className="flex flex-col p-2 text-sm overflow-y-auto flex-1 min-h-0"
             >
               {(() => {
@@ -316,6 +408,10 @@ export default function MultiSelectDropdown({
                         />
                       );
                     })}
+                    {hasMore && <div ref={sentinelRef} className="h-1" />}
+                    {isLoadingMore && (
+                      <div className="text-xs text-gray-400 text-center py-1">{t('Loading…')}</div>
+                    )}
                   </>
                 );
               })()}

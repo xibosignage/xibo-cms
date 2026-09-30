@@ -139,7 +139,7 @@ export default function Displays() {
       xmrRegistered: false,
       commercialLicence: false,
       remote: false,
-      groupsWithPermissions: false,
+      groupsWithPermissionsList: false,
       screenSize: false,
       isMobile: false,
       isOutdoor: false,
@@ -244,6 +244,7 @@ export default function Displays() {
     confirmDelete,
     confirmAuthorise,
     handleConfirmMove,
+    isMoving,
     isActionPending,
     actionError,
     setActionError,
@@ -516,7 +517,7 @@ export default function Displays() {
 
         <div className={`min-h-0 flex flex-col ${viewMode === 'map' && 'flex-1'}`}>
           {!isHydrated ? (
-            <div className="flex-1 flex items-center justify-center bg-gray-50 animate-pulse rounded-lg border border-gray-200">
+            <div className="flex-1 min-h-64 flex items-center justify-center bg-gray-50 animate-pulse rounded-lg border border-gray-200">
               <span className="text-gray-400 font-medium">{t('Loading your displays...')}</span>
             </div>
           ) : viewMode === 'map' ? (
@@ -577,6 +578,7 @@ export default function Displays() {
           handleRefresh,
           deleteError,
           isDeleting,
+          isMoving,
           isActionPending,
           actionError,
         }}

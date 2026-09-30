@@ -68,6 +68,8 @@ void i18n.use(initReactI18next).init({
   lng: lang,
   fallbackLng: FALLBACK_LANG,
   interpolation: { escapeValue: false },
+  nsSeparator: false,
+  keySeparator: false,
   resources: {
     [lang]: { translation: translations },
   },

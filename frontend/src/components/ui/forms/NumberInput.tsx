@@ -31,6 +31,7 @@ interface NumberInputProps {
   helpText?: string;
   error?: string;
   onChange: (num: number) => void;
+  onClear?: () => void;
   className?: string;
   disabled?: boolean;
   min?: number;
@@ -43,6 +44,7 @@ export default function NumberInput({
   name,
   value,
   onChange,
+  onClear,
   className,
   label,
   placeholder,
@@ -69,6 +71,15 @@ export default function NumberInput({
       max={max}
       step={step}
       onChange={(e) => {
+        if (e.target.value === '') {
+          if (onClear) {
+            onClear();
+          } else {
+            onChange(0);
+          }
+          return;
+        }
+
         const numericValue = e.target.valueAsNumber;
 
         if (!Number.isNaN(numericValue)) {

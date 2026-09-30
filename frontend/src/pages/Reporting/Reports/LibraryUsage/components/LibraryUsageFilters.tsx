@@ -67,6 +67,7 @@ export default function LibraryUsageFilters({
             options={users.options}
             searchable
             clearable
+            translateLabels={false}
             isLoading={users.isLoading}
             onSearch={users.onSearch}
             onLoadMore={users.onLoadMore}
@@ -83,6 +84,7 @@ export default function LibraryUsageFilters({
             options={groups.options}
             searchable
             clearable
+            translateLabels={false}
             isLoading={groups.isLoading}
             onSearch={groups.onSearch}
             onLoadMore={groups.onLoadMore}

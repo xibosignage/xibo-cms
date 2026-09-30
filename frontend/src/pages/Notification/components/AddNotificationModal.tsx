@@ -19,7 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useQuery } from '@tanstack/react-query';
 import { Extension } from '@tiptap/core';
 import Color from '@tiptap/extension-color';
 import FontFamily from '@tiptap/extension-font-family';
@@ -70,6 +69,7 @@ import TagInput from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
 import Modal from '@/components/ui/modals/Modal';
 import { useUserContext } from '@/context/UserContext';
+import { useDebounce } from '@/hooks/useDebounce';
 import { fetchDisplayGroups } from '@/services/displayGroupApi';
 import {
   createNotification,
@@ -78,8 +78,10 @@ import {
   uploadNotificationAttachment,
 } from '@/services/notificationApi';
 import { fetchUsers } from '@/services/userApi';
-import { fetchUserGroups } from '@/services/userGroupApi';
+import { fetchUserGroupById, fetchUserGroups } from '@/services/userGroupApi';
 import type { Tag } from '@/types/tag';
+
+const AUDIENCE_PAGE_SIZE = 20;
 
 interface AddNotificationModalProps {
   isOpen?: boolean;
@@ -555,6 +557,32 @@ export default function AddNotificationModal({
   const [pendingBody, setPendingBody] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [userGroupRows, setUserGroupRows] = useState<{ groupId: number; group: string }[]>([]);
+  const [userGroupPage, setUserGroupPage] = useState(0);
+  const [userGroupHasMore, setUserGroupHasMore] = useState(false);
+  const [isLoadingMoreUserGroups, setIsLoadingMoreUserGroups] = useState(false);
+  const [userRows, setUserRows] = useState<{ groupId?: number; userName: string }[]>([]);
+  const [userPage, setUserPage] = useState(0);
+  const [userHasMore, setUserHasMore] = useState(false);
+  const [isLoadingMoreUsers, setIsLoadingMoreUsers] = useState(false);
+  const [recipientSearch, setRecipientSearch] = useState('');
+  const debouncedRecipientSearch = useDebounce(recipientSearch, 300);
+
+  const [displayGroupRows, setDisplayGroupRows] = useState<
+    { displayGroupId: number; displayGroup: string }[]
+  >([]);
+  const [displayGroupPage, setDisplayGroupPage] = useState(0);
+  const [displayGroupHasMore, setDisplayGroupHasMore] = useState(false);
+  const [isLoadingMoreDisplayGroups, setIsLoadingMoreDisplayGroups] = useState(false);
+  const [displayRows, setDisplayRows] = useState<
+    { displayGroupId: number; displayGroup: string }[]
+  >([]);
+  const [displayPage, setDisplayPage] = useState(0);
+  const [displayHasMore, setDisplayHasMore] = useState(false);
+  const [isLoadingMoreDisplays, setIsLoadingMoreDisplays] = useState(false);
+  const [displayRecipientSearch, setDisplayRecipientSearch] = useState('');
+  const debouncedDisplayRecipientSearch = useDebounce(displayRecipientSearch, 300);
+
   const editor = useEditor({
     extensions: [
       ...EDITOR_EXTENSIONS,
@@ -584,6 +612,8 @@ export default function AddNotificationModal({
       setExistingAttachmentName(null);
       setAttachmentCleared(false);
       setPendingBody(null);
+      setRecipientSearch('');
+      setDisplayRecipientSearch('');
       editor?.commands.setContent('');
     }
   }, [isOpen, editor]);
@@ -634,51 +664,196 @@ export default function AddNotificationModal({
     }
   }, [editor, pendingBody]);
 
-  const { data: userGroupData } = useQuery({
-    queryKey: ['userGroups', 'notification-form'],
-    queryFn: () => fetchUserGroups({ start: 0, length: 1000 }),
-    staleTime: 5 * 60 * 1000,
-    enabled: activeTab === 'audience',
-  });
+  useEffect(() => {
+    if (!isOpen || activeTab !== 'audience') {
+      return;
+    }
+    setUserGroupRows([]);
+    setUserGroupPage(0);
+    fetchUserGroups({
+      start: 0,
+      length: AUDIENCE_PAGE_SIZE,
+      userGroup: debouncedRecipientSearch || undefined,
+    })
+      .then((res) => {
+        setUserGroupRows(res.rows);
+        setUserGroupHasMore(res.rows.length === AUDIENCE_PAGE_SIZE);
+      })
+      .catch(() => {
+        setUserGroupRows([]);
+        setUserGroupHasMore(false);
+      });
+  }, [isOpen, activeTab, debouncedRecipientSearch]);
 
-  const { data: userData } = useQuery({
-    queryKey: ['users', 'notification-form'],
-    queryFn: () => fetchUsers({ start: 0, length: 1000 }),
-    staleTime: 5 * 60 * 1000,
-    enabled: activeTab === 'audience',
-  });
+  useEffect(() => {
+    if (!isOpen || activeTab !== 'audience') {
+      return;
+    }
+    setUserRows([]);
+    setUserPage(0);
+    fetchUsers({
+      start: 0,
+      length: AUDIENCE_PAGE_SIZE,
+      userName: debouncedRecipientSearch || undefined,
+    })
+      .then((res) => {
+        setUserRows(res.rows);
+        setUserHasMore(res.rows.length === AUDIENCE_PAGE_SIZE);
+      })
+      .catch(() => {
+        setUserRows([]);
+        setUserHasMore(false);
+      });
+  }, [isOpen, activeTab, debouncedRecipientSearch]);
 
-  const { data: displayGroupData } = useQuery({
-    queryKey: ['displayGroups', 'notification-form'],
-    queryFn: () => fetchDisplayGroups({ start: 0, length: 1000, isDisplaySpecific: 0 }),
-    staleTime: 5 * 60 * 1000,
-    enabled: activeTab === 'audience',
-  });
+  useEffect(() => {
+    if (!isOpen || activeTab !== 'audience') {
+      return;
+    }
+    setDisplayGroupRows([]);
+    setDisplayGroupPage(0);
+    fetchDisplayGroups({
+      start: 0,
+      length: AUDIENCE_PAGE_SIZE,
+      isDisplaySpecific: 0,
+      displayGroup: debouncedDisplayRecipientSearch || undefined,
+    })
+      .then((res) => {
+        setDisplayGroupRows(res.rows);
+        setDisplayGroupHasMore(res.rows.length === AUDIENCE_PAGE_SIZE);
+      })
+      .catch(() => {
+        setDisplayGroupRows([]);
+        setDisplayGroupHasMore(false);
+      });
+  }, [isOpen, activeTab, debouncedDisplayRecipientSearch]);
 
-  const { data: displayData } = useQuery({
-    queryKey: ['displays', 'notification-form'],
-    queryFn: () => fetchDisplayGroups({ start: 0, length: 1000, isDisplaySpecific: 1 }),
-    staleTime: 5 * 60 * 1000,
-    enabled: activeTab === 'audience',
-  });
+  useEffect(() => {
+    if (!isOpen || activeTab !== 'audience') {
+      return;
+    }
+    setDisplayRows([]);
+    setDisplayPage(0);
+    fetchDisplayGroups({
+      start: 0,
+      length: AUDIENCE_PAGE_SIZE,
+      isDisplaySpecific: 1,
+      displayGroup: debouncedDisplayRecipientSearch || undefined,
+    })
+      .then((res) => {
+        setDisplayRows(res.rows);
+        setDisplayHasMore(res.rows.length === AUDIENCE_PAGE_SIZE);
+      })
+      .catch(() => {
+        setDisplayRows([]);
+        setDisplayHasMore(false);
+      });
+  }, [isOpen, activeTab, debouncedDisplayRecipientSearch]);
+
+  const handleLoadMoreRecipients = () => {
+    if (userGroupHasMore && !isLoadingMoreUserGroups) {
+      const nextPage = userGroupPage + 1;
+      setIsLoadingMoreUserGroups(true);
+      fetchUserGroups({
+        start: nextPage * AUDIENCE_PAGE_SIZE,
+        length: AUDIENCE_PAGE_SIZE,
+        userGroup: debouncedRecipientSearch || undefined,
+      })
+        .then((res) => {
+          setUserGroupRows((prev) => [...prev, ...res.rows]);
+          setUserGroupPage(nextPage);
+          setUserGroupHasMore(res.rows.length === AUDIENCE_PAGE_SIZE);
+        })
+        .catch(() => {})
+        .finally(() => setIsLoadingMoreUserGroups(false));
+    }
+    if (userHasMore && !isLoadingMoreUsers) {
+      const nextPage = userPage + 1;
+      setIsLoadingMoreUsers(true);
+      fetchUsers({
+        start: nextPage * AUDIENCE_PAGE_SIZE,
+        length: AUDIENCE_PAGE_SIZE,
+        userName: debouncedRecipientSearch || undefined,
+      })
+        .then((res) => {
+          setUserRows((prev) => [...prev, ...res.rows]);
+          setUserPage(nextPage);
+          setUserHasMore(res.rows.length === AUDIENCE_PAGE_SIZE);
+        })
+        .catch(() => {})
+        .finally(() => setIsLoadingMoreUsers(false));
+    }
+  };
+
+  const handleLoadMoreDisplayRecipients = () => {
+    if (displayGroupHasMore && !isLoadingMoreDisplayGroups) {
+      const nextPage = displayGroupPage + 1;
+      setIsLoadingMoreDisplayGroups(true);
+      fetchDisplayGroups({
+        start: nextPage * AUDIENCE_PAGE_SIZE,
+        length: AUDIENCE_PAGE_SIZE,
+        isDisplaySpecific: 0,
+        displayGroup: debouncedDisplayRecipientSearch || undefined,
+      })
+        .then((res) => {
+          setDisplayGroupRows((prev) => [...prev, ...res.rows]);
+          setDisplayGroupPage(nextPage);
+          setDisplayGroupHasMore(res.rows.length === AUDIENCE_PAGE_SIZE);
+        })
+        .catch(() => {})
+        .finally(() => setIsLoadingMoreDisplayGroups(false));
+    }
+    if (displayHasMore && !isLoadingMoreDisplays) {
+      const nextPage = displayPage + 1;
+      setIsLoadingMoreDisplays(true);
+      fetchDisplayGroups({
+        start: nextPage * AUDIENCE_PAGE_SIZE,
+        length: AUDIENCE_PAGE_SIZE,
+        isDisplaySpecific: 1,
+        displayGroup: debouncedDisplayRecipientSearch || undefined,
+      })
+        .then((res) => {
+          setDisplayRows((prev) => [...prev, ...res.rows]);
+          setDisplayPage(nextPage);
+          setDisplayHasMore(res.rows.length === AUDIENCE_PAGE_SIZE);
+        })
+        .catch(() => {})
+        .finally(() => setIsLoadingMoreDisplays(false));
+    }
+  };
+
+  const resolveRecipientLabel = async (value: string): Promise<string> => {
+    const group = await fetchUserGroupById(Number(value));
+    return group?.group ?? '';
+  };
+
+  const resolveDisplayRecipientLabel = async (value: string): Promise<string> => {
+    const res = await fetchDisplayGroups({ start: 0, length: 1, displayGroupId: Number(value) });
+    return res.rows[0]?.displayGroup ?? '';
+  };
 
   const recipientOptions = [
-    ...(userGroupData?.rows ?? []).map((g) => ({ value: String(g.groupId), label: g.group })),
-    ...(userData?.rows ?? [])
+    ...userGroupRows.map((g) => ({ value: String(g.groupId), label: g.group })),
+    ...userRows
       .filter((u) => u.groupId != null)
       .map((u) => ({ value: String(u.groupId), label: u.userName })),
   ];
 
   const displayRecipientOptions = [
-    ...(displayGroupData?.rows ?? []).map((g) => ({
+    ...displayGroupRows.map((g) => ({
       value: String(g.displayGroupId),
       label: g.displayGroup,
     })),
-    ...(displayData?.rows ?? []).map((g) => ({
+    ...displayRows.map((g) => ({
       value: String(g.displayGroupId),
       label: g.displayGroup,
     })),
   ];
+
+  const recipientsHasMore = userGroupHasMore || userHasMore;
+  const isLoadingMoreRecipients = isLoadingMoreUserGroups || isLoadingMoreUsers;
+  const displayRecipientsHasMore = displayGroupHasMore || displayHasMore;
+  const isLoadingMoreDisplayRecipients = isLoadingMoreDisplayGroups || isLoadingMoreDisplays;
 
   const isPastDate = (isoString: string): boolean => {
     if (!isoString) return false;
@@ -958,6 +1133,11 @@ export default function AddNotificationModal({
                   )}
                   showTags
                   optional
+                  onSearch={setRecipientSearch}
+                  hasMore={recipientsHasMore}
+                  onLoadMore={handleLoadMoreRecipients}
+                  isLoadingMore={isLoadingMoreRecipients}
+                  resolveLabel={resolveRecipientLabel}
                 />
               </div>
 
@@ -988,6 +1168,11 @@ export default function AddNotificationModal({
                   )}
                   showTags
                   optional
+                  onSearch={setDisplayRecipientSearch}
+                  hasMore={displayRecipientsHasMore}
+                  onLoadMore={handleLoadMoreDisplayRecipients}
+                  isLoadingMore={isLoadingMoreDisplayRecipients}
+                  resolveLabel={resolveDisplayRecipientLabel}
                 />
               </div>
             </div>

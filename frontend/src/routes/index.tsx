@@ -78,6 +78,11 @@ export const router = createBrowserRouter(
               index: true,
               element: <Navigate to={DEFAULT_INTERNAL_ROUTE} replace />,
             },
+            // Old Displays URL — redirect for any external/bookmarked links
+            {
+              path: 'displays/displays',
+              element: <Navigate to="/displays/all-displays" replace />,
+            },
             ...flattenRoutes(APP_ROUTES),
           ],
         },

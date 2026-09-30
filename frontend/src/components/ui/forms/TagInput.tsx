@@ -482,6 +482,7 @@ function TagInput({
               value={pendingValueTag.options.includes(valueInput) ? valueInput : ''}
               placeholder={t('Select a value')}
               options={pendingValueTag.options.map((opt) => ({ label: opt, value: opt }))}
+              translateLabels={false}
               onSelect={(val) => applyValue(val)}
               clearable
             />

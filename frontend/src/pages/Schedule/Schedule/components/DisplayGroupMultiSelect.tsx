@@ -51,6 +51,27 @@ interface Option {
   label: string;
 }
 
+function seedLabelsCache(
+  value: DisplayGroupMultiSelectValue,
+  initialLabels: Record<number, string> | undefined,
+): Record<string, string> {
+  if (!initialLabels) {
+    return {};
+  }
+  const seeded: Record<string, string> = {};
+  value.displaySpecificGroupIds.forEach((id) => {
+    if (initialLabels[id]) {
+      seeded[`${DISPLAY_PREFIX}${id}`] = initialLabels[id];
+    }
+  });
+  value.displayGroupIds.forEach((id) => {
+    if (initialLabels[id]) {
+      seeded[`${GROUP_PREFIX}${id}`] = initialLabels[id];
+    }
+  });
+  return seeded;
+}
+
 export interface DisplayGroupMultiSelectValue {
   displaySpecificGroupIds: number[];
   displayGroupIds: number[];
@@ -60,6 +81,7 @@ interface DisplayGroupMultiSelectProps {
   value: DisplayGroupMultiSelectValue;
   onChange: (value: DisplayGroupMultiSelectValue) => void;
   onLabelsChange?: (labels: Record<number, string>) => void;
+  initialLabels?: Record<number, string>;
   disabled?: boolean;
   className?: string;
   triggerClassName?: string;
@@ -70,6 +92,7 @@ export function DisplayGroupMultiSelect({
   value,
   onChange,
   onLabelsChange,
+  initialLabels,
   disabled = false,
   className,
   triggerClassName,
@@ -93,8 +116,10 @@ export function DisplayGroupMultiSelect({
   const [isLoadingGroups, setIsLoadingGroups] = useState(false);
   const [isLoadingMoreGroups, setIsLoadingMoreGroups] = useState(false);
 
-  const [labelsCache, setLabelsCache] = useState<Record<string, string>>({});
-  const fetchedIdsRef = useRef<Set<string>>(new Set());
+  const [labelsCache, setLabelsCache] = useState<Record<string, string>>(() =>
+    seedLabelsCache(value, initialLabels),
+  );
+  const fetchedIdsRef = useRef<Set<string>>(new Set(Object.keys(labelsCache)));
 
   const displaySentinelRef = useRef<HTMLDivElement>(null);
   const groupSentinelRef = useRef<HTMLDivElement>(null);
@@ -120,6 +145,16 @@ export function DisplayGroupMultiSelect({
     missingDisplayIds.forEach((id) => fetchedIdsRef.current.add(`${DISPLAY_PREFIX}${id}`));
     missingGroupIds.forEach((id) => fetchedIdsRef.current.add(`${GROUP_PREFIX}${id}`));
 
+    const fillMissing = (prev: Record<string, string>, prefix: string, ids: number[]) => {
+      const next = { ...prev };
+      ids.forEach((id) => {
+        if (!next[`${prefix}${id}`]) {
+          next[`${prefix}${id}`] = `${id}`;
+        }
+      });
+      return next;
+    };
+
     if (missingDisplayIds.length > 0) {
       fetchDisplays({
         displayGroupIds: missingDisplayIds,
@@ -132,10 +167,12 @@ export function DisplayGroupMultiSelect({
             res.rows.forEach((d) => {
               next[`${DISPLAY_PREFIX}${d.displayGroupId}`] = d.display;
             });
-            return next;
+            return fillMissing(next, DISPLAY_PREFIX, missingDisplayIds);
           });
         })
-        .catch(() => {});
+        .catch(() => {
+          setLabelsCache((prev) => fillMissing(prev, DISPLAY_PREFIX, missingDisplayIds));
+        });
     }
 
     if (missingGroupIds.length > 0) {
@@ -150,15 +187,20 @@ export function DisplayGroupMultiSelect({
             res.rows.forEach((g) => {
               next[`${GROUP_PREFIX}${g.displayGroupId}`] = g.displayGroup;
             });
-            return next;
+            return fillMissing(next, GROUP_PREFIX, missingGroupIds);
           });
         })
-        .catch(() => {});
+        .catch(() => {
+          setLabelsCache((prev) => fillMissing(prev, GROUP_PREFIX, missingGroupIds));
+        });
     }
   }, [displayIdsKey, groupIdsKey]);
 
+  const onLabelsChangeRef = useRef(onLabelsChange);
+  onLabelsChangeRef.current = onLabelsChange;
+
   useEffect(() => {
-    if (!onLabelsChange) {
+    if (!onLabelsChangeRef.current) {
       return;
     }
     const allKeys = [
@@ -180,8 +222,8 @@ export function DisplayGroupMultiSelect({
         labelsMap[id] = label;
       }
     }
-    onLabelsChange(labelsMap);
-  }, [labelsCache, onLabelsChange, displayIdsKey, groupIdsKey]);
+    onLabelsChangeRef.current(labelsMap);
+  }, [labelsCache, displayIdsKey, groupIdsKey]);
 
   useEffect(() => {
     setIsLoadingDisplays(true);
@@ -400,6 +442,10 @@ export function DisplayGroupMultiSelect({
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
 
   const totalSelected = value.displaySpecificGroupIds.length + value.displayGroupIds.length;
+  const allLabelsResolved =
+    totalSelected > 0 &&
+    value.displaySpecificGroupIds.every((id) => !!labelsCache[`${DISPLAY_PREFIX}${id}`]) &&
+    value.displayGroupIds.every((id) => !!labelsCache[`${GROUP_PREFIX}${id}`]);
 
   const visibleDisplays = displayOptions;
   const visibleGroups = groupOptions;
@@ -422,51 +468,51 @@ export function DisplayGroupMultiSelect({
           <span className="flex-1 text-sm text-gray-400">
             {t('Search Display and Display Groups')}
           </span>
-        ) : (
+        ) : allLabelsResolved ? (
           <div className="flex flex-wrap gap-1.5 flex-1 max-h-17 overflow-y-auto">
-            {value.displaySpecificGroupIds.map((id) => {
-              const label = labelsCache[`${DISPLAY_PREFIX}${id}`] ?? `${id}`;
-              return (
-                <span
-                  key={`${DISPLAY_PREFIX}${id}`}
-                  className="inline-flex items-center gap-1 rounded-full border border-gray-400 p-1.5"
-                >
-                  <span className="px-1 text-xs text-gray-800">{label}</span>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggle(`${DISPLAY_PREFIX}${id}`);
-                    }}
-                    className="flex justify-center items-center size-3.75 bg-gray-200 text-gray-800 hover:text-gray-600 hover:bg-gray-300 rounded-full"
-                  >
-                    <X size={10} />
-                  </button>
+            {value.displaySpecificGroupIds.map((id) => (
+              <span
+                key={`${DISPLAY_PREFIX}${id}`}
+                className="inline-flex items-center gap-1 rounded-full border border-gray-400 p-1.5"
+              >
+                <span className="px-1 text-xs text-gray-800">
+                  {labelsCache[`${DISPLAY_PREFIX}${id}`]}
                 </span>
-              );
-            })}
-            {value.displayGroupIds.map((id) => {
-              const label = labelsCache[`${GROUP_PREFIX}${id}`] ?? `${id}`;
-              return (
-                <span
-                  key={`${GROUP_PREFIX}${id}`}
-                  className="inline-flex items-center gap-1 rounded-full border border-gray-400 p-1.5"
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggle(`${DISPLAY_PREFIX}${id}`);
+                  }}
+                  className="flex justify-center items-center size-3.75 bg-gray-200 text-gray-800 hover:text-gray-600 hover:bg-gray-300 rounded-full"
                 >
-                  <span className="px-1 text-[12px] text-gray-800">{label}</span>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggle(`${GROUP_PREFIX}${id}`);
-                    }}
-                    className="flex justify-center items-center size-3.75 bg-gray-200 text-gray-800 hover:text-gray-600 hover:bg-gray-300 rounded-full"
-                  >
-                    <X size={10} />
-                  </button>
+                  <X size={10} />
+                </button>
+              </span>
+            ))}
+            {value.displayGroupIds.map((id) => (
+              <span
+                key={`${GROUP_PREFIX}${id}`}
+                className="inline-flex items-center gap-1 rounded-full border border-gray-400 p-1.5"
+              >
+                <span className="px-1 text-xs text-gray-800">
+                  {labelsCache[`${GROUP_PREFIX}${id}`]}
                 </span>
-              );
-            })}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggle(`${GROUP_PREFIX}${id}`);
+                  }}
+                  className="flex justify-center items-center size-3.75 bg-gray-200 text-gray-800 hover:text-gray-600 hover:bg-gray-300 rounded-full"
+                >
+                  <X size={10} />
+                </button>
+              </span>
+            ))}
           </div>
+        ) : (
+          <span className="flex-1 text-sm text-gray-400 italic">{t('Loading...')}</span>
         )}
         {totalSelected > 0 && (
           <button

@@ -32,6 +32,7 @@ import {
   resetReportSchedule,
 } from '@/services/reportScheduleApi';
 import type { ReportSchedule } from '@/types/reportSchedule';
+import { isAlreadyDeletedError } from '@/utils/errors';
 
 interface UseReportScheduleActionsProps {
   t: TFunction;
@@ -66,22 +67,34 @@ export function useReportScheduleActions({
         itemsToDelete.map((item) => deleteReportSchedule(item.reportScheduleId)),
       );
 
-      const failed = results.filter((r) => r.status === 'rejected');
-      if (failed.length > 0) {
-        const firstRejected = failed[0] as PromiseRejectedResult;
+      const trueFailed = results.filter(
+        (r) => r.status === 'rejected' && !isAlreadyDeletedError(r.reason),
+      );
+      const deletedCount = itemsToDelete.length - trueFailed.length;
+
+      if (trueFailed.length > 0) {
+        const firstRejected = trueFailed[0] as PromiseRejectedResult;
         const reason = firstRejected.reason;
-        const message =
+        const specificMessage =
           isAxiosError(reason) && reason.response?.data?.message
             ? reason.response.data.message
-            : t('{{count}} item(s) could not be deleted.', { count: failed.length });
-        setDeleteError(message);
+            : undefined;
+        const failurePart =
+          specificMessage ??
+          t('{{count}} report schedule(s) could not be deleted.', { count: trueFailed.length });
+        const successPart =
+          deletedCount > 0
+            ? t('{{count}} report schedule(s) deleted successfully.', { count: deletedCount })
+            : '';
+
+        setDeleteError([successPart, failurePart].filter(Boolean).join(' '));
         setRowSelection({});
         handleRefresh();
         return;
       }
 
       notify.success(
-        t('{{count}} report schedule(s) deleted successfully.', { count: itemsToDelete.length }),
+        t('{{count}} report schedule(s) deleted successfully.', { count: deletedCount }),
       );
       setRowSelection({});
       handleRefresh();

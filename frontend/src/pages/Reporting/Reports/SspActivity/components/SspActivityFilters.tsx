@@ -75,6 +75,7 @@ export default function SspActivityFilters({
             placeholder={t('Select Display')}
             searchable
             clearable
+            translateLabels={false}
             resolveLabel={displaySelect.resolveLabel}
             options={displaySelect.options}
             isLoading={displaySelect.isLoading}
@@ -106,6 +107,7 @@ export default function SspActivityFilters({
             optional
             isLoading={partnersLoading}
             options={partnerOptions}
+            translateLabels={false}
             onSelect={(val) => onFilterChange({ partnerId: val })}
           />
         </div>

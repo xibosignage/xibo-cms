@@ -134,3 +134,8 @@ export async function fetchDaypartScheduleCount(dayPartId: number): Promise<numb
   });
   return response.data?.scheduleCount ?? 0;
 }
+
+export async function fetchDaypartById(dayPartId: number | string): Promise<Daypart> {
+  const response = await http.get(`/daypart/${dayPartId}`);
+  return response.data;
+}

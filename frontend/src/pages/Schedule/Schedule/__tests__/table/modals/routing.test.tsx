@@ -20,8 +20,10 @@
  */
 
 import { render, screen } from '@testing-library/react';
+import { DateTime } from 'luxon';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
+import { AgendaModal } from '../../../components/AgendaModal';
 import CopyEventModal from '../../../components/CopyEventModal';
 import DeleteEventModal from '../../../components/DeleteEventModal';
 import { EventModals } from '../../../components/EventModals';
@@ -46,6 +48,10 @@ vi.mock('@/components/ui/modals/ScheduleEventModal', () => ({
   default: vi.fn(({ mode }: { mode?: string }) => (
     <div data-testid="schedule-modal" data-mode={mode ?? 'add'} />
   )),
+}));
+// AgendaModal is a named export, unlike the three default-export modals above.
+vi.mock('../../../components/AgendaModal', () => ({
+  AgendaModal: vi.fn(() => <div data-testid="agenda-modal" />),
 }));
 
 // A small helper that builds a complete set of props for EventModals using
@@ -347,6 +353,59 @@ describe('EventModals - routing', () => {
       );
 
       expect(screen.queryByTestId('schedule-modal')).not.toBeInTheDocument();
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Routing rules for the agenda. The calendar's day panel chooses the day, and
+  // the page works out which display groups that day's events touch; EventModals
+  // just forwards both on.
+  // ---------------------------------------------------------------------------
+  describe('agenda modal', () => {
+    test('opens AgendaModal for the chosen day and its display groups', () => {
+      const closeModal = vi.fn();
+      const agendaDate = DateTime.fromISO('2026-03-17T00:00:00', { zone: 'utc' });
+      const displayGroups = [{ id: 5, name: 'Lobby Screens' }];
+
+      render(
+        <EventModals
+          {...buildProps({
+            actions: {
+              activeModal: 'agenda',
+              agendaDate,
+              displayGroups,
+              closeModal,
+            } as unknown as EventModalsProps['actions'],
+          })}
+        />,
+      );
+
+      expect(screen.getByTestId('agenda-modal')).toBeInTheDocument();
+      expect(AgendaModal).toHaveBeenCalledWith(
+        expect.objectContaining({ date: agendaDate, displayGroups }),
+        undefined,
+      );
+
+      // The agenda closes itself through the callback it was handed, so check
+      // the wiring rather than just that the right component was chosen.
+      const props = vi.mocked(AgendaModal).mock.calls[0]![0];
+      props.onClose();
+      expect(closeModal).toHaveBeenCalledTimes(1);
+    });
+
+    // Safety check matching the one for edit mode above: "agenda" is only a
+    // valid state once a day has actually been picked off the calendar.
+    test('does not open the agenda before a day has been chosen', () => {
+      render(
+        <EventModals
+          {...buildProps({
+            actions: { activeModal: 'agenda' } as unknown as EventModalsProps['actions'],
+          })}
+        />,
+      );
+
+      expect(screen.queryByTestId('agenda-modal')).not.toBeInTheDocument();
+      expect(AgendaModal).not.toHaveBeenCalled();
     });
   });
 });

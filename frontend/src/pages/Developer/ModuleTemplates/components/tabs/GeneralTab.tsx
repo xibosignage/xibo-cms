@@ -84,6 +84,7 @@ export default function GeneralTab({
               value={formValues.dataType}
               helpText={t('Which data type does this template need?')}
               options={dataTypeOptions}
+              translateLabels={false}
               placeholder={t('Select data type...')}
               onSelect={(v: string) => updateField('dataType', v)}
             />

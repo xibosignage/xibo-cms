@@ -93,6 +93,7 @@ export default function PlaylistDropdown({ value, onSelect }: PlaylistDropdownPr
       helpText={t('Select a Playlist to manage.')}
       value={value ? String(value) : ''}
       options={options}
+      translateLabels={false}
       onSelect={(v) => onSelect(v ? Number(v) : null)}
       isLoading={isLoading}
       onLoadMore={handleLoadMore}

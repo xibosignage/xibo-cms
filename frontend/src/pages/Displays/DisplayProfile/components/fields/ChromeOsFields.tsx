@@ -42,6 +42,7 @@ export interface ChromeOsFieldProps {
   onLoadMoreDayparts?: () => void;
   isLoadingMoreDayparts?: boolean;
   onSearchDayparts?: (term: string) => void;
+  resolveDaypartLabel?: (value: string) => Promise<string>;
   playerVersions: PlayerSoftware[];
   playerVersionsHasMore?: boolean;
   onLoadMorePlayerVersions?: () => void;
@@ -64,6 +65,7 @@ export function ChromeOsFields({
   onLoadMoreDayparts,
   isLoadingMoreDayparts,
   onSearchDayparts,
+  resolveDaypartLabel,
   playerVersions,
   playerVersionsHasMore,
   onLoadMorePlayerVersions,
@@ -112,6 +114,7 @@ export function ChromeOsFields({
     onLoadMoreDayparts,
     isLoadingMoreDayparts,
     onSearchDayparts,
+    resolveDaypartLabel,
     playerVersions,
     playerVersionsHasMore,
     onLoadMorePlayerVersions,

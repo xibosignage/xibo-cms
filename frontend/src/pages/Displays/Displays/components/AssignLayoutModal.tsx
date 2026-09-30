@@ -57,11 +57,48 @@ export default function AssignLayoutModal({ display, onClose, onSave }: AssignLa
   const [sorting, setSorting] = useState<SortingState>([]);
 
   useEffect(() => {
+    let cancelled = false;
     setIsLoadingAssigned(true);
-    fetchLayouts({ start: 0, length: 500, displayGroupId: display.displayGroupId })
-      .then(({ rows }) => setAssignedLayouts(rows))
-      .catch(() => setAssignedLayouts([]))
-      .finally(() => setIsLoadingAssigned(false));
+
+    const loadAllAssigned = async () => {
+      const pageSize = 200;
+      try {
+        const first = await fetchLayouts({
+          start: 0,
+          length: pageSize,
+          displayGroupId: display.displayGroupId,
+        });
+        let rows = first.rows;
+        const totalCount = first.totalCount;
+        while (!cancelled && rows.length < totalCount) {
+          const next = await fetchLayouts({
+            start: rows.length,
+            length: pageSize,
+            displayGroupId: display.displayGroupId,
+          });
+          if (next.rows.length === 0) {
+            break;
+          }
+          rows = [...rows, ...next.rows];
+        }
+        if (!cancelled) {
+          setAssignedLayouts(rows);
+        }
+      } catch {
+        if (!cancelled) {
+          setAssignedLayouts([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingAssigned(false);
+        }
+      }
+    };
+
+    loadAllAssigned();
+    return () => {
+      cancelled = true;
+    };
   }, [display.displayGroupId]);
 
   const { data: searchData, isFetching } = useQuery({

@@ -39,8 +39,11 @@ use Xibo\Factory\ScheduleExclusionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\ScheduleReminderFactory;
 use Xibo\Factory\SyncGroupFactory;
+use Xibo\Factory\TaskFactory;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\LayoutDescription;
 use Xibo\Helper\Session;
+use Xibo\Helper\Status;
 use Xibo\Service\JwtServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ControllerNotImplemented;
@@ -75,7 +78,8 @@ class Schedule extends Base
         private readonly ScheduleExclusionFactory $scheduleExclusionFactory,
         private readonly SyncGroupFactory $syncGroupFactory,
         private readonly ScheduleCriteriaFactory $scheduleCriteriaFactory,
-        private readonly JwtServiceInterface $jwtService
+        private readonly JwtServiceInterface $jwtService,
+        private readonly TaskFactory $taskFactory
     ) {
     }
 
@@ -176,6 +180,7 @@ class Schedule extends Base
         $events = [];
         $displayGroups = [];
         $layouts = [];
+        $maintenanceTask = false;
         $campaigns = [];
 
         // Add the displayGroupId I am filtering for to the displayGroup object
@@ -290,6 +295,18 @@ class Schedule extends Base
                         );
                     }
                     if ($showLayoutName || $this->getUser()->checkViewable($layout)) {
+                        // Say when Displays are notified about a Layout built without notifying them
+                        if ($layout->status === Status::$STATUS_PENDING_NOTIFY) {
+                            if ($maintenanceTask === false) {
+                                $maintenanceTask = $this->taskFactory->getRegularMaintenanceTask();
+                            }
+
+                            $layout->setUnmatchedProperty(
+                                'statusDescription',
+                                LayoutDescription::getPendingNotifyDescription($maintenanceTask)
+                            );
+                        }
+
                         $layouts[$layoutId] = $layout;
                     } else {
                         $layouts[$layoutId] = [
@@ -690,17 +707,45 @@ class Schedule extends Base
         $schedule->syncGroupId = $sanitizedParams->getInt('syncGroupId');
         $schedule->name = $sanitizedParams->getString('name');
 
+        // $scheduleWithView gates the Display Group permission checks further below -
+        // SCHEDULE_WITH_VIEW_PERMISSION is a Display-scoped setting, it does not apply to Campaigns.
+        $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
+
         // Set the parentCampaignId for campaign events
         if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$CAMPAIGN_EVENT) {
             $schedule->parentCampaignId = $schedule->campaignId;
 
-            // Make sure we're not directly scheduling an ad campaign
+            // getById() is fetched with permission checking disabled (its default), so the
+            // DB lookup alone does not gate access - the campaign must be checked explicitly.
             $campaign = $this->campaignFactory->getById($schedule->campaignId);
+
+            // Check permission before any business-rule check on the campaign
+            if (!$this->getUser()->checkViewable($campaign)) {
+                throw new AccessDeniedException(__('Access to the Campaign denied'));
+            }
+
             if ($campaign->type === 'ad') {
                 throw new InvalidArgumentException(
                     __('Direct scheduling of an Ad Campaign is not allowed'),
                     'campaignId'
                 );
+            }
+        } else {
+            $schedule->parentCampaignId = null;
+            if (!empty($schedule->campaignId)) {
+                // e.g. Layout events, which also reference a (layout-specific) Campaign directly.
+                $campaign = $this->campaignFactory->getById($schedule->campaignId);
+
+                if (!$this->getUser()->checkViewable($campaign)) {
+                    throw new AccessDeniedException(__('Access to the Campaign denied'));
+                }
+
+                if ($campaign->isLayoutSpecific === 0) {
+                    throw new InvalidArgumentException(
+                        __('Cannot schedule Campaign in selected event type, please select a Layout instead.'),
+                        'campaignId'
+                    );
+                }
             }
         }
 
@@ -792,9 +837,7 @@ class Schedule extends Base
         );
 
         // Verify the caller has the appropriate permission on each display group they're
-        // assigning. Mirrors isEventEditable() semantics: view is sufficient when
-        // SCHEDULE_WITH_VIEW_PERMISSION is enabled, otherwise edit is required.
-        $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
+        // assigning (see $scheduleWithView above).
         $displayGroupIds = $sanitizedParams->getIntArray('displayGroupIds', ['default' => []]);
         foreach ($displayGroupIds as $displayGroupId) {
             $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
@@ -880,6 +923,10 @@ class Schedule extends Base
                 'Processed times are: FromDt=' . $fromDt->format(DateFormatHelper::getSystemFormat())
                 . '. ToDt=' . $logToDt . '. recurrenceRange=' . $logRecurrenceRange
             );
+        } else {
+            // Always daypart cannot be recurring — clear recurrence fields
+            $schedule->recurrenceType = null;
+            $schedule->recurrenceRange = null;
         }
 
         // Schedule Criteria
@@ -1248,7 +1295,7 @@ class Schedule extends Base
         $oldSchedule = clone $schedule;
 
         $schedule->load([
-            'loadScheduleReminders' => in_array('scheduleReminders', $embed),
+            'loadScheduleReminders' => true,
         ]);
 
         if (!$this->isEventEditable($schedule)) {
@@ -1319,14 +1366,26 @@ class Schedule extends Base
             $schedule->campaignId = null;
         }
 
+        // $scheduleWithView gates the Display Group permission checks further below -
+        // SCHEDULE_WITH_VIEW_PERMISSION is a Display-scoped setting, it does not apply to Campaigns.
+        $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
+        $isCampaignUnchanged = ($oldSchedule->campaignId == $schedule->campaignId);
+
         // Set the parentCampaignId for campaign events
         // null parentCampaignId on other events
         // make sure correct Layout/Campaign is selected for relevant event.
         if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$CAMPAIGN_EVENT) {
             $schedule->parentCampaignId = $schedule->campaignId;
 
-            // Make sure we're not directly scheduling an ad campaign
+            // getById() is fetched with permission checking disabled (its default), so the
+            // DB lookup alone does not gate access - the campaign must be checked explicitly.
             $campaign = $this->campaignFactory->getById($schedule->campaignId);
+
+            // Check permission before any business-rule check on the campaign
+            if (!$isCampaignUnchanged && !$this->getUser()->checkViewable($campaign)) {
+                throw new AccessDeniedException(__('Access to the Campaign denied'));
+            }
+
             if ($campaign->type === 'ad') {
                 throw new InvalidArgumentException(
                     __('Direct scheduling of an Ad Campaign is not allowed'),
@@ -1344,6 +1403,11 @@ class Schedule extends Base
             $schedule->parentCampaignId = null;
             if (!empty($schedule->campaignId)) {
                 $campaign = $this->campaignFactory->getById($schedule->campaignId);
+
+                if (!$isCampaignUnchanged && !$this->getUser()->checkViewable($campaign)) {
+                    throw new AccessDeniedException(__('Access to the Campaign denied'));
+                }
+
                 if ($campaign->isLayoutSpecific === 0) {
                     throw new InvalidArgumentException(
                         __('Cannot schedule Campaign in selected event type, please select a Layout instead.'),
@@ -1433,12 +1497,10 @@ class Schedule extends Base
         }
 
         // Verify the caller has the appropriate permission on each display group they're
-        // assigning. Mirrors isEventEditable() semantics: view is sufficient when
-        // SCHEDULE_WITH_VIEW_PERMISSION is enabled, otherwise edit is required. The
-        // $originalDisplayGroupIds bypass (captured before the assignment list was
-        // cleared) lets the user re-save already-assigned groups without view/edit
-        // access on each — mirrors the Campaign::edit() pattern.
-        $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
+        // assigning (see $scheduleWithView above). The $originalDisplayGroupIds bypass
+        // (captured before the assignment list was cleared) lets the user re-save
+        // already-assigned groups without view/edit access on each — mirrors the
+        // Campaign::edit() pattern.
         $displayGroupIds = $sanitizedParams->getIntArray('displayGroupIds', ['default' => []]);
         foreach ($displayGroupIds as $displayGroupId) {
             $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
@@ -1514,6 +1576,7 @@ class Schedule extends Base
         } else {
             // This is an always day part, which cannot be recurring, make sure we clear the recurring type if it has been set
             $schedule->recurrenceType = null;
+            $schedule->recurrenceRange = null;
         }
 
         // Schedule Criteria
@@ -1639,9 +1702,35 @@ class Schedule extends Base
             $this->saveReminder($schedule, $scheduleReminder);
         }
 
-        // If this is a recurring event delete all schedule exclusions
-        if ($schedule->recurrenceType != '') {
-            // Delete schedule exclusions
+        // If the recurrence pattern changed, the old exclusions no longer correspond to
+        // real occurrences — delete them. Only do this when a recurrence-defining field
+        // actually changed; cosmetic edits (name, priority, etc.) must not discard exclusions.
+        // Timestamps are compared at minute granularity because the UI trims seconds from
+        // API-created events on save — that rounding must not count as a user change.
+        // recurrenceRepeatsOn is sorted before comparison so that "4,5" == "5,4".
+        $oldRepeatsOn = $oldSchedule->recurrenceRepeatsOn;
+        $newRepeatsOn = $schedule->recurrenceRepeatsOn;
+        if ($oldRepeatsOn !== null) {
+            $parts = explode(',', $oldRepeatsOn);
+            sort($parts);
+            $oldRepeatsOn = implode(',', $parts);
+        }
+        if ($newRepeatsOn !== null) {
+            $parts = explode(',', $newRepeatsOn);
+            sort($parts);
+            $newRepeatsOn = implode(',', $parts);
+        }
+
+        if ($schedule->recurrenceType != ''
+            && ($oldSchedule->recurrenceType !== $schedule->recurrenceType
+                || $oldSchedule->recurrenceDetail != $schedule->recurrenceDetail
+                || $oldRepeatsOn !== $newRepeatsOn
+                || $oldSchedule->recurrenceMonthlyRepeatsOn != $schedule->recurrenceMonthlyRepeatsOn
+                || !$schedule->isSameStartAs($oldSchedule->fromDt)
+                || intdiv((int)$oldSchedule->toDt, 60) !== intdiv((int)$schedule->toDt, 60)
+                || $oldSchedule->dayPartId != $schedule->dayPartId)
+        ) {
+            // Delete schedule exclusions — the occurrence grid has shifted
             $scheduleExclusions = $this->scheduleExclusionFactory->query(null, ['eventId' => $schedule->eventId]);
             foreach ($scheduleExclusions as $exclusion) {
                 $exclusion->delete();
@@ -1722,6 +1811,18 @@ class Schedule extends Base
         $schedule = clone $originalSchedule;
         $schedule->name = $sanitizedParams->getString('name');
         $schedule->userId = $this->getUser()->userId;
+
+        // A recurrence ending on or before the start only plays once, so copy it as a single event
+        if (!empty($schedule->recurrenceType)
+            && !empty($schedule->recurrenceRange)
+            && $schedule->recurrenceRange <= $schedule->fromDt
+        ) {
+            $schedule->recurrenceType = null;
+            $schedule->recurrenceDetail = null;
+            $schedule->recurrenceRange = null;
+            $schedule->recurrenceRepeatsOn = null;
+            $schedule->recurrenceMonthlyRepeatsOn = 0;
+        }
 
         $schedule->setDisplayNotifyService($this->displayFactory->getDisplayNotifyService());
 
@@ -1996,6 +2097,7 @@ class Schedule extends Base
     public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $schedule = $this->scheduleFactory->getById($id, false);
+        $schedule->load(['loadScheduleReminders' => true]);
         $this->decorateEventProperties($schedule);
 
         if (!$this->getUser()->isSuperAdmin()) {

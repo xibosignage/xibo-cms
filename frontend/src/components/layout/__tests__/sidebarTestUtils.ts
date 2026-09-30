@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { createElement } from 'react';
 import { MemoryRouter } from 'react-router-dom';
@@ -26,6 +27,7 @@ import { MemoryRouter } from 'react-router-dom';
 import SidebarMenu from '../SideBar';
 
 import { UserProvider } from '@/context/UserContext';
+import { testQueryClient } from '@/setupTests';
 import groupAdminData from '@/testUtils/personas/data/group_admin.json';
 import superAdminData from '@/testUtils/personas/data/super_admin.json';
 import regularUserData from '@/testUtils/personas/data/user.json';
@@ -167,15 +169,19 @@ export function renderSidebar({
 } = {}) {
   return render(
     createElement(
-      UserProvider,
-      { initialUser: user, children: undefined },
+      QueryClientProvider,
+      { client: testQueryClient },
       createElement(
-        MemoryRouter,
-        { initialEntries: [initialRoute] },
-        createElement(SidebarMenu, {
-          isCollapsed,
-          closeMobileDrawer,
-        }),
+        UserProvider,
+        { initialUser: user, children: undefined },
+        createElement(
+          MemoryRouter,
+          { initialEntries: [initialRoute] },
+          createElement(SidebarMenu, {
+            isCollapsed,
+            closeMobileDrawer,
+          }),
+        ),
       ),
     ),
   );

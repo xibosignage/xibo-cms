@@ -296,8 +296,7 @@ export async function fetchGroupFolderPermissions(
   const response = await http.get<Record<string, MultiPermissionItem>>('/user/permissions/Folder', {
     params: {
       ids: folderIds.join(','),
-      start: 0,
-      length: folderIds.length,
+      disablePaging: 1,
       isUserSpecific: 1,
     },
   });

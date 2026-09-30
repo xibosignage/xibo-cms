@@ -41,6 +41,7 @@ import {
   Tags,
   BarChart3,
 } from 'lucide-react';
+import { DateTime } from 'luxon';
 import type { ComponentProps } from 'react';
 
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
@@ -57,11 +58,14 @@ import {
   getSharingColumn,
 } from '@/components/ui/table/cells';
 import { getCommonFormOptions } from '@/config/commonForms';
+import LayoutPendingNotifyIcon from '@/pages/Design/Layouts/components/LayoutPendingNotifyIcon';
 import type { Layout } from '@/types/layout';
 import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
+import type { UIStatus } from '@/types/uiStatus';
 import type { DateLike } from '@/utils/date';
 import { formatDuration } from '@/utils/formatters';
+import { isPendingNotifyLayoutStatus, toNotifiedLayoutStatus } from '@/utils/layoutStatus';
 import { formatTagsForExport } from '@/utils/tags';
 
 export interface LayoutFilterInput {
@@ -254,6 +258,8 @@ export interface LayoutActionsProps {
   canSaveTemplate?: boolean;
   canTag?: boolean;
   formatDateTime: (value: DateLike) => string;
+  timeZone?: string;
+  locale?: string;
   onPreview?: (row: Layout) => void;
   onMiniPreview?: (row: Layout, kind: 'published' | 'draft') => void;
   onDelete: (id: number) => void;
@@ -513,6 +519,8 @@ export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[]
     t,
     showDescriptionId,
     formatDateTime,
+    timeZone,
+    locale,
     canTag = false,
     onTagClick,
     selectedTagIds,
@@ -598,10 +606,34 @@ export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[]
     {
       accessorKey: 'publishedStatus',
       header: t('Status'),
-      size: 120,
+      size: 160,
       cell: (info) => {
-        const status = info.getValue<string>();
-        return <StatusCell label={status} type={status === 'Published' ? 'success' : 'neutral'} />;
+        const row = info.row.original;
+        const status = row.publishedStatus;
+        let badgeType: UIStatus = status === 'Published' ? 'success' : 'neutral';
+        let extraInfo = '';
+
+        if (row.publishedDate) {
+          const published = DateTime.fromSQL(row.publishedDate, { zone: timeZone });
+          const diffMinutes = published.diff(DateTime.now(), 'minutes').minutes;
+
+          if (diffMinutes < -5) {
+            extraInfo = t('Publish failed.');
+            badgeType = 'danger';
+          } else {
+            extraInfo = t('Publishing {{time}}', {
+              time: published.setLocale(locale ?? 'en').toRelative(),
+            });
+            badgeType = 'warning';
+          }
+        }
+
+        return (
+          <div>
+            <StatusCell label={status} type={badgeType} />
+            {extraInfo && <div className="text-xs text-gray-500 mt-1">{extraInfo}</div>}
+          </div>
+        );
       },
     },
     {
@@ -630,8 +662,18 @@ export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[]
       id: 'valid',
       header: t('Valid?'),
       size: 100,
-      accessorFn: (row) => (row as Layout).status,
-      cell: (info) => <CheckMarkCell active={info.getValue<number>() <= 2} />,
+      accessorFn: (row) => toNotifiedLayoutStatus((row as Layout).status),
+      cell: (info) =>
+        isPendingNotifyLayoutStatus((info.row.original as Layout).status) ? (
+          <div className="flex items-center justify-center">
+            <LayoutPendingNotifyIcon
+              className="size-6"
+              title={(info.row.original as Layout).statusDescription}
+            />
+          </div>
+        ) : (
+          <CheckMarkCell active={info.getValue<number>() <= 2} />
+        ),
     },
 
     {

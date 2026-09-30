@@ -67,6 +67,7 @@ export interface FilterConfigItem<T> {
   showTimePicker?: boolean;
   compareToDefault?: boolean;
   tooltip?: string;
+  translateLabels?: boolean;
 }
 
 type FilterValue = string | number | boolean | null | Tag[];
@@ -428,6 +429,7 @@ export default function FilterInputs<T>({
               },
               isLoading: filter.isLoading,
               className: `w-full md:w-auto md:flex-1 min-w-0 ${filter.className ?? ''}`,
+              translateLabels: filter.translateLabels,
             };
 
             if (filter.onLoadMore && filter.onSearch) {

@@ -160,7 +160,7 @@ describe('DisplayProfile page - delete', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Yes, Delete' }));
 
     await waitFor(() => {
-      expect(screen.getByText('1 item(s) could not be deleted.')).toBeInTheDocument();
+      expect(screen.getByText('1 display profile(s) could not be deleted.')).toBeInTheDocument();
     });
     expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
@@ -251,7 +251,11 @@ describe('DisplayProfile page - delete', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Yes, Delete' }));
 
     await waitFor(() => {
-      expect(screen.getByText('1 item(s) could not be deleted.')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          '1 display profile(s) deleted successfully. 1 display profile(s) could not be deleted.',
+        ),
+      ).toBeInTheDocument();
     });
     expect(screen.getByRole('dialog')).toBeInTheDocument();
 

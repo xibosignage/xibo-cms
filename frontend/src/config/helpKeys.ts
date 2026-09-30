@@ -35,7 +35,7 @@ const HELP_KEY_BY_PATH: Record<string, string> = {
   '/library/media': 'library.view',
   '/library/datasets': 'dataset.view',
   '/library/menu-boards': 'menuBoard.view',
-  '/displays/displays': 'display.view',
+  '/displays/all-displays': 'display.view',
   '/displays/display-groups': 'displaygroup.view',
   '/displays/sync-groups': 'syncgroup.view',
   '/displays/settings': 'displayprofile.view',

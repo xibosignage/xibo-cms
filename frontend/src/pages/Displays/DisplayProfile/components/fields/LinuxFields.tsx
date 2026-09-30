@@ -41,6 +41,7 @@ export interface LinuxFieldProps {
   onLoadMoreDayparts?: () => void;
   isLoadingMoreDayparts?: boolean;
   onSearchDayparts?: (term: string) => void;
+  resolveDaypartLabel?: (value: string) => Promise<string>;
   settings?: Record<string, unknown> | null;
 }
 
@@ -58,6 +59,7 @@ export function LinuxFields({
   onLoadMoreDayparts,
   isLoadingMoreDayparts,
   onSearchDayparts,
+  resolveDaypartLabel,
   settings,
 }: LinuxFieldProps) {
   const metaMap = getFieldMetaForType('linux', t);
@@ -97,6 +99,7 @@ export function LinuxFields({
     onLoadMoreDayparts,
     isLoadingMoreDayparts,
     onSearchDayparts,
+    resolveDaypartLabel,
   };
 
   return (

@@ -36,6 +36,7 @@ export interface Dataset {
   owner: string;
   lastDataEdit: number;
   groupsWithPermissions: string;
+  groupsWithPermissionsList?: string[] | null;
   code: string;
   isLookup: boolean;
   isRemote: boolean;

@@ -222,6 +222,7 @@ export default function AddCampaignModal({
           <TextInput
             name="name"
             label={t('Name')}
+            placeholder={t('Enter name')}
             value={draft.name}
             onChange={(val) => setDraft((prev) => ({ ...prev, name: val }))}
             error={formErrors.name}
@@ -265,6 +266,7 @@ export default function AddCampaignModal({
                 name="target"
                 label={t('Target')}
                 type="number"
+                placeholder={t('Add number')}
                 helpText={t('What is the target number for this Campaign over its entire playtime')}
                 value={draft.target === '' ? '' : String(draft.target)}
                 onChange={(val) =>

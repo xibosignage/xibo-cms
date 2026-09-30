@@ -25,8 +25,10 @@ import { createRoot } from 'react-dom/client';
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
 import '@fontsource/inter/600.css';
+import '@fontsource/maven-pro/700.css';
 import './styles.css';
 import { LoginApp } from './LoginApp';
+import { NotFoundView } from './components/NotFoundView';
 import { SuspendedView } from './components/SuspendedView';
 import { UpgradePendingView } from './components/UpgradePendingView';
 import type { LoginConfig } from './types';
@@ -35,6 +37,7 @@ import { publicPath } from './utils';
 function resolveComponent(config: LoginConfig) {
   if (config.upgradeInProgress) return UpgradePendingView;
   if (config.instanceSuspended) return SuspendedView;
+  if (config.notFound) return NotFoundView;
   return LoginApp;
 }
 

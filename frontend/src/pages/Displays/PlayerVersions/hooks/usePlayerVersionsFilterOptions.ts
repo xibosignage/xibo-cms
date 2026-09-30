@@ -38,7 +38,11 @@ export function usePlayerVersionFilterOptions(t: TFunction) {
     value: v.version,
   }));
 
+  const filterOptions = getBaseFilterKeys(t, versionOptions).map((item) =>
+    item.name === 'version' ? { ...item, translateLabels: false } : item,
+  );
+
   return {
-    filterOptions: getBaseFilterKeys(t, versionOptions),
+    filterOptions,
   };
 }

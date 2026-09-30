@@ -125,9 +125,9 @@ export function expiresToExpiryValue(expires?: string): ExpiryValue {
 
 export const DATE_KEY_REGEX = /^(\d{4})-(\d{2})-(\d{2})/;
 
-// Reads back the Y/M/D a day-only picker produced. Pass timeZone only when `date` is a
-// real instant anchored to that zone (e.g. combined with a time-of-day); omit it for
-// plain calendar-day values with no timezone semantics attached.
+// Reads back the Y/M/D a picker produced. Pass the CMS timeZone for DatePicker results,
+// which are anchored to that zone (day-only picks at midday); omit it for plain
+// calendar-day values with no timezone semantics attached.
 export function toLocalDateKey(date: Date, timeZone?: string): string {
   if (!timeZone) {
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;

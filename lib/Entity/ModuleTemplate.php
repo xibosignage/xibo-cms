@@ -172,8 +172,18 @@ class ModuleTemplate implements \JsonSerializable
      */
     #[OA\Property(description: 'A comma separated list of groups/users with permissions to this template')]
     public $groupsWithPermissions;
+
+    /**
+     * @var string[]
+     */
+    #[OA\Property(
+        description: 'An array of groups/users with permissions to this template',
+        type: 'array',
+        items: new OA\Items(type: 'string')
+    )]
+    public $groupsWithPermissionsList = [];
     /** @var string $xml The XML used to build this template */
-    
+
     private $xml;
 
     /** @var \DOMDocument The DOM Document for this templates XML */

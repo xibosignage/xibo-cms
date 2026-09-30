@@ -240,7 +240,7 @@ describe('Tags page - bulk delete', () => {
     await screen.findByRole('heading', { name: /delete tags\?/i });
     await user.click(screen.getByRole('button', { name: /yes, delete/i }));
 
-    await screen.findByText('Tag 2 is in use.');
+    await screen.findByText('1 tag(s) deleted successfully. Tag 2 is in use.');
     expect(screen.getByRole('heading', { name: /delete tags\?/i })).toBeInTheDocument();
     expect(deleteTag).toHaveBeenCalledTimes(2);
   });

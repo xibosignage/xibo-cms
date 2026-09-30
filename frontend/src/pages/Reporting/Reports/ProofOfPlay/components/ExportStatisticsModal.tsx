@@ -182,6 +182,7 @@ export default function ExportStatisticsModal({ isOpen, onClose }: ExportStatist
           searchable
           clearable
           optional
+          translateLabels={false}
           resolveLabel={displaySelect.resolveLabel}
           isLoading={displaySelect.isLoading}
           onLoadMore={displaySelect.onLoadMore}

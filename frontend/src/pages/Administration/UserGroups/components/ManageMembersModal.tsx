@@ -63,13 +63,50 @@ export default function ManageMembersModal({
 
   // Load currently assigned users (fresh on every open)
   useEffect(() => {
+    let cancelled = false;
     setIsLoadingAssigned(true);
     setToAdd([]);
     setToRemove([]);
-    fetchUsers({ start: 0, length: 1000, userGroupIdMembers: userGroup.groupId })
-      .then((res) => setAssignedUsers(res.rows))
-      .catch(() => setAssignedUsers([]))
-      .finally(() => setIsLoadingAssigned(false));
+
+    const loadAllAssigned = async () => {
+      const pageSize = 200;
+      try {
+        const first = await fetchUsers({
+          start: 0,
+          length: pageSize,
+          userGroupIdMembers: userGroup.groupId,
+        });
+        let rows = first.rows;
+        const totalCount = first.totalCount;
+        while (!cancelled && rows.length < totalCount) {
+          const next = await fetchUsers({
+            start: rows.length,
+            length: pageSize,
+            userGroupIdMembers: userGroup.groupId,
+          });
+          if (next.rows.length === 0) {
+            break;
+          }
+          rows = [...rows, ...next.rows];
+        }
+        if (!cancelled) {
+          setAssignedUsers(rows);
+        }
+      } catch {
+        if (!cancelled) {
+          setAssignedUsers([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingAssigned(false);
+        }
+      }
+    };
+
+    loadAllAssigned();
+    return () => {
+      cancelled = true;
+    };
   }, [userGroup]);
 
   // Search for users to assign

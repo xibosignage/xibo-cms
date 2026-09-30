@@ -194,7 +194,6 @@ class State implements Middleware
                 '/tfa',
                 '/error',
                 '/notFound',
-                '/public/thumbnail/{id}',
             ],
             \Xibo\Controller\Spa::getRoutePatterns()
         ));

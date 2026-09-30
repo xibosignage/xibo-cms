@@ -28,6 +28,7 @@ export const getScheduleEventSchema = (
   t: TFunction,
   customDayPartId?: string,
   alwaysDayPartId?: string,
+  original?: { fromDt?: string; recurrenceType: string; recurrenceRange: string },
 ) =>
   z
     .object({
@@ -207,6 +208,26 @@ export const getScheduleEventSchema = (
           path: ['recurrenceDetail'],
           code: z.ZodIssueCode.custom,
           message: t('Repeat every must be at least 1'),
+        });
+      }
+
+      const isUnchangedLegacyRange =
+        !!original?.recurrenceType &&
+        !!original.recurrenceRange &&
+        data.recurrenceRange === original.recurrenceRange &&
+        data.fromDt === original.fromDt;
+
+      if (
+        data.recurrenceType &&
+        data.recurrenceRange &&
+        data.fromDt &&
+        !isUnchangedLegacyRange &&
+        new Date(data.recurrenceRange) <= new Date(data.fromDt)
+      ) {
+        ctx.addIssue({
+          path: ['recurrenceRange'],
+          code: z.ZodIssueCode.custom,
+          message: t('Recurrence end must be after the event start date'),
         });
       }
 

@@ -53,6 +53,7 @@ export interface DynamicSettingFieldProps {
     onLoadMoreDayparts?: () => void;
     isLoadingMoreDayparts?: boolean;
     onSearchDayparts?: (term: string) => void;
+    resolveDaypartLabel?: (value: string) => Promise<string>;
     playerVersions?: PlayerSoftware[];
     playerVersionsHasMore?: boolean;
     onLoadMorePlayerVersions?: () => void;
@@ -210,7 +211,10 @@ export function DynamicSettingField({
   }
   if (meta.inputType === 'daypart') {
     const daypartOptions =
-      contextData.dayparts?.map((d) => ({ value: String(d.dayPartId), label: d.name })) ?? [];
+      contextData.dayparts?.map((d) => ({
+        value: String(d.dayPartId),
+        label: d.isAlways || d.isCustom ? t(d.name) : d.name,
+      })) ?? [];
     if (contextData.onLoadMoreDayparts && contextData.onSearchDayparts) {
       return (
         <SelectDropdown
@@ -218,8 +222,11 @@ export function DynamicSettingField({
           helpText={meta.helpText}
           value={value ? String(value) : ''}
           options={daypartOptions}
-          placeholder=" "
+          translateLabels={false}
+          resolveLabel={contextData.resolveDaypartLabel}
+          placeholder={t('None')}
           searchable
+          clearable
           onSelect={onChange}
           onLoadMore={contextData.onLoadMoreDayparts}
           hasMore={contextData.daypartsHasMore ?? false}
@@ -234,8 +241,11 @@ export function DynamicSettingField({
         helpText={meta.helpText}
         value={value ? String(value) : ''}
         options={daypartOptions}
-        placeholder=" "
+        translateLabels={false}
+        resolveLabel={contextData.resolveDaypartLabel}
+        placeholder={t('None')}
         searchable
+        clearable
         onSelect={onChange}
       />
     );
@@ -253,8 +263,10 @@ export function DynamicSettingField({
           helpText={meta.helpText}
           value={value ? String(value) : ''}
           options={playerVersionOptions}
-          placeholder=" "
+          translateLabels={false}
+          placeholder={t('None')}
           searchable
+          clearable
           onSelect={onChange}
           onLoadMore={contextData.onLoadMorePlayerVersions}
           hasMore={contextData.playerVersionsHasMore ?? false}
@@ -269,8 +281,10 @@ export function DynamicSettingField({
         helpText={meta.helpText}
         value={value ? String(value) : ''}
         options={playerVersionOptions}
-        placeholder=" "
+        translateLabels={false}
+        placeholder={t('None')}
         searchable
+        clearable
         onSelect={onChange}
       />
     );
