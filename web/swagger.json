@@ -2877,7 +2877,7 @@
                 }
             }
         },
-        "/dataset/{id}/rss/{rssId}}": {
+        "/dataset/{id}/rss/{rssId}": {
             "get": {
                 "tags": [
                     "dataset"
@@ -16527,6 +16527,13 @@
                     "groupsWithPermissions": {
                         "description": "A comma separated list of groups/users with permissions to this Command",
                         "type": "string"
+                    },
+                    "groupsWithPermissionsList": {
+                        "description": "An array of groups/users with permissions to this Command",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
                     }
                 },
                 "type": "object"
@@ -16564,6 +16571,13 @@
                     "groupsWithPermissions": {
                         "description": "A comma separated list of Groups/Users that have permission to this DataSet",
                         "type": "string"
+                    },
+                    "groupsWithPermissionsList": {
+                        "description": "An array of Groups/Users that have permission to this DataSet",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
                     },
                     "code": {
                         "description": "A code for this Data Set",
@@ -17091,6 +17105,13 @@
                         "description": "A comma separated list of groups/users with permissions to this Display",
                         "type": "string"
                     },
+                    "groupsWithPermissionsList": {
+                        "description": "An array of groups/users with permissions to this Display",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
                     "createdDt": {
                         "description": "The datetime this entity was created",
                         "type": "string"
@@ -17203,6 +17224,13 @@
                     "groupsWithPermissions": {
                         "description": "A comma separated list of groups/users with permissions to this DisplayGroup",
                         "type": "string"
+                    },
+                    "groupsWithPermissionsList": {
+                        "description": "An array of groups/users with permissions to this DisplayGroup",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
                     },
                     "createdDt": {
                         "description": "The datetime this entity was created",
@@ -17439,7 +17467,7 @@
                         "type": "string"
                     },
                     "status": {
-                        "description": "Flag indicating the Layout status",
+                        "description": "Flag indicating the Layout status. 1 = valid, 2 = valid with items only assessed by the Display, 3 = build required, 4 = invalid, 5 = built and valid, displays pending notification",
                         "type": "integer"
                     },
                     "retired": {
@@ -17469,7 +17497,7 @@
                         "type": "integer"
                     },
                     "duration": {
-                        "description": "A read-only estimate of this Layout's total duration in seconds. This is equal to the longest region duration and is valid when the layout status is 1 or 2.",
+                        "description": "A read-only estimate of this Layout's total duration in seconds. This is equal to the longest region duration and is valid when the layout status is 1, 2 or 5.",
                         "type": "integer"
                     },
                     "statusMessage": {
@@ -17675,6 +17703,13 @@
                         "description": "A comma separated list of groups/users with permissions to this Media",
                         "type": "string"
                     },
+                    "groupsWithPermissionsList": {
+                        "description": "An array of groups/users with permissions to this Media",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
                     "released": {
                         "description": "A flag indicating whether this media has been released",
                         "type": "integer"
@@ -17747,6 +17782,13 @@
                     },
                     "groupsWithPermissions": {
                         "description": "A comma separated list of Groups/Users that have permission to this menu Board"
+                    },
+                    "groupsWithPermissionsList": {
+                        "description": "An array of Groups/Users that have permission to this menu Board",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
                     }
                 },
                 "type": "object"
@@ -18102,6 +18144,13 @@
                     "groupsWithPermissions": {
                         "description": "A comma separated list of groups/users with permissions to this template",
                         "type": "string"
+                    },
+                    "groupsWithPermissionsList": {
+                        "description": "An array of groups/users with permissions to this template",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
                     }
                 },
                 "type": "object"
@@ -18407,7 +18456,7 @@
                         "type": "string"
                     },
                     "duration": {
-                        "description": "A read-only estimate of this Layout's total duration in seconds. This is equal to the longest region duration and is valid when the layout status is 1 or 2.",
+                        "description": "A read-only estimate of this Layout's total duration in seconds. This is equal to the longest region duration and is valid when the layout status is 1, 2 or 5.",
                         "type": "integer"
                     },
                     "requiresDurationUpdate": {
@@ -18516,7 +18565,7 @@
                         }
                     },
                     "duration": {
-                        "description": "A read-only estimate of this Regions's total duration in seconds. This is valid when the parent layout status is 1 or 2.",
+                        "description": "A read-only estimate of this Regions's total duration in seconds. This is valid when the parent layout status is 1, 2 or 5.",
                         "type": "integer"
                     },
                     "isDrawer": {
