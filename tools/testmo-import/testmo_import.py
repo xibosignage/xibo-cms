@@ -52,6 +52,9 @@ COLUMN_KEYS = {
     "test steps": "steps",
     "expected result": "expected",
     "actual result": "actual",
+    "estimated execution time": "estimated_time",
+    "estimated time": "estimated_time",
+    "estimate": "estimated_time",
 }
 
 # Tables whose preceding heading matches one of these are not test cases.
@@ -378,6 +381,10 @@ def build_case(case, cfg, folder_id):
                 payload["tags"] = tags
         elif field == "name":
             payload["name"] = render_template(spec, case, as_html=False)[:255]
+        elif spec == "@estimate":
+            secs = parse_duration(case.get("estimated_time", ""), case["test_id"])
+            if secs:
+                payload[field] = secs
         elif field == "estimate":
             payload["estimate"] = spec
         else:
@@ -387,6 +394,23 @@ def build_case(case, cfg, folder_id):
             if re.sub(r"<[^>]+>", "", value).strip():
                 payload[field] = value if value.lstrip().startswith("<") else f"<p>{value}</p>"
     return payload
+
+
+DURATION_UNITS = {"h": 3600, "hr": 3600, "hrs": 3600, "hour": 3600, "hours": 3600,
+                  "m": 60, "min": 60, "mins": 60, "minute": 60, "minutes": 60,
+                  "s": 1, "sec": 1, "secs": 1, "second": 1, "seconds": 1}
+
+
+def parse_duration(text, test_id=""):
+    """'5 min' / '1 hr' / '2 hrs' / '1 hr 30 min' / '1.5h' -> seconds (Testmo's estimate unit). None if empty or unreadable."""
+    text = (text or "").strip().lower()
+    if not text:
+        return None
+    parts = re.findall(r"(\d+(?:\.\d+)?)\s*([a-z]+)", text)
+    if not parts or any(u not in DURATION_UNITS for _, u in parts):
+        print(f"warning: {test_id}: can't read estimated time '{text}', estimate left out", file=sys.stderr)
+        return None
+    return int(round(sum(float(n) * DURATION_UNITS[u] for n, u in parts)))
 
 
 # Fields that are set on create but never compared or updated.
@@ -893,9 +917,12 @@ def cmd_update(args):
     moved = [c for c, _, ch, _, _ in updates if "folder" in ch]
     folder_map = scope.ensure_area_folders(moved, dry_run=False) if moved else {}
     touched = dict(adopted)
+    # Testmo's bulk PATCH gives every listed case the same values, so cases whose changes are
+    # identical (e.g. the same new estimate) share one request of up to 100 ids.
+    groups = {}
     for c, tc, changed, revive, old in updates:
         payload = build_case(c, cfg, None)
-        body = {"ids": [tc["id"]]}
+        body = {}
         for field in changed:
             if field == "folder":
                 body["folder_id"] = folder_map[c["section"]]
@@ -907,12 +934,18 @@ def cmd_update(args):
                       f"(set testmo.state_id); left retired", file=sys.stderr)
             else:
                 body["state_id"] = active_id
-        api.request("PATCH", f"/projects/{pid}/cases", body)
+        key = json.dumps(body, sort_keys=True, ensure_ascii=False)
+        groups.setdefault(key, (body, []))[1].append(tc["id"])
         if old:
             state.cases.pop(old, None)
         touched[c["test_id"]] = (tc["id"], fingerprint(c, cfg))
+    requests = 0
+    for body, ids in groups.values():
+        for i in range(0, len(ids), MAX_PER_REQUEST):
+            api.request("PATCH", f"/projects/{pid}/cases", dict(body, ids=ids[i:i + MAX_PER_REQUEST]))
+            requests += 1
     if updates:
-        print(f"  updated {len(updates)} cases")
+        print(f"  updated {len(updates)} cases in {requests} request(s)")
 
     for i in range(0, len(retire), MAX_PER_REQUEST):
         chunk = retire[i:i + MAX_PER_REQUEST]
@@ -955,7 +988,7 @@ def print_plan(plan, scope):
 # diff: offline comparison of two suite versions (never touches Testmo)
 # --------------------------------------------------------------------------- #
 
-DIFF_FIELDS = ("scenario", "priority", "players", "prerequisite", "steps", "expected", "section")
+DIFF_FIELDS = ("scenario", "priority", "players", "prerequisite", "estimated_time", "steps", "expected", "section")
 
 
 def cmd_diff(args):

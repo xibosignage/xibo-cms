@@ -171,6 +171,7 @@ When you use a filter, **update doesn't retire anything**, because it can't tell
 | Test Steps | Steps: one Testmo step per numbered line |
 | Expected Result | Expected result of the last step |
 | Players, Pre-requisite | Description |
+| Estimated Execution Time | Estimate (`5 min`, `1 hr`, `2 hrs`, `1 hr 30 min`, `30 sec` are all understood; anything else is left out with a warning) |
 | Priority | Priority field: P0 and P1 → High, P2 → Medium, P3 → Low. The exact level is also a tag (`p0`...`p3`). |
 | Players, area | Tags (e.g. `android`, `inst`, `p1`; Testmo stores tags lower-case) |
 | Actual Result | Not imported (it's filled in during test runs) |
@@ -216,10 +217,11 @@ In `mapping`, each key is a Testmo field system name (from `discover`). Each val
 
 - `"@steps"`: the numbered Test Steps, one Testmo step each
 - `"@priority"`: P0–P3 through `priority_map`
-- a template built from docx columns: `{test_id} {priority} {scenario} {players} {prerequisite} {expected} {actual} {area} {area_name} {section}`
+- `"@estimate"`: the Estimated Execution Time column converted to seconds (Testmo's estimate unit)
+- a template built from docx columns: `{test_id} {priority} {scenario} {players} {prerequisite} {estimated_time} {expected} {actual} {area} {area_name} {section}`
 
 In `tags`, `"@players"` makes one tag per player. Delete a key to stop syncing that field. `name` must start with `{test_id}`.
 
 Changing `mapping` makes the next `update` see every case as changed. Do it deliberately and preview with `--dry-run` first.
 
-Cases are sent to Testmo 100 at a time (the API's limit per request); updates go one request per case.
+Cases are sent to Testmo 100 at a time (the API's limit per request). Updates with identical changes (e.g. the same new estimate) share a request; otherwise it's one request per case.

@@ -16,6 +16,7 @@
     "custom_description": "<p><strong>Players:</strong> {players}</p><p><strong>Pre-requisite:</strong> {prerequisite}</p>",
     "custom_steps": "@steps",
     "custom_priority": "@priority",
+    "estimate": "@estimate",
     "tags": [
       "@players",
       "{area}",
