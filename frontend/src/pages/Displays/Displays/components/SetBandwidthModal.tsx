@@ -73,7 +73,7 @@ export default function SetBandwidthModal({
         {
           label: isActionPending ? t('Saving…') : t('Save'),
           onClick: handleSave,
-          disabled: isActionPending || bandwidthKb === null,
+          disabled: isActionPending,
         },
       ]}
     >
