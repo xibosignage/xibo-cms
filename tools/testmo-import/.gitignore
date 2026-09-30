@@ -1,0 +1,8 @@
+# Per-run outputs (config.json and sync-state.json are committed on purpose)
+payload.json
+import-result.json
+update-report.json
+discover.json
+suite.json
+*.docx
+__pycache__/

@@ -1,0 +1,35 @@
+{
+  "testmo": {
+    "base_url": "https://xibo.testmo.net",
+    "project_id": 8,
+    "template_id": 2,
+    "state_id": null
+  },
+  "folders": {
+    "parent_id": null,
+    "root": "Player Test Suite",
+    "per_area": true,
+    "area_name": "{section}"
+  },
+  "mapping": {
+    "name": "{test_id} {scenario}",
+    "custom_description": "<p><strong>Players:</strong> {players}</p><p><strong>Pre-requisite:</strong> {prerequisite}</p>",
+    "custom_steps": "@steps",
+    "custom_priority": "@priority",
+    "tags": [
+      "@players",
+      "{area}",
+      "{priority}"
+    ]
+  },
+  "expected_mode": "last_step",
+  "state_file": "sync-state.json",
+  "retired_state": "Retired",
+  "renames": {},
+  "priority_map": {
+    "P0": 1,
+    "P1": 1,
+    "P2": 2,
+    "P3": 3
+  }
+}
