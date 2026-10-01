@@ -114,7 +114,7 @@
     "leaflet-search": "^4.0.0",
     "leaflet.markercluster": "^1.5.3",
     "masonry-layout": "^4.2.2",
-    "moment": "~2.30.1",
+    "moment": "~2.31.0",
     "moment-jalaali": "~0.10.1",
     "moment-timezone": "^0.5.45",
     "moveable": "^0.53.0",
