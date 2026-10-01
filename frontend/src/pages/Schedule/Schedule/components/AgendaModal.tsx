@@ -61,6 +61,7 @@ import { withPublicPath } from '@/config/publicPath';
 import { useUserContext } from '@/context/UserContext';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { usePreline } from '@/hooks/usePreline';
+import LayoutPendingNotifyIcon from '@/pages/Design/Layouts/components/LayoutPendingNotifyIcon';
 import LayoutPreviewer from '@/pages/Design/Layouts/components/LayoutPreviewer';
 import MiniLayoutPreview from '@/pages/Design/Layouts/components/MiniLayoutPreview';
 import type {
@@ -69,6 +70,7 @@ import type {
   FetchAgendaEventsResponse,
 } from '@/services/eventApi';
 import type { Event } from '@/types/event';
+import { isPendingNotifyLayoutStatus, toNotifiedLayoutStatus } from '@/utils/layoutStatus';
 import { hasFeature } from '@/utils/permissions';
 
 interface AgendaModalProps {
@@ -796,7 +798,9 @@ function sortEventRows(
         cmp = (la?.layout ?? '').localeCompare(lb?.layout ?? '');
         break;
       case 'status':
-        cmp = (layoutA?.status ?? -1) - (layoutB?.status ?? -1);
+        cmp =
+          (toNotifiedLayoutStatus(layoutA?.status) ?? -1) -
+          (toNotifiedLayoutStatus(layoutB?.status) ?? -1);
         break;
       case 'fromDt':
         cmp = a.fromDt - b.fromDt;
@@ -820,10 +824,14 @@ function sortEventRows(
 
 interface LayoutStatusIconProps {
   status?: number;
+  statusDescription?: string;
 }
 
-function LayoutStatusIcon({ status }: LayoutStatusIconProps) {
+function LayoutStatusIcon({ status, statusDescription }: LayoutStatusIconProps) {
   const { t } = useTranslation();
+  if (isPendingNotifyLayoutStatus(status)) {
+    return <LayoutPendingNotifyIcon className="w-6.5 h-6.5 shrink-0" title={statusDescription} />;
+  }
   if (status === 1) {
     return (
       <span
@@ -1083,7 +1091,10 @@ function EventTypeTable({
                     </div>
                   </td>
                   <td className="px-3 py-2">
-                    <LayoutStatusIcon status={layout?.status} />
+                    <LayoutStatusIcon
+                      status={layout?.status}
+                      statusDescription={layout?.statusDescription}
+                    />
                   </td>
                   <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
                     {event.isAlways ? (

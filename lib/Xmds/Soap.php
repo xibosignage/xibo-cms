@@ -600,7 +600,7 @@ class Soap
 
                 if (!empty($layoutCode) && $schedule->eventTypeId == Schedule::$ACTION_EVENT) {
                     $actionEventLayout = $this->layoutFactory->getByCode($layoutCode);
-                    if ($actionEventLayout->status <= 3) {
+                    if (Status::isPlayable($actionEventLayout->status)) {
                         $layouts[] = $actionEventLayout->layoutId;
                     } else {
                         $this->getLog()->error(sprintf(__('Scheduled Action Event ID %d contains an invalid Layout linked to it by the Layout code.'), $schedule->eventId));
@@ -1434,7 +1434,7 @@ class Soap
 
                         // Check the layout status
                         // https://github.com/xibosignage/xibo/issues/743
-                        if ($status > 3) {
+                        if (!Status::isPlayable($status)) {
                             $this->getLog()->info(sprintf('Player has invalid layout scheduled. Display = %s, LayoutId = %d', $this->display->display, $layoutId));
                             continue;
                         }
@@ -1508,7 +1508,7 @@ class Soap
 
                         // Check the layout status
                         // https://github.com/xibosignage/xibo/issues/743
-                        if (intval($row['status']) > 3) {
+                        if (!Status::isPlayable((int)$row['status'])) {
                             $this->getLog()->error(sprintf('Player has invalid layout scheduled. Display = %s, LayoutId = %d', $this->display->display, $layoutId));
                             continue;
                         }
@@ -1615,14 +1615,14 @@ class Soap
             // is it valid?
             $defaultLayout = $this->layoutFactory->getById($defaultLayoutId);
 
-            if ($defaultLayout->status >= Status::$STATUS_INVALID) {
+            if (!Status::isPlayable($defaultLayout->status)) {
                 $this->getLog()->error(sprintf('Player has invalid default Layout. Display = %s, LayoutId = %d',
                     $this->display->display,
                     $defaultLayout->layoutId));
             }
 
             // Are we interleaving the default? And is the default valid?
-            if ($this->display->incSchedule == 1 && $defaultLayout->status < Status::$STATUS_INVALID) {
+            if ($this->display->incSchedule == 1 && Status::isPlayable($defaultLayout->status)) {
                 // Add as a node at the end of the schedule.
                 $layout = $scheduleXml->createElement("layout");
 
