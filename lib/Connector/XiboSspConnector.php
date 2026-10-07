@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -163,6 +163,15 @@ class XiboSspConnector implements ConnectorInterface
 
         // Pull in expected fields.
         foreach ($available as $partnerId => $partner) {
+            // A request without any fields for this partner must not overwrite its config on the exchange.
+            if (!$params->hasParam($partnerId . '_sov')) {
+                $existing = $this->getExistingPartner($partnerId);
+                if ($existing !== null) {
+                    $partners[] = $existing;
+                }
+                continue;
+            }
+
             $partners[] = [
                 'name' => $partnerId,
                 'enabled' => $params->getCheckbox($partnerId . '_enabled'),
@@ -313,6 +322,22 @@ class XiboSspConnector implements ConnectorInterface
         }
 
         return $default;
+    }
+
+    /**
+     * Get the partner config the exchange currently holds
+     * @param string $partnerKey
+     * @return array|null
+     */
+    private function getExistingPartner(string $partnerKey): ?array
+    {
+        foreach ($this->partners['partners'] ?? [] as $partner) {
+            if (($partner['name'] ?? null) === $partnerKey) {
+                return $partner;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -516,6 +541,26 @@ class XiboSspConnector implements ConnectorInterface
             'data' => [],
             'recordsTotal' => 0,
         ];
+    }
+
+    /**
+     * Partner settings held by the exchange, keyed by partner
+     */
+    public function getPartnerSettings(SanitizerInterface $params): array
+    {
+        try {
+            $this->getAvailablePartners(true);
+        } catch (\Exception $e) {
+            $this->getLogger()->error('getPartnerSettings: e = ' . $e->getMessage());
+            throw new GeneralException(__('Cannot contact SSP service, please try again shortly.'));
+        }
+
+        $settings = [];
+        foreach ($this->partners['partners'] ?? [] as $partner) {
+            $settings[$partner['name']] = $partner;
+        }
+
+        return $settings;
     }
     // </editor-fold>
 
