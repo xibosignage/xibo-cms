@@ -55,18 +55,18 @@ function getMediaTypesOptions(t: TFunction) {
   ];
 }
 
-const PARTNER_FIELDS = [
-  'enabled',
-  'isTest',
-  'isUseWidget',
-  'currency',
-  'key',
-  'sov',
-  'mediaTypesAllowed',
-  'duration',
-  'minDuration',
-  'maxDuration',
-] as const;
+const PARTNER_FIELD_DEFAULTS: Record<string, string | undefined> = {
+  enabled: '0',
+  isTest: '0',
+  isUseWidget: '0',
+  currency: undefined,
+  key: '',
+  sov: '0',
+  mediaTypesAllowed: 'imagesAndVideo',
+  duration: '',
+  minDuration: '',
+  maxDuration: '',
+};
 
 function toFormValue(value: unknown): string | undefined {
   if (value === null || value === undefined) {
@@ -204,10 +204,10 @@ export default function SspConnectorForm({
       }
 
       for (const [partnerId] of partnerEntries) {
-        for (const field of PARTNER_FIELDS) {
+        for (const [field, fallback] of Object.entries(PARTNER_FIELD_DEFAULTS)) {
           const key = `${partnerId}_${field}`;
           if (formValues[key] === undefined) {
-            payload[key] = getSavedPartnerValue(partnerId, field);
+            payload[key] = getSavedPartnerValue(partnerId, field) ?? fallback;
           }
         }
 

@@ -164,7 +164,7 @@ class XiboSspConnector implements ConnectorInterface
         // Pull in expected fields.
         foreach ($available as $partnerId => $partner) {
             // A request without any fields for this partner must not overwrite its config on the exchange.
-            if (!$params->hasParam($partnerId . '_sov')) {
+            if (!$this->hasPartnerParams($params, $partnerId)) {
                 $existing = $this->getExistingPartner($partnerId);
                 if ($existing !== null) {
                     $partners[] = $existing;
@@ -322,6 +322,36 @@ class XiboSspConnector implements ConnectorInterface
         }
 
         return $default;
+    }
+
+    /**
+     * Whether the request contains any field for a partner
+     * @param SanitizerInterface $params
+     * @param string $partnerKey
+     * @return bool
+     */
+    private function hasPartnerParams(SanitizerInterface $params, string $partnerKey): bool
+    {
+        foreach ([
+            'enabled',
+            'isTest',
+            'isUseWidget',
+            'currency',
+            'key',
+            'sov',
+            'mediaTypesAllowed',
+            'duration',
+            'minDuration',
+            'maxDuration',
+            'displayGroupId',
+            'sspIdField',
+        ] as $field) {
+            if ($params->hasParam($partnerKey . '_' . $field)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
