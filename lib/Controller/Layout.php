@@ -589,6 +589,13 @@ class Layout extends Base
             );
         }
 
+        if ($isTemplate && !$layout->hasTag('template')) {
+            throw new InvalidArgumentException(
+                __('Cannot remove the Template tag from a Template.'),
+                'tags'
+            );
+        }
+
         $layout->retired = $sanitizedParams->getCheckbox('retired');
         $layout->enableStat = $sanitizedParams->getCheckbox('enableStat');
         $layout->code = $sanitizedParams->getString('code');
