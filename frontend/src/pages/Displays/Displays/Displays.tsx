@@ -402,7 +402,7 @@ export default function Displays() {
       : undefined,
     onShare: () => {
       const allItems = getAllSelectedItems();
-      const ids = allItems.map((i) => i.displayId);
+      const ids = allItems.map((i) => i.displayGroupId);
       setShareEntityIds(ids);
       openModal('share');
     },
