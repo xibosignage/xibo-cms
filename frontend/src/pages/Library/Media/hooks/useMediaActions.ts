@@ -27,7 +27,7 @@ import { useState } from 'react';
 
 import { notify } from '@/components/ui/Notification';
 import { selectFolder, type ApiResult } from '@/services/folderApi';
-import { cloneMedia, deleteMedia, tidyLibrary, updateMedia } from '@/services/mediaApi';
+import { cloneMedia, deleteMedia, setMediaEnableStat, tidyLibrary } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
 import type { Tag } from '@/types/tag';
 import { isAlreadyDeletedError } from '@/utils/errors';
@@ -224,11 +224,7 @@ export function useMediaActions({
     try {
       setIsUpdatingStats(true);
 
-      await updateMedia(media.mediaId, {
-        name: media.name,
-        duration: media.duration,
-        enableStat: value,
-      });
+      await setMediaEnableStat(media.mediaId, value);
 
       notify.success(t('Stats collection updated'));
       handleRefresh();
