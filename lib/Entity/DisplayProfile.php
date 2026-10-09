@@ -300,12 +300,18 @@ class DisplayProfile implements \JsonSerializable
                 $alreadyAssigned->commandString = $command->commandString;
                 $alreadyAssigned->validationString = $command->validationString;
                 $alreadyAssigned->createAlertOn = $command->createAlertOn;
+                $alreadyAssigned->commandStringDisplayProfile = $command->commandString;
+                $alreadyAssigned->validationStringDisplayProfile = $command->validationString;
+                $alreadyAssigned->createAlertOnDisplayProfile = $command->createAlertOn;
                 $assigned = true;
                 break;
             }
         }
 
         if (!$assigned) {
+            $command->commandStringDisplayProfile = $command->commandString;
+            $command->validationStringDisplayProfile = $command->validationString;
+            $command->createAlertOnDisplayProfile = $command->createAlertOn;
             $this->commands[] = $command;
         }
     }
@@ -525,8 +531,13 @@ class DisplayProfile implements \JsonSerializable
             count($this->commands),
         );
 
+        // Only commands with a profile specific command string are linked
+        $linkedCommands = array_filter($this->commands, function ($command) {
+            return !empty($command->commandStringDisplayProfile);
+        });
+
         // Link
-        foreach ($this->commands as $command) {
+        foreach ($linkedCommands as $command) {
             /* @var Command $command */
             $this->getStore()->update('
               INSERT INTO `lkcommanddisplayprofile` (
@@ -550,12 +561,12 @@ class DisplayProfile implements \JsonSerializable
             ', [
                 'commandId' => $command->commandId,
                 'displayProfileId' => $this->displayProfileId,
-                'commandString' => $command->commandString,
-                'validationString' => $command->validationString,
-                'createAlertOn' => $command->createAlertOn,
-                'commandString2' => $command->commandString,
-                'validationString2' => $command->validationString,
-                'createAlertOn2' => $command->createAlertOn
+                'commandString' => $command->commandStringDisplayProfile,
+                'validationString' => $command->validationStringDisplayProfile,
+                'createAlertOn' => $command->createAlertOnDisplayProfile,
+                'commandString2' => $command->commandStringDisplayProfile,
+                'validationString2' => $command->validationStringDisplayProfile,
+                'createAlertOn2' => $command->createAlertOnDisplayProfile
             ]);
         }
 
@@ -566,7 +577,7 @@ class DisplayProfile implements \JsonSerializable
                 WHERE `displayProfileId` = :displayProfileId AND `commandId` NOT IN (0';
 
         $i = 0;
-        foreach ($this->commands as $command) {
+        foreach ($linkedCommands as $command) {
             /* @var Command $command */
             $i++;
             $sql .= ',:commandId' . $i;
