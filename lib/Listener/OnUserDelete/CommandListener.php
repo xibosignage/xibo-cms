@@ -68,7 +68,7 @@ class CommandListener implements OnUserDeleteInterface
     public function deleteChildren(User $user, EventDispatcherInterface $dispatcher, User $systemUser)
     {
         foreach ($this->commandFactory->getByOwnerId($user->userId) as $command) {
-            $dispatcher->dispatch(CommandDeleteEvent::$NAME, new CommandDeleteEvent($command));
+            $dispatcher->dispatch(new CommandDeleteEvent($command), CommandDeleteEvent::$NAME);
             $command->delete();
         }
     }
