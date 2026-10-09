@@ -108,7 +108,9 @@ export function TemplateModals({
         <EditTagsMultipleModal
           targetType="layout"
           ids={selection.bulkItems.map((item) => item.layoutId)}
-          existingTags={mergeEntityTags(selection.bulkItems)}
+          existingTags={mergeEntityTags(selection.bulkItems).filter(
+            (tag) => tag.tag !== 'template',
+          )}
           onClose={actions.closeModal}
           onSuccess={async () => {
             await actions.handleRefresh();
