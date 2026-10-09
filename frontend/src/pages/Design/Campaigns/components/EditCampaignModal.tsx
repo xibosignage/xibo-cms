@@ -96,6 +96,7 @@ export default function EditCampaignModal({
   });
 
   const [assignedLayouts, setAssignedLayouts] = useState<CampaignLayout[]>([]);
+  const [layoutsLoaded, setLayoutsLoaded] = useState(false);
   const assignmentKeyRef = useRef(0);
   const [layoutKeyword, setLayoutKeyword] = useState('');
   const [layoutPagination, setLayoutPagination] = useState<PaginationState>({
@@ -129,7 +130,7 @@ export default function EditCampaignModal({
     }
   }, [isOpen, campaign]);
 
-  const { data: assignedData } = useQuery({
+  const { data: assignedData, isError: isAssignedError } = useQuery({
     queryKey: ['layouts', 'campaign', campaign?.campaignId],
     queryFn: async () => {
       const pageSize = 200;
@@ -159,15 +160,17 @@ export default function EditCampaignModal({
     },
     enabled: isOpen && !!campaign,
     staleTime: 0,
+    gcTime: 0,
   });
 
   useEffect(() => {
-    if (assignedData) {
+    if (assignedData && !layoutsLoaded) {
       setAssignedLayouts(
         assignedData.rows.map((l) => ({ ...l, assignmentKey: assignmentKeyRef.current++ })),
       );
+      setLayoutsLoaded(true);
     }
-  }, [assignedData]);
+  }, [assignedData, layoutsLoaded]);
 
   const layoutSortBy = layoutSorting[0]?.id;
   const layoutSortDir = layoutSorting[0] ? (layoutSorting[0].desc ? 'desc' : 'asc') : undefined;
@@ -229,8 +232,10 @@ export default function EditCampaignModal({
           ref3: draft.ref3 || undefined,
           ref4: draft.ref4 || undefined,
           ref5: draft.ref5 || undefined,
-          manageLayouts: 1,
-          layoutIds: assignedLayouts.map((l) => l.layoutId),
+          ...(layoutsLoaded && {
+            manageLayouts: 1,
+            layoutIds: assignedLayouts.map((l) => l.layoutId),
+          }),
         });
 
         onSuccess();
@@ -417,11 +422,18 @@ export default function EditCampaignModal({
           {activeTab === 'layouts' && (
             <SearchAssignPanel<CampaignLayout>
               assignedItems={assignedLayouts}
+              isLoadingAssigned={!layoutsLoaded && !isAssignedError}
               assignedLabel={t('Selected Layouts')}
               onAddItem={addLayout}
               onRemoveItem={removeLayout}
               onClearAll={() => setAssignedLayouts([])}
-              noAssignedText={t('No layouts assigned yet')}
+              isItemActionDisabled={() => !layoutsLoaded}
+              disabledActionMessage={t('The assigned layouts have not loaded yet')}
+              noAssignedText={
+                isAssignedError
+                  ? t('The assigned layouts could not be loaded')
+                  : t('No layouts assigned yet')
+              }
               getItemId={(l) => l.layoutId}
               getItemLabel={(l) => l.layout}
               sortable
