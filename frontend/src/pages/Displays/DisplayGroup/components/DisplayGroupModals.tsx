@@ -28,6 +28,7 @@ import ManageMembersModal from './ManageMembersModal';
 
 import EditTagsMultipleModal from '@/components/ui/modals/EditTagsMultipleModal';
 import MoveModal from '@/components/ui/modals/MoveModal';
+import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
 import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
 import type { CopyDisplayGroupFormData } from '@/pages/Displays/DisplayGroup/hooks/useDisplayGroupActions';
@@ -247,6 +248,18 @@ export function DisplayGroupModals({ actions, selection, handlers }: DisplayGrou
           displayGroup={selection.selectedDisplayGroup}
           onClose={actions.closeModal}
           onSuccess={actions.handleRefresh}
+        />
+      )}
+
+      {isModalOpen('schedule') && selection.selectedDisplayGroup && (
+        <ScheduleEventModal
+          isOpen
+          onClose={() => {
+            actions.closeModal();
+            actions.handleRefresh();
+          }}
+          mode="add"
+          displayGroupIds={[selection.selectedDisplayGroup.displayGroupId]}
         />
       )}
 
