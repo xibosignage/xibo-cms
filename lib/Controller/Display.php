@@ -1236,9 +1236,10 @@ class Display extends Base
             // get display
             $display = $this->displayFactory->getById($id);
 
-            // check if the display is accessible by user
-            if (!$this->getUser()->checkViewable($display)) {
-                throw new AccessDeniedException();
+            if (!$this->getUser()->checkEditable($display)) {
+                throw new AccessDeniedException(
+                    sprintf(__('You do not have permission to edit %s'), $display->display)
+                );
             }
 
             $displayGroupIds[] = $display->displayGroupId;
@@ -1368,8 +1369,7 @@ class Display extends Base
     {
         $display = $this->displayFactory->getById($id);
 
-        // Allow limited view access
-        if (!$this->getUser()->checkViewable($display) && !$this->getUser()->featureEnabled('displays.limitedView')) {
+        if (!$this->getUser()->checkViewable($display)) {
             throw new AccessDeniedException();
         }
 
@@ -1450,8 +1450,7 @@ class Display extends Base
     {
         $display = $this->displayFactory->getById($id);
 
-        // Allow limited view access
-        if (!$this->getUser()->checkViewable($display) && !$this->getUser()->featureEnabled('displays.limitedView')) {
+        if (!$this->getUser()->checkViewable($display)) {
             throw new AccessDeniedException();
         }
 
