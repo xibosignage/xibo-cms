@@ -42,6 +42,13 @@ import type { DataTableBulkAction } from './DataTableBulkActions';
 import { DataTableBulkActions } from './DataTableBulkActions';
 import { DataTableOptions } from './DataTableOptions';
 import { DataTablePagination } from './DataTablePagination';
+import {
+  NON_PRINTABLE_COLUMNS,
+  getExportCellValue,
+  getExportHeader,
+  isExportableColumn,
+  toCsvField,
+} from './exportCsv';
 import type { ViewMode } from './types';
 
 import { CheckboxCell } from '@/components/ui/table/cells';
@@ -209,49 +216,18 @@ export function DataTable<TData, TValue>({
     getRowId,
   });
 
-  // Columns injected by the table itself (selection checkbox, row actions) have no
-  // exportable/printable data of their own.
-  const nonPrintableColumns = ['tableSelection', 'tableActions'];
-
-  const isExportableColumn = (columnId: string, meta?: { excludeFromExport?: boolean }) =>
-    !nonPrintableColumns.includes(columnId) && !meta?.excludeFromExport;
-
   const handleExportCSV = () => {
     const exportableColumns = table
       .getAllLeafColumns()
       .filter((column) => isExportableColumn(column.id, column.columnDef.meta));
 
-    const headers = exportableColumns.map((column) => {
-      return typeof column.columnDef.header === 'string' ? column.columnDef.header : column.id;
-    });
+    const headers = exportableColumns.map((column) => getExportHeader(column));
 
     const rows = exportTable.getRowModel().rows.map((row) =>
       row
         .getAllCells()
         .filter((cell) => isExportableColumn(cell.column.id, cell.column.columnDef.meta))
-        .map((cell) => {
-          const getExportValue = cell.column.columnDef.meta?.getExportValue;
-
-          let raw: string;
-          if (getExportValue) {
-            // Column declares its own CSV representation (e.g. formatted dates,
-            // status labels) separately from its on-screen `cell` renderer.
-            raw = getExportValue(row.original) ?? '';
-          } else {
-            const value = cell.getValue();
-
-            // Some tables have an object row so we need to convert it to JSON string
-            raw =
-              value === null || value === undefined
-                ? ''
-                : typeof value === 'object'
-                  ? JSON.stringify(value)
-                  : String(value);
-          }
-
-          const stringValue = raw.replace(/"/g, '""');
-          return `"${stringValue}"`;
-        }),
+        .map((cell) => toCsvField(getExportCellValue(cell))),
     );
 
     const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
@@ -373,7 +349,7 @@ export function DataTable<TData, TValue>({
                       <th
                         key={header.id}
                         scope="col"
-                        className={`relative ${nonPrintableColumns.includes(header.id) ? 'no-print' : ''}`}
+                        className={`relative ${NON_PRINTABLE_COLUMNS.includes(header.id) ? 'no-print' : ''}`}
                         style={{
                           ...getCommonPinningStyles(header.column),
                           position: 'sticky',
@@ -441,7 +417,7 @@ export function DataTable<TData, TValue>({
                           className={twMerge(
                             'px-3 py-2 border-b border-gray-200',
                             rowBackgroundColor,
-                            nonPrintableColumns.includes(cell.column.id) ? 'no-print' : '',
+                            NON_PRINTABLE_COLUMNS.includes(cell.column.id) ? 'no-print' : '',
                           )}
                           style={{
                             ...getCommonPinningStyles(cell.column),
