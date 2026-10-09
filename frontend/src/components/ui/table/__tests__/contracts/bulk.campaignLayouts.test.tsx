@@ -31,6 +31,7 @@ import EditCampaignModal from '@/pages/Design/Campaigns/components/EditCampaignM
 import { updateCampaign } from '@/services/campaignApi';
 import { fetchLayouts } from '@/services/layoutsApi';
 import { testQueryClient } from '@/setupTests';
+import { knownFailure } from '@/testUtils/knownFailure';
 import type { Layout } from '@/types/layout';
 
 vi.mock('@/services/campaignApi');
@@ -106,6 +107,17 @@ const savedLayoutLists = () =>
     .filter((payload) => payload.manageLayouts === 1)
     .map((payload) => payload.layoutIds);
 
+/** Open the modal, click Save straight away, and return the layout lists Save sent. */
+const saveWithoutTouchingLayouts = async () => {
+  const user = userEvent.setup();
+  await renderModal();
+
+  await user.click(screen.getByRole('button', { name: 'Save' }));
+
+  await waitFor(() => expect(updateCampaign).toHaveBeenCalled());
+  return savedLayoutLists();
+};
+
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(updateCampaign).mockResolvedValue(mockCampaign);
@@ -131,7 +143,7 @@ describe('saving a list campaign keeps every assigned layout', () => {
   // Until the campaign's layouts have loaded, the
   // modal's list is empty; saving then (e.g. after renaming on the General tab) sends
   // `manageLayouts: 1, layoutIds: []` and the server unassigns every layout.
-  test.fails(
+  knownFailure(
     'saving before the campaign’s layouts have loaded does not unassign them',
     async () => {
       vi.mocked(fetchLayouts).mockImplementation((params) =>
@@ -139,30 +151,23 @@ describe('saving a list campaign keeps every assigned layout', () => {
           ? new Promise(() => {}) // still loading
           : Promise.resolve({ rows: [], totalCount: 0 }),
       );
-      const user = userEvent.setup();
-      await renderModal();
-
-      await user.click(screen.getByRole('button', { name: 'Save' }));
-
-      await waitFor(() => expect(updateCampaign).toHaveBeenCalled());
-      expect(savedLayoutLists()).not.toContainEqual([]);
+      return saveWithoutTouchingLayouts();
     },
+    (saved) => expect(saved).not.toContainEqual([]),
   );
 
   // If loading the campaign's layouts fails, the list stays empty and Save
   // unassigns every layout.
-  test.fails('if loading the campaign’s layouts fails, saving does not unassign them', async () => {
-    vi.mocked(fetchLayouts).mockImplementation((params) =>
-      params?.campaignId
-        ? Promise.reject(new Error('network'))
-        : Promise.resolve({ rows: [], totalCount: 0 }),
-    );
-    const user = userEvent.setup();
-    await renderModal();
-
-    await user.click(screen.getByRole('button', { name: 'Save' }));
-
-    await waitFor(() => expect(updateCampaign).toHaveBeenCalled());
-    expect(savedLayoutLists()).not.toContainEqual([]);
-  });
+  knownFailure(
+    'if loading the campaign’s layouts fails, saving does not unassign them',
+    async () => {
+      vi.mocked(fetchLayouts).mockImplementation((params) =>
+        params?.campaignId
+          ? Promise.reject(new Error('network'))
+          : Promise.resolve({ rows: [], totalCount: 0 }),
+      );
+      return saveWithoutTouchingLayouts();
+    },
+    (saved) => expect(saved).not.toContainEqual([]),
+  );
 });

@@ -35,6 +35,7 @@ import { getPlayerVersionColumns } from '@/pages/Displays/PlayerVersions/PlayerV
 import { buildPlayerVersion } from '@/pages/Displays/PlayerVersions/__tests__/fixtures/playerVersion';
 import { getSyncGroupColumns } from '@/pages/Displays/SyncGroups/SyncGroupsConfig';
 import { buildSyncGroup } from '@/pages/Displays/SyncGroups/__tests__/fixtures/syncGroup';
+import { knownFailure } from '@/testUtils/knownFailure';
 
 describe('Displays grid', () => {
   const columns = getDisplayColumns(propsWith());
@@ -91,7 +92,7 @@ describe('Displays grid', () => {
   });
 
   // Cancelling a transfer writes '' (Display::moveCmsCancel); never-transferred is NULL.
-  test.fails(
+  knownFailure(
     'the CMS Transfer column shows a cancelled transfer the same as a display never transferred',
     () => {
       const states = statesOf(columns, 'cmsTransfer', {
@@ -99,14 +100,15 @@ describe('Displays grid', () => {
         cancelled: display({ newCmsAddress: '' }),
         inProgress: display({ newCmsAddress: 'https://cms.example.com' }),
       });
-
+      // Control: the column does tell a transfer in progress from none.
       expect(states.inProgress).not.toBe(states.neverTransferred);
-      expect(states.cancelled).toBe(states.neverTransferred);
+      return states;
     },
+    (states) => expect(states.cancelled).toBe(states.neverTransferred),
   );
 
   // A cleared XMR channel is '' and means "not registered".
-  test.fails(
+  knownFailure(
     'the XMR Registered column shows a cleared channel the same as a display never registered',
     () => {
       const states = statesOf(columns, 'xmrRegistered', {
@@ -114,21 +116,19 @@ describe('Displays grid', () => {
         cleared: display({ xmrChannel: '' }),
         registered: display({ xmrChannel: 'abc123channel' }),
       });
-
+      // Control: the column does tell a registered display from one never registered.
       expect(states.registered).not.toBe(states.neverRegistered);
-      expect(states.cleared).toBe(states.neverRegistered);
+      return states;
     },
+    (states) => expect(states.cleared).toBe(states.neverRegistered),
   );
 
   // The edit form saves '' for a blank TeamViewer serial, and
   // `teamViewerSerial ?? webkeySerial` keeps the '' instead of falling through to Webkey.
-  test.fails(
+  knownFailure(
     'the Remote column shows the Webkey serial when the TeamViewer serial is blank',
-    () => {
-      expect(
-        textOf(columns, 'remote', display({ teamViewerSerial: '', webkeySerial: 'WK-1' })),
-      ).toBe('WK-1');
-    },
+    () => textOf(columns, 'remote', display({ teamViewerSerial: '', webkeySerial: 'WK-1' })),
+    (text) => expect(text).toBe('WK-1'),
   );
 });
 
@@ -176,13 +176,20 @@ describe('Sync Groups grid', () => {
 
 describe('Player Versions grid', () => {
   // The getter has no CMS formatter, so the server's string is printed as-is.
-  test.fails('the Created and Modified columns show dates through the CMS formatter', () => {
-    const columns = getPlayerVersionColumns(propsWith());
-    const row = { ...buildPlayerVersion(), createdAt: SQL_DATETIME, modifiedAt: SQL_DATETIME };
+  const columns = getPlayerVersionColumns(propsWith());
+  const row = { ...buildPlayerVersion(), createdAt: SQL_DATETIME, modifiedAt: SQL_DATETIME };
 
-    expect(textOf(columns, 'createdAt', row)).toMatch(/^formatted:/);
-    expect(textOf(columns, 'modifiedAt', row)).toMatch(/^formatted:/);
-  });
+  knownFailure(
+    'the Created column shows the date through the CMS formatter',
+    () => textOf(columns, 'createdAt', row),
+    (text) => expect(text).toMatch(/^formatted:/),
+  );
+
+  knownFailure(
+    'the Modified column shows the date through the CMS formatter',
+    () => textOf(columns, 'modifiedAt', row),
+    (text) => expect(text).toMatch(/^formatted:/),
+  );
 });
 
 describe('Commands grid', () => {

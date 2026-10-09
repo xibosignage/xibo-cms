@@ -23,7 +23,7 @@ import type { Cell, Column } from '@tanstack/react-table';
 
 // Columns injected by the table itself (selection checkbox, row actions) have no
 // exportable/printable data of their own.
-export const NON_PRINTABLE_COLUMNS = ['tableSelection', 'tableActions'];
+export const NON_PRINTABLE_COLUMNS: readonly string[] = ['tableSelection', 'tableActions'];
 
 export const isExportableColumn = (columnId: string, meta?: { excludeFromExport?: boolean }) =>
   !NON_PRINTABLE_COLUMNS.includes(columnId) && !meta?.excludeFromExport;

@@ -28,6 +28,7 @@ import { getDynamicDataColumns } from '@/pages/Library/Dataset/subPages/Data/Dat
 import { getMediaColumns } from '@/pages/Library/Media/MediaConfig';
 import { getMenuBoardColumns } from '@/pages/Library/MenuBoard/MenuBoardConfig';
 import { getPlaylistColumns } from '@/pages/Library/Playlists/PlaylistsConfig';
+import { knownFailure } from '@/testUtils/knownFailure';
 import type { DatasetColumn } from '@/types/datasetColumn';
 
 describe('Media grid', () => {
@@ -45,16 +46,14 @@ describe('Media grid', () => {
   });
 
   // "Too large" breaks every layout using the image; "pending" clears itself.
-  test.fails(
+  knownFailure(
     'the Released column shows an image too large to ever use differently from one waiting to be resized',
-    () => {
-      const states = statesOf(columns, 'released', {
+    () =>
+      statesOf(columns, 'released', {
         pendingResize: media({ released: 0 }),
         tooLarge: media({ released: 2 }),
-      });
-
-      expect(states.tooLarge).not.toBe(states.pendingResize);
-    },
+      }),
+    (states) => expect(states.tooLarge).not.toBe(states.pendingResize),
   );
 
   // enableStat is 'On', 'Off' or 'Inherit'; null is saved as the default, so it means Inherit too.
@@ -133,26 +132,28 @@ describe('Datasets grid', () => {
   });
 
   // The API sends lastDataEdit; "dataLastModified" is only a PHP sort alias.
-  test.fails('the Modified column shows something for a dataset that has been edited', () => {
-    expect(textOf(columns, 'dataLastModified', dataset({ lastDataEdit: EPOCH }))).not.toBe('');
-  });
+  knownFailure(
+    'the Modified column shows something for a dataset that has been edited',
+    () => textOf(columns, 'dataLastModified', dataset({ lastDataEdit: EPOCH })),
+    (text) => expect(text).not.toBe(''),
+  );
 
   // lastSync is a unix timestamp, and 0 means the dataset has never synced.
-  test.fails('the Last Sync column shows a date, not a raw unix timestamp', () => {
-    expect(textOf(columns, 'lastSync', dataset({ lastSync: EPOCH }))).not.toMatch(/^\d+$/);
-  });
+  knownFailure(
+    'the Last Sync column shows a date, not a raw unix timestamp',
+    () => textOf(columns, 'lastSync', dataset({ lastSync: EPOCH })),
+    (text) => expect(text).not.toMatch(/^\d+$/),
+  );
 
   // types/dataset.ts declares isRemote/isRealTime as boolean; the API sends 0/1.
-  test.fails(
+  knownFailure(
     'the Remote column shows the declared boolean `true` the same as the API value 1',
-    () => {
-      const states = statesOf(columns, 'isRemote', {
+    () =>
+      statesOf(columns, 'isRemote', {
         api: dataset({ isRemote: 1 }),
         typed: dataset({ isRemote: true }),
-      });
-
-      expect(states.typed).toBe(states.api);
-    },
+      }),
+    (states) => expect(states.typed).toBe(states.api),
   );
 });
 
@@ -179,11 +180,14 @@ describe('Dataset data grid', () => {
 describe('Menu Boards grid', () => {
   // The cell uses the module-level formatDateTime from utils/date, which ignores the
   // CMS date format and timezone; the getter has no way to receive the CMS formatter.
-  test.fails('the Modified column shows the date through the CMS formatter', () => {
-    const columns = getMenuBoardColumns(propsWith());
-
-    expect(textOf(columns, 'modifiedDt', { menuId: 1, name: 'M', modifiedDt: EPOCH })).toMatch(
-      /^formatted:/,
-    );
-  });
+  knownFailure(
+    'the Modified column shows the date through the CMS formatter',
+    () =>
+      textOf(getMenuBoardColumns(propsWith()), 'modifiedDt', {
+        menuId: 1,
+        name: 'M',
+        modifiedDt: EPOCH,
+      }),
+    (text) => expect(text).toMatch(/^formatted:/),
+  );
 });

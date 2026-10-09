@@ -28,6 +28,7 @@ import { EPOCH, SQL_DATETIME, formatDateTime, propsWith, statesOf, t, textOf } f
 import { getAuditTrailColumns } from '@/pages/Advanced/AuditTrail/AuditTrailConfig';
 import { getLogsColumns } from '@/pages/Advanced/Logs/LogsConfig';
 import { getSessionColumns } from '@/pages/Advanced/Sessions/SessionsConfig';
+import { knownFailure } from '@/testUtils/knownFailure';
 
 describe('Audit Trail grid', () => {
   const columns = getAuditTrailColumns(t, formatDateTime);
@@ -53,16 +54,18 @@ describe('Audit Trail grid', () => {
 describe('Logs grid', () => {
   // getLogsColumns takes only `t`, so there is no way to hand it the CMS
   // formatter; the cast passes one anyway so the test starts passing once the getter accepts it.
-  test.fails('the Date column shows the date through the CMS formatter', () => {
-    const getColumns = getLogsColumns as unknown as (
-      translate: TFunction,
-      format: typeof formatDateTime,
-    ) => ColumnDef<object>[];
+  knownFailure(
+    'the Date column shows the date through the CMS formatter',
+    () => {
+      const getColumns = getLogsColumns as unknown as (
+        translate: TFunction,
+        format: typeof formatDateTime,
+      ) => ColumnDef<object>[];
 
-    expect(
-      textOf(getColumns(t, formatDateTime), 'logDate', { logId: 1, logDate: SQL_DATETIME }),
-    ).toMatch(/^formatted:/);
-  });
+      return textOf(getColumns(t, formatDateTime), 'logDate', { logId: 1, logDate: SQL_DATETIME });
+    },
+    (text) => expect(text).toMatch(/^formatted:/),
+  );
 });
 
 describe('Sessions grid', () => {
@@ -80,16 +83,14 @@ describe('Sessions grid', () => {
 
   // types/session.ts declares `isExpired: boolean`; the API sends 0/1 and the
   // cell compares with 1, so an expired session built to the declared type shows as active.
-  test.fails(
+  knownFailure(
     'the Active column shows the declared boolean `true` the same as the API value 1',
-    () => {
-      const states = statesOf(columns, 'isExpired', {
+    () =>
+      statesOf(columns, 'isExpired', {
         api: session({ isExpired: 1 }),
         typed: session({ isExpired: true }),
-      });
-
-      expect(states.typed).toBe(states.api);
-    },
+      }),
+    (states) => expect(states.typed).toBe(states.api),
   );
 
   test('the Last Accessed column shows the date through the CMS formatter', () => {

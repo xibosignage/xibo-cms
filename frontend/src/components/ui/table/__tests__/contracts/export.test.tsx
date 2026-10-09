@@ -51,6 +51,7 @@ import { getSavedReportColumns } from '@/pages/Reporting/SavedReports/SavedRepor
 import { getEventColumns } from '@/pages/Schedule/Schedule/EventsConfig';
 import { buildEvent } from '@/pages/Schedule/Schedule/__tests__/fixtures/event';
 import { exportColumnValue, exportedColumns, renderColumnText } from '@/testUtils/columnContract';
+import { knownFailure } from '@/testUtils/knownFailure';
 
 /**
  * Export contract: a column exports to CSV what it shows on screen.
@@ -60,8 +61,8 @@ import { exportColumnValue, exportedColumns, renderColumnText } from '@/testUtil
  *
  * How it is checked: for every column that declares `getExportValue`, the exported text must equal
  * the text the cell shows, for a fully populated row and a row of empty values. Icon-only cells
- * (nothing visible to compare) are skipped. Known mismatches are pinned below with `test.fails`
- * and excluded from the sweep, so each one has exactly one test that names it.
+ * (nothing visible to compare) are skipped. Known mismatches are pinned below with `knownFailure`,
+ * and the sweep's rows avoid them, so each one has exactly one test that names it.
  *
  * Exports run through `getExportCellValue` (components/ui/table/exportCsv.ts), the same function
  * the CSV button uses.
@@ -70,15 +71,11 @@ import { exportColumnValue, exportedColumns, renderColumnText } from '@/testUtil
 const collapse = (text: string) => text.replace(/\s+/g, ' ').trim();
 
 /** Every column that declares getExportValue and exports something other than what it shows. */
-function exportMismatches<T>(
-  columns: ColumnDef<T>[],
-  rows: Record<string, object>,
-  knownIssues: string[] = [],
-): string[] {
+function exportMismatches<T>(columns: ColumnDef<T>[], rows: Record<string, object>): string[] {
   const mismatches: string[] = [];
   let compared = 0;
   for (const column of exportedColumns(columns)) {
-    if (!column.declaresExportValue || knownIssues.includes(column.id)) continue;
+    if (!column.declaresExportValue) continue;
     for (const [label, row] of Object.entries(rows)) {
       const shown = collapse(renderColumnText(columns, column.id, row as T));
       if (shown === '') continue; // icon-only cell: nothing visible to compare
@@ -121,14 +118,11 @@ describe('every declared export matches what the grid shows', () => {
     const columns = getCampaignColumn(propsWith({ canAccessAdCampaign: true }));
     const base = { campaignId: 1, campaign: 'C', tags: [] };
     expect(
-      exportMismatches(
-        columns,
-        {
-          full: { ...base, startDt: EPOCH, endDt: EPOCH, cyclePlaybackEnabled: 1 },
-          empty: { ...base, startDt: EPOCH, endDt: EPOCH, cyclePlaybackEnabled: 0 },
-        },
-        // The empty-date case is pinned separately below.
-      ),
+      exportMismatches(columns, {
+        full: { ...base, startDt: EPOCH, endDt: EPOCH, cyclePlaybackEnabled: 1 },
+        // Keeps its dates: a campaign with no dates is a known mismatch, pinned below.
+        empty: { ...base, startDt: EPOCH, endDt: EPOCH, cyclePlaybackEnabled: 0 },
+      }),
     ).toEqual([]);
   });
 
@@ -230,14 +224,10 @@ describe('every declared export matches what the grid shows', () => {
   test('Events', () => {
     const columns = getEventColumns(propsWith());
     expect(
-      exportMismatches(
-        columns,
-        {
-          dated: buildEvent({ createdOn: SQL_DATETIME, updatedOn: SQL_DATETIME }),
-          always: buildEvent({ isAlways: 1, createdOn: SQL_DATETIME, updatedOn: SQL_DATETIME }),
-        },
-        ['createdOn', 'updatedOn'],
-      ),
+      exportMismatches(columns, {
+        dated: buildEvent({ createdOn: SQL_DATETIME, updatedOn: SQL_DATETIME }),
+        always: buildEvent({ isAlways: 1, createdOn: SQL_DATETIME, updatedOn: SQL_DATETIME }),
+      }),
     ).toEqual([]);
   });
 
@@ -336,71 +326,80 @@ describe('every declared export matches what the grid shows', () => {
 
 describe('known export mismatches', () => {
   // The cell shows "-" for a campaign with no start/end date; the CSV is blank.
-  test.fails('a campaign with no dates exports what the grid shows', () => {
-    const columns = getCampaignColumn(propsWith({ canAccessAdCampaign: true }));
-    const { shown, exported } = shownAndExported(columns, 'startDt', {
-      campaignId: 1,
-      campaign: 'C',
-      startDt: 0,
-    });
-
-    expect(exported).toBe(shown);
-  });
+  knownFailure(
+    'a campaign with no dates exports what the grid shows',
+    () =>
+      shownAndExported(getCampaignColumn(propsWith({ canAccessAdCampaign: true })), 'startDt', {
+        campaignId: 1,
+        campaign: 'C',
+        startDt: 0,
+      }),
+    ({ shown, exported }) => expect(exported).toBe(shown),
+  );
 
   // Events with no created/updated date show "—"; the CSV is blank.
-  test.fails('an event with no created date exports what the grid shows', () => {
-    const columns = getEventColumns(propsWith());
-    const { shown, exported } = shownAndExported(
-      columns,
-      'createdOn',
-      buildEvent({ createdOn: '' }),
-    );
-
-    expect(exported).toBe(shown);
-  });
+  knownFailure(
+    'an event with no created date exports what the grid shows',
+    () =>
+      shownAndExported(getEventColumns(propsWith()), 'createdOn', buildEvent({ createdOn: '' })),
+    ({ shown, exported }) => expect(exported).toBe(shown),
+  );
 
   // These Events columns have no accessor, so they export an empty value while the
   // grid shows the campaign and display-group names.
-  test.fails('the Events Event and Display Groups columns export the names the grid shows', () => {
-    const columns = getEventColumns(propsWith());
-    const row = buildEvent({ campaign: 'Spring promo' });
+  knownFailure(
+    'the Events Event column exports the name the grid shows',
+    () =>
+      shownAndExported(
+        getEventColumns(propsWith()),
+        'event',
+        buildEvent({ campaign: 'Spring promo' }),
+      ),
+    ({ exported }) => expect(exported).not.toBe(''),
+  );
 
-    expect(shownAndExported(columns, 'event', row).exported).not.toBe('');
-    expect(shownAndExported(columns, 'displayGroups', row).exported).not.toBe('');
-  });
+  knownFailure(
+    'the Events Display Groups column exports the names the grid shows',
+    () =>
+      shownAndExported(
+        getEventColumns(propsWith()),
+        'displayGroups',
+        buildEvent({ campaign: 'Spring promo' }),
+      ),
+    ({ exported }) => expect(exported).not.toBe(''),
+  );
 
   // The Type column shows "Layout", "Command"...; the CSV holds the raw type number.
-  test.fails('the Events Type column exports the type name the grid shows', () => {
-    const columns = getEventColumns(propsWith());
-    const { shown, exported } = shownAndExported(
-      columns,
-      'eventTypeId',
-      buildEvent({ eventTypeId: 2 }),
-    );
-
-    expect(exported).toBe(shown);
-  });
+  knownFailure(
+    'the Events Type column exports the type name the grid shows',
+    () =>
+      shownAndExported(getEventColumns(propsWith()), 'eventTypeId', buildEvent({ eventTypeId: 2 })),
+    ({ shown, exported }) => expect(exported).toBe(shown),
+  );
 
   // The Sharing column shows group names but exports the raw array as JSON, e.g. ["Group A"].
-  test.fails('the Sharing column exports the group names, not JSON', () => {
-    const columns = getMediaColumns(propsWith());
-    const sharing = exportedColumns(columns).find((c) => /sharing/i.test(c.header))!;
-    const exported = exportColumnValue(columns, sharing.id, {
-      mediaId: 1,
-      name: 'a.jpg',
-      fileSize: 1,
-      groupsWithPermissions: 'Group A',
-      groupsWithPermissionsList: ['Group A'],
-    } as never);
-
-    expect(exported).not.toMatch(/^\[/);
-  });
+  knownFailure(
+    'the Sharing column exports the group names, not JSON',
+    () => {
+      const columns = getMediaColumns(propsWith());
+      const sharing = exportedColumns(columns).find((c) => /sharing/i.test(c.header));
+      expect(sharing).toBeDefined();
+      return exportColumnValue(columns, sharing!.id, {
+        mediaId: 1,
+        name: 'a.jpg',
+        fileSize: 1,
+        groupsWithPermissions: 'Group A',
+        groupsWithPermissionsList: ['Group A'],
+      } as never);
+    },
+    (exported) => expect(exported).not.toMatch(/^\[/),
+  );
 
   // The Events badge column has an empty header and is not excluded, so the CSV gets a
   // nameless column.
-  test.fails('every column in the Events CSV has a header', () => {
-    const columns = getEventColumns(propsWith());
-
-    expect(exportedColumns(columns).filter((c) => c.header.trim() === '')).toEqual([]);
-  });
+  knownFailure(
+    'every column in the Events CSV has a header',
+    () => exportedColumns(getEventColumns(propsWith())),
+    (columns) => expect(columns.filter((c) => c.header.trim() === '')).toEqual([]),
+  );
 });

@@ -27,6 +27,7 @@ import { getCampaignColumn } from '@/pages/Design/Campaigns/CampaignConfig';
 import { getLayoutColumns } from '@/pages/Design/Layouts/LayoutConfig';
 import { getResolutionColumns } from '@/pages/Design/Resolutions/ResolutionsConfig';
 import { getTemplateColumn } from '@/pages/Design/Templates/TemplatesConfig';
+import { knownFailure } from '@/testUtils/knownFailure';
 
 describe('Layouts grid', () => {
   const columns = getLayoutColumns(propsWith());
@@ -43,40 +44,37 @@ describe('Layouts grid', () => {
   });
 
   //"Not built yet" is the normal state for most layouts. This column is visible by default.
-  test.fails(
+  knownFailure(
     'the Valid? column shows a layout that has not been built yet differently from a broken one',
-    () => {
-      const states = statesOf(columns, 'valid', {
+    () =>
+      statesOf(columns, 'valid', {
         notBuilt: layout({ status: 3 }),
         invalid: layout({ status: 4 }),
-      });
-
-      expect(states.notBuilt).not.toBe(states.invalid);
-    },
+      }),
+    (states) => expect(states.notBuilt).not.toBe(states.invalid),
   );
 
   // The legacy grid drew a warning icon for status 2.
-  test.fails(
+  knownFailure(
     'the Valid? column shows a layout with player warnings differently from a fully valid one',
-    () => {
-      const states = statesOf(columns, 'valid', {
+    () =>
+      statesOf(columns, 'valid', {
         valid: layout({ status: 1 }),
         warnings: layout({ status: 2 }),
-      });
-
-      expect(states.warnings).not.toBe(states.valid);
-    },
+      }),
+    (states) => expect(states.warnings).not.toBe(states.valid),
   );
 
   // enableStat NULL means "use LAYOUT_STATS_ENABLED_DEFAULT" (Entity/Layout.php), not "off".
-  test.fails('the Stats? column shows "use the default" differently from "off"', () => {
-    const states = statesOf(columns, 'enableStat', {
-      inherit: layout({ enableStat: null }),
-      off: layout({ enableStat: 0 }),
-    });
-
-    expect(states.inherit).not.toBe(states.off);
-  });
+  knownFailure(
+    'the Stats? column shows "use the default" differently from "off"',
+    () =>
+      statesOf(columns, 'enableStat', {
+        inherit: layout({ enableStat: null }),
+        off: layout({ enableStat: 0 }),
+      }),
+    (states) => expect(states.inherit).not.toBe(states.off),
+  );
 
   test('the Stats? column shows on differently from off', () => {
     const states = statesOf(columns, 'enableStat', {
@@ -136,12 +134,17 @@ describe('Campaigns grid', () => {
   });
 
   // The getter receives formatDateTime but these two cells print the server string as-is.
-  test.fails('the Created and Modified columns show dates through the CMS formatter', () => {
-    const row = campaign({ createdAt: SQL_DATETIME, modifiedAt: SQL_DATETIME });
+  knownFailure(
+    'the Created column shows the date through the CMS formatter',
+    () => textOf(columns, 'createdAt', campaign({ createdAt: SQL_DATETIME })),
+    (text) => expect(text).toMatch(/^formatted:/),
+  );
 
-    expect(textOf(columns, 'createdAt', row)).toMatch(/^formatted:/);
-    expect(textOf(columns, 'modifiedAt', row)).toMatch(/^formatted:/);
-  });
+  knownFailure(
+    'the Modified column shows the date through the CMS formatter',
+    () => textOf(columns, 'modifiedAt', campaign({ modifiedAt: SQL_DATETIME })),
+    (text) => expect(text).toMatch(/^formatted:/),
+  );
 });
 
 describe('Templates grid', () => {
@@ -179,15 +182,13 @@ describe('Resolutions grid', () => {
 
   // types/resolution.ts declares `enabled: boolean`, but the API sends 0/1 and the
   // cell compares with 1. A row built to the declared type shows as disabled.
-  test.fails(
+  knownFailure(
     'the Enabled column shows the declared boolean `true` the same as the API value 1',
-    () => {
-      const states = statesOf(columns, 'enabled', {
+    () =>
+      statesOf(columns, 'enabled', {
         api: resolution({ enabled: 1 }),
         typed: resolution({ enabled: true }),
-      });
-
-      expect(states.typed).toBe(states.api);
-    },
+      }),
+    (states) => expect(states.typed).toBe(states.api),
   );
 });

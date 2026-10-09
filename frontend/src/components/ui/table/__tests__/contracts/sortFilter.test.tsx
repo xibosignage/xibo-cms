@@ -65,6 +65,7 @@ import {
 } from '@/pages/Schedule/Schedule/EventsConfig';
 import { useAllEventData, useEventData } from '@/pages/Schedule/Schedule/hooks/useEventData';
 import { sortableColumnIds } from '@/testUtils/columnContract';
+import { knownFailure } from '@/testUtils/knownFailure';
 import { readSortAllowList, type SortFactory } from '@/testUtils/sortAllowList';
 
 /**
@@ -162,7 +163,7 @@ const grids = {
   } as Grid<typeof LAYOUT_INITIAL_FILTER_STATE>,
 };
 
-/** Sort keys known to be missing from the server allow-list; each has its own `test.fails` below. */
+/** Sort keys known to be missing from the server allow-list; each has its own `knownFailure` below. */
 const KNOWN_UNSORTABLE: Record<string, string[]> = {
   Events: ['recurringEventDescription'], // report 221
   Layouts: ['code'], // new
@@ -258,45 +259,49 @@ describe.each(Object.values(grids))('$name grid', (grid) => {
 describe('known sort and filter defects', () => {
   // The column sends `recurringEventDescription`; ScheduleFactory only allows
   // `recurringEvent`, so the server silently keeps its default order.
-  test.fails('the Events Recurrence Description sort key is one the server accepts', () => {
-    expect(readSortAllowList('ScheduleFactory')).toContain('recurringEventDescription');
-  });
+  knownFailure(
+    'the Events Recurrence Description sort key is one the server accepts',
+    () => readSortAllowList('ScheduleFactory'),
+    (allowed) => expect(allowed).toContain('recurringEventDescription'),
+  );
 
   // The Layouts Code column is sortable, but `code` is not in LayoutFactory's
   // allow-list, so clicking it changes nothing.
-  test.fails('the Layouts Code sort key is one the server accepts', () => {
-    expect(readSortAllowList('LayoutFactory')).toContain('code');
-  });
+  knownFailure(
+    'the Layouts Code sort key is one the server accepts',
+    () => readSortAllowList('LayoutFactory'),
+    (allowed) => expect(allowed).toContain('code'),
+  );
 
   // In Day view the Events grid loads rows with useAllEventData, which takes no sort,
   // yet the headers stay clickable.
-  test.fails('the Events Day view sends the chosen sort to the server', async () => {
-    const request = await requestFrom(mockFetchEvent, () =>
-      useAllEventData({
-        advancedFilters: EVENT_INITIAL_FILTER_STATE,
-        sorting: [{ id: 'name', desc: false }],
-      } as Parameters<typeof useAllEventData>[0]),
-    );
-
-    expect(request.sortBy).toBe('name');
-  });
+  knownFailure(
+    'the Events Day view sends the chosen sort to the server',
+    () =>
+      requestFrom(mockFetchEvent, () =>
+        useAllEventData({
+          advancedFilters: EVENT_INITIAL_FILTER_STATE,
+          sorting: [{ id: 'name', desc: false }],
+        } as Parameters<typeof useAllEventData>[0]),
+      ),
+    (request) => expect(request.sortBy).toBe('name'),
+  );
 
   // useEventData sends `campaignId: layoutCampaignId ?? campaignId`, so with both the
   // Layout and the Campaign filter set, the Campaign filter is dropped.
-  test.fails(
+  knownFailure(
     'the Events Campaign filter still applies when a Layout filter is also set',
-    async () => {
-      const layoutOnly = await grids.events.request([], {
+    async () => ({
+      layoutOnly: await grids.events.request([], {
         ...EVENT_INITIAL_FILTER_STATE,
         layoutCampaignId: 7,
-      });
-      const both = await grids.events.request([], {
+      }),
+      both: await grids.events.request([], {
         ...EVENT_INITIAL_FILTER_STATE,
         layoutCampaignId: 7,
         campaignId: 9,
-      });
-
-      expect(both).not.toEqual(layoutOnly);
-    },
+      }),
+    }),
+    ({ layoutOnly, both }) => expect(both).not.toEqual(layoutOnly),
   );
 });

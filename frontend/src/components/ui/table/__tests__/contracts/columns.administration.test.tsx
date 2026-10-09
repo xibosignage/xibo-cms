@@ -34,6 +34,7 @@ import { getTransitionColumns } from '@/pages/Administration/Transitions/Transit
 import { getUserGroupColumns } from '@/pages/Administration/UserGroups/UserGroupsConfig';
 import { getUserColumns } from '@/pages/Administration/Users/UsersConfig';
 import { buildUser } from '@/pages/Administration/Users/__tests__/fixtures/user';
+import { knownFailure } from '@/testUtils/knownFailure';
 
 describe('Tasks grid', () => {
   const columns = getTaskColumns(propsWith());
@@ -58,16 +59,14 @@ describe('Tasks grid', () => {
   });
 
   // lastRunStatus only ever holds 0 (never run), 3 (error) or 4 (success).
-  test.fails(
+  knownFailure(
     'the Last Status column shows a task whose last run failed differently from one that has never run',
-    () => {
-      const states = statesOf(columns, 'lastRunStatus', {
+    () =>
+      statesOf(columns, 'lastRunStatus', {
         neverRun: task({ lastRunStatus: 0 }),
         failed: task({ lastRunStatus: 3 }),
-      });
-
-      expect(states.failed).not.toBe(states.neverRun);
-    },
+      }),
+    (states) => expect(states.failed).not.toBe(states.neverRun),
   );
 
   test('the Next Run column is empty when no run is scheduled, and a CMS date otherwise', () => {
@@ -101,11 +100,11 @@ describe('Users grid', () => {
   });
 
   // The getter has no CMS formatter, so the server's string is printed as-is.
-  test.fails('the Last Accessed column shows the date through the CMS formatter', () => {
-    expect(textOf(columns, 'lastAccessed', user({ lastAccessed: SQL_DATETIME }))).toMatch(
-      /^formatted:/,
-    );
-  });
+  knownFailure(
+    'the Last Accessed column shows the date through the CMS formatter',
+    () => textOf(columns, 'lastAccessed', user({ lastAccessed: SQL_DATETIME })),
+    (text) => expect(text).toMatch(/^formatted:/),
+  );
 });
 
 describe('User Groups grid', () => {
@@ -127,13 +126,20 @@ describe('User Groups grid', () => {
 
 describe('Fonts grid', () => {
   // The getter has no CMS formatter, so the server's string is printed as-is.
-  test.fails('the Created and Modified columns show dates through the CMS formatter', () => {
-    const columns = getFontColumns(propsWith());
-    const row = { id: 1, name: 'F', createdAt: SQL_DATETIME, modifiedAt: SQL_DATETIME, size: 10 };
+  const columns = getFontColumns(propsWith());
+  const row = { id: 1, name: 'F', createdAt: SQL_DATETIME, modifiedAt: SQL_DATETIME, size: 10 };
 
-    expect(textOf(columns, 'createdAt', row)).toMatch(/^formatted:/);
-    expect(textOf(columns, 'modifiedAt', row)).toMatch(/^formatted:/);
-  });
+  knownFailure(
+    'the Created column shows the date through the CMS formatter',
+    () => textOf(columns, 'createdAt', row),
+    (text) => expect(text).toMatch(/^formatted:/),
+  );
+
+  knownFailure(
+    'the Modified column shows the date through the CMS formatter',
+    () => textOf(columns, 'modifiedAt', row),
+    (text) => expect(text).toMatch(/^formatted:/),
+  );
 });
 
 describe('Modules grid', () => {

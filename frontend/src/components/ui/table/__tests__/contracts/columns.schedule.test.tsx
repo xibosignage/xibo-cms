@@ -25,6 +25,7 @@ import { propsWith, statesOf, textOf } from './helpers';
 
 import { getEventColumns } from '@/pages/Schedule/Schedule/EventsConfig';
 import { buildEvent } from '@/pages/Schedule/Schedule/__tests__/fixtures/event';
+import { knownFailure } from '@/testUtils/knownFailure';
 
 const columns = getEventColumns(propsWith());
 const event = (fields: object) => ({ ...buildEvent(), ...fields });
@@ -79,47 +80,43 @@ describe('Events grid', () => {
 
   // 0 means "no limit" (ScheduleEventModal; Schedule.php default 0), but the cell prints
   // the number, so an unlimited event reads as "0 plays per hour".
-  test.fails('the Max Plays per Hour column does not show an unlimited event as "0"', () => {
-    expect(textOf(columns, 'maxPlaysPerHour', event({ maxPlaysPerHour: 0 }))).not.toBe('0');
-  });
+  knownFailure(
+    'the Max Plays per Hour column does not show an unlimited event as "0"',
+    () => textOf(columns, 'maxPlaysPerHour', event({ maxPlaysPerHour: 0 })),
+    (text) => expect(text).not.toBe('0'),
+  );
 
   // The API sends 0 for "no campaign" (command, sync and action events); the cell
   // was written for null, so the dash never appears.
-  test.fails(
+  knownFailure(
     'the Campaign ID column shows "no campaign" the same whether it arrives as 0 or null',
-    () => {
-      const states = statesOf(columns, 'campaignId', {
+    () =>
+      statesOf(columns, 'campaignId', {
         zero: event({ campaignId: 0 }),
         none: event({ campaignId: null }),
-      });
-
-      expect(states.zero).toBe(states.none);
-    },
+      }),
+    (states) => expect(states.zero).toBe(states.none),
   );
 
   // Same 0-for-null shape: share of voice only applies to Interrupt events.
-  test.fails(
+  knownFailure(
     'the Share of Voice column shows "not set" the same whether it arrives as 0 or null',
-    () => {
-      const states = statesOf(columns, 'shareOfVoice', {
+    () =>
+      statesOf(columns, 'shareOfVoice', {
         zero: event({ shareOfVoice: 0 }),
         none: event({ shareOfVoice: null }),
-      });
-
-      expect(states.zero).toBe(states.none);
-    },
+      }),
+    (states) => expect(states.zero).toBe(states.none),
   );
 
   // A non-recurring event has recurrenceDetail 0.
-  test.fails(
+  knownFailure(
     'the Recurrence Interval column shows "not recurring" the same whether it arrives as 0 or null',
-    () => {
-      const states = statesOf(columns, 'recurrenceDetail', {
+    () =>
+      statesOf(columns, 'recurrenceDetail', {
         zero: event({ recurrenceDetail: 0 }),
         none: event({ recurrenceDetail: null }),
-      });
-
-      expect(states.zero).toBe(states.none);
-    },
+      }),
+    (states) => expect(states.zero).toBe(states.none),
   );
 });
