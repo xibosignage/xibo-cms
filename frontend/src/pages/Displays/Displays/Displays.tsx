@@ -60,7 +60,7 @@ import { useTableState } from '@/hooks/useTableState';
 import type { Display } from '@/types/display';
 import type { Tag } from '@/types/tag';
 import { countActiveFilters } from '@/utils/filters';
-import { hasFeature } from '@/utils/permissions';
+import { filterByPermission, hasFeature } from '@/utils/permissions';
 import { isPreferenceEnabled } from '@/utils/preferences';
 import { toggleTag } from '@/utils/tags';
 
@@ -72,10 +72,13 @@ export default function Displays() {
   const canViewFolders = usePermissions()?.canViewFolders;
   const canSchedule = hasFeature(user, 'schedule.add');
   const canModify = hasFeature(user, 'displays.modify');
+  const canAdd = hasFeature(user, 'displays.add');
   const canTag = hasFeature(user, 'tag.tagging');
-  const canLimitedView = hasFeature(user, 'displays.limitedView');
+  const canLimitedView =
+    hasFeature(user, 'displays.limitedView') || hasFeature(user, 'displaygroup.limitedView');
   const canCommandView = hasFeature(user, 'command.view');
   const canDisplayGroupModify = hasFeature(user, 'displaygroup.modify');
+  const canDisplayGroupView = hasFeature(user, 'displaygroup.view');
   const canViewLayout = hasFeature(user, 'layout.view');
   const scheduleWithView = Number(user?.settings?.SCHEDULE_WITH_VIEW_PERMISSION) === 1;
   const isSuperAdmin = user?.userTypeId === 1;
@@ -318,11 +321,13 @@ export default function Displays() {
   const columns = getDisplayColumns({
     t,
     canModify,
+    canAdd,
     canTag,
     canUserShare: hasFeature(user, 'user.sharing'),
     canLimitedView,
     canCommandView,
     canDisplayGroupModify,
+    canDisplayGroupView,
     canViewLayout,
     scheduleWithView,
     isSuperAdmin,
@@ -378,44 +383,79 @@ export default function Displays() {
     selectedTagIds: (filterInputs.tags ?? []).map((tag) => tag.tagId),
   });
 
-  const openBulkModal = (modal: ModalType) => {
+  const openBulkModal = (
+    modal: ModalType,
+    checkFn?: (item: Display) => boolean | number | undefined,
+  ) => {
     const allItems = getAllSelectedItems();
-    setBulkActionItems(allItems);
+    const permittedItems = checkFn ? filterByPermission(allItems, checkFn, t, t('edit')) : allItems;
+    if (permittedItems.length === 0) {
+      return;
+    }
+    setBulkActionItems(permittedItems);
     setActionError(null);
     openModal(modal);
   };
 
+  const canEdit = (item: Display) => item.userPermissions?.edit;
+  const canGroupAction = (item: Display) => item.userPermissions?.edit || canLimitedView;
+
   const bulkActions = getBulkActions({
     t,
+    canModify,
+    canAdd,
+    canDisplayGroupModify,
+    canDisplayGroupView,
+    canCommandView,
     onDelete: () => {
-      const allItems = getAllSelectedItems();
-      setItemsToDelete(allItems);
+      const permittedItems = filterByPermission(
+        getAllSelectedItems(),
+        (item) => item.userPermissions?.delete,
+        t,
+        t('delete'),
+      );
+      if (permittedItems.length === 0) {
+        return;
+      }
+      setItemsToDelete(permittedItems);
       setDeleteError(null);
       openModal('delete');
     },
     onMove: canViewFolders
       ? () => {
-          const allItems = getAllSelectedItems();
-          setItemsToMove(allItems);
+          const permittedItems = filterByPermission(getAllSelectedItems(), canEdit, t, t('move'));
+          if (permittedItems.length === 0) {
+            return;
+          }
+          setItemsToMove(permittedItems);
           openModal('move');
         }
       : undefined,
-    onShare: () => {
-      const allItems = getAllSelectedItems();
-      const ids = allItems.map((i) => i.displayGroupId);
-      setShareEntityIds(ids);
-      openModal('share');
-    },
-    onBulkAuthorise: () => openBulkModal('bulkAuthorise'),
-    onBulkSetDefaultLayout: () => openBulkModal('bulkDefaultLayout'),
+    onShare: hasFeature(user, 'user.sharing')
+      ? () => {
+          const permittedItems = filterByPermission(
+            getAllSelectedItems(),
+            (item) => item.userPermissions?.modifyPermissions,
+            t,
+            t('share'),
+          );
+          if (permittedItems.length === 0) {
+            return;
+          }
+          setShareEntityIds(permittedItems.map((i) => i.displayGroupId));
+          openModal('share');
+        }
+      : undefined,
+    onBulkAuthorise: () => openBulkModal('bulkAuthorise', canEdit),
+    onBulkSetDefaultLayout: () => openBulkModal('bulkDefaultLayout', canEdit),
     onBulkCheckLicence: () => openBulkModal('bulkCheckLicence'),
     onBulkRequestScreenShot: () => openBulkModal('bulkRequestScreenShot'),
-    onBulkCollectNow: () => openBulkModal('bulkCollectNow'),
-    onBulkTriggerWebhook: () => openBulkModal('bulkTriggerWebhook'),
-    onSetBandwidth: () => openBulkModal('setBandwidth'),
-    onBulkSendCommand: () => openBulkModal('bulkSendCommand'),
-    onBulkMoveCms: () => openBulkModal('bulkMoveCms'),
-    onEditTags: canTag ? () => openBulkModal('editTagsMultiple') : undefined,
+    onBulkCollectNow: () => openBulkModal('bulkCollectNow', canGroupAction),
+    onBulkTriggerWebhook: () => openBulkModal('bulkTriggerWebhook', canEdit),
+    onSetBandwidth: () => openBulkModal('setBandwidth', canEdit),
+    onBulkSendCommand: () => openBulkModal('bulkSendCommand', canGroupAction),
+    onBulkMoveCms: () => openBulkModal('bulkMoveCms', canEdit),
+    onEditTags: canTag ? () => openBulkModal('editTagsMultiple', canEdit) : undefined,
   });
 
   const { filterOptions } = useDisplaysFilterOptions(t, canTag);
