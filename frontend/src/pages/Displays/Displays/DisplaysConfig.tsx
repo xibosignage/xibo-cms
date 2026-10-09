@@ -412,11 +412,13 @@ export const getBaseFilterKeys = (
 export interface DisplayActionsProps {
   t: TFunction;
   canModify?: boolean;
+  canAdd?: boolean;
   canTag?: boolean;
   canUserShare?: boolean;
   canLimitedView?: boolean;
   canCommandView?: boolean;
   canDisplayGroupModify?: boolean;
+  canDisplayGroupView?: boolean;
   canViewLayout?: boolean;
   scheduleWithView?: boolean;
   isSuperAdmin?: boolean;
@@ -453,10 +455,12 @@ const LICENCE_CHECK_CLIENT_TYPES = ['android', 'lg', 'sssp', 'chromeOS'];
 export const getDisplayItemActions = ({
   t,
   canModify = false,
+  canAdd = false,
   canUserShare = false,
   canLimitedView = false,
   canCommandView = false,
   canDisplayGroupModify = false,
+  canDisplayGroupView = false,
   canViewLayout = false,
   scheduleWithView = false,
   isSuperAdmin = false,
@@ -487,11 +491,7 @@ export const getDisplayItemActions = ({
     const canDelete = !!display.userPermissions?.delete;
     const canShare = !!display.userPermissions?.modifyPermissions;
 
-    // "Limited view" block: visible with edit, or when the user has the
-    // displays.limitedView feature (mirrors release44's grid button guards).
-    const limitedBlock = (canModify && canEdit) || canLimitedView;
-    // Items inside the limited-view block that still require edit permission.
-    const limitedEdit = canEdit && (canModify || canLimitedView);
+    const canGroupAction = canEdit || canLimitedView;
 
     const actions: ActionItem[] = [];
 
@@ -521,7 +521,7 @@ export const getDisplayItemActions = ({
       });
     }
 
-    if (canModify && canEdit && openMoveModal) {
+    if (canDisplayGroupModify && canEdit && openMoveModal) {
       actions.push({
         label: t('Move'),
         icon: FolderInput,
@@ -545,15 +545,13 @@ export const getDisplayItemActions = ({
       });
     }
 
-    if (limitedBlock) {
-      actions.push({
-        label: t('Request Screenshot'),
-        icon: RotateCw,
-        onClick: () => onRequestScreenShot(display),
-      });
-    }
+    actions.push({
+      label: t('Request Screenshot'),
+      icon: RotateCw,
+      onClick: () => onRequestScreenShot(display),
+    });
 
-    if (canModify && canShare) {
+    if (canModify && canEdit) {
       actions.push({
         label: t('Add to Group'),
         icon: PlusSquare,
@@ -561,22 +559,22 @@ export const getDisplayItemActions = ({
       });
     }
 
-    if (canModify && canEdit) {
+    if (canAdd && canEdit) {
       actions.push({
         label: display.licensed === 1 ? t('Unauthorise') : t('Authorise'),
         icon: display.licensed === 1 ? MonitorXIcon : MonitorCheck,
         onClick: () => onAuthorise(display),
       });
-
-      actions.push({
-        label: t('Manage'),
-        icon: Info,
-        rightIcon: ArrowRight,
-        onClick: () => onManage(display),
-      });
     }
 
-    if (limitedEdit && canViewLayout && onJumpToScheduledLayouts) {
+    actions.push({
+      label: t('Manage'),
+      icon: Info,
+      rightIcon: ArrowRight,
+      onClick: () => onManage(display),
+    });
+
+    if (canEdit && (canModify || canLimitedView) && canViewLayout && onJumpToScheduledLayouts) {
       addSeparator();
       actions.push({
         label: t('Scheduled Layouts'),
@@ -585,7 +583,7 @@ export const getDisplayItemActions = ({
       });
     }
 
-    if (limitedEdit) {
+    if (canDisplayGroupModify && canEdit) {
       addSeparator();
       actions.push({
         label: t('Assign Layouts'),
@@ -598,7 +596,7 @@ export const getDisplayItemActions = ({
       });
     }
 
-    if (limitedBlock) {
+    if (canDisplayGroupView && canGroupAction) {
       addSeparator();
       actions.push({
         label: t('Collect Now'),
@@ -613,26 +611,21 @@ export const getDisplayItemActions = ({
       });
     }
 
-    if (limitedEdit) {
+    if (canModify) {
       actions.push({
         label: t('Wake on LAN'),
         onClick: () => onWakeOnLan(display),
       });
     }
 
-    if (canDisplayGroupModify || canCommandView) {
+    if ((canDisplayGroupModify || canCommandView) && canGroupAction) {
       actions.push({
         label: t('Send Command'),
         onClick: () => onSendCommand(display),
       });
     }
 
-    if (
-      canModify &&
-      canEdit &&
-      display.clientType &&
-      LICENCE_CHECK_CLIENT_TYPES.includes(display.clientType)
-    ) {
+    if (display.clientType && LICENCE_CHECK_CLIENT_TYPES.includes(display.clientType)) {
       actions.push({
         label: t('Check Licence'),
         onClick: () => onCheckLicence(display),
@@ -646,7 +639,7 @@ export const getDisplayItemActions = ({
       });
     }
 
-    if (isSuperAdmin && limitedEdit) {
+    if (isSuperAdmin) {
       addSeparator();
       actions.push({
         label: t('Purge All Media'),
@@ -655,7 +648,7 @@ export const getDisplayItemActions = ({
       });
     }
 
-    if (limitedEdit) {
+    if (canModify && canEdit) {
       addSeparator();
       actions.push({
         label: t('Transfer to another CMS'),
@@ -1156,23 +1149,33 @@ export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display
 
 interface GetBulkActionsProps {
   t: TFunction;
+  canModify?: boolean;
+  canAdd?: boolean;
+  canDisplayGroupModify?: boolean;
+  canDisplayGroupView?: boolean;
+  canCommandView?: boolean;
   onDelete: () => void;
   onMove?: () => void;
   onShare?: () => void;
-  onBulkAuthorise?: () => void;
-  onBulkSetDefaultLayout?: () => void;
-  onBulkCheckLicence?: () => void;
-  onBulkRequestScreenShot?: () => void;
-  onBulkCollectNow?: () => void;
-  onBulkTriggerWebhook?: () => void;
-  onSetBandwidth?: () => void;
-  onBulkSendCommand?: () => void;
-  onBulkMoveCms?: () => void;
+  onBulkAuthorise: () => void;
+  onBulkSetDefaultLayout: () => void;
+  onBulkCheckLicence: () => void;
+  onBulkRequestScreenShot: () => void;
+  onBulkCollectNow: () => void;
+  onBulkTriggerWebhook: () => void;
+  onSetBandwidth: () => void;
+  onBulkSendCommand: () => void;
+  onBulkMoveCms: () => void;
   onEditTags?: () => void;
 }
 
 export const getBulkActions = ({
   t,
+  canModify = false,
+  canAdd = false,
+  canDisplayGroupModify = false,
+  canDisplayGroupView = false,
+  canCommandView = false,
   onDelete,
   onMove,
   onShare,
@@ -1187,83 +1190,104 @@ export const getBulkActions = ({
   onBulkMoveCms,
   onEditTags,
 }: GetBulkActionsProps): DataTableBulkAction<Display>[] => {
-  return [
-    {
+  const actions: DataTableBulkAction<Display>[] = [];
+
+  if (canAdd) {
+    actions.push({
       label: t('Toggle Authorise'),
       icon: MonitorCheck,
-      onClick: () => onBulkAuthorise && onBulkAuthorise(),
-    },
-    {
+      onClick: onBulkAuthorise,
+    });
+  }
+
+  if (canModify) {
+    actions.push({
       label: t('Set Default Layout'),
       icon: LayoutTemplate,
-      onClick: () => onBulkSetDefaultLayout && onBulkSetDefaultLayout(),
-    },
-    ...(onMove
-      ? [
-          {
-            label: t('Move'),
-            icon: FolderInput,
-            onClick: onMove,
-          },
-        ]
-      : []),
+      onClick: onBulkSetDefaultLayout,
+    });
+  }
+
+  if (canDisplayGroupModify && onMove) {
+    actions.push({
+      label: t('Move'),
+      icon: FolderInput,
+      onClick: onMove,
+    });
+  }
+
+  actions.push(
     {
       label: t('Check Licence'),
       icon: BadgeCheck,
-      onClick: () => onBulkCheckLicence && onBulkCheckLicence(),
+      onClick: onBulkCheckLicence,
     },
     {
       label: t('Request Screen Shot'),
       icon: Camera,
-      onClick: () => onBulkRequestScreenShot && onBulkRequestScreenShot(),
+      onClick: onBulkRequestScreenShot,
     },
-    {
+  );
+
+  if (canDisplayGroupView) {
+    actions.push({
       label: t('Collect Now'),
       icon: RefreshCw,
-      onClick: () => onBulkCollectNow && onBulkCollectNow(),
-    },
-    {
+      onClick: onBulkCollectNow,
+    });
+  }
+
+  if (canDisplayGroupModify) {
+    actions.push({
       label: t('Trigger a web hook'),
       icon: Webhook,
-      onClick: () => onBulkTriggerWebhook && onBulkTriggerWebhook(),
-    },
-    ...(onShare
-      ? [
-          {
-            label: t('Share'),
-            icon: UserPlus2,
-            onClick: onShare,
-          },
-        ]
-      : []),
-    ...(onEditTags
-      ? [
-          {
-            label: t('Edit Tags'),
-            icon: Tags,
-            onClick: onEditTags,
-          },
-        ]
-      : []),
-    {
+      onClick: onBulkTriggerWebhook,
+    });
+  }
+
+  if (canModify && onShare) {
+    actions.push({
+      label: t('Share'),
+      icon: UserPlus2,
+      onClick: onShare,
+    });
+  }
+
+  if (onEditTags) {
+    actions.push({
+      label: t('Edit Tags'),
+      icon: Tags,
+      onClick: onEditTags,
+    });
+  }
+
+  if (canDisplayGroupModify || canCommandView) {
+    actions.push({
       label: t('Send Command'),
       icon: Terminal,
-      onClick: () => onBulkSendCommand && onBulkSendCommand(),
-    },
-    {
-      label: t('Transfer to another CMS'),
-      icon: ArrowRightLeft,
-      onClick: () => onBulkMoveCms && onBulkMoveCms(),
-    },
-    {
-      label: t('Set Bandwidth'),
-      icon: Gauge,
-      onClick: () => onSetBandwidth && onSetBandwidth(),
-    },
-    {
-      label: t('Delete Selected'),
-      icon: Trash2,
-      onClick: onDelete,
-    },
-  ];
+      onClick: onBulkSendCommand,
+    });
+  }
+
+  if (canModify) {
+    actions.push(
+      {
+        label: t('Transfer to another CMS'),
+        icon: ArrowRightLeft,
+        onClick: onBulkMoveCms,
+      },
+      {
+        label: t('Set Bandwidth'),
+        icon: Gauge,
+        onClick: onSetBandwidth,
+      },
+      {
+        label: t('Delete Selected'),
+        icon: Trash2,
+        onClick: onDelete,
+      },
+    );
+  }
+
+  return actions;
 };

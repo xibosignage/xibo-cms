@@ -48,7 +48,7 @@ import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import type { Command } from '@/types/command';
 import { countActiveFilters } from '@/utils/filters';
-import { hasFeature } from '@/utils/permissions';
+import { filterByPermission, hasFeature } from '@/utils/permissions';
 
 export default function Commands() {
   const { t } = useTranslation();
@@ -205,17 +205,36 @@ export default function Commands() {
 
   const bulkActions = getBulkActions({
     t,
+    canModify: hasFeature(user, 'command.modify'),
     onDelete: () => {
-      const allItems = getAllSelectedItems();
-      setItemsToDelete(allItems);
+      const permittedItems = filterByPermission(
+        getAllSelectedItems(),
+        (item) => item.userPermissions?.delete,
+        t,
+        t('delete'),
+      );
+      if (permittedItems.length === 0) {
+        return;
+      }
+      setItemsToDelete(permittedItems);
       setDeleteError(null);
       openModal('delete');
     },
-    onShare: () => {
-      const allItems = getAllSelectedItems();
-      setShareEntityIds(allItems.map((item) => item.commandId));
-      openModal('share');
-    },
+    onShare: hasFeature(user, 'user.sharing')
+      ? () => {
+          const permittedItems = filterByPermission(
+            getAllSelectedItems(),
+            (item) => item.userPermissions?.modifyPermissions,
+            t,
+            t('share'),
+          );
+          if (permittedItems.length === 0) {
+            return;
+          }
+          setShareEntityIds(permittedItems.map((item) => item.commandId));
+          openModal('share');
+        }
+      : undefined,
   });
 
   const selectedCommand = commandList.find((m) => m.commandId === selectedCommandId) ?? null;

@@ -287,8 +287,9 @@ export const getDisplayGroupItemActions = ({
       });
     }
 
-    const canSendCommand = canModify || canCommandView;
-    const canCollectNow = (canModify && canEdit) || canLimitedView;
+    const canGroupAction = canEdit || canLimitedView;
+    const canSendCommand = (canModify || canCommandView) && canGroupAction;
+    const canCollectNow = canGroupAction;
 
     if (canSendCommand || canCollectNow) {
       addSeparator();
@@ -332,19 +333,19 @@ export const getDisplayGroupItemActions = ({
 interface GetBulkActionsProps {
   t: TFunction;
   canModify?: boolean;
-  canLimitedView?: boolean;
+  canCommandView?: boolean;
   onDelete: () => void;
   onMove: () => void;
   onBulkSendCommand: () => void;
   onBulkTriggerWebhook: () => void;
-  onBulkShare: () => void;
+  onBulkShare?: () => void;
   onEditTags?: () => void;
 }
 
 export const getBulkActions = ({
   t,
   canModify = false,
-  canLimitedView = false,
+  canCommandView = false,
   onDelete,
   onMove,
   onBulkSendCommand,
@@ -362,12 +363,15 @@ export const getBulkActions = ({
     });
   }
 
-  if (canModify || canLimitedView) {
+  if (canModify || canCommandView) {
     actions.push({
       label: t('Send Command'),
       icon: Terminal,
       onClick: onBulkSendCommand,
     });
+  }
+
+  if (canModify) {
     actions.push({
       label: t('Trigger a web hook'),
       icon: Webhook,
@@ -375,7 +379,7 @@ export const getBulkActions = ({
     });
   }
 
-  if (canModify) {
+  if (canModify && onBulkShare) {
     actions.push({
       label: t('Share'),
       icon: UserPlus2,
