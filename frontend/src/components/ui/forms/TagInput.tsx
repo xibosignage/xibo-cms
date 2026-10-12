@@ -115,6 +115,7 @@ interface TagInputProps {
   suggestions?: boolean;
   onPendingValueChange?: (isPending: boolean) => void;
   compact?: boolean;
+  lockedTags?: string[];
 }
 
 function TagInput({
@@ -135,6 +136,7 @@ function TagInput({
   suggestions = true,
   onPendingValueChange,
   compact = false,
+  lockedTags = [],
 }: TagInputProps) {
   const { t } = useTranslation();
   const inputId = useId();
@@ -268,7 +270,7 @@ function TagInput({
   };
 
   const removeTag = (tag: string) => {
-    if (disabled) {
+    if (disabled || lockedTags.includes(tag)) {
       return;
     }
 
@@ -363,15 +365,17 @@ function TagInput({
                 ) : (
                   label
                 )}
-                <button
-                  type="button"
-                  aria-label={t('Remove tag {{tag}}', { tag: tagObj.tag })}
-                  onClick={() => removeTag(tagObj.tag)}
-                  disabled={disabled}
-                  className="text-xibo-blue-600 w-3 rounded-full h-3 flex items-center justify-center bg-xibo-blue-200 hover:text-gray-600 shrink-0"
-                >
-                  <X size={8} />
-                </button>
+                {!lockedTags.includes(tagObj.tag) && (
+                  <button
+                    type="button"
+                    aria-label={t('Remove tag {{tag}}', { tag: tagObj.tag })}
+                    onClick={() => removeTag(tagObj.tag)}
+                    disabled={disabled}
+                    className="text-xibo-blue-600 w-3 rounded-full h-3 flex items-center justify-center bg-xibo-blue-200 hover:text-gray-600 shrink-0"
+                  >
+                    <X size={8} />
+                  </button>
+                )}
               </span>
             );
           })}

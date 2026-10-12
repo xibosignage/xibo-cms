@@ -94,6 +94,8 @@ export interface CreateTemplatePayload {
   tags?: string;
   retired?: number;
   folderId?: number | null;
+  enableStat?: number;
+  code?: string | null;
 }
 
 export async function createTemplate(payload: CreateTemplatePayload) {
