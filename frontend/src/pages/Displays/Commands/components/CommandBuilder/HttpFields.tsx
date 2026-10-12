@@ -66,6 +66,20 @@ function parseJsonToEntries(json: string): KeyValueEntry[] {
   }
 }
 
+function isFlatStringJson(json: string): boolean {
+  try {
+    const obj: unknown = JSON.parse(json);
+    return (
+      typeof obj === 'object' &&
+      obj !== null &&
+      !Array.isArray(obj) &&
+      Object.values(obj).every((value) => typeof value === 'string')
+    );
+  } catch {
+    return false;
+  }
+}
+
 function entriesToJson(entries: KeyValueEntry[]): string {
   const obj: Record<string, string> = {};
   entries.forEach((e) => {
@@ -133,6 +147,12 @@ export default function HttpFields({
   const { baseUrl, params: queryParams } = showQueryBuilder
     ? parseUrlQueryParams(url)
     : { baseUrl: url, params: [] as KeyValueEntry[] };
+
+  const headersFitBuilder = isFlatStringJson(requestOptions.headers || '{}');
+  const bodyFitsBuilder =
+    contenttype !== 'application/json' || isFlatStringJson(requestOptions.body || '{}');
+  const isRawHeaders = showRawHeaders || !headersFitBuilder;
+  const isRawBody = showRawBody || !bodyFitsBuilder || contenttype === 'text/plain';
 
   const headerEntries = parseJsonToEntries(requestOptions.headers || '{}');
   const bodyEntries =
@@ -211,10 +231,16 @@ export default function HttpFields({
         <div className="flex items-center justify-between">
           <h4 className="font-bold text-gray-800 text-base">{t('Raw Headers')}</h4>
           <div className="shrink-0">
-            <Switch size="sm" checked={showRawHeaders} onChange={setShowRawHeaders} hideOnOff />
+            <Switch
+              size="sm"
+              checked={isRawHeaders}
+              onChange={setShowRawHeaders}
+              disabled={!headersFitBuilder}
+              hideOnOff
+            />
           </div>
         </div>
-        {showRawHeaders ? (
+        {isRawHeaders ? (
           <TextInput
             name="rawHeaders"
             label={t('Headers')}
@@ -247,10 +273,16 @@ export default function HttpFields({
         <div className="flex items-center justify-between">
           <h4 className="font-bold text-gray-800 text-base">{t('Raw Body')}</h4>
           <div className="shrink-0">
-            <Switch size="sm" checked={showRawBody} onChange={setShowRawBody} hideOnOff />
+            <Switch
+              size="sm"
+              checked={isRawBody}
+              onChange={setShowRawBody}
+              disabled={!bodyFitsBuilder || contenttype === 'text/plain'}
+              hideOnOff
+            />
           </div>
         </div>
-        {showRawBody || contenttype === 'text/plain' ? (
+        {isRawBody ? (
           <TextInput
             name="rawBody"
             label={t('Raw data')}
