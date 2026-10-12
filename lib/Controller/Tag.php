@@ -715,6 +715,10 @@ class Tag extends Base
                         $entity = $entityFactory->getById($id);
                     }
 
+                    if (!$this->getUser()->checkEditable($entity)) {
+                        throw new AccessDeniedException();
+                    }
+
                     if ($targetType === 'display' || $targetType === 'displayGroup') {
                         $this->getDispatcher()->dispatch(
                             new DisplayGroupLoadEvent($entity),
@@ -739,7 +743,9 @@ class Tag extends Base
                     );
                     $failed[] = [
                         'id' => $id,
-                        'name' => $this->getEditMultipleTargetName($entity),
+                        'name' => $entity !== null && $this->getUser()->checkViewable($entity)
+                            ? $this->getEditMultipleTargetName($entity)
+                            : '',
                     ];
                 }
             }
@@ -763,7 +769,7 @@ class Tag extends Base
                 'message' => __('Tags updated with some errors'),
                 'data' => [
                     'failedCount' => count($failed),
-                    'failedNames' => array_column($failed, 'name'),
+                    'failedNames' => array_values(array_filter(array_column($failed, 'name'))),
                 ],
             ]);
         } else {
