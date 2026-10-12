@@ -27,7 +27,7 @@ import { useState } from 'react';
 
 import { notify } from '@/components/ui/Notification';
 import { selectFolder, type ApiResult } from '@/services/folderApi';
-import { clonePlaylist, deletePlaylist, updatePlaylist } from '@/services/playlistApi';
+import { clonePlaylist, deletePlaylist, setPlaylistEnableStat } from '@/services/playlistApi';
 import type { Playlist } from '@/types/playlist';
 import { isAlreadyDeletedError } from '@/utils/errors';
 
@@ -174,10 +174,7 @@ export function usePlaylistActions({
     try {
       setIsUpdatingStats(true);
 
-      await updatePlaylist(playlist.playlistId, {
-        name: playlist.name,
-        enableStat: value,
-      });
+      await setPlaylistEnableStat(playlist.playlistId, value);
 
       notify.success(t('Stats collection updated'));
       handleRefresh();

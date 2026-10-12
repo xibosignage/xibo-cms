@@ -164,6 +164,8 @@ describe('Templates page - edit form fields', () => {
       tags: 'template',
       retired: 0,
       folderId: mockTemplate.folderId,
+      enableStat: mockTemplate.enableStat,
+      code: mockTemplate.code,
     });
   });
 

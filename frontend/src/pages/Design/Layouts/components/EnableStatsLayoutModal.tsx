@@ -24,14 +24,14 @@ import { useTranslation } from 'react-i18next';
 
 import Checkbox from '@/components/ui/forms/Checkbox';
 import Modal from '@/components/ui/modals/Modal';
-import { updateLayout } from '@/services/layoutsApi';
+import { setLayoutEnableStat } from '@/services/layoutsApi';
 import type { Layout } from '@/types/layout';
 
 interface EnableStatsLayoutModalProps {
   layout: Layout | null;
   isOpen?: boolean;
   onClose: () => void;
-  onSuccess?: (layout: Layout) => void;
+  onSuccess?: () => void;
 }
 
 export function EnableStatsLayoutModal({
@@ -57,11 +57,9 @@ export function EnableStatsLayoutModal({
     try {
       setIsLoading(true);
 
-      const updated = await updateLayout(layout.layoutId, {
-        enableStat: enabled ? 1 : 0,
-      });
+      await setLayoutEnableStat(layout.layoutId, enabled);
 
-      onSuccess?.(updated);
+      onSuccess?.();
       onClose();
     } catch (err) {
       console.error(err);
