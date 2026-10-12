@@ -196,25 +196,34 @@ export const getCommandColumns = (props: CommandActionsProps): ColumnDef<Command
 
 interface GetBulkActionsProps {
   t: TFunction;
+  canModify?: boolean;
   onDelete: () => void;
-  onShare: () => void;
+  onShare?: () => void;
 }
 
 export const getBulkActions = ({
   t,
+  canModify = false,
   onDelete,
   onShare,
 }: GetBulkActionsProps): DataTableBulkAction<Command>[] => {
-  return [
-    {
+  const actions: DataTableBulkAction<Command>[] = [];
+
+  if (canModify && onShare) {
+    actions.push({
       label: t('Share Selected'),
       icon: UserPlus2,
       onClick: onShare,
-    },
-    {
+    });
+  }
+
+  if (canModify) {
+    actions.push({
       label: t('Delete Selected'),
       icon: Trash2,
       onClick: onDelete,
-    },
-  ];
+    });
+  }
+
+  return actions;
 };

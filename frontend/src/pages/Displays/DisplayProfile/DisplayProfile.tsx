@@ -48,7 +48,7 @@ import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import type { DisplayProfile } from '@/types/displayProfile';
 import { countActiveFilters } from '@/utils/filters';
-import { hasFeature } from '@/utils/permissions';
+import { filterByPermission, hasFeature } from '@/utils/permissions';
 
 export default function DisplayProfile() {
   const { t } = useTranslation();
@@ -219,8 +219,16 @@ export default function DisplayProfile() {
     t,
     canModify: hasFeature(user, 'displayprofile.modify'),
     onDelete: () => {
-      const allItems = getAllSelectedItems();
-      setItemsToDelete(allItems);
+      const permittedItems = filterByPermission(
+        getAllSelectedItems(),
+        (item) => user?.userTypeId === 1 || item.userId === user?.userId,
+        t,
+        t('delete'),
+      );
+      if (permittedItems.length === 0) {
+        return;
+      }
+      setItemsToDelete(permittedItems);
       setDeleteError(null);
       openModal('delete');
     },
