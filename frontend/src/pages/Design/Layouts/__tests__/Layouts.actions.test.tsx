@@ -35,7 +35,12 @@ import {
 } from './layoutTestUtils';
 
 import type * as TagInputModule from '@/components/ui/forms/TagInput';
-import { retireLayout, saveLayoutAsTemplate, updateLayout } from '@/services/layoutsApi';
+import {
+  retireLayout,
+  saveLayoutAsTemplate,
+  setLayoutEnableStat,
+  updateLayout,
+} from '@/services/layoutsApi';
 import { testQueryClient } from '@/setupTests';
 
 // =============================================================================
@@ -516,7 +521,8 @@ describe('Layouts page - row actions', () => {
 
   // ---------------------------------------------------------------------------
   // Enable Stats Collection
-  // Available for all layouts. EnableStatsLayoutModal calls updateLayout directly.
+  // Available for all layouts. EnableStatsLayoutModal calls setLayoutEnableStat
+  // (PUT /layout/setenablestat/{id}) so no other field is sent.
   // ---------------------------------------------------------------------------
   describe('Enable Stats Collection', () => {
     // Checkbox initialises from layout.enableStat — mockLayout has enableStat: true.
@@ -530,10 +536,9 @@ describe('Layouts page - row actions', () => {
       ).toBeChecked();
     });
 
-    // Save calls updateLayout with enableStat: 1 (checkbox was already checked).
-    test('Save calls updateLayout with { enableStat: 1 }', async () => {
-      vi.mocked(updateLayout).mockResolvedValueOnce(mockLayout);
-
+    // Save sends only the stats flag via setLayoutEnableStat (checkbox was already checked),
+    // never a full updateLayout — a full edit without a name fails validation (xibo#3997).
+    test('Save sends only the stats setting, not a full layout edit', async () => {
       renderLayoutsPage();
       await openDropdownAction('Enable Stats Collection');
 
@@ -541,8 +546,9 @@ describe('Layouts page - row actions', () => {
       fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
 
       await waitFor(() =>
-        expect(updateLayout).toHaveBeenCalledWith(mockLayout.layoutId, { enableStat: 1 }),
+        expect(setLayoutEnableStat).toHaveBeenCalledWith(mockLayout.layoutId, true),
       );
+      expect(updateLayout).not.toHaveBeenCalled();
     });
 
     // Cancelling must close the modal.
