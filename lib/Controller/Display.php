@@ -1237,7 +1237,9 @@ class Display extends Base
             $display = $this->displayFactory->getById($id);
 
             if (!$this->getUser()->checkEditable($display)) {
-                throw new AccessDeniedException();
+                throw new AccessDeniedException(
+                    sprintf(__('You do not have permission to edit %s'), $display->display)
+                );
             }
 
             $displayGroupIds[] = $display->displayGroupId;
