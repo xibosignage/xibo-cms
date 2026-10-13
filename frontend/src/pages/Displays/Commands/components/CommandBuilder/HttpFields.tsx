@@ -246,7 +246,10 @@ export default function HttpFields({
             label={t('Headers')}
             placeholder={t('JSON headers')}
             value={requestOptions.headers || '{}'}
-            onChange={(val) => updateOptions({ headers: val })}
+            onChange={(val) => {
+              setShowRawHeaders(true);
+              updateOptions({ headers: val });
+            }}
             multiline
             rows={3}
           />
@@ -288,7 +291,10 @@ export default function HttpFields({
             label={t('Raw data')}
             placeholder={t('Body data')}
             value={requestOptions.body || ''}
-            onChange={(val) => updateOptions({ body: val })}
+            onChange={(val) => {
+              setShowRawBody(true);
+              updateOptions({ body: val });
+            }}
             multiline
             rows={4}
           />
