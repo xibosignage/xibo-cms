@@ -190,6 +190,7 @@ export function SearchAssignPanel<TItem>({
     enableSorting: false,
     cell: ({ row }) => {
       const itemId = getItemId(row.original);
+      const isDisabled = isItemActionDisabled?.(row.original) ?? false;
 
       if (allowMultiple) {
         return (
@@ -197,8 +198,9 @@ export function SearchAssignPanel<TItem>({
             <button
               type="button"
               onClick={() => onAddItem(row.original)}
-              className="w-5 h-5 rounded-full flex items-center justify-center transition-colors cursor-pointer text-xibo-blue-600 hover:text-xibo-blue-80 hover:bg-xibo-blue-50"
-              title={t('Add')}
+              disabled={isDisabled}
+              className="w-5 h-5 rounded-full flex items-center justify-center transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 text-xibo-blue-600 hover:text-xibo-blue-80 hover:bg-xibo-blue-50"
+              title={isDisabled ? disabledActionMessage : t('Add')}
             >
               <PlusCircle size={20} />
             </button>
@@ -208,7 +210,6 @@ export function SearchAssignPanel<TItem>({
 
       const assignedIndex = assignedItems.findIndex((item) => getItemId(item) === itemId);
       const isAssigned = assignedIndex !== -1;
-      const isDisabled = isItemActionDisabled?.(row.original) ?? false;
       return (
         <div className="flex justify-center">
           <button
