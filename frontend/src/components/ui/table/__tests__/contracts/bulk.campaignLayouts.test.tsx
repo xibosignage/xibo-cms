@@ -31,7 +31,6 @@ import EditCampaignModal from '@/pages/Design/Campaigns/components/EditCampaignM
 import { updateCampaign } from '@/services/campaignApi';
 import { fetchLayouts } from '@/services/layoutsApi';
 import { testQueryClient } from '@/setupTests';
-import { knownFailure } from '@/testUtils/knownFailure';
 import type { Layout } from '@/types/layout';
 
 vi.mock('@/services/campaignApi');
@@ -140,34 +139,26 @@ describe('saving a list campaign keeps every assigned layout', () => {
     await waitFor(() => expect(savedLayoutLists()).toEqual([[10, 11, 12]]));
   });
 
-  // Until the campaign's layouts have loaded, the
-  // modal's list is empty; saving then (e.g. after renaming on the General tab) sends
-  // `manageLayouts: 1, layoutIds: []` and the server unassigns every layout.
-  knownFailure(
-    'saving before the campaign’s layouts have loaded does not unassign them',
-    async () => {
-      vi.mocked(fetchLayouts).mockImplementation((params) =>
-        params?.campaignId
-          ? new Promise(() => {}) // still loading
-          : Promise.resolve({ rows: [], totalCount: 0 }),
-      );
-      return saveWithoutTouchingLayouts();
-    },
-    (saved) => expect(saved).not.toContainEqual([]),
-  );
+  // Saving before the campaign's layouts have loaded (e.g. after renaming on the General tab)
+  // must leave them alone, not send an empty list that unassigns every layout.
+  test('saving before the campaign’s layouts have loaded does not unassign them', async () => {
+    vi.mocked(fetchLayouts).mockImplementation((params) =>
+      params?.campaignId
+        ? new Promise(() => {}) // still loading
+        : Promise.resolve({ rows: [], totalCount: 0 }),
+    );
+    const saved = await saveWithoutTouchingLayouts();
+    expect(saved).not.toContainEqual([]);
+  });
 
-  // If loading the campaign's layouts fails, the list stays empty and Save
-  // unassigns every layout.
-  knownFailure(
-    'if loading the campaign’s layouts fails, saving does not unassign them',
-    async () => {
-      vi.mocked(fetchLayouts).mockImplementation((params) =>
-        params?.campaignId
-          ? Promise.reject(new Error('network'))
-          : Promise.resolve({ rows: [], totalCount: 0 }),
-      );
-      return saveWithoutTouchingLayouts();
-    },
-    (saved) => expect(saved).not.toContainEqual([]),
-  );
+  // If loading the campaign's layouts fails, Save must leave them alone too.
+  test('if loading the campaign’s layouts fails, saving does not unassign them', async () => {
+    vi.mocked(fetchLayouts).mockImplementation((params) =>
+      params?.campaignId
+        ? Promise.reject(new Error('network'))
+        : Promise.resolve({ rows: [], totalCount: 0 }),
+    );
+    const saved = await saveWithoutTouchingLayouts();
+    expect(saved).not.toContainEqual([]);
+  });
 });
