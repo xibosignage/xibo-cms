@@ -546,18 +546,18 @@ class Folder implements \JsonSerializable
     public function isTheSameBranch(int $newParentFolderId): bool
     {
         $children = array_filter(explode(',', $this->children ?? ''));
-        $found = false;
 
         foreach ($children as $child) {
             if ((int)$child === $newParentFolderId) {
-                $found = true;
-                break;
+                return true;
             }
             $childObject = $this->folderFactory->getById($child);
-            $childObject->isTheSameBranch($newParentFolderId);
+            if ($childObject->isTheSameBranch($newParentFolderId)) {
+                return true;
+            }
         }
 
-        return $found;
+        return false;
     }
 
     /**
