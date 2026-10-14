@@ -21,7 +21,7 @@
 
 import type { ColumnDef } from '@tanstack/react-table';
 import type { TFunction } from 'i18next';
-import { Edit, Trash2, Users } from 'lucide-react';
+import { Edit, Trash2, UserPlus2, Users } from 'lucide-react';
 import { type ComponentProps } from 'react';
 
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
@@ -78,21 +78,26 @@ export const getFilterKeys = (t: TFunction): FilterConfigItem<SyncGroupsFilterIn
 export interface SyncGroupActionsProps {
   t: TFunction;
   canModify?: boolean;
+  canUserShare?: boolean;
   onDelete: (id: number) => void;
   openEditModal: (row: SyncGroup) => void;
   openMembersModal: (row: SyncGroup) => void;
+  openShareModal: (row: SyncGroup) => void;
   formatDateTime: (value: DateLike) => string;
 }
 
 export const getSyncGroupItemActions = ({
   t,
   canModify = false,
+  canUserShare = false,
   onDelete,
   openEditModal,
   openMembersModal,
+  openShareModal,
 }: SyncGroupActionsProps): ((syncGroup: SyncGroup) => ActionItem[]) => {
   return (syncGroup: SyncGroup) => {
     const canEdit = !!syncGroup.userPermissions?.edit;
+    const canShare = !!syncGroup.userPermissions?.modifyPermissions;
 
     const actions: ActionItem[] = [];
 
@@ -119,6 +124,14 @@ export const getSyncGroupItemActions = ({
         label: t('Members'),
         icon: Users,
         onClick: () => openMembersModal(syncGroup),
+      });
+    }
+
+    if (canModify && canShare && canUserShare) {
+      actions.push({
+        label: t('Share'),
+        icon: UserPlus2,
+        onClick: () => openShareModal(syncGroup),
       });
     }
 
@@ -227,18 +240,32 @@ export const getSyncGroupColumns = (props: SyncGroupActionsProps): ColumnDef<Syn
 
 interface GetBulkActionsProps {
   t: TFunction;
+  canShare?: boolean;
   onDelete: () => void;
+  onShare: () => void;
 }
 
 export const getBulkActions = ({
   t,
+  canShare = false,
   onDelete,
+  onShare,
 }: GetBulkActionsProps): DataTableBulkAction<SyncGroup>[] => {
-  return [
-    {
-      label: t('Delete Selected'),
-      icon: Trash2,
-      onClick: onDelete,
-    },
-  ];
+  const actions: DataTableBulkAction<SyncGroup>[] = [];
+
+  if (canShare) {
+    actions.push({
+      label: t('Share Selected'),
+      icon: UserPlus2,
+      onClick: onShare,
+    });
+  }
+
+  actions.push({
+    label: t('Delete Selected'),
+    icon: Trash2,
+    onClick: onDelete,
+  });
+
+  return actions;
 };
