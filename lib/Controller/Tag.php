@@ -726,6 +726,8 @@ class Tag extends Base
                         );
                     }
 
+                    $isTemplate = $targetType === 'layout' && $entity->hasTag('template');
+
                     foreach ($untags as $untag) {
                         $entity->unassignTag($untag);
                     }
@@ -733,6 +735,15 @@ class Tag extends Base
                     // go through tags and adjust assignments.
                     foreach ($tags as $tag) {
                         $entity->assignTag($tag);
+                    }
+
+                    if ($targetType === 'layout' && $isTemplate !== $entity->hasTag('template')) {
+                        throw new InvalidArgumentException(
+                            $isTemplate
+                                ? __('Cannot remove the Template tag from a Template.')
+                                : __('Cannot assign a Template tag to a Layout, to create a template use the Save Template button instead.'),
+                            'tags'
+                        );
                     }
 
                     $entity->save(['isTagEdit' => true]);
