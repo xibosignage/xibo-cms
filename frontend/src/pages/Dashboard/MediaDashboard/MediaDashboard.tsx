@@ -19,13 +19,13 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type { ColumnDef, PaginationState, SortingState } from '@tanstack/react-table';
-import type { TFunction } from 'i18next';
+import type { PaginationState, SortingState } from '@tanstack/react-table';
 import { ArrowRight } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { getUnreleasedColumns, getUnusedColumns } from './MediaDashboardConfig';
 import MediaTypeChart, { buildChartItems } from './components/MediaTypeChart';
 import { useMediaDashboardStats } from './hooks/useMediaDashboardStats';
 import { useUnreleasedMedia, useUnusedMedia } from './hooks/useUnusedMedia';
@@ -36,66 +36,10 @@ import trash from '@/assets/dashboard/trash-can.svg';
 import Button from '@/components/ui/Button';
 import { notify } from '@/components/ui/Notification';
 import { DataTable } from '@/components/ui/table/DataTable';
-import { StatusCell, TextCell } from '@/components/ui/table/cells';
 import { useUserContext } from '@/context/UserContext';
-import { getStatusTypeFromMediaType } from '@/pages/Library/Media/MediaConfig';
 import TidyLibraryModal from '@/pages/Library/Media/components/TidyLibraryModal';
 import { tidyLibrary } from '@/services/mediaApi';
-import type { Media } from '@/types/media';
 import { hasFeature } from '@/utils/permissions';
-
-function getUnusedColumns(t: TFunction): ColumnDef<Media>[] {
-  return [
-    {
-      accessorKey: 'mediaId',
-      header: t('ID'),
-      size: 100,
-      cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
-    },
-    {
-      accessorKey: 'name',
-      header: t('Name'),
-      cell: (info) => (
-        <TextCell truncate weight="bold">
-          {info.getValue<string>()}
-        </TextCell>
-      ),
-    },
-    {
-      accessorKey: 'mediaType',
-      header: t('Type'),
-      cell: (info) => {
-        const value = info.getValue() as string;
-        return <StatusCell label={value} type={getStatusTypeFromMediaType(value)} />;
-      },
-    },
-    {
-      accessorKey: 'fileSizeFormatted',
-      header: t('Size'),
-      cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
-    },
-  ];
-}
-
-function getUnreleasedColumns(t: TFunction): ColumnDef<Media>[] {
-  return [
-    {
-      accessorKey: 'mediaId',
-      header: t('ID'),
-      size: 80,
-      cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
-    },
-    {
-      accessorKey: 'name',
-      header: t('Name'),
-      cell: (info) => (
-        <TextCell truncate weight="bold">
-          {info.getValue<string>()}
-        </TextCell>
-      ),
-    },
-  ];
-}
 
 interface StatCardProps {
   icon: string;
