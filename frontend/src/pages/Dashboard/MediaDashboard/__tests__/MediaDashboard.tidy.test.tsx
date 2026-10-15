@@ -47,6 +47,7 @@ import { notify } from '@/components/ui/Notification';
 import { fetchMediaDashboard, fetchUnusedMedia } from '@/services/dashboardApi';
 import { tidyLibrary } from '@/services/mediaApi';
 import { testQueryClient } from '@/setupTests';
+import { knownFailure } from '@/testUtils/knownFailure';
 import { PERSONAS } from '@/testUtils/personas';
 
 // =============================================================================
@@ -249,22 +250,27 @@ describe('Media Manager Dashboard - tidying the library', () => {
     expect(tidyLibrary).not.toHaveBeenCalled();
   });
 
-  // Known-open (K1): a tidy deletes exactly the media the Unused Media table lists, but only
-  // the totals are reloaded, so the deleted rows stay on screen. Flip to `test` when fixed.
-  test.fails('after a tidy, the Unused Media list is reloaded', async () => {
-    const user = userEvent.setup();
-    mockUnusedMedia({ rows: buildDashboardMediaRows(2), totalCount: 2 });
-    mockTidy(2);
-    renderMediaDashboardPage(tidyUser());
-    await waitFor(() => expect(fetchUnusedMedia).toHaveBeenCalled());
-    const loadsBefore = vi.mocked(fetchUnusedMedia).mock.calls.length;
+  // xibosignage/xibo#ISSUE_TIDY_RELOAD: a tidy deletes exactly the media the Unused Media table
+  // lists, but only the totals are reloaded, so the deleted rows stay on screen.
+  knownFailure(
+    'after a tidy, the Unused Media list is reloaded',
+    async () => {
+      const user = userEvent.setup();
+      mockUnusedMedia({ rows: buildDashboardMediaRows(2), totalCount: 2 });
+      mockTidy(2);
+      renderMediaDashboardPage(tidyUser());
+      await waitFor(() => expect(fetchUnusedMedia).toHaveBeenCalled());
+      const loadsBefore = vi.mocked(fetchUnusedMedia).mock.calls.length;
 
-    const dialog = await openTidyDialog(user);
-    await user.click(getTidyConfirm(dialog));
-    await waitFor(() => expect(notify.success).toHaveBeenCalled());
-
-    await waitFor(() =>
-      expect(vi.mocked(fetchUnusedMedia).mock.calls.length).toBeGreaterThan(loadsBefore),
-    );
-  });
+      const dialog = await openTidyDialog(user);
+      await user.click(getTidyConfirm(dialog));
+      // Control: the tidy itself succeeded.
+      await waitFor(() => expect(notify.success).toHaveBeenCalled());
+      return loadsBefore;
+    },
+    (loadsBefore) =>
+      waitFor(() =>
+        expect(vi.mocked(fetchUnusedMedia).mock.calls.length).toBeGreaterThan(loadsBefore),
+      ),
+  );
 });

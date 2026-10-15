@@ -54,7 +54,7 @@ export const selectPlaylist = async (user: UserEvent, name: string) => {
   await user.selectOptions(getPicker(), name);
 };
 
-// Spot rows have no role or label of their own (known issue K4). Each row's first child is
+// Spot rows have no role or label of their own (xibosignage/xibo#ISSUE_A11Y_LABELS). Each row's first child is
 // its 1-based number in a <span>; the row is that span's parent. Used only to scope queries.
 export const getSpot = (n: number): HTMLElement => {
   const number = screen
@@ -70,7 +70,7 @@ export const getFileInput = (spot: HTMLElement): HTMLInputElement =>
   spot.querySelector('input[type="file"]') as HTMLInputElement;
 
 // Opens the delete confirmation for spot n and returns it. The dialog has no accessible
-// name (known issue K5); callers confirm it through its heading.
+// name (xibosignage/xibo#ISSUE_DIALOG_NAME); callers confirm it through its heading.
 export const openDeleteForSpot = async (user: UserEvent, n: number): Promise<HTMLElement> => {
   await user.click(within(getSpot(n)).getByRole('button', { name: 'Delete' }));
   return screen.findByRole('dialog');

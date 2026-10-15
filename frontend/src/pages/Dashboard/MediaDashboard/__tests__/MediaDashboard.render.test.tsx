@@ -21,7 +21,7 @@
 
 import { screen, waitFor, within } from '@testing-library/react';
 import type * as RechartsModule from 'recharts';
-import { vi, beforeEach, describe, test, expect } from 'vitest';
+import { vi, beforeEach, describe, test, expect, onTestFinished } from 'vitest';
 
 import { buildLibraryType, buildMediaDashboardData } from './fixtures/mediaDashboard';
 import {
@@ -37,6 +37,7 @@ import {
 
 import { fetchMediaDashboard } from '@/services/dashboardApi';
 import { testQueryClient } from '@/setupTests';
+import { knownFailure } from '@/testUtils/knownFailure';
 import { formatFileSize } from '@/utils/formatters';
 
 // =============================================================================
@@ -83,14 +84,27 @@ describe('Media Manager Dashboard - summary cards', () => {
     await waitFor(() => expect(getStatCardValue('Library Count')).toHaveTextContent(/^245$/));
   });
 
-  // toLocaleString() follows the runner's locale ("12,345" in en-US, "12.345" in de-DE),
-  // so the expected text is worked out the same way rather than hard-coded.
-  test('Library Count is formatted with a thousands separator', async () => {
+  // The page calls toLocaleString() with no locale, so the separator follows the browser's
+  // locale. Rule 1.12: run it under two locales whose separators differ, by setting the default
+  // locale toLocaleString() falls back to, so neither the machine's own setting nor one
+  // hard-coded locale decides the result.
+  test.each([
+    ['en-US', '12,345'],
+    ['de-DE', '12.345'],
+  ])('in %s, Library Count reads %s', async (locale, expected) => {
+    const toLocaleString = Number.prototype.toLocaleString;
+    const browserLocale = vi.spyOn(Number.prototype, 'toLocaleString').mockImplementation(function (
+      this: number,
+      locales?: Intl.LocalesArgument,
+      options?: Intl.NumberFormatOptions,
+    ) {
+      return toLocaleString.call(this, locales ?? locale, options);
+    });
+    onTestFinished(() => browserLocale.mockRestore());
     mockMediaDashboard(buildMediaDashboardData({ countOf: 12345 }));
     renderMediaDashboardPage();
 
-    const expected = (12345).toLocaleString();
-    await waitFor(() => expect(getStatCardValue('Library Count')).toHaveTextContent(expected));
+    await waitFor(() => expect(getStatCardValue('Library Count').textContent).toBe(expected));
   });
 
   test('Library Size shows the size exactly as the server sent it', async () => {
@@ -185,12 +199,16 @@ describe('Media Manager Dashboard - error handling', () => {
     expect(fetchMediaDashboard).toHaveBeenCalled();
   });
 
-  // Known-open (K2): the page never reads the stats query's error, so a failure looks like
-  // "no data". Flip to `test` when an error message is added.
-  test.fails('a failed load tells the user something went wrong', async () => {
-    mockMediaDashboardError('Server unavailable');
-    renderMediaDashboardPage();
-
-    expect(await screen.findByRole('alert')).toHaveTextContent('Server unavailable');
-  });
+  // xibosignage/xibo#ISSUE_MEDIA_LOAD_ERROR: the page never reads the stats query's error, so
+  // a failure looks like "no data".
+  knownFailure(
+    'a failed load tells the user something went wrong',
+    async () => {
+      mockMediaDashboardError('Server unavailable');
+      renderMediaDashboardPage();
+      // Control: the failure has reached the page (both cards fall back to a dash).
+      await waitFor(() => expect(getStatCardValue('Library Count')).toHaveTextContent(/^—$/));
+    },
+    async () => expect(await screen.findByRole('alert')).toHaveTextContent('Server unavailable'),
+  );
 });

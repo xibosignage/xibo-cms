@@ -274,7 +274,7 @@ describe('Playlist Dashboard - Remove All', () => {
     expect(deleteCalls().map(([, deleteMedia]) => deleteMedia)).toEqual([true, true]);
   });
 
-  // Known issue K8 (pinned): the loop stops at the first failure.
+  // Pins current behaviour: the loop stops at the first failure, leaving later spots in place.
   test('if one removal fails, the rest are not attempted and the list reloads', async () => {
     const user = userEvent.setup();
     const widgets = buildSpotWidgets(3, { regionSpecific: 1 });
@@ -331,7 +331,7 @@ describe('Playlist Dashboard - dynamic playlists', () => {
     expect(deleteSpotWidget).not.toHaveBeenCalled();
   });
 
-  // Pins current behaviour (K6); product to confirm whether these should be hidden.
+  // Pins current behaviour; product to confirm whether these should be hidden.
   test('Remove All and Delete are still offered', async () => {
     const user = userEvent.setup();
     await openLobby(user, spotsWith([buildSpotWidget()], { isDynamic: 1 }));

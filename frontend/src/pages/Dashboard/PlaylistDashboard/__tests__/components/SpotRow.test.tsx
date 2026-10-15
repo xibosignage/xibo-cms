@@ -132,7 +132,8 @@ describe('SpotRow - empty and filled spots', () => {
       widget: buildSpotWidget({ type: 'clock', name: 'Clock', mediaIds: [], mediaFiles: [] }),
     });
 
-    expect(screen.getAllByText('Clock').length).toBeGreaterThan(0);
+    // Once as the title (in place of a file name) and once in the type badge.
+    expect(screen.getAllByText('Clock')).toHaveLength(2);
   });
 
   test('a library image shows its thumbnail', () => {
@@ -196,7 +197,7 @@ describe('SpotRow - uploads', () => {
   });
 
   // On an empty spot the preview's alt text is empty (there is no widget name yet), so it has
-  // no "img" role and is found as an element (known issue K11).
+  // no "img" role and is found as an element (xibosignage/xibo#ISSUE_A11Y_LABELS).
   test('an image being uploaded shows its temporary preview', () => {
     const { container } = renderSpot({ uploadState: uploading({ blobUrl: 'blob:preview-1' }) });
 
@@ -210,7 +211,7 @@ describe('SpotRow - uploads', () => {
     expect(screen.queryByText('40%')).not.toBeInTheDocument();
   });
 
-  // userEvent can't drag files; the drop is fired directly (documented §5.2 exception).
+  // userEvent can't drag files, so the drop is fired directly (§5.2 file-drop exception).
   test('dropping a file while the spot is uploading does nothing', () => {
     const { container } = renderSpot({ widget: buildSpotWidget(), uploadState: uploading() });
 
@@ -249,7 +250,7 @@ describe('SpotRow - locked spots', () => {
     expect(onSelectFile).not.toHaveBeenCalled();
   });
 
-  // A preview without a thumbnail is an icon-only button with no name (known issue K11), so
+  // A preview without a thumbnail is an icon-only button with no name (xibosignage/xibo#ISSUE_A11Y_LABELS), so
   // "no preview" is checked as "no buttons at all": this spot also may not be deleted.
   test('a locked spot the user may not view shows no thumbnail and no preview', () => {
     renderSpot({ widget: LOCKED_HIDDEN_WIDGET });
@@ -258,7 +259,7 @@ describe('SpotRow - locked spots', () => {
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 
-  // Pins K7: only image/video/audio spots narrow the picker; others accept any file.
+  // Current behaviour: only image/video/audio spots narrow the picker; others accept any file.
   test('the file picker matches the spot’s type for images, and is open for PDFs', () => {
     const { container, unmount } = renderSpot({ widget: buildSpotWidget({ type: 'image' }) });
     const accept = getFileInput(container).getAttribute('accept') ?? '';

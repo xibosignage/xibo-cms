@@ -109,7 +109,7 @@ describe('Status Dashboard - Latest News', () => {
 
   // Checks only that markup never reaches the page. It is NOT a proof against script
   // execution: JSDOM never loads images, so an onerror handler can't fire here even
-  // though it would in a browser (known issue K9, needs a manual check).
+  // though it would in a browser, so script execution needs a manual browser check.
   test('markup inside a news description never appears on the page as elements', async () => {
     renderWithNews([buildNewsItem({ description: '<img src="x"><b>Bold</b> text' })]);
 
@@ -167,7 +167,7 @@ describe('Status Dashboard - Latest News', () => {
     await screen.findByText('No news available.');
   });
 
-  // Low priority: rows are keyed by link, so two empty links share a key (known issue K7).
+  // Rows are keyed by link, so two empty links share a React key (xibosignage/xibo#ISSUE_NEWS_KEY).
   test('two news items without links both still appear', async () => {
     renderWithNews([
       buildNewsItem({ title: 'A', link: '' }),

@@ -94,14 +94,16 @@ const headersOf = (heading: 'Unused Media' | 'Unreleased Media') =>
 // The cells of the Unused Media row whose Name reads `name`, in column order.
 const unusedCellsOf = (name: string) =>
   within(within(getTableUnder('Unused Media')).getByText(name).closest('tr')!).getAllByRole('cell');
-const TYPE = 2;
 
-// DataTable's sort toggle is a bare <div onClick> with no role or keyboard access (Status
-// Dashboard plan, K10), so it is found as the header's only cursor-pointer element.
-const getSortToggle = (heading: 'Unused Media' | 'Unreleased Media', column: string) =>
-  within(getTableUnder(heading))
-    .getByRole('columnheader', { name: column })
-    .querySelector('.cursor-pointer') as HTMLElement;
+// DataTable's sort toggle is a bare <div onClick> with no role or keyboard access
+// (xibosignage/xibo#ISSUE_SORT_TOGGLE). It is the element that holds the header's sort icon, the only icon in
+// the header.
+const getSortToggle = (heading: 'Unused Media' | 'Unreleased Media', column: string) => {
+  const header = within(getTableUnder(heading)).getByRole('columnheader', { name: column });
+  const icon = header.querySelector('svg');
+  if (!icon?.parentElement) throw new Error(`Column "${column}" has no sort toggle`);
+  return icon.parentElement;
+};
 
 // =============================================================================
 // Tests
@@ -149,25 +151,8 @@ describe('Media Manager Dashboard - table columns', () => {
     expect(cells.map((c) => c.textContent)).toEqual(['42', 'Logo.png', 'image', '2.4 MiB']);
   });
 
-  // Column contract (§4.6): different media types must look different, and the same type
-  // must look the same. Types are the lower-case strings /library actually sends.
-  test('different media types look different in Type; the same type looks the same', async () => {
-    mockUnusedMedia({
-      rows: [
-        buildDashboardMedia({ mediaId: 1, name: 'A.png', mediaType: 'image' }),
-        buildDashboardMedia({ mediaId: 2, name: 'B.mp4', mediaType: 'video' }),
-        buildDashboardMedia({ mediaId: 3, name: 'C.png', mediaType: 'image' }),
-      ],
-      totalCount: 3,
-    });
-    renderMediaDashboardPage();
-    await screen.findByText('A.png');
-
-    expect(unusedCellsOf('A.png')[TYPE]!.innerHTML).not.toBe(
-      unusedCellsOf('B.mp4')[TYPE]!.innerHTML,
-    );
-    expect(unusedCellsOf('A.png')[TYPE]!.innerHTML).toBe(unusedCellsOf('C.png')[TYPE]!.innerHTML);
-  });
+  // Whether the Type column draws each media type distinctly is checked in the shared
+  // contract file components/ui/table/__tests__/contracts/columns.dashboard.test.tsx.
 
   test('empty tables show their empty state', async () => {
     mockUnusedMedia(EMPTY_MEDIA_TABLE);
@@ -246,7 +231,7 @@ describe('Media Manager Dashboard - table paging and sorting', () => {
     expect(lastRequest(fetchUnreleasedMedia)).toEqual(expect.objectContaining({ start: 0 }));
   });
 
-  test('sorting Unused Media by Name asks the server to sort by name', async () => {
+  test('sorting Unused Media by Name asks the server to sort by name, ascending first', async () => {
     const user = userEvent.setup();
     renderMediaDashboardPage();
     await waitForBothTables();
@@ -257,8 +242,25 @@ describe('Media Manager Dashboard - table paging and sorting', () => {
       expect(lastRequest(fetchUnusedMedia)).toEqual(
         expect.objectContaining({
           sortBy: 'name',
-          sortDir: expect.stringMatching(/^(asc|desc)$/),
+          sortDir: 'asc',
         }),
+      ),
+    );
+  });
+
+  // The first request is already 'asc', so only the second click proves the direction is sent.
+  test('sorting Unused Media by Name a second time asks for descending order', async () => {
+    const user = userEvent.setup();
+    renderMediaDashboardPage();
+    await waitForBothTables();
+
+    await user.click(getSortToggle('Unused Media', 'Name'));
+    await waitFor(() => expect(lastRequest(fetchUnusedMedia)?.sortBy).toBe('name'));
+    await user.click(getSortToggle('Unused Media', 'Name'));
+
+    await waitFor(() =>
+      expect(lastRequest(fetchUnusedMedia)).toEqual(
+        expect.objectContaining({ sortBy: 'name', sortDir: 'desc' }),
       ),
     );
   });

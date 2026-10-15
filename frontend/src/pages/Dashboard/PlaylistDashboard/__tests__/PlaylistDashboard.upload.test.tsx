@@ -175,7 +175,7 @@ describe('Playlist Dashboard - uploading', () => {
     );
   });
 
-  // userEvent can't drag files, so the drop is fired directly (documented §5.2 exception).
+  // userEvent can't drag files, so the drop is fired directly (§5.2 file-drop exception).
   test('dropping a file on an empty spot uploads it', async () => {
     const user = userEvent.setup();
     mockUploadOk();

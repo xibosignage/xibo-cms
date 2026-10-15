@@ -149,8 +149,8 @@ describe('Status Dashboard - error handling', () => {
     expect(fetchStatusDashboard).toHaveBeenCalled();
   });
 
-  // Pins current behaviour (known issue K8): a failure reads as "0 displays", which is
-  // indistinguishable from a real zero. Changing this should be a deliberate decision.
+  // Pins current behaviour: a failure reads as "0 displays", which is indistinguishable from a
+  // real zero (the error alert is the only sign). Changing this should be a deliberate decision.
   test('a failed load leaves Active Displays at 0 and the other cards at a dash', async () => {
     mockStatusDashboardError('Server unavailable');
     renderStatusDashboardPage();

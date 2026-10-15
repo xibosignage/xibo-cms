@@ -41,6 +41,7 @@ import { mockDeletePending, mockUploadPending, uploadOk } from '../mocks/playlis
 import type { UploadSpotMediaParams } from '@/services/dashboardApi';
 import { uploadSpotMedia } from '@/services/dashboardApi';
 import { testQueryClient } from '@/setupTests';
+import { knownFailure } from '@/testUtils/knownFailure';
 import type { PlaylistSpotsResponse } from '@/types/dashboard';
 
 // =============================================================================
@@ -107,22 +108,6 @@ describe('usePlaylistDashboardActions', () => {
     expect(result.current.uploadStates.get(1)?.blobUrl).toBeUndefined();
   });
 
-  // Not yet discriminating: while K12 is open, the state-change cleanup also releases the
-  // preview, so removing the release in clearUpload still passes (checked by mutation). It
-  // becomes a real check once K12 is fixed.
-  test('the temporary preview is released when its upload finishes', async () => {
-    const resolve = mockUploadPending();
-    const { result } = renderActions();
-
-    act(() => {
-      void result.current.startUpload(0, makeFile('a.png', 'image/png'));
-    });
-    await act(async () => resolve(uploadOk()));
-
-    await waitFor(() => expect(result.current.uploadStates.has(0)).toBe(false));
-    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:mock-1');
-  });
-
   test('previews still in use are released when the user leaves the page', () => {
     mockUploadPending();
     const { result, unmount } = renderActions();
@@ -135,22 +120,39 @@ describe('usePlaylistDashboardActions', () => {
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:mock-1');
   });
 
-  // Known-open (K12): the "release on leaving" cleanup is tied to every change of the upload
-  // state, so the first progress update releases the preview of an upload still running.
-  // Flip to `test` when the cleanup only runs on unmount.
-  test.fails('a preview is not released while its upload is still running', () => {
-    mockUploadPending();
-    const { result } = renderActions();
+  // xibosignage/xibo#ISSUE_PREVIEW_RELEASE: the "release on leaving" cleanup is tied to every
+  // change of the upload state, so the first progress update releases the preview of an upload
+  // still running. This also covers "the preview is released once its upload finishes", which
+  // can't fail on its own while this bug is open (the early release already happened).
+  knownFailure(
+    'a preview is kept while its upload runs and released once it finishes',
+    async () => {
+      const resolve = mockUploadPending();
+      const { result } = renderActions();
 
-    act(() => {
-      void result.current.startUpload(0, makeFile('a.png', 'image/png'));
-    });
-    const params = vi.mocked(uploadSpotMedia).mock.calls[0]![0] as UploadSpotMediaParams;
-    act(() => params.onProgress?.(40));
+      act(() => {
+        void result.current.startUpload(0, makeFile('a.png', 'image/png'));
+      });
+      const params = vi.mocked(uploadSpotMedia).mock.calls[0]![0] as UploadSpotMediaParams;
+      act(() => params.onProgress?.(40));
+      // Control: the upload is still running.
+      expect(result.current.uploadStates.get(0)?.status).toBe('uploading');
+      const releasedWhileRunning = [...vi.mocked(URL.revokeObjectURL).mock.calls];
 
-    expect(result.current.uploadStates.get(0)?.status).toBe('uploading');
-    expect(URL.revokeObjectURL).not.toHaveBeenCalled();
-  });
+      await act(async () => resolve(uploadOk()));
+      // Control: the upload finished and left the upload list.
+      await waitFor(() => expect(result.current.uploadStates.has(0)).toBe(false));
+      const releasedAfterFinish = vi
+        .mocked(URL.revokeObjectURL)
+        .mock.calls.slice(releasedWhileRunning.length);
+      return { releasedWhileRunning, releasedAfterFinish };
+    },
+    (released) =>
+      expect(released).toEqual({
+        releasedWhileRunning: [],
+        releasedAfterFinish: [['blob:mock-1']],
+      }),
+  );
 
   test('with no playlist selected, nothing is uploaded', async () => {
     const { result } = renderActions(null);

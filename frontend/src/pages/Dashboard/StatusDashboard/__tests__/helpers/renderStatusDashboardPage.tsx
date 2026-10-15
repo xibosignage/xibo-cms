@@ -44,12 +44,19 @@ export const renderStatusDashboardPage = (user: User = mockUser) =>
   );
 
 // Returns the card under a section heading. The page has no landmarks, and "Display Activity"
-// is used twice (chart card = index 0, table card = index 1), so cards are reached through
-// their <h3>. The card is the nearest ancestor with a border; this scopes queries and
-// doesn't select the element under test.
+// is used twice (xibosignage/xibo#ISSUE_A11Y_LABELS; chart card = index 0, table card = index 1), so cards
+// are reached through their heading. The card is the largest ancestor that holds no other heading of the same
+// level or higher, which follows the page structure rather than its styling. Article titles
+// inside the news card are a lower level, so they don't stop the walk. Scopes queries only.
 export const getSection = (heading: string | RegExp, index = 0): HTMLElement => {
   const h = screen.getAllByRole('heading', { name: heading })[index]!;
-  return h.closest('.rounded-lg') as HTMLElement;
+  const level = Number(h.tagName.slice(1));
+  const peers = Array.from({ length: level }, (_, i) => `h${i + 1}`).join(',');
+  let section = h;
+  while (section.parentElement && section.parentElement.querySelectorAll(peers).length === 1) {
+    section = section.parentElement;
+  }
+  return section;
 };
 
 // Returns the stat card whose label matches ("Active Displays", "Library Size", "Active Users").
@@ -62,9 +69,11 @@ export const getDisplayTable = (): HTMLElement =>
   within(getSection('Display Activity', 1)).getByRole('table');
 
 // DataTable's sort toggle is a bare <div onClick> inside the header, with no role, name or
-// keyboard access, so it can't be selected by role (known issue: make it a <button>).
-// It is the only element in the header carrying the cursor-pointer class.
+// keyboard access, so it can't be selected by role (xibosignage/xibo#ISSUE_SORT_TOGGLE).
+// It is the element that holds the header's sort icon, the only icon in the header.
 export const getSortToggle = (columnName: string | RegExp): HTMLElement => {
   const header = within(getDisplayTable()).getByRole('columnheader', { name: columnName });
-  return header.querySelector('.cursor-pointer') as HTMLElement;
+  const icon = header.querySelector('svg');
+  if (!icon?.parentElement) throw new Error(`Column "${String(columnName)}" has no sort toggle`);
+  return icon.parentElement;
 };

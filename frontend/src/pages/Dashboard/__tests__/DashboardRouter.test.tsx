@@ -122,7 +122,7 @@ describe('Dashboard router - choosing the home dashboard', () => {
     await expectOnly('Icon');
   });
 
-  // '' is what a user saved without a home page carries; `??` alone wouldn't catch it (K2).
+  // '' is what a user saved without a home page carries; `??` alone wouldn't catch it.
   test.each([
     ['not set', undefined],
     ['blank', ''],

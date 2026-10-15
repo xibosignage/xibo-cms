@@ -135,8 +135,8 @@ describe('PlaylistDropdown', () => {
     expect(onSelect).toHaveBeenCalledWith(null);
   });
 
-  // The search box has no accessible name (only a placeholder), but it is the only text box
-  // in the open dropdown.
+  // The search box has no accessible name, only a placeholder (xibosignage/xibo#ISSUE_A11Y_LABELS), but it
+  // is the only text box in the open dropdown.
   test('searching waits for a short pause, then asks by name from the first page', async () => {
     const user = userEvent.setup();
     vi.mocked(fetchPlaylistsForDashboard).mockResolvedValue(page(1, 10, 25));
@@ -240,6 +240,8 @@ describe('PlaylistDropdown', () => {
     });
     renderDropdown(2);
 
-    await screen.findByText('Reception', { selector: '[role="combobox"] span' });
+    await waitFor(() =>
+      expect(screen.getByRole('combobox', { name: 'Playlist' })).toHaveTextContent('Reception'),
+    );
   });
 });

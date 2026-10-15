@@ -27,6 +27,8 @@ import { vi, describe, test, expect } from 'vitest';
 import LibraryUsageChart from '../../components/LibraryUsageChart';
 import { buildLibraryWidget } from '../fixtures/statusDashboard';
 
+import { knownFailure } from '@/testUtils/knownFailure';
+
 // =============================================================================
 // Module mocks
 // =============================================================================
@@ -181,24 +183,35 @@ describe('LibraryUsageChart - legend', () => {
     }
   });
 
-  // Known-open (K1): the server labels multi-word types as ucfirst(type) with no space
-  // ("Genericfile", "Htmlpackage", "Playersoftware", "Savedreport"), and the chart only
-  // knows "Generic File" etc., so these four always read 0. Flip to `test` when fixed.
-  test.fails('multi-word media types show their real size', () => {
-    renderChart({
-      rows: [
-        ['Genericfile GiB', 2.5],
-        ['Htmlpackage GiB', 1],
-        ['Playersoftware GiB', 0.3],
-        ['Savedreport GiB', 0.1],
-      ],
-    });
-
-    expect(screen.getByText('Generic File: 2.5 GiB')).toBeInTheDocument();
-    expect(screen.getByText('HTML Package: 1 GiB')).toBeInTheDocument();
-    expect(screen.getByText('Player Software: 0.3 GiB')).toBeInTheDocument();
-    expect(screen.getByText('Saved Report: 0.1 GiB')).toBeInTheDocument();
-  });
+  // xibosignage/xibo#ISSUE_LIBRARY_USAGE: the server labels multi-word types as ucfirst(type)
+  // with no space ("Genericfile", "Htmlpackage", "Playersoftware", "Savedreport"), and the chart
+  // only knows "Generic File" etc., so these four always read 0.
+  knownFailure(
+    'multi-word media types show their real size',
+    () => {
+      renderChart({
+        rows: [
+          ['Image GiB', 1],
+          ['Genericfile GiB', 2.5],
+          ['Htmlpackage GiB', 1],
+          ['Playersoftware GiB', 0.3],
+          ['Savedreport GiB', 0.1],
+        ],
+      });
+      // Control: the same render shows a single-word type's size, so the data did arrive.
+      expect(screen.getByText('Image: 1 GiB')).toBeInTheDocument();
+      return legendRows().map((row) => row.textContent);
+    },
+    (legend) =>
+      expect(legend).toEqual(
+        expect.arrayContaining([
+          'Generic File: 2.5 GiB',
+          'HTML Package: 1 GiB',
+          'Player Software: 0.3 GiB',
+          'Saved Report: 0.1 GiB',
+        ]),
+      ),
+  );
 });
 
 describe('LibraryUsageChart - free space', () => {

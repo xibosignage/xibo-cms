@@ -19,9 +19,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type { ColumnDef, PaginationState, SortingState } from '@tanstack/react-table';
-import type { TFunction } from 'i18next';
-import { ArrowRight, Check, Loader2, Newspaper, X } from 'lucide-react';
+import type { PaginationState, SortingState } from '@tanstack/react-table';
+import { ArrowRight, Loader2, Newspaper } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -31,6 +30,7 @@ import display from '../../../assets/dashboard/display.svg';
 import server from '../../../assets/dashboard/server.svg';
 import users from '../../../assets/dashboard/user.svg';
 
+import { getDisplayColumns } from './StatusDashboardConfig';
 import BandwidthChart from './components/BandwidthChart';
 import type { DisplayChartItem } from './components/DisplayChart';
 import DisplayChart from './components/DisplayChart';
@@ -40,7 +40,6 @@ import { useDashboardStats } from './hooks/useDashboardStats';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { INITIAL_FILTER_STATE } from '@/pages/Displays/Displays/DisplaysConfig';
 import { useDisplaysData } from '@/pages/Displays/Displays/hooks/useDisplaysData';
-import type { Display } from '@/types/display';
 import { formatRelativeDate } from '@/utils/formatters';
 
 interface StatCardProps {
@@ -112,35 +111,6 @@ function NewsArticle({ news }: { news: NewsItem }) {
       )}
     </div>
   );
-}
-
-function getDisplayColumns(t: TFunction): ColumnDef<Display>[] {
-  return [
-    {
-      accessorKey: 'display',
-      header: t('Display'),
-    },
-    {
-      accessorKey: 'loggedIn',
-      header: t('Logged In'),
-      cell: ({ getValue }) =>
-        getValue<number>() ? (
-          <Check className="h-4 w-4 text-green-500" />
-        ) : (
-          <X className="h-4 w-4 text-red-400" />
-        ),
-    },
-    {
-      accessorKey: 'licensed',
-      header: t('Authorised'),
-      cell: ({ getValue }) =>
-        getValue<number>() ? (
-          <Check className="h-4 w-4 text-green-500" />
-        ) : (
-          <X className="h-4 w-4 text-red-400" />
-        ),
-    },
-  ];
 }
 
 export default function Dashboard() {

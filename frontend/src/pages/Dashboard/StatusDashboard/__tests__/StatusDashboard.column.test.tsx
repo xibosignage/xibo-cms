@@ -80,14 +80,6 @@ const FIVE_OF_TWELVE = {
   totalCount: 12,
 };
 
-// The cells of the row whose Display column reads `name`, in column order.
-const cellsOf = (name: string) =>
-  within(within(getDisplayTable()).getByText(name).closest('tr')!).getAllByRole('cell');
-
-// Column order: Display (0), Logged In (1), Authorised (2).
-const LOGGED_IN = 1;
-const AUTHORISED = 2;
-
 // =============================================================================
 // Tests
 // =============================================================================
@@ -108,52 +100,8 @@ describe('Status Dashboard - Display Activity table columns', () => {
     expect(headers.map((h) => h.textContent)).toEqual(['Display', 'Logged In', 'Authorised']);
   });
 
-  // ---------------------------------------------------------------------------
-  // Column contract (§4.6). The API sends 0/1, not booleans. A tick/cross column must
-  // draw the two meanings differently, and the same meaning the same way. Compared on
-  // whole-cell markup because the icons carry no text (known issue K5).
-  // ---------------------------------------------------------------------------
-  test('a logged-in display and a logged-out display look different in Logged In', async () => {
-    mockDashboardDisplays({
-      rows: [
-        buildDisplay({ displayId: 1, display: 'On', loggedIn: 1 }),
-        buildDisplay({ displayId: 2, display: 'Off', loggedIn: 0 }),
-      ],
-      totalCount: 2,
-    });
-    renderStatusDashboardPage();
-    await screen.findByText('On');
-
-    expect(cellsOf('On')[LOGGED_IN]!.innerHTML).not.toBe(cellsOf('Off')[LOGGED_IN]!.innerHTML);
-  });
-
-  test('two logged-in displays look the same in Logged In', async () => {
-    mockDashboardDisplays({
-      rows: [
-        buildDisplay({ displayId: 1, display: 'A', loggedIn: 1 }),
-        buildDisplay({ displayId: 2, display: 'B', loggedIn: 1 }),
-      ],
-      totalCount: 2,
-    });
-    renderStatusDashboardPage();
-    await screen.findByText('A');
-
-    expect(cellsOf('A')[LOGGED_IN]!.innerHTML).toBe(cellsOf('B')[LOGGED_IN]!.innerHTML);
-  });
-
-  test('an authorised display and an unauthorised display look different in Authorised', async () => {
-    mockDashboardDisplays({
-      rows: [
-        buildDisplay({ displayId: 1, display: 'Yes', licensed: 1 }),
-        buildDisplay({ displayId: 2, display: 'No', licensed: 0 }),
-      ],
-      totalCount: 2,
-    });
-    renderStatusDashboardPage();
-    await screen.findByText('Yes');
-
-    expect(cellsOf('Yes')[AUTHORISED]!.innerHTML).not.toBe(cellsOf('No')[AUTHORISED]!.innerHTML);
-  });
+  // Whether each tick/cross column draws its states distinctly is checked in the shared
+  // contract file components/ui/table/__tests__/contracts/columns.dashboard.test.tsx.
 
   test('with no displays, the table shows its empty state', async () => {
     mockDashboardDisplays(EMPTY_DISPLAY_TABLE);
@@ -213,7 +161,7 @@ describe('Status Dashboard - Display Activity table paging and sorting', () => {
     );
   });
 
-  test('sorting by Display asks the server to sort by display name', async () => {
+  test('sorting by Display asks the server to sort by display name, ascending first', async () => {
     const user = userEvent.setup();
     renderStatusDashboardPage();
     await screen.findByText('Display 1');
@@ -224,8 +172,24 @@ describe('Status Dashboard - Display Activity table paging and sorting', () => {
       expect(lastDisplaysRequest()).toEqual(
         expect.objectContaining({
           sortBy: 'display',
-          sortDir: expect.stringMatching(/^(asc|desc)$/),
+          sortDir: 'asc',
         }),
+      ),
+    );
+  });
+
+  test('sorting by Display a second time asks for descending order', async () => {
+    const user = userEvent.setup();
+    renderStatusDashboardPage();
+    await screen.findByText('Display 1');
+
+    await user.click(getSortToggle('Display'));
+    await waitFor(() => expect(lastDisplaysRequest().sortDir).toBe('asc'));
+    await user.click(getSortToggle('Display'));
+
+    await waitFor(() =>
+      expect(lastDisplaysRequest()).toEqual(
+        expect.objectContaining({ sortBy: 'display', sortDir: 'desc' }),
       ),
     );
   });

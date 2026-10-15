@@ -85,7 +85,7 @@ describe('Icon Dashboard - cards for each kind of user', () => {
     expect(visibleCards()).toEqual(['Schedule', 'Layouts', 'Users', 'Library', 'About']);
   });
 
-  // Rule 1.11 / K3: the Users card needs the admin rank as well as the feature. A plain User
+  // Rule 1.11: the Users card needs the admin rank as well as the feature. A plain User
   // with permission to view users must still not see it.
   test('a plain User does not see Users, even with permission to view users', () => {
     expect(PERSONAS.user.features['users.view']).toBe(true);
@@ -108,7 +108,7 @@ describe('Icon Dashboard - cards for each kind of user', () => {
     expect(visibleCards()).toEqual(['About']);
   });
 
-  // Super Admin passes every feature check (K4), so each case starts from a non-admin who
+  // Super Admin passes every feature check, so each case starts from a non-admin who
   // normally has the card, and switches off just that one feature.
   test.each<[string, string, User, string[]]>([
     ['Schedule', 'schedule.view', PERSONAS.user, ['Layouts', 'Library', 'About']],

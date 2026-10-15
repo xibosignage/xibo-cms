@@ -39,6 +39,7 @@ import {
 import { fetchPlaylistSpots } from '@/services/dashboardApi';
 import { saveUserPreference } from '@/services/userApi';
 import { testQueryClient } from '@/setupTests';
+import { knownFailure } from '@/testUtils/knownFailure';
 
 // =============================================================================
 // Module mocks
@@ -194,8 +195,8 @@ describe('Playlist Dashboard - remembering the chosen playlist', () => {
     });
   });
 
-  // Low priority. Pins K2: restoring the saved playlist triggers a redundant save of the
-  // same value. If that is fixed, flip this to expect no save.
+  // Pins current behaviour: restoring the saved playlist triggers a redundant save of the same
+  // value (noted on xibosignage/xibo#ISSUE_PLAYLIST_PREF). If that is fixed, flip this to expect no save.
   test('opening the page re-saves the remembered playlist once', async () => {
     mockSavedPref(1);
     renderPlaylistDashboardPage();
@@ -206,17 +207,21 @@ describe('Playlist Dashboard - remembering the chosen playlist', () => {
     expect(savedValues()).toEqual([{ option: PREF_KEY, value: { selectedPlaylistId: 1 } }]);
   });
 
-  // Known-open (K1): until the saved preference arrives, a choice isn't saved, and when it
-  // arrives it replaces what the user picked. Flip to `test` when fixed.
-  test.fails('a playlist chosen before the saved preference loads is kept', async () => {
-    const user = setupUser();
-    const resolvePref = mockPrefPending();
-    renderPlaylistDashboardPage();
+  // xibosignage/xibo#ISSUE_PLAYLIST_PREF: until the saved preference arrives, a choice isn't
+  // saved, and when it arrives it replaces what the user picked.
+  knownFailure(
+    'a playlist chosen before the saved preference loads is kept',
+    async () => {
+      const user = setupUser();
+      const resolvePref = mockPrefPending();
+      renderPlaylistDashboardPage();
 
-    await selectPlaylist(user, 'Reception');
-    await act(async () => resolvePref({ selectedPlaylistId: 1 }));
-    await advance(SAVE_DELAY);
-
-    expect(getPicker()).toHaveValue('2');
-  });
+      await selectPlaylist(user, 'Reception');
+      // Control: the choice registered before the preference arrived.
+      expect(getPicker()).toHaveValue('2');
+      await act(async () => resolvePref({ selectedPlaylistId: 1 }));
+      await advance(SAVE_DELAY);
+    },
+    () => expect(getPicker()).toHaveValue('2'),
+  );
 });
