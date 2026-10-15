@@ -197,7 +197,7 @@ describe('SpotRow - uploads', () => {
   });
 
   // On an empty spot the preview's alt text is empty (there is no widget name yet), so it has
-  // no "img" role and is found as an element (xibosignage/xibo#ISSUE_A11Y_LABELS).
+  // no "img" role and is found as an element (xibosignage/xibo#4041).
   test('an image being uploaded shows its temporary preview', () => {
     const { container } = renderSpot({ uploadState: uploading({ blobUrl: 'blob:preview-1' }) });
 
@@ -250,7 +250,7 @@ describe('SpotRow - locked spots', () => {
     expect(onSelectFile).not.toHaveBeenCalled();
   });
 
-  // A preview without a thumbnail is an icon-only button with no name (xibosignage/xibo#ISSUE_A11Y_LABELS), so
+  // A preview without a thumbnail is an icon-only button with no name (xibosignage/xibo#4041), so
   // "no preview" is checked as "no buttons at all": this spot also may not be deleted.
   test('a locked spot the user may not view shows no thumbnail and no preview', () => {
     renderSpot({ widget: LOCKED_HIDDEN_WIDGET });

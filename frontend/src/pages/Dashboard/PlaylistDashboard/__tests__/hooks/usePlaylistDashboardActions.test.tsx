@@ -120,7 +120,7 @@ describe('usePlaylistDashboardActions', () => {
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:mock-1');
   });
 
-  // xibosignage/xibo#ISSUE_PREVIEW_RELEASE: the "release on leaving" cleanup is tied to every
+  // xibosignage/xibo#4037: the "release on leaving" cleanup is tied to every
   // change of the upload state, so the first progress update releases the preview of an upload
   // still running. This also covers "the preview is released once its upload finishes", which
   // can't fail on its own while this bug is open (the early release already happened).

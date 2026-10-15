@@ -135,7 +135,7 @@ describe('PlaylistDropdown', () => {
     expect(onSelect).toHaveBeenCalledWith(null);
   });
 
-  // The search box has no accessible name, only a placeholder (xibosignage/xibo#ISSUE_A11Y_LABELS), but it
+  // The search box has no accessible name, only a placeholder (xibosignage/xibo#4041), but it
   // is the only text box in the open dropdown.
   test('searching waits for a short pause, then asks by name from the first page', async () => {
     const user = userEvent.setup();

@@ -33,7 +33,9 @@ import type { User } from '@/types/user';
 
 // Renders the Playlist Dashboard inside all required context providers.
 // Call testQueryClient.clear() and vi.clearAllMocks() in beforeEach first.
-// Page-level tests replace SelectDropdown with a native <select> (see Dashboard/DASHBOARD_TESTS.md).
+// Page-level tests replace SelectDropdown with a native <select>, so only choosing a playlist is
+// tested here; paging and search run against the real component in
+// components/PlaylistDropdown.test.tsx.
 export const renderPlaylistDashboardPage = (user: User = mockUser) =>
   render(
     <QueryClientProvider client={testQueryClient}>
@@ -54,7 +56,7 @@ export const selectPlaylist = async (user: UserEvent, name: string) => {
   await user.selectOptions(getPicker(), name);
 };
 
-// Spot rows have no role or label of their own (xibosignage/xibo#ISSUE_A11Y_LABELS). Each row's first child is
+// Spot rows have no role or label of their own (xibosignage/xibo#4041). Each row's first child is
 // its 1-based number in a <span>; the row is that span's parent. Used only to scope queries.
 export const getSpot = (n: number): HTMLElement => {
   const number = screen
@@ -70,7 +72,7 @@ export const getFileInput = (spot: HTMLElement): HTMLInputElement =>
   spot.querySelector('input[type="file"]') as HTMLInputElement;
 
 // Opens the delete confirmation for spot n and returns it. The dialog has no accessible
-// name (xibosignage/xibo#ISSUE_DIALOG_NAME); callers confirm it through its heading.
+// name (xibosignage/xibo#4039); callers confirm it through its heading.
 export const openDeleteForSpot = async (user: UserEvent, n: number): Promise<HTMLElement> => {
   await user.click(within(getSpot(n)).getByRole('button', { name: 'Delete' }));
   return screen.findByRole('dialog');

@@ -96,7 +96,7 @@ const unusedCellsOf = (name: string) =>
   within(within(getTableUnder('Unused Media')).getByText(name).closest('tr')!).getAllByRole('cell');
 
 // DataTable's sort toggle is a bare <div onClick> with no role or keyboard access
-// (xibosignage/xibo#ISSUE_SORT_TOGGLE). It is the element that holds the header's sort icon, the only icon in
+// (xibosignage/xibo#4040). It is the element that holds the header's sort icon, the only icon in
 // the header.
 const getSortToggle = (heading: 'Unused Media' | 'Unreleased Media', column: string) => {
   const header = within(getTableUnder(heading)).getByRole('columnheader', { name: column });

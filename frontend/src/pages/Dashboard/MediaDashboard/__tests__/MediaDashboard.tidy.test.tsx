@@ -250,7 +250,7 @@ describe('Media Manager Dashboard - tidying the library', () => {
     expect(tidyLibrary).not.toHaveBeenCalled();
   });
 
-  // xibosignage/xibo#ISSUE_TIDY_RELOAD: a tidy deletes exactly the media the Unused Media table
+  // xibosignage/xibo#4035: a tidy deletes exactly the media the Unused Media table
   // lists, but only the totals are reloaded, so the deleted rows stay on screen.
   knownFailure(
     'after a tidy, the Unused Media list is reloaded',

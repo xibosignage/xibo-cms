@@ -199,7 +199,7 @@ describe('Media Manager Dashboard - error handling', () => {
     expect(fetchMediaDashboard).toHaveBeenCalled();
   });
 
-  // xibosignage/xibo#ISSUE_MEDIA_LOAD_ERROR: the page never reads the stats query's error, so
+  // xibosignage/xibo#4036: the page never reads the stats query's error, so
   // a failure looks like "no data".
   knownFailure(
     'a failed load tells the user something went wrong',

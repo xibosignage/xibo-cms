@@ -196,7 +196,7 @@ describe('Playlist Dashboard - remembering the chosen playlist', () => {
   });
 
   // Pins current behaviour: restoring the saved playlist triggers a redundant save of the same
-  // value (noted on xibosignage/xibo#ISSUE_PLAYLIST_PREF). If that is fixed, flip this to expect no save.
+  // value (noted on xibosignage/xibo#4038). If that is fixed, flip this to expect no save.
   test('opening the page re-saves the remembered playlist once', async () => {
     mockSavedPref(1);
     renderPlaylistDashboardPage();
@@ -207,7 +207,7 @@ describe('Playlist Dashboard - remembering the chosen playlist', () => {
     expect(savedValues()).toEqual([{ option: PREF_KEY, value: { selectedPlaylistId: 1 } }]);
   });
 
-  // xibosignage/xibo#ISSUE_PLAYLIST_PREF: until the saved preference arrives, a choice isn't
+  // xibosignage/xibo#4038: until the saved preference arrives, a choice isn't
   // saved, and when it arrives it replaces what the user picked.
   knownFailure(
     'a playlist chosen before the saved preference loads is kept',

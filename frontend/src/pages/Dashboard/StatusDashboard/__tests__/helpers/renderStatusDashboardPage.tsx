@@ -44,10 +44,11 @@ export const renderStatusDashboardPage = (user: User = mockUser) =>
   );
 
 // Returns the card under a section heading. The page has no landmarks, and "Display Activity"
-// is used twice (xibosignage/xibo#ISSUE_A11Y_LABELS; chart card = index 0, table card = index 1), so cards
-// are reached through their heading. The card is the largest ancestor that holds no other heading of the same
-// level or higher, which follows the page structure rather than its styling. Article titles
-// inside the news card are a lower level, so they don't stop the walk. Scopes queries only.
+// is used twice (xibosignage/xibo#4041; chart card = index 0, table card = index 1), so cards
+// are reached through their heading. The card is the largest ancestor that holds no other
+// heading of the same level or higher, which follows the page structure rather than its
+// styling. Article titles inside the news card are a lower level, so they don't stop the walk.
+// Scopes queries only.
 export const getSection = (heading: string | RegExp, index = 0): HTMLElement => {
   const h = screen.getAllByRole('heading', { name: heading })[index]!;
   const level = Number(h.tagName.slice(1));
@@ -69,7 +70,7 @@ export const getDisplayTable = (): HTMLElement =>
   within(getSection('Display Activity', 1)).getByRole('table');
 
 // DataTable's sort toggle is a bare <div onClick> inside the header, with no role, name or
-// keyboard access, so it can't be selected by role (xibosignage/xibo#ISSUE_SORT_TOGGLE).
+// keyboard access, so it can't be selected by role (xibosignage/xibo#4040).
 // It is the element that holds the header's sort icon, the only icon in the header.
 export const getSortToggle = (columnName: string | RegExp): HTMLElement => {
   const header = within(getDisplayTable()).getByRole('columnheader', { name: columnName });

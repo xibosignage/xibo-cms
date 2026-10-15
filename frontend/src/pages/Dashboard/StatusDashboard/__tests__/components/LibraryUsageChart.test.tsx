@@ -183,7 +183,7 @@ describe('LibraryUsageChart - legend', () => {
     }
   });
 
-  // xibosignage/xibo#ISSUE_LIBRARY_USAGE: the server labels multi-word types as ucfirst(type)
+  // xibosignage/xibo#4034: the server labels multi-word types as ucfirst(type)
   // with no space ("Genericfile", "Htmlpackage", "Playersoftware", "Savedreport"), and the chart
   // only knows "Generic File" etc., so these four always read 0.
   knownFailure(

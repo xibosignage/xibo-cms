@@ -82,7 +82,8 @@ export const buildSpotWidgets = (
     }),
   );
 
-// Named SpotRow states (see the permission matrix in Dashboard/DASHBOARD_TESTS.md).
+// Named SpotRow states. The edit/view/delete permission matrix they feed is tested in
+// components/SpotRow.test.tsx.
 export const SUBPLAYLIST_WIDGET = buildSpotWidget({
   type: 'subplaylist',
   name: 'Nested Playlist',

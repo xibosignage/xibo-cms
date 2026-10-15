@@ -118,7 +118,7 @@ describe('buildChartItems', () => {
     expect(valueOf(items, 'Audio')?.value).toBe(0);
   });
 
-  // Pins current behaviour (xibosignage/xibo#ISSUE_MEDIA_CHART_TYPES): types outside the nine are dropped,
+  // Pins current behaviour (xibosignage/xibo#4043): types outside the nine are dropped,
   // so the legend can add up to less than the centre total.
   test('a type the chart does not know about is left out', () => {
     const items = buildChartItems(

@@ -167,7 +167,7 @@ describe('Status Dashboard - Latest News', () => {
     await screen.findByText('No news available.');
   });
 
-  // Rows are keyed by link, so two empty links share a React key (xibosignage/xibo#ISSUE_NEWS_KEY).
+  // Rows are keyed by link, so two empty links share a React key (xibosignage/xibo#4042).
   test('two news items without links both still appear', async () => {
     renderWithNews([
       buildNewsItem({ title: 'A', link: '' }),

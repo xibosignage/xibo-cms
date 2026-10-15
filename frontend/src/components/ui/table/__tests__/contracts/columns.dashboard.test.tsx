@@ -31,7 +31,7 @@ describe('Status Dashboard - Display Activity grid', () => {
   const display = (fields: object) => ({ displayId: 1, display: 'Lobby', ...fields });
 
   // The API sends 0/1, not booleans. The tick and cross icons carry no text
-  // (xibosignage/xibo#ISSUE_A11Y_LABELS); comparing markup works either way.
+  // (xibosignage/xibo#4041); comparing markup works either way.
   test('the Logged In column shows a logged-in display differently from a logged-out one', () => {
     const states = statesOf(columns, 'loggedIn', {
       on: display({ loggedIn: 1 }),

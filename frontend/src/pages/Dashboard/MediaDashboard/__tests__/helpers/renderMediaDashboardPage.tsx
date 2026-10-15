@@ -60,7 +60,7 @@ export const getTableUnder = (heading: 'Unused Media' | 'Unreleased Media'): HTM
   within(getSection(heading)).getByRole('table');
 
 // Opens the Tidy Library dialog from its card and returns the dialog. The dialog has no
-// accessible name (TidyLibraryModal passes no title, xibosignage/xibo#ISSUE_DIALOG_NAME), so it is found by role
+// accessible name (TidyLibraryModal passes no title, xibosignage/xibo#4039), so it is found by role
 // alone; callers confirm it is the right one through its "Tidy Library" heading.
 export const openTidyDialog = async (user: UserEvent): Promise<HTMLElement> => {
   await user.click(await screen.findByRole('button', { name: /tidy library/i }));
