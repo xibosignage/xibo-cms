@@ -1268,6 +1268,8 @@ class DataSet implements \JsonSerializable
     {
         $this->getLog()->debug('Adding row ' . var_export($row, true));
 
+        $this->validateRowColumns($row);
+
         // Update the last edit date on this dataSet
         $this->lastDataEdit = Carbon::now()->format('U');
 
@@ -1299,6 +1301,8 @@ class DataSet implements \JsonSerializable
     {
         $this->getLog()->debug(sprintf('Editing row %s', var_export($row, true)));
 
+        $this->validateRowColumns($row);
+
         // Update the last edit date on this dataSet
         $this->lastDataEdit = Carbon::now()->format('U');
 
@@ -1322,6 +1326,27 @@ class DataSet implements \JsonSerializable
 
 
         $this->getStore()->update($sql, $params);
+    }
+
+    /**
+     * Check that every key in a row is a stored column of this DataSet
+     * @param array $row
+     * @throws InvalidArgumentException
+     */
+    private function validateRowColumns(array $row): void
+    {
+        $allowed = ['id'];
+        foreach ($this->getColumn() as $column) {
+            if ($column->dataSetColumnTypeId != 2) {
+                $allowed[] = $column->heading;
+            }
+        }
+
+        foreach (array_keys($row) as $key) {
+            if (!in_array($key, $allowed, true)) {
+                throw new InvalidArgumentException(sprintf(__('Column %s not found'), $key), 'row');
+            }
+        }
     }
 
     /**

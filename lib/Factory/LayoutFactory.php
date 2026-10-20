@@ -1896,10 +1896,15 @@ class LayoutFactory extends BaseFactory
                             $existingDataSet->dataSetId
                         ));
 
-                        foreach (($item['data'] ?? []) as $itemData) {
-                            if (isset($itemData['id'])) {
-                                unset($itemData['id']);
+                        $columnHeadings = [];
+                        foreach ($existingDataSet->getColumn() as $column) {
+                            if ($column->dataSetColumnTypeId != 2) {
+                                $columnHeadings[] = $column->heading;
                             }
+                        }
+
+                        foreach (($item['data'] ?? []) as $itemData) {
+                            $itemData = array_intersect_key($itemData, array_flip($columnHeadings));
 
                             foreach ($columnWithImages as $columnHeading) {
                                 foreach ($uploadedMediaIds as $old => $new) {
