@@ -1275,7 +1275,7 @@ class DataSet implements \JsonSerializable
 
         // Build a query to insert
         $params = [];
-        $keys = array_keys($row);
+        $keys = array_map(fn($key) => str_replace('`', '``', $key), array_keys($row));
 
         $sql = 'INSERT INTO `dataset_' . $this->dataSetId
             . '` (`' . implode('`, `', $keys) . '`) VALUES (';
@@ -1315,7 +1315,7 @@ class DataSet implements \JsonSerializable
         $i = 0;
         foreach ($row as $key => $value) {
             $i++;
-            $sql .= ' `' . $key . '` = :value' . $i . ',';
+            $sql .= ' `' . str_replace('`', '``', $key) . '` = :value' . $i . ',';
             $params['value' . $i] = $value;
         }
 
@@ -1343,7 +1343,7 @@ class DataSet implements \JsonSerializable
         }
 
         foreach (array_keys($row) as $key) {
-            if (!in_array($key, $allowed, true)) {
+            if (!in_array((string)$key, $allowed, true)) {
                 throw new InvalidArgumentException(sprintf(__('Column %s not found'), $key), 'row');
             }
         }
