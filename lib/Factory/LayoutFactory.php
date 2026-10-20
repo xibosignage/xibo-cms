@@ -1905,6 +1905,9 @@ class LayoutFactory extends BaseFactory
 
                         foreach (($item['data'] ?? []) as $itemData) {
                             $itemData = array_intersect_key($itemData, array_flip($columnHeadings));
+                            if (count($itemData) === 0) {
+                                continue;
+                            }
 
                             foreach ($columnWithImages as $columnHeading) {
                                 foreach ($uploadedMediaIds as $old => $new) {
