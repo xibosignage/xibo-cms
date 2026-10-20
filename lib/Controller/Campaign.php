@@ -500,7 +500,7 @@ class Campaign extends Base
                     ),
                     new OA\Property(
                         property: 'layoutIds',
-                        description: 'An array of layoutIds to assign to this Campaign, in order.',
+                        description: 'An array of layoutIds to assign to this Campaign, in order. Layouts already assigned that are not shared with the user are kept in their current position.', // phpcs:ignore
                         type: 'array',
                         items: new OA\Items(type: 'integer')
                     ),
@@ -638,21 +638,25 @@ class Campaign extends Base
 
             // Assign layouts?
             if ($parsedRequestParams->getCheckbox('manageLayouts') === 1) {
-                // Fully decorate our Campaign
-                $campaign->loadLayouts();
+                // Layouts the user cannot see are kept in their original positions
+                $hiddenAssignments = [];
+                foreach (array_values($campaign->loadLayouts()) as $position => $assignment) {
+                    if (!$this->getUser()->checkViewable($this->layoutFactory->getById($assignment->layoutId))) {
+                        $hiddenAssignments[$position] = $assignment;
+                    }
+                }
+                $hiddenLayoutIds = array_map(fn ($assignment) => $assignment->layoutId, $hiddenAssignments);
 
-                // Remove all we've currently got assigned, keeping track of them for sharing check
-                $originalLayoutAssignments = array_map(function ($element) {
-                    return $element->layoutId;
-                }, $campaign->loadLayouts());
-
-                $campaign->unassignAllLayouts();
-
+                $layoutIds = [];
                 foreach ($parsedRequestParams->getIntArray('layoutIds', ['default' => []]) as $layoutId) {
+                    if (in_array($layoutId, $hiddenLayoutIds)) {
+                        continue;
+                    }
+
                     // Check permissions.
                     $layout = $this->layoutFactory->getById($layoutId);
 
-                    if (!$this->getUser()->checkViewable($layout) && !in_array($layoutId, $originalLayoutAssignments)) {
+                    if (!$this->getUser()->checkViewable($layout)) {
                         throw new AccessDeniedException(
                             __('You are trying to assign a Layout that is not shared with you.')
                         );
@@ -661,8 +665,33 @@ class Campaign extends Base
                     // Make sure we can assign this layout
                     $this->checkLayoutAssignable($layout);
 
-                    // Assign.
-                    $campaign->assignLayout($layout->layoutId);
+                    $layoutIds[] = $layout->layoutId;
+                }
+
+                $keepHidden = fn ($assignment) => $campaign->assignLayout(
+                    $assignment->layoutId,
+                    null,
+                    $assignment->dayPartId,
+                    $assignment->daysOfWeek,
+                    $assignment->geoFence
+                );
+
+                $campaign->unassignAllLayouts();
+
+                $position = 0;
+                foreach ($layoutIds as $layoutId) {
+                    while (isset($hiddenAssignments[$position])) {
+                        $keepHidden($hiddenAssignments[$position]);
+                        unset($hiddenAssignments[$position]);
+                        $position++;
+                    }
+
+                    $campaign->assignLayout($layoutId);
+                    $position++;
+                }
+
+                foreach ($hiddenAssignments as $assignment) {
+                    $keepHidden($assignment);
                 }
             }
         }

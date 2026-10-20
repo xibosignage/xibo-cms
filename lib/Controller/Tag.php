@@ -715,12 +715,18 @@ class Tag extends Base
                         $entity = $entityFactory->getById($id);
                     }
 
+                    if (!$this->getUser()->checkEditable($entity)) {
+                        throw new AccessDeniedException();
+                    }
+
                     if ($targetType === 'display' || $targetType === 'displayGroup') {
                         $this->getDispatcher()->dispatch(
                             new DisplayGroupLoadEvent($entity),
                             DisplayGroupLoadEvent::$NAME
                         );
                     }
+
+                    $isTemplate = $targetType === 'layout' && $entity->hasTag('template');
 
                     foreach ($untags as $untag) {
                         $entity->unassignTag($untag);
@@ -731,6 +737,15 @@ class Tag extends Base
                         $entity->assignTag($tag);
                     }
 
+                    if ($targetType === 'layout' && $isTemplate !== $entity->hasTag('template')) {
+                        throw new InvalidArgumentException(
+                            $isTemplate
+                                ? __('Cannot remove the Template tag from a Template.')
+                                : __('Cannot assign a Template tag to a Layout, to create a template use the Save Template button instead.'),
+                            'tags'
+                        );
+                    }
+
                     $entity->save(['isTagEdit' => true]);
                 } catch (\Exception $exception) {
                     $this->getLog()->error(
@@ -739,7 +754,9 @@ class Tag extends Base
                     );
                     $failed[] = [
                         'id' => $id,
-                        'name' => $this->getEditMultipleTargetName($entity),
+                        'name' => $entity !== null && $this->getUser()->checkViewable($entity)
+                            ? $this->getEditMultipleTargetName($entity)
+                            : '',
                     ];
                 }
             }
@@ -763,7 +780,7 @@ class Tag extends Base
                 'message' => __('Tags updated with some errors'),
                 'data' => [
                     'failedCount' => count($failed),
-                    'failedNames' => array_column($failed, 'name'),
+                    'failedNames' => array_values(array_filter(array_column($failed, 'name'))),
                 ],
             ]);
         } else {

@@ -2302,6 +2302,14 @@ PropertiesPanel.prototype.initPanelFields = function(
               );
             }
           },
+          'select2:clear': function(_ev) {
+            if (skipSave(_ev.currentTarget, _ev)) {
+              return;
+            }
+
+            // The load snapshot can miss async-loaded values, so force it
+            self.save({forceSave: true});
+          },
           'focus editorFocus': function(_ev) {
             // Check if we dont skip this field
             self.toSave = !skipSave(_ev.currentTarget, _ev);

@@ -54,7 +54,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
 import type { SyncGroup } from '@/types/syncGroup';
 import { countActiveFilters } from '@/utils/filters';
-import { hasFeature } from '@/utils/permissions';
+import { filterByPermission, hasFeature } from '@/utils/permissions';
 
 export default function SyncGroups() {
   const { t } = useTranslation();
@@ -101,9 +101,13 @@ export default function SyncGroups() {
   const [activeModal, setActiveModal] = useState<ModalType | null>(null);
   const [itemsToDelete, setItemsToDelete] = useState<SyncGroup[]>([]);
   const [selectedSyncGroupId, setSelectedSyncGroupId] = useState<number | null>(null);
+  const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
 
   const openModal = (name: ModalType) => setActiveModal(name);
-  const closeModal = () => setActiveModal(null);
+  const closeModal = () => {
+    setActiveModal(null);
+    setShareEntityIds(null);
+  };
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['syncGroups'] });
@@ -212,6 +216,11 @@ export default function SyncGroups() {
     openModal('members');
   };
 
+  const openShareModal = (syncGroup: SyncGroup) => {
+    setShareEntityIds(syncGroup.syncGroupId);
+    openModal('share');
+  };
+
   const { filterOptions } = useSyncGroupFilterOptions(t);
 
   const handleResetFilters = () => {
@@ -219,12 +228,17 @@ export default function SyncGroups() {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
+  const canModify = hasFeature(user, 'display.syncModify');
+  const canUserShare = hasFeature(user, 'user.sharing');
+
   const columns = getSyncGroupColumns({
     t,
-    canModify: hasFeature(user, 'display.syncModify'),
+    canModify,
+    canUserShare,
     onDelete: handleDelete,
     openEditModal,
     openMembersModal,
+    openShareModal,
     formatDateTime,
   });
 
@@ -236,11 +250,25 @@ export default function SyncGroups() {
 
   const bulkActions = getBulkActions({
     t,
+    canShare: canModify && canUserShare,
     onDelete: () => {
       const allItems = getAllSelectedItems();
       setItemsToDelete(allItems);
       setDeleteError(null);
       openModal('delete');
+    },
+    onShare: () => {
+      const allItems = filterByPermission(
+        getAllSelectedItems(),
+        (item) => item.userPermissions?.modifyPermissions,
+        t,
+        t('share'),
+      );
+      if (allItems.length === 0) {
+        return;
+      }
+      setShareEntityIds(allItems.map((item) => item.syncGroupId));
+      openModal('share');
     },
   });
 
@@ -394,6 +422,7 @@ export default function SyncGroups() {
         selection={{
           selectedSyncGroup,
           itemsToDelete,
+          shareEntityIds,
         }}
         handlers={{
           confirmDelete,

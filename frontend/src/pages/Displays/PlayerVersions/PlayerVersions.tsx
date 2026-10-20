@@ -43,14 +43,18 @@ import FilterInputs from '@/components/ui/FilterInputs';
 import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { useUserContext } from '@/context/UserContext';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import { downloadPlayerVersion } from '@/services/playerVersionApi';
 import type { PlayerVersion } from '@/types/playerVersion';
 import { countActiveFilters } from '@/utils/filters';
+import { hasFeature } from '@/utils/permissions';
 
 export default function PlayerVersions() {
   const { t } = useTranslation();
+  const { user } = useUserContext();
+  const canAdd = hasFeature(user, 'playersoftware.add');
   const queryClient = useQueryClient();
 
   const {
@@ -224,17 +228,19 @@ export default function PlayerVersions() {
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="Player Versions" navigation={displaysTabs} />
-          <div className="flex items-center gap-2 md:mb-0">
-            <Button
-              variant="primary"
-              className="font-semibold"
-              disabled={!isHydrated}
-              onClick={openAddModal}
-              leftIcon={Plus}
-            >
-              {t('Add Version')}
-            </Button>
-          </div>
+          {canAdd && (
+            <div className="flex items-center gap-2 md:mb-0">
+              <Button
+                variant="primary"
+                className="font-semibold"
+                disabled={!isHydrated}
+                onClick={openAddModal}
+                leftIcon={Plus}
+              >
+                {t('Add Version')}
+              </Button>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col lg:flex-row justify-end items-center gap-4">

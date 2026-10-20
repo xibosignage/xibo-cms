@@ -699,7 +699,7 @@
                                         "type": "integer"
                                     },
                                     "layoutIds": {
-                                        "description": "An array of layoutIds to assign to this Campaign, in order.",
+                                        "description": "An array of layoutIds to assign to this Campaign, in order. Layouts already assigned that are not shared with the user are kept in their current position.",
                                         "type": "array",
                                         "items": {
                                             "type": "integer"

@@ -28,6 +28,7 @@ import ManageMembersModal from './ManageMembersModal';
 
 import EditTagsMultipleModal from '@/components/ui/modals/EditTagsMultipleModal';
 import MoveModal from '@/components/ui/modals/MoveModal';
+import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
 import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
 import type { CopyDisplayGroupFormData } from '@/pages/Displays/DisplayGroup/hooks/useDisplayGroupActions';
@@ -57,6 +58,7 @@ interface DisplayGroupModalsProps {
     itemsToDelete: DisplayGroup[];
     existingNames: string[];
     itemsToMove: DisplayGroup[];
+    bulkItems: DisplayGroup[];
     shareEntityIds: number | number[] | null;
     setShareEntityIds: React.Dispatch<React.SetStateAction<number | number[] | null>>;
   };
@@ -69,7 +71,6 @@ interface DisplayGroupModalsProps {
     confirmTriggerWebhook: (displayGroupId: number, triggerCode: string) => void;
     confirmBulkSendCommand: (items: DisplayGroup[], commandId: number) => void;
     confirmBulkTriggerWebhook: (items: DisplayGroup[], triggerCode: string) => void;
-    getAllSelectedItems: () => DisplayGroup[];
   };
 }
 
@@ -84,9 +85,7 @@ export function DisplayGroupModals({ actions, selection, handlers }: DisplayGrou
       }
     : null;
 
-  const editTagsSelectedItems = isModalOpen('editTagsMultiple')
-    ? handlers.getAllSelectedItems()
-    : [];
+  const { bulkItems } = selection;
 
   return (
     <>
@@ -200,13 +199,13 @@ export function DisplayGroupModals({ actions, selection, handlers }: DisplayGrou
 
       {isModalOpen('bulkSendCommand') && (
         <SendCommandModal
-          items={handlers.getAllSelectedItems().map((dg) => ({
+          items={bulkItems.map((dg) => ({
             displayGroupId: dg.displayGroupId,
             display: dg.displayGroup,
           }))}
           onClose={actions.closeModal}
           onConfirm={(_items, commandId) => {
-            handlers.confirmBulkSendCommand(handlers.getAllSelectedItems(), commandId);
+            handlers.confirmBulkSendCommand(bulkItems, commandId);
           }}
           isActionPending={actions.isActionPending}
           actionError={actions.actionError}
@@ -215,13 +214,13 @@ export function DisplayGroupModals({ actions, selection, handlers }: DisplayGrou
 
       {isModalOpen('bulkTriggerWebhook') && (
         <TriggerWebhookModal
-          items={handlers.getAllSelectedItems().map((dg) => ({
+          items={bulkItems.map((dg) => ({
             displayGroupId: dg.displayGroupId,
             display: dg.displayGroup,
           }))}
           onClose={actions.closeModal}
           onConfirm={(_items, triggerCode) => {
-            handlers.confirmBulkTriggerWebhook(handlers.getAllSelectedItems(), triggerCode);
+            handlers.confirmBulkTriggerWebhook(bulkItems, triggerCode);
           }}
           isActionPending={actions.isActionPending}
           actionError={actions.actionError}
@@ -231,8 +230,8 @@ export function DisplayGroupModals({ actions, selection, handlers }: DisplayGrou
       {isModalOpen('editTagsMultiple') && (
         <EditTagsMultipleModal
           targetType="displayGroup"
-          ids={editTagsSelectedItems.map((dg) => dg.displayGroupId)}
-          existingTags={mergeEntityTags(editTagsSelectedItems)}
+          ids={bulkItems.map((dg) => dg.displayGroupId)}
+          existingTags={mergeEntityTags(bulkItems)}
           onClose={actions.closeModal}
           onSuccess={async () => {
             await actions.handleRefresh();
@@ -247,6 +246,18 @@ export function DisplayGroupModals({ actions, selection, handlers }: DisplayGrou
           displayGroup={selection.selectedDisplayGroup}
           onClose={actions.closeModal}
           onSuccess={actions.handleRefresh}
+        />
+      )}
+
+      {isModalOpen('schedule') && selection.selectedDisplayGroup && (
+        <ScheduleEventModal
+          isOpen
+          onClose={() => {
+            actions.closeModal();
+            actions.handleRefresh();
+          }}
+          mode="add"
+          displayGroupIds={[selection.selectedDisplayGroup.displayGroupId]}
         />
       )}
 

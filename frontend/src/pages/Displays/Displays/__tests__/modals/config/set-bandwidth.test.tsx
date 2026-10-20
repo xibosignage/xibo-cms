@@ -71,21 +71,29 @@ describe('SetBandwidthModal', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // Save must be disabled on open because no bandwidth value has been entered
-  // yet (bandwidthKb starts as null).
+  // An empty value means "no limit": Save must be enabled on open and submit 0
+  // so the bulk action can clear an existing bandwidth limit.
   // ---------------------------------------------------------------------------
-  test('Save button is disabled before a bandwidth value is entered', () => {
+  test('Save button is enabled with no value and calls onConfirm with 0', async () => {
+    const onConfirm = vi.fn();
+    const user = userEvent.setup();
+
     render(
       <SetBandwidthModal
         displayCount={1}
         onClose={vi.fn()}
-        onConfirm={vi.fn()}
+        onConfirm={onConfirm}
         isActionPending={false}
         actionError={null}
       />,
     );
 
-    expect(screen.getByRole('button', { name: /^save$/i })).toBeDisabled();
+    const save = screen.getByRole('button', { name: /^save$/i });
+    expect(save).not.toBeDisabled();
+
+    await user.click(save);
+
+    expect(onConfirm).toHaveBeenCalledWith(0);
   });
 
   // ---------------------------------------------------------------------------

@@ -413,7 +413,7 @@ export default function Layouts() {
       : undefined,
     onShare: () => {
       const allItems = getAllSelectedItems();
-      const ids = allItems.map((i) => i.layoutId);
+      const ids = allItems.map((i) => i.campaignId);
       setShareEntityIds(ids);
       openModal('share');
     },
@@ -618,8 +618,8 @@ export default function Layouts() {
         }}
         onShare={
           previewItem?.userPermissions?.modifyPermissions
-            ? (mediaId) => {
-                setShareEntityIds(mediaId);
+            ? () => {
+                setShareEntityIds(previewItem.campaignId);
                 openModal('share');
               }
             : undefined

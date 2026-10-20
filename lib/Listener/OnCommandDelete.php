@@ -47,7 +47,7 @@ class OnCommandDelete
 
         foreach ($this->displayProfileFactory->getByCommandId($command->commandId) as $displayProfile) {
             $displayProfile->unassignCommand($command);
-            $displayProfile->save(['validate' => false]);
+            $displayProfile->save(false);
         }
     }
 }

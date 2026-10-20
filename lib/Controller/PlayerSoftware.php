@@ -35,6 +35,7 @@ use Xibo\Service\DownloadService;
 use Xibo\Service\MediaService;
 use Xibo\Service\MediaServiceInterface;
 use Xibo\Service\UploadService;
+use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
@@ -328,6 +329,10 @@ class PlayerSoftware extends Base
     #[OA\Response(response: 200, description: 'successful operation')]
     public function add(Request $request, Response $response): Response|ResponseInterface
     {
+        if (!$this->getUser()->featureEnabled('playersoftware.add')) {
+            throw new AccessDeniedException();
+        }
+
         $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
         MediaService::ensureLibraryExists($libraryFolder);

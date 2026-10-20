@@ -1132,9 +1132,10 @@ class Library extends Base
         }
 
         if ($sanitizedParams->getDate('expires') != null) {
-            if ($sanitizedParams->getDate('expires')->format('U') > Carbon::now()->format('U')) {
-                $media->expires = $sanitizedParams->getDate('expires')->format('U');
-            } else {
+            $expires = (int)$sanitizedParams->getDate('expires')->format('U');
+            if ($expires > Carbon::now()->format('U')) {
+                $media->expires = $expires;
+            } elseif ($expires !== (int)$media->expires) {
                 throw new InvalidArgumentException(__('Cannot set Expiry date in the past'), 'expires');
             }
         } else {

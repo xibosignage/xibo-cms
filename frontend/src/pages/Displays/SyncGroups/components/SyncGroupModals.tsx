@@ -19,12 +19,15 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { useTranslation } from 'react-i18next';
+
 import type { ModalType } from '../SyncGroupsConfig';
 
 import AddAndEditSyncGroupModal from './AddAndEditSyncGroupModal';
 import DeleteSyncGroupModal from './DeleteSyncGroupModal';
 import ManageMembersModal from './ManageMembersModal';
 
+import ShareModal from '@/components/ui/modals/ShareModal';
 import type { SyncGroup } from '@/types/syncGroup';
 
 interface SyncGroupModalsProps {
@@ -41,6 +44,7 @@ interface SyncGroupModalsProps {
   selection: {
     selectedSyncGroup: SyncGroup | null;
     itemsToDelete: SyncGroup[];
+    shareEntityIds: number | number[] | null;
   };
   handlers: {
     confirmDelete: (items: SyncGroup[]) => void;
@@ -48,6 +52,7 @@ interface SyncGroupModalsProps {
 }
 
 export function SyncGroupModals({ actions, selection, handlers }: SyncGroupModalsProps) {
+  const { t } = useTranslation();
   const isModalOpen = (name: string) => actions.activeModal === name;
 
   return (
@@ -96,6 +101,19 @@ export function SyncGroupModals({ actions, selection, handlers }: SyncGroupModal
               ? () => actions.openEditForSyncGroup(selection.selectedSyncGroup!)
               : undefined
           }
+        />
+      )}
+
+      {isModalOpen('share') && (
+        <ShareModal
+          isOpen
+          title={t('Share Sync Group')}
+          entityType="syncGroup"
+          entityId={selection.shareEntityIds}
+          onClose={() => {
+            actions.closeModal();
+            actions.handleRefresh();
+          }}
         />
       )}
 

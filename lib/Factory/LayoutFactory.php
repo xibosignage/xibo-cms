@@ -1896,9 +1896,17 @@ class LayoutFactory extends BaseFactory
                             $existingDataSet->dataSetId
                         ));
 
+                        $columnHeadings = [];
+                        foreach ($existingDataSet->getColumn() as $column) {
+                            if ($column->dataSetColumnTypeId != 2) {
+                                $columnHeadings[] = $column->heading;
+                            }
+                        }
+
                         foreach (($item['data'] ?? []) as $itemData) {
-                            if (isset($itemData['id'])) {
-                                unset($itemData['id']);
+                            $itemData = array_intersect_key($itemData, array_flip($columnHeadings));
+                            if (count($itemData) === 0) {
+                                continue;
                             }
 
                             foreach ($columnWithImages as $columnHeading) {

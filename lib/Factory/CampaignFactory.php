@@ -521,12 +521,10 @@ class CampaignFactory extends BaseFactory
 
         // Paging
         if ($limit != '' && count($campaigns) > 0) {
-            if ($sanitizedFilter->getInt('retired', ['default' => -1]) != -1) {
-                $body .= ' AND layout.retired = :retired ';
-            }
-
             $results = $this->getStore()->select(
-                'SELECT COUNT(DISTINCT campaign.campaignId) AS total ' . $body,
+                'SELECT COUNT(*) AS total FROM (SELECT `campaign`.campaignId, '
+                . 'MAX(CASE WHEN `campaign`.IsLayoutSpecific = 1 THEN `layout`.retired ELSE 0 END) AS retired '
+                . $body . $group . ') campaigns',
                 $params
             );
             $this->_countLast = intval($results[0]['total']);

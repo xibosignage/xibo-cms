@@ -32,6 +32,8 @@ trait XmrClientTrait
         return $this->clientType === 'chromeOS'
             || ($this->clientType === 'linux' && $this->clientCode >= 400)
             || ($this->clientType === 'windows' && $this->clientCode >= 407)
-            || ($this->clientType === 'android' && $this->clientCode >= 408);
+            || ($this->clientType === 'android' && $this->clientCode >= 408)
+            || ($this->clientType === 'lg' && $this->clientCode >= 418)
+            || ($this->clientType === 'sssp' && $this->clientCode >= 418);
     }
 }

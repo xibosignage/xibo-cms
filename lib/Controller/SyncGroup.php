@@ -562,12 +562,18 @@ class SyncGroup extends Base
      * @param Response $response
      * @param $id
      * @return Response|ResponseInterface
+     * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
      */
     public function fetchDisplays(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $syncGroup = $this->syncGroupFactory->getById($id);
+
+        if (!$this->getUser()->checkViewable($syncGroup)) {
+            throw new AccessDeniedException();
+        }
+
         $params = $this->getSanitizer($request->getParams());
         $displays = [];
 

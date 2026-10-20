@@ -1592,10 +1592,7 @@ class DisplayGroup extends Base
         $displayGroup = $this->displayGroupFactory->getById($id);
 
         // Non-destructive edit-only feature; allow limited view access
-        if (!$this->getUser()->checkEditable($displayGroup)
-            && !$this->getUser()->featureEnabled('displays.limitedView')
-            && !$this->getUser()->featureEnabled('displaygroup.limitedView')
-        ) {
+        if (!$this->isLimitedViewAllowed($displayGroup)) {
             throw new AccessDeniedException();
         }
 
@@ -2056,10 +2053,7 @@ class DisplayGroup extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Non-destructive edit-only feature; allow limited view access
-        if (!$this->getUser()->checkEditable($displayGroup)
-            && !$this->getUser()->featureEnabled('displaygroup.limitedView')
-            && !$this->getUser()->featureEnabled('displays.limitedView')
-        ) {
+        if (!$this->isLimitedViewAllowed($displayGroup)) {
             throw new AccessDeniedException();
         }
 
@@ -2503,11 +2497,7 @@ class DisplayGroup extends Base
         $displayGroup = $this->displayGroupFactory->getById($id);
 
         // Non-destructive edit-only feature; allow limited view access
-        if (
-            !$this->getUser()->checkEditable($displayGroup)
-            && !$this->getUser()->featureEnabled('displaygroup.limitedView')
-            && !$this->getUser()->featureEnabled('displays.limitedView')
-        ) {
+        if (!$this->isLimitedViewAllowed($displayGroup)) {
             throw new AccessDeniedException();
         }
 
@@ -2652,5 +2642,15 @@ class DisplayGroup extends Base
             new FolderTouchEvent($folderId, $oldFolderId),
             FolderTouchEvent::$NAME
         );
+    }
+
+    private function isLimitedViewAllowed(\Xibo\Entity\DisplayGroup $displayGroup): bool
+    {
+        $user = $this->getUser();
+
+        return $user->checkEditable($displayGroup)
+            || ($user->checkViewable($displayGroup)
+                && ($user->featureEnabled('displays.limitedView')
+                    || $user->featureEnabled('displaygroup.limitedView')));
     }
 }

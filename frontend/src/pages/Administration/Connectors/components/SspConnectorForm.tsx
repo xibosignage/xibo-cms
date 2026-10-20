@@ -55,6 +55,29 @@ function getMediaTypesOptions(t: TFunction) {
   ];
 }
 
+const PARTNER_FIELD_DEFAULTS: Record<string, string | undefined> = {
+  enabled: '0',
+  isTest: '0',
+  isUseWidget: '0',
+  currency: undefined,
+  key: '',
+  sov: '0',
+  mediaTypesAllowed: 'imagesAndVideo',
+  duration: '',
+  minDuration: '',
+  maxDuration: '',
+};
+
+function toFormValue(value: unknown): string | undefined {
+  if (value === null || value === undefined) {
+    return undefined;
+  }
+  if (typeof value === 'boolean') {
+    return value ? '1' : '0';
+  }
+  return String(value);
+}
+
 function getSspIdFieldOptions(t: TFunction) {
   return [
     { value: 'displayId', label: t('Display ID') },
@@ -114,7 +137,28 @@ export default function SspConnectorForm({
     enabled: connector.connectorId !== null && savedApiKey,
   });
 
-  const partnerEntries = partners ? Object.entries(partners) : [];
+  const {
+    data: partnerSettings,
+    isLoading: partnerSettingsLoading,
+    isError: partnerSettingsIsError,
+  } = useQuery({
+    queryKey: ['connectors', connectorId, 'proxy', 'getPartnerSettings'],
+    queryFn: () =>
+      fetchConnectorProxy<Record<string, Partial<Record<string, unknown>>>>(
+        String(connector.connectorId!),
+        'getPartnerSettings',
+      ),
+    enabled: connector.connectorId !== null && savedApiKey,
+  });
+
+  const partnerEntries = partners && partnerSettings ? Object.entries(partners) : [];
+
+  function getSavedPartnerValue(partnerId: string, field: string) {
+    if (field === 'displayGroupId' || field === 'sspIdField') {
+      return toFormValue(settings[`${partnerId}_${field}`]);
+    }
+    return toFormValue(partnerSettings?.[partnerId]?.[field]);
+  }
 
   function handleChange(name: string, value: string) {
     setFormValues((prev) => ({ ...prev, [name]: value }));
@@ -140,13 +184,11 @@ export default function SspConnectorForm({
 
   function getPartnerStr(partnerId: string, field: string, fallback = '') {
     const key = `${partnerId}_${field}`;
-    return formValues[key] !== undefined ? formValues[key] : String(settings[key] ?? fallback);
+    return formValues[key] ?? getSavedPartnerValue(partnerId, field) ?? fallback;
   }
 
   function getPartnerBool(partnerId: string, field: string) {
-    const key = `${partnerId}_${field}`;
-    const raw = formValues[key] !== undefined ? formValues[key] : String(settings[key] ?? '0');
-    return Boolean(Number(raw));
+    return Boolean(Number(getPartnerStr(partnerId, field, '0')));
   }
 
   function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
@@ -162,6 +204,13 @@ export default function SspConnectorForm({
       }
 
       for (const [partnerId] of partnerEntries) {
+        for (const [field, fallback] of Object.entries(PARTNER_FIELD_DEFAULTS)) {
+          const key = `${partnerId}_${field}`;
+          if (formValues[key] === undefined) {
+            payload[key] = getSavedPartnerValue(partnerId, field) ?? fallback;
+          }
+        }
+
         const dgKey = `${partnerId}_displayGroupId`;
         if (!(partnerId in displayGroups) && settings[dgKey] !== undefined) {
           payload[dgKey] = settings[dgKey];
@@ -240,18 +289,18 @@ export default function SspConnectorForm({
               )}
             </p>
 
-            {savedApiKey && partnersLoading && (
+            {savedApiKey && (partnersLoading || partnerSettingsLoading) && (
               <div className="flex items-center gap-2">
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-xibo-blue-600 border-t-transparent" />
                 <span className="text-sm text-gray-500">{t('Loading partners…')}</span>
               </div>
             )}
-            {savedApiKey && partnersIsError && (
+            {savedApiKey && (partnersIsError || partnerSettingsIsError) && (
               <InfoBanner type="danger">
                 {t('Cannot contact SSP service, please try again shortly.')}
               </InfoBanner>
             )}
-            {savedApiKey && !partnersLoading && !partnersIsError && partners !== undefined && (
+            {savedApiKey && partners !== undefined && partnerSettings !== undefined && (
               <InfoBanner type="info">{t('Your API key is connected.')}</InfoBanner>
             )}
             {!savedApiKey && (

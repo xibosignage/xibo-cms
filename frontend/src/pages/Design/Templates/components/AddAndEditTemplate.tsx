@@ -230,6 +230,8 @@ export default function AddAndEditTemplateModal({
           const updatedTemplate = await updateTemplate(data.layoutId, {
             ...commonPayload,
             retired: draft.retired ? 1 : 0,
+            enableStat: data.enableStat,
+            code: data.code,
           });
 
           onSave({ ...data, ...updatedTemplate });
@@ -324,6 +326,7 @@ export default function AddAndEditTemplateModal({
               onInputChange={setPendingTagInput}
               onPendingValueChange={setHasTagPendingValue}
               disabled={!hasFeature(user, 'tag.tagging')}
+              lockedTags={type === 'edit' ? ['template'] : []}
             />
           )}
 
