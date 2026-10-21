@@ -15,41 +15,43 @@ RUN apk update && apk upgrade && apk add \
 RUN cd / && \
     apxs -cia mod_xsendfile.c
 
+# Stage 0.5
+# Build PHP 7.4 from the security backports branch (Alpine no longer packages fixes for 7.4)
+# PHP_SRC_REF is pinned to a reviewed commit; bump it when new backports land.
+# 802c2107: GHSA-w8hw-w9fx-j79w (CVE-2026-109618), GHSA-6wmf-4rv5-p3rp (CVE-2026-109619)
+FROM alpine:3.15 as php
+ARG PHP_SRC_REF=802c21075308066362aab4993478dcd0577993a6
+ADD https://github.com/remicollet/php-src-security/archive/${PHP_SRC_REF}.tar.gz /usr/src/php.tar.gz
+COPY php-build/build-php.sh /usr/src/build-php.sh
+RUN mkdir /usr/src/php && \
+    tar -xzf /usr/src/php.tar.gz -C /usr/src/php --strip-components=1 && \
+    rm /usr/src/php.tar.gz && \
+    sh /usr/src/build-php.sh
+
+# Stage 0.6
+# Current Mozilla CA trust store.
+# Alpine 3.15 is EOL and its ca-certificates (20230506) still trusts roots Mozilla has since removed,
+# including those behind the October 2026 eMudhra intermediate CA key compromise.
+FROM alpine:3.22 as cacerts
+RUN apk add --no-cache ca-certificates
+
 # Stage 1
 # Build the CMS container
 FROM alpine:3.15
 MAINTAINER Xibo Signage <support@xibosignage.com>
 
-# Install apache, PHP, and supplimentary programs.
+# PHP built from source in the php stage
+COPY --from=php /usr/local/bin/php /usr/local/bin/php
+COPY --from=php /usr/local/lib/php /usr/local/lib/php
+COPY --from=php /usr/local/php-run-deps /usr/local/php-run-deps
+COPY --from=php /etc/php7 /etc/php7
+COPY --from=php /usr/lib/apache2/mod_php7.so /usr/lib/apache2/mod_php7.so
+
+# Install apache, PHP runtime libraries, and supplimentary programs.
 RUN apk update && apk upgrade && apk add tar \
     bash \
     curl \
-    php7 \
-    php7-apache2 \
-    php7-zmq \
-    php7-json \
-    php7-gd \
-    php7-dom \
-    php7-pdo \
-    php7-zip \
-    php7-pdo_mysql \
-    php7-gettext \
-    php7-soap \
-    php7-iconv \
-    php7-curl \
-    php7-session \
-    php7-sockets \
-    php7-ctype \
-    php7-fileinfo \
-    php7-xml \
-    php7-simplexml \
-    php7-xmlwriter \
-    php7-tokenizer \
-    php7-mbstring \
-    php7-memcached \
-    php7-tokenizer \
-    php7-pecl-mongodb \
-    php7-zlib \
+    $(cat /usr/local/php-run-deps) \
     mysql-client \
     msmtp \
     python2 \
@@ -57,7 +59,17 @@ RUN apk update && apk upgrade && apk add tar \
     ca-certificates \
     tzdata \
     openssl \
-    && rm -rf /var/cache/apk/*
+    && rm -rf /var/cache/apk/* \
+    && ln -s /usr/local/bin/php /usr/bin/php \
+    && ln -s /usr/local/bin/php /usr/bin/php7
+
+# Replace the Alpine 3.15 Mozilla trust store with the current one
+# (custom certificates from /var/www/cms/ca-certs are still merged in by the entrypoint)
+COPY --from=cacerts /usr/share/ca-certificates/mozilla /tmp/mozilla-ca
+COPY --from=cacerts /etc/ca-certificates.conf /etc/ca-certificates.conf
+RUN rm -rf /usr/share/ca-certificates/mozilla && \
+    mv /tmp/mozilla-ca /usr/share/ca-certificates/mozilla && \
+    update-ca-certificates
 
 # Add all necessary config files in one layer
 ADD docker/ /
