@@ -87,6 +87,10 @@ FROM debian:trixie-slim
 MAINTAINER Xibo Signage <support@xibosignage.com>
 LABEL org.opencontainers.image.authors="support@xibosignage.com"
 
+# Pass a unique value (e.g. the CI run id) to force fresh apt layers rather than reusing the build cache.
+# Declared before the first RUN so every following RUN is invalidated when it changes.
+ARG APT_CACHE_BUST=static
+
 # Install apache, PHP, and supplimentary programs.
 RUN apt update && \
     apt install -y lsb-release ca-certificates curl && \

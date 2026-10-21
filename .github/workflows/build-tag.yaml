@@ -38,7 +38,9 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           tags: ghcr.io/xibosignage/xibo-cms:release-${{ github.ref_name }}
-          build-args: GIT_COMMIT=${{ github.sha }}
+          build-args: |
+            GIT_COMMIT=${{ github.sha }}
+            APT_CACHE_BUST=${{ github.run_id }}
           push: true
           load: false
           provenance: false
