@@ -1129,8 +1129,8 @@ class Widget extends Base
             throw new AccessDeniedException();
         }
 
-        // Get the other objects
-        $widget = $this->widgetFactory->loadByWidgetId($id);
+        // Get the other objects, the widget must belong to the region we've authorised against.
+        $widget = $this->widgetFactory->loadByWidgetIdForRegion((int)$id, $region->regionId);
         $module = $this->moduleFactory->getByType($widget->type);
 
         // This is always a preview
@@ -1365,8 +1365,8 @@ class Widget extends Base
             throw new AccessDeniedException();
         }
 
-        // Get the other objects
-        $widget = $this->widgetFactory->loadByWidgetId($id);
+        // Get the other objects, the widget must belong to the region we've authorised against.
+        $widget = $this->widgetFactory->loadByWidgetIdForRegion((int)$id, $region->regionId);
         $module = $this->moduleFactory->getByType($widget->type);
 
         // 3 options
@@ -1994,6 +1994,9 @@ class Widget extends Base
 
         // Load the widget
         $widget = $this->widgetFactory->loadByWidgetId($id);
+        if (!$this->getUser()->checkEditable($widget)) {
+            throw new AccessDeniedException();
+        }
 
         // Sanitizer options
         $sanitizerOptions = [
@@ -2067,6 +2070,9 @@ class Widget extends Base
 
         // Load the widget
         $widget = $this->widgetFactory->loadByWidgetId($id);
+        if (!$this->getUser()->checkViewable($widget)) {
+            throw new AccessDeniedException();
+        }
 
         // Does this widget have a data type?
         $module = $this->moduleFactory->getByType($widget->type);
