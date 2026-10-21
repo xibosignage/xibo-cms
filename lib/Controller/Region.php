@@ -578,8 +578,8 @@ class Region extends Base
                 $this->getLog()->debug('preview: single widget');
 
                 // Assume we're a frame, single Widget Requested
-                $widget = $this->widgetFactory->getById($widgetId);
-                $widget->load();
+                // The widget must belong to this region, we've only authorised against its layout.
+                $widget = $this->widgetFactory->loadByWidgetIdForRegion($widgetId, $region->regionId);
 
                 if ($widget->type === 'subplaylist') {
                     // Get the sub-playlist widgets

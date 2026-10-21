@@ -219,6 +219,38 @@ class WidgetFactory extends BaseFactory
     }
 
     /**
+     * Load widget by widget id, only if it belongs to the provided region's playlist (including sub-playlists).
+     * Use this wherever access has been authorised against a region/layout rather than the widget itself.
+     * @param int $widgetId
+     * @param int $regionId
+     * @return Widget
+     * @throws NotFoundException
+     */
+    public function loadByWidgetIdForRegion(int $widgetId, int $regionId): Widget
+    {
+        $row = $this->getStore()->select('
+            SELECT `widget`.widgetId
+              FROM `widget`
+                INNER JOIN `lkplaylistplaylist`
+                ON `lkplaylistplaylist`.childId = `widget`.playlistId
+                INNER JOIN `playlist`
+                ON `playlist`.playlistId = `lkplaylistplaylist`.parentId
+             WHERE `playlist`.regionId = :regionId
+                AND `widget`.widgetId = :widgetId
+             LIMIT 1
+        ', [
+            'regionId' => $regionId,
+            'widgetId' => $widgetId,
+        ]);
+
+        if (count($row) <= 0) {
+            throw new NotFoundException(__('Widget not found'));
+        }
+
+        return $this->loadByWidgetId($widgetId);
+    }
+
+    /**
      * @param $ownerId
      * @return Widget[]
      * @throws NotFoundException
