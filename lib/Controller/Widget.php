@@ -1994,6 +1994,9 @@ class Widget extends Base
 
         // Load the widget
         $widget = $this->widgetFactory->loadByWidgetId($id);
+        if (!$this->getUser()->checkEditable($widget)) {
+            throw new AccessDeniedException();
+        }
 
         // Sanitizer options
         $sanitizerOptions = [
