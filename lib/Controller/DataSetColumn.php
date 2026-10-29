@@ -237,6 +237,10 @@ class DataSetColumn extends Base
         $dataset = $this->dataSetFactory->getById($id, false);
         $datasetColumn = $this->dataSetColumnFactory->getById($colId);
 
+        if ($datasetColumn->dataSetId != $dataset->dataSetId) {
+            throw new NotFoundException();
+        }
+
         $datasetColumn->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($dataset));
 
         return $response
@@ -528,6 +532,11 @@ class DataSetColumn extends Base
 
         // Column
         $column = $this->dataSetColumnFactory->getById($colId);
+
+        if ($column->dataSetId != $dataSet->dataSetId) {
+            throw new NotFoundException();
+        }
+
         $column->heading = $sanitizedParams->getString('heading');
         $column->listContent = $sanitizedParams->getString('listContent');
         $column->columnOrder = $sanitizedParams->getInt('columnOrder');
@@ -610,6 +619,11 @@ class DataSetColumn extends Base
 
         // Get the column
         $column = $this->dataSetColumnFactory->getById($colId);
+
+        if ($column->dataSetId != $dataSet->dataSetId) {
+            throw new NotFoundException();
+        }
+
         $column->delete();
 
         // Return
