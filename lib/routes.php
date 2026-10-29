@@ -468,7 +468,7 @@ $app->group('', function (RouteCollectorProxy $group) {
         ->setName('dataSet.column.types');
     $group->get('/dataset/column/datatypes', ['\Xibo\Controller\DataSetColumn','getDataTypes'])
         ->setName('dataSet.column.datatypes');
-    $group->get('/dataset/column/{colId:[0-9]+}', ['\Xibo\Controller\DataSetColumn','searchById'])
+    $group->get('/dataset/{id:[0-9]+}/column/{colId:[0-9]+}', ['\Xibo\Controller\DataSetColumn','searchById'])
         ->setName('dataSet.column.search.id');
     $group->get('/dataset/{id:[0-9]+}/column', ['\Xibo\Controller\DataSetColumn','grid'])->setName('dataSet.column.search');
     $group->post('/dataset/{id:[0-9]+}/column', ['\Xibo\Controller\DataSetColumn','add'])->setName('dataSet.column.add');
