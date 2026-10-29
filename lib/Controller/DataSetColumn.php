@@ -229,12 +229,18 @@ class DataSetColumn extends Base
      * @param int $id
      * @param int $colId
      * @return Response|ResponseInterface
+     * @throws AccessDeniedException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
     public function searchById(Request $request, Response $response, int $id, int $colId): Response|ResponseInterface
     {
         $dataset = $this->dataSetFactory->getById($id, false);
+
+        if (!$this->getUser()->checkEditable($dataset)) {
+            throw new AccessDeniedException();
+        }
+
         $datasetColumn = $this->dataSetColumnFactory->getById($colId);
 
         if ($datasetColumn->dataSetId != $dataset->dataSetId) {
