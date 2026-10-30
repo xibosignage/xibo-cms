@@ -68,7 +68,7 @@ fi
 # Pull necessary Docker images
 echo "Pulling Docker images..."
 docker pull mysql:8.4
-docker pull ghcr.io/xibosignage/xibo-xmr:latest
+docker pull ghcr.io/xibosignage/xibo-xmr:1.5
 docker pull ghcr.io/xibosignage/xibo-cms:test-"$PR_NUMBER"
 docker pull mongo:4.2
 
@@ -96,7 +96,7 @@ else
   echo "MongoDB container already exists, skipping creation."
 fi
 
-docker run --name test-pr-xmr-"$SERVER_PORT" -d ghcr.io/xibosignage/xibo-xmr:latest
+docker run --name test-pr-xmr-"$SERVER_PORT" -d ghcr.io/xibosignage/xibo-xmr:1.5
 
 # Run the CMS container
 docker run --name test-pr-web-"$SERVER_PORT" \
