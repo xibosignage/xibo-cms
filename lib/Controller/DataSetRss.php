@@ -209,12 +209,18 @@ class DataSetRss extends Base
      * @param int $id
      * @param int $rssId
      * @return Response|ResponseInterface
+     * @throws AccessDeniedException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
     public function searchById(Request $request, Response $response, int $id, int $rssId): Response|ResponseInterface
     {
         $dataset = $this->dataSetFactory->getById($id, false);
+
+        if (!$this->getUser()->checkEditable($dataset)) {
+            throw new AccessDeniedException();
+        }
+
         $datasetRss = $this->dataSetRssFactory->getById($rssId, false);
 
         // $id authorizes the parent DataSet, but the feed was fetched by its own id alone, thus, we need to check this

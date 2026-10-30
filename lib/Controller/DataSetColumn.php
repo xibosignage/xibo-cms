@@ -229,13 +229,23 @@ class DataSetColumn extends Base
      * @param int $id
      * @param int $colId
      * @return Response|ResponseInterface
+     * @throws AccessDeniedException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
     public function searchById(Request $request, Response $response, int $id, int $colId): Response|ResponseInterface
     {
         $dataset = $this->dataSetFactory->getById($id, false);
+
+        if (!$this->getUser()->checkEditable($dataset)) {
+            throw new AccessDeniedException();
+        }
+
         $datasetColumn = $this->dataSetColumnFactory->getById($colId);
+
+        if ($datasetColumn->dataSetId != $dataset->dataSetId) {
+            throw new NotFoundException();
+        }
 
         $datasetColumn->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($dataset));
 
@@ -528,6 +538,11 @@ class DataSetColumn extends Base
 
         // Column
         $column = $this->dataSetColumnFactory->getById($colId);
+
+        if ($column->dataSetId != $dataSet->dataSetId) {
+            throw new NotFoundException();
+        }
+
         $column->heading = $sanitizedParams->getString('heading');
         $column->listContent = $sanitizedParams->getString('listContent');
         $column->columnOrder = $sanitizedParams->getInt('columnOrder');
@@ -610,6 +625,11 @@ class DataSetColumn extends Base
 
         // Get the column
         $column = $this->dataSetColumnFactory->getById($colId);
+
+        if ($column->dataSetId != $dataSet->dataSetId) {
+            throw new NotFoundException();
+        }
+
         $column->delete();
 
         // Return
