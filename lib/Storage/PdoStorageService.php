@@ -113,7 +113,7 @@ class PdoStorageService implements StorageServiceInterface
 
         $dsn = PdoStorageService::createDsn(ConfigService::$dbConfig['host'], ConfigService::$dbConfig['name']);
 
-        $opts = [];
+        $opts = [\PDO::MYSQL_ATTR_MULTI_STATEMENTS => false];
         if (!empty(ConfigService::$dbConfig['ssl']) && ConfigService::$dbConfig['ssl'] !== 'none') {
             $opts[\PDO::MYSQL_ATTR_SSL_CA] = ConfigService::$dbConfig['ssl'];
             $opts[\PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = ConfigService::$dbConfig['sslVerify'];
@@ -142,7 +142,7 @@ class PdoStorageService implements StorageServiceInterface
 
         $dsn = PdoStorageService::createDsn($host, $name);
 
-        $opts = [];
+        $opts = [\PDO::MYSQL_ATTR_MULTI_STATEMENTS => false];
         if (!empty($ssl) && $ssl !== 'none') {
             $opts[\PDO::MYSQL_ATTR_SSL_CA] = $ssl;
             $opts[\PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = $sslVerify;

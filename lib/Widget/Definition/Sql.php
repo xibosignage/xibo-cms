@@ -144,18 +144,25 @@ class Sql
     {
         // 1. EXTRACT AND PROTECT STRING LITERALS (Preserve user data)
         $strings = [];
-        $placeholderPrefix = '__SQL_STR_';
-        $stringPattern = '/(\'(?:\\\\.|[^\'\\\\])*\'|"(?:\\\\.|[^"\\\\])*")/';
+        // Braces keep keyword word-boundaries intact; the nonce stops input forging a placeholder
+        $nonce = bin2hex(random_bytes(8));
+        // Same literal boundaries as MySQL's lexer, including backtick identifiers
+        $stringPattern = '/(\'(?:\\\\.|[^\'\\\\])*\'|"(?:\\\\.|[^"\\\\])*"|`(?:``|[^`])*`)/s';
 
-        $sqlCleaned = preg_replace_callback($stringPattern, function ($matches) use (&$strings, $placeholderPrefix) {
+        $sqlCleaned = preg_replace_callback($stringPattern, function ($matches) use (&$strings, $nonce) {
             $id = count($strings);
             $strings[] = $matches[0];
-            return $placeholderPrefix . $id . '__';
+            return '{' . $nonce . '_' . $id . '}';
         }, $sql);
+
+        // A quote, backslash or backtick left outside a literal means our boundaries may differ from MySQL's
+        $sqlCleaned = preg_replace('/[\'"\\\\`]/', '', $sqlCleaned, -1, $strayCount);
+        $total += $strayCount;
 
         // 2. STRIP COMMENTS & ENCODINGS (Before keyword checks)
         $preCleanupPatterns = [
-            '/(?:\/\*.*?\*\/|--[ \t].*?(?:\n|$)|#[^\n]*?(?:\n|$))/s', // Standard & Executable Comments
+            '/(?:\/\*.*?\*\/|--[\x00-\x20].*?(?:\n|$)|#[^\n]*?(?:\n|$))/s', // Standard & Executable Comments
+            '/\/\*|\*\//',                                            // Unpaired comment markers
             '/\b0x[0-9a-fA-F]+\b/',                                   // Hex literals (e.g., 0x7e)
             '/\bb\'[01]+\'/i'                                         // Binary literals
         ];
@@ -193,10 +200,13 @@ class Sql
         } while ($count > 0);
 
         // 5. RESTORE STRING LITERALS
+        // Single pass, so placeholder text inside a restored literal is never expanded
         if (!empty($strings)) {
-            foreach ($strings as $id => $originalString) {
-                $sqlCleaned = str_replace($placeholderPrefix . $id . '__', $originalString, $sqlCleaned);
-            }
+            $sqlCleaned = preg_replace_callback(
+                '/\{' . $nonce . '_(\d+)\}/',
+                fn ($matches) => $strings[(int)$matches[1]],
+                $sqlCleaned
+            );
         }
 
         return trim($sqlCleaned);
