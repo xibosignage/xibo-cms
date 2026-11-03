@@ -75,7 +75,7 @@
     "lcobucci/clock": "3.6.*",
     "lcobucci/jwt": "5.6.*",
     "mjaschen/phpgeo": "^5.0",
-    "mongodb/mongodb": "2.0.*",
+    "mongodb/mongodb": "2.4.*",
     "monolog/monolog": "^3.9",
     "mpdf/mpdf": "v8.3.*",
     "nesbot/carbon": "^3.8",
