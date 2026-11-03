@@ -145,13 +145,18 @@ class Sql
         // 1. EXTRACT AND PROTECT STRING LITERALS (Preserve user data)
         $strings = [];
         $placeholderPrefix = '__SQL_STR_';
-        $stringPattern = '/(\'(?:\\\\.|[^\'\\\\])*\'|"(?:\\\\.|[^"\\\\])*")/';
+        // /s so a backslash escapes a newline too, matching MySQL's lexer
+        $stringPattern = '/(\'(?:\\\\.|[^\'\\\\])*\'|"(?:\\\\.|[^"\\\\])*")/s';
 
         $sqlCleaned = preg_replace_callback($stringPattern, function ($matches) use (&$strings, $placeholderPrefix) {
             $id = count($strings);
             $strings[] = $matches[0];
             return $placeholderPrefix . $id . '__';
         }, $sql);
+
+        // A quote or backslash left outside a literal means our literal boundaries may not match MySQL's
+        $sqlCleaned = preg_replace('/[\'"\\\\]/', '', $sqlCleaned, -1, $strayCount);
+        $total += $strayCount;
 
         // 2. STRIP COMMENTS & ENCODINGS (Before keyword checks)
         $preCleanupPatterns = [
