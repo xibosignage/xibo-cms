@@ -65,16 +65,11 @@ class SafeClient
 
     private static function build(array $config, bool $allowLocalNetwork): Client
     {
-        // Must not allow the stack to be set
-        if (isset($config['stack'])) {
-            unset($config['stack']);
-        }
-
         // Manually build Guzzle's stack, starting with the defaults.
         $stack = HandlerStack::create();
 
-        // Add Ssrf protection
-        $stack->unshift(SsrfProtectionMiddleware::create([
+        // Add Ssrf protection innermost so redirect hops are validated too
+        $stack->push(SsrfProtectionMiddleware::create([
             'allow_local_network' => $allowLocalNetwork
         ]), 'ssrf_protection');
 
@@ -83,7 +78,6 @@ class SafeClient
         //  - we must support redirects, but limit the number
         //  - http/https only
         $config = array_merge([
-            'handler' => $stack,
             'timeout' => 10,
             'connect_timeout' => 5,
             'allow_redirects' => [
@@ -94,6 +88,9 @@ class SafeClient
                 'track_redirects' => false,
             ]
         ], $config);
+
+        // Must not allow the stack to be replaced
+        $config['handler'] = $stack;
 
         return new Client($config);
     }
