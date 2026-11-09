@@ -167,6 +167,7 @@ class SsrfProtectionMiddleware
      */
     private const array IPV6_TRANSITION_PREFIXES = [
         ['::', 96],           // Deprecated IPv4-compatible IPv6 (RFC 4291/5156)
+        ['::ffff:0:0', 96],   // IPv4-mapped IPv6 (RFC 4291)
         ['64:ff9b::', 96],    // NAT64 Well-Known Prefix (RFC 6052)
         ['64:ff9b:1::', 48],  // NAT64 Local-Use Prefix (RFC 8215)
         ['2002::', 16],       // 6to4 (RFC 3056)
