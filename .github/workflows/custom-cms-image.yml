@@ -1,0 +1,133 @@
+name: Publish custom CMS 4.5.6
+run-name: "Explicit CMS build by ${{ github.actor }} (source 35ab84d)"
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish the pinned custom CMS image to GHCR (never deploy)"
+        type: boolean
+        required: true
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: custom-cms-4-5-6-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: >-
+      github.repository == 'omarkwayes94/xibo-cms' &&
+      github.ref == 'refs/heads/custom/cms-4.5.6' &&
+      github.event_name == 'workflow_dispatch' && inputs.publish == true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      packages: write
+    env:
+      IMAGE: ghcr.io/omarkwayes94/xibo-cms
+      SOURCE_COMMIT: 35ab84d9e36ef032672ca8a7fdaf9c2e33cc2dd2
+      DOCKER_BUILD_RECORD_UPLOAD: "false"
+    steps:
+      - name: Checkout the reviewed workflow revision
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Validate preparation code and immutable inputs
+        run: |
+          python3 .github/custom-cms/test_build.py
+          python3 .github/custom-cms/test_configuration.py
+
+      - name: Export the immutable application source and prepare build evidence
+        id: prepare
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor "$SOURCE_COMMIT" "$GITHUB_SHA"
+          build_dir="$RUNNER_TEMP/custom-cms-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          printf 'BUILD_DIR=%s\n' "$build_dir" >> "$GITHUB_ENV"
+          python3 .github/custom-cms/prepare.py --repo "$GITHUB_WORKSPACE" --output "$build_dir"
+          php "$build_dir/context/tests/fonts/run.php"
+
+      - name: Configure the pinned BuildKit builder
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+        with:
+          version: v0.24.0
+          driver-opts: image=${{ steps.prepare.outputs.buildkit_image }}
+          buildkitd-flags: ""
+
+      - name: Authenticate to GHCR with this job's scoped token
+        env:
+          GHCR_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+
+      - name: Build and publish the complete custom application
+        id: build
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          context: ${{ steps.prepare.outputs.directory }}/context
+          file: ${{ steps.prepare.outputs.directory }}/Dockerfile.custom
+          platforms: linux/amd64
+          push: true
+          load: false
+          no-cache: true
+          provenance: mode=max
+          tags: |
+            ghcr.io/omarkwayes94/xibo-cms:it4.5.6-35ab84d
+            ghcr.io/omarkwayes94/xibo-cms:it4.5.6-35ab84d-r${{ github.run_id }}-a${{ github.run_attempt }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/omarkwayes94/xibo-cms
+            org.opencontainers.image.revision=35ab84d9e36ef032672ca8a7fdaf9c2e33cc2dd2
+            org.opencontainers.image.version=4.5.6-custom
+          build-args: |
+            GIT_COMMIT=35ab84d9e36ef032672ca8a7fdaf9c2e33cc2dd2
+            SOURCE_DATE_EPOCH=${{ steps.prepare.outputs.epoch }}
+
+      - name: Record only the actual registry digest
+        env:
+          PUBLISHED_DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          set -euo pipefail
+          [[ "$PUBLISHED_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
+          docker buildx imagetools inspect "$IMAGE@$PUBLISHED_DIGEST" --raw > "$BUILD_DIR/published-manifest.json"
+          python3 - <<'PY'
+          import json, os, pathlib
+          directory = pathlib.Path(os.environ["BUILD_DIR"])
+          manifest = json.loads((directory / "published-manifest.json").read_text())
+          # Lookup by returned digest must succeed and contain Linux amd64.
+          assert any(item.get("platform", {}).get("os") == "linux" and
+                     item.get("platform", {}).get("architecture") == "amd64"
+                     for item in manifest.get("manifests", [])), "Missing Linux amd64 manifest"
+          evidence = json.loads((directory / "build-inputs.json").read_text())
+          evidence.update(image=os.environ["IMAGE"], digest=os.environ["PUBLISHED_DIGEST"],
+                          workflow_commit=os.environ["GITHUB_SHA"],
+                          run_id=os.environ["GITHUB_RUN_ID"], run_attempt=os.environ["GITHUB_RUN_ATTEMPT"])
+          (directory / "published-image.json").write_text(json.dumps(evidence, indent=2) + "\n")
+          reference = os.environ["IMAGE"] + "@" + os.environ["PUBLISHED_DIGEST"]
+          (directory / "image-digest.txt").write_text(reference + "\n")
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as output:
+              output.write("Published custom CMS image: " + reference + "\n\n")
+              output.write("Application source: " + evidence["source_commit"] + "\n\n")
+              output.write("Workflow revision: " + evidence["workflow_commit"] + "\n\nNo deployment was performed.\n")
+          PY
+
+      - name: Preserve image identity and reproducibility evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: custom-cms-image-${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: error
+          retention-days: 30
+          path: |
+            ${{ steps.prepare.outputs.directory }}/image-digest.txt
+            ${{ steps.prepare.outputs.directory }}/published-image.json
+            ${{ steps.prepare.outputs.directory }}/published-manifest.json
+            ${{ steps.prepare.outputs.directory }}/build-inputs.json
+            ${{ steps.prepare.outputs.directory }}/Dockerfile.custom
