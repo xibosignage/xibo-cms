@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 
@@ -81,7 +83,7 @@ class SAMLAuthentication extends AuthenticationBase
             $priorRoute = SafeRedirect::sanitizeRoute($request->getQueryParams()['priorRoute'] ?? null);
             $auth = new Auth($this->getConfig()->samlSettings);
             return $auth->login($priorRoute ?: null);
-        });
+        })->setName('saml.login');
 
         // SAML Logout
         $app->get('/saml/logout', function (Request $request, Response $response) {
@@ -465,6 +467,9 @@ class SAMLAuthentication extends AuthenticationBase
     {
         if ($this->isAjax($request)) {
             return $this->createResponse($request)->withJson(ApplicationState::asRequiresLogin());
+        } else if ($this->getConfig()->isSamlLoginPageShown()) {
+            // Show the login page, which offers SAML alongside the other ways to sign in.
+            return $this->createResponse($request)->withRedirect($this->getRouteParser()->urlFor('login'));
         } else {
             // Initiate SAML SSO, preserving the originally-requested route (if any) as RelayState.
             $priorRoute = SafeRedirect::sanitizeRoute($request->getQueryParams()['priorRoute'] ?? null);
@@ -490,7 +495,7 @@ class SAMLAuthentication extends AuthenticationBase
     {
         return ($this->getSession()->isExpired()
                 && ($route == '/login/ping' || $route == 'clock'))
-            || $route == '/login';
+            || ($route == '/login' && !$this->getConfig()->isSamlLoginPageShown());
     }
 
     /** @inheritDoc */

@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Controller;
@@ -32,6 +34,7 @@ use Stash\Invalidation;
 use Xibo\Factory\FontFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\HttpCacheProvider;
+use Xibo\Helper\SendFile;
 use Xibo\Middleware\TokenAuthMiddleware;
 use Xibo\Service\DownloadService;
 use Xibo\Service\MediaService;
@@ -245,19 +248,32 @@ class Font extends Base
     public function getFontLibDetails(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $font = $this->fontFactory->getById($id);
-        $fontLib = \FontLib\Font::load($font->getFilePath());
-        $fontLib->parse();
 
-        $fontDetails = [
-            'Name' => $fontLib->getFontName(),
-            'SubFamily Name' => $fontLib->getFontSubfamily(),
-            'Subfamily ID' => $fontLib->getFontSubfamilyID(),
-            'Full Name' => $fontLib->getFontFullName(),
-            'Version' => $fontLib->getFontVersion(),
-            'Font Weight' => $fontLib->getFontWeight(),
-            'Font Postscript Name' => $fontLib->getFontPostscriptName(),
-            'Font Copyright' => $fontLib->getFontCopyright(),
-        ];
+        $storage = $this->fontFactory->getStorage();
+        try {
+            $localPath = $storage->downloadToTemp($font->fileName);
+        } catch (InvalidArgumentException) {
+            // A key storage refuses, such as a legacy name containing '..', can't be read.
+            throw new NotFoundException(__('Font file not found'));
+        }
+        try {
+            $fontLib = \FontLib\Font::load($localPath);
+            $fontLib->parse();
+
+            $fontDetails = [
+                'Name' => $fontLib->getFontName(),
+                'SubFamily Name' => $fontLib->getFontSubfamily(),
+                'Subfamily ID' => $fontLib->getFontSubfamilyID(),
+                'Full Name' => $fontLib->getFontFullName(),
+                'Version' => $fontLib->getFontVersion(),
+                'Font Weight' => $fontLib->getFontWeight(),
+                'Font Postscript Name' => $fontLib->getFontPostscriptName(),
+                'Font Copyright' => $fontLib->getFontCopyright(),
+            ];
+            $fontLib->close();
+        } finally {
+            $storage->releaseTemp($localPath);
+        }
 
         return $response
             ->withStatus(200)
@@ -301,6 +317,17 @@ class Font extends Base
             schema: new OA\Schema(type: 'string', format: 'binary')
         )
     )]
+    #[OA\Response(
+        response: 302,
+        description: 'Redirect to a time-limited URL for the file, when the library is not kept on the CMS',
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'The URL to download the file from.',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * @param Request $request
      * @param Response $response
@@ -318,15 +345,33 @@ class Font extends Base
 
         $this->getLog()->debug('Download request for fontId ' . $id);
 
-        $library = $this->getConfig()->getSetting('LIBRARY_LOCATION');
-        $sendFileMode = $this->getConfig()->getSetting('SENDFILE_MODE');
         $attachmentName = urlencode($font->fileName);
-        $libraryPath = $library . 'fonts' . DIRECTORY_SEPARATOR . $font->fileName;
 
-        $downLoadService = new DownloadService($libraryPath, $sendFileMode);
-        $downLoadService->useLogger($this->getLog()->getLoggerInterface());
+        $sendFileMode = $this->getConfig()->getSetting('SENDFILE_MODE');
 
-        return $downLoadService->returnFile($response, $attachmentName, '/download/fonts/' . $font->fileName);
+        try {
+            // The editor's @font-face rules load this URL too, so the redirect target must allow the CMS origin (CORS).
+            return SendFile::download(
+                $response,
+                $this->fontFactory->getStorage(),
+                $font->fileName,
+                'application/octet-stream',
+                SendFile::attachmentDisposition($font->fileName),
+                function ($localPath) use ($response, $sendFileMode, $attachmentName, $font) {
+                    $downLoadService = new DownloadService($localPath, $sendFileMode);
+                    $downLoadService->useLogger($this->getLog()->getLoggerInterface());
+
+                    return $downLoadService->returnFile(
+                        $response,
+                        $attachmentName,
+                        '/download/fonts/' . $font->fileName
+                    );
+                }
+            );
+        } catch (InvalidArgumentException) {
+            // A key storage refuses, such as a legacy name containing '..', can't be served.
+            throw new NotFoundException(__('Font file not found'));
+        }
     }
 
     #[OA\Post(
@@ -386,6 +431,7 @@ class Font extends Base
 
         $options = [
             'accept_file_types' => '/\.' . implode('|', $validExt) . '$/i',
+            'accept_chunks' => $this->fontFactory->getStorage()->hasLocalFiles(),
             'libraryLimit' => $libraryLimit,
             'libraryQuotaFull' => ($libraryLimit > 0 && $this->getMediaService()->libraryUsage() > $libraryLimit),
         ];
@@ -423,8 +469,12 @@ class Font extends Base
                 );
             }
 
-            // everything is fine, move the file from temp folder.
-            rename($filePath, $libraryFolder . 'fonts/' . $font->fileName);
+            try {
+                $this->getFontFactory()->storeFontFile($filePath, $font->fileName);
+            } catch (GeneralException $exception) {
+                $this->getLog()->error('Cannot store font ' . $font->fileName . ': ' . $exception->getMessage());
+                throw new ConfigurationException(__('Problem moving uploaded file into the Library Folder'));
+            }
 
             // return
             $file->id = $font->id;
@@ -508,8 +558,6 @@ class Font extends Base
      */
     public function fontCss(Request $request, Response $response): Response|ResponseInterface
     {
-        $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'fonts/local_fontcss';
-
         $cacheItem = $this->getMediaService()->getPool()->getItem('localFontCss');
         $cacheItem->setInvalidationMethod(Invalidation::SLEEP, 5000, 15);
 
@@ -567,15 +615,10 @@ class Font extends Base
             }, $localCss);
         }
 
-        // Return the CSS to the browser as a file
-        $out = fopen($tempFileName, 'w');
-
-        if (!$out) {
-            throw new ConfigurationException(__('Unable to write to the library'));
-        }
-
-        fputs($out, $localCss);
-        fclose($out);
+        // Return the CSS to the browser from memory, so nothing is written to the library.
+        $cssStream = fopen('php://temp', 'w+');
+        fwrite($cssStream, $localCss);
+        rewind($cssStream);
 
         // Work out the etag
         $response = HttpCacheProvider::withEtag($response, md5($localCss));
@@ -583,7 +626,7 @@ class Font extends Base
         $this->setNoOutput(true);
 
         $response = $response->withHeader('Content-Type', 'text/css')
-            ->withBody(new Stream(fopen($tempFileName, 'r')));
+            ->withBody(new Stream($cssStream));
 
         return $this->render($request, $response);
     }

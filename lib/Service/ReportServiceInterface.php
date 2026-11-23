@@ -1,31 +1,35 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Service;
 
 use Slim\Http\ServerRequest as Request;
+use Xibo\Entity\ReportResult;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Helper\SanitizerService;
 use Xibo\Report\ReportInterface;
+use Xibo\Storage\LibraryFileJournal;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
 use Xibo\Support\Exception\GeneralException;
@@ -116,9 +120,19 @@ interface ReportServiceInterface
      * @param int $savedreportId
      * @param string $reportName
      * @throws GeneralException
-     * @return array
+     * @return array the new zip's fileName, size and md5, for the caller to save on the saved report
      */
     public function convertSavedReportResults($savedreportId, $reportName);
+
+    /**
+     * Zips $results as reportschedule.json and moves it into saved report storage under $key, recording the upload in
+     * the returned journal for the caller to clear once its saved report row commits.
+     * @param array|\JsonSerializable $results
+     * @param string $key
+     * @return array{journal: LibraryFileJournal, journalId: int, size: int, md5: string}
+     * @throws GeneralException
+     */
+    public function storeSavedReportZip(array|\JsonSerializable $results, string $key): array;
 
     /**
      * Run the report
@@ -139,11 +153,9 @@ interface ReportServiceInterface
     public function getReportEmailTemplate($reportName);
 
     /**
-     * Get chart script
-     * @param int $savedreportId
-     * @param string $reportName
+     * Get the chart script for saved report results already read
+     * @return string|null
      * @throws GeneralException
-     * @return string
      */
-    public function getReportChartScript($savedreportId, $reportName);
+    public function getReportChartScriptFromResults(ReportResult|array $results, string $reportName);
 }

@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Helper;
@@ -88,6 +90,8 @@ class BlueImpUploadHandler
             'accept_file_types' => '/.+$/i',
             // Set the following option to false to enable resumable uploads:
             'discard_aborted_uploads' => true,
+            // Chunked uploads need one temp folder for every part, which only a local library gives.
+            'accept_chunks' => false,
         ], $options);
 
         if ($initialize) {
@@ -239,7 +243,7 @@ class BlueImpUploadHandler
         $uploadPath = $this->getUploadPath($name);
 
         $this->getLogger()->debug('getUniqueFilename: ' . $name . ', uploadPath: ' . $uploadPath
-            . ', contentRange: ' . $contentRange);
+            . ', contentRange: ' . json_encode($contentRange));
 
         $attempts = 0;
         while (is_dir($uploadPath) && $attempts < 100) {
@@ -289,10 +293,10 @@ class BlueImpUploadHandler
     /**
      * @param string $name
      * @param string $type
-     * @param int|null $contentRange
+     * @param string[]|null $contentRange the Content-Range header's numbers
      * @return string
      */
-    private function getFileName(string $name, string $type, ?int $contentRange): string
+    private function getFileName(string $name, string $type, ?array $contentRange): string
     {
         $this->getLogger()->debug('getFileName: ' . $name . ', type: ' . $type);
 
@@ -437,6 +441,17 @@ class BlueImpUploadHandler
      */
     public function post(): void
     {
+        // Refused without a local library, as their parts may reach web servers with separate temp folders.
+        if ($this->getServerVar('HTTP_CONTENT_RANGE') && !$this->options['accept_chunks']) {
+            $this->getLogger()->error('post: refusing a chunked upload');
+            $this->head();
+            echo json_encode(['files' => [(object)['error' => __('Chunked uploads are not supported')]]]);
+            return;
+        }
+
+        // Storing the file can take minutes; this request does not change the session.
+        Session::releaseLock();
+
         $upload = $_FILES['files'] ?? null;
 
         // Parse the Content-Disposition header, if available:

@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Helper;
@@ -28,6 +30,17 @@ namespace Xibo\Helper;
  */
 class AttachmentUploadHandler extends BlueImpUploadHandler
 {
+    /** Folder under the library's temp folder holding one upload folder per user */
+    public const UPLOAD_FOLDER = 'notification_attachments';
+
+    /**
+     * Each user uploads into their own folder, so nobody can claim, or append a chunk to, another user's file.
+     */
+    public static function getUserUploadDir(string $libraryLocation, int $userId): string
+    {
+        return $libraryLocation . 'temp/' . self::UPLOAD_FOLDER . '/' . $userId . '/';
+    }
+
     /**
      * @param $file
      * @param $index
@@ -38,5 +51,19 @@ class AttachmentUploadHandler extends BlueImpUploadHandler
         /* @var \Xibo\Controller\Notification $controller */
 
         $controller->getLog()->debug('Upload complete for name: ' . $file->name);
+
+        // Stage the upload in storage straight away, when the save may reach another web server.
+        $stageAttachment = $this->options['stage_attachment'] ?? null;
+        if ($stageAttachment !== null) {
+            $tempPath = $this->getUploadDir() . $file->name;
+            try {
+                $stageAttachment($tempPath, $file->name);
+            } catch (\Exception $exception) {
+                @unlink($tempPath);
+                $controller->getLog()->error('Cannot stage attachment ' . $file->name . ': '
+                    . $exception->getMessage());
+                $file->error = __('Problem moving uploaded file into the Attachment Folder');
+            }
+        }
     }
 }

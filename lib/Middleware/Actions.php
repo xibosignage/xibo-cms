@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Middleware;
@@ -39,6 +41,14 @@ use Xibo\Helper\Environment;
  */
 class Actions implements Middleware
 {
+    /**
+     * A request attribute: when true, someone other than the signed-in user is making this request as its user
+     * (set by an extension, never in CE). What belongs to that user is then left alone: the request isn't sent
+     * to their forced password change, and controllers don't mark their notifications read or change their
+     * welcome state.
+     */
+    public const ON_BEHALF_OF_USER = 'onBehalfOfUser';
+
     /* @var App $app */
     private $app;
 
@@ -64,7 +74,10 @@ class Actions implements Middleware
         // Force a password change by redirecting to the React force-change-password page.
         // The React SPA guards this client-side too, but this catches full-page loads of the
         // remaining server-rendered legacy pages.
-        if (!$this->isAjax($request) && $user->isPasswordChangeRequired == 1) {
+        if (!$this->isAjax($request)
+            && $user->isPasswordChangeRequired == 1
+            && $request->getAttribute(self::ON_BEHALF_OF_USER) !== true
+        ) {
             return $handler->handle($request)
                 ->withStatus(302)
                 ->withHeader(

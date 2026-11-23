@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
@@ -228,6 +230,31 @@ describe('Layouts page - row actions', () => {
       fireEvent.click(within(dialog).getByRole('button', { name: 'Publish' }));
 
       expect(confirmPublish).toHaveBeenCalledWith(mockDraftLayout.layoutId, { type: 'now' });
+    });
+
+    // Regression cover for xibosignage/xibo#3906: a layout already scheduled to
+    // publish opened the dialog on "Publish Now", so confirming it replaced the
+    // schedule with an immediate publish. mockDraftLayout has no publishedDate,
+    // which is the case that always worked.
+    test('a layout already scheduled to publish keeps its date when confirmed', async () => {
+      const confirmPublish = vi.fn();
+      vi.mocked(useLayoutActions).mockReturnValue(defaultLayoutActions({ confirmPublish }));
+      mockFetchLayouts({
+        rows: [{ ...mockDraftLayout, publishedDate: '2027-01-15 09:30:00' }],
+        totalCount: 1,
+      });
+
+      renderLayoutsPage();
+      await openDropdownAction('Publish', mockDraftLayout.layout);
+
+      const dialog = await screen.findByRole('dialog');
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Publish' }));
+
+      // The CMS (and mockUser) timezone is UTC.
+      expect(confirmPublish).toHaveBeenCalledWith(mockDraftLayout.layoutId, {
+        type: 'scheduled',
+        date: new Date('2027-01-15T09:30:00Z'),
+      });
     });
 
     // Cancelling must close the modal.

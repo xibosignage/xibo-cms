@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 namespace Xibo\Entity;
 
@@ -25,7 +27,10 @@ use Carbon\Carbon;
 use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
+use Xibo\Event\DisplayAuthoriseEvent;
+use Xibo\Event\DisplayReleaseEvent;
 use Xibo\Event\DisplayGroupLoadEvent;
+use Xibo\Event\DisplayLimitEvent;
 use Xibo\Event\FolderTouchEvent;
 use Xibo\Event\TriggerTaskEvent;
 use Xibo\Factory\DisplayFactory;
@@ -51,6 +56,9 @@ class Display implements \JsonSerializable, XmrTargetInterface
     public static $STATUS_DONE = 1;
     public static $STATUS_DOWNLOADING = 2;
     public static $STATUS_PENDING = 3;
+
+    /** The longest name the display column holds, in characters. */
+    public const MAX_NAME_LENGTH = 50;
 
     use EntityTrait;
     use TagLinkTrait;
@@ -194,6 +202,12 @@ class Display implements \JsonSerializable, XmrTargetInterface
     #[OA\Property(description: 'A flag indicating whether this Display is licensed or not')]
     public $licensed;
     private $currentlyLicensed;
+
+    /** The authorisation asked for since the last save, or null. */
+    private ?DisplayAuthoriseEvent $authoriseEvent = null;
+
+    /** Whether the last slot check gave up waiting for another authorisation. */
+    private bool $slotLockTimedOut = false;
 
     /**
      * @var int
@@ -623,12 +637,67 @@ class Display implements \JsonSerializable, XmrTargetInterface
     }
 
     /**
+     * The key of a Display's latest screenshot in screenshot storage.
+     */
+    public static function getScreenShotKey(int $displayId): string
+    {
+        return $displayId . '_screenshot.jpg';
+    }
+
+    /**
      * Get the cache key
      * @return string
      */
     public function getCacheKey()
     {
         return self::getCachePrefix() . $this->displayId;
+    }
+
+    /**
+     * Cache key for pre-configured display settings from the Add Display form.
+     *
+     * The operator fills in the settings and submits a code. addViaCode() stores this
+     * claim under this key, and the XMDS RegisterDisplay handler reads it back once the
+     * Player turns up.
+     */
+    public static function getAddViaCodeCacheKey(string $userCode): string
+    {
+        return self::getCachePrefix() . 'addViaCode/' . md5($userCode);
+    }
+
+    /**
+     * Cache key for a pending manual-connect one-time code.
+     *
+     * The operator appends this code to the CMS server key (as key||code) when configuring the
+     * Player, so RegisterDisplay can tell exactly which Add Display form a registration belongs
+     * to. Codes are short and case-insensitive to type, so they are upper-cased before keying.
+     */
+    public static function getManualConnectCacheKey(string $code): string
+    {
+        return self::getCachePrefix() . 'manualConnect/' . strtoupper($code);
+    }
+
+    /**
+     * Normalise a manual-connect code as typed or sent by a Player.
+     *
+     * Codes are always four letters or digits and case-insensitive. Anything else is not one of
+     * ours, which matters because the code becomes part of a cache key as given.
+     *
+     * @return string|null the upper-cased code, or null when it isn't a manual-connect code
+     */
+    public static function normaliseManualCode(?string $code): ?string
+    {
+        $code = strtoupper(trim($code ?? ''));
+
+        return preg_match('/^[A-Z0-9]{4}$/', $code) ? $code : null;
+    }
+
+    /**
+     * Cache key for the Add Display code a display last presented on its server key.
+     */
+    public static function getPresentedCodeCacheKey(int $displayId): string
+    {
+        return self::getCachePrefix() . 'presentedCode/' . $displayId;
     }
 
     public function isHisensePlayer(): bool
@@ -782,7 +851,7 @@ class Display implements \JsonSerializable, XmrTargetInterface
             throw new InvalidArgumentException(__('Can not have a display without a name'), 'name');
         }
 
-        if (!v::stringType()->length(null, 50)->validate($this->display)) {
+        if (!v::stringType()->length(null, self::MAX_NAME_LENGTH)->validate($this->display)) {
             throw new InvalidArgumentException(__('Name cannot exceed 50 characters'), 'display');
         }
 
@@ -918,47 +987,122 @@ class Display implements \JsonSerializable, XmrTargetInterface
     }
 
     /**
-     * Check if there is display slot available,
-     * returns true when there are display slots available,
-     * return false if there are no display slots available
+     * The most displays this CMS can authorise, or null for no limit.
+     */
+    public function getDisplayLimit(): ?int
+    {
+        $event = new DisplayLimitEvent();
+        $this->getDispatcher()->dispatch($event, DisplayLimitEvent::$NAME);
+
+        return $event->getLimit();
+    }
+
+    /**
+     * Whether this save authorises the display: it is authorised now and was not when it was loaded, or its
+     * hardware key changes while it stays authorised (the new key needs authorising).
+     */
+    public function isBeingAuthorised(): bool
+    {
+        return $this->licensed == 1 && ($this->currentlyLicensed != 1 || $this->isHardwareKeyChanging());
+    }
+
+    /**
+     * Whether this save changes the hardware key of a display that was authorised when it was loaded, so the
+     * authorisation held by the old key has to be given up.
+     */
+    public function isHardwareKeyChanging(): bool
+    {
+        $originalKey = (string)$this->getOriginalValue('license');
+
+        return $this->currentlyLicensed == 1 && $originalKey !== '' && $originalKey !== (string)$this->license;
+    }
+
+    /**
+     * Whether this save un-authorises the display: it was authorised when it was loaded and is not now.
+     */
+    public function isBeingUnauthorised(): bool
+    {
+        return $this->currentlyLicensed == 1 && $this->licensed != 1;
+    }
+
+    /**
+     * Tells the listeners the display was un-authorised or deleted, or its hardware key changed (written, not yet
+     * committed), so they can give up what the authorisation held by that key took.
+     */
+    private function release(bool $isDelete, ?string $hardwareKey = null): void
+    {
+        $this->getDispatcher()->dispatch(
+            new DisplayReleaseEvent($this, $isDelete, $hardwareKey),
+            DisplayReleaseEvent::$NAME
+        );
+    }
+
+    /**
+     * Asks the listeners whether the display can be authorised, once until the next save.
+     * @return string|null the message to show the user when the authorisation is refused, otherwise null
+     */
+    public function requestAuthorisation(): ?string
+    {
+        if ($this->authoriseEvent === null) {
+            $this->authoriseEvent = new DisplayAuthoriseEvent($this);
+            $this->getDispatcher()->dispatch($this->authoriseEvent, DisplayAuthoriseEvent::$NAME);
+        }
+
+        return $this->authoriseEvent->getRefusal();
+    }
+
+    /**
+     * Whether a licence slot is free for this display, when this save authorises it. A display whose slot the
+     * licensing server decides is not checked here.
      * @return boolean
      */
     public function isDisplaySlotAvailable(): bool
     {
-        $maxDisplays = $this->config->GetSetting('MAX_LICENSED_DISPLAYS');
+        $this->slotLockTimedOut = false;
 
-        // Check the number of licensed displays
-        if ($maxDisplays > 0) {
-            $this->getLog()->debug(
-                sprintf(
-                    'Testing authorised displays against %d maximum. Currently authorised = %d, authorised = %d.',
-                    $maxDisplays,
-                    $this->currentlyLicensed,
-                    $this->licensed
-                )
-            );
-
-            if ($this->currentlyLicensed != $this->licensed && $this->licensed == 1) {
-                $countLicensed = $this->getStore()->select(
-                    'SELECT COUNT(DisplayID) AS CountLicensed FROM display WHERE licensed = 1',
-                    []
-                );
-
-                $this->getLog()->debug(
-                    sprintf(
-                        'There are %d authorised displays and we the maximum is %d',
-                        $countLicensed[0]['CountLicensed'],
-                        $maxDisplays
-                    )
-                );
-
-                if (intval($countLicensed[0]['CountLicensed']) + 1 > $maxDisplays) {
-                    return false;
-                }
-            }
+        // Only a display that is being authorised now takes a new slot.
+        if ($this->currentlyLicensed == $this->licensed || $this->licensed != 1) {
+            return true;
         }
 
-        return true;
+        $event = new DisplayLimitEvent($this);
+        $this->getDispatcher()->dispatch($event, DisplayLimitEvent::$NAME);
+
+        if ($event->getLimit() === null || $event->isDecidedElsewhere()) {
+            return true;
+        }
+
+        // Two requests authorising at the same moment must not both find the last slot free. The lock is held
+        // until this save commits, and the slots are counted once it is taken, so a request that waited for it
+        // counts the display authorised before it.
+        if (!$this->getStore()->lockUntilCommit('xibo_display_slots', 30)) {
+            $this->getLog()->error('Authorising displayId ' . ($this->displayId ?: 'new')
+                . ': timed out waiting for another authorisation, so it is refused.');
+            $this->slotLockTimedOut = true;
+            return false;
+        }
+
+        $event = new DisplayLimitEvent($this);
+        $this->getDispatcher()->dispatch($event, DisplayLimitEvent::$NAME);
+
+        $maxDisplays = $event->getLimit();
+        if ($maxDisplays === null || $event->isDecidedElsewhere()) {
+            return true;
+        }
+
+        $used = $event->getUsed() ?? intval($this->getStore()->select(
+            'SELECT COUNT(DisplayID) AS CountLicensed FROM display WHERE licensed = 1',
+            []
+        )[0]['CountLicensed'] ?? 0);
+
+        $this->getLog()->debug(sprintf(
+            'Authorising displayId %s: %d licence slots in use of %d.',
+            $this->displayId ?: 'new',
+            $used,
+            $maxDisplays
+        ));
+
+        return $used + 1 <= $maxDisplays;
     }
 
     /**
@@ -1015,20 +1159,54 @@ class Display implements \JsonSerializable, XmrTargetInterface
 
         if ($options['checkDisplaySlotAvailability']) {
             // Check if there are display slots available
-            $maxDisplays = $this->config->GetSetting('MAX_LICENSED_DISPLAYS');
-
             if (!$this->isDisplaySlotAvailable()) {
+                if ($this->slotLockTimedOut) {
+                    throw new InvalidArgumentException(
+                        __('Another display is being authorised. Please try again.'),
+                        'maxDisplays'
+                    );
+                }
                 throw new InvalidArgumentException(sprintf(
-                    __('You have exceeded your maximum number of authorised displays. %d'),
-                    $maxDisplays
+                    __('Every display licence is in use (%d).'),
+                    $this->getDisplayLimit()
                 ), 'maxDisplays');
             }
         }
+
+        // A refused authorisation stops the save. The next save asks again.
+        if ($this->isBeingAuthorised()) {
+            $refusal = $this->requestAuthorisation();
+            if ($refusal !== null) {
+                $this->authoriseEvent = null;
+                throw new InvalidArgumentException($refusal, 'licensed');
+            }
+        }
+
+        // The authorisation to give up is held by the key the display was loaded with.
+        $releaseKey = $this->isBeingUnauthorised() || $this->isHardwareKeyChanging()
+            ? (string)($this->getOriginalValue('license') ?: $this->license)
+            : null;
+
+        // Taken now, so the listeners hear about this save once and a later save asks again.
+        $authoriseEvent = $this->authoriseEvent;
+        $this->authoriseEvent = null;
 
         if ($this->displayId == null || $this->displayId == 0) {
             $this->add();
         } else {
             $this->edit($options);
+        }
+
+        // Told once the change is written, so work outside the database can wait for it to commit.
+        if ($releaseKey !== null) {
+            $this->release(false, $releaseKey);
+        }
+
+        // Saved, so a second save of this object does not authorise the display again.
+        $this->currentlyLicensed = $this->licensed;
+
+        if ($authoriseEvent !== null) {
+            $this->getDispatcher()->dispatch($authoriseEvent, DisplayAuthoriseEvent::$NAME_SAVED);
         }
 
         if ($options['audit'] && $this->getChangedProperties() != []) {
@@ -1043,6 +1221,9 @@ class Display implements \JsonSerializable, XmrTargetInterface
                 TriggerTaskEvent::$NAME
             );
         }
+
+        // Saved, so a second save of this object does not give up the old key's authorisation again.
+        $this->setOriginalValue('license', $this->license);
     }
 
     /**
@@ -1084,6 +1265,11 @@ class Display implements \JsonSerializable, XmrTargetInterface
         $this->getStore()->update('DELETE FROM `display` WHERE displayId = :displayId', [
             'displayId' => $this->displayId
         ]);
+
+        // Told once the display is gone, so work outside the database can wait for it to commit.
+        if ($this->currentlyLicensed == 1) {
+            $this->release(true, (string)($this->getOriginalValue('license') ?: $this->license));
+        }
 
         $this->getLog()->audit('Display', $this->displayId, 'Display Deleted', [
             'displayId' => $this->displayId,
@@ -1590,37 +1776,6 @@ class Display implements \JsonSerializable, XmrTargetInterface
 
         $item = $pool->getItem('/currentLayoutId/' . $this->displayId);
         $item->set($currentLayoutId);
-        $item->expiresAfter(new \DateInterval('P1W'));
-
-        $pool->saveDeferred($item);
-
-        return $this;
-    }
-
-    /**
-     * @param PoolInterface $pool
-     * @return int|null
-     */
-    public function getCurrentScreenShotTime($pool)
-    {
-        $item = $pool->getItem('/screenShotTime/' . $this->displayId);
-
-        return $item->get();
-    }
-
-    /**
-     * @param PoolInterface $pool
-     * @param string $date
-     * @return $this
-     * @throws \Exception
-     */
-    public function setCurrentScreenShotTime($pool, $date)
-    {
-        // Cache it
-        $this->getLog()->debug('Caching currentLayoutId with Pool');
-
-        $item = $pool->getItem('/screenShotTime/' . $this->displayId);
-        $item->set($date);
         $item->expiresAfter(new \DateInterval('P1W'));
 
         $pool->saveDeferred($item);

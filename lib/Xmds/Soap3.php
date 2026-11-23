@@ -1,30 +1,32 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 namespace Xibo\Xmds;
 
 use Carbon\Carbon;
 use Xibo\Entity\Bandwidth;
 use Xibo\Event\XmdsDependencyRequestEvent;
-use Xibo\Helper\LibraryFile;
+use Xibo\Service\LibraryAsset;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -58,7 +60,7 @@ class Soap3 extends Soap
         $hardwareKey = $sanitizer->getString('hardwareKey');
 
         // Check the serverKey matches the one we have
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
+        if (!$this->isValidServerKey($serverKey))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Check the Length of the hardwareKey
@@ -152,7 +154,7 @@ class Soap3 extends Soap
         $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
+        if (!$this->isValidServerKey($serverKey)) {
             throw new \SoapFault(
                 'Sender',
                 'The Server key you entered does not match with the server key at this address'
@@ -193,15 +195,8 @@ class Soap3 extends Soap
                 $requiredFile = $this->requiredFileFactory->getByDisplayAndLayout($this->display->displayId, $fileId);
 
                 // Load the layout
-                $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->getById($fileId));
-                try {
-                    $path = $layout->xlfToDisk();
-                } finally {
-                    $this->layoutFactory->concurrentRequestRelease($layout);
-                }
-
-                $file = file_get_contents($path);
-                $chunkSize = filesize($path);
+                $file = $this->layoutFactory->getBuiltXlf($this->layoutFactory->getById($fileId));
+                $chunkSize = strlen($file);
 
                 $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
                 $requiredFile->save();
@@ -213,15 +208,29 @@ class Soap3 extends Soap
 
                 $fileId = explode('.', $filePath);
 
-                if (is_numeric($fileId)) {
+                if (is_numeric($fileId[0])) {
                     // Validate the nonce
                     $requiredFile = $this->requiredFileFactory->getByDisplayAndMedia(
                         $this->display->displayId,
                         $fileId[0]
                     );
 
-                    // Return the Chunk size specified
-                    $f = fopen(LibraryFile::resolve($libraryLocation, $filePath), 'r');
+                    // Only the media's own file, so another sharing its id (such as {layoutId}.xlf) isn't served.
+                    $media = $this->getStore()->select(
+                        'SELECT `storedAs`, `storageEngine` FROM `media` WHERE `mediaId` = :mediaId',
+                        ['mediaId' => (int)$fileId[0]]
+                    )[0] ?? null;
+                    if ($media === null || $media['storedAs'] !== $filePath) {
+                        throw new NotFoundException('Invalid file path.');
+                    }
+
+                    // Only the requested chunk is read, from the local library while the media waits to be copied.
+                    $storage = $this->libraryStorageRegistry->get(LibraryAsset::MEDIA, $media['storageEngine']);
+                    $file = $storage->readRange(
+                        $filePath,
+                        (int) $chunkOffset,
+                        (int) $chunkSize
+                    )->getContents();
                 } else {
                     // Non-numeric, so assume we're a dependency
                     $this->getLog()->debug('Assumed dependency with path: ' . $filePath);
@@ -230,24 +239,17 @@ class Soap3 extends Soap
                         $this->display->displayId,
                         $filePath
                     );
-                    
+
                     $event = new XmdsDependencyRequestEvent($requiredFile);
                     $this->getDispatcher()->dispatch($event, 'xmds.dependency.request');
 
-                    // Get the path
-                    $path = $event->getRelativePath();
-                    if (empty($path)) {
-                        throw new NotFoundException(__('File not found'));
-                    }
-
-                    $path = LibraryFile::resolve($libraryLocation, $path);
-
-                    $f = fopen($path, 'r');
+                    $file = $this->readDependencyChunk(
+                        $event,
+                        $libraryLocation,
+                        (int)$chunkOffset,
+                        (int)$chunkSize
+                    );
                 }
-
-                fseek($f, $chunkOffset);
-
-                $file = fread($f, $chunkSize);
 
                 // Store file size for bandwidth log
                 $chunkSize = strlen($file);

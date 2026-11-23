@@ -26,6 +26,15 @@
             <directory suffix="Test.php">tests/Xmds/</directory>
             <directory suffix="Test.php">tests/Helper/</directory>
             <directory suffix="Test.php">tests/Middleware/</directory>
+            <directory suffix="Test.php">tests/CapabilityMatrix/</directory>
+            <directory suffix="Test.php">tests/Service/</directory>
+            <directory suffix="Test.php">tests/Entity/</directory>
+            <directory suffix="Test.php">tests/Widget/</directory>
+            <directory suffix="Test.php">tests/XTR/</directory>
+            <directory suffix="Test.php">tests/Storage/</directory>
+            <directory suffix="Test.php">tests/Factory/</directory>
+            <directory suffix="Test.php">tests/Controller/</directory>
+            <directory suffix="Test.php">tests/Migration/</directory>
         </testsuite>
         <testsuite name="Xibo Helper Test Suite">
             <directory suffix="Test.php">tests/Helper/</directory>

@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Factory;
@@ -25,6 +27,9 @@ namespace Xibo\Factory;
 use Xibo\Entity\PlayerVersion;
 use Xibo\Entity\User;
 use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\LibraryAsset;
+use Xibo\Service\LibraryStorageRegistryInterface;
+use Xibo\Service\LibraryStorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -37,8 +42,17 @@ class PlayerVersionFactory extends BaseFactory
         User $user,
         UserFactory $userFactory,
         private readonly ConfigServiceInterface $config,
+        private readonly LibraryStorageRegistryInterface $libraryStorageRegistry,
     ) {
         $this->setAclDependencies($user, $userFactory);
+    }
+
+    /**
+     * Where player software packages are stored, keyed by fileName.
+     */
+    public function getStorage(): LibraryStorageServiceInterface
+    {
+        return $this->libraryStorageRegistry->get(LibraryAsset::PLAYER_SOFTWARE);
     }
 
     public function createEmpty(): PlayerVersion
@@ -48,7 +62,7 @@ class PlayerVersionFactory extends BaseFactory
             $this->getLog(),
             $this->getDispatcher(),
             $this->config,
-            $this
+            $this->libraryStorageRegistry
         );
     }
 

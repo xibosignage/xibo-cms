@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 
@@ -32,6 +34,7 @@ use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Helper\SanitizerService;
+use Xibo\Helper\StoredFileMetadata;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -605,15 +608,16 @@ class DataSet implements \JsonSerializable
         // fragments (DataSetDataProviderListener::buildFilterClause for the clause
         // builder, DataSetRss::getFeed for RSS feed clauses, DataSet.filter for the
         // raw mode). All of them converge here; this is the ONE place where SQL is
-        // sanitized for the filter path. Per-callsite escaping in the assembly code
-        // is unnecessary by design.
+        // sanitized for the filter path. The clause builders escape their values
+        // (Sql::escapeLiteral) only so values like O'Brien work, not for security.
         if ($filter != '') {
             // Support display filtering.
             $filter = str_replace('[DisplayId]', $displayId, $filter);
 
             $filter = Sql::sanitizeFragment($filter, 'filter');
 
-            $body .= ' AND ' . $filter;
+            // Brackets keep an OR in the filter from escaping the clauses after it, newlines end any line comment
+            $body .= ' AND (' . PHP_EOL . $filter . PHP_EOL . ') ';
         }
 
         // Filter by ID
@@ -1075,6 +1079,9 @@ class DataSet implements \JsonSerializable
 
         // The last thing we do is drop the dataSet table
         $this->dropTable();
+
+        // Real-time may have been turned off since its script was saved.
+        $this->deleteScript();
     }
 
     /**
@@ -1381,31 +1388,76 @@ class DataSet implements \JsonSerializable
         $this->pool->deleteItem('/dataset/cache/' . $this->dataSetId);
     }
 
-    private function getScriptPath(): string
+    public static function getScriptKey(int $dataSetId): string
     {
-        return $this->config->getSetting('LIBRARY_LOCATION')
-            . 'data_connectors' . DIRECTORY_SEPARATOR
-            . 'dataSet_' . $this->dataSetId . '.js';
+        return 'dataSet_' . $dataSetId . '.js';
     }
 
+    public static function getScriptMetadataCacheKey(int $dataSetId): string
+    {
+        return '/xmds/dataConnector/metadata/' . $dataSetId;
+    }
+
+    /**
+     * @throws GeneralException if storage cannot be reached
+     */
     public function getScript(): string
     {
         if ($this->isRealTime == 0) {
             return '';
         }
 
-        $path = $this->getScriptPath();
-        return (file_exists($path))
-            ? file_get_contents($path)
-            : '';
+        try {
+            return $this->dataSetFactory->getScriptStorage()
+                ->readStream(self::getScriptKey($this->dataSetId))
+                ->getContents();
+        } catch (NotFoundException) {
+            return '';
+        }
     }
 
-    public function saveScript(string $script): void
+    /**
+     * @param bool $skipIfUnchanged skip a script whose cached md5 matches, for saves on every RequiredFiles call
+     * @throws GeneralException
+     */
+    public function saveScript(string $script, bool $skipIfUnchanged = false): void
     {
-        if ($this->isRealTime == 1) {
-            $path = $this->getScriptPath();
-            file_put_contents($path, $script);
-            file_put_contents($path . '.md5', md5_file($path));
+        if ($this->isRealTime != 1) {
+            return;
         }
+
+        $key = self::getScriptKey($this->dataSetId);
+        $cacheKey = self::getScriptMetadataCacheKey($this->dataSetId);
+
+        if ($skipIfUnchanged) {
+            try {
+                $metadata = StoredFileMetadata::get(
+                    $this->pool,
+                    $cacheKey,
+                    fn () => $this->dataSetFactory->getScriptStorage(),
+                    $key
+                );
+                if ($metadata['md5'] === md5($script)) {
+                    return;
+                }
+            } catch (NotFoundException) {
+                // Not stored yet.
+            }
+        }
+
+        StoredFileMetadata::store(
+            $this->pool,
+            $cacheKey,
+            $this->dataSetFactory->getScriptStorage(),
+            $key,
+            $script,
+            $this->config->getSetting('LIBRARY_LOCATION') . 'temp/'
+        );
+    }
+
+    private function deleteScript(): void
+    {
+        StoredFileMetadata::forget($this->pool, self::getScriptMetadataCacheKey($this->dataSetId));
+        $this->dataSetFactory->deleteScriptAfterCommit(self::getScriptKey($this->dataSetId));
     }
 }

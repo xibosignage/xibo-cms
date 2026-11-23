@@ -50,7 +50,7 @@ mkdir -p cache library
 chmod 777 cache library
 
 # Bring up Docker containers
-docker-compose up --build -d
+docker compose -f docker-compose.dev.yml up --build -d
 
 # Login with: xibo_admin / password
 ```
@@ -133,16 +133,16 @@ vendor/bin/phpunit --configuration phpunit.xml
 **API Documentation**:
 ```bash
 # Generate Swagger/OpenAPI docs (with containers running)
-docker-compose exec web sh -c "cd /var/www/cms; vendor/bin/swagger lib -o web/swagger.json"
+docker compose -f docker-compose.dev.yml exec web sh -c "cd /var/www/cms; vendor/bin/swagger lib -o web/swagger.json"
 
-# Swagger UI available at: http://localhost:8080 (in docker-compose)
+# Swagger UI available at: http://localhost:8080 (in docker-compose.dev.yml)
 ```
 
 **Translations**:
 ```bash
 # Clear cache and regenerate locale files
-docker-compose exec web sh -c "cd /var/www/cms; rm -R ./cache"
-docker-compose exec web sh -c "cd /var/www/cms; php bin/locale.php"
+docker compose -f docker-compose.dev.yml exec web sh -c "cd /var/www/cms; rm -R ./cache"
+docker compose -f docker-compose.dev.yml exec web sh -c "cd /var/www/cms; php bin/locale.php"
 
 # Extract translation strings
 find ./locale ./cache ./lib ./web -iname "*.php" -print0 | xargs -0 xgettext --from-code=UTF-8 -k_e -k_x -k__ -o locale/default.pot
@@ -186,6 +186,9 @@ web/
   ├── dist/               # Compiled webpack assets (JS/CSS bundles)
   ├── theme/              # Twig templates for web UI
   ├── install/            # Installation wizard
+  ├── pwa/                # ChromeOS player, extracted here when the image is built (gitignored; only
+  │                       #   index.php, the getResource/getData entry point, is tracked). CE builds
+  │                       #   drop this folder
   └── swagger.json        # Generated API documentation
 
 ui/
@@ -215,7 +218,7 @@ tests/
   └── resources/          # Test fixtures (layout seeds used by SeedDatabaseTask)
 
 docker/                   # Docker entrypoint scripts and configurations
-containers/db/            # Docker Compose MySQL data volume (DO NOT SEARCH — large binary files)
+containers/db/            # Dev compose (docker-compose.dev.yml) MySQL data volume (DO NOT SEARCH — large binary files)
 
 frontend/
   ├── src/
@@ -427,7 +430,7 @@ All outbound HTTP **must** be made through `Xibo\Helper\Guzzle\SafeClient::getSa
 
 `SafeClient` is safe for every call site: literal URLs, admin-settable URLs, DB-sourced URLs, connector responses. The safety checks are no-ops on safe URLs. The Semgrep rule `xibo-raw-guzzle-client` in `.semgrep/rules.yml` enforces this — a PR adding raw `new Client()` will fail the lint.
 
-**Internal services on the local network (XMR, on-premise data sources, etc.)** need `SafeClient::getSafeClientForInternal()` instead of `getSafeClient()`. The default `getSafeClient()` rejects RFC-1918 / IPv6 ULA destinations (because `allow_local_network` defaults to `false`) — calls to a Docker-network or LAN address will throw. The `*ForInternal` variant force-enables `allow_local_network` for the SsrfProtectionMiddleware config while keeping the always-block list (loopback `127/8`, AWS metadata `169.254/16`, `0.0.0.0/8`, IPv6 loopback, AWS IPv6 metadata) and the other defences active. Use it for fixed-purpose internal connections only — never for user/admin-settable URLs. Custom connectors under `custom/` that talk to on-premise data sources should override `ConnectorTrait::getClient()` to use `getSafeClientForInternal()`, or call it directly at the egress site.
+**Internal services on the local network (XMR, on-premise data sources, etc.)** need `SafeClient::getSafeClientForInternal()` instead of `getSafeClient()`. The default `getSafeClient()` rejects RFC-1918 / IPv6 ULA destinations (because `allow_local_network` defaults to `false`) — calls to a Docker-network or LAN address will throw. The `*ForInternal` variant force-enables `allow_local_network` for the SsrfProtectionMiddleware config while keeping the always-block list (loopback `127/8`, AWS metadata `169.254/16`, Alibaba metadata `100.100.100.200`, `0.0.0.0/8`, IPv6 loopback, AWS IPv6 metadata) and the other defences active. Use it for fixed-purpose internal connections only — never for user/admin-settable URLs. Custom connectors under `custom/` that talk to on-premise data sources should override `ConnectorTrait::getClient()` to use `getSafeClientForInternal()`, or call it directly at the egress site.
 
 The `allow_local_network` config flag (default `false`, set only via `web/settings.php` / `web/settings-custom.php` — not via any admin UI) opens *all* `SafeClient::getSafeClient()` calls to RFC-1918 destinations globally. Production deployments should leave it at the default and use `getSafeClientForInternal()` per-call where needed.
 
@@ -435,7 +438,7 @@ The `allow_local_network` config flag (default `false`, set only via `web/settin
 
 The DataSet pipeline assembles WHERE-clause fragments from multiple sources (clause-builder in `DataSetDataProviderListener::buildFilterClause`, raw filter on the `DataSet` entity, RSS feed clause-builder in `DataSetRss::getFeed`). **All paths converge at `DataSet::getData()`** in `lib/Entity/DataSet.php`, which calls `Sql::sanitizeFragment()` on the assembled filter and keyword fragments before they're concatenated into the final SQL.
 
-Per-callsite escaping in the assembly code is unnecessary and would hide the choke-point pattern. When extending the DataSet pipeline:
+Per-callsite escaping is not the security defence and must not replace the choke-point. The clause builders do escape their values with `Sql::escapeLiteral()`, but only so values like `O'Brien` produce valid SQL. When extending the DataSet pipeline:
 
 - **For SQL fragments** (filter, keyword, formula strings that become part of WHERE/SELECT): use `Xibo\Widget\Definition\Sql::sanitizeFragment($input, $context)` (throws on disallowed keywords). The formula path is the only callsite that uses the bare `Sql::cleanup()` because it intentionally silently skips offending columns rather than failing the query.
 - **For SQL identifiers** (table names, column names that have to be concatenated because PDO can't bind them): use `Sql::validateIdentifier($id, $context)` — a regex check against `^[A-Za-z_][A-Za-z0-9_]*$` that throws on non-conforming input. Required for any trait or factory method that accepts table/column names as parameters.
@@ -468,7 +471,9 @@ Production deployments use **Docker** with multi-stage builds:
 
 See `Dockerfile`, `Dockerfile.dev`, and `Dockerfile.ci` for different build targets.
 
-Docker Compose development environment includes:
+The root `docker-compose.yml` + `.env.template` are the **production** install for end users (they replace the retired `xibo-docker` repo and ship to CE). The compose file pins `ghcr.io/xibosignage/xibo-cms:stable`; `release-archive.yml` packages them with `INSTALL.md` as `xibo-docker-<version>.tar.gz/.zip` (files at the archive root, so it extracts over an existing install) with the image pinned to the release version. Keep the `image: ghcr.io/xibosignage/xibo-cms:stable` line intact (the release step fails if it can't find it to rewrite). Keep the `cms-*` service names: the image's default `CMS_QUICK_CHART_URL` (`http://cms-quickchart:3400`) and the docs' proxy exceptions (`cms-xmr,cms-quickchart`) depend on them. Keep README.md's install/upgrade/migration sections and `INSTALL.md` in sync with any change. The production file is project `xibo` and the dev file is project `xibo-dev` (top-level `name:`), so the two never share containers.
+
+The development environment is `docker-compose.dev.yml` (always pass `-f docker-compose.dev.yml`) and includes:
 - MySQL 8.4 (port 3315)
 - Memcached
 - Xibo XMR (message router) on port 9505

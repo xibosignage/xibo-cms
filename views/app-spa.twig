@@ -1,3 +1,27 @@
+{#
+/*
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
+ *
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
+ */
+#}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -26,13 +50,14 @@
        is needed here. RootLayout.tsx reads this to show a warning banner. #}
     <script nonce="{{ cspNonce }}">window.__XIBO_APP_CONFIG__ = { partiallySuspended: {{ settings.INSTANCE_SUSPENDED == "partial" ? 'true' : 'false' }} };</script>
 
-    {# Brand assets are served at the domain-root /brand alias (preserved on alias installs). #}
-    <link rel="shortcut icon" href="/brand/favicon.ico"/>
-    <link rel="stylesheet" href="/brand/theme.css">
+    <link rel="shortcut icon" href="{{ brand.assetUrl('favicon') }}"/>
+    {% if brand.stylesheetUrl %}<link rel="stylesheet" href="{{ brand.stylesheetUrl }}">{% endif %}
 
     {% for cssUrl in appCssUrls %}
         <link rel="stylesheet" href="{{ cssUrl }}">
     {% endfor %}
+    {# After the app CSS, which sets Xibo's default colours. #}
+    {% if brand.tokens %}<style>:root { {% for name, value in brand.tokens %}--{{ name }}: {{ value }}; {% endfor %}}</style>{% endif %}
 </head>
 <body>
     <div id="root"></div>

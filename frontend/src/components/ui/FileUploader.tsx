@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import type { TFunction } from 'i18next';
@@ -41,7 +43,7 @@ import TagInput from './forms/TagInput';
 
 import Button from '@/components/ui/Button';
 import { usePreline } from '@/hooks/usePreline';
-import type { UploadItem } from '@/hooks/useUploadQueue';
+import { hasFailed, isStoring, type UploadItem } from '@/hooks/useUploadQueue';
 import type { Tag } from '@/types/tag';
 import { captureVideoFrame } from '@/utils/captureVideoFrame';
 
@@ -129,6 +131,7 @@ function UploadItemRow({ item, onRemove, onUpdate, canTag = true }: RowProps) {
   const isError = item.status === 'error';
   const isCompleted = item.status === 'completed';
   const isUploading = item.status === 'uploading';
+  const storing = isStoring(item);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const [hasCaptured, setHasCaptured] = useState(false);
@@ -312,19 +315,29 @@ function UploadItemRow({ item, onRemove, onUpdate, canTag = true }: RowProps) {
               <div className="flex gap-2 items-center">
                 <div className="bg-gray-200 h-2.5 rounded-full w-full overflow-hidden">
                   <div
-                    className="h-full transition-all duration-300 rounded-full bg-xibo-blue-600"
-                    style={{ width: `${item.progress}%` }}
+                    className={twMerge(
+                      'h-full transition-all duration-300 rounded-full bg-xibo-blue-600',
+                      storing && 'animate-pulse',
+                    )}
+                    style={{ width: `${storing ? 100 : item.progress}%` }}
                   />
                 </div>
                 <div
                   className={twMerge(
-                    'text-sm font-semibold w-11 text-right shrink-0',
+                    'text-sm font-semibold text-right shrink-0',
+                    storing ? 'whitespace-nowrap' : 'w-11',
                     isCompleted ? 'text-xibo-blue-600' : 'text-gray-800',
                   )}
                 >
-                  {item.progress}%
+                  {storing ? t('Saving to storage…') : `${item.progress}%`}
                 </div>
               </div>
+            )}
+
+            {item.thumbnailFailed && (
+              <p className="text-[11px] text-red-600 font-bold mt-1">
+                {t('The thumbnail could not be saved. Retake it to try again.')}
+              </p>
             )}
 
             {item.error && (
@@ -444,8 +457,10 @@ export function FileUploader({
   };
 
   const uploadingCount = queue.filter((item) => item.status === 'uploading').length;
-  const completedCount = queue.filter((item) => item.status === 'completed').length;
-  const errorCount = queue.filter((item) => item.status === 'error').length;
+  const errorCount = queue.filter(hasFailed).length;
+  const completedCount = queue.filter(
+    (item) => item.status === 'completed' && !hasFailed(item),
+  ).length;
   const totalCount = queue.length;
   const isAllComplete = uploadingCount === 0 && totalCount > 0;
 

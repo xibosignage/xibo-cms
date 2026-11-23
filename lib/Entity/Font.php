@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Entity;
@@ -27,7 +29,6 @@ use OpenApi\Attributes as OA;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Factory\FontFactory;
 use Xibo\Helper\DateFormatHelper;
-use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\DuplicateEntityException;
@@ -95,9 +96,6 @@ class Font
     #[OA\Property(description: 'A MD5 checksum of the stored font file')]
     public $md5;
 
-    /** @var ConfigServiceInterface */
-    private $config;
-
     /** @var  FontFactory */
     private $fontFactory;
 
@@ -106,16 +104,10 @@ class Font
      * @param LogServiceInterface $log
      * @param EventDispatcherInterface $dispatcher
      */
-    public function __construct($store, $log, $dispatcher, $config, $fontFactory)
+    public function __construct($store, $log, $dispatcher, $fontFactory)
     {
         $this->setCommonDependencies($store, $log, $dispatcher);
-        $this->config = $config;
         $this->fontFactory = $fontFactory;
-    }
-
-    public function getFilePath()
-    {
-        return $this->config->getSetting('LIBRARY_LOCATION') . 'fonts/' . $this->fileName;
     }
 
     /**
@@ -176,12 +168,7 @@ class Font
             'id' => $this->id
         ]);
 
-        // delete file
-        $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
-
-        if (file_exists($libraryLocation . 'fonts/' . $this->fileName)) {
-            unlink($libraryLocation . 'fonts/' . $this->fileName);
-        }
+        $this->fontFactory->deleteFontFileAfterCommit((string)$this->fileName);
     }
 
     /**

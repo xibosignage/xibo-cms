@@ -27,7 +27,7 @@ Every setting below is a PHP variable, set at deployment time and never in the a
 ### `$allowLocalNetworkRequests` — leave at the default (`false`)
 
 `SafeClient` (`lib/Helper/Guzzle/SafeClient.php`) blocks outbound HTTP to RFC 1918,
-link-local, IPv6 ULA and cloud-metadata addresses. That is the CMS's SSRF defence.
+link-local, CGNAT and other special-use, IPv6 ULA and cloud-metadata addresses. That is the CMS's SSRF defence.
 
 Setting `$allowLocalNetworkRequests = true;` removes it for every outbound request. The CMS
 can then reach internal services and the AWS/GCP/Azure metadata endpoints, which makes any

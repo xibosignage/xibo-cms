@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 namespace Xibo\Service;
 
@@ -26,19 +28,23 @@ use GuzzleHttp\Exception\RequestException;
 use Mimey\MimeTypes;
 use Stash\Interfaces\PoolInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Xibo\Entity\Media;
 use Xibo\Entity\User;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Factory\FontFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Helper\AttachmentUploadHandler;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
 use Xibo\Helper\Guzzle\SafeClient;
 use Xibo\Helper\SanitizerService;
+use Xibo\Helper\StoredFileMetadata;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\LibraryFullException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * MediaService
@@ -241,23 +247,34 @@ class MediaService implements MediaServiceInterface
             $css .= str_replace('[url]', $font->fileName, str_replace('[family]', $font->familyName, $fontTemplate));
         }
 
-        // If we're a full regenerate, we want to also update the fonts.css file.
-        $existingLibraryFontsCss = '';
-        if (file_exists($libraryLocation . 'fonts/fonts.css')) {
-            $existingLibraryFontsCss = file_get_contents($libraryLocation . 'fonts/fonts.css');
+        $storage = $this->fontFactory->getStorage();
+        try {
+            $stream = $storage->readStream(FontFactory::FONTS_CSS_KEY);
+            try {
+                $existingLibraryFontsCss = $stream->getContents();
+            } finally {
+                $stream->close();
+            }
+        } catch (NotFoundException) {
+            $existingLibraryFontsCss = '';
         }
 
-        $tempFontsCss = $libraryLocation . 'temp/fonts.css';
-        file_put_contents($tempFontsCss, $css);
         // Check to see if the existing file is different from the new one
-        if ($existingLibraryFontsCss == '' || md5($existingLibraryFontsCss) !== md5($tempFontsCss)) {
+        if ($existingLibraryFontsCss == '' || $existingLibraryFontsCss !== $css) {
             $this->log->info('Detected change in fonts.css file, dropping the Display cache');
-            rename($tempFontsCss, $libraryLocation . 'fonts/fonts.css');
+            StoredFileMetadata::store(
+                $this->pool,
+                FontFactory::FONTS_CSS_METADATA_CACHE_KEY,
+                $storage,
+                FontFactory::FONTS_CSS_KEY,
+                $css,
+                $libraryLocation . 'temp/'
+            );
             // Clear the display cache
             $this->pool->deleteItem('/display');
         } else {
-            @unlink($tempFontsCss);
             $this->log->debug('Newly generated fonts.css is the same as the old file. Ignoring.');
+            StoredFileMetadata::remember($this->pool, FontFactory::FONTS_CSS_METADATA_CACHE_KEY, $css);
         }
     }
 
@@ -296,10 +313,6 @@ class MediaService implements MediaServiceInterface
             mkdir($libraryFolder . '/playersoftware', 0777, true);
         }
 
-        if (!file_exists($libraryFolder . '/playersoftware/chromeos')) {
-            mkdir($libraryFolder . '/playersoftware/chromeos', 0777, true);
-        }
-
         if (!file_exists($libraryFolder . '/savedreport')) {
             mkdir($libraryFolder . '/savedreport', 0777, true);
         }
@@ -321,7 +334,19 @@ class MediaService implements MediaServiceInterface
     /** @inheritDoc */
     public function removeTempFiles()
     {
-        $libraryTemp = $this->configService->getSetting('LIBRARY_LOCATION') . 'temp';
+        // Preview sources unused for a week, only cached when storage has no local files.
+        $libraryLocation = $this->configService->getSetting('LIBRARY_LOCATION');
+        if (!$this->mediaFactory->getStorage()->hasLocalFiles()) {
+            $before = Carbon::now()->subDays(7)->format('U');
+            foreach (glob($libraryLocation . Media::PREVIEW_SOURCE_CACHE_PREFIX . '*') ?: [] as $filePath) {
+                if (is_file($filePath) && filemtime($filePath) < $before) {
+                    $this->log->debug('Deleting unused preview source: ' . basename($filePath));
+                    @unlink($filePath);
+                }
+            }
+        }
+
+        $libraryTemp = $libraryLocation . 'temp';
 
         if (!is_dir($libraryTemp)) {
             return;
@@ -350,6 +375,19 @@ class MediaService implements MediaServiceInterface
             $this->log->debug('Deleting temp file: ' . $item);
 
             unlink($filePath);
+        }
+
+        // Notification attachments are uploaded into a folder per user
+        $before = Carbon::now()->subSeconds(86400)->format('U');
+        $userFolders = glob($libraryTemp . '/' . AttachmentUploadHandler::UPLOAD_FOLDER . '/*', GLOB_ONLYDIR) ?: [];
+        foreach ($userFolders as $userFolder) {
+            foreach (glob($userFolder . '/*') ?: [] as $filePath) {
+                if (is_file($filePath) && filemtime($filePath) < $before) {
+                    $this->log->debug('Deleting temp attachment: ' . basename($filePath));
+                    @unlink($filePath);
+                }
+            }
+            @rmdir($userFolder);
         }
     }
 

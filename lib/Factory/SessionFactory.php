@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Factory;
@@ -31,6 +33,21 @@ use Xibo\Helper\DateFormatHelper;
  */
 class SessionFactory extends BaseFactory
 {
+    /** @var callable|null Adds to listed sessions (see setDecorator), nothing when null */
+    private $decorator = null;
+
+    /**
+     * Adds to the sessions query() lists, for an extension that knows more about some of them (CE has none). The
+     * decorator is given the listed Session entities and may set unmatched properties, userName and isExpired.
+     * @param callable(Session[]): void $decorator
+     * @return $this
+     */
+    public function setDecorator(callable $decorator): static
+    {
+        $this->decorator = $decorator;
+        return $this;
+    }
+
     /**
      * @return Session
      */
@@ -173,6 +190,10 @@ class SessionFactory extends BaseFactory
             $session->remoteAddress = filter_var($session->remoteAddress, FILTER_VALIDATE_IP);
             $session->excludeProperty('sessionId');
             $entries[] = $session;
+        }
+
+        if ($this->decorator !== null && count($entries) > 0) {
+            ($this->decorator)($entries);
         }
 
         // Paging

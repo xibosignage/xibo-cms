@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { screen, waitFor } from '@testing-library/react';
@@ -120,12 +122,9 @@ describe('Dayparting page - search and filters', () => {
 
     await user.type(screen.getByPlaceholderText('Search daypart...'), 'Alpha');
 
-    await waitFor(
-      () => {
-        expect(fetchDaypart).toHaveBeenCalledWith(expect.objectContaining({ name: 'Alpha' }));
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchDaypart).toHaveBeenCalledWith(expect.objectContaining({ name: 'Alpha' }));
+    });
   });
 
   // Searching resets back to the first page of results.
@@ -136,14 +135,11 @@ describe('Dayparting page - search and filters', () => {
 
     await user.type(screen.getByPlaceholderText('Search daypart...'), 'Alpha');
 
-    await waitFor(
-      () => {
-        expect(fetchDaypart).toHaveBeenCalledWith(
-          expect.objectContaining({ name: 'Alpha', start: 0 }),
-        );
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchDaypart).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'Alpha', start: 0 }),
+      );
+    });
   });
 
   // The Name filter feeds the `name` query param and resets to page 1.
@@ -156,14 +152,11 @@ describe('Dayparting page - search and filters', () => {
     const nameInput = await screen.findByRole('textbox', { name: /^name$/i });
     await user.type(nameInput, 'Alpha');
 
-    await waitFor(
-      () => {
-        expect(fetchDaypart).toHaveBeenCalledWith(
-          expect.objectContaining({ name: 'Alpha', start: 0 }),
-        );
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchDaypart).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'Alpha', start: 0 }),
+      );
+    });
   });
 
   // The Retired filter feeds the `isRetired` query param and resets to page 1.
@@ -191,20 +184,14 @@ describe('Dayparting page - search and filters', () => {
 
     const search = screen.getByPlaceholderText('Search daypart...');
     await user.type(search, 'Alpha');
-    await waitFor(
-      () => {
-        expect(fetchDaypart).toHaveBeenCalledWith(expect.objectContaining({ name: 'Alpha' }));
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchDaypart).toHaveBeenCalledWith(expect.objectContaining({ name: 'Alpha' }));
+    });
 
     await user.clear(search);
-    await waitFor(
-      () => {
-        expect(fetchDaypart).toHaveBeenCalledWith(expect.objectContaining({ name: undefined }));
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchDaypart).toHaveBeenCalledWith(expect.objectContaining({ name: undefined }));
+    });
   });
 
   // The Name field's AND/OR control feeds `logicalOperatorName` into the query.
@@ -242,14 +229,11 @@ describe('Dayparting page - search and filters', () => {
     // (container is available if a class-based lookup is ever needed)
     expect(container).toBeTruthy();
 
-    await waitFor(
-      () => {
-        expect(fetchDaypart).toHaveBeenCalledWith(
-          expect.objectContaining({ useRegexForName: 1, name: 'Alpha' }),
-        );
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchDaypart).toHaveBeenCalledWith(
+        expect.objectContaining({ useRegexForName: 1, name: 'Alpha' }),
+      );
+    });
   });
 
   // Reset restores the filter inputs to their defaults (Name empty, Retired "No").
@@ -266,12 +250,9 @@ describe('Dayparting page - search and filters', () => {
 
     // The Name field is debounced; wait for the value to commit to the filter
     // state (externalValue) before resetting, otherwise Reset can't re-sync it.
-    await waitFor(
-      () => {
-        expect(fetchDaypart).toHaveBeenCalledWith(expect.objectContaining({ name: 'Alpha' }));
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchDaypart).toHaveBeenCalledWith(expect.objectContaining({ name: 'Alpha' }));
+    });
 
     await user.click(screen.getByRole('button', { name: /reset/i }));
 

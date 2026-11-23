@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
@@ -35,6 +37,7 @@ import {
 } from './templateTestUtils';
 import type { UseTemplateActionsReturn } from './templateTestUtils';
 
+import type { FetchTemplateResponse } from '@/services/templatesApi';
 import { testQueryClient } from '@/setupTests';
 
 // =============================================================================
@@ -258,6 +261,32 @@ describe('Templates page - row actions', () => {
       expect(confirmPublish).toHaveBeenCalledWith(mockDraftTemplate.layoutId, { type: 'now' });
     });
 
+    // Regression cover for xibosignage/xibo#3906, on the second page that opens
+    // the same dialog.
+    test('a template already scheduled to publish keeps its date when confirmed', async () => {
+      const confirmPublish = vi.fn();
+      vi.mocked(useTemplateActions).mockReturnValue({
+        ...defaultTemplateActions(),
+        confirmPublish,
+      } as unknown as UseTemplateActionsReturn);
+      mockFetchTemplates({
+        rows: [{ ...mockDraftTemplate, publishedDate: '2027-01-15 09:30:00' }],
+        totalCount: 1,
+      } as FetchTemplateResponse);
+
+      renderTemplatesPage();
+      await openDropdownAction('Publish', mockDraftTemplate.layout);
+
+      const dialog = await screen.findByRole('dialog');
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Publish' }));
+
+      // The CMS (and mockUser) timezone is UTC.
+      expect(confirmPublish).toHaveBeenCalledWith(mockDraftTemplate.layoutId, {
+        type: 'scheduled',
+        date: new Date('2027-01-15T09:30:00Z'),
+      });
+    });
+
     // Cancel must close the dialog without publishing.
     test('Cancel closes the Publish modal', async () => {
       renderTemplatesPage();
@@ -333,6 +362,7 @@ describe('Templates page - row actions', () => {
   // Checkout
   // TDD: Checkout should appear for Published templates only, allowing the user
   // to check out a published template for editing (creating a Draft).
+  // Report 285, open: 4.4 offered it; the React page dropped it.
   // ---------------------------------------------------------------------------
   describe('Checkout', () => {
     // Checkout should only appear for Published templates.
@@ -347,7 +377,8 @@ describe('Templates page - row actions', () => {
     });
 
     // Checkout must appear in the dropdown for Published templates.
-    test.fails('Checkout action appears for Published templates', async () => {
+    // https://github.com/xibosignage/xibo/issues/4056
+    test.fails('Checkout action appears for Published templates', { retry: 0 }, async () => {
       renderTemplatesPage();
       await screen.findByText(mockTemplate.layout);
       fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
@@ -356,21 +387,27 @@ describe('Templates page - row actions', () => {
     });
 
     // When implemented: clicking Checkout should call handleCheckoutTemplate with the layoutId.
-    test.fails('Checkout calls handleCheckoutTemplate with the layoutId', async () => {
-      const handleCheckoutTemplate = vi.fn();
-      vi.mocked(useTemplateActions).mockReturnValue({
-        ...defaultTemplateActions(),
-        handleCheckoutTemplate,
-      } as unknown as UseTemplateActionsReturn);
+    // https://github.com/xibosignage/xibo/issues/4056
+    test.fails(
+      'Checkout calls handleCheckoutTemplate with the layoutId',
+      { retry: 0 },
+      async () => {
+        const handleCheckoutTemplate = vi.fn();
+        vi.mocked(useTemplateActions).mockReturnValue({
+          ...defaultTemplateActions(),
+          handleCheckoutTemplate,
+        } as unknown as UseTemplateActionsReturn);
 
-      renderTemplatesPage();
-      await openDropdownAction('Checkout');
+        renderTemplatesPage();
+        await openDropdownAction('Checkout');
 
-      expect(handleCheckoutTemplate).toHaveBeenCalledWith(mockTemplate.layoutId);
-    });
+        expect(handleCheckoutTemplate).toHaveBeenCalledWith(mockTemplate.layoutId);
+      },
+    );
 
     // When implemented: Cancel must close the Checkout dialog.
-    test.fails('Cancel closes the Checkout modal', async () => {
+    // https://github.com/xibosignage/xibo/issues/4056
+    test.fails('Cancel closes the Checkout modal', { retry: 0 }, async () => {
       renderTemplatesPage();
       await openDropdownAction('Checkout');
 

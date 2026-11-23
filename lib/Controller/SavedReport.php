@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Controller;
@@ -34,6 +36,7 @@ use Xibo\Factory\ReportScheduleFactory;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\SendFile;
+use Xibo\Service\BrandServiceInterface;
 use Xibo\Service\ReportServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ControllerNotImplemented;
@@ -85,7 +88,8 @@ class SavedReport extends Base
         ReportScheduleFactory $reportScheduleFactory,
         SavedReportFactory $savedReportFactory,
         MediaFactory $mediaFactory,
-        UserFactory $userFactory
+        UserFactory $userFactory,
+        private readonly BrandServiceInterface $brandService
     ) {
         $this->reportService = $reportService;
         $this->reportScheduleFactory = $reportScheduleFactory;
@@ -239,7 +243,7 @@ class SavedReport extends Base
 
             if (!empty($quickChartUrl)) {
                 $quickChartUrl .= '/chart?width=1000&height=300&c=';
-                $script = $this->reportService->getReportChartScript($id, $name);
+                $script = $this->reportService->getReportChartScriptFromResults($results, $name);
 
                 // Replace " with ' for the quick chart URL
                 $src = $quickChartUrl . str_replace('"', '\'', $script);
@@ -282,8 +286,7 @@ class SavedReport extends Base
                 [
                     'header' => $report->description,
                     'logo' => ($showLogo)
-                        ? rtrim($this->getConfig()->getSetting('LIBRARY_LOCATION'), '/')
-                            . '/brand/' . $this->getConfig()->getBrandLogoDarkFile()
+                        ? $this->brandService->getAssetPath(BrandServiceInterface::SLOT_LOGO_DARK)
                         : null,
                     'title' => $savedReport->saveAs,
                     'metadata' => $results->metadata,
@@ -341,6 +344,7 @@ class SavedReport extends Base
      * @param $id
      * @param $name
      * @return ResponseInterface|Response
+     * @throws AccessDeniedException
      * @throws GeneralException
      * @throws ControllerNotImplemented
      */
@@ -348,14 +352,21 @@ class SavedReport extends Base
     {
         $savedReport = $this->savedReportFactory->getById($id);
 
+        if (!$this->getUser()->checkEditable($savedReport)) {
+            throw new AccessDeniedException(__('You do not have permissions to convert this report.'));
+        }
+
         if ($savedReport->schemaVersion == 2) {
             throw new GeneralException(__('This report has already been converted to the latest version.'));
         }
 
         // Convert Result to schemaVersion 2
-        $this->reportService->convertSavedReportResults($id, $name);
+        $converted = $this->reportService->convertSavedReportResults($id, $name);
 
         $savedReport->schemaVersion = 2;
+        $savedReport->fileName = $converted['fileName'];
+        $savedReport->size = $converted['size'];
+        $savedReport->md5 = $converted['md5'];
         $savedReport->save();
 
         // Return

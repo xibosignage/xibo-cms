@@ -1,43 +1,60 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
+import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type React from 'react';
+import { MemoryRouter } from 'react-router-dom';
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 
 import { DisplayModals } from '../../../components/DisplaysModals';
-import { buildDisplay, mockDisplay } from '../../fixtures/display';
+import { buildDisplay, mockDisplay, mockUser } from '../../fixtures/display';
 
+import { UserProvider } from '@/context/UserContext';
+import { fetchLicenceUsage } from '@/services/displaysApi';
+import type * as DisplaysApiModule from '@/services/displaysApi';
 import { testQueryClient } from '@/setupTests';
+import { buildCurrentUser, PERSONAS } from '@/testUtils/personas';
+import type { User } from '@/types/user';
 
 // =============================================================================
 // Module mocks
 // =============================================================================
 
 vi.mock('@/components/ui/modals/Modal');
+vi.mock('@/services/displaysApi', async (importOriginal) => ({
+  ...(await importOriginal<typeof DisplaysApiModule>()),
+  fetchLicenceUsage: vi.fn(),
+}));
 
 // Sub-component modals are tested in isolation in their own test files.
 // Stub them here so DisplayModals can render without their full dependencies.
-vi.mock('../../../components/AddDisplayModal', () => ({ default: () => null }));
+vi.mock('../../../components/AddDisplay/AddDisplayModal', () => ({ default: () => null }));
+vi.mock('../../../components/AddDisplay/AddDisplayDock', () => ({ default: () => null }));
+vi.mock('../../../components/AddDisplay/hooks/usePendingConnect', () => ({
+  usePendingConnectToast: () => {},
+}));
 vi.mock('../../../components/EditDisplayModal', () => ({ default: () => null }));
 vi.mock('../../../components/DeleteDisplayModal', () => ({ default: () => null }));
 vi.mock('../../../components/CollectNowModal', () => ({ default: () => null }));
@@ -76,12 +93,14 @@ const renderModals = ({
   actionDisplay = mockDisplay,
   bulkActionItems = [mockDisplay],
   handlers = {},
+  user = mockUser,
 }: {
   activeModal: ActiveModal;
   closeModal?: () => void;
   actionDisplay?: ReturnType<typeof buildDisplay> | null;
   bulkActionItems?: ReturnType<typeof buildDisplay>[];
   handlers?: Partial<React.ComponentProps<typeof DisplayModals>['handlers']>;
+  user?: User;
 }) => {
   const defaultHandlers: React.ComponentProps<typeof DisplayModals>['handlers'] = {
     confirmDelete: vi.fn(),
@@ -109,28 +128,35 @@ const renderModals = ({
   };
 
   return render(
-    <DisplayModals
-      actions={{
-        activeModal,
-        closeModal,
-        handleRefresh: vi.fn(),
-        deleteError: null,
-        isDeleting: false,
-        isMoving: false,
-        isActionPending: false,
-        actionError: null,
-      }}
-      selection={{
-        selectedDisplay: null,
-        itemsToDelete: [],
-        itemsToMove: [],
-        actionDisplay,
-        bulkActionItems,
-        shareEntityIds: null,
-        setShareEntityIds: vi.fn(),
-      }}
-      handlers={defaultHandlers}
-    />,
+    <MemoryRouter>
+      <QueryClientProvider client={testQueryClient}>
+        <UserProvider initialUser={user}>
+          <DisplayModals
+            actions={{
+              activeModal,
+              openModal: vi.fn(),
+              closeModal,
+              handleRefresh: vi.fn(),
+              deleteError: null,
+              isDeleting: false,
+              isMoving: false,
+              isActionPending: false,
+              actionError: null,
+            }}
+            selection={{
+              selectedDisplay: null,
+              itemsToDelete: [],
+              itemsToMove: [],
+              actionDisplay,
+              bulkActionItems,
+              shareEntityIds: null,
+              setShareEntityIds: vi.fn(),
+            }}
+            handlers={defaultHandlers}
+          />
+        </UserProvider>
+      </QueryClientProvider>
+    </MemoryRouter>,
   );
 };
 
@@ -142,6 +168,64 @@ describe('DisplayModals — inline action modals', () => {
   beforeEach(() => {
     testQueryClient.clear();
     vi.clearAllMocks();
+    vi.mocked(fetchLicenceUsage).mockResolvedValue({
+      maxLicensed: null,
+      currentlyLicensed: 2,
+      available: null,
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Authorise modal — every display licence in use
+  // ---------------------------------------------------------------------------
+  test('authorise modal with every licence in use links to Billing and disables confirm', async () => {
+    vi.mocked(fetchLicenceUsage).mockResolvedValue({
+      maxLicensed: 3,
+      currentlyLicensed: 3,
+      available: 0,
+    });
+    renderModals({ activeModal: 'authorise', actionDisplay: buildDisplay({ licensed: 0 }) });
+
+    expect(await screen.findByText(/every display licence is in use \(3\)/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Add more licences in Billing' })).toHaveAttribute(
+      'href',
+      '/administration/billing',
+    );
+    expect(screen.getByRole('button', { name: /yes, authorise/i })).toBeDisabled();
+  });
+
+  test('authorise modal hides the Billing link from users without Billing access', async () => {
+    vi.mocked(fetchLicenceUsage).mockResolvedValue({
+      maxLicensed: 3,
+      currentlyLicensed: 3,
+      available: 0,
+    });
+    const noBilling = buildCurrentUser(PERSONAS.user, {
+      features: { 'displays.view': true, 'displays.modify': true },
+    });
+    renderModals({
+      activeModal: 'authorise',
+      actionDisplay: buildDisplay({ licensed: 0 }),
+      user: noBilling,
+    });
+
+    expect(await screen.findByText(/every display licence is in use \(3\)/i)).toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: 'Add more licences in Billing' }),
+    ).not.toBeInTheDocument();
+  });
+
+  test('authorise modal with a free licence keeps confirm enabled', async () => {
+    vi.mocked(fetchLicenceUsage).mockResolvedValue({
+      maxLicensed: 3,
+      currentlyLicensed: 2,
+      available: 1,
+    });
+    renderModals({ activeModal: 'authorise', actionDisplay: buildDisplay({ licensed: 0 }) });
+
+    await vi.waitFor(() => expect(fetchLicenceUsage).toHaveBeenCalled());
+    expect(screen.queryByText(/every display licence is in use/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /yes, authorise/i })).toBeEnabled();
   });
 
   // ---------------------------------------------------------------------------

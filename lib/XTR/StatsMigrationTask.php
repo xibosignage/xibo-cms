@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\XTR;
@@ -181,10 +183,10 @@ class StatsMigrationTask implements TaskInterface
     public function moveStatsFromStatArchiveToStatMysql($options)
     {
 
-        $fileName = $this->config->getSetting('LIBRARY_LOCATION') . '.watermark_stat_archive_mysql.txt';
+        $watermarkName = 'watermark_stat_archive_mysql';
 
-        // Get low watermark from file
-        $watermark = $this->getWatermarkFromFile($fileName, 'stat_archive');
+        // Get low watermark
+        $watermark = $this->getWatermark($watermarkName, 'stat_archive');
 
         $numberOfLoops = 0;
 
@@ -208,7 +210,7 @@ class StatsMigrationTask implements TaskInterface
             $count+= $recordCount;
 
             // End of records
-            if ($this->checkEndOfRecords($recordCount, $fileName) === true) {
+            if ($this->checkEndOfRecords($recordCount, $watermarkName) === true) {
                 $this->appendRunMessage(PHP_EOL. '# End of records.' . PHP_EOL. '- Dropping stat_archive.');
                 $this->log->debug('End of records in stat_archive (migration to MYSQL). Dropping table.');
 
@@ -235,7 +237,12 @@ class StatsMigrationTask implements TaskInterface
             }
 
             // Loops limit end - task will need to rerun again to start from the saved watermark
-            if ($this->checkLoopLimits($numberOfLoops, $options['numberOfLoops'], $fileName, $watermark) === true) {
+            if ($this->checkLoopLimits(
+                $numberOfLoops,
+                $options['numberOfLoops'],
+                $watermarkName,
+                $watermark
+            ) === true) {
                 break;
             }
             $numberOfLoops++;
@@ -324,10 +331,10 @@ class StatsMigrationTask implements TaskInterface
 
         $this->appendRunMessage('## Moving from stat to Mongo');
 
-        $fileName = $this->config->getSetting('LIBRARY_LOCATION') . '.watermark_stat_mongo.txt';
+        $watermarkName = 'watermark_stat_mongo';
 
-        // Get low watermark from file
-        $watermark = $this->getWatermarkFromFile($fileName, 'stat');
+        // Get low watermark
+        $watermark = $this->getWatermark($watermarkName, 'stat');
 
         $numberOfLoops = 0;
 
@@ -346,7 +353,7 @@ class StatsMigrationTask implements TaskInterface
             $count+= $recordCount;
 
             // End of records
-            if ($this->checkEndOfRecords($recordCount, $fileName) === true) {
+            if ($this->checkEndOfRecords($recordCount, $watermarkName) === true) {
                 $this->appendRunMessage(PHP_EOL. '# End of records.' . PHP_EOL. '- Truncating and Optimising stat.');
                 $this->log->debug('End of records in stat table. Truncate and Optimise.');
 
@@ -364,7 +371,12 @@ class StatsMigrationTask implements TaskInterface
             }
 
             // Loops limit end - task will need to rerun again to start from the saved watermark
-            if ($this->checkLoopLimits($numberOfLoops, $options['numberOfLoops'], $fileName, $watermark) === true) {
+            if ($this->checkLoopLimits(
+                $numberOfLoops,
+                $options['numberOfLoops'],
+                $watermarkName,
+                $watermark
+            ) === true) {
                 break;
             }
             $numberOfLoops++;
@@ -424,10 +436,10 @@ class StatsMigrationTask implements TaskInterface
     {
 
         $this->appendRunMessage(PHP_EOL. '## Moving from stat_archive to Mongo');
-        $fileName = $this->config->getSetting('LIBRARY_LOCATION') . '.watermark_stat_archive_mongo.txt';
+        $watermarkName = 'watermark_stat_archive_mongo';
 
-        // Get low watermark from file
-        $watermark = $this->getWatermarkFromFile($fileName, 'stat_archive');
+        // Get low watermark
+        $watermark = $this->getWatermark($watermarkName, 'stat_archive');
 
         $numberOfLoops = 0;
 
@@ -451,7 +463,7 @@ class StatsMigrationTask implements TaskInterface
             $count+= $recordCount;
 
             // End of records
-            if ($this->checkEndOfRecords($recordCount, $fileName) === true) {
+            if ($this->checkEndOfRecords($recordCount, $watermarkName) === true) {
                 $this->appendRunMessage(PHP_EOL. '# End of records.' . PHP_EOL. '- Dropping stat_archive.');
                 $this->log->debug('End of records in stat_archive (migration to Mongo). Dropping table.');
 
@@ -465,7 +477,12 @@ class StatsMigrationTask implements TaskInterface
             }
 
             // Loops limit end - task will need to rerun again to start from the saved watermark
-            if ($this->checkLoopLimits($numberOfLoops, $options['numberOfLoops'], $fileName, $watermark) === true) {
+            if ($this->checkLoopLimits(
+                $numberOfLoops,
+                $options['numberOfLoops'],
+                $watermarkName,
+                $watermark
+            ) === true) {
                 break;
             }
             $numberOfLoops++;
@@ -552,24 +569,38 @@ class StatsMigrationTask implements TaskInterface
         }
     }
 
-    // Get low watermark from file
-    function getWatermarkFromFile($fileName, $tableName)
+    // Get low watermark
+    public function getWatermark($watermarkName, $tableName)
     {
+        $legacyFile = $this->config->getSetting('LIBRARY_LOCATION') . '.' . $watermarkName . '.txt';
+        $saved = $this->store->select('SELECT `value` FROM `setting` WHERE `setting` = :setting', [
+            'setting' => $this->getWatermarkSetting($watermarkName),
+        ]);
 
-        if (file_exists($fileName)) {
-            $file = fopen($fileName, 'r');
-            $line = fgets($file);
-            fclose($file);
-            $watermark = (int) $line;
+        if (count($saved) > 0) {
+            $watermark = (int) $saved[0]['value'];
+        } else if (isset($this->getTask()->options[$watermarkName])) {
+            // Adopt a watermark kept in the task options by an earlier version, removing only that key
+            $watermark = (int) $this->getTask()->options[$watermarkName];
+            $this->store->update('
+                UPDATE `task` SET `options` = JSON_REMOVE(`options`, :path) WHERE `taskId` = :taskId
+            ', [
+                'path' => '$.' . $watermarkName,
+                'taskId' => $this->getTask()->taskId,
+            ]);
+            unset($this->getTask()->options[$watermarkName]);
+            $this->saveWatermark($watermarkName, $watermark);
+        } else if (file_exists($legacyFile)) {
+            // Adopt a watermark file written by an earlier version, so a migration in progress carries on
+            $watermark = (int) file_get_contents($legacyFile);
+            $this->saveWatermark($watermarkName, $watermark);
+            @unlink($legacyFile);
         } else {
-            // Save mysql low watermark in file if .watermark.txt file is not found
+            // Save the low watermark if none has been recorded yet
             /** @noinspection SqlResolve */
             $statId = $this->store->select('SELECT MAX(statId) as statId FROM '.$tableName, []);
             $watermark = (int) $statId[0]['statId'];
-
-            $out = fopen($fileName, 'w');
-            fwrite($out, $watermark);
-            fclose($out);
+            $this->saveWatermark($watermarkName, $watermark);
         }
 
         // We need to increase it
@@ -579,17 +610,38 @@ class StatsMigrationTask implements TaskInterface
         return $watermark;
     }
 
+    // Hidden setting name for a watermark, e.g. STATS_MIGRATION_WATERMARK_STAT_MONGO
+    private function getWatermarkSetting($watermarkName): string
+    {
+        return 'STATS_MIGRATION_' . strtoupper($watermarkName);
+    }
+
+    // Save the watermark in a hidden setting, committed at once so a later failure in this run keeps it
+    private function saveWatermark($watermarkName, $watermark)
+    {
+        $params = ['setting' => $this->getWatermarkSetting($watermarkName), 'value' => $watermark];
+
+        if ($this->store->exists('SELECT `settingId` FROM `setting` WHERE `setting` = :setting', [
+            'setting' => $params['setting'],
+        ])) {
+            $this->store->update('UPDATE `setting` SET `value` = :value WHERE `setting` = :setting', $params);
+        } else {
+            $this->store->insert('
+                INSERT INTO `setting` (`setting`, `value`, `userSee`, `userChange`)
+                VALUES (:setting, :value, 0, 0)
+            ', $params);
+        }
+
+        $this->store->commitIfNecessary();
+    }
+
     // Check if end of records
-    function checkEndOfRecords($recordCount, $fileName)
+    public function checkEndOfRecords($recordCount, $watermarkName)
     {
 
         if ($recordCount == 0) {
-            // No records in stat, save watermark in file
-            $watermark = -1;
-
-            $out = fopen($fileName, 'w');
-            fwrite($out, $watermark);
-            fclose($out);
+            // No records in stat, save watermark
+            $this->saveWatermark($watermarkName, -1);
 
             return true;
         }
@@ -598,17 +650,15 @@ class StatsMigrationTask implements TaskInterface
     }
 
     // Check loop limits
-    function checkLoopLimits($numberOfLoops, $optionsNumberOfLoops, $fileName, $watermark)
+    public function checkLoopLimits($numberOfLoops, $optionsNumberOfLoops, $watermarkName, $watermark)
     {
 
         if ($numberOfLoops == $optionsNumberOfLoops) {
-            // Save watermark in file
+            // Save watermark
             $watermark = $watermark - 1;
             $this->log->debug(' Loop reached limit. Watermark is now '.$watermark);
 
-            $out = fopen($fileName, 'w');
-            fwrite($out, $watermark);
-            fclose($out);
+            $this->saveWatermark($watermarkName, $watermark);
 
             return true;
         }

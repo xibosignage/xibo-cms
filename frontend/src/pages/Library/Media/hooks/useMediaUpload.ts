@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { useEffect, useRef, useState } from 'react';
@@ -28,7 +30,9 @@ import { ACCEPTED_MIME_TYPES } from '../MediaConfig';
 import { notify } from '@/components/ui/Notification';
 import { useUploadContext } from '@/context/UploadContext';
 import type { UploadItem } from '@/hooks/useUploadQueue';
-import { uploadThumbnail } from '@/services/mediaApi';
+
+// Saves landing close together refresh the list once.
+export const REFRESH_DELAY_MS = 1000;
 
 interface UseMediaUploadProps {
   targetUploadFolderId: number;
@@ -44,8 +48,59 @@ export function useMediaUpload({
   const { t } = useTranslation();
   const [isAddModalOpen, setAddModalOpen] = useState(false);
 
-  const { queue, addFiles, removeFile, clearQueue, updateFileData, saveMetadata, addUrlToQueue } =
-    useUploadContext();
+  const {
+    queue,
+    addFiles,
+    removeFile,
+    clearQueue,
+    clearFinished,
+    updateFileData,
+    saveMetadata,
+    addUrlToQueue,
+    startUploadSession,
+  } = useUploadContext();
+
+  // Uploads finished since the dialog was last closed belong to that session, not this one.
+  useEffect(() => {
+    if (isAddModalOpen) {
+      clearFinished();
+      startUploadSession();
+    }
+  }, [isAddModalOpen, clearFinished, startUploadSession]);
+
+  const handleRefreshRef = useRef(handleRefresh);
+  const previousItemsRef = useRef(new Map<string, UploadItem>());
+  const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  useEffect(() => {
+    handleRefreshRef.current = handleRefresh;
+  }, [handleRefresh]);
+
+  // Uploads, details and thumbnails keep saving after Done, so the list is refreshed once they settle.
+  useEffect(() => {
+    const previous = previousItemsRef.current;
+    const hasSaved = queue.some((item) => {
+      const before = previous.get(item.id);
+      if (!before || item.status !== 'completed') {
+        return false;
+      }
+
+      return (
+        before.status !== 'completed' ||
+        (before.isDirty === true && !item.isDirty) ||
+        (!item.thumbnailFailed && item.savedThumbnailBlob !== before.savedThumbnailBlob)
+      );
+    });
+
+    previousItemsRef.current = new Map(queue.map((item) => [item.id, item]));
+
+    if (hasSaved) {
+      clearTimeout(refreshTimerRef.current);
+      refreshTimerRef.current = setTimeout(() => handleRefreshRef.current(), REFRESH_DELAY_MS);
+    }
+  }, [queue]);
+
+  useEffect(() => () => clearTimeout(refreshTimerRef.current), []);
 
   const uploadStateRef = useRef({ targetId: targetUploadFolderId, canCreate: canAddToFolder });
 
@@ -90,32 +145,14 @@ export function useMediaUpload({
   const handleStartUpload = async () => {
     await saveMetadata();
 
-    const thumbnailPromises = queue
-      .filter((item): item is UploadItem & { mediaId: number; thumbnailBlob: Blob } => {
-        return !!item.thumbnailBlob && !!item.mediaId;
-      })
-      .map((item) => {
-        return uploadThumbnail({
-          mediaId: item.mediaId,
-          image: item.thumbnailBlob,
-        });
-      });
-
-    if (thumbnailPromises.length > 0) {
-      try {
-        await Promise.allSettled(thumbnailPromises);
-      } catch (error) {
-        console.error('Failed to save some thumbnails', error);
-        notify.error(t('Some thumbnails failed to save.'));
-      }
-    }
-
+    // Video thumbnails are sent by the upload queue as soon as each upload finishes.
     const hasPending = queue.some((item) => {
       return item.status === 'uploading' || item.status === 'pending';
     });
 
     if (!hasPending) {
-      clearQueue();
+      // Keeps failed items, so they can be retried.
+      clearFinished();
     }
 
     setAddModalOpen(false);

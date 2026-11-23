@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { screen, waitFor } from '@testing-library/react';
@@ -151,33 +153,37 @@ describe('AddAndEditDaypartModal - add mode', () => {
     expect(screen.getByRole('textbox', { name: /^name$/i })).toBeInTheDocument();
   });
 
-  test('a successful save sends the entered values to createDaypart and closes', async () => {
-    const user = userEvent.setup();
-    vi.mocked(createDaypart).mockResolvedValue(mockDaypart);
-    const { onClose } = renderAddEditModal({ type: 'add' });
+  test(
+    'a successful save sends the entered values to createDaypart and closes',
+    { tags: ['smoke'] },
+    async () => {
+      const user = userEvent.setup();
+      vi.mocked(createDaypart).mockResolvedValue(mockDaypart);
+      const { onClose } = renderAddEditModal({ type: 'add' });
 
-    await user.type(screen.getByRole('textbox', { name: /^name$/i }), 'Morning Slot');
-    await user.type(screen.getByRole('textbox', { name: /start time/i }), '09:00:00');
-    await user.type(screen.getByRole('textbox', { name: /end time/i }), '17:00:00');
-    await user.click(screen.getByRole('button', { name: /^save$/i }));
+      await user.type(screen.getByRole('textbox', { name: /^name$/i }), 'Morning Slot');
+      await user.type(screen.getByRole('textbox', { name: /start time/i }), '09:00:00');
+      await user.type(screen.getByRole('textbox', { name: /end time/i }), '17:00:00');
+      await user.click(screen.getByRole('button', { name: /^save$/i }));
 
-    await waitFor(() => {
-      expect(createDaypart).toHaveBeenCalledWith(
-        expect.objectContaining({
-          name: 'Morning Slot',
-          startTime: '09:00:00',
-          endTime: '17:00:00',
-          isRetired: 0,
-          exceptionDays: [],
-          exceptionStartTimes: [],
-          exceptionEndTimes: [],
-        }),
-      );
-    });
-    await waitFor(() => {
-      expect(onClose).toHaveBeenCalled();
-    });
-  });
+      await waitFor(() => {
+        expect(createDaypart).toHaveBeenCalledWith(
+          expect.objectContaining({
+            name: 'Morning Slot',
+            startTime: '09:00:00',
+            endTime: '17:00:00',
+            isRetired: 0,
+            exceptionDays: [],
+            exceptionStartTimes: [],
+            exceptionEndTimes: [],
+          }),
+        );
+      });
+      await waitFor(() => {
+        expect(onClose).toHaveBeenCalled();
+      });
+    },
+  );
 
   test('clicking Cancel closes the modal without saving', async () => {
     const user = userEvent.setup();

@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 
@@ -32,6 +34,88 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class AuditLogFactory extends BaseFactory
 {
+    /** @var AuditLogExtensionInterface|null Extends the listing and export, none when null */
+    private ?AuditLogExtensionInterface $extension = null;
+
+    /**
+     * Extends the audit log listing and export (CE has no extension).
+     * @param AuditLogExtensionInterface|null $extension
+     * @return $this
+     */
+    public function setExtension(?AuditLogExtensionInterface $extension): static
+    {
+        $this->extension = $extension;
+        return $this;
+    }
+
+    /**
+     * The extra filter parameters an extension accepts.
+     * @return string[]
+     */
+    public function getExtensionFilterNames(): array
+    {
+        return $this->extension?->getFilterNames() ?? [];
+    }
+
+    /**
+     * The extra CSV export headers an extension adds.
+     * @return string[]
+     */
+    public function getExtensionExportHeaders(): array
+    {
+        return $this->extension?->getExportHeaders() ?? [];
+    }
+
+    /**
+     * The extra CSV export values an extension adds for this entry.
+     * @param AuditLog $entry
+     * @return array
+     */
+    public function getExtensionExportValues(AuditLog $entry): array
+    {
+        return $this->extension?->getExportValues($entry) ?? [];
+    }
+
+    /**
+     * The CSV export's User column for this entry: its userName, unless an extension set that.
+     * @param AuditLog $entry
+     * @return string|null
+     */
+    public function getExportUserName(AuditLog $entry): ?string
+    {
+        return $this->extension?->getExportUserName($entry) ?? $entry->userName;
+    }
+
+    /**
+     * One whole CSV export row, as an extension makes it safe to open in a spreadsheet (unchanged without one).
+     * @param array $cells
+     * @return array
+     */
+    public function getExportSafeRow(array $cells): array
+    {
+        return $this->extension?->getExportSafeRow($cells) ?? $cells;
+    }
+
+    /**
+     * Decorates audit entries read some other way than query() (reports), as query() does.
+     * @param AuditLog[] $entries
+     */
+    public function decorate(array $entries): void
+    {
+        $this->extension?->decorate($entries);
+    }
+
+    /**
+     * Who wrote other rows that carry a session history (debug log rows, session history rows), as decorate()
+     * attributes audit rows: the fields to set on each, keyed as the rows were; nothing for rows left as they are.
+     * @param array<int|string, array{sessionHistoryId: int|null, userId: int|null, userName: string|null}> $rows
+     * @return array<int|string, array<string, mixed>>
+     */
+    public function getAttributions(array $rows): array
+    {
+        return $this->extension?->getAttributions($rows) ?? [];
+    }
+
     /**
      * @return AuditLog
      */
@@ -174,6 +258,13 @@ class AuditLogFactory extends BaseFactory
             $params['logId'] = $sanitizedFilter->getInt('logId');
         }
 
+        // Extension filters
+        if ($this->extension !== null) {
+            [$extensionSql, $extensionParams] = $this->extension->filter($sanitizedFilter);
+            $body .= $extensionSql;
+            $params = array_merge($params, $extensionParams);
+        }
+
         // Sorting?
         $allowedColumns = [
             'logId',
@@ -210,6 +301,8 @@ class AuditLogFactory extends BaseFactory
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $this->create()->hydrate($row);
         }
+
+        $this->extension?->decorate($entries);
 
         // Paging
         if ($limit != '' && count($entries) > 0) {

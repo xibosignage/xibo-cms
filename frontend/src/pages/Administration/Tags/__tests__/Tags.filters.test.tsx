@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { screen, waitFor } from '@testing-library/react';
@@ -126,12 +128,9 @@ describe('Tags page - search and filters', () => {
 
     await user.type(screen.getByRole('textbox', { name: /search tags/i }), 'location');
 
-    await waitFor(
-      () => {
-        expect(fetchTags).toHaveBeenCalledWith(expect.objectContaining({ tag: 'location' }));
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchTags).toHaveBeenCalledWith(expect.objectContaining({ tag: 'location' }));
+    });
   });
 
   test('typing in the search box resets to page 1', async () => {
@@ -141,14 +140,11 @@ describe('Tags page - search and filters', () => {
 
     await user.type(screen.getByRole('textbox', { name: /search tags/i }), 'location');
 
-    await waitFor(
-      () => {
-        expect(fetchTags).toHaveBeenCalledWith(
-          expect.objectContaining({ tag: 'location', start: 0 }),
-        );
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchTags).toHaveBeenCalledWith(
+        expect.objectContaining({ tag: 'location', start: 0 }),
+      );
+    });
   });
 
   test('entering a Name filter updates the query and resets to page 1', async () => {
@@ -160,14 +156,11 @@ describe('Tags page - search and filters', () => {
     const nameInput = await screen.findByRole('textbox', { name: /^name$/i });
     await user.type(nameInput, 'location');
 
-    await waitFor(
-      () => {
-        expect(fetchTags).toHaveBeenCalledWith(
-          expect.objectContaining({ tag: 'location', start: 0 }),
-        );
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchTags).toHaveBeenCalledWith(
+        expect.objectContaining({ tag: 'location', start: 0 }),
+      );
+    });
   });
 
   test('clicking Reset clears the filter inputs', async () => {
@@ -179,12 +172,9 @@ describe('Tags page - search and filters', () => {
     const nameInput = (await screen.findByRole('textbox', { name: /^name$/i })) as HTMLInputElement;
     await user.type(nameInput, 'location');
 
-    await waitFor(
-      () => {
-        expect(fetchTags).toHaveBeenCalledWith(expect.objectContaining({ tag: 'location' }));
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchTags).toHaveBeenCalledWith(expect.objectContaining({ tag: 'location' }));
+    });
 
     await user.click(screen.getByRole('button', { name: /reset/i }));
 
@@ -213,19 +203,13 @@ describe('Tags page - search and filters', () => {
 
     const search = screen.getByRole('textbox', { name: /search tags/i });
     await user.type(search, 'location');
-    await waitFor(
-      () => {
-        expect(fetchTags).toHaveBeenCalledWith(expect.objectContaining({ tag: 'location' }));
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchTags).toHaveBeenCalledWith(expect.objectContaining({ tag: 'location' }));
+    });
 
     await user.clear(search);
-    await waitFor(
-      () => {
-        expect(fetchTags).toHaveBeenCalledWith(expect.objectContaining({ tag: undefined }));
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchTags).toHaveBeenCalledWith(expect.objectContaining({ tag: undefined }));
+    });
   });
 });

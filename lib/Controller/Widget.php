@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Controller;
@@ -42,11 +44,13 @@ use Xibo\Factory\WidgetDataFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Middleware\TokenAuthMiddleware;
+use Xibo\Service\LibraryStorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Widget\Provider\DataProviderInterface;
 use Xibo\Widget\Render\WidgetDownloader;
 
 /**
@@ -103,7 +107,8 @@ class Widget extends Base
         $transitionFactory,
         $regionFactory,
         $widgetAudioFactory,
-        private readonly WidgetDataFactory $widgetDataFactory
+        private readonly WidgetDataFactory $widgetDataFactory,
+        private readonly LibraryStorageServiceInterface $libraryStorageService
     ) {
         $this->moduleFactory = $moduleFactory;
         $this->moduleTemplateFactory = $moduleTemplateFactory;
@@ -1200,10 +1205,31 @@ class Widget extends Base
             $dataTypeFields = null;
         }
 
-        // Use the cache if we can.
-        if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey, $dataModifiedDt)
-            || $widgetDataProviderCache->isCacheMissOrOld()
-        ) {
+        // Uses the cache without waiting for another process that is refreshing it.
+        $hasCachedData = $widgetDataProviderCache->decorateWithCache(
+            $dataProvider,
+            $cacheKey,
+            $dataModifiedDt,
+            true,
+            false
+        );
+        $isRefreshingElsewhere = $widgetDataProviderCache->isRefreshingElsewhere();
+
+        if ($isRefreshingElsewhere) {
+            // Stale data, or none yet, is served and never saved back, so a recent edit may briefly not show.
+            $this->getLog()->debug('getData: data is being refreshed elsewhere, has stale data: '
+                . var_export($hasCachedData, true));
+
+            if (!$hasCachedData) {
+                $dataProvider->clearData();
+
+                // Nothing cached yet, so show fallback data if the widget has some.
+                if ($showFallback !== 'never' && $dataTypeFields !== null) {
+                    $isFallback = $this->addFallbackData($dataProvider, $widget->widgetId, $dataTypeFields);
+                    $dataProvider->addOrUpdateMeta('includesFallback', $isFallback);
+                }
+            }
+        } else if (!$hasCachedData || $widgetDataProviderCache->isCacheMissOrOld()) {
             $this->getLog()->debug('getData: Pulling fresh data');
 
             try {
@@ -1238,22 +1264,11 @@ class Widget extends Base
                     $this->getLog()->debug('getData: eligible for fallback data');
 
                     // Pull in the fallback data
-                    foreach ($this->widgetDataFactory->getByWidgetId($dataProvider->getWidgetId()) as $item) {
-                        // Handle any special data types in the fallback data
-                        foreach ($item->data as $itemId => $itemData) {
-                            if (!empty($itemData)
-                                && array_key_exists($itemId, $dataTypeFields)
-                                && $dataTypeFields[$itemId] === 'image'
-                            ) {
-                                $item->data[$itemId] = $dataProvider->addLibraryFile($itemData);
-                            }
-                        }
-
-                        $dataProvider->addItem($item->data);
-
-                        // Indicate we've been handled by fallback data
-                        $isFallback = true;
-                    }
+                    $isFallback = $this->addFallbackData(
+                        $dataProvider,
+                        $dataProvider->getWidgetId(),
+                        $dataTypeFields
+                    );
 
                     if ($isFallback) {
                         $dataProvider->addOrUpdateMeta('includesFallback', true);
@@ -1269,12 +1284,17 @@ class Widget extends Base
                 $media = $dataProvider->getImages();
                 if (count($media) > 0) {
                     // Process the downloads.
-                    $this->mediaFactory->processDownloads(function ($media) use ($widget) {
+                    $this->mediaFactory->processDownloads(function ($media) use ($widgetDataProviderCache) {
                         // Success
                         // We don't need to do anything else, references to mediaId will be built when we
                         // decorate the HTML.
                         // Nothing is linked to a display when in preview mode.
                         $this->getLog()->debug('getData: Successfully downloaded ' . $media->mediaId);
+                        $widgetDataProviderCache->refreshLock();
+                    }, function () use ($widgetDataProviderCache) {
+                        $widgetDataProviderCache->refreshLock();
+                    }, function () use ($widgetDataProviderCache) {
+                        $widgetDataProviderCache->refreshLock();
                     });
                 }
 
@@ -1332,10 +1352,12 @@ class Widget extends Base
             },
         );
 
-        return $response->withJson([
+        $response = $response->withJson([
             'data' => $data,
             'meta' => $dataProvider->getMeta(),
         ]);
+
+        return $isRefreshingElsewhere ? $response->withHeader('Cache-Control', 'no-store') : $response;
     }
 
     /**
@@ -1387,7 +1409,8 @@ class Widget extends Base
             $downloader = new WidgetDownloader(
                 $this->getConfig()->getSetting('LIBRARY_LOCATION'),
                 $this->getConfig()->getSetting('SENDFILE_MODE'),
-                $this->getConfig()->getSetting('DEFAULT_RESIZE_LIMIT', 6000)
+                $this->getConfig()->getSetting('DEFAULT_RESIZE_LIMIT', 6000),
+                $this->mediaFactory->getStorageFor($media->storageEngine)
             );
             $downloader->useLogger($this->getLog()->getLoggerInterface());
             return $this->render($request, $downloader->download($media, $request, $response));
@@ -2089,5 +2112,31 @@ class Widget extends Base
         } else {
             throw new NotFoundException(__('Widget does not have a data type'));
         }
+    }
+
+    /**
+     * Adds the widget's fallback data to the data provider, adding any image fields as library files.
+     * @param array<string, string> $dataTypeFields field id => data type
+     * @return bool whether any fallback data was added
+     */
+    private function addFallbackData(DataProviderInterface $dataProvider, int $widgetId, array $dataTypeFields): bool
+    {
+        $isFallback = false;
+        foreach ($this->widgetDataFactory->getByWidgetId($widgetId) as $item) {
+            // Handle any special data types in the fallback data
+            foreach ($item->data as $itemId => $itemData) {
+                if (!empty($itemData)
+                    && array_key_exists($itemId, $dataTypeFields)
+                    && $dataTypeFields[$itemId] === 'image'
+                ) {
+                    $item->data[$itemId] = $dataProvider->addLibraryFile($itemData);
+                }
+            }
+
+            $dataProvider->addItem($item->data);
+            $isFallback = true;
+        }
+
+        return $isFallback;
     }
 }

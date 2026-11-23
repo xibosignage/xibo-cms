@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Service;
@@ -31,8 +33,10 @@ use Xibo\Entity\ReportResult;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Helper\SanitizerService;
 use Xibo\Report\ReportInterface;
+use Xibo\Storage\LibraryFileJournal;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -266,23 +270,7 @@ class ReportService implements ReportServiceInterface
 
         $savedReport = $this->savedReportFactory->getById($savedreportId);
 
-        // Open a zipfile and read the json
-        $zipFile = $this->config->getSetting('LIBRARY_LOCATION') .'savedreport/'. $savedReport->fileName;
-
-        // Do some pre-checks on the arguments we have been provided
-        if (!file_exists($zipFile)) {
-            throw new InvalidArgumentException(__('File does not exist'));
-        }
-
-        // Open the Zip file
-        $zip = new \ZipArchive();
-        if (!$zip->open($zipFile)) {
-            throw new InvalidArgumentException(__('Unable to open ZIP'));
-        }
-
-        // Get the reportscheduledetails
-        $json = json_decode($zip->getFromName('reportschedule.json'), true);
-        $zip->close();
+        $json = $this->readSavedReportJson($savedReport->fileName, $savedReport->storageEngine);
 
         // Backward-compat: old ZIP files may omit the chart key or store null.
         // Ensure it is always an array so per-report getSavedReportResults() can safely read it.
@@ -310,43 +298,108 @@ class ReportService implements ReportServiceInterface
 
         $savedReport = $this->savedReportFactory->getById($savedreportId);
 
-        // Open a zipfile and read the json
-        $zipFile = $this->config->getSetting('LIBRARY_LOCATION') . $savedReport->storedAs;
-
-        // Do some pre-checks on the arguments we have been provided
-        if (!file_exists($zipFile)) {
-            throw new InvalidArgumentException(__('File does not exist'));
-        }
-
-        // Open the Zip file
-        $zip = new \ZipArchive();
-        if (!$zip->open($zipFile)) {
-            throw new InvalidArgumentException(__('Unable to open ZIP'));
-        }
-
         // Get the old json (saved report)
-        $oldjson = json_decode($zip->getFromName('reportschedule.json'), true);
+        $oldjson = $this->readSavedReportJson($savedReport->fileName, $savedReport->storageEngine);
 
         // Restructure the old json to new json
         $json = $object->restructureSavedReportOldJson($oldjson);
 
-        // Format the JSON as schemaVersion 2
-        $fileName = tempnam($this->config->getSetting('LIBRARY_LOCATION') . '/temp/', 'reportschedule');
-        $out = fopen($fileName, 'w');
-        fwrite($out, json_encode($json));
-        fclose($out);
+        // A new key keeps the original until the row points at the converted zip.
+        $convertedKey = preg_replace('/\.zip$/', '', $savedReport->fileName) . '_v2.zip';
+        $stored = $this->storeSavedReportZip($json, $convertedKey);
 
-        $zip = new \ZipArchive();
-        $result = $zip->open($zipFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
-        if ($result !== true) {
-            throw new InvalidArgumentException(__('Can\'t create ZIP. Error Code: %s', $result));
+        // Recording the delete opens the transaction, so the upload record is kept if saving the row fails.
+        (new LibraryFileJournal(
+            $this->store,
+            $this->getSavedReportStorage($savedReport->storageEngine),
+            LibraryAsset::SAVED_REPORT
+        ))->deleteAfterCommit($savedReport->fileName, $this->log->getLoggerInterface());
+        $stored['journal']->clearUploadAfterCommit($stored['journalId']);
+
+        // The converted zip is in the configured store, even when the original waited to be copied.
+        if ($savedReport->storageEngine !== null) {
+            $this->store->update(
+                'UPDATE `saved_report` SET `storageEngine` = NULL WHERE `savedReportId` = :savedReportId',
+                ['savedReportId' => $savedReport->savedReportId]
+            );
         }
 
-        $zip->addFile($fileName, 'reportschedule.json');
-        $zip->close();
+        return [
+            'fileName' => $convertedKey,
+            'size' => $stored['size'],
+            'md5' => $stored['md5'],
+        ];
+    }
 
-        // Remove the JSON file
-        unlink($fileName);
+    /**
+     * @inheritdoc
+     */
+    public function storeSavedReportZip(array|\JsonSerializable $results, string $key): array
+    {
+        $jsonTempPath = tempnam($this->config->getSetting('LIBRARY_LOCATION') . '/temp/', 'reportschedule');
+        $zipTempPath = $jsonTempPath . '.zip';
+        try {
+            file_put_contents($jsonTempPath, json_encode($results));
+
+            $zip = new \ZipArchive();
+            $result = $zip->open($zipTempPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+            if ($result !== true) {
+                throw new InvalidArgumentException(__('Can\'t create ZIP. Error Code: %s', $result));
+            }
+            $zip->addFile($jsonTempPath, 'reportschedule.json');
+            $zip->close();
+
+            // Size and md5 first: storing the zip removes the local copy.
+            $size = filesize($zipTempPath);
+            $md5 = md5_file($zipTempPath);
+
+            $journal = new LibraryFileJournal($this->store, $this->getSavedReportStorage(), LibraryAsset::SAVED_REPORT);
+            $journalId = $journal->storeLocalFile($zipTempPath, $key, false, $this->log->getLoggerInterface());
+        } finally {
+            @unlink($jsonTempPath);
+            @unlink($zipTempPath);
+        }
+
+        return ['journal' => $journal, 'journalId' => $journalId, 'size' => $size, 'md5' => $md5];
+    }
+
+    /**
+     * Read reportschedule.json from a saved report zip
+     * @param string $fileName
+     * @param string|null $storageEngine the saved report's storageEngine
+     * @return array|null
+     * @throws GeneralException
+     */
+    private function readSavedReportJson(string $fileName, ?string $storageEngine = null): ?array
+    {
+        $storage = $this->getSavedReportStorage($storageEngine);
+
+        try {
+            $zipFile = $storage->downloadToTemp($fileName);
+        } catch (NotFoundException) {
+            throw new InvalidArgumentException(__('File does not exist'));
+        }
+
+        try {
+            // Open the Zip file
+            $zip = new \ZipArchive();
+            if ($zip->open($zipFile) !== true) {
+                throw new InvalidArgumentException(__('Unable to open ZIP'));
+            }
+
+            // Get the reportscheduledetails
+            $json = json_decode($zip->getFromName('reportschedule.json'), true);
+            $zip->close();
+        } finally {
+            $storage->releaseTemp($zipFile);
+        }
+
+        return $json;
+    }
+
+    private function getSavedReportStorage(?string $storageEngine = null): LibraryStorageServiceInterface
+    {
+        return $this->container->get('libraryStorageRegistry')->get(LibraryAsset::SAVED_REPORT, $storageEngine);
     }
 
     /**
@@ -385,16 +438,8 @@ class ReportService implements ReportServiceInterface
     /**
      * @inheritdoc
      */
-    public function getReportChartScript($savedreportId, $reportName)
+    public function getReportChartScriptFromResults(ReportResult|array $results, string $reportName)
     {
-        /* @var ReportResult $results */
-        $results = $this->getSavedReportResults($savedreportId, $reportName);
-
-        $className = $this->getReportClass($reportName);
-
-        $object = $this->createReportObject($className);
-
-        // Set Report Schedule form data
-        return $object->getReportChartScript($results);
+        return $this->createReportObject($this->getReportClass($reportName))->getReportChartScript($results);
     }
 }

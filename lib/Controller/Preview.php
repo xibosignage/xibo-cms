@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 namespace Xibo\Controller;
 
@@ -156,30 +158,26 @@ class Preview extends Base
      */
     public function getXlf(Request $request, Response $response, $id)
     {
-        $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->getById($id));
-        try {
-            /** @var \Lcobucci\JWT\Token $token */
-            $token = $request->getAttribute('authedToken');
-            if (!$this->getUser()->checkViewable($layout) && empty($token)) {
-                throw new AccessDeniedException();
-            }
+        $layout = $this->layoutFactory->getById($id);
 
-            if (!empty($token)
-                && (!$token->isPermittedFor('layout') || !$token->isIdentifiedBy($layout->layoutId))
-            ) {
-                throw new AccessDeniedException();
-            }
-
-            $response->getBody()->write(file_get_contents($layout->xlfToDisk([
-                'notify' => false,
-                'collectNow' => false,
-            ])));
-
-            $this->setNoOutput();
-        } finally {
-            // Release lock
-            $this->layoutFactory->concurrentRequestRelease($layout);
+        /** @var \Lcobucci\JWT\Token $token */
+        $token = $request->getAttribute('authedToken');
+        if (!$this->getUser()->checkViewable($layout) && empty($token)) {
+            throw new AccessDeniedException();
         }
+
+        if (!empty($token)
+            && (!$token->isPermittedFor('layout') || !$token->isIdentifiedBy($layout->layoutId))
+        ) {
+            throw new AccessDeniedException();
+        }
+
+        $response->getBody()->write($this->layoutFactory->getBuiltXlf($layout, [
+            'notify' => false,
+            'collectNow' => false,
+        ]));
+
+        $this->setNoOutput();
 
         return $this->render($request, $response);
     }

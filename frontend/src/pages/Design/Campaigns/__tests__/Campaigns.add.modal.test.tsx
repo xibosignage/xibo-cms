@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -260,32 +262,36 @@ describe('AddCampaignModal', () => {
   // ---------------------------------------------------------------------------
   // API calls — happy path (list campaign)
   // ---------------------------------------------------------------------------
-  test('successful list campaign creation calls createCampaign with correct payload', async () => {
-    vi.mocked(createCampaign).mockResolvedValueOnce({ campaignId: 1 } as Campaign);
-    const onSuccess = vi.fn();
-    const onClose = vi.fn();
-    renderModal({ onSuccess, onClose });
+  test(
+    'successful list campaign creation calls createCampaign with correct payload',
+    { tags: ['smoke'] },
+    async () => {
+      vi.mocked(createCampaign).mockResolvedValueOnce({ campaignId: 1 } as Campaign);
+      const onSuccess = vi.fn();
+      const onClose = vi.fn();
+      renderModal({ onSuccess, onClose });
 
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'New List Campaign' } });
+      fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'New List Campaign' } });
 
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
-    });
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+      });
 
-    await waitFor(() => {
-      expect(createCampaign).toHaveBeenCalledWith(
-        expect.objectContaining({
-          name: 'New List Campaign',
-          type: 'list',
-          cyclePlaybackEnabled: false,
-          listPlayOrder: 'round',
-        }),
-      );
-    });
+      await waitFor(() => {
+        expect(createCampaign).toHaveBeenCalledWith(
+          expect.objectContaining({
+            name: 'New List Campaign',
+            type: 'list',
+            cyclePlaybackEnabled: false,
+            listPlayOrder: 'round',
+          }),
+        );
+      });
 
-    expect(onSuccess).toHaveBeenCalledTimes(1);
-    expect(onClose).toHaveBeenCalledTimes(1);
-  });
+      expect(onSuccess).toHaveBeenCalledTimes(1);
+      expect(onClose).toHaveBeenCalledTimes(1);
+    },
+  );
 
   test('list campaign with cycle playback enabled calls createCampaign with playCount', async () => {
     vi.mocked(createCampaign).mockResolvedValueOnce({ campaignId: 2 } as Campaign);

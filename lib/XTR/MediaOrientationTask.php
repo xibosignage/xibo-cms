@@ -1,28 +1,33 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\XTR;
 
+use Xibo\Entity\Media;
 use Xibo\Factory\MediaFactory;
+use Xibo\Service\LibraryStorageServiceInterface;
+use Xibo\Support\Exception\GeneralException;
 
 class MediaOrientationTask implements TaskInterface
 {
@@ -33,10 +38,16 @@ class MediaOrientationTask implements TaskInterface
      */
     private $mediaFactory;
 
+    /**
+     * @var LibraryStorageServiceInterface
+     */
+    private $libraryStorageService;
+
     /** @inheritdoc */
     public function setFactories($container)
     {
         $this->mediaFactory = $container->get('mediaFactory');
+        $this->libraryStorageService = $container->get('libraryStorageService');
         return $this;
     }
 
@@ -56,26 +67,47 @@ class MediaOrientationTask implements TaskInterface
         $this->appendRunMessage('# Setting Media Orientation on Library Media files.');
 
         // onlyMenuBoardAllowed filter means images and videos
-        $filesToCheck = $this->mediaFactory->query(null, ['requiresMetaUpdate' => 1, 'onlyMenuBoardAllowed' => 1]);
+        $filesToCheck = $this->mediaFactory->query(null, [
+            'requiresMetaUpdate' => 1,
+            'onlyMenuBoardAllowed' => 1,
+            'excludeWaitingForMove' => 1,
+        ]);
         $count = 0;
 
         foreach ($filesToCheck as $media) {
             $count++;
-            $filePath = '';
-            $libraryFolder = $this->config->getSetting('LIBRARY_LOCATION');
+            $key = '';
 
             if ($media->mediaType === 'image') {
-                $filePath = $libraryFolder . $media->storedAs;
-            } elseif ($media->mediaType === 'video' && file_exists($libraryFolder . $media->mediaId . '_videocover.png')) {
-                $filePath = $libraryFolder . $media->mediaId . '_videocover.png';
+                $key = $media->storedAs;
+            } elseif ($media->mediaType === 'video' && $media->thumbnailVersion !== null) {
+                $key = Media::getVideoCoverKey($media->mediaId);
             }
 
-            if (!empty($filePath)) {
-                list($imgWidth, $imgHeight) = @getimagesize($filePath);
-                $media->width = $imgWidth;
-                $media->height = $imgHeight;
-                $media->orientation = ($imgWidth >= $imgHeight) ? 'landscape' : 'portrait';
-                $media->save(['saveTags' => false, 'validate' => false]);
+            if (!empty($key)) {
+                try {
+                    $tempCopyPath = $this->libraryStorageService->downloadToTemp($key);
+                } catch (GeneralException $exception) {
+                    $this->log->error('Cannot read library file for orientation update: ' . $key . '. '
+                        . $exception->getMessage());
+                    continue;
+                }
+
+                try {
+                    $imageSize = @getimagesize($tempCopyPath);
+                    if ($imageSize === false) {
+                        $this->log->error('Cannot read image size for orientation update: ' . $key);
+                        continue;
+                    }
+
+                    [$imgWidth, $imgHeight] = $imageSize;
+                    $media->width = $imgWidth;
+                    $media->height = $imgHeight;
+                    $media->orientation = ($imgWidth >= $imgHeight) ? 'landscape' : 'portrait';
+                    $media->save(['saveTags' => false, 'validate' => false]);
+                } finally {
+                    $this->libraryStorageService->releaseTemp($tempCopyPath);
+                }
             }
         }
         $this->appendRunMessage('Updated ' . $count . ' items');

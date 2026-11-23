@@ -17,6 +17,9 @@ node_modules/
 web/dist/
 web/app/
 
+# A local ChromeOS player package (a "local" pin): the build extracts it into web/pwa beforehand
+**/xibo-chromeos-*.zip
+
 # Cache should be empty so that it gets built internally
 cache/
 
@@ -29,8 +32,13 @@ web/theme/custom/*
 
 Dockerfile*
 docker-compose.yml
+docker-compose.dev.yml
+.env.template
 docker-compose-mysql-5.7.yml
 CONTRIBUTING.md
+
+# Production install data
+shared/
 
 # Our own container's settings.php shouldn't be included
 web/settings.php
@@ -38,3 +46,6 @@ web/settings.php
 # Our own build files
 build.sh
 build-composer.sh
+
+# Local environment variables, for example XIBO_LICENSE_KEY
+.env

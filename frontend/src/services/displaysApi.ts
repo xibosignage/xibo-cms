@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import axios from 'axios';
@@ -316,11 +318,116 @@ export async function fetchDisplayLocales(): Promise<{ id: string; value: string
   return response.data;
 }
 
-export async function addDisplayViaCode(userCode: string): Promise<void> {
-  const params = new URLSearchParams({ user_code: userCode });
+export async function addDisplayViaCode(
+  input:
+    | string
+    | {
+        userCode: string;
+        displayName?: string;
+        folderId?: number | null;
+        displayGroupId?: number | null;
+        authorised?: boolean;
+      },
+): Promise<void> {
+  const opts = typeof input === 'string' ? { userCode: input } : input;
+  const params = new URLSearchParams({ user_code: opts.userCode });
+  if (opts.displayName) params.append('displayName', opts.displayName);
+  if (opts.folderId != null) params.append('folderId', String(opts.folderId));
+  if (opts.displayGroupId != null) params.append('displayGroupId', String(opts.displayGroupId));
+  if (opts.authorised !== undefined) params.append('authorised', opts.authorised ? '1' : '0');
   await http.post('/display/addViaCode', params.toString(), {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   });
+}
+
+export interface LicenceUsage {
+  /** null means unlimited. */
+  maxLicensed: number | null;
+  currentlyLicensed: number;
+  /** null means unlimited. */
+  available: number | null;
+}
+
+export async function fetchLicenceUsage(): Promise<LicenceUsage> {
+  const response = await http.get('/display/licence/usage');
+  return response.data;
+}
+
+export interface ConnectDetails {
+  /** The address a Player must be pointed at, as the CMS itself resolves it. */
+  cmsAddress: string;
+  cmsKey: string;
+}
+
+export async function fetchConnectDetails(): Promise<ConnectDetails> {
+  const response = await http.get('/display/connect/details');
+  return response.data;
+}
+
+export interface ConnectCode {
+  /** Four characters, unambiguous alphabet, single use. */
+  code: string;
+  expiresInMinutes: number;
+}
+
+/** Issue a one-time code for a manually configured Player. It identifies the Player only. */
+export async function fetchConnectCode(): Promise<ConnectCode> {
+  const response = await http.post('/display/connect/code', {});
+  return response.data;
+}
+
+export interface ConnectStatus {
+  /** The code was never issued, or has passed its 30 minute life. */
+  expired: boolean;
+  connected: boolean;
+  displayId: number | null;
+  display: string | null;
+  /** The Player was already registered, so it wasn't added again and no settings were applied. */
+  existing?: boolean;
+}
+
+export async function fetchConnectStatus(code: string): Promise<ConnectStatus> {
+  const response = await http.get('/display/connect/status', { params: { code } });
+  return response.data;
+}
+
+export interface ConnectApplied {
+  displayId: number;
+  display: string;
+  licensed: number;
+  folderId: number;
+  /** False when the display ended up in a folder this user can't see. */
+  viewable: boolean;
+  /** False when a display group was chosen but the display couldn't be added to it. */
+  displayGroupAssigned: boolean;
+}
+
+/**
+ * Apply the Add Display settings to the Player that connected with a manual-connect code.
+ *
+ * The CMS applies them on the user's behalf, as it does for an activation code, so this works even
+ * when the Player registered in a folder the user has no rights over. Name, folder and group are
+ * only honoured for users who can edit displays.
+ */
+export async function applyConnectSettings(
+  code: string,
+  opts: {
+    displayName?: string;
+    folderId?: number | null;
+    displayGroupId?: number | null;
+    authorised: boolean;
+  },
+): Promise<ConnectApplied> {
+  const params = new URLSearchParams({ authorised: opts.authorised ? '1' : '0' });
+  if (opts.displayName) params.append('displayName', opts.displayName);
+  if (opts.folderId != null) params.append('folderId', String(opts.folderId));
+  if (opts.displayGroupId != null) params.append('displayGroupId', String(opts.displayGroupId));
+  const response = await http.put(
+    `/display/connect/${encodeURIComponent(code)}`,
+    params.toString(),
+    { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } },
+  );
+  return response.data;
 }
 
 export async function checkLicence(displayId: number | string): Promise<void> {
@@ -335,12 +442,16 @@ export async function requestScreenShot(displayId: number | string): Promise<voi
   });
 }
 
+// Sent without credentials or the CSRF header, as a redirect target may allow any origin and
+// the header would follow the redirect.
 export async function fetchDisplayScreenshotBlob(
   displayId: number | string,
   signal?: AbortSignal,
 ): Promise<Blob> {
   const response = await http.get(`/display/screenshot/${displayId}`, {
     responseType: 'blob',
+    withCredentials: false,
+    withXSRFToken: false,
     signal,
   });
   return response.data;

@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 namespace Xibo\Xmds;
 
@@ -27,9 +29,12 @@ use Intervention\Image\ImageManager;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
 use Xibo\Event\XmdsDependencyRequestEvent;
+use Xibo\Event\XmdsRegisterDisplayEvent;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\LibraryFile;
 use Xibo\Helper\Random;
+use Xibo\Helper\ScreenShotStamp;
+use Xibo\Service\LibraryAsset;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -86,7 +91,7 @@ class Soap4 extends Soap
         $operatingSystem = $sanitized->getString('operatingSystem');
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
+        if (!$this->isValidServerKey($serverKey)) {
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
         }
 
@@ -247,8 +252,14 @@ class Soap4 extends Soap
                 $display->licensed = $this->getConfig()->getSetting('DISPLAY_AUTO_AUTH', 0);
                 $display->incSchedule = 0;
                 $display->clientAddress = $this->getIp();
+                // Set again below for every display. Set here too, so authorising can tell the player apart.
+                $display->clientType = $clientType;
+                $display->clientCode = $clientCode;
 
-                if (!$display->isDisplaySlotAvailable()) {
+                // A refused authorisation leaves the new display waiting for an administrator.
+                if (!$display->isDisplaySlotAvailable()
+                    || ($display->licensed == 1 && $display->requestAuthorisation() !== null)
+                ) {
                     $display->licensed = 0;
                 }
             } catch (\InvalidArgumentException $e) {
@@ -287,6 +298,12 @@ class Soap4 extends Soap
         $display->model = $operatingSystemJson->model ?? null;
 
         $display->save(['validate' => false, 'audit' => false]);
+
+        // Listeners can add attributes and nodes to the response.
+        $this->getDispatcher()->dispatch(
+            new XmdsRegisterDisplayEvent($display, $return, $displayElement),
+            XmdsRegisterDisplayEvent::$NAME
+        );
 
         // Log Bandwidth
         $returnXml = $return->saveXML();
@@ -354,7 +371,7 @@ class Soap4 extends Soap
         $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
+        if (!$this->isValidServerKey($serverKey)) {
             throw new \SoapFault(
                 'Sender',
                 'The Server key you entered does not match with the server key at this address'
@@ -394,21 +411,7 @@ class Soap4 extends Soap
                 $event = new XmdsDependencyRequestEvent($requiredFile);
                 $this->getDispatcher()->dispatch($event, 'xmds.dependency.request');
 
-                // Get the path
-                $path = $event->getRelativePath();
-                if (empty($path)) {
-                    throw new NotFoundException(__('File not found'));
-                }
-
-                $path = LibraryFile::resolve($libraryLocation, $path);
-
-                $f = fopen($path, 'r');
-                if (!$f) {
-                    throw new NotFoundException(__('Unable to get file pointer'));
-                }
-
-                fseek($f, $chunkOffset);
-                $file = fread($f, $chunkSize);
+                $file = $this->readDependencyChunk($event, $libraryLocation, (int)$chunkOffset, (int)$chunkSize);
 
                 // Store file size for bandwidth log
                 $chunkSize = strlen($file);
@@ -424,15 +427,8 @@ class Soap4 extends Soap
                 $requiredFile = $this->requiredFileFactory->getByDisplayAndLayout($this->display->displayId, $fileId);
 
                 // Load the layout
-                $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->getById($fileId));
-                try {
-                    $path = $layout->xlfToDisk();
-                } finally {
-                    $this->layoutFactory->concurrentRequestRelease($layout);
-                }
-
-                $file = file_get_contents($path);
-                $chunkSize = filesize($path);
+                $file = $this->layoutFactory->getBuiltXlf($this->layoutFactory->getById($fileId));
+                $chunkSize = strlen($file);
 
                 $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
                 $requiredFile->save();
@@ -446,21 +442,13 @@ class Soap4 extends Soap
                 $media = $this->mediaFactory->getById($fileId);
                 $this->getLog()->debug(json_encode($media));
 
-                $mediaPath = LibraryFile::resolve($libraryLocation, $media->storedAs);
-                if (!file_exists($mediaPath)) {
-                    throw new NotFoundException(__('Media exists but file missing from library.'));
-                }
-
-                // Return the Chunk size specified
-                $f = fopen($mediaPath, 'r');
-
-                if (!$f) {
-                    throw new NotFoundException(__('Unable to get file pointer'));
-                }
-
-                fseek($f, $chunkOffset);
-
-                $file = fread($f, $chunkSize);
+                // Only the requested chunk is read, from the local library while the media waits to be copied.
+                $storage = $this->libraryStorageRegistry->get(LibraryAsset::MEDIA, $media->storageEngine);
+                $file = $storage->readRange(
+                    $media->storedAs,
+                    (int) $chunkOffset,
+                    (int) $chunkSize
+                )->getContents();
 
                 // Store file size for bandwidth log
                 $chunkSize = strlen($file);
@@ -600,7 +588,7 @@ class Soap4 extends Soap
         $hardwareKey = $sanitizer->getString('hardwareKey');
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
+        if (!$this->isValidServerKey($serverKey)) {
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
         }
 
@@ -760,11 +748,8 @@ class Soap4 extends Soap
         $needConversion = false;
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
-            throw new \SoapFault(
-                'Sender',
-                'The Server key you entered does not match with the server key at this address'
-            );
+        if (!$this->isValidServerKey($serverKey)) {
+            throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
         }
 
         // Auth this request...
@@ -779,11 +764,7 @@ class Soap4 extends Soap
 
         $this->getLog()->debug('Received Screen shot');
 
-        // Open this displays screen shot file and save this.
-        $location = LibraryFile::resolve(
-            $this->getConfig()->getSetting('LIBRARY_LOCATION'),
-            'screenshots/' . $this->display->displayId . '_screenshot.' . $screenShotFmt
-        );
+        $screenShotKey = Display::getScreenShotKey($this->display->displayId);
 
         foreach (['imagick', 'gd'] as $driverName) {
             try {
@@ -815,25 +796,45 @@ class Soap4 extends Soap
 
         // return early with false, keep screenShotRequested intact, let the Player retry.
         if ($needConversion && !$converted) {
-            $this->logBandwidth($this->display->displayId, Bandwidth::$SCREENSHOT, filesize($location));
+            $this->logBandwidth($this->display->displayId, Bandwidth::$SCREENSHOT, strlen($screenShot));
             throw new \SoapFault('Receiver', __('Incorrect Screen shot Format'));
         }
 
-        $fp = fopen($location, 'wb');
-        fwrite($fp, $screenShot);
-        fclose($fp);
+        // Stored with its capture time drawn on, so it is sent as stored.
+        $capturedAt = Carbon::now()->format(DateFormatHelper::getSystemFormat());
+        $bandwidth = strlen($screenShot);
+        if ($screenShotImg !== false) {
+            try {
+                $screenShot = ScreenShotStamp::stamp($screenShotImg, $capturedAt);
+            } catch (\Exception $e) {
+                $this->getLog()->error('Unable to stamp the screen shot: ' . $e->getMessage());
+            }
+        }
+
+        // Stage in temp, then move into storage; on failure screenShotRequested stays set so the Player retries.
+        $tempPath = LibraryFile::resolve(
+            $this->getConfig()->getSetting('LIBRARY_LOCATION'),
+            'temp/screenshot_' . $this->display->displayId . '_' . uniqid() . '.' . $screenShotFmt
+        );
+        try {
+            if (file_put_contents($tempPath, $screenShot) === false) {
+                throw new GeneralException('Unable to write screenshot to ' . $tempPath);
+            }
+            $this->libraryStorageRegistry
+                ->get(LibraryAsset::SCREENSHOT)
+                ->moveFromLocalPath($tempPath, $screenShotKey);
+        } catch (GeneralException $exception) {
+            @unlink($tempPath);
+            $this->getLog()->error('Unable to store screenshot ' . $screenShotKey . ': ' . $exception->getMessage());
+            $this->logBandwidth($this->display->displayId, Bandwidth::$SCREENSHOT, $bandwidth);
+            throw new \SoapFault('Receiver', __('Unable to save Screen shot'));
+        }
 
         // Touch the display record
         $this->display->screenShotRequested = 0;
         $this->display->save(Display::$saveOptionsMinimum);
 
-        // Cache the current screen shot time
-        $this->display->setCurrentScreenShotTime(
-            $this->getPool(),
-            Carbon::now()->format(DateFormatHelper::getSystemFormat())
-        );
-
-        $this->logBandwidth($this->display->displayId, Bandwidth::$SCREENSHOT, filesize($location));
+        $this->logBandwidth($this->display->displayId, Bandwidth::$SCREENSHOT, $bandwidth);
 
         return true;
     }

@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 namespace Xibo\Controller;
 
@@ -44,6 +46,8 @@ use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\QuickChartQRProvider;
 use Xibo\Helper\Random;
 use Xibo\Helper\Translate;
+use Xibo\Middleware\Actions;
+use Xibo\Service\BrandServiceInterface;
 use Xibo\Service\MediaService;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
@@ -90,7 +94,8 @@ class User extends Base
         private readonly PermissionFactory $permissionFactory,
         private readonly ApplicationFactory $applicationFactory,
         private readonly SessionFactory $sessionFactory,
-        private readonly MediaService $mediaService
+        private readonly MediaService $mediaService,
+        private readonly BrandServiceInterface $brandService
     ) {
     }
 
@@ -169,19 +174,15 @@ class User extends Base
             1
         );
 
-        // Branding is served from library/brand/ via the /brand Apache alias.
-        $brandConfig = $this->getConfig()->getBrandConfig();
-        $logoFile = $this->getConfig()->getBrandAssetFile('logo');
-        $iconFile = $this->getConfig()->getBrandAssetFile('logo-icon');
-        $logoDarkFile = $this->getConfig()->getBrandLogoDarkFile();
+        $brandConfig = $this->brandService->getConfig();
 
         $branding = [
             'productName' => $brandConfig['productName'] ?? 'Xibo Digital Signage',
             'appName'     => $brandConfig['appName']     ?? 'Xibo',
-            'logoUrl'     => '/brand/' . $logoFile,
-            'logoDarkUrl' => '/brand/' . $logoDarkFile,
-            'faviconUrl'  => '/brand/' . $iconFile,
-            'cssUrl'      => '/brand/theme.css',
+            'logoUrl'     => $this->brandService->getAssetUrl(BrandServiceInterface::SLOT_LOGO),
+            'logoDarkUrl' => $this->brandService->getAssetUrl(BrandServiceInterface::SLOT_LOGO_DARK),
+            'faviconUrl'  => $this->brandService->getAssetUrl(BrandServiceInterface::SLOT_LOGO_ICON),
+            'cssUrl'      => $this->brandService->getStylesheetUrl(),
             'supportUrl'  => $brandConfig['supportUrl']  ?? 'https://xibosignage.com',
         ];
 
@@ -206,7 +207,14 @@ class User extends Base
         $samlEnabled = !empty($this->getConfig()->samlSettings);
         $hideLogoutButton = $samlEnabled && !$this->getConfig()->isSamlSloSupported();
 
-        return $response->withJson(array_merge($this->getUser()->toArray(), [
+        // A request made on behalf of this user (someone else making it as them) isn't sent to their forced
+        // password change. Only this response says so: never the user, which other requests in that state save.
+        $details = $this->getUser()->toArray();
+        if ($request->getAttribute(Actions::ON_BEHALF_OF_USER) === true) {
+            $details['isPasswordChangeRequired'] = 0;
+        }
+
+        return $response->withJson(array_merge($details, [
             'settings' => $settings,
             'features' => $this->getUserFeatures(),
             'branding' => $branding,
@@ -367,6 +375,11 @@ class User extends Base
      */
     public function searchById(Request $request, Response $response, $id): Response|ResponseInterface
     {
+        // A reserved user is only found by itself.
+        if ((int)$id !== (int)$this->getUser()->userId) {
+            $this->userFactory->assertNotReserved((int)$id);
+        }
+
         $user = $this->userFactory->getById($id, false);
         $user->setChildAclDependencies($this->userGroupFactory);
         $user->load();
@@ -489,7 +502,9 @@ class User extends Base
         $user->setChildAclDependencies($this->userGroupFactory);
 
         $user->userName = $sanitizedParams->getString('userName');
-        $user->email = $sanitizedParams->getString('email');
+        $this->checkUserNameAllowed($user);
+        $user->email = $this->getTrimmedEmail($sanitizedParams);
+        $this->checkEmailNotTaken($user, __('Another user already has this email.'));
         $user->homePageId = $sanitizedParams->getString('homePageId');
         $user->libraryQuota = $sanitizedParams->getInt('libraryQuota', ['default' => 0]);
         $user->setNewPassword($sanitizedParams->getString('password'));
@@ -660,6 +675,9 @@ class User extends Base
     {
         $user = $this->userFactory->getById($id);
 
+        // A reserved user can't be managed here.
+        $this->userFactory->assertNotReserved((int)$user->userId);
+
         if (!$this->getUser()->checkEditable($user)) {
             throw new AccessDeniedException();
         }
@@ -671,7 +689,9 @@ class User extends Base
         $user->setChildAclDependencies($this->userGroupFactory);
         $user->load();
         $user->userName = $sanitizedParams->getString('userName');
-        $user->email = $sanitizedParams->getString('email');
+        $this->checkUserNameAllowed($user);
+        $user->email = $this->getTrimmedEmail($sanitizedParams);
+        $this->checkEmailNotTaken($user, __('Another user already has this email.'));
         $user->homePageId = $sanitizedParams->getString('homePageId');
         $user->libraryQuota = $sanitizedParams->getInt('libraryQuota', ['default' => $user->libraryQuota]);
         $user->retired = $sanitizedParams->getCheckbox('retired');
@@ -827,6 +847,9 @@ class User extends Base
     public function delete(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $user = $this->userFactory->getById($id);
+
+        // A reserved user can't be managed here.
+        $this->userFactory->assertNotReserved((int)$user->userId);
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // System User
         if ($user->userId == $this->getConfig()->getSetting('SYSTEM_USER')) {
@@ -863,6 +886,9 @@ class User extends Base
         if ($sanitizedParams->getCheckbox('deleteAllItems') != 1) {
             // Do we have a userId to reassign content to?
             if ($sanitizedParams->getInt('reassignUserId') != null) {
+                // Never to a reserved user.
+                $this->userFactory->assertNotReserved($sanitizedParams->getInt('reassignUserId'));
+
                 // Reassign all content owned by this user to the provided user
                 $this->getLog()->debug(
                     sprintf(
@@ -1047,7 +1073,11 @@ class User extends Base
         $oldPassword = $sanitizedParams->getString('password');
         $newPassword = $sanitizedParams->getString('newPassword');
         $retypeNewPassword = $sanitizedParams->getString('retypeNewPassword');
-        $user->email = $sanitizedParams->getString('email');
+        $user->email = $this->getTrimmedEmail($sanitizedParams);
+        $this->checkEmailNotTaken(
+            $user,
+            __('This email can\'t be used. Choose another, or ask your administrator.')
+        );
         $user->twoFactorTypeId = $sanitizedParams->getInt('twoFactorTypeId');
         $code = $sanitizedParams->getString('code');
         $recoveryCodes = $sanitizedParams->getString('twoFactorRecoveryCodes');
@@ -1698,6 +1728,11 @@ class User extends Base
 
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
+        // Never owned by a reserved user. Checked before anything changes.
+        if ($sanitizedParams->getInt('ownerId') != 0) {
+            $this->userFactory->assertNotReserved($sanitizedParams->getInt('ownerId'));
+        }
+
         // Get all current permissions
         $permissions = $this->permissionFactory->getAllByObjectId($this->getUser(), $object->permissionsClass(), $id);
 
@@ -1705,15 +1740,17 @@ class User extends Base
         $groupIds = $sanitizedParams->getArray('groupIds', ['default' => []]);
 
         // Run the update
-        $this->updatePermissions($permissions, $groupIds);
+        $changes = $this->updatePermissions($permissions, $groupIds);
 
         // Should we update the owner?
+        $newOwnerId = null;
         if ($sanitizedParams->getInt('ownerId') != 0) {
             $ownerId = $sanitizedParams->getInt('ownerId');
 
             $this->getLog()->debug('Requesting update to a new Owner - id = ' . $ownerId);
 
             if ($object->canChangeOwner()) {
+                $newOwnerId = $ownerId;
                 $object->setOwner($ownerId);
                 $object->save([
                     'notify' => false,
@@ -1768,6 +1805,16 @@ class User extends Base
             );
 
             $this->updatePermissions($permissions, $groupIds);
+        }
+
+        // Audit what changed on this object (the canvas regions and playlists above follow it).
+        if (count($changes) > 0 || $newOwnerId !== null) {
+            $this->getLog()->audit('Permission', $id, 'Sharing changed', array_filter([
+                'entity' => $object->permissionsClass(),
+                'objectId' => $id,
+                'groups' => $changes,
+                'ownerId' => $newOwnerId,
+            ], fn ($value) => $value !== null && $value !== []));
         }
 
         // Return
@@ -1881,9 +1928,12 @@ class User extends Base
      * Updates a set of permissions from a set of groupIds
      * @param Permission[] $permissions
      * @param array $groupIds
+     * @return array the groups whose permissions changed, with what they are now
      */
-    private function updatePermissions(array $permissions, array $groupIds): void
+    private function updatePermissions(array $permissions, array $groupIds): array
     {
+        $changes = [];
+
         $this->getLog()->debug(
             sprintf(
                 'Received Permissions Array to update: %s',
@@ -1897,6 +1947,8 @@ class User extends Base
             // If all permissions are 0, then the record is deleted
             if (is_array($groupIds)) {
                 if (array_key_exists($row->groupId, $groupIds)) {
+                    $before = ['view' => $row->view, 'edit' => $row->edit, 'delete' => $row->delete];
+
                     if (array_key_exists('view', $groupIds[$row->groupId])) {
                         $row->view = $groupIds[$row->groupId]['view'];
                     }
@@ -1909,10 +1961,26 @@ class User extends Base
                         $row->delete = $groupIds[$row->groupId]['delete'];
                     }
 
+                    if ((int)$row->view !== (int)$before['view']
+                        || (int)$row->edit !== (int)$before['edit']
+                        || (int)$row->delete !== (int)$before['delete']
+                    ) {
+                        $changes[] = [
+                            'groupId' => (int)$row->groupId,
+                            'group' => $row->group,
+                            'isUser' => (int)$row->isUser,
+                            'view' => (int)$row->view,
+                            'edit' => (int)$row->edit,
+                            'delete' => (int)$row->delete,
+                        ];
+                    }
+
                     $row->save();
                 }
             }
         }
+
+        return $changes;
     }
 
     /**
@@ -2061,11 +2129,25 @@ class User extends Base
     {
         $user = $this->userFactory->getById($id);
 
+        // A reserved user can't be managed here.
+        $this->userFactory->assertNotReserved((int)$user->userId);
+
         if (!$this->getUser()->checkEditable($user)) {
             throw new AccessDeniedException();
         }
 
         $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        // A reserved user's own group can't be managed here. Checked before anything changes.
+        foreach (array_merge(
+            $sanitizedParams->getIntArray('userGroupId', ['default' => []]),
+            $sanitizedParams->getIntArray('unassignUserGroupId', ['default' => []])
+        ) as $userGroupId) {
+            if ($this->userFactory->isReservedUserGroup((int)$userGroupId)) {
+                throw new NotFoundException(__('Group not found'));
+            }
+        }
+
         // Go through each ID to assign
         foreach ($sanitizedParams->getIntArray('userGroupId', ['default' => []]) as $userGroupId) {
             $userGroup = $this->userGroupFactory->getById($userGroupId);
@@ -2106,6 +2188,11 @@ class User extends Base
      */
     public function userWelcomeSetUnSeen(Request $request, Response $response): Response|ResponseInterface
     {
+        // Whether they have seen the welcome is theirs: not changed by someone else making the request as them.
+        if ($request->getAttribute(Actions::ON_BEHALF_OF_USER) === true) {
+            return $response->withStatus(204);
+        }
+
         $this->getUser()->newUserWizard = 0;
         $this->getUser()->save(['validate' => false]);
 
@@ -2125,6 +2212,11 @@ class User extends Base
      */
     public function userWelcomeSetSeen(Request $request, Response $response): Response|ResponseInterface
     {
+        // Whether they have seen the welcome is theirs: not changed by someone else making the request as them.
+        if ($request->getAttribute(Actions::ON_BEHALF_OF_USER) === true) {
+            return $response->withStatus(204);
+        }
+
         $this->getUser()->newUserWizard = 1;
         $this->getUser()->save(['validate' => false]);
 
@@ -2218,6 +2310,9 @@ class User extends Base
     public function setHomeFolder(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $user = $this->userFactory->getById($id);
+
+        // A reserved user can't be managed here.
+        $this->userFactory->assertNotReserved((int)$user->userId);
         $user->setChildAclDependencies($this->userGroupFactory);
 
         if (!$this->getUser()->checkEditable($user)) {
@@ -2388,5 +2483,52 @@ class User extends Base
         return $response
             ->withStatus(200)
             ->withJson($userTypes);
+    }
+
+    /**
+     * Refuse a new or changed username that isn't letters, numbers, dots, dashes or underscores,
+     * so it can't be confused with an email at login. Existing usernames can still be saved.
+     * @throws InvalidArgumentException
+     */
+    private function checkUserNameAllowed(\Xibo\Entity\User $user): void
+    {
+        $original = (string)$user->getOriginalValue('userName');
+        if ($user->userId !== null && strtolower($original) === strtolower((string)$user->userName)) {
+            return;
+        }
+
+        if (!\Respect\Validation\Validator::alnum('_.-')->length(1, 50)->validate($user->userName)) {
+            throw new InvalidArgumentException(
+                __('User name must be 1 to 50 letters, numbers, dots, dashes or underscores.'),
+                'userName'
+            );
+        }
+    }
+
+    private function getTrimmedEmail(\Xibo\Support\Sanitizer\SanitizerInterface $sanitizedParams): ?string
+    {
+        $email = $sanitizedParams->getString('email');
+
+        return $email === null ? null : trim($email);
+    }
+
+    /**
+     * Refuse a new or changed email another user already has. Existing duplicates can still be saved.
+     * @throws InvalidArgumentException
+     */
+    private function checkEmailNotTaken(\Xibo\Entity\User $user, string $message): void
+    {
+        if (empty($user->email)) {
+            return;
+        }
+
+        $original = strtolower(trim((string)$user->getOriginalValue('email')));
+        if ($user->userId !== null && $original === strtolower($user->email)) {
+            return;
+        }
+
+        if ($this->userFactory->isEmailUsedByOtherUser($user->email, $user->userId)) {
+            throw new InvalidArgumentException($message, 'email');
+        }
     }
 }

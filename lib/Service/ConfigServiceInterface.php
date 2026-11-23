@@ -1,29 +1,30 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 namespace Xibo\Service;
 
 use Stash\Interfaces\PoolInterface;
 use Xibo\Storage\StorageServiceInterface;
-use Xibo\Support\Exception\ConfigurationException;
 
 /**
  * Interface ConfigServiceInterface
@@ -109,6 +110,34 @@ interface ConfigServiceInterface
     public function isSamlSloSupported();
 
     /**
+     * Is SAML the active authentication ($authentication is SAMLAuthentication) with $samlSettings configured?
+     * Its /saml/* routes only exist when it is.
+     * @return bool
+     */
+    public function isSamlEnabled(): bool;
+
+    /**
+     * Is CAS the active authentication ($authentication is CASAuthentication) with $casSettings configured?
+     * Its /cas/* routes only exist when it is.
+     * @return bool
+     */
+    public function isCasEnabled(): bool;
+
+    /**
+     * Should the login page be shown (with a SAML button) rather than redirecting straight to the IdP?
+     * Opt-in via $samlSettings['workflow']['showLoginPage'] (true, 1, 'true', 'yes' or 'on'), and SAML is enabled.
+     * @return bool
+     */
+    public function isSamlLoginPageShown(): bool;
+
+    /**
+     * Should the full login page be shown (with a CAS button) rather than a CAS-only page?
+     * Opt-in via $casSettings['showLoginPage'] (true, 1, 'true', 'yes' or 'on'), and CAS is enabled.
+     * @return bool
+     */
+    public function isCasLoginPageShown(): bool;
+
+    /**
      * Get Proxy Configuration
      * @param array $httpOptions
      * @return array
@@ -128,11 +157,9 @@ interface ConfigServiceInterface
     public function checkEnvironment();
 
     /**
-     * Loads the theme
-     * @param string[Optional] $themeName
-     * @throws ConfigurationException
+     * Loads the theme, overlaying the brand's names and texts when a brand service is given.
      */
-    public function loadTheme($themeName = null);
+    public function loadTheme(?BrandServiceInterface $brandService = null);
 
     /**
      * Get Theme Specific Settings
@@ -141,21 +168,6 @@ interface ConfigServiceInterface
      * @return null
      */
     public function getThemeConfig($settingName = null, $default = null);
-
-    /**
-     * Resolve which file backs a brand asset, preferring the SVG variant and falling
-     * back to PNG for WL packages that ship a raster logo.
-     * @param string $base Asset base name, e.g. "logo" or "logo-icon"
-     * @return string
-     */
-    public function getBrandAssetFile(string $base): string;
-
-    /**
-     * Resolve which file backs the dark-logo variant (for light backgrounds, e.g. the login
-     * card): dark SVG, else dark PNG, else fall back to the standard logo asset.
-     * @return string
-     */
-    public function getBrandLogoDarkFile(): string;
 
     /**
      * Get theme URI

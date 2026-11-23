@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 
@@ -77,6 +79,24 @@ class BandwidthFactory extends BaseFactory
             return false;
         }
 
+        $usage = $this->getUsage($displayId);
+
+        $this->getLog()->debug(sprintf(
+            'isBandwidthExceeded: Checking bandwidth usage %s against allowance %s',
+            ByteFormatter::format($usage),
+            ByteFormatter::format($limit * 1024)
+        ));
+
+        return ($usage >= ($limit * 1024));
+    }
+
+    /**
+     * The bandwidth used this month, in bytes
+     * @param int $displayId
+     * @return int
+     */
+    public function getUsage(int $displayId = 0): int
+    {
         // Get from cache.
         $cache = $this->pool->getItem('bandwidth_' . $displayId);
         $usage = $cache->get();
@@ -91,13 +111,7 @@ class BandwidthFactory extends BaseFactory
             $cache->save();
         }
 
-        $this->getLog()->debug(sprintf(
-            'isBandwidthExceeded: Checking bandwidth usage %s against allowance %s',
-            ByteFormatter::format($usage),
-            ByteFormatter::format($limit * 1024)
-        ));
-
-        return ($usage >= ($limit * 1024));
+        return intval($usage);
     }
 
     private function getBandwidth(int $displayId): int

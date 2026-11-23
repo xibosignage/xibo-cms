@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { Loader2 } from 'lucide-react';
@@ -25,8 +27,9 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import type { NavigateFunction } from 'react-router-dom';
 
-import EditorChrome from '@/components/editor/EditorChrome';
+import EditorChrome, { type HelpSlot } from '@/components/editor/EditorChrome';
 import { withPublicPath } from '@/config/publicPath';
+import { HelpSourceContext } from '@/context/HelpSourceContext';
 
 interface EditorHostProps {
   id: string;
@@ -39,7 +42,13 @@ interface EditorHostProps {
   title: string;
   forwardQuery?: string;
   readySelector?: string;
-  showChrome?: boolean;
+  chrome?: 'full' | 'helpOnly';
+  contentName?: string;
+}
+
+interface EditorContent {
+  id: string;
+  name?: string;
 }
 
 const READY_TIMEOUT_MS = 8000;
@@ -71,7 +80,8 @@ export default function EditorHost({
   title,
   forwardQuery,
   readySelector,
-  showChrome,
+  chrome,
+  contentName,
 }: EditorHostProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -80,6 +90,13 @@ export default function EditorHost({
   const lastIdRef = useRef(id);
   const [loading, setLoading] = useState(true);
   const [fullscreen, setFullscreen] = useState(false);
+  const [content, setContent] = useState<EditorContent>({ id, name: contentName });
+  const [helpSlot, setHelpSlot] = useState<HelpSlot | null>(null);
+  const showChrome = chrome === 'full' || (chrome === 'helpOnly' && helpSlot !== null);
+
+  const helpSource = content.name
+    ? t('{{editor}}: {{name}} (ID {{id}})', { editor: title, name: content.name, id: content.id })
+    : t('{{editor}} (ID {{id}})', { editor: title, id: content.id });
 
   const exit = () => leaveEditor(navigate, returnPath, onExit);
 
@@ -99,6 +116,14 @@ export default function EditorHost({
 
       if (event.data?.type === 'xibo:editor-schedule') {
         onScheduleRequest?.(event.data.campaignId, event.data.layoutName);
+      }
+
+      if (event.data?.type === 'xibo:editor-context') {
+        setContent({ id: String(event.data.id), name: event.data.name });
+      }
+
+      if (event.data?.type === 'xibo:editor-help-slot') {
+        setHelpSlot({ top: Number(event.data.top), left: Number(event.data.left) });
       }
     };
 
@@ -188,7 +213,11 @@ export default function EditorHost({
         </div>
       )}
 
-      {!loading && showChrome && !fullscreen && <EditorChrome />}
+      {!loading && showChrome && !fullscreen && (
+        <HelpSourceContext.Provider value={helpSource}>
+          <EditorChrome helpSlot={chrome === 'helpOnly' ? helpSlot : null} />
+        </HelpSourceContext.Provider>
+      )}
 
       <iframe
         ref={iframeRef}

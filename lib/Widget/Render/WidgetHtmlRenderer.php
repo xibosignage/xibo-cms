@@ -1,34 +1,36 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Widget\Render;
 
 use Carbon\Carbon;
-use FilesystemIterator;
 use Illuminate\Support\Str;
 use Psr\Http\Message\RequestInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Slim\Views\Twig;
+use Stash\Interfaces\PoolInterface;
 use Twig\Extension\SandboxExtension;
 use Twig\Sandbox\SecurityPolicy;
 use Twig\TwigFilter;
@@ -39,49 +41,45 @@ use Xibo\Entity\Region;
 use Xibo\Entity\Widget;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Helper\DateFormatHelper;
-use Xibo\Helper\LinkSigner;
+use Xibo\Helper\StashLock;
+use Xibo\Helper\StoredFileMetadata;
 use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\LibraryAsset;
+use Xibo\Service\LibraryStorageRegistryInterface;
+use Xibo\Service\LibraryStorageServiceInterface;
+use Xibo\Storage\LibraryFileJournal;
+use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 use Xibo\Twig\TransExtension;
+use Xibo\Xmds\PlayerFileLink;
 
 /**
  * Class responsible for rendering out a widgets HTML, caching it if necessary
  */
 class WidgetHtmlRenderer
 {
-    /** @var string Cache Path */
-    private $cachePath;
+    /**
+     * Seconds a render may hold its lock, and how long others wait for it in total.
+     */
+    private const LOCK_TTL = 30;
+    private const LOCK_WAIT_MS = 250;
+    private const LOCK_TRIES = 9;
 
     /** @var LoggerInterface */
     private $logger;
 
-    /** @var \Slim\Views\Twig */
-    private $twig;
-
-    /** @var \Xibo\Service\ConfigServiceInterface */
-    private $config;
-
-    /** @var ModuleFactory */
-    private $moduleFactory;
-
-    /**
-     * @param string                 $cachePath
-     * @param Twig                   $twig
-     * @param ConfigServiceInterface $config
-     * @param ModuleFactory          $moduleFactory
-     */
     public function __construct(
-        string $cachePath,
-        Twig $twig,
-        ConfigServiceInterface $config,
-        ModuleFactory $moduleFactory
+        private readonly LibraryStorageRegistryInterface $storageRegistry,
+        private readonly StorageServiceInterface $store,
+        private readonly PoolInterface $pool,
+        private readonly Twig $twig,
+        private readonly ConfigServiceInterface $config,
+        private readonly ModuleFactory $moduleFactory
     ) {
-        $this->cachePath = $cachePath;
-        $this->twig = $twig;
-        $this->config = $config;
-        $this->moduleFactory = $moduleFactory;
     }
 
     /**
@@ -194,11 +192,8 @@ class WidgetHtmlRenderer
     ): string {
         // HTML is cached per widget for regions of type zone/frame and playlist.
         // HTML is cached per region for regions of type canvas.
-        $widgetModifiedDt = 0;
-
         if ($region->type === 'canvas') {
             foreach ($widgets as $item) {
-                $widgetModifiedDt = max($widgetModifiedDt, $item->modifiedDt);
                 if ($item->type === 'global') {
                     $widget = $item;
                 }
@@ -208,73 +203,189 @@ class WidgetHtmlRenderer
             $widget = $widget ?? $widgets[0];
         } else {
             $widget = $widgets[0];
-            $widgetModifiedDt = $widget->modifiedDt;
+            $widgets = [$widget];
         }
 
-        if (!file_exists($this->cachePath)) {
-            mkdir($this->cachePath, 0777, true);
-        }
-
-        // Cache File
-        // ----------
         // Widgets may or may not appear in the same Region each time they are previewed due to them potentially
         // being contained in a Playlist.
         // Region width/height only changes in Draft state, so the FE is responsible for asserting the correct
         // width/height relating scaling params when the preview first loads.
-        $cachePath = $this->cachePath . DIRECTORY_SEPARATOR
-            . $widget->widgetId
-            . '_'
-            . $region->regionId
-            . '.html';
+        $version = self::getRenderVersion($widgets, $this->getPlaylistModifiedDt($region));
+        $key = self::getRenderKey($widget->widgetId, $region->regionId, $version);
 
-        // Changes to the Playlist should also invalidate Widget HTML caches
+        $render = fn () => $this->render($widget->widgetId, $region, $widgets, $moduleTemplates);
+
         try {
-            $playlistModifiedDt = Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $region->getPlaylist([
+            $storage = $this->storageRegistry->get(LibraryAsset::WIDGET_HTML);
+            $output = $this->readRender($storage, $key);
+        } catch (GeneralException $exception) {
+            $this->getLog()->error('renderOrCache: cannot read ' . $key . ', rendering without storing. '
+                . $exception->getMessage());
+            return $render();
+        }
+
+        if ($output !== null) {
+            return $output;
+        }
+
+        $lock = new StashLock($this->pool, self::getLockKey($key), $this->getLog());
+        if (!$lock->acquire(self::LOCK_TTL, self::LOCK_WAIT_MS, self::LOCK_TRIES)) {
+            $this->getLog()->debug('renderOrCache: ' . $key . ' is still being rendered elsewhere');
+            return $this->readRenderOrNull($storage, $key) ?? $render();
+        }
+
+        try {
+            // Rendered by another request while this one waited for the lock.
+            $output = $this->readRenderOrNull($storage, $key);
+            if ($output !== null) {
+                return $output;
+            }
+
+            $output = $render();
+            $this->storeRender($storage, $key, $output);
+            $this->deleteRenders($widget->widgetId, $region->regionId, $version);
+
+            return $output;
+        } finally {
+            $lock->release();
+        }
+    }
+
+    /**
+     * The version of a render: the latest change to the widgets rendered or the region's playlist.
+     * @param Widget[] $widgets
+     */
+    public static function getRenderVersion(array $widgets, ?string $playlistModifiedDt): int
+    {
+        $version = 0;
+        foreach ($widgets as $widget) {
+            $version = max($version, (int)$widget->modifiedDt);
+        }
+
+        if (!empty($playlistModifiedDt)) {
+            $version = max(
+                $version,
+                Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $playlistModifiedDt)->getTimestamp()
+            );
+        }
+
+        return $version;
+    }
+
+    public static function getRenderKey(int $widgetId, int $regionId, int $version): string
+    {
+        return $widgetId . '/' . $regionId . '_' . $version . '.html';
+    }
+
+    /**
+     * The parts of a getRenderKey() key, or null for any other key.
+     * @return array{widgetId: int, regionId: int, version: int}|null
+     */
+    public static function parseRenderKey(string $key): ?array
+    {
+        if (!preg_match('/^(\d+)\/(\d+)_(\d+)\.html$/', $key, $matches)) {
+            return null;
+        }
+
+        return ['widgetId' => (int)$matches[1], 'regionId' => (int)$matches[2], 'version' => (int)$matches[3]];
+    }
+
+    private static function getLockKey(string $renderKey): string
+    {
+        return 'locks/widget-render/' . str_replace('/', '_', $renderKey);
+    }
+
+    private function getPlaylistModifiedDt(Region $region): ?string
+    {
+        try {
+            return $region->getPlaylist([
                 'loadPermissions' => false,
                 'loadWidgets' => false,
                 'loadTags' => false,
                 'loadActions' => false,
-            ])->modifiedDt);
+            ])->modifiedDt;
         } catch (\Exception) {
-            $this->getLog()->error('renderOrCache: cannot find playlist modifiedDt, using now');
-            $playlistModifiedDt = Carbon::now();
+            $this->getLog()->error('renderOrCache: cannot find playlist modifiedDt for regionId '
+                . $region->regionId);
+            return null;
+        }
+    }
+
+    /**
+     * The stored render, or null if there isn't one.
+     * @throws GeneralException when storage can't be read
+     */
+    private function readRender(LibraryStorageServiceInterface $storage, string $key): ?string
+    {
+        try {
+            $stream = $storage->readStream($key);
+        } catch (NotFoundException) {
+            return null;
         }
 
-        // Have we changed since we last cached this widget
-        $modifiedDt = max(DateFormatHelper::createFromTimestamp($widgetModifiedDt), $playlistModifiedDt);
-        $cachedDt = DateFormatHelper::createFromTimestamp(file_exists($cachePath) ? filemtime($cachePath) : 0);
+        try {
+            return $stream->getContents();
+        } finally {
+            $stream->close();
+        }
+    }
 
-        $this->getLog()->debug(
-            'renderOrCache: Cache details - modifiedDt: '
-            . $modifiedDt->format(DateFormatHelper::getSystemFormat())
-            . ', cachedDt: ' . $cachedDt->format(DateFormatHelper::getSystemFormat())
-            . ', cachePath: ' . $cachePath
-        );
+    /**
+     * The stored render, or null if there isn't one or it can't be read.
+     */
+    private function readRenderOrNull(LibraryStorageServiceInterface $storage, string $key): ?string
+    {
+        try {
+            return $this->readRender($storage, $key);
+        } catch (GeneralException $exception) {
+            $this->getLog()->error('renderOrCache: cannot read ' . $key . '. ' . $exception->getMessage());
+            return null;
+        }
+    }
 
-        if ($modifiedDt->greaterThan($cachedDt) || !file_get_contents($cachePath)) {
-            $this->getLog()->debug('renderOrCache: We will need to regenerate');
+    /**
+     * Stores a render, logging rather than failing the request when storage can't take it.
+     */
+    private function storeRender(LibraryStorageServiceInterface $storage, string $key, string $output): void
+    {
+        try {
+            StoredFileMetadata::storeContents(
+                $storage,
+                $key,
+                $output,
+                $this->config->getSetting('LIBRARY_LOCATION') . 'temp/'
+            );
+        } catch (GeneralException $exception) {
+            $this->getLog()->error('renderOrCache: cannot store ' . $key . '. ' . $exception->getMessage());
+        }
+    }
 
-            // Are we worried about concurrent requests here?
-            // these aren't providing any data anymore, so in theory it shouldn't be possible to
-            // get locked up here
-            // We don't clear cached media here, as that comes along with data.
-            if (file_exists($cachePath)) {
-                $this->getLog()->debug('renderOrCache: Deleting cache file ' . $cachePath . ' which already existed');
-                unlink($cachePath);
+    /**
+     * Deletes a widget's renders, or only those of $regionId older than $version.
+     */
+    private function deleteRenders(int $widgetId, ?int $regionId = null, ?int $version = null): void
+    {
+        try {
+            $keys = $this->storageRegistry->get(LibraryAsset::WIDGET_HTML)->listKeys((string)$widgetId);
+            foreach ($keys as $item) {
+                $render = self::parseRenderKey($item['key']);
+                if ($render === null
+                    || ($regionId !== null && ($render['regionId'] !== $regionId || $render['version'] >= $version))
+                ) {
+                    continue;
+                }
+
+                LibraryFileJournal::deleteFileAfterCommit(
+                    $this->store,
+                    $this->storageRegistry,
+                    LibraryAsset::WIDGET_HTML,
+                    $item['key'],
+                    $this->getLog()
+                );
             }
-
-            // Render
-            $output = $this->render($widget->widgetId, $region, $widgets, $moduleTemplates);
-
-            // Cache to the library
-            file_put_contents($cachePath, $output);
-
-            $this->getLog()->debug('renderOrCache: Generate complete');
-
-            return $output;
-        } else {
-            $this->getLog()->debug('renderOrCache: Serving from cache');
-            return file_get_contents($cachePath);
+        } catch (GeneralException $exception) {
+            $this->getLog()->error('Cannot list the renders of widgetId ' . $widgetId . '. '
+                . $exception->getMessage());
         }
     }
 
@@ -359,6 +470,7 @@ class WidgetHtmlRenderer
     /**
      * Decorate the HTML output for a player
      *
+     * @param  \Xibo\Xmds\PlayerFileLink       $playerFileLink
      * @param  \Xibo\Entity\Display            $display
      * @param  string                          $output
      * @param  array                           $storedAs          A keyed array of library media this widget has access to
@@ -369,6 +481,7 @@ class WidgetHtmlRenderer
      * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function decorateForPlayer(
+        PlayerFileLink $playerFileLink,
         Display $display,
         string $output,
         array $storedAs,
@@ -380,24 +493,19 @@ class WidgetHtmlRenderer
         $auth = $display->isPwa()
             ? '&v=7&serverKey=' . $this->config->getSetting('SERVER_KEY') . '&hardwareKey=' . $display->license
             : null;
-        $encryptionKey = $this->config->getApiKeyDetails()['encryptionKey'];
-        $cdnUrl = $this->config->getSetting('CDN_URL');
-
         $matches = [];
         preg_match_all('/\[\[(.*?)\]\]/', $output, $matches);
         foreach ($matches[1] as $match) {
             if ($match === 'PlayerBundle') {
                 if ($display->isPwa()) {
-                    $url = LinkSigner::generateSignedLink(
+                    $url = $playerFileLink->get(
                         $display,
-                        $encryptionKey,
-                        $cdnUrl,
                         'P',
                         1,
                         'bundle.min.js',
                         'bundle',
                         true,
-                    );
+                    )[0];
                 } else {
                     $url = 'bundle.min.js';
                 }
@@ -408,16 +516,14 @@ class WidgetHtmlRenderer
                 );
             } else if ($match === 'FontBundle') {
                 if ($display->isPwa()) {
-                    $url = LinkSigner::generateSignedLink(
+                    $url = $playerFileLink->get(
                         $display,
-                        $encryptionKey,
-                        $cdnUrl,
                         'P',
                         1,
                         'fonts.css',
                         'fontCss',
                         true,
-                    );
+                    )[0];
                 } else {
                     $url = 'fonts.css';
                 }
@@ -458,16 +564,14 @@ class WidgetHtmlRenderer
                 $value = explode('=', $match);
                 if (array_key_exists($value[1], $storedAs)) {
                     if ($display->isPwa()) {
-                        $url = LinkSigner::generateSignedLink(
+                        $url = $playerFileLink->get(
                             $display,
-                            $encryptionKey,
-                            $cdnUrl,
                             'M',
                             $value[1],
                             $storedAs[$value[1]],
                             null,
                             true,
-                        );
+                        )[0];
                     } else {
                         $url = $storedAs[$value[1]];
                     }
@@ -488,16 +592,14 @@ class WidgetHtmlRenderer
                 if (array_key_exists($value[1], $assets)) {
                     $asset = $assets[$value[1]];
                     if ($display->isPwa()) {
-                        $url = LinkSigner::generateSignedLink(
+                        $url = $playerFileLink->get(
                             $display,
-                            $encryptionKey,
-                            $cdnUrl,
                             'P',
                             $asset->id,
                             $asset->getFilename(),
                             'asset',
                             true,
-                        );
+                        )[0];
                     } else {
                         $url = $asset->getFilename();
                     }
@@ -518,16 +620,14 @@ class WidgetHtmlRenderer
                 foreach ($assets as $asset) {
                     if ($asset->alias === $value[1]) {
                         if ($display->isPwa()) {
-                            $url = LinkSigner::generateSignedLink(
+                            $url = $playerFileLink->get(
                                 $display,
-                                $encryptionKey,
-                                $cdnUrl,
                                 'P',
                                 $asset->id,
                                 $asset->getFilename(),
                                 'asset',
                                 true,
-                            );
+                            )[0];
                         } else {
                             $url = $asset->getFilename();
                         }
@@ -555,7 +655,7 @@ class WidgetHtmlRenderer
      * @throws \Twig\Error\LoaderError
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    private function render(
+    protected function render(
         int $widgetId,
         Region $region,
         array $widgets,
@@ -1011,35 +1111,11 @@ class WidgetHtmlRenderer
     }
 
     /**
-     * @param  \Xibo\Entity\Widget $widget
-     * @return void
+     * Deletes every render of a widget, once the caller's transaction commits.
      */
-    public function clearWidgetCache(Widget $widget)
+    public function clearWidgetCache(Widget $widget): void
     {
-        $cachePath = $this->cachePath
-            . DIRECTORY_SEPARATOR
-            . $widget->widgetId
-            . DIRECTORY_SEPARATOR;
-
-        // Drop the cache
-        // there is a chance this may not yet exist
-        try {
-            $it = new \RecursiveDirectoryIterator($cachePath, FilesystemIterator::SKIP_DOTS);
-            $files = new \RecursiveIteratorIterator($it, \RecursiveIteratorIterator::CHILD_FIRST);
-            foreach ($files as $file) {
-                if ($file->isDir()) {
-                    rmdir($file->getRealPath());
-                } else {
-                    unlink($file->getRealPath());
-                }
-            }
-            rmdir($cachePath);
-        } catch (\UnexpectedValueException $unexpectedValueException) {
-            $this->logger->debug(
-                'HTML cache doesn\'t exist yet or cannot be deleted. '
-                . $unexpectedValueException->getMessage()
-            );
-        }
+        $this->deleteRenders((int)$widget->widgetId);
     }
 
     /**

@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 namespace Xibo\Controller;
 
@@ -436,6 +438,11 @@ class UserGroup extends Base
 
         $group = $this->userGroupFactory->getById($id);
 
+        // A reserved user's own group can't be managed here.
+        if ($this->userFactory->isReservedUserGroup((int)$group->groupId)) {
+            throw new NotFoundException(__('Group not found'));
+        }
+
         if (!$this->getUser()->checkEditable($group)) {
             throw new AccessDeniedException();
         }
@@ -515,6 +522,11 @@ class UserGroup extends Base
 
         $group = $this->userGroupFactory->getById($id);
 
+        // A reserved user's own group can't be managed here.
+        if ($this->userFactory->isReservedUserGroup((int)$group->groupId)) {
+            throw new NotFoundException(__('Group not found'));
+        }
+
         if (!$this->getUser()->checkEditable($group)) {
             throw new AccessDeniedException();
         }
@@ -556,6 +568,12 @@ class UserGroup extends Base
         }
 
         $group = $this->userGroupFactory->getById($id);
+
+        // A reserved user's own group can't be managed here.
+        if ($this->userFactory->isReservedUserGroup((int)$group->groupId)) {
+            throw new NotFoundException(__('Group not found'));
+        }
+
         $group->features = $features;
         $group->saveFeatures();
 
@@ -633,6 +651,11 @@ class UserGroup extends Base
 
         $group = $this->userGroupFactory->getById($id);
 
+        // A reserved user's own group can't be managed here.
+        if ($this->userFactory->isReservedUserGroup((int)$group->groupId)) {
+            throw new NotFoundException(__('Group not found'));
+        }
+
         if (!$this->getUser()->checkEditable($group)) {
             throw new AccessDeniedException();
         }
@@ -648,6 +671,7 @@ class UserGroup extends Base
             $this->getLog()->debug(sprintf('Assign User %d for groupId %d', $userId, $id));
 
             $user = $this->userFactory->getById($userId);
+            $this->userFactory->assertNotReserved((int)$user->userId);
 
             if (!$this->getUser()->checkViewable($user)) {
                 throw new AccessDeniedException(__('Access Denied to User'));
@@ -664,6 +688,7 @@ class UserGroup extends Base
             $this->getLog()->debug(sprintf('Unassign User %d for groupId %d', $userId, $id));
 
             $user = $this->userFactory->getById($userId);
+            $this->userFactory->assertNotReserved((int)$user->userId);
 
             if (!$this->getUser()->checkViewable($user)) {
                 throw new AccessDeniedException(__('Access Denied to User'));
@@ -744,6 +769,11 @@ class UserGroup extends Base
     public function unassignUser(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $group = $this->userGroupFactory->getById($id);
+
+        // A reserved user's own group can't be managed here.
+        if ($this->userFactory->isReservedUserGroup((int)$group->groupId)) {
+            throw new NotFoundException(__('Group not found'));
+        }
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         if (!$this->getUser()->checkEditable($group)) {
@@ -753,6 +783,7 @@ class UserGroup extends Base
         $users = $sanitizedParams->getIntArray('userId');
 
         foreach ($users as $userId) {
+            $this->userFactory->assertNotReserved((int)$userId);
             $group->unassignUser($this->userFactory->getById($userId));
         }
 
@@ -830,6 +861,11 @@ class UserGroup extends Base
     public function copy(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $group = $this->userGroupFactory->getById($id);
+
+        // A reserved user's own group can't be managed here.
+        if ($this->userFactory->isReservedUserGroup((int)$group->groupId)) {
+            throw new NotFoundException(__('Group not found'));
+        }
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check we have permission to view this group

@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 namespace Xibo\Controller;
 
@@ -59,9 +61,11 @@ use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Guzzle\SafeClient;
 use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\LibraryDescription;
+use Xibo\Helper\Session;
 use Xibo\Helper\XiboUploadHandler;
 use Xibo\Middleware\TokenAuthMiddleware;
 use Xibo\Service\JwtServiceInterface;
+use Xibo\Service\LibraryStorageServiceInterface;
 use Xibo\Service\MediaService;
 use Xibo\Service\MediaServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -169,6 +173,7 @@ class Library extends Base
         $scheduleFactory,
         $folderFactory,
         private readonly JwtServiceInterface $jwtService,
+        private readonly LibraryStorageServiceInterface $libraryStorageService,
     ) {
         $this->moduleFactory = $moduleFactory;
         $this->mediaFactory = $mediaFactory;
@@ -668,13 +673,18 @@ class Library extends Base
 
                 // Thumbnail
                 $module = $this->moduleFactory->getByType($media->mediaType);
-                if ($module->hasThumbnail) {
+                if ($module->hasThumbnail && $media->mediaType === 'video' && $media->thumbnailVersion === null) {
+                    // No cover yet, so the preview's blank image rather than the thumbnail's error image.
                     $searchResult->thumbnail = $this->urlFor($request, 'library.download', [
-                            'id' => $media->mediaId
-                        ], [
-                            'preview' => 1,
-                            'isThumb' => 1
-                        ]);
+                        'id' => $media->mediaId
+                    ], [
+                        'preview' => 1,
+                        'isThumb' => 1
+                    ]);
+                } else if ($module->hasThumbnail) {
+                    $searchResult->thumbnail = $this->urlFor($request, 'library.thumbnail', [
+                        'id' => $media->mediaId
+                    ]);
                 }
 
                 // Add the result
@@ -991,6 +1001,7 @@ class Library extends Base
             'displayOrder' => $parsedBody->getInt('displayOrder'),
             'playlistId' => $parsedBody->getInt('playlistId'),
             'accept_file_types' => '/\.' . implode('|', $validExt) . '$/i',
+            'accept_chunks' => $this->libraryStorageService->hasLocalFiles(),
             'libraryLimit' => $libraryLimit,
             'libraryQuotaFull' => ($libraryLimit > 0 && $this->getMediaService()->libraryUsage() > $libraryLimit),
             'expires' => $expires === null ? null : $expires->format('U'),
@@ -1238,8 +1249,8 @@ class Library extends Base
         // Return
         $this->getState()->hydrate([
             'message' => __('Library Tidy Complete'),
-            'countDeleted' => $i
         ]);
+        $this->getState()->setData(['countDeleted' => $i]);
 
         return $this->render($request, $response);
     }
@@ -1301,6 +1312,17 @@ class Library extends Base
             schema: new OA\Schema(type: 'string', format: 'binary')
         )
     )]
+    #[OA\Response(
+        response: 302,
+        description: 'Redirect to a time-limited URL for the file, when the library is not kept on the CMS',
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'The URL to download the file from.',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * @param Request $request
      * @param Response $response
@@ -1338,7 +1360,8 @@ class Library extends Base
         $downloader = new WidgetDownloader(
             $this->getConfig()->getSetting('LIBRARY_LOCATION'),
             $this->getConfig()->getSetting('SENDFILE_MODE'),
-            $this->getConfig()->getSetting('DEFAULT_RESIZE_LIMIT', 6000)
+            $this->getConfig()->getSetting('DEFAULT_RESIZE_LIMIT', 6000),
+            $this->mediaFactory->getStorageFor($media->storageEngine)
         );
         $downloader->useLogger($this->getLog()->getLoggerInterface());
 
@@ -1347,6 +1370,9 @@ class Library extends Base
         // Check if preview is allowed for the module
         if ($params->getCheckbox('preview') == 1 && $module->allowPreview === 1) {
             $this->getLog()->debug('download: preview mode, seeing if we can output an image/video');
+
+            // Previews only read the session, so an editor's parallel previews don't wait on each other.
+            Session::releaseLock();
 
             // Output a 1px image if we're not allowed to see the media.
             if (!$this->getUser()->checkViewable($media) && $request->getAttribute('authedViaToken') !== true) {
@@ -1362,10 +1388,15 @@ class Library extends Base
                     $response,
                     PROJECT_ROOT . '/web/img/error.png',
                 );
+            } else if ($module->type === 'video' && $media->thumbnailVersion === null) {
+                // No cover yet, so the blank fallback image without a storage lookup.
+                $img = ImageManager::gd()->read(PROJECT_ROOT . '/web/img/1x1.png');
+                $response->write($img->encode());
+                $response = $response->withHeader('Content-Type', $img->origin()->mediaType());
             } else if ($module->type === 'video') {
                 $response = $downloader->imagePreview(
                     $params,
-                    $media->mediaId . '_videocover.png',
+                    Media::getVideoCoverKey($media->mediaId),
                     $response,
                     PROJECT_ROOT . '/web/img/1x1.png',
                 );
@@ -1383,19 +1414,37 @@ class Library extends Base
             // Streaming playback (e.g. the React Media Previewer) wants the real content type so
             // the browser can play it inline, instead of a forced octet-stream/attachment download.
             if ($params->getCheckbox('stream') == 1 && in_array($module->type, ['video', 'audio'], true)) {
-                $response = $downloader->download($media, $request, $response, $this->getStreamableMimeType($media));
+                $response = $downloader->download(
+                    $media,
+                    $request,
+                    $response,
+                    $this->getStreamableMimeType($media),
+                    null,
+                    self::getPlaybackUrlExpiry($media, time())
+                );
             } else {
+                // Read raw, as getString strips anything tag-like from the name; the disposition escapes it.
+                $attachment = $request->getParam('attachment');
                 $response = $downloader->download(
                     $media,
                     $request,
                     $response,
                     null,
-                    $params->getString('attachment')
+                    is_string($attachment) ? $attachment : null
                 );
             }
         }
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * When a URL for inline playback expires: twice the media's duration, at least 15 minutes and at most 7 days, as a
+     * player keeps seeking with it.
+     */
+    public static function getPlaybackUrlExpiry(Media $media, int $now): int
+    {
+        return $now + min(7 * 86400, max(15 * 60, 2 * (int)$media->duration));
     }
 
     /**
@@ -1465,6 +1514,9 @@ class Library extends Base
     {
         $this->setNoOutput();
 
+        // Making a thumbnail can take seconds, and only reads the session.
+        Session::releaseLock();
+
         // We can download by mediaId or by mediaName.
         if (is_numeric($id)) {
             $media = $this->mediaFactory->getById($id);
@@ -1486,13 +1538,15 @@ class Library extends Base
         $downloader = new WidgetDownloader(
             $this->getConfig()->getSetting('LIBRARY_LOCATION'),
             $this->getConfig()->getSetting('SENDFILE_MODE'),
-            $this->getConfig()->getSetting('DEFAULT_RESIZE_LIMIT', 6000)
+            $this->getConfig()->getSetting('DEFAULT_RESIZE_LIMIT', 6000),
+            $this->libraryStorageService
         );
         $downloader->useLogger($this->getLog()->getLoggerInterface());
 
         $response = $downloader->thumbnail(
             $media,
             $response,
+            $this->getMediaService()->getPool(),
             PROJECT_ROOT . '/web/img/error.png'
         );
 
@@ -2212,6 +2266,9 @@ class Library extends Base
             );
         }
 
+        // Downloading and storing the file can take minutes; this request does not change the session.
+        Session::releaseLock();
+
         // add our media to queueDownload and process the downloads
         $media = $this->mediaFactory->queueDownload(
             $name,
@@ -2227,13 +2284,12 @@ class Library extends Base
             ]
         );
 
+        $realDuration = null;
         $this->mediaFactory->processDownloads(
-            function (Media $media) use ($module) {
+            function (Media $media) use (&$realDuration) {
                 // Success
                 $this->getLog()->debug('Successfully uploaded Media from URL, Media Id is ' . $media->mediaId);
-                $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
-                $realDuration = $module->fetchDurationOrDefaultFromFile($libraryFolder . $media->storedAs);
-                if ($realDuration !== $media->duration) {
+                if ($realDuration !== null && $realDuration !== $media->duration) {
                     $media->updateDuration($realDuration);
                 }
             },
@@ -2243,6 +2299,10 @@ class Library extends Base
             function ($message) {
                 // Download rejected.
                 throw new InvalidArgumentException(sprintf(__('Download rejected due to %s'), $message));
+            },
+            function (Media $media, string $localPath) use ($module, &$realDuration) {
+                // Read from the downloaded file, before it moves to storage.
+                $realDuration = $module->fetchDurationOrDefaultFromFile($localPath);
             }
         );
 
@@ -2286,13 +2346,32 @@ class Library extends Base
             throw new AccessDeniedException();
         }
 
+        // Only videos have a cover image.
+        if ($media->mediaType !== 'video') {
+            throw new InvalidArgumentException(__('A cover image can only be added to a video.'), 'mediaId');
+        }
+
+        // Only an uploaded image, as the image library would also accept a server file path.
+        if (!is_string($imageData) || !preg_match('#^data:image/[a-z0-9.+-]+;base64,#i', $imageData)) {
+            throw new InvalidArgumentException(__('Invalid image data'), 'image');
+        }
+
+        $tempPath = $libraryLocation . 'temp' . DIRECTORY_SEPARATOR . 'videocover_' . uniqid() . '.png';
+
         try {
-            // Load the image
             $image = ImageManager::gd()->read($imageData);
-            $image->save($libraryLocation . $mediaId . '_' . $media->mediaType . 'cover.png');
+            $image->save($tempPath);
         } catch (\Exception $exception) {
+            @unlink($tempPath);
             $this->getLog()->error('Exception adding Video cover image. e = ' . $exception->getMessage());
             throw new InvalidArgumentException(__('Invalid image data'));
+        }
+
+        try {
+            $media->storeVideoCover($tempPath);
+        } catch (GeneralException $exception) {
+            @unlink($tempPath);
+            throw $exception;
         }
 
         $media->width = $image->width();
@@ -2497,22 +2576,30 @@ class Library extends Base
                         && $media->mediaType === 'video'
                         && !empty($import->searchResult->videoThumbnailUrl)
                     ) {
-                        try {
-                            $filePath = $libraryLocation . $media->getId() . '_' . $media->mediaType . 'cover.png';
+                        $tempPath = $libraryLocation . 'temp' . DIRECTORY_SEPARATOR . 'videocover_'
+                            . uniqid() . '.png';
 
+                        try {
                             // Expect a quick download.
                             $client = SafeClient::getSafeClient($this->getConfig()->getGuzzleProxy(['timeout' => 20]));
                             $client->request(
                                 'GET',
                                 $import->searchResult->videoThumbnailUrl,
-                                ['sink' => $filePath]
+                                ['sink' => $tempPath]
                             );
 
-                            list($imgWidth, $imgHeight) = @getimagesize($filePath);
+                            $imageSize = @getimagesize($tempPath);
+                            if ($imageSize === false) {
+                                throw new InvalidArgumentException(__('Invalid image data'));
+                            }
+
+                            [$imgWidth, $imgHeight] = $imageSize;
                             $media->updateOrientation($imgWidth, $imgHeight);
+
+                            $media->storeVideoCover($tempPath);
                         } catch (\Exception $exception) {
                             // if we failed, corrupted file might still be created, remove it here
-                            unlink($libraryLocation . $media->getId() . '_' . $media->mediaType . 'cover.png');
+                            @unlink($tempPath);
                             $this->getLog()->error(sprintf(
                                 'Downloading thumbnail for video %s, from url %s, failed with message %s',
                                 $media->name,
@@ -2637,14 +2724,13 @@ class Library extends Base
             $module = $this->moduleFactory->getByType($media->mediaType);
 
             if ($module->hasThumbnail) {
-                $renderThumbnail = true;
-                // for video, check if the cover image exists here.
-                if ($media->mediaType === 'video') {
-                    $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
-                    $renderThumbnail = file_exists($libraryLocation . $media->mediaId . '_videocover.png');
-                }
+                // A video has a thumbnail only once it has a cover, and an image without one has it made on request.
+                $renderThumbnail = $media->mediaType !== 'video' || $media->thumbnailVersion !== null;
+                $directUrl = $renderThumbnail ? $media->getThumbnailUrl(time()) : null;
 
-                if ($renderThumbnail) {
+                if ($directUrl !== null) {
+                    $thumbnailUrl = $directUrl;
+                } else if ($renderThumbnail) {
                     if ($isReturnPublicUrls) {
                         // Sign the link.
                         $thumbnailUrl = TokenAuthMiddleware::sign(
@@ -2660,8 +2746,10 @@ class Library extends Base
                     }
                 }
             }
-        } catch (NotFoundException) {
-            $this->getLog()->error('Module ' . $media->mediaType . ' not found');
+        } catch (GeneralException $e) {
+            // Not found or storage unreachable, told apart by the message.
+            $this->getLog()->error('Module ' . $media->mediaType . ' not found or storage unavailable. '
+                . $e->getMessage());
         }
 
         return $thumbnailUrl;

@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 
@@ -26,6 +28,7 @@ namespace Xibo\Entity;
 use League\OAuth2\Server\Entities\ClientEntityInterface;
 use OpenApi\Attributes as OA;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Xibo\Event\ApplicationCredentialsChangedEvent;
 use Xibo\Factory\ApplicationRedirectUriFactory;
 use Xibo\Factory\ApplicationScopeFactory;
 use Xibo\Helper\Random;
@@ -205,7 +208,11 @@ class Application implements \JsonSerializable, ClientEntityInterface
 
             // Add
             $this->add();
-            $this->audit(0, 'Added', $this->auditContext());
+            $this->audit(0, 'Added', array_merge($this->auditContext(), [
+                'authCode' => $this->authCode,
+                'clientCredentials' => $this->clientCredentials,
+            ]));
+            $credentialsChanged = true;
         } else {
             // Work out what's changed before we overwrite the row - strip the secret out
             // immediately so it never sits in a loggable array any longer than necessary.
@@ -225,6 +232,20 @@ class Application implements \JsonSerializable, ClientEntityInterface
                     $changedProperties
                 ));
             }
+
+            // What the credentials can do, or who they run as, changed.
+            $credentialsChanged = $keyChanged
+                || count(array_intersect_key(
+                    $changedProperties,
+                    array_flip(['authCode', 'clientCredentials', 'userId'])
+                )) > 0;
+        }
+
+        if ($credentialsChanged) {
+            $this->getDispatcher()->dispatch(
+                new ApplicationCredentialsChangedEvent($this, $isNew),
+                ApplicationCredentialsChangedEvent::$NAME
+            );
         }
 
         $this->getLog()->debug('Saving redirect uris: ' . json_encode($this->redirectUris));
@@ -292,6 +313,9 @@ class Application implements \JsonSerializable, ClientEntityInterface
         return [
             'Application identifier ends with' => substr($this->key, -8),
             'Application Name' => $this->name,
+            // Who the application's client credentials run as.
+            'Owner userId' => $this->userId ?? null,
+            'Owner' => $this->owner ?? null,
         ];
     }
 

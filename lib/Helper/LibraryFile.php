@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Helper;
@@ -107,5 +109,33 @@ class LibraryFile
         }
 
         return $absolute;
+    }
+
+    /**
+     * Refuses an uploaded file name containing '..', which storage would reject as a traversal.
+     * @throws InvalidArgumentException
+     */
+    public static function assertNoDoubleDot(string $fileName): void
+    {
+        if (str_contains($fileName, '..')) {
+            throw new InvalidArgumentException(
+                __('The file name cannot contain \'..\', please rename the file and upload it again'),
+                'fileName'
+            );
+        }
+    }
+
+    /**
+     * Checks a byte range requested from a library file.
+     * @throws InvalidArgumentException If the offset is negative or the length isn't positive.
+     */
+    public static function assertValidRange(string $relativePath, int $offset, int $length): void
+    {
+        if ($offset < 0 || $length <= 0) {
+            throw new InvalidArgumentException(
+                sprintf('Invalid range for library file %s: offset %d, length %d', $relativePath, $offset, $length),
+                'range'
+            );
+        }
     }
 }

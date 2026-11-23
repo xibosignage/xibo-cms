@@ -6,6 +6,7 @@ namespace Xibo\Helper;
 
 use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * A set of helper methods for dealing with HTTP cache
@@ -118,5 +119,24 @@ class HttpCacheProvider
         }
 
         return $response->withHeader('Last-Modified', gmdate('D, d M Y H:i:s T', $time));
+    }
+
+    /**
+     * Whether the request's If-None-Match, or without one its If-Modified-Since, shows the client's copy is current.
+     *
+     * @param  ServerRequestInterface $request
+     * @param  string                 $etag         The response's quoted `ETag` header value, or empty for none
+     * @param  int|null               $lastModified The response's last modified UNIX timestamp, or null for none
+     *
+     * @return bool
+     */
+    public static function isNotModified(ServerRequestInterface $request, string $etag, ?int $lastModified): bool
+    {
+        return ConditionalRequest::isNotModified(
+            $request->hasHeader('If-None-Match') ? $request->getHeaderLine('If-None-Match') : null,
+            $request->hasHeader('If-Modified-Since') ? $request->getHeaderLine('If-Modified-Since') : null,
+            $etag,
+            $lastModified
+        );
     }
 }

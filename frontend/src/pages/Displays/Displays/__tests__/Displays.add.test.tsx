@@ -1,25 +1,27 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
-import { screen, waitFor } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent, { type UserEvent } from '@testing-library/user-event';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
@@ -27,9 +29,9 @@ import { EMPTY_DISPLAY_TABLE } from './fixtures/display';
 import { renderDisplaysPage } from './helpers/renderDisplaysPage';
 import { mockFetchDisplays } from './mocks/displaysApi';
 
-import { notify } from '@/components/ui/Notification';
-import { addDisplayViaCode } from '@/services/displaysApi';
+import { addDisplayViaCode, fetchLicenceUsage } from '@/services/displaysApi';
 import { testQueryClient } from '@/setupTests';
+import { buildCurrentUser, PERSONAS } from '@/testUtils/personas';
 
 // =============================================================================
 // Module mocks
@@ -59,7 +61,7 @@ vi.mock('@/services/folderApi', () => ({
 vi.mock('@/components/ui/modals/Modal');
 vi.mock('@/components/ui/FolderActionModals', () => ({ default: () => null }));
 vi.mock('@/components/ui/Notification', () => ({
-  notify: { success: vi.fn(), error: vi.fn() },
+  notify: { success: vi.fn(), error: vi.fn(), info: vi.fn() },
 }));
 vi.mock('../hooks/useDisplaysFilterOptions', () => ({
   useDisplaysFilterOptions: () => ({ filterOptions: [], isLoading: false }),
@@ -69,132 +71,98 @@ vi.mock('../hooks/useDisplaysFilterOptions', () => ({
 // Helpers
 // =============================================================================
 
+const findAddDialog = () => screen.findByRole('dialog', { name: 'Add Display' });
+const queryAddDialog = () => screen.queryByRole('dialog', { name: 'Add Display' });
+
 const openAddModal = async (user: UserEvent) => {
   renderDisplaysPage();
   const addButton = await screen.findByRole('button', { name: /add display/i });
   await user.click(addButton);
-  await screen.findByRole('dialog', { name: /add display via code/i });
+  await findAddDialog();
 };
 
 // =============================================================================
 // Tests
 // =============================================================================
 
+// The Add Display wizard ships in every edition, so these cover what CE and Pro both see.
 describe('Displays page - add display', () => {
   beforeEach(() => {
     testQueryClient.clear();
     vi.clearAllMocks();
+    window.localStorage.clear();
     mockFetchDisplays(EMPTY_DISPLAY_TABLE);
+    vi.mocked(fetchLicenceUsage).mockResolvedValue({
+      maxLicensed: null,
+      currentlyLicensed: 0,
+      available: null,
+    });
   });
 
-  // ---------------------------------------------------------------------------
-  // Clicking the Add Display button on the page header opens the Add modal.
-  // ---------------------------------------------------------------------------
-  test('clicking Add Display opens the Add Display modal', async () => {
+  test('clicking Add Display opens the wizard on the choice of route', async () => {
     const user = userEvent.setup();
     await openAddModal(user);
 
-    expect(screen.getByRole('dialog', { name: /add display via code/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /use activation code/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /manually configure/i })).toBeInTheDocument();
   });
 
-  // ---------------------------------------------------------------------------
-  // The Save button must be disabled until the user has typed something into
-  // the code field — submitting an empty code would be a no-op on the server.
-  // ---------------------------------------------------------------------------
-  test('Save button is disabled when the code field is empty', async () => {
-    const user = userEvent.setup();
-    await openAddModal(user);
+  // ?add=1 comes from the getting-started checklist.
+  test('?add=1 opens the wizard on load', async () => {
+    renderDisplaysPage({ initialEntries: ['/displays/all-displays?add=1'] });
 
-    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+    await findAddDialog();
+    expect(screen.getByRole('button', { name: /use activation code/i })).toBeInTheDocument();
   });
 
-  // ---------------------------------------------------------------------------
-  // Typing any non-whitespace character into the code field enables the button.
-  // ---------------------------------------------------------------------------
-  test('Save button becomes enabled once a code is typed', async () => {
-    const user = userEvent.setup();
-    await openAddModal(user);
+  // ?addCode= comes from a pending-connect notification or a scanned QR code: the customer has
+  // already chosen the activation code route, so it opens there with the code filled in.
+  test('?addCode= opens the activation code step with the code and name filled in', async () => {
+    renderDisplaysPage({
+      initialEntries: ['/displays/all-displays?addCode=AB12&displayName=Lobby'],
+    });
 
-    await user.type(screen.getByRole('textbox', { name: /code/i }), 'ABC-123');
-
-    expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
+    await findAddDialog();
+    expect(await screen.findByRole('textbox', { name: /activation code/i })).toHaveValue('AB12');
+    expect(screen.getByRole('textbox', { name: /display name/i })).toHaveValue('Lobby');
   });
 
-  // ---------------------------------------------------------------------------
-  // Clicking Cancel must close the modal without contacting the server.
-  // ---------------------------------------------------------------------------
-  test('Cancel closes the modal without calling the API', async () => {
+  test.each([['?add=1'], ['?addCode=ABC123']])(
+    '%s does nothing for a user who cannot add displays',
+    async (query) => {
+      const cannotAdd = buildCurrentUser(PERSONAS.user, {
+        features: { 'displays.view': true, 'displays.add': false },
+      });
+      renderDisplaysPage({ initialEntries: [`/displays/all-displays${query}`], user: cannotAdd });
+
+      await screen.findByRole('table');
+      expect(queryAddDialog()).not.toBeInTheDocument();
+    },
+  );
+
+  test('Cancel closes the wizard without calling the API', async () => {
     const user = userEvent.setup();
     await openAddModal(user);
 
     await user.click(screen.getByRole('button', { name: /cancel/i }));
 
-    expect(screen.queryByRole('dialog', { name: /add display via code/i })).not.toBeInTheDocument();
+    expect(queryAddDialog()).not.toBeInTheDocument();
     expect(addDisplayViaCode).not.toHaveBeenCalled();
   });
 
-  // ---------------------------------------------------------------------------
-  // A correct code triggers the success notification and closes the modal.
-  // The notification message "CMS Credentials Added" confirms to the user that
-  // the CMS address and key have been accepted by the authentication service.
-  // ---------------------------------------------------------------------------
-  test('correct code shows "CMS Credentials Added" notification and closes the modal', async () => {
-    const user = userEvent.setup();
-    vi.mocked(addDisplayViaCode).mockResolvedValue(undefined);
-
-    await openAddModal(user);
-    await user.type(screen.getByRole('textbox', { name: /code/i }), 'VALID-CODE');
-    await user.click(screen.getByRole('button', { name: 'Save' }));
-
-    await waitFor(() => {
-      expect(notify.success).toHaveBeenCalledWith('CMS Credentials Added');
-    });
-    expect(screen.queryByRole('dialog', { name: /add display via code/i })).not.toBeInTheDocument();
-  });
-
-  // ---------------------------------------------------------------------------
-  // A wrong code returns an error from the server. The modal must stay open
-  // and show the exact message so the user knows what went wrong.
-  // ---------------------------------------------------------------------------
-  test('wrong code keeps the modal open and shows the server error message', async () => {
-    const user = userEvent.setup();
-    vi.mocked(addDisplayViaCode).mockRejectedValueOnce({
-      isAxiosError: true,
-      response: {
-        data: {
-          message:
-            'The code provided does not match. Please double-check the code shown on the device you are trying to connect.',
-        },
-      },
-    });
-
-    await openAddModal(user);
-    await user.type(screen.getByRole('textbox', { name: /code/i }), 'WRONG-CODE');
-    await user.click(screen.getByRole('button', { name: 'Save' }));
-
-    expect(screen.getByRole('dialog', { name: /add display via code/i })).toBeInTheDocument();
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'The code provided does not match. Please double-check the code shown on the device you are trying to connect.',
-    );
-  });
-
-  // ---------------------------------------------------------------------------
-  // The code field must be blank every time the modal opens so a previously
-  // typed (and rejected) code cannot accidentally be submitted for a different
-  // display. The useEffect in AddDisplayModal resets state whenever isOpen
-  // flips from false back to true.
-  // ---------------------------------------------------------------------------
-  test('code field is blank when the modal is reopened after being closed', async () => {
+  // A code typed and abandoned must not be offered again for a different display.
+  test('the code field is blank when the wizard is reopened after Cancel', async () => {
     const user = userEvent.setup();
     await openAddModal(user);
 
-    await user.type(screen.getByRole('textbox', { name: /code/i }), 'LEFTOVER-CODE');
+    await user.click(screen.getByRole('button', { name: /use activation code/i }));
+    await user.type(screen.getByRole('textbox', { name: /activation code/i }), 'LEFTOVER');
     await user.click(screen.getByRole('button', { name: /cancel/i }));
 
-    // Reopen the modal
     await user.click(screen.getByRole('button', { name: /add display/i }));
-    await screen.findByRole('dialog', { name: /add display via code/i });
+    await findAddDialog();
+    await user.click(screen.getByRole('button', { name: /use activation code/i }));
 
-    expect(screen.getByRole('textbox', { name: /code/i })).toHaveValue('');
+    expect(screen.getByRole('textbox', { name: /activation code/i })).toHaveValue('');
   });
 });

@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { useQueryClient } from '@tanstack/react-query';
@@ -891,15 +893,22 @@ interface SortableHeaderProps {
 }
 
 function SortableHeader({ col, label, sortCol, sortDir, onSort }: SortableHeaderProps) {
+  const { t } = useTranslation();
   const isActive = sortCol === col;
   return (
-    <th className="relative">
+    <th
+      className="relative"
+      aria-label={label}
+      aria-sort={isActive ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined}
+    >
       <div className="px-3 py-2 h-8 flex uppercase bg-gray-50 border-b border-gray-200 text-sm items-center justify-between text-gray-500">
         <div className="text-sm font-semibold text-nowrap overflow-hidden w-full text-left">
           {label}
         </div>
-        <div
-          className="flex justify-center items-center p-1 size-6 cursor-pointer select-none"
+        <button
+          type="button"
+          aria-label={t('Sort by {{column}}', { column: label })}
+          className="flex shrink-0 justify-center items-center p-1 size-6 cursor-pointer"
           onClick={() => onSort(col)}
         >
           {isActive ? (
@@ -911,7 +920,7 @@ function SortableHeader({ col, label, sortCol, sortDir, onSort }: SortableHeader
           ) : (
             <ChevronsUpDown className="size-4" />
           )}
-        </div>
+        </button>
       </div>
     </th>
   );

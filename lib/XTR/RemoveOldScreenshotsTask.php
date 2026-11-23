@@ -1,43 +1,47 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\XTR;
 
 
 use Carbon\Carbon;
-use Xibo\Factory\MediaFactory;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Service\LibraryAsset;
+use Xibo\Service\LibraryStorageRegistryInterface;
+use Xibo\Support\Exception\GeneralException;
 
 class RemoveOldScreenshotsTask implements TaskInterface
 {
     use TaskTrait;
 
-    /** @var MediaFactory */
-    private $mediaFactory;
+    /** @var LibraryStorageRegistryInterface */
+    private $libraryStorageRegistry;
 
     /** @inheritdoc */
     public function setFactories($container)
     {
-        $this->mediaFactory = $container->get('mediaFactory');
+        $this->libraryStorageRegistry = $container->get('libraryStorageRegistry');
 
         return $this;
     }
@@ -47,23 +51,33 @@ class RemoveOldScreenshotsTask implements TaskInterface
     {
         $this->runMessage = '# ' . __('Remove Old Screenshots') . PHP_EOL . PHP_EOL;
 
-        $screenshotLocation = $this->config->getSetting('LIBRARY_LOCATION') . 'screenshots/';
         $screenshotTTL = $this->config->getSetting('DISPLAY_SCREENSHOT_TTL');
         $count = 0;
 
         if ($screenshotTTL > 0) {
-            foreach (array_diff(scandir($screenshotLocation), ['..', '.']) as $file) {
-                $fileLocation = $screenshotLocation . $file;
+            $now = Carbon::now();
+            $storage = $this->libraryStorageRegistry->get(LibraryAsset::SCREENSHOT);
 
-                $lastModified = DateFormatHelper::createFromTimestamp(filemtime($fileLocation));
-                $now = Carbon::now();
+            foreach ($storage->listKeys() as $item) {
+                // Keep a screenshot whose age is unknown rather than guess.
+                if ($item['lastModified'] === null) {
+                    continue;
+                }
+
+                $lastModified = DateFormatHelper::createFromTimestamp($item['lastModified']);
                 $diff = $now->diffInDays($lastModified, true);
 
                 if ($diff > $screenshotTTL) {
-                    unlink($fileLocation);
+                    try {
+                        $storage->delete($item['key']);
+                    } catch (GeneralException $exception) {
+                        $this->log->error('Unable to remove old Display screenshot ' . $item['key'] . ': '
+                            . $exception->getMessage());
+                        continue;
+                    }
                     $count++;
 
-                    $this->log->debug('Removed old Display screenshot:' . $file);
+                    $this->log->debug('Removed old Display screenshot:' . $item['key']);
                 }
             }
             $this->appendRunMessage(sprintf(__('Removed %d old Display screenshots'), $count));

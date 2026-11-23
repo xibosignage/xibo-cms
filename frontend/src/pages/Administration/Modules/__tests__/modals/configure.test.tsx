@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { screen } from '@testing-library/react';
@@ -156,5 +158,55 @@ describe('ConfigureModuleModal', () => {
     renderConfigureModal({ error: 'Settings could not be saved.' });
 
     expect(screen.getByText('Settings could not be saved.')).toBeInTheDocument();
+  });
+});
+
+// =============================================================================
+// Tests — settings that only have a default (xibosignage/xibo#3924)
+// =============================================================================
+
+// The server sends `value: null` for a setting nobody has changed, alongside
+// its `default`. Before #3924 the form ignored the default, so those fields
+// opened empty, and saving the form wrote the empty value over the default.
+// MODULE_WITH_SETTINGS gives every setting a value, so it can't show this.
+describe('ConfigureModuleModal - settings left at their default', () => {
+  const MODULE_WITH_DEFAULTS = buildModule({
+    moduleId: 'core-weather',
+    name: 'Weather',
+    settings: [
+      { id: 'apiKey', type: 'text', title: 'API Key', default: 'demo-key' },
+      { id: 'cacheMinutes', type: 'number', title: 'Cache Minutes', value: null, default: 60 },
+      { id: 'units', type: 'text', title: 'Units', value: 'imperial', default: 'metric' },
+    ] as unknown as NonNullable<Parameters<typeof buildModule>[0]>['settings'],
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('a setting with no value shows its default', () => {
+    renderConfigureModal({ module: MODULE_WITH_DEFAULTS });
+
+    expect(screen.getByLabelText(/api key/i)).toHaveValue('demo-key');
+    expect(screen.getByLabelText(/cache minutes/i)).toHaveValue(60);
+  });
+
+  test('saving without changes keeps each default', async () => {
+    const user = userEvent.setup();
+    const { onSave } = renderConfigureModal({ module: MODULE_WITH_DEFAULTS });
+
+    await user.click(screen.getByRole('button', { name: /^save$/i }));
+
+    expect(onSave).toHaveBeenCalledWith(
+      'core-weather',
+      expect.objectContaining({ apiKey: 'demo-key', cacheMinutes: 60 }),
+    );
+  });
+
+  // A value the admin has set wins over the default.
+  test('a setting with a value shows the value, not the default', () => {
+    renderConfigureModal({ module: MODULE_WITH_DEFAULTS });
+
+    expect(screen.getByLabelText(/units/i)).toHaveValue('imperial');
   });
 });

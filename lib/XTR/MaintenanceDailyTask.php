@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\XTR;
@@ -31,16 +33,23 @@ use Xibo\Event\MaintenanceDailyEvent;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\FontFactory;
 use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\ModuleTemplateFactory;
+use Xibo\Factory\NotificationFactory;
+use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\DatabaseLogHandler;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
+use Xibo\Service\DefaultLayoutBuilder;
+use Xibo\Service\DefaultsImporter;
 use Xibo\Service\MediaService;
+use Xibo\Service\LibraryStorageRegistryInterface;
 use Xibo\Service\MediaServiceInterface;
+use Xibo\Storage\LibraryFileJournal;
 use Xibo\Support\Exception\GeneralException;
-use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class MaintenanceDailyTask
@@ -49,6 +58,7 @@ use Xibo\Support\Exception\NotFoundException;
 class MaintenanceDailyTask implements TaskInterface
 {
     use TaskTrait;
+    use NotifiesOncePerDayTrait;
 
     /** @var LayoutFactory */
     private $layoutFactory;
@@ -74,6 +84,18 @@ class MaintenanceDailyTask implements TaskInterface
     /** @var ModuleTemplateFactory */
     private $moduleTemplateFactory;
 
+    /** @var LibraryStorageRegistryInterface */
+    private $libraryStorageRegistry;
+
+    /** @var NotificationFactory */
+    private $notificationFactory;
+
+    private PlaylistFactory $playlistFactory;
+
+    private WidgetFactory $widgetFactory;
+
+    private MediaFactory $mediaFactory;
+
     /** @var string */
     private $libraryLocation;
 
@@ -88,6 +110,11 @@ class MaintenanceDailyTask implements TaskInterface
         $this->fontFactory = $container->get('fontFactory');
         $this->moduleFactory = $container->get('moduleFactory');
         $this->moduleTemplateFactory = $container->get('moduleTemplateFactory');
+        $this->libraryStorageRegistry = $container->get('libraryStorageRegistry');
+        $this->notificationFactory = $container->get('notificationFactory');
+        $this->playlistFactory = $container->get('playlistFactory');
+        $this->widgetFactory = $container->get('widgetFactory');
+        $this->mediaFactory = $container->get('mediaFactory');
         return $this;
     }
 
@@ -111,6 +138,8 @@ class MaintenanceDailyTask implements TaskInterface
         // Import layouts
         $this->importLayouts();
 
+        $this->repairDefaultFonts();
+
         // Cycle the XMR Key
         $this->cycleXmrKey();
 
@@ -130,6 +159,9 @@ class MaintenanceDailyTask implements TaskInterface
             $this->getLogger()->error('Failure to build caches, e = ' . $exception->getMessage());
             $this->appendRunMessage(__('Failure to build caches'));
         }
+
+        // Library file deletes and rolled-back uploads still pending
+        $this->processLibraryJournal();
 
         // Tidy logs
         $this->tidyLogs();
@@ -168,6 +200,46 @@ class MaintenanceDailyTask implements TaskInterface
     }
 
     /**
+     * Carry out journalled library file work that hasn't happened yet, for every asset type, so a failed delete or
+     * a rolled-back upload is cleaned up without waiting for a Library Tidy.
+     */
+    private function processLibraryJournal(): void
+    {
+        $this->appendRunMessage('## ' . __('Library files'));
+
+        // Commit what earlier steps left open (cycleXmrKey()), so it doesn't hold journal rows or roll back with them.
+        $this->store->commitIfNecessary();
+
+        try {
+            $result = LibraryFileJournal::processAllPending(
+                $this->store,
+                $this->libraryStorageRegistry,
+                $this->getLogger()
+            );
+        } catch (\Exception $exception) {
+            $this->getLogger()->error('Failure to process the library file journal, e = ' . $exception->getMessage());
+            $this->appendRunMessage(__('Failure to process pending library files'));
+            return;
+        }
+
+        $this->appendRunMessage(sprintf(
+            __('Deleted %d library files, %d failed and will be retried.'),
+            $result['deleted'],
+            $result['failed']
+        ));
+
+        if ($result['stuck'] > 0) {
+            $this->notifyOncePerDay(
+                $this->notificationFactory,
+                __('Library files could not be deleted'),
+                __('Some library files could not be deleted after several attempts. See the CMS log for details.'),
+                'library'
+            );
+            $this->store->commitIfNecessary();
+        }
+    }
+
+    /**
      * Tidy Cache
      */
     private function tidyCache()
@@ -178,102 +250,76 @@ class MaintenanceDailyTask implements TaskInterface
     }
 
     /**
+     * Stores again any unchanged default font missing from storage, such as after a storage change.
+     */
+    private function repairDefaultFonts(): void
+    {
+        try {
+            $storage = $this->fontFactory->getStorage();
+            foreach (FontFactory::getDefaultFonts() as $file => $md5) {
+                $isDefault = false;
+                foreach ($this->fontFactory->getByFileName($file) as $font) {
+                    $isDefault = $isDefault || strtolower((string)$font->md5) === $md5;
+                }
+
+                if ($isDefault && !$storage->exists($file)) {
+                    $this->getLogger()->info('Default font missing from storage, storing it again: ' . $file);
+                    try {
+                        $this->getDefaultsImporter()->storeDefaultFont($file);
+                    } catch (\Exception $exception) {
+                        $this->getLogger()->error('Unable to store default font ' . $file . ': '
+                            . $exception->getMessage());
+                    }
+                }
+            }
+        } catch (\Exception $exception) {
+            $this->getLogger()->error('Unable to check default fonts: ' . $exception->getMessage());
+        }
+    }
+
+    /**
      * Import Layouts
-     * @throws GeneralException|\FontLib\Exception\FontNotFoundException
      */
     private function importLayouts()
     {
         $this->runMessage .= '## ' . __('Import Layouts and Fonts') . PHP_EOL;
 
-        if ($this->config->getSetting('DEFAULTS_IMPORTED') == 0) {
-            // Make sure the library exists
-            $this->mediaService->initLibrary();
-
-            // Import any layouts from library/brand/layouts/
-            $folder = rtrim($this->config->getSetting('LIBRARY_LOCATION'), '/') . '/brand/layouts';
-
-            foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
-                if (stripos($file, '.zip')) {
-                    try {
-                        $layout = $this->layoutFactory->createFromZip(
-                            $folder . '/' . $file,
-                            null,
-                            $this->userFactory->getSystemUser()->getId(),
-                            false,
-                            false,
-                            true,
-                            false,
-                            true,
-                            $this->dataSetFactory,
-                            null,
-                            $this->mediaService,
-                            1
-                        );
-
-                        $layout->save([
-                            'audit' => false,
-                            'import' => true
-                        ]);
-
-                        if (!empty($layout->getUnmatchedProperty('thumbnail'))) {
-                            rename($layout->getUnmatchedProperty('thumbnail'), $layout->getThumbnailUri());
-                        }
-
-                        try {
-                            $this->layoutFactory->getById($this->config->getSetting('DEFAULT_LAYOUT'));
-                        } catch (NotFoundException $exception) {
-                            $this->config->changeSetting('DEFAULT_LAYOUT', $layout->layoutId);
-                        }
-                    } catch (\Exception $exception) {
-                        $this->log->error('Unable to import layout: ' . $file . '. E = ' . $exception->getMessage());
-                        $this->log->debug($exception->getTraceAsString());
-                    }
-                }
+        $importer = $this->getDefaultsImporter();
+        if ($importer->isRequired()) {
+            try {
+                $importer->import(rtrim($this->config->getSetting('LIBRARY_LOCATION'), '/') . '/brand', true);
+                $this->runMessage .= ' - ' . __('Done.') . PHP_EOL . PHP_EOL;
+            } catch (\Exception $exception) {
+                // Left to run again tomorrow, without stopping the rest of the maintenance.
+                $this->getLogger()->error('Unable to import defaults: ' . $exception->getMessage());
+                $this->runMessage .= ' - ' . __('Failed.') . PHP_EOL . PHP_EOL;
             }
-
-            // Fonts
-            // -----
-            // install fonts from the project fonts/ directory
-            $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
-            $fontFolder = PROJECT_ROOT . '/fonts';
-            foreach (array_diff(scandir($fontFolder), array('..', '.')) as $file) {
-                // check if we already have this font file
-                if (count($this->fontFactory->getByFileName($file)) <= 0) {
-                    // if we don't add it
-                    $filePath = $fontFolder . DIRECTORY_SEPARATOR . $file;
-                    $fontLib = \FontLib\Font::load($filePath);
-
-                    // check embed flag, just in case
-                    $embed = intval($fontLib->getData('OS/2', 'fsType'));
-                    // if it's not embeddable, log error and skip it
-                    if ($embed != 0 && $embed != 8) {
-                        $this->log->error('Unable to install default Font: ' . $file
-                            . ' . Font file is not embeddable due to its permissions');
-                        continue;
-                    }
-
-                    $font = $this->fontFactory->createEmpty();
-                    $font->modifiedBy = $this->userFactory->getSystemUser()->userName;
-                    $font->name = $fontLib->getFontName() . ' ' . $fontLib->getFontSubfamily();
-                    $font->familyName = strtolower(preg_replace('/\s+/', ' ', preg_replace('/\d+/u', '', $font->name)));
-                    $font->fileName = $file;
-                    $font->size = filesize($filePath);
-                    $font->md5 = md5_file($filePath);
-                    $font->save();
-
-                    $copied = copy($filePath, $libraryLocation . 'fonts/' . $file);
-                    if (!$copied) {
-                        $this->getLogger()->error('importLayouts: Unable to copy fonts to ' . $libraryLocation);
-                    }
-                }
-            }
-
-            $this->config->changeSetting('DEFAULTS_IMPORTED', 1);
-
-            $this->runMessage .= ' - ' . __('Done.') . PHP_EOL . PHP_EOL;
         } else {
             $this->runMessage .= ' - ' . __('Not Required.') . PHP_EOL . PHP_EOL;
         }
+    }
+
+    private function getDefaultsImporter(): DefaultsImporter
+    {
+        return new DefaultsImporter(
+            $this->config,
+            $this->store,
+            $this->layoutFactory,
+            $this->userFactory,
+            $this->dataSetFactory,
+            $this->fontFactory,
+            $this->mediaService,
+            new DefaultLayoutBuilder(
+                $this->config,
+                $this->layoutFactory,
+                $this->playlistFactory,
+                $this->widgetFactory,
+                $this->moduleFactory,
+                $this->mediaFactory,
+                $this->getLogger()
+            ),
+            $this->getLogger()
+        );
     }
 
     /**

@@ -1,32 +1,64 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 
 namespace Xibo\Factory;
 
+use Xibo\Service\LibraryAsset;
+use Xibo\Service\LibraryStorageRegistryInterface;
+use Xibo\Service\LibraryStorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 class WidgetMediaFactory extends BaseFactory
 {
+    /**
+     * @var LibraryStorageServiceInterface
+     */
+    private $libraryStorageService;
+
+    private ?LibraryStorageRegistryInterface $libraryStorageRegistry = null;
+
+    /**
+     * The registry a media file still waiting to be copied is read through.
+     * @return $this
+     */
+    public function useLibraryStorageRegistry(LibraryStorageRegistryInterface $libraryStorageRegistry)
+    {
+        $this->libraryStorageRegistry = $libraryStorageRegistry;
+        return $this;
+    }
+
+    /**
+     * @param LibraryStorageServiceInterface $libraryStorageService
+     * @return $this
+     */
+    public function useLibraryStorageService($libraryStorageService)
+    {
+        $this->libraryStorageService = $libraryStorageService;
+        return $this;
+    }
+
     /**
      * Media Linked to Widgets by WidgetId
      * @param int $widgetId
@@ -70,15 +102,28 @@ class WidgetMediaFactory extends BaseFactory
      */
     public function getPathForMediaId(int $mediaId): string
     {
-        $results = $this->getStore()->select('SELECT `storedAs` FROM `media` WHERE `mediaId` = :mediaId', [
-            'mediaId' => $mediaId
-        ]);
+        $results = $this->getStore()->select(
+            'SELECT `storedAs`, `storageEngine` FROM `media` WHERE `mediaId` = :mediaId',
+            ['mediaId' => $mediaId]
+        );
 
         if (count($results) <= 0) {
             throw new NotFoundException();
         }
 
-        return $this->getConfig()->getSetting('LIBRARY_LOCATION') . $results[0]['storedAs'];
+        // A local copy is the library file itself, which releasePath() leaves alone.
+        $storage = $this->libraryStorageRegistry?->get(LibraryAsset::MEDIA, $results[0]['storageEngine'])
+            ?? $this->libraryStorageService;
+        return $storage->downloadToTemp($results[0]['storedAs']);
+    }
+
+    /**
+     * Release a path returned by getPathForMediaId() (see LibraryStorageServiceInterface::releaseTemp()).
+     * @param string $path
+     */
+    public function releasePath(string $path): void
+    {
+        $this->libraryStorageService->releaseTemp($path);
     }
 
     /**

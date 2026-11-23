@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import {
@@ -36,6 +38,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
+import type { MenuTriggerProps, MenuTriggerRenderProps } from '@/components/layout/menuTrigger';
 import InfoBanner from '@/components/ui/InfoBanner';
 import { useUserContext } from '@/context/UserContext';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
@@ -114,7 +117,14 @@ function SystemNotificationItem({ notification }: { notification: Notification }
   );
 }
 
-export default function NotificationDropdown() {
+export interface NotificationTriggerRenderProps extends MenuTriggerRenderProps {
+  unreadCount: number;
+}
+
+export default function NotificationDropdown({
+  placement = 'bottom-end',
+  renderTrigger,
+}: MenuTriggerProps<NotificationTriggerRenderProps>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -131,7 +141,7 @@ export default function NotificationDropdown() {
       setIsOpen(open);
       if (open) setSaveError(null);
     },
-    placement: 'bottom-end',
+    placement,
     whileElementsMounted: autoUpdate,
     middleware: [offset(8), flip(), shift({ padding: 8 })],
   });
@@ -231,21 +241,30 @@ export default function NotificationDropdown() {
 
   return (
     <>
-      <button
-        ref={refs.setReference}
-        type="button"
-        className="cursor-pointer flex items-center justify-center relative h-9.5 w-9.5 rounded-lg transition hover:bg-blue-100"
-        {...getReferenceProps()}
-        aria-label={t('Notifications')}
-        title={t('Notifications')}
-      >
-        <Bell size={16} className="text-xibo-blue-600" />
-        {unreadCount > 0 && (
-          <div className="w-4.5 h-4.5 bg-xibo-blue-600 rounded-full text-[10px] text-white absolute top-0 right-0 flex items-center justify-center pointer-events-none">
-            {unreadCount > 9 ? '9+' : unreadCount}
-          </div>
-        )}
-      </button>
+      {renderTrigger ? (
+        renderTrigger({
+          ref: refs.setReference,
+          referenceProps: getReferenceProps(),
+          isOpen,
+          unreadCount,
+        })
+      ) : (
+        <button
+          ref={refs.setReference}
+          type="button"
+          className="cursor-pointer flex items-center justify-center relative h-9.5 w-9.5 rounded-lg transition hover:bg-blue-100"
+          {...getReferenceProps()}
+          aria-label={t('Notifications')}
+          title={t('Notifications')}
+        >
+          <Bell size={16} className="text-xibo-blue-600" />
+          {unreadCount > 0 && (
+            <div className="w-4.5 h-4.5 bg-xibo-blue-600 rounded-full text-[10px] text-white absolute top-0 right-0 flex items-center justify-center pointer-events-none">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </div>
+          )}
+        </button>
+      )}
 
       {isOpen && (
         <FloatingPortal>

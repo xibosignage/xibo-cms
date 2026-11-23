@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { Equal, Regex } from 'lucide-react';
@@ -170,20 +172,26 @@ function DebouncedTextWithControls({
   ) : undefined;
 
   const suffix = showRegex ? (
-    <div
-      className="px-3 py-2 flex items-center cursor-pointer justify-center"
-      onClick={() => {
-        if (!isRegex && localValue && !isValidRegex(localValue)) {
-          setRegexError(t('Invalid regular expression'));
-          return;
-        }
-        onRegexChange?.(!isRegex);
-      }}
-      title={t('Use RegEx pattern matching')}
-    >
+    <div className="px-3 py-2 flex items-center justify-center">
       <Button
         variant="tertiary"
         leftIcon={Regex}
+        ariaLabel={t('Use RegEx pattern matching')}
+        title={t('Use RegEx pattern matching')}
+        aria-pressed={isRegex}
+        onClick={() => {
+          if (!isRegex && localValue && !isValidRegex(localValue)) {
+            setRegexError(t('Invalid regular expression'));
+            return;
+          }
+          if (isRegex && regexError) {
+            if (debounceRef.current) {
+              clearTimeout(debounceRef.current);
+            }
+            onChange(name, localValue);
+          }
+          onRegexChange?.(!isRegex);
+        }}
         className={twMerge(
           'p-1.5',
           isRegex

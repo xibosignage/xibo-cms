@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 // Load templates
@@ -1282,18 +1284,20 @@ Toolbar.prototype.createContent = function(
   const self = this;
   const app = this.parent;
 
+  // Menu items rendering their own content keep it once rendered
+  const $paneContainer =
+    self.DOMObject.find('#content-' + menu + ' .toolbar-pane-container');
+  const isRendered = (typeof this.menuItems[menu].createWindow === 'function') ?
+    $paneContainer.children().length > 0 :
+    $paneContainer.find('.toolbar-card').length > 0;
+
   // Create content only if it's not rendered yet
   // ( if force reload is true, skip this step)
   if (
     !forceReload &&
     this.menuItems[menu].contentType != 'modules' &&
     this.menuItems[menu].contentType != 'playlists' &&
-    self.DOMObject
-      .find(
-        '#content-' +
-        menu +
-        ' .toolbar-pane-container .toolbar-card',
-      ).length > 0
+    isRendered
   ) {
     // Adapt card behaviour to current tab
     self.handleCardsBehaviour();
@@ -1321,6 +1325,12 @@ Toolbar.prototype.createContent = function(
     this.layoutTemplatesContentCreateWindow(menu);
   } else if (content.contentType === 'playlists') {
     this.playlistsContentCreateWindow(menu);
+  } else if (typeof content.createWindow === 'function') {
+    // Menu items can render their own content
+    content.createWindow(
+      this.DOMObject.find('#' + content.contentType + '-container-' + menu),
+      {app, toolbar: this},
+    );
   } else {
     this.handleCardsBehaviour();
 

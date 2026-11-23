@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 namespace Xibo\Entity;
 
@@ -45,8 +47,12 @@ use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
 use Xibo\Helper\Profiler;
 use Xibo\Helper\Status;
+use Xibo\Helper\StoredFileMetadata;
 use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\LibraryAsset;
+use Xibo\Service\LibraryStorageServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\LibraryFileJournal;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\GeneralException;
@@ -285,6 +291,15 @@ class Layout implements \JsonSerializable
     // Flag to indicate we've not built this layout this session.
     private $hasBuilt = false;
 
+    /** @var array|false|null md5 and size of the stored XLF, false when there is none, null when not yet read */
+    private $xlfDetails = null;
+
+    /** Whether the layout row's XLF columns have been read, so null columns aren't read again. */
+    private bool $xlfColumnsRead = false;
+
+    /** @var string|null the stored XLF, when this request has already read or written it */
+    private $xlf = null;
+
     public static $loadOptionsMinimum = [
         'loadPlaylists' => false,
         'loadTags' => false,
@@ -360,6 +375,9 @@ class Layout implements \JsonSerializable
      */
     private $fontFactory;
 
+    /** @var \Xibo\Service\LibraryStorageServiceInterface */
+    private $libraryStorageService;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
@@ -377,6 +395,8 @@ class Layout implements \JsonSerializable
      * @param PlaylistFactory $playlistFactory
      * @param ActionFactory $actionFactory
      * @param FolderFactory $folderFactory
+     * @param FontFactory $fontFactory
+     * @param \Xibo\Service\LibraryStorageServiceInterface $libraryStorageService
      */
     public function __construct(
         $store,
@@ -394,7 +414,8 @@ class Layout implements \JsonSerializable
         $playlistFactory,
         $actionFactory,
         $folderFactory,
-        FontFactory $fontFactory
+        FontFactory $fontFactory,
+        $libraryStorageService
     ) {
         $this->setCommonDependencies($store, $log, $dispatcher);
         $this->setPermissionsClass('Xibo\Entity\Campaign');
@@ -411,6 +432,7 @@ class Layout implements \JsonSerializable
         $this->actionFactory = $actionFactory;
         $this->folderFactory = $folderFactory;
         $this->fontFactory = $fontFactory;
+        $this->libraryStorageService = $libraryStorageService;
     }
 
     public function __clone()
@@ -423,6 +445,9 @@ class Layout implements \JsonSerializable
         $this->permissions = [];
         $this->tags = [];
         $this->linkTags = [];
+        $this->xlfDetails = null;
+        $this->xlfColumnsRead = false;
+        $this->xlf = null;
 
         // A normal clone (for copy) will set this to Published, so that the copy is published.
         $this->publishedStatusId = 1;
@@ -1042,7 +1067,7 @@ class Layout implements \JsonSerializable
         $this->getLog()->audit('Layout', $this->layoutId, 'Layout Deleted', ['layoutId' => $this->layoutId]);
 
         // Delete the cached file (if there is one)
-        $this->deleteFiles();
+        $this->deleteFiles($options['keepDraftThumbnail'] ?? false);
 
         // Audit the Delete
         $this->audit($this->layoutId, 'Deleted' . (($this->parentId !== null) ? ' draft for ' . $this->parentId : ''));
@@ -1962,212 +1987,261 @@ class Layout implements \JsonSerializable
         ]));
 
         // Add all media
-        $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
         $mappings = [];
+        // Temporary copies, one per key, are released only after $zip->close(), which is when ZipArchive reads them.
+        $tempCopyPaths = [];
+        $fontStorage = $this->fontFactory->getStorage();
+        $fontTempPaths = [];
+        $thumbnailStorage = $this->layoutFactory->getThumbnailStorage();
+        $thumbnailTempPath = null;
+        $addMediaFile = function (Media $media) use ($zip, &$tempCopyPaths): void {
+            try {
+                // A local copy is the library file itself, which every store's releaseTemp() leaves alone.
+                $tempCopyPaths[$media->storedAs] ??= ($media->storageEngine === null
+                    ? $this->libraryStorageService
+                    : $this->mediaFactory->getStorageFor($media->storageEngine))->downloadToTemp($media->storedAs);
+            } catch (NotFoundException | InvalidArgumentException) {
+                // A missing file is left out of the zip but keeps its mapping.
+                $this->getLog()->error('toZip: media file missing for layoutId ' . $this->layoutId
+                    . ', mediaId ' . $media->mediaId . ' at ' . $media->storedAs);
+                return;
+            }
+            $zip->addFile($tempCopyPaths[$media->storedAs], 'library/' . $media->fileName);
+        };
 
-        foreach ($this->mediaFactory->getByLayoutId($this->layoutId, 1, 1) as $media) {
-            /* @var Media $media */
-            $zip->addFile($libraryLocation . $media->storedAs, 'library/' . $media->fileName);
-            $media->load();
+        try {
+            foreach ($this->mediaFactory->getByLayoutId($this->layoutId, 1, 1) as $media) {
+                /* @var Media $media */
+                $addMediaFile($media);
+                $media->load();
 
-            $mappings[] = [
-                'file' => $media->fileName,
-                'mediaid' => $media->mediaId,
-                'name' => $media->name,
-                'type' => $media->mediaType,
-                'duration' => $media->duration,
-                'background' => 0,
-                'font' => 0,
-                'tags' => $media->tags
-            ];
-        }
+                $mappings[] = [
+                    'file' => $media->fileName,
+                    'mediaid' => $media->mediaId,
+                    'name' => $media->name,
+                    'type' => $media->mediaType,
+                    'duration' => $media->duration,
+                    'background' => 0,
+                    'font' => 0,
+                    'tags' => $media->tags
+                ];
+            }
 
-        // Add the background image
-        if ($this->backgroundImageId != 0) {
-            $media = $this->mediaFactory->getById($this->backgroundImageId);
-            $zip->addFile($libraryLocation . $media->storedAs, 'library/' . $media->fileName);
-            $media->load();
+            // Add the background image
+            if ($this->backgroundImageId != 0) {
+                $media = $this->mediaFactory->getById($this->backgroundImageId);
+                $addMediaFile($media);
+                $media->load();
 
-            $mappings[] = [
-                'file' => $media->fileName,
-                'mediaid' => $media->mediaId,
-                'name' => $media->name,
-                'type' => $media->mediaType,
-                'duration' => $media->duration,
-                'background' => 1,
-                'font' => 0,
-                'tags' => $media->tags
-            ];
-        }
+                $mappings[] = [
+                    'file' => $media->fileName,
+                    'mediaid' => $media->mediaId,
+                    'name' => $media->name,
+                    'type' => $media->mediaType,
+                    'duration' => $media->duration,
+                    'background' => 1,
+                    'font' => 0,
+                    'tags' => $media->tags
+                ];
+            }
 
-        if (file_exists($this->getThumbnailUri())) {
-            $zip->addFile($this->getThumbnailUri(), 'library/thumbs/campaign_thumb.png');
-        }
+            try {
+                $thumbnailTempPath = $thumbnailStorage->downloadToTemp($this->getThumbnailKey());
+                $zip->addFile($thumbnailTempPath, 'library/thumbs/campaign_thumb.png');
+            } catch (NotFoundException | InvalidArgumentException) {
+                $this->getLog()->debug('toZip: no thumbnail for layoutId ' . $this->layoutId);
+            }
 
-        // Add any fonts
-        // Parse cdata/raw Widget Options (raw html, css, js etc)
-        // Get fonts assigned to elements
-        // lookup font files in db by name and add them to the zip
-        $fonts = [];
-        $nonElementsFonts = null;
+            // Add any fonts
+            // Parse cdata/raw Widget Options (raw html, css, js etc)
+            // Get fonts assigned to elements
+            // lookup font files in db by name and add them to the zip
+            $fonts = [];
+            $nonElementsFonts = null;
 
-        foreach ($this->getAllWidgets() as $widget) {
-            foreach ($widget->widgetOptions as $option) {
-                if ($option->type === 'cdata' || $option->type === 'raw' && $option->option !== 'elements') {
-                    preg_match_all('/font-family:(.*?);/', $option->value, $nonElementsFonts);
-                    if (!empty($nonElementsFonts[1])) {
-                        foreach ($nonElementsFonts[1] as $nonElementsFont) {
-                            if (!in_array(trim($nonElementsFont), $fonts)) {
-                                $fonts[] = trim($nonElementsFont);
+            foreach ($this->getAllWidgets() as $widget) {
+                foreach ($widget->widgetOptions as $option) {
+                    if ($option->type === 'cdata' || $option->type === 'raw' && $option->option !== 'elements') {
+                        preg_match_all('/font-family:(.*?);/', $option->value, $nonElementsFonts);
+                        if (!empty($nonElementsFonts[1])) {
+                            foreach ($nonElementsFonts[1] as $nonElementsFont) {
+                                if (!in_array(trim($nonElementsFont), $fonts)) {
+                                    $fonts[] = trim($nonElementsFont);
+                                }
                             }
                         }
-                    }
-                } else if ($option->option === 'elements') {
-                    $widgetElements = $widget->getOptionValue('elements', null);
-                    // Elements will be JSON
-                    $widgetElements = json_decode($widgetElements, true);
+                    } else if ($option->option === 'elements') {
+                        $widgetElements = $widget->getOptionValue('elements', null);
+                        // Elements will be JSON
+                        $widgetElements = json_decode($widgetElements, true);
 
-                    // go through the arrays to get properties array inside of elements
-                    // find fontFamily property, add it to fonts array if we do not already have it there
-                    foreach (($widgetElements ?? []) as $widgetElement) {
-                        foreach (($widgetElement['elements'] ?? []) as $element) {
-                            foreach ($element['properties'] as $property) {
-                                if ($property['id'] === 'fontFamily' && !in_array($property['value'], $fonts)) {
-                                    $fonts[] = $property['value'];
+                        // go through the arrays to get properties array inside of elements
+                        // find fontFamily property, add it to fonts array if we do not already have it there
+                        foreach (($widgetElements ?? []) as $widgetElement) {
+                            foreach (($widgetElement['elements'] ?? []) as $element) {
+                                foreach ($element['properties'] as $property) {
+                                    if ($property['id'] === 'fontFamily' && !in_array($property['value'], $fonts)) {
+                                        $fonts[] = $property['value'];
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
-        }
 
-        if (!empty($fonts)) {
-            $this->getLog()->debug(sprintf('Matched fonts: %s', json_encode($fonts)));
+            if (!empty($fonts)) {
+                $this->getLog()->debug(sprintf('Matched fonts: %s', json_encode($fonts)));
 
-            foreach ($fonts as $font) {
-                $matches = $this->fontFactory->getByName($font);
+                foreach ($fonts as $font) {
+                    $matches = $this->fontFactory->getByName($font);
 
-                if (count($matches) <= 0) {
-                    $this->getLog()->info(sprintf('Unmatched font during export: %s', $font));
-                    continue;
-                }
-
-                $fontFile = $matches[0];
-
-                $zip->addFile($libraryLocation . 'fonts/'. $fontFile->fileName, 'library/' . $fontFile->fileName);
-
-                $mappings[] = [
-                    'file' => $fontFile->fileName,
-                    'fontId' => $fontFile->id,
-                    'name' => $fontFile->name,
-                    'type' => 'font',
-                    'background' => 0,
-                    'font' => 1
-                ];
-            }
-        }
-
-        // Add the mappings file to the ZIP
-        $zip->addFromString('mapping.json', json_encode($mappings));
-
-        // Handle any DataSet structures
-        $dataSetIds = [];
-        $dataSets = [];
-
-        // Handle any Widget Data
-        $widgetData = [];
-
-        // Playlists
-        $playlistMappings = [];
-        $playlistDefinitions = [];
-        $nestedPlaylistDefinitions = [];
-
-        foreach ($this->getAllWidgets() as $widget) {
-            if ($widget->type == 'dataset') {
-                $dataSetId = $widget->getOptionValue('dataSetId', 0);
-
-                if ($dataSetId != 0) {
-                    if (in_array($dataSetId, $dataSetIds)) {
+                    if (count($matches) <= 0) {
+                        $this->getLog()->info(sprintf('Unmatched font during export: %s', $font));
                         continue;
                     }
 
-                    // Export the structure for this dataSet
-                    $dataSet = $dataSetFactory->getById($dataSetId);
-                    $dataSet->load();
+                    $fontFile = $matches[0];
 
-                    // Are we also looking to export the data?
-                    if ($options['includeData']) {
-                        $dataSet->data = $dataSet->getData([], ['includeFormulaColumns' => false]);
+                    try {
+                        $fontTempPaths[$fontFile->fileName] ??= $fontStorage->downloadToTemp($fontFile->fileName);
+                    } catch (NotFoundException | InvalidArgumentException) {
+                        $this->getLog()->error('Font file missing during export: ' . $fontFile->fileName);
+                        continue;
                     }
+                    $zip->addFile($fontTempPaths[$fontFile->fileName], 'library/' . $fontFile->fileName);
 
-                    $dataSetIds[] = $dataSet->dataSetId;
-                    $dataSets[] = $dataSet;
-                }
-            } else if ($widget->type == 'subplaylist') {
-                $playlistItems = json_decode($widget->getOptionValue('subPlaylists', '[]'), true);
-                foreach ($playlistItems as $playlistItem) {
-                    $count = 1;
-                    $playlist = $this->playlistFactory->getById($playlistItem['playlistId']);
-                    // include Widgets only for non dynamic Playlists #2392
-                    $playlist->load(['loadWidgets' => !$playlist->isDynamic]);
-                    if ($playlist->isDynamic === 0) {
-                        $playlist->expandWidgets(0, false);
-                    }
-
-                    $playlistDefinitions[$playlist->playlistId] = $playlist;
-
-                    // this is a recursive function, we are adding Playlist definitions,
-                    // Playlist mappings and DataSets existing on the nested Playlist.
-                    $playlist->generatePlaylistMapping(
-                        $playlist->widgets,
-                        $playlist->playlistId,
-                        $playlistMappings,
-                        $count,
-                        $nestedPlaylistDefinitions,
-                        $dataSetIds,
-                        $dataSets,
-                        $dataSetFactory,
-                        $options['includeData']
-                    );
+                    $mappings[] = [
+                        'file' => $fontFile->fileName,
+                        'fontId' => $fontFile->id,
+                        'name' => $fontFile->name,
+                        'type' => 'font',
+                        'background' => 0,
+                        'font' => 1
+                    ];
                 }
             }
 
-            // Handle fallback data?
-            if ($options['includeFallback'] == 1) {
-                $fallback = $widgetDataFactory->getByWidgetId($widget->widgetId);
-                if (count($fallback) > 0) {
-                    $widgetData[$widget->widgetId] = $fallback;
+            // Add the mappings file to the ZIP
+            $zip->addFromString('mapping.json', json_encode($mappings));
+
+            // Handle any DataSet structures
+            $dataSetIds = [];
+            $dataSets = [];
+
+            // Handle any Widget Data
+            $widgetData = [];
+
+            // Playlists
+            $playlistMappings = [];
+            $playlistDefinitions = [];
+            $nestedPlaylistDefinitions = [];
+
+            foreach ($this->getAllWidgets() as $widget) {
+                if ($widget->type == 'dataset') {
+                    $dataSetId = $widget->getOptionValue('dataSetId', 0);
+
+                    if ($dataSetId != 0) {
+                        if (in_array($dataSetId, $dataSetIds)) {
+                            continue;
+                        }
+
+                        // Export the structure for this dataSet
+                        $dataSet = $dataSetFactory->getById($dataSetId);
+                        $dataSet->load();
+
+                        // Are we also looking to export the data?
+                        if ($options['includeData']) {
+                            $dataSet->data = $dataSet->getData([], ['includeFormulaColumns' => false]);
+                        }
+
+                        $dataSetIds[] = $dataSet->dataSetId;
+                        $dataSets[] = $dataSet;
+                    }
+                } else if ($widget->type == 'subplaylist') {
+                    $playlistItems = json_decode($widget->getOptionValue('subPlaylists', '[]'), true);
+                    foreach ($playlistItems as $playlistItem) {
+                        $count = 1;
+                        $playlist = $this->playlistFactory->getById($playlistItem['playlistId']);
+                        // include Widgets only for non dynamic Playlists #2392
+                        $playlist->load(['loadWidgets' => !$playlist->isDynamic]);
+                        if ($playlist->isDynamic === 0) {
+                            $playlist->expandWidgets(0, false);
+                        }
+
+                        $playlistDefinitions[$playlist->playlistId] = $playlist;
+
+                        // this is a recursive function, we are adding Playlist definitions,
+                        // Playlist mappings and DataSets existing on the nested Playlist.
+                        $playlist->generatePlaylistMapping(
+                            $playlist->widgets,
+                            $playlist->playlistId,
+                            $playlistMappings,
+                            $count,
+                            $nestedPlaylistDefinitions,
+                            $dataSetIds,
+                            $dataSets,
+                            $dataSetFactory,
+                            $options['includeData']
+                        );
+                    }
                 }
+
+                // Handle fallback data?
+                if ($options['includeFallback'] == 1) {
+                    $fallback = $widgetDataFactory->getByWidgetId($widget->widgetId);
+                    if (count($fallback) > 0) {
+                        $widgetData[$widget->widgetId] = $fallback;
+                    }
+                }
+            }
+
+            // Add the mappings file to the ZIP
+            if ($dataSets != []) {
+                $zip->addFromString('dataSet.json', json_encode($dataSets, JSON_PRETTY_PRINT));
+            }
+
+            // Add widget data
+            if ($options['includeFallback'] == 1 && $widgetData != []) {
+                $zip->addFromString('fallback.json', json_encode($widgetData, JSON_PRETTY_PRINT));
+            }
+
+            // Add the Playlist definitions to the ZIP
+            if ($playlistDefinitions != []) {
+                $zip->addFromString('playlist.json', json_encode($playlistDefinitions, JSON_PRETTY_PRINT));
+            }
+
+            // Add the nested Playlist definitions to the ZIP
+            if ($nestedPlaylistDefinitions != []) {
+                $zip->addFromString('nestedPlaylist.json', json_encode($nestedPlaylistDefinitions, JSON_PRETTY_PRINT));
+            }
+
+            // Add Playlist mappings file to the ZIP
+            if ($playlistMappings != []) {
+                $zip->addFromString('playlistMappings.json', json_encode($playlistMappings, JSON_PRETTY_PRINT));
+            }
+
+            $closed = $zip->close();
+        } finally {
+            // Discards a failed export's entries while the files they read still exist.
+            if (!isset($closed)) {
+                $zip->unchangeAll();
+                $zip->close();
+            }
+            foreach ($tempCopyPaths as $tempCopyPath) {
+                $this->libraryStorageService->releaseTemp($tempCopyPath);
+            }
+            foreach ($fontTempPaths as $fontTempPath) {
+                $fontStorage->releaseTemp($fontTempPath);
+            }
+            if ($thumbnailTempPath !== null) {
+                $thumbnailStorage->releaseTemp($thumbnailTempPath);
             }
         }
 
-        // Add the mappings file to the ZIP
-        if ($dataSets != []) {
-            $zip->addFromString('dataSet.json', json_encode($dataSets, JSON_PRETTY_PRINT));
+        if ($closed !== true) {
+            throw new GeneralException(__('Problem closing the export ZIP file.'));
         }
-
-        // Add widget data
-        if ($options['includeFallback'] == 1 && $widgetData != []) {
-            $zip->addFromString('fallback.json', json_encode($widgetData, JSON_PRETTY_PRINT));
-        }
-
-        // Add the Playlist definitions to the ZIP
-        if ($playlistDefinitions != []) {
-            $zip->addFromString('playlist.json', json_encode($playlistDefinitions, JSON_PRETTY_PRINT));
-        }
-
-        // Add the nested Playlist definitions to the ZIP
-        if ($nestedPlaylistDefinitions != []) {
-            $zip->addFromString('nestedPlaylist.json', json_encode($nestedPlaylistDefinitions, JSON_PRETTY_PRINT));
-        }
-
-        // Add Playlist mappings file to the ZIP
-        if ($playlistMappings != []) {
-            $zip->addFromString('playlistMappings.json', json_encode($playlistMappings, JSON_PRETTY_PRINT));
-        }
-
-        $zip->close();
     }
 
     /**
@@ -2176,7 +2250,7 @@ class Layout implements \JsonSerializable
      */
     public function isBuildRequired(): bool
     {
-        return $this->status == 3 || !file_exists($this->getCachePath());
+        return $this->status == 3 || $this->getXlfDetails() === null;
     }
 
     /**
@@ -2189,14 +2263,13 @@ class Layout implements \JsonSerializable
     }
 
     /**
-     * Save the XLF to disk if necessary
+     * Build and store the XLF, if necessary
      * @param array $options
-     * @return string the path
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws GeneralException
      */
-    public function xlfToDisk($options = [])
+    public function buildXlf($options = []): void
     {
         $options = array_merge([
             'notify' => true,
@@ -2206,11 +2279,9 @@ class Layout implements \JsonSerializable
             'publishing' => false
         ], $options);
 
-        Profiler::start('Layout::xlfToDisk', $this->getLog());
+        Profiler::start('Layout::buildXlf', $this->getLog());
 
-        $path = $this->getCachePath();
-
-        if ($this->status == 3 || !file_exists($path)) {
+        if ($this->isBuildRequired()) {
             $this->getLog()->debug('XLF needs building for Layout ' . $this->layoutId);
 
             $this->load(['loadPlaylists' => true]);
@@ -2253,6 +2324,10 @@ class Layout implements \JsonSerializable
                 }
             }
 
+            // Restored if storing fails, as nothing is saved then.
+            $statusBefore = $this->status;
+            $durationBefore = $this->duration;
+
             // Assume error
             $this->status = Status::$STATUS_INVALID;
 
@@ -2260,8 +2335,9 @@ class Layout implements \JsonSerializable
             $this->duration = 0;
 
             // Save the resulting XLF
+            $xlf = null;
             try {
-                file_put_contents($path, $this->toXlf());
+                $xlf = $this->toXlf();
             } catch (\Exception $e) {
                 $this->getLog()->error('Cannot build Layout ' . $this->layoutId . '. error: ' . $e->getMessage());
 
@@ -2277,12 +2353,13 @@ class Layout implements \JsonSerializable
                 $options['notify'] = false;
             }
 
+            // Checked before storing, so a rejected build never replaces the stored XLF.
             if ($options['exceptionOnError']) {
                 // Handle exception cases
                 if ($this->status === Status::$STATUS_INVALID
                     || ($options['exceptionOnEmptyRegion'] && $this->hasEmptyRegion())
                 ) {
-                    $this->getLog()->debug('xlfToDisk: publish failed for layoutId ' . $this->layoutId
+                    $this->getLog()->debug('buildXlf: publish failed for layoutId ' . $this->layoutId
                         . ', status is ' . $this->status);
 
                     $this->audit($this->layoutId, 'Publish layout failed, rollback', ['layoutId' => $this->layoutId]);
@@ -2294,6 +2371,19 @@ class Layout implements \JsonSerializable
                         ),
                         'status'
                     );
+                }
+            }
+
+            // A storage failure leaves the layout as it was, so the next request builds it again.
+            if ($xlf !== null) {
+                try {
+                    $this->storeXlf($xlf);
+                } catch (GeneralException $e) {
+                    $this->status = $statusBefore;
+                    $this->duration = $durationBefore;
+                    // So the caller releases the build lock.
+                    $this->hasBuilt = true;
+                    throw $e;
                 }
             }
 
@@ -2324,43 +2414,199 @@ class Layout implements \JsonSerializable
                 'setModifiedDt' => false,
             ]);
 
+            if ($xlf !== null) {
+                $this->saveXlfDetails();
+            }
+
             $this->hasBuilt = true;
         } else {
-            $this->getLog()->debug('xlfToDisk: no build required for layoutId: ' . $this->layoutId);
+            $this->getLog()->debug('buildXlf: no build required for layoutId: ' . $this->layoutId);
             $this->hasBuilt = false;
         }
 
-        Profiler::end('Layout::xlfToDisk', $this->getLog());
-        return $path;
+        Profiler::end('Layout::buildXlf', $this->getLog());
     }
 
     /**
-     * @return string
+     * The key a Layout's XLF is stored under.
      */
-    private function getCachePath()
+    public static function getXlfKey(int $layoutId): string
     {
-        $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
-        return $libraryLocation . $this->layoutId . '.xlf';
+        return $layoutId . '.xlf';
+    }
+
+    /**
+     * Sets the md5 and size from the layout row's XLF columns, null when they aren't filled in yet.
+     */
+    public function setStoredXlfDetails(?string $md5, ?int $size): void
+    {
+        $this->xlfColumnsRead = true;
+        $this->xlfDetails = $md5 === null ? null : ['md5' => $md5, 'size' => (int)$size];
+    }
+
+    /**
+     * Sets the md5 and size from a row holding the layout's xlfMd5 and xlfSize columns.
+     */
+    public function setStoredXlfDetailsFromRow(array $row): void
+    {
+        $this->setStoredXlfDetails(
+            $row['xlfMd5'] ?? null,
+            isset($row['xlfSize']) ? (int)$row['xlfSize'] : null
+        );
+    }
+
+    /**
+     * Treats the stored XLF as missing, so the next build writes it again.
+     */
+    public function forgetStoredXlf(): void
+    {
+        $this->xlfDetails = false;
+        $this->xlf = null;
+    }
+
+    /**
+     * The md5 and size of the stored XLF, or null when it has never been built.
+     * An XLF stored before the layout row had these columns is hashed once and its details saved.
+     * @return array{md5: string, size: int}|null
+     * @throws GeneralException when storage can't be read
+     */
+    public function getXlfDetails(): ?array
+    {
+        if ($this->xlfDetails === null && !$this->xlfColumnsRead) {
+            $rows = $this->getStore()->select(
+                'SELECT `xlfMd5`, `xlfSize` FROM `layout` WHERE `layoutId` = :layoutId',
+                ['layoutId' => $this->layoutId]
+            );
+            $this->setStoredXlfDetailsFromRow($rows[0] ?? []);
+        }
+
+        if ($this->xlfDetails === null) {
+            $this->xlfDetails = $this->hashStoredXlf() ?? false;
+            if ($this->xlfDetails !== false) {
+                $this->fillXlfDetails();
+            }
+        }
+
+        return $this->xlfDetails === false ? null : $this->xlfDetails;
+    }
+
+    /**
+     * @throws NotFoundException when no XLF is stored
+     * @throws GeneralException when storage can't be read
+     */
+    public function getXlf(): string
+    {
+        if ($this->xlf !== null) {
+            return $this->xlf;
+        }
+
+        $stream = $this->libraryStorageService->readStream(self::getXlfKey($this->layoutId));
+        try {
+            return $stream->getContents();
+        } finally {
+            $stream->close();
+        }
+    }
+
+    /**
+     * Stores the XLF through a temporary file, keeping its md5 and size to save with the build.
+     * @throws GeneralException when storage fails
+     */
+    private function storeXlf(string $xlf): void
+    {
+        StoredFileMetadata::storeContents(
+            $this->libraryStorageService,
+            self::getXlfKey($this->layoutId),
+            $xlf,
+            $this->config->getSetting('LIBRARY_LOCATION') . 'temp/'
+        );
+
+        $this->xlfDetails = ['md5' => md5($xlf), 'size' => strlen($xlf)];
+        $this->xlf = $xlf;
+    }
+
+    /**
+     * The md5 and size of the stored XLF read back from storage, or null when none is stored.
+     * @throws GeneralException when storage can't be read
+     */
+    private function hashStoredXlf(): ?array
+    {
+        try {
+            $stream = $this->libraryStorageService->readStream(self::getXlfKey($this->layoutId));
+        } catch (NotFoundException) {
+            return null;
+        }
+
+        $context = hash_init('md5');
+        $size = 0;
+        try {
+            while (!$stream->eof()) {
+                $bytes = $stream->read(1024 * 1024);
+                $size += strlen($bytes);
+                hash_update($context, $bytes);
+            }
+        } finally {
+            $stream->close();
+        }
+
+        return ['md5' => hash_final($context), 'size' => $size];
+    }
+
+    /**
+     * Fills in the md5 and size of an XLF stored before the columns existed, committed at once and only if still empty.
+     */
+    private function fillXlfDetails(): void
+    {
+        $store = $this->getStore();
+        $params = [
+            'layoutId' => $this->layoutId,
+            'xlfMd5' => $this->xlfDetails['md5'],
+            'xlfSize' => $this->xlfDetails['size'],
+        ];
+
+        // After commit, as the isolated connection would wait on any layout row lock held by the request transaction.
+        $store->afterCommit(fn () => $store->update(
+            'UPDATE `layout` SET `xlfMd5` = :xlfMd5, `xlfSize` = :xlfSize
+              WHERE `layoutId` = :layoutId AND `xlfMd5` IS NULL',
+            $params,
+            StorageServiceInterface::ISOLATED_CONNECTION,
+            false,
+            false
+        ));
+    }
+
+    /**
+     * Saves the stored XLF's md5 and size on the layout row, apart from other columns, so a save of other changes
+     * never writes stale ones.
+     */
+    private function saveXlfDetails(): void
+    {
+        $this->getStore()->update(
+            'UPDATE `layout` SET `xlfMd5` = :xlfMd5, `xlfSize` = :xlfSize WHERE `layoutId` = :layoutId',
+            [
+                'layoutId' => $this->layoutId,
+                'xlfMd5' => $this->xlfDetails['md5'],
+                'xlfSize' => $this->xlfDetails['size'],
+            ]
+        );
     }
 
     /**
      * Delete any cached files for this Layout.
+     * @param bool $keepDraftThumbnail true when publishing, which deletes the draft thumbnail once it is copied
      */
-    private function deleteFiles()
+    private function deleteFiles(bool $keepDraftThumbnail = false)
     {
-        if (file_exists($this->getCachePath())) {
-            @unlink($this->getCachePath());
+        $this->layoutFactory->deleteXlfFileAfterCommit(self::getXlfKey($this->layoutId));
+
+        // A draft shares its Layout's campaignId, so it deletes only the draft thumbnail.
+        if (!$keepDraftThumbnail) {
+            $this->layoutFactory->deleteThumbnailFileAfterCommit(self::getDraftThumbnailKey($this->campaignId));
         }
-
-        $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
-
-        // Delete any thumbs
-        if (file_exists($libraryLocation . 'thumbs/' . $this->getId() . '_layout_thumb.png')) {
-            @unlink($libraryLocation . 'thumbs/' . $this->getId() . '_layout_thumb.png');
-        }
-
-        if (file_exists($libraryLocation . 'thumbs/' . $this->campaignId . '_campaign_thumb.png')) {
-            @unlink($libraryLocation . 'thumbs/' . $this->campaignId . '_campaign_thumb.png');
+        if (!$this->isChild()) {
+            $this->layoutFactory->deleteThumbnailFileAfterCommit(
+                self::getPublishedThumbnailKey($this->campaignId)
+            );
         }
     }
 
@@ -2461,7 +2707,7 @@ class Layout implements \JsonSerializable
         $parent->parentId = $this->layoutId;
         $parent->tags = []; // Clear the tags so we don't attempt a delete.
         $parent->permissions = []; // Clear the permissions so we don't attempt a delete
-        $parent->delete();
+        $parent->delete(['keepDraftThumbnail' => true]);
 
         // Set my statusId to published
         // we do not want to notify here as we should wait for the build to happen
@@ -3137,30 +3383,107 @@ class Layout implements \JsonSerializable
         }
     }
 
-    /**
-     * @return string
-     */
-    public function getThumbnailUri(): string
+    private static function getDraftThumbnailKey(int $campaignId): string
     {
-        $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
-        if ($this->isChild()) {
-            return $libraryLocation . 'thumbs/' . $this->campaignId . '_layout_thumb.png';
-        } else {
-            return $libraryLocation . 'thumbs/' . $this->campaignId . '_campaign_thumb.png';
+        return $campaignId . '_layout_thumb.png';
+    }
+
+    private static function getPublishedThumbnailKey(int $campaignId): string
+    {
+        return $campaignId . '_campaign_thumb.png';
+    }
+
+    /**
+     * The key of this Layout's thumbnail in thumbnail storage.
+     */
+    public function getThumbnailKey(): string
+    {
+        return $this->isChild()
+            ? self::getDraftThumbnailKey($this->campaignId)
+            : self::getPublishedThumbnailKey($this->campaignId);
+    }
+
+    /**
+     * Stores an imported thumbnail, logging instead of throwing on failure.
+     */
+    public function storeThumbnail(string $localPath): void
+    {
+        try {
+            $this->layoutFactory->storeThumbnailFile($localPath, $this->getThumbnailKey());
+        } catch (GeneralException $exception) {
+            $this->getLog()->error('Unable to store thumbnail for layoutId ' . $this->layoutId . ': '
+                . $exception->getMessage());
         }
     }
 
     /**
-     * Publish the Layout thumbnail if it exists.
+     * Copies the draft thumbnail to the published key after commit, leaving the journalled draft key to the tidy on
+     * failure and removing the published key whenever nothing is copied.
      */
-    private function publishThumbnail()
+    private function publishThumbnail(): void
     {
-        $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
-        if (file_exists($libraryLocation . 'thumbs/' . $this->campaignId . '_layout_thumb.png')) {
-            copy(
-                $libraryLocation . 'thumbs/' . $this->campaignId . '_layout_thumb.png',
-                $libraryLocation . 'thumbs/' . $this->campaignId . '_campaign_thumb.png'
-            );
+        $campaignId = $this->campaignId;
+        $draftKey = self::getDraftThumbnailKey($campaignId);
+        try {
+            $storage = $this->layoutFactory->getThumbnailStorage();
+            $journal = new LibraryFileJournal($this->getStore(), $storage, LibraryAsset::LAYOUT_THUMBNAIL);
+            $journalId = $journal->recordDelete($draftKey);
+        } catch (GeneralException $exception) {
+            $this->getLog()->error('Unable to publish thumbnail for campaignId ' . $campaignId . ': '
+                . $exception->getMessage());
+            return;
+        }
+
+        $this->getStore()->afterCommit(function () use ($campaignId, $draftKey, $storage, $journal, $journalId) {
+            $publishedKey = self::getPublishedThumbnailKey($campaignId);
+            try {
+                $hasDraftThumbnail = $storage->exists($draftKey);
+                if ($hasDraftThumbnail) {
+                    $storage->copy($draftKey, $publishedKey);
+                }
+            } catch (GeneralException $exception) {
+                $this->getLog()->error('Unable to publish thumbnail for campaignId ' . $campaignId
+                    . ', the draft thumbnail is left for the next tidy: ' . $exception->getMessage());
+                $this->deletePublishedThumbnail($storage, $journal, $publishedKey);
+                return;
+            }
+
+            try {
+                if (!$hasDraftThumbnail) {
+                    $this->deletePublishedThumbnail($storage, $journal, $publishedKey);
+                } else if ($journal->hasPendingUpload($draftKey)) {
+                    $this->getLog()->debug('publishThumbnail: ' . $draftKey
+                        . ' is being uploaded, the next tidy will check it.');
+                    return;
+                } else if (!$journal->isReferenced($draftKey)) {
+                    $storage->delete($draftKey);
+                }
+                $journal->removeRecord($journalId);
+            } catch (GeneralException $exception) {
+                $this->getLog()->error('Unable to remove the draft thumbnail for campaignId ' . $campaignId
+                    . ', it is left for the next tidy: ' . $exception->getMessage());
+            }
+        });
+    }
+
+    /**
+     * Removes the previous version's published thumbnail so the grid shows none rather than a stale one, unless a new
+     * one is being uploaded.
+     */
+    private function deletePublishedThumbnail(
+        LibraryStorageServiceInterface $storage,
+        LibraryFileJournal $journal,
+        string $publishedKey
+    ): void {
+        try {
+            if ($journal->hasPendingUpload($publishedKey)) {
+                $this->getLog()->debug('publishThumbnail: ' . $publishedKey . ' is being uploaded, so it is kept.');
+                return;
+            }
+            $storage->delete($publishedKey);
+        } catch (GeneralException $exception) {
+            $this->getLog()->error('Unable to remove the stale published thumbnail ' . $publishedKey . ': '
+                . $exception->getMessage());
         }
     }
 

@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { screen, waitFor } from '@testing-library/react';
@@ -118,12 +120,9 @@ describe('Sync Groups page - filters', () => {
 
     await user.type(screen.getByPlaceholderText('Search sync groups...'), 'Alpha');
 
-    await waitFor(
-      () => {
-        expect(fetchSyncGroups).toHaveBeenCalledWith(expect.objectContaining({ name: 'Alpha' }));
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchSyncGroups).toHaveBeenCalledWith(expect.objectContaining({ name: 'Alpha' }));
+    });
   });
 
   test('typing in the search box resets pagination to page 1', async () => {
@@ -133,14 +132,11 @@ describe('Sync Groups page - filters', () => {
 
     await user.type(screen.getByPlaceholderText('Search sync groups...'), 'screen');
 
-    await waitFor(
-      () => {
-        expect(fetchSyncGroups).toHaveBeenCalledWith(
-          expect.objectContaining({ start: 0, name: 'screen' }),
-        );
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchSyncGroups).toHaveBeenCalledWith(
+        expect.objectContaining({ start: 0, name: 'screen' }),
+      );
+    });
   });
 
   test('clearing the search box restores the full list', async () => {
@@ -188,14 +184,11 @@ describe('Sync Groups page - filters', () => {
     });
     await user.type(leadDisplayInput, '42');
 
-    await waitFor(
-      () => {
-        expect(fetchSyncGroups).toHaveBeenCalledWith(
-          expect.objectContaining({ leadDisplayId: 42, start: 0 }),
-        );
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchSyncGroups).toHaveBeenCalledWith(
+        expect.objectContaining({ leadDisplayId: 42, start: 0 }),
+      );
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -213,14 +206,11 @@ describe('Sync Groups page - filters', () => {
     })) as HTMLInputElement;
     await user.type(nameInput, 'Alpha');
 
-    await waitFor(
-      () => {
-        expect(fetchSyncGroups).toHaveBeenCalledWith(
-          expect.objectContaining({ start: 0, name: 'Alpha' }),
-        );
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchSyncGroups).toHaveBeenCalledWith(
+        expect.objectContaining({ start: 0, name: 'Alpha' }),
+      );
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -241,14 +231,9 @@ describe('Sync Groups page - filters', () => {
     });
     await user.type(leadDisplayInput, '42');
 
-    await waitFor(
-      () => {
-        expect(fetchSyncGroups).toHaveBeenCalledWith(
-          expect.objectContaining({ leadDisplayId: 42 }),
-        );
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchSyncGroups).toHaveBeenCalledWith(expect.objectContaining({ leadDisplayId: 42 }));
+    });
 
     await user.click(screen.getByRole('button', { name: /reset/i }));
 

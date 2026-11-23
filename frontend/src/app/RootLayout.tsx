@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { ChevronLeftSquare, ChevronRightSquare } from 'lucide-react';
@@ -25,7 +27,6 @@ import { useTranslation } from 'react-i18next';
 import { Outlet, useLocation, useLoaderData } from 'react-router-dom';
 
 import { SessionExpiredModal } from '@/components/auth/SessionExpiredModal';
-import HelpPane from '@/components/help/HelpPane';
 import SideBar from '@/components/layout/SideBar';
 import TopNav from '@/components/layout/TopNav';
 import InfoBanner from '@/components/ui/InfoBanner';
@@ -38,6 +39,16 @@ import { useSidebarCollapsed } from '@/hooks/useSidebarPreferences';
 import { UploadProgressDock } from '@/pages/Library/Media/components/UploadProgressDock';
 import NotificationInterruptCheck from '@/pages/Notification/components/NotificationInterruptCheck';
 import type { User } from '@/types/user';
+
+function RootProviders({ user, children }: { user: User | null; children: React.ReactNode }) {
+  return (
+    <BrandingProvider branding={user?.branding}>
+      <UserProvider initialUser={user}>
+        <FolderRefreshProvider>{children}</FolderRefreshProvider>
+      </UserProvider>
+    </BrandingProvider>
+  );
+}
 
 export default function RootLayout() {
   const { pathname } = useLocation();
@@ -55,69 +66,69 @@ export default function RootLayout() {
     sessionStorage.removeItem('xibo_chunk_reload');
   }, []);
 
-  return (
-    <BrandingProvider branding={user?.branding}>
-      <UserProvider initialUser={user}>
-        <FolderRefreshProvider>
-          <div className="flex h-screen w-full overflow-hidden bg-gray-50 dark:bg-neutral-900">
-            {/* Desktop Sidebar Drawer */}
-            <div className="relative md:block hidden flex-none">
-              <aside
-                className={`h-full bg-(--sidebar-bg) dark:bg-orange-300 transition-[width] duration-300 ease-in-out overflow-clip whitespace-nowrap will-change-[width]
-            ${isCollapsed ? 'w-21' : 'w-60'}
-          `}
-              >
-                <SideBar isCollapsed={isCollapsed} />
-              </aside>
-              {/* Toggle button */}
-              <button
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                className="absolute top-5 -right-3 z-10 md:flex hidden items-center justify-center w-6 h-6 rounded-lg bg-(--sidebar-bg) dark:bg-orange-300 text-(--sidebar-fg) dark:text-black transition-colors hover:bg-(--sidebar-bg-hover) dark:hover:bg-orange-400 cursor-pointer"
-              >
-                {isCollapsed ? <ChevronRightSquare size={16} /> : <ChevronLeftSquare size={16} />}
-              </button>
-            </div>
-            {/* Mobile drawer */}
-            <div
-              className={`
-          fixed inset-y-0 left-0 z-40 w-full
-          bg-(--sidebar-bg) dark:bg-orange-300
-          transform transition-transform duration-300 ease-in-out
-          md:hidden sm:px-8 px-0 overflow-visible
-          ${openMobileDrawer ? 'translate-x-0' : '-translate-x-full'}
-        `}
-            >
-              <SideBar
-                isCollapsed={false}
-                closeMobileDrawer={() => setOpenMobileDrawer(!openMobileDrawer)}
-              />
-            </div>
+  useEffect(() => {
+    setOpenMobileDrawer(false);
+  }, [pathname]);
 
-            <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out">
-              <TopNav
-                pathName={pathname}
-                onToggleMobileDrawer={() => setOpenMobileDrawer(!openMobileDrawer)}
-              />
-              {partiallySuspended && (
-                <InfoBanner type="warning" className="w-full mx-0 rounded-none">
-                  {t(
-                    'CMS suspended. Displays will show cached content. Please contact your administrator.',
-                  )}
-                </InfoBanner>
-              )}
-              <main className="flex-1 flex flex-col min-h-0 bg-white overflow-auto dark:bg-black">
-                <Outlet />
-              </main>
-            </div>
+  const content = (
+    <div className="flex h-screen w-full overflow-hidden bg-gray-50 dark:bg-neutral-900">
+      {/* Desktop Sidebar Drawer */}
+      <div className="relative md:block hidden flex-none">
+        <aside
+          className={`h-full bg-(--sidebar-bg) dark:bg-orange-300 transition-[width] duration-300 ease-in-out overflow-clip whitespace-nowrap will-change-[width]
+      ${isCollapsed ? 'w-21' : 'w-60'}
+    `}
+        >
+          <SideBar isCollapsed={isCollapsed} />
+        </aside>
+        {/* Toggle button */}
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          className="absolute top-5 -right-3 z-10 md:flex hidden items-center justify-center w-6 h-6 rounded-lg bg-(--sidebar-bg) dark:bg-orange-300 text-(--sidebar-fg) dark:text-black transition-colors hover:bg-(--sidebar-bg-hover) dark:hover:bg-orange-400 cursor-pointer"
+        >
+          {isCollapsed ? <ChevronRightSquare size={16} /> : <ChevronLeftSquare size={16} />}
+        </button>
+      </div>
+      {/* Mobile drawer */}
+      <div
+        className={`
+    fixed inset-y-0 left-0 z-40 w-full
+    bg-(--sidebar-bg) dark:bg-orange-300
+    transform transition-transform duration-300 ease-in-out
+    md:hidden sm:px-8 px-0 overflow-visible
+    ${openMobileDrawer ? 'translate-x-0' : '-translate-x-full'}
+  `}
+      >
+        <SideBar
+          isCollapsed={false}
+          isMobileDrawer
+          closeMobileDrawer={() => setOpenMobileDrawer(!openMobileDrawer)}
+        />
+      </div>
 
-            <SessionExpiredModal />
-            <NotificationInterruptCheck />
-            <UploadProgressDock />
-            <HelpPane />
-          </div>
-        </FolderRefreshProvider>
-      </UserProvider>
-    </BrandingProvider>
+      <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out">
+        <TopNav
+          pathName={pathname}
+          onToggleMobileDrawer={() => setOpenMobileDrawer(!openMobileDrawer)}
+        />
+        {partiallySuspended && (
+          <InfoBanner type="warning" className="w-full mx-0 rounded-none">
+            {t(
+              'CMS suspended. Displays will show cached content. Please contact your administrator.',
+            )}
+          </InfoBanner>
+        )}
+        <main className="flex-1 flex flex-col min-h-0 bg-white overflow-auto dark:bg-black">
+          <Outlet />
+        </main>
+      </div>
+
+      <SessionExpiredModal />
+      <NotificationInterruptCheck />
+      <UploadProgressDock />
+    </div>
   );
+
+  return <RootProviders user={user}>{content}</RootProviders>;
 }

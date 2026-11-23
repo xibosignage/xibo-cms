@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { screen, waitFor, within } from '@testing-library/react';
@@ -100,14 +102,11 @@ const rowLayoutNames = () => {
     .map((row) => (row as HTMLTableRowElement).cells[nameIndex]?.textContent?.trim() ?? '');
 };
 
-/**
- * The sort control lives in a bare <div onClick> inside the <th> (AgendaModal.tsx
- * :893) — no role and no accessible name, so it cannot be reached by role. Scoped
- * to the column header rather than queried globally. Remove this helper once the
- * control becomes a real <button>.
- */
+// Scoped to the column header so it can't match another table's sort button.
 const sortControlFor = (columnName: RegExp) =>
-  screen.getByRole('columnheader', { name: columnName }).querySelector('div.cursor-pointer')!;
+  within(screen.getByRole('columnheader', { name: columnName })).getByRole('button', {
+    name: /^sort by/i,
+  });
 
 // =============================================================================
 // Tests
@@ -443,14 +442,17 @@ describe('AgendaModal - filtering the day by location', () => {
     expect(screen.getByLabelText('Longitude')).toHaveValue(1.1);
   });
 
-  // A fence drawn in the CMS map editor is exported as a GeoJSON
-  // FeatureCollection, but isPointInGeoJSON reads `geoJSON.coordinates` for that
+  // Report 283, open. A geofence sent through the API can be a GeoJSON
+  // FeatureCollection (the CMS's own map editor saves a single Feature), but
+  // isPointInGeoJSON reads `geoJSON.coordinates` for that
   // type (AgendaModal.tsx:156) where a FeatureCollection keeps its members in
   // `.features`. The lookup yields undefined, `[].some(...)` is false, and the
   // event silently disappears from the agenda whenever any location is set.
   // Kept as test.fails (not test.skip) so a real fix surfaces here immediately.
+  // https://github.com/xibosignage/xibo/issues/4055
   test.fails(
     'an event fenced with a FeatureCollection survives a point inside that fence',
+    { retry: 0 },
     async () => {
       const user = userEvent.setup();
       vi.mocked(fetchAgendaEvents).mockResolvedValue(

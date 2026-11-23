@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { describe, expect, test } from 'vitest';
@@ -28,6 +30,9 @@ import { getLayoutColumns } from '@/pages/Design/Layouts/LayoutConfig';
 import { getResolutionColumns } from '@/pages/Design/Resolutions/ResolutionsConfig';
 import { getTemplateColumn } from '@/pages/Design/Templates/TemplatesConfig';
 import { knownFailure } from '@/testUtils/knownFailure';
+
+/** A publish date that is always in the future. */
+const FUTURE_DATETIME = '2099-01-01 00:00:00';
 
 describe('Layouts grid', () => {
   const columns = getLayoutColumns(propsWith());
@@ -92,6 +97,35 @@ describe('Layouts grid', () => {
     });
 
     expect(states.published).not.toBe(states.draft);
+  });
+
+  // Regression cover for xibosignage/xibo#3913: a draft scheduled to publish
+  // said only "Draft", and so did one whose scheduled publish had failed.
+  // (`t` is the identity here, so the relative time stays as its placeholder.)
+  test('the Status column says when a scheduled publish is still to come', () => {
+    expect(
+      textOf(
+        columns,
+        'publishedStatus',
+        layout({ publishedStatus: 'Draft', publishedDate: FUTURE_DATETIME }),
+      ),
+    ).toMatch(/Publishing/);
+  });
+
+  test('the Status column says when a scheduled publish has failed', () => {
+    expect(
+      textOf(
+        columns,
+        'publishedStatus',
+        layout({ publishedStatus: 'Draft', publishedDate: SQL_DATETIME }),
+      ),
+    ).toMatch(/Publish failed/);
+  });
+
+  test('the Status column adds nothing for a draft with no scheduled publish', () => {
+    expect(
+      textOf(columns, 'publishedStatus', layout({ publishedStatus: 'Draft', publishedDate: null })),
+    ).toBe('Draft');
   });
 
   test('the Modified column shows the date through the CMS formatter', () => {
@@ -160,6 +194,19 @@ describe('Templates grid', () => {
     expect(states.published).not.toBe(states.draft);
   });
 
+  // Report 125: the #3913 fix was made on the Layouts grid only.
+  // https://github.com/xibosignage/xibo/issues/4050
+  knownFailure(
+    'the Status column says when a scheduled publish is still to come',
+    () =>
+      textOf(
+        columns,
+        'publishedStatus',
+        template({ publishedStatus: 'Draft', publishedDate: FUTURE_DATETIME }),
+      ),
+    (text) => expect(text).toMatch(/Publishing/),
+  );
+
   test('the Modified column shows the date through the CMS formatter', () => {
     expect(textOf(columns, 'modifiedDt', template({ modifiedDt: SQL_DATETIME }))).toMatch(
       /^formatted:/,
@@ -182,6 +229,7 @@ describe('Resolutions grid', () => {
 
   // types/resolution.ts declares `enabled: boolean`, but the API sends 0/1 and the
   // cell compares with 1. A row built to the declared type shows as disabled.
+  // https://github.com/xibosignage/xibo/issues/4051
   knownFailure(
     'the Enabled column shows the declared boolean `true` the same as the API value 1',
     () =>

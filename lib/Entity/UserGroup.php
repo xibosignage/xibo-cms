@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 
@@ -237,6 +239,7 @@ class UserGroup implements \JsonSerializable
      */
     public function assignUser($user)
     {
+        $this->assertMembershipChangeable($user);
         $this->load();
 
         if (!in_array($user, $this->users)) {
@@ -251,6 +254,7 @@ class UserGroup implements \JsonSerializable
      */
     public function unassignUser($user)
     {
+        $this->assertMembershipChangeable($user);
         $this->load();
         $this->unassignedUserIds[] = $user->userId;
         $this->users = array_udiff($this->users, [$user], function ($a, $b) {
@@ -260,6 +264,21 @@ class UserGroup implements \JsonSerializable
              */
             return $a->getId() - $b->getId();
         });
+    }
+
+    /**
+     * A reserved user's group memberships never change, and nobody joins a reserved user's own group.
+     * Nothing is reserved in CE.
+     * @param User $user
+     * @throws NotFoundException
+     */
+    private function assertMembershipChangeable($user): void
+    {
+        $this->userFactory->assertNotReserved((int)$user->userId);
+
+        if ($this->groupId > 0 && $this->userFactory->isReservedUserGroup((int)$this->groupId)) {
+            throw new NotFoundException(__('Group not found'));
+        }
     }
 
     /**
@@ -387,7 +406,7 @@ class UserGroup implements \JsonSerializable
         $this->getStore()->update('DELETE FROM `permission` WHERE groupId = :groupId', ['groupId' => $this->groupId]);
         $this->getStore()->update('DELETE FROM `group` WHERE groupId = :groupId', ['groupId' => $this->groupId]);
 
-        $this->audit($this->groupId, 'User group deleted.', false);
+        $this->audit($this->groupId, 'User group deleted.', ['group' => $this->group]);
     }
 
     /**
@@ -538,6 +557,13 @@ class UserGroup implements \JsonSerializable
             $i++;
             $sql .= ',:userId' . $i;
             $params['userId' . $i] = $user->userId;
+        }
+
+        // A reserved user is never in the loaded list (UserFactory leaves it out), and is never unlinked.
+        foreach ($this->userFactory->getReservedUserIds() as $reservedUserId) {
+            $i++;
+            $sql .= ',:userId' . $i;
+            $params['userId' . $i] = $reservedUserId;
         }
 
         $sql .= ')';

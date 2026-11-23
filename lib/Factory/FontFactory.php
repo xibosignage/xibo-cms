@@ -1,44 +1,103 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Factory;
 
 use FontLib\Exception\FontNotFoundException;
 use Xibo\Entity\Font;
-use Xibo\Service\ConfigServiceInterface;
+use Xibo\Helper\LibraryFile;
+use Xibo\Service\LibraryAsset;
+use Xibo\Service\LibraryStorageRegistryInterface;
+use Xibo\Service\LibraryStorageServiceInterface;
+use Xibo\Storage\LibraryFileJournal;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
 class FontFactory extends BaseFactory
 {
-    /**
-     * @var ConfigServiceInterface
-     */
-    private $config;
+    /** The player fonts.css, in font storage. */
+    public const FONTS_CSS_KEY = 'fonts.css';
 
-    public function __construct(ConfigServiceInterface $configService)
+    /** Cache key of fonts.css's size and md5. */
+    public const FONTS_CSS_METADATA_CACHE_KEY = '/xmds/fontsCss/metadata';
+
+    public function __construct(private readonly LibraryStorageRegistryInterface $libraryStorageRegistry)
     {
-        $this->config = $configService;
     }
+
+    /**
+     * Where font files and the player fonts.css are stored, keyed by fileName.
+     */
+    public function getStorage(): LibraryStorageServiceInterface
+    {
+        return $this->libraryStorageRegistry->get(LibraryAsset::FONT);
+    }
+
+    /**
+     * Deletes a font file once the caller's transaction commits, logging rather than throwing a storage error.
+     */
+    public function deleteFontFileAfterCommit(string $fileName): void
+    {
+        LibraryFileJournal::deleteFileAfterCommit(
+            $this->getStore(),
+            $this->libraryStorageRegistry,
+            LibraryAsset::FONT,
+            $fileName,
+            $this->getLog()->getLoggerInterface()
+        );
+    }
+
+    /**
+     * Moves a font file into storage, journalled until the caller's transaction commits.
+     * @throws GeneralException
+     */
+    public function storeFontFile(string $localPath, string $fileName): void
+    {
+        (new LibraryFileJournal($this->getStore(), $this->getStorage(), LibraryAsset::FONT))
+            ->storeLocalFile($localPath, $fileName);
+    }
+
+    /**
+     * The md5 of each default font Daily Maintenance installs from the project fonts folder, keyed by file name.
+     * @return array<string, string>
+     */
+    public static function getDefaultFonts(): array
+    {
+        if (!defined('PROJECT_ROOT')) {
+            return [];
+        }
+
+        $defaults = [];
+        foreach (scandir(PROJECT_ROOT . '/fonts') ?: [] as $file) {
+            if (is_file(PROJECT_ROOT . '/fonts/' . $file)) {
+                $defaults[$file] = md5_file(PROJECT_ROOT . '/fonts/' . $file);
+            }
+        }
+        return $defaults;
+    }
+
     /**
      * @return Font
      */
@@ -48,7 +107,6 @@ class FontFactory extends BaseFactory
             $this->getStore(),
             $this->getLog(),
             $this->getDispatcher(),
-            $this->config,
             $this
         );
     }
@@ -65,6 +123,9 @@ class FontFactory extends BaseFactory
     public function createFontFromUpload(string $file, string $name, string $fileName, $modifiedBy): Font
     {
         $font = $this->createEmpty();
+        $font->fileName = preg_replace('/[^-.\w]/', '-', $fileName);
+        LibraryFile::assertNoDoubleDot($font->fileName);
+
         $fontLib = \FontLib\Font::load($file);
 
         // check embed flag
@@ -91,9 +152,33 @@ class FontFactory extends BaseFactory
             )
         );
 
-        $font->fileName = preg_replace('/[^-.\w]/', '-', $fileName);
         $font->size = filesize($file);
         $font->md5 = md5_file($file);
+
+        return $font;
+    }
+
+    /**
+     * Adds a font from a layout import, removing the local file if it can't be added.
+     * Older versions allowed '..' in font file names, so runs of dots are collapsed rather than refused.
+     * @throws GeneralException
+     * @throws FontNotFoundException
+     */
+    public function importFontFile(string $localPath, string $name, string $fileName, string $modifiedBy): Font
+    {
+        try {
+            $font = $this->createFontFromUpload(
+                $localPath,
+                $name,
+                preg_replace('/\.{2,}/', '.', $fileName),
+                $modifiedBy
+            );
+            $font->save();
+            $this->storeFontFile($localPath, $font->fileName);
+        } catch (\Throwable $throwable) {
+            @unlink($localPath);
+            throw $throwable;
+        }
 
         return $font;
     }

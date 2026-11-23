@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 
@@ -62,7 +64,7 @@ class Theme implements Middleware
     {
         // Inject our Theme into the Twig View (if it exists)
         $app = $this->app;
-        $app->getContainer()->get('configService')->loadTheme();
+        $app->getContainer()->get('configService')->loadTheme($app->getContainer()->get('brandService'));
 
         self::setTheme($app->getContainer(), $request, $app->getRouteCollector()->getRouteParser());
 
@@ -131,6 +133,7 @@ class Theme implements Middleware
         }
 
         $view['theme'] = $container->get('configService');
+        $view['brand'] = $container->get('brandService');
         $view['settings'] = $settings;
         $view['translate'] = [
             'locale' => Translate::GetLocale(),
@@ -147,7 +150,7 @@ class Theme implements Middleware
             'validExt' => implode('|', $container->get('moduleFactory')->getValidExtensions()),
             'validImageExt' => implode('|', $container->get('moduleFactory')->getValidExtensions(['type' => 'image']))
         ];
-        $view['version'] = Environment::$WEBSITE_VERSION_NAME;
+        $view['version'] = Environment::getVersion();
         $view['revision'] = Environment::getGitCommit();
         $view['playerVersion'] = Environment::$PLAYER_SUPPORT;
         $view['isDevMode'] = Environment::isDevMode();

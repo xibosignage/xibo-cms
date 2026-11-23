@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Controller;
@@ -33,6 +35,7 @@ use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Service\LibraryStorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -59,6 +62,7 @@ class Settings extends Base
         private readonly UserGroupFactory $userGroupFactory,
         private readonly TransitionFactory $transitionFactory,
         private readonly UserFactory $userFactory,
+        private readonly LibraryStorageServiceInterface $libraryStorageService,
     ) {
     }
 
@@ -173,6 +177,7 @@ class Settings extends Base
             ],
             'elevateLogUntil' => $elevateLogUntil,
             'phoneticKey' => $this->getConfig()->getPhoneticKey(),
+            'hasLocalLibrary' => $this->libraryStorageService->hasLocalFiles(),
         ]);
     }
 
@@ -195,6 +200,11 @@ class Settings extends Base
         $changedSettings = [];
 
         $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        // A reserved user can't be the system user. Checked before any setting changes.
+        if ($sanitizedParams->getInt('SYSTEM_USER') !== null) {
+            $this->userFactory->assertNotReserved($sanitizedParams->getInt('SYSTEM_USER'));
+        }
 
         if ($this->getConfig()->isSettingEditable('LIBRARY_LOCATION')) {
             $libraryLocation = $sanitizedParams->getString('LIBRARY_LOCATION');
@@ -505,18 +515,6 @@ class Settings extends Base
             $this->getConfig()->changeSetting(
                 'SHOW_DISPLAY_AS_VNC_TGT',
                 $sanitizedParams->getString('SHOW_DISPLAY_AS_VNC_TGT')
-            );
-        }
-
-        if ($this->getConfig()->isSettingEditable('MAX_LICENSED_DISPLAYS')) {
-            $this->handleChangedSettings(
-                'MAX_LICENSED_DISPLAYS',
-                $sanitizedParams->getInt('MAX_LICENSED_DISPLAYS'),
-                $changedSettings
-            );
-            $this->getConfig()->changeSetting(
-                'MAX_LICENSED_DISPLAYS',
-                $sanitizedParams->getInt('MAX_LICENSED_DISPLAYS')
             );
         }
 

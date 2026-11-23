@@ -1,0 +1,63 @@
+/*
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
+ *
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
+ */
+
+import type { TFunction } from 'i18next';
+import { useState } from 'react';
+
+import {
+  getFeatureCategories,
+  getFeatureDefinitions,
+  getGroupDescriptions,
+  getGroupLabels,
+} from '../config/featureDefinitions';
+
+import { isServiceShown, useServiceVisibility } from '@/hooks/useCmsVisibility';
+
+/**
+ * The features and category tabs of the user and user group Features modals, without the ones for a service this
+ * CMS doesn't offer. A category left with no features is dropped, and the active tab moves to the first category
+ * if its own is dropped.
+ */
+export function useFeatureTabs(t: TFunction) {
+  const getServiceVisibility = useServiceVisibility();
+  const allFeatures = getFeatureDefinitions(t).filter((feature) =>
+    isServiceShown(getServiceVisibility, feature.service),
+  );
+  const categories = getFeatureCategories(t).filter((category) =>
+    allFeatures.some((feature) => category.groups.includes(feature.group)),
+  );
+  const firstTab = categories[0]?.key ?? 'content';
+  const [selectedTab, setActiveTab] = useState(firstTab);
+  const activeTab = categories.some((category) => category.key === selectedTab)
+    ? selectedTab
+    : firstTab;
+
+  return {
+    allFeatures,
+    categories,
+    groupLabels: getGroupLabels(t),
+    groupDescriptions: getGroupDescriptions(t),
+    activeTab,
+    setActiveTab,
+  };
+}

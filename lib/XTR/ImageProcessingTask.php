@@ -1,31 +1,37 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\XTR;
+
 use Carbon\Carbon;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\ImageProcessingServiceInterface;
+use Xibo\Service\LibraryStorageServiceInterface;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class ImageProcessingTask
@@ -44,12 +50,16 @@ class ImageProcessingTask implements TaskInterface
     /** @var DisplayFactory */
     private $displayFactory;
 
+    /** @var LibraryStorageServiceInterface */
+    private $libraryStorageService;
+
     /** @inheritdoc */
     public function setFactories($container)
     {
         $this->mediaFactory = $container->get('mediaFactory');
         $this->displayFactory = $container->get('displayFactory');
         $this->imageProcessingService = $container->get('imageProcessingService');
+        $this->libraryStorageService = $container->get('libraryStorageService');
         return $this;
     }
 
@@ -65,13 +75,44 @@ class ImageProcessingTask implements TaskInterface
     }
 
     /**
+     * Resizes an image to the threshold.
+     * @return array{filePath: string, height: int, width: int, changed: bool}|null null if it can't be decoded
+     */
+    private function resize(string $path, $resizeThreshold): ?array
+    {
+        $imageSize = @getimagesize($path);
+        if ($imageSize === false) {
+            return null;
+        }
+
+        [$imgWidth, $imgHeight] = $imageSize;
+
+        // Orientation of the image
+        if ($imgWidth > $imgHeight) { // 'landscape';
+            $updatedImg = $this->imageProcessingService->resizeImage($path, $resizeThreshold, null);
+        } else { // 'portrait';
+            $updatedImg = $this->imageProcessingService->resizeImage($path, null, $resizeThreshold);
+        }
+
+        if ($updatedImg === null) {
+            return null;
+        }
+
+        return $updatedImg + ['changed' => true];
+    }
+
+    /**
      *
      */
     private function runImageProcessing()
     {
-        $images = $this->mediaFactory->query(null, ['released' => 0, 'allModules' => 1, 'imageProcessing' => 1]);
+        $images = $this->mediaFactory->query(null, [
+            'released' => 0,
+            'allModules' => 1,
+            'imageProcessing' => 1,
+            'excludeWaitingForMove' => 1,
+        ]);
 
-        $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
         $resizeThreshold = $this->config->getSetting('DEFAULT_RESIZE_THRESHOLD');
         $count = 0;
 
@@ -80,30 +121,70 @@ class ImageProcessingTask implements TaskInterface
 
         // Get list of Images
         foreach ($images as $media) {
-
-            $filePath = $libraryLocation . $media->storedAs;
-            list($imgWidth, $imgHeight) = @getimagesize($filePath);
-
-            // Orientation of the image
-            if ($imgWidth > $imgHeight) { // 'landscape';
-                $updatedImg = $this->imageProcessingService->resizeImage($filePath, $resizeThreshold, null);
-            } else { // 'portrait';
-                $updatedImg = $this->imageProcessingService->resizeImage($filePath, null, $resizeThreshold);
+            try {
+                $tempCopyPath = $this->libraryStorageService->downloadToTemp($media->storedAs);
+            } catch (NotFoundException $exception) {
+                // The file is gone, so it is released rather than retried every run.
+                $this->log->error('Library file missing for image processing, releasing it unchanged: '
+                    . $media->storedAs . '. ' . $exception->getMessage());
+                $media->release($media->md5, $media->fileSize, $media->height, $media->width);
+                $this->store->commitIfNecessary();
+                continue;
+            } catch (GeneralException $exception) {
+                // Storage is unavailable and nothing was read, so it is retried next run.
+                $this->log->error('Cannot read library file for image processing: ' . $media->storedAs
+                    . '. ' . $exception->getMessage());
+                continue;
             }
 
-            // Clears file status cache
-            clearstatcache(true, $updatedImg['filePath']);
+            try {
+                $resized = $this->resize($tempCopyPath, $resizeThreshold);
+                if ($resized === null) {
+                    // It will never decode, so it is released rather than retried every run.
+                    $this->log->warning('Image could not be resized, releasing it unchanged: ' . $media->storedAs);
+                    $resized = [
+                        'filePath' => $tempCopyPath,
+                        'height' => $media->height,
+                        'width' => $media->width,
+                        'changed' => false,
+                    ];
+                }
 
-            $count++;
+                // Clears file status cache
+                clearstatcache(true, $resized['filePath']);
 
-            // Release image and save
-            $media->release(
-                md5_file($updatedImg['filePath']),
-                filesize($updatedImg['filePath']),
-                $updatedImg['height'],
-                $updatedImg['width']
-            );
-            $this->store->commitIfNecessary();
+                $newMd5 = md5_file($resized['filePath']);
+                $newFileSize = filesize($resized['filePath']);
+
+                if ($newMd5 === false || $newFileSize === false) {
+                    $this->log->error('Could not read back resized image, skipping: ' . $media->storedAs);
+                    continue;
+                }
+
+                // The resize wrote to the temporary copy path, so store it.
+                if ($resized['changed']) {
+                    try {
+                        $this->libraryStorageService->storeFromTemp($resized['filePath'], $media->storedAs);
+                    } catch (GeneralException $exception) {
+                        $this->log->error('Cannot upload resized image, skipping: ' . $media->storedAs
+                            . '. ' . $exception->getMessage());
+                        continue;
+                    }
+                }
+
+                $count++;
+
+                // Release image and save
+                $media->release(
+                    $newMd5,
+                    $newFileSize,
+                    $resized['height'],
+                    $resized['width']
+                );
+                $this->store->commitIfNecessary();
+            } finally {
+                $this->libraryStorageService->releaseTemp($tempCopyPath);
+            }
 
             $mediaDisplays= [];
             $sql = 'SELECT displayId FROM `requiredfile` WHERE itemId = :itemId';
@@ -114,11 +195,10 @@ class ImageProcessingTask implements TaskInterface
 
             // Update Required Files
             foreach ($mediaDisplays as $displayId) {
-
                 $this->store->update('UPDATE `requiredfile` SET released = :released, size = :size
                 WHERE `requiredfile`.displayId = :displayId AND `requiredfile`.itemId = :itemId ', [
                     'released' => 1,
-                    'size' => $media->fileSize,
+                    'size' => $newFileSize,
                     'displayId' => $displayId,
                     'itemId' => $media->mediaId
                 ]);
@@ -151,7 +231,6 @@ class ImageProcessingTask implements TaskInterface
         // Notify display
         if ($count > 0) {
             foreach (array_unique($displayIds) as $displayId) {
-
                 // Get display
                 $display = $this->displayFactory->getById($displayId);
                 $display->notify();
@@ -159,6 +238,5 @@ class ImageProcessingTask implements TaskInterface
         }
 
         $this->appendRunMessage('Released and modified image count. ' . $count);
-
     }
 }

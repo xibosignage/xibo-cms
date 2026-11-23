@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 
@@ -28,6 +30,7 @@ use Illuminate\Support\Str;
 use Stash\Invalidation;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
+use Xibo\Event\XmdsRegisterDisplayEvent;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
 use Xibo\Support\Exception\GeneralException;
@@ -108,8 +111,15 @@ class Soap5 extends Soap4
             $xmrPubKey = "-----BEGIN PUBLIC KEY-----\n" . $xmrPubKey . "\n-----END PUBLIC KEY-----\n";
         }
 
+        // A Player added with an activation code presents that code alongside the server key on
+        // its first register ("key||code"), pointing at settings the Add Display form cached.
+        [$serverKey, $authCode] = $this->parseServerKey($serverKey);
+        $claim = null;
+        $isActivationCodeClaim = false;
+        $isNewDisplay = false;
+
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
+        if (!$this->isValidServerKey($serverKey)) {
             throw new \SoapFault(
                 'Sender',
                 'The Server key you entered does not match with the server key at this address'
@@ -424,6 +434,7 @@ class Soap5 extends Soap4
             }
         } catch (NotFoundException $e) {
             // Add a new display
+            $isNewDisplay = true;
             try {
                 $display = $this->displayFactory->createEmpty();
                 $this->display = $display;
@@ -439,8 +450,47 @@ class Soap5 extends Soap4
                 $display->xmrChannel = $xmrChannel;
                 $display->xmrPubKey = $xmrPubKey;
                 $display->folderId = intval($this->getConfig()->getSetting('DISPLAY_DEFAULT_FOLDER', 1));
+                // Set again below for every display. Set here too, so authorising can tell the player apart.
+                $display->clientType = $clientType;
+                $display->clientCode = $clientCode;
 
-                if (!$display->isDisplaySlotAvailable()) {
+                // Settings chosen on the Add Display form take precedence over the global
+                // defaults above. They are only ever applied to a brand new display, and only
+                // activation codes carry them: for manual codes the form applies them once the
+                // Player has connected.
+                $claim = $this->getDisplayClaim($authCode);
+                $isActivationCodeClaim = $claim !== null;
+
+                if ($claim !== null) {
+                    if (!empty($claim['display'])) {
+                        $display->display = $claim['display'];
+                    }
+                    if (!empty($claim['folderId'])) {
+                        $display->folderId = $claim['folderId'];
+                    }
+                    if (!empty($claim['licensed'])) {
+                        $display->licensed = 1;
+                    }
+                }
+
+                // The display is saved without validation below, so a name the column can't hold
+                // would fail every registration. Shorten it instead, whether the Player sent it or
+                // it came from an Add Display code cached before names were checked. It can be
+                // renamed in the CMS.
+                $name = (string)$display->display;
+                if (mb_strlen($name) > Display::MAX_NAME_LENGTH) {
+                    $this->getLog()->warning(sprintf(
+                        'RegisterDisplay: display name over %d characters shortened for hardware key %s',
+                        Display::MAX_NAME_LENGTH,
+                        $hardwareKey
+                    ));
+                    $display->display = mb_substr($name, 0, Display::MAX_NAME_LENGTH);
+                }
+
+                // A refused authorisation leaves the new display waiting for an administrator.
+                if (!$display->isDisplaySlotAvailable()
+                    || ($display->licensed == 1 && $display->requestAuthorisation() !== null)
+                ) {
                     $display->licensed = 0;
                 }
             } catch (\InvalidArgumentException $e) {
@@ -547,6 +597,28 @@ class Soap5 extends Soap4
             return new \SoapFault('Receiver', __('Unexpected error, please contact your administrator.'));
         }
 
+        if ($isNewDisplay) {
+            // Recorded from the start, so a later change of code can be told apart from the same
+            // code being resent on every collect.
+            $this->recordPresentedCode($display, $authCode);
+
+            // A manually configured Player carries its one-time code appended to the server key,
+            // which is what lets the form it came from recognise it.
+            // claimManualConnectCode handles audit, ownership and notification for manual claims.
+            $this->claimManualConnectCode($authCode, $display);
+        } else {
+            // A Player this CMS already knows. If it now presents a new code from Add Display, nothing
+            // on the form is applied to it, but the form that issued the code is told which display
+            // it was. Called with no code too, so the display's record stays current.
+            $this->claimCodeForExistingDisplay($authCode, $display);
+        }
+
+        // completeDisplayClaim handles group assignment, audit and notification for activation-code
+        // claims. It is only relevant for new displays claimed via an activation code.
+        if ($isActivationCodeClaim && $claim !== null && $authCode !== null) {
+            $this->completeDisplayClaim($display, $claim, $authCode);
+        }
+
         // cache checks
         $cacheSchedule = $this->getPool()->getItem($this->display->getCacheKey() . '/schedule');
         $cacheSchedule->setInvalidationMethod(Invalidation::OLD);
@@ -558,6 +630,12 @@ class Soap5 extends Soap4
         $cacheRF = $this->getPool()->getItem($this->display->getCacheKey() . '/requiredFiles');
         $cacheRF->setInvalidationMethod(Invalidation::OLD);
         $displayElement->setAttribute('checkRf', ($cacheRF->isHit() ? crc32($cacheRF->get()) : ''));
+
+        // Listeners can add attributes and nodes to the response.
+        $this->getDispatcher()->dispatch(
+            new XmdsRegisterDisplayEvent($display, $return, $displayElement),
+            XmdsRegisterDisplayEvent::$NAME
+        );
 
         // Log Bandwidth
         $returnXml = $return->saveXML();

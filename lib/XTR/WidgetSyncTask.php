@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\XTR;
@@ -195,6 +197,11 @@ class WidgetSyncTask implements TaskInterface
                 $this->log->debug($xiboException->getTraceAsString());
                 $this->log->error('widgetSyncTask: Cannot process widget ' . $widgetId
                     . ', E = ' . $xiboException->getMessage());
+
+                // Also shown in the run history, so a run with failing widgets doesn't look clean.
+                $this->appendRunMessage(
+                    __('Error processing widget %d: %s', $widgetId, $xiboException->getMessage())
+                );
             }
         }
 
@@ -348,18 +355,23 @@ class WidgetSyncTask implements TaskInterface
                 // They could be library images (i.e. they already exist) or downloads
                 $mediaIds = $dataProvider->getImageIds();
                 if (count($mediaIds) > 0) {
-                    // Process the downloads.
-                    $this->mediaFactory->processDownloads(function ($media) {
+                    // The lock is extended after each download, as slow downloads can outlive it.
+                    $this->mediaFactory->processDownloads(function ($media) use ($widgetDataProviderCache) {
                         /** @var \Xibo\Entity\Media $media */
                         // Success
                         // We don't need to do anything else, references to mediaId will be built when we
                         // decorate the HTML.
                         $this->getLogger()->debug('cache: Successfully downloaded ' . $media->mediaId);
-                    }, function ($media) use (&$mediaIds) {
+                        $widgetDataProviderCache->refreshLock();
+                    }, function ($media) use (&$mediaIds, $widgetDataProviderCache) {
                         /** @var \Xibo\Entity\Media $media */
                         // Error
                         // Remove it
                         unset($mediaIds[$media->mediaId]);
+                        $widgetDataProviderCache->refreshLock();
+                    }, function () use ($widgetDataProviderCache) {
+                        // Rejected (the download itself failed)
+                        $widgetDataProviderCache->refreshLock();
                     });
                 }
 

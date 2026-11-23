@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Entity;
@@ -25,8 +27,10 @@ namespace Xibo\Entity;
 use OpenApi\Attributes as OA;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\SavedReportFactory;
-use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\LibraryAsset;
+use Xibo\Service\LibraryStorageRegistryInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\LibraryFileJournal;
 use Xibo\Storage\StorageServiceInterface;
 
 /**
@@ -123,9 +127,10 @@ class SavedReport implements \JsonSerializable
     public $md5;
 
     /**
-     * @var ConfigServiceInterface
+     * Where the file is while files are copied to new storage: 'local' until copied, else the configured store.
+     * @var string|null
      */
-    private $config;
+    public $storageEngine;
 
     /**
      * @var MediaFactory
@@ -137,22 +142,31 @@ class SavedReport implements \JsonSerializable
      */
     private $savedReportFactory;
 
+    /** @var LibraryStorageRegistryInterface */
+    private $libraryStorageRegistry;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
-     * @param ConfigServiceInterface $config
      * @param MediaFactory $mediaFactory
      * @param SavedReportFactory $savedReportFactory
+     * @param LibraryStorageRegistryInterface $libraryStorageRegistry
      */
-    public function __construct($store, $log, $dispatcher, $config, $mediaFactory, $savedReportFactory)
-    {
+    public function __construct(
+        $store,
+        $log,
+        $dispatcher,
+        $mediaFactory,
+        $savedReportFactory,
+        LibraryStorageRegistryInterface $libraryStorageRegistry
+    ) {
         $this->setCommonDependencies($store, $log, $dispatcher);
 
-        $this->config = $config;
         $this->mediaFactory = $mediaFactory;
         $this->savedReportFactory = $savedReportFactory;
+        $this->libraryStorageRegistry = $libraryStorageRegistry;
     }
 
     /**
@@ -186,7 +200,10 @@ class SavedReport implements \JsonSerializable
                 `reportScheduleId` = :reportScheduleId,
                 `generatedOn` = :generatedOn,
                 `userId` = :userId,
-                `schemaVersion` = :schemaVersion
+                `schemaVersion` = :schemaVersion,
+                `fileName` = :fileName,
+                `size` = :size,
+                `md5` = :md5
            WHERE savedReportId = :savedReportId
         ';
 
@@ -196,6 +213,9 @@ class SavedReport implements \JsonSerializable
             'generatedOn' => $this->generatedOn,
             'userId' => $this->userId,
             'schemaVersion' => $this->schemaVersion,
+            'fileName' => $this->fileName,
+            'size' => $this->size,
+            'md5' => $this->md5,
             'savedReportId' => $this->savedReportId,
         ];
 
@@ -224,13 +244,15 @@ class SavedReport implements \JsonSerializable
             'reportScheduleId' => $this->reportScheduleId
             ]);
 
-        // Library location
-        $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
-
-        // delete file
-        if (file_exists($libraryLocation . 'savedreport/'. $this->fileName)) {
-            unlink($libraryLocation  . 'savedreport/'. $this->fileName);
-        }
+        LibraryFileJournal::deleteFileAfterCommit(
+            $this->getStore(),
+            $this->libraryStorageRegistry,
+            LibraryAsset::SAVED_REPORT,
+            (string)$this->fileName,
+            $this->getLog()->getLoggerInterface(),
+            false,
+            $this->storageEngine
+        );
     }
 
     /**

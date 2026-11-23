@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 
@@ -25,7 +27,10 @@ namespace Xibo\Entity;
 use OpenApi\Attributes as OA;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\UserGroupFactory;
+use Xibo\Service\LibraryAsset;
+use Xibo\Service\LibraryStorageRegistryInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\LibraryFileJournal;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 
@@ -140,6 +145,9 @@ class Notification implements \JsonSerializable
     /** @var  DisplayGroupFactory */
     private $displayGroupFactory;
 
+    /** @var LibraryStorageRegistryInterface */
+    private $libraryStorageRegistry;
+
     /**
      * Command constructor.
      * @param StorageServiceInterface $store
@@ -147,13 +155,35 @@ class Notification implements \JsonSerializable
      * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param UserGroupFactory $userGroupFactory
      * @param DisplayGroupFactory $displayGroupFactory
+     * @param LibraryStorageRegistryInterface $libraryStorageRegistry
      */
-    public function __construct($store, $log, $dispatcher, $userGroupFactory, $displayGroupFactory)
-    {
+    public function __construct(
+        $store,
+        $log,
+        $dispatcher,
+        $userGroupFactory,
+        $displayGroupFactory,
+        LibraryStorageRegistryInterface $libraryStorageRegistry
+    ) {
         $this->setCommonDependencies($store, $log, $dispatcher);
 
         $this->userGroupFactory = $userGroupFactory;
         $this->displayGroupFactory = $displayGroupFactory;
+        $this->libraryStorageRegistry = $libraryStorageRegistry;
+    }
+
+    /**
+     * Deletes an attachment file after the caller's transaction commits.
+     */
+    public function deleteAttachmentFile(?string $filename): void
+    {
+        LibraryFileJournal::deleteFileAfterCommit(
+            $this->getStore(),
+            $this->libraryStorageRegistry,
+            LibraryAsset::ATTACHMENT,
+            (string)$filename,
+            $this->getLog()->getLoggerInterface()
+        );
     }
 
     /**
@@ -289,6 +319,8 @@ class Notification implements \JsonSerializable
             'DELETE FROM `notification` WHERE `notificationId` = :notificationId',
             ['notificationId' => $this->notificationId]
         );
+
+        $this->deleteAttachmentFile($this->filename);
     }
 
     /**

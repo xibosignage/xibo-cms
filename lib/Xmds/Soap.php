@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Xmds;
@@ -29,11 +31,13 @@ use Stash\Invalidation;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
+use Xibo\Entity\Layout;
 use Xibo\Entity\Region;
 use Xibo\Entity\RequiredFile;
 use Xibo\Entity\Schedule;
 use Xibo\Event\DataConnectorScriptRequestEvent;
 use Xibo\Event\XmdsDependencyListEvent;
+use Xibo\Event\XmdsDependencyRequestEvent;
 use Xibo\Factory\BandwidthFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DayPartFactory;
@@ -54,19 +58,23 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\DisplayClaimGroup;
 use Xibo\Helper\IpTrust;
 use Xibo\Helper\LibraryFile;
-use Xibo\Helper\LinkSigner;
 use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Status;
 use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\LibraryAsset;
+use Xibo\Service\LibraryStorageRegistryInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\DownloadUrlUnavailableException;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
 use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\DeadlockException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Widget\Render\WidgetHtmlRenderer;
 use Xibo\Xmds\Entity\Dependency;
 use Xibo\Xmds\Listeners\XmdsDataConnectorListener;
 
@@ -172,6 +180,17 @@ class Soap
     /** @var PlayerFaultFactory */
     protected $playerFaultFactory;
 
+    /** @var \Xibo\Factory\DisplayGroupFactory */
+    protected $displayGroupFactory;
+
+    /** @var \Xibo\Service\LibraryStorageServiceInterface */
+    protected $libraryStorageService;
+
+    /** @var \Xibo\Service\LibraryStorageRegistryInterface */
+    protected $libraryStorageRegistry;
+
+    private ?PlayerFileLink $playerFileLink = null;
+
     /**
      * Soap constructor.
      * @param LogProcessor $logProcessor
@@ -199,6 +218,10 @@ class Soap
      * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param \Xibo\Factory\CampaignFactory $campaignFactory
      * @param SyncGroupFactory $syncGroupFactory
+     * @param PlayerFaultFactory $playerFaultFactory
+     * @param \Xibo\Service\LibraryStorageServiceInterface $libraryStorageService
+     * @param \Xibo\Service\LibraryStorageRegistryInterface $libraryStorageRegistry
+     * @param \Xibo\Factory\DisplayGroupFactory $displayGroupFactory
      */
     public function __construct(
         $logProcessor,
@@ -226,7 +249,10 @@ class Soap
         $dispatcher,
         $campaignFactory,
         $syncGroupFactory,
-        $playerFaultFactory
+        $playerFaultFactory,
+        $libraryStorageService,
+        $libraryStorageRegistry,
+        $displayGroupFactory = null
     ) {
         $this->logProcessor = $logProcessor;
         $this->pool = $pool;
@@ -254,6 +280,91 @@ class Soap
         $this->campaignFactory = $campaignFactory;
         $this->syncGroupFactory = $syncGroupFactory;
         $this->playerFaultFactory = $playerFaultFactory;
+        $this->libraryStorageService = $libraryStorageService;
+        $this->libraryStorageRegistry = $libraryStorageRegistry;
+        $this->displayGroupFactory = $displayGroupFactory;
+    }
+
+    /**
+     * The storageEngine of each of $mediaIds that has one, for links to media still waiting to be copied.
+     * @param int[] $mediaIds
+     * @return array<int, string> by mediaId
+     */
+    protected function getMediaStorageEngines(array $mediaIds): array
+    {
+        // Nothing waits to be copied into the local library the CMS already uses, or once copying has finished.
+        $mediaIds = array_values(array_unique(array_filter(array_map('intval', $mediaIds))));
+        if (count($mediaIds) <= 0
+            || $this->libraryStorageService->hasLocalFiles()
+            || !$this->libraryStorageRegistry->hasFilesToMove()
+        ) {
+            return [];
+        }
+
+        $storageEngines = [];
+        foreach ($this->getStore()->select(
+            'SELECT `mediaId`, `storageEngine` FROM `media`
+              WHERE `storageEngine` = :local AND `mediaId` IN (' . implode(',', $mediaIds) . ')',
+            ['local' => LibraryStorageRegistryInterface::LOCAL_ENGINE]
+        ) as $row) {
+            $storageEngines[(int)$row['mediaId']] = $row['storageEngine'];
+        }
+        return $storageEngines;
+    }
+
+    /**
+     * Records whether each media file's re-signed link is direct, except a file the CMS has already started sending.
+     * @param array<int, int> $isDirectByMediaId
+     */
+    protected function syncMediaIsDirect(array $isDirectByMediaId): void
+    {
+        if (count($isDirectByMediaId) <= 0) {
+            return;
+        }
+
+        $changed = [0 => [], 1 => []];
+        foreach ($this->getStore()->select(
+            'SELECT `itemId`, `isDirect`, `complete`, `bytesRequested` FROM `requiredfile`
+              WHERE `displayId` = :displayId AND `type` = \'M\'',
+            ['displayId' => $this->display->displayId]
+        ) as $row) {
+            $isDirect = $isDirectByMediaId[(int)$row['itemId']] ?? null;
+            $isStartedThroughTheCms = (int)$row['complete'] === 0 && (int)$row['bytesRequested'] > 0;
+            if ($isDirect !== null && $isDirect !== (int)$row['isDirect']
+                && !($isDirect === 1 && $isStartedThroughTheCms)
+            ) {
+                $changed[$isDirect][] = (int)$row['itemId'];
+            }
+        }
+
+        foreach ($changed as $isDirect => $mediaIds) {
+            if (count($mediaIds) > 0) {
+                $this->getStore()->update(
+                    'UPDATE `requiredfile` SET `isDirect` = :isDirect
+                      WHERE `displayId` = :displayId AND `type` = \'M\'
+                        AND `itemId` IN (' . implode(',', $mediaIds) . ')',
+                    ['isDirect' => $isDirect, 'displayId' => $this->display->displayId]
+                );
+            }
+        }
+    }
+
+    /**
+     * Makes the download links players are given.
+     */
+    protected function getPlayerFileLink(): PlayerFileLink
+    {
+        if ($this->playerFileLink === null) {
+            $linkBaseUrl = null;
+
+            $this->playerFileLink = new PlayerFileLink(
+                $this->configService,
+                $this->libraryStorageRegistry,
+                $linkBaseUrl
+            );
+        }
+
+        return $this->playerFileLink;
     }
 
     /**
@@ -324,6 +435,307 @@ class Soap
     }
 
     /**
+     * Split an incoming serverKey into the CMS key and an optional Add Display activation code.
+     *
+     * The addViaCode controller appends the activation code to the CMS key ("key||code") so that
+     * the Player's first RegisterDisplay call can be matched back to the Add Display form
+     * submission. Every other call carries the bare key - the Player strips the code before
+     * storing the key in its config.
+     *
+     * @param string|null $serverKey as received from the Player
+     * @return array [string|null $serverKey, string|null $authCode]
+     */
+    protected function parseServerKey(?string $serverKey): array
+    {
+        if ($serverKey !== null && str_contains($serverKey, '||')) {
+            return array_pad(explode('||', $serverKey, 2), 2, null);
+        }
+
+        return [$serverKey, null];
+    }
+
+    /**
+     * Does the serverKey a Player sent match this CMS?
+     *
+     * Players configured through Add Display are given a key with a one-time code appended
+     * ("key||code"), and they store and resend whatever they were given on every subsequent call.
+     * Validation therefore has to look at the key part alone - checking the whole string would let
+     * such a Player register and then fail every RequiredFiles, Schedule and SubmitLog after it.
+     *
+     * @param string|null $serverKey as received from the Player
+     * @return bool
+     */
+    protected function isValidServerKey(?string $serverKey): bool
+    {
+        [$key] = $this->parseServerKey($serverKey);
+
+        return $key === $this->getConfig()->getSetting('SERVER_KEY');
+    }
+
+    /**
+     * Fetch the Add Display form settings cached against an activation code, if there are any.
+     * @param string|null $authCode
+     * @return array|null
+     */
+    protected function getDisplayClaim(?string $authCode): ?array
+    {
+        if (empty($authCode)) {
+            return null;
+        }
+
+        $cache = $this->getPool()->getItem(Display::getAddViaCodeCacheKey($authCode));
+        $claim = $cache->get();
+
+        // An applied claim is spent: its settings belong to the Player that already presented it.
+        if ($cache->isMiss() || !is_array($claim) || !empty($claim['applied'])) {
+            return null;
+        }
+
+        return $claim;
+    }
+
+    /**
+     * Finish an Add Display claim once the new display has been saved: assign the display group
+     * chosen on the form, and drop the cached form data so it is only ever applied once.
+     * @param Display $display
+     * @param array $claim
+     * @param string $authCode
+     */
+    protected function completeDisplayClaim(Display $display, array $claim, string $authCode): void
+    {
+        $this->recordDisplayAdded($display, intval($claim['userId'] ?? 0), 'activation code');
+        $this->clearPendingConnectNotification($claim['notificationId'] ?? null);
+
+        $this->assignClaimDisplayGroup($display, intval($claim['displayGroupId'] ?? 0));
+
+        // Keep the entry rather than dropping it, so the form that submitted this code can confirm
+        // exactly which display appeared - no guessing from the display list. Marked applied so a
+        // second Player presenting the same code cannot inherit these settings.
+        $item = $this->getPool()->getItem(Display::getAddViaCodeCacheKey($authCode));
+        $item->set(array_merge($claim, [
+            'applied' => true,
+            'displayId' => $display->displayId,
+        ]));
+        $item->expiresAfter(new \DateInterval('PT30M'));
+        $this->getPool()->save($item);
+    }
+
+    /**
+     * Assign a newly registered display to the display group chosen on the Add Display form.
+     */
+    protected function assignClaimDisplayGroup(Display $display, int $displayGroupId): void
+    {
+        if ($this->displayGroupFactory === null) {
+            return;
+        }
+
+        DisplayClaimGroup::assign(
+            $this->displayGroupFactory,
+            $this->getDispatcher(),
+            $this->getLog(),
+            $display,
+            $displayGroupId
+        );
+    }
+
+    protected function claimManualConnectCode(?string $code, Display $display): void
+    {
+        $code = Display::normaliseManualCode($code);
+
+        if ($code === null) {
+            return;
+        }
+
+        $item = $this->getPool()->getItem(Display::getManualConnectCacheKey($code));
+        $pending = $item->get();
+
+        if ($item->isMiss() || !is_array($pending)) {
+            return;
+        }
+
+        // Already claimed by another Player - leave the first claim standing.
+        if (!empty($pending['displayId'])) {
+            return;
+        }
+
+        $item->set([
+            'displayId' => $display->displayId,
+            'userId' => $pending['userId'] ?? null,
+        ]);
+        $item->expiresAfter(new \DateInterval('PT30M'));
+        $this->getPool()->save($item);
+
+        $this->getLog()->debug('claimManualConnectCode: code claimed by displayId '
+            . $display->displayId);
+
+        $this->recordDisplayAdded($display, intval($pending['userId'] ?? 0), 'manual configuration');
+        $this->clearPendingConnectNotification($pending['notificationId'] ?? null);
+    }
+
+    /**
+     * Record the Add Display code a display presented, and say whether it has just changed.
+     *
+     * Players store the key||code they were configured with and resend it on every call, long after
+     * the code has expired. Codes are short and are reissued once they expire, so an old code still
+     * held by one Player can match a code issued later for another. Only a change in the code a known
+     * display presents means it has been pointed at an Add Display form again.
+     *
+     * A display with no record yet (first seen since this was introduced, or dropped from the cache)
+     * is recorded but not counted as a change, so an old code is never mistaken for a new one.
+     *
+     * @return bool true when the display now presents a code different from the last one it sent
+     */
+    protected function recordPresentedCode(Display $display, ?string $authCode): bool
+    {
+        $current = trim($authCode ?? '');
+
+        $item = $this->getPool()->getItem(Display::getPresentedCodeCacheKey($display->displayId));
+        $last = $item->get();
+        $known = !$item->isMiss() && is_array($last);
+        $changed = $known && strcasecmp($current, $last['code'] ?? '') !== 0;
+
+        // Only saved when there is something new to record. A record that expires is written again
+        // on the next registration without counting as a change, so nothing is claimed by mistake.
+        if (!$known || $changed) {
+            $item->set(['code' => $current]);
+            $item->expiresAfter(new \DateInterval('P7D'));
+            $this->getPool()->save($item);
+        }
+
+        return $changed && $current !== '';
+    }
+
+    /**
+     * Mark a live Add Display code as claimed by a Player that was already registered, e.g. one that
+     * connected once without the code before the operator set it up.
+     *
+     * The display is not new, so none of the form's settings are applied to it: they could rename or
+     * move a display the operator has no rights over. Recording which display it was lets the form
+     * stop waiting and say the Player was already registered, rather than wait until the code expires.
+     * A code that has already been claimed, e.g. resent by the Player that claimed it, is left as is.
+     *
+     * Only a code the display has just started presenting is considered. An old code it still sends
+     * on every collect could otherwise take over the same code reissued to somebody else's Player.
+     */
+    protected function claimCodeForExistingDisplay(?string $authCode, Display $display): void
+    {
+        if (!$this->recordPresentedCode($display, $authCode)) {
+            return;
+        }
+
+        $claim = $this->getDisplayClaim($authCode);
+
+        if ($claim !== null) {
+            $item = $this->getPool()->getItem(Display::getAddViaCodeCacheKey($authCode));
+            $item->set(array_merge($claim, [
+                'applied' => true,
+                'existing' => true,
+                'displayId' => $display->displayId,
+            ]));
+            $item->expiresAfter(new \DateInterval('PT30M'));
+            $this->getPool()->save($item);
+
+            $this->clearPendingConnectNotification($claim['notificationId'] ?? null);
+            return;
+        }
+
+        $code = Display::normaliseManualCode($authCode);
+
+        if ($code === null) {
+            return;
+        }
+
+        $item = $this->getPool()->getItem(Display::getManualConnectCacheKey($code));
+        $pending = $item->get();
+
+        if ($item->isMiss() || !is_array($pending) || !empty($pending['displayId'])) {
+            return;
+        }
+
+        $item->set([
+            'displayId' => $display->displayId,
+            'userId' => $pending['userId'] ?? null,
+            'existing' => true,
+        ]);
+        $item->expiresAfter(new \DateInterval('PT30M'));
+        $this->getPool()->save($item);
+
+        $this->getLog()->debug('claimCodeForExistingDisplay: manual code claimed by existing displayId '
+            . $display->displayId);
+
+        $this->clearPendingConnectNotification($pending['notificationId'] ?? null);
+    }
+
+    /**
+     * Give a newly claimed display its owner, and record who added it.
+     *
+     * Registration runs with no session, so nothing about it reaches the audit trail: display->save
+     * uses $saveOptionsMinimum, which sets audit => false, and LogService would attribute the entry
+     * to user 0 anyway. The Add Display form is the only place that knows which user is responsible,
+     * so the claim carries that user through and it is applied here.
+     *
+     * @param Display $display the display that just registered
+     * @param int $userId the user whose Add Display form this Player came from
+     * @param string $via how it was connected, for the audit message
+     */
+    protected function recordDisplayAdded(Display $display, int $userId, string $via): void
+    {
+        if ($userId <= 0 || $this->displayGroupFactory === null) {
+            return;
+        }
+
+        try {
+            // Displays created by XMDS are owned by the system user, because there is nobody else
+            // to attribute them to. When we do know, hand the display to the person who added it.
+            foreach ($this->displayGroupFactory->getByDisplayId($display->displayId) as $displayGroup) {
+                if ($displayGroup->isDisplaySpecific === 1) {
+                    $displayGroup->userId = $userId;
+                    $displayGroup->save(['validate' => false, 'manageDisplayLinks' => false]);
+                }
+            }
+        } catch (GeneralException $e) {
+            $this->getLog()->error('recordDisplayAdded: cannot set owner for displayId '
+                . $display->displayId . ', e = ' . $e->getMessage());
+        }
+
+        // Attribute the audit entry to the operator rather than to nobody, then put the log service
+        // back as it was so nothing else in this request is mis-attributed.
+        $previousUserId = $this->getLog()->getUserId();
+
+        try {
+            $this->getLog()->setUserId($userId);
+            $this->getLog()->audit('Display', $display->displayId, 'Display Added', [
+                'display' => $display->display,
+                'via' => $via,
+            ]);
+        } finally {
+            $this->getLog()->setUserId($previousUserId);
+        }
+    }
+
+    /**
+     * Remove the "waiting for a Player" notice once the Player has arrived.
+     *
+     * The notice exists so that an abandoned setup leaves a trace the operator can find. A setup
+     * that completed should leave none, or every successful add would look like a failure.
+     *
+     * @param int|null $notificationId
+     */
+    protected function clearPendingConnectNotification(?int $notificationId): void
+    {
+        if (empty($notificationId)) {
+            return;
+        }
+
+        try {
+            $this->notificationFactory->getById($notificationId)->delete();
+        } catch (GeneralException $e) {
+            // Already gone, or never created. Nothing to tidy.
+            $this->getLog()->debug('clearPendingConnectNotification: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Get Required Files (common)
      * @param $serverKey
      * @param $hardwareKey
@@ -353,7 +765,7 @@ class Soap
         $hardwareKey = $sanitizer->getString('hardwareKey');
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
+        if (!$this->isValidServerKey($serverKey)) {
             throw new \SoapFault(
                 'Sender',
                 'The Server key you entered does not match with the server key at this address'
@@ -379,15 +791,15 @@ class Soap
         $output = $cache->get();
 
         // Required files are cached for 4 hours, but the cached document is only valid to serve as-is
-        // if it was generated under the same SENDFILE_MODE (httpDownloads) as the current request -
-        // otherwise the download="http"/"xmds" attributes it contains are stale.
+        // if it was made with the links this request would get (SENDFILE_MODE, where files are kept, the CDN).
+        $playerFileLink = $this->getPlayerFileLink();
+        $linkMode = $playerFileLink->getFingerprint($httpDownloads, $this->display);
         $cachedDocument = null;
         $cacheModeMatches = false;
         if ($cache->isHit()) {
             $cachedDocument = new \DOMDocument('1.0');
             $cachedDocument->loadXML($output);
-            $cacheModeMatches = $cachedDocument->documentElement->getAttribute('httpDownloads')
-                === ($httpDownloads ? '1' : '0');
+            $cacheModeMatches = $cachedDocument->documentElement->getAttribute('linkMode') === $linkMode;
         }
 
         if ($cacheModeMatches) {
@@ -396,47 +808,73 @@ class Soap
             // Resign HTTP links and extend expiry
             $document = $cachedDocument;
 
-            $cdnUrl = $this->configService->getSetting('CDN_URL');
-
+            // Media still waiting to be copied are linked from the local library.
+            $mediaIds = [];
             foreach ($document->documentElement->childNodes as $node) {
-                if ($node instanceof \DOMElement) {
-                    if ($node->getAttribute('download') === 'http') {
-                        $type = match ($node->getAttribute('type')) {
-                            'layout' => 'L',
-                            'media' => 'M',
-                            default => 'P',
-                        };
+                if ($node instanceof \DOMElement
+                    && $node->getAttribute('download') === 'http'
+                    && $node->getAttribute('type') === 'media'
+                    && $node->getAttribute('assetType') === ''
+                ) {
+                    $mediaIds[] = (int)($node->getAttribute('realId') ?: $node->getAttribute('id'));
+                }
+            }
+            $storageEngines = $this->getMediaStorageEngines($mediaIds);
+            $isDirectByMediaId = [];
 
-                        // HTTP download for a v3 player will have saved the type and fileType as M and media
-                        // respectively, which is different to what we use in the URL.
-                        $assetType = $node->getAttribute('assetType');
-                        if (!empty($assetType)) {
-                            $type = 'P';
-                            $fileType = $assetType;
-                        } else {
-                            $fileType = $node->getAttribute('fileType');
+            try {
+                foreach ($document->documentElement->childNodes as $node) {
+                    if ($node instanceof \DOMElement) {
+                        if ($node->getAttribute('download') === 'http') {
+                            $type = match ($node->getAttribute('type')) {
+                                'layout' => 'L',
+                                'media' => 'M',
+                                default => 'P',
+                            };
+
+                            // HTTP download for a v3 player will have saved the type and fileType as M and media
+                            // respectively, which is different to what we use in the URL.
+                            $assetType = $node->getAttribute('assetType');
+                            if (!empty($assetType)) {
+                                $type = 'P';
+                                $fileType = $assetType;
+                            } else {
+                                $fileType = $node->getAttribute('fileType');
+                            }
+
+                            // Use the realId if we have it.
+                            $realId = $node->getAttribute('realId');
+                            if (empty($realId)) {
+                                $realId = $node->getAttribute('id');
+                            }
+
+                            // Generate a new URL.
+                            [$newUrl, $isDirect] = $playerFileLink->get(
+                                $this->display,
+                                $type,
+                                $realId,
+                                $node->getAttribute('saveAs'),
+                                $fileType,
+                                false,
+                                $type === 'M' ? ($storageEngines[(int)$realId] ?? null) : null,
+                            );
+
+                            $node->setAttribute('path', $newUrl);
+
+                            if ($type === 'M' && empty($assetType)) {
+                                $isDirectByMediaId[(int)$realId] = $isDirect ? 1 : 0;
+                            }
                         }
-
-                        // Use the realId if we have it.
-                        $realId = $node->getAttribute('realId');
-                        if (empty($realId)) {
-                            $realId = $node->getAttribute('id');
-                        }
-
-                        // Generate a new URL.
-                        $newUrl = LinkSigner::generateSignedLink(
-                            $this->display,
-                            $this->configService->getApiKeyDetails()['encryptionKey'],
-                            $cdnUrl,
-                            $type,
-                            $realId,
-                            $node->getAttribute('saveAs'),
-                            $fileType,
-                        );
-
-                        $node->setAttribute('path', $newUrl);
                     }
                 }
+            } catch (DownloadUrlUnavailableException $e) {
+                $this->getLog()->error('Cannot re-sign cached required files, e = ' . $e->getMessage());
+                return new \SoapFault('Receiver', 'Unable to get a list of files');
+            }
+
+            // A local library never copies files between builds, so its link mode can't change.
+            if (!$this->libraryStorageService->hasLocalFiles()) {
+                $this->syncMediaIsDirect($isDirectByMediaId);
             }
 
             $output = $document->saveXML();
@@ -474,9 +912,8 @@ class Soap
         $fileElements->setAttribute('fitlerFrom', $this->fromFilter->format(DateFormatHelper::getSystemFormat()));
         $fileElements->setAttribute('fitlerTo', $this->toFilter->format(DateFormatHelper::getSystemFormat()));
 
-        // Record the mode this document was generated under, so a future cache hit can tell whether
-        // SENDFILE_MODE has changed since and needs to be regenerated rather than served stale.
-        $fileElements->setAttribute('httpDownloads', $httpDownloads ? '1' : '0');
+        // Record the links this document was made with, so a later cache hit can tell whether they have changed.
+        $fileElements->setAttribute('linkMode', $linkMode);
 
         // Player dependencies
         // -------------------
@@ -487,16 +924,21 @@ class Soap
         $this->getDispatcher()->dispatch($dependencyListEvent, 'xmds.dependency.list');
 
         // 2) Each dependency returned needs to be added to RF.
-        foreach ($dependencyListEvent->getDependencies() as $dependency) {
-            // Add a new required file for this.
-            $this->addDependency(
-                $newRfIds,
-                $requiredFilesXml,
-                $fileElements,
-                $httpDownloads,
-                $isSupportsDependency,
-                $dependency
-            );
+        try {
+            foreach ($dependencyListEvent->getDependencies() as $dependency) {
+                // Add a new required file for this.
+                $this->addDependency(
+                    $newRfIds,
+                    $requiredFilesXml,
+                    $fileElements,
+                    $httpDownloads,
+                    $isSupportsDependency,
+                    $dependency
+                );
+            }
+        } catch (DownloadUrlUnavailableException $e) {
+            $this->getLog()->error('Cannot link a dependency, e = ' . $e->getMessage());
+            return new \SoapFault('Receiver', 'Unable to get a list of files');
         }
         // ------------
         // Dependencies finished
@@ -556,9 +998,7 @@ class Soap
                 $parsedRow = $this->getSanitizer($row);
                 $schedule = $this->scheduleFactory->createEmpty()->hydrate($row);
 
-                // Is this scheduled event a synchronised timezone?
-                // if it is, then we get our events with respect to the timezone of the display
-                $isSyncTimezone = ($schedule->syncTimezone == 1 && !empty($this->display->timeZone));
+                $isSyncTimezone = $schedule->syncTimezone == 1 && !empty($this->display->timeZone);
 
                 try {
                     if ($isSyncTimezone) {
@@ -618,14 +1058,28 @@ class Soap
                             ->dispatch($dataConnectorScriptRequestEvent, DataConnectorScriptRequestEvent::$NAME);
                     }
 
-                    $this->addDependency(
-                        $newRfIds,
-                        $requiredFilesXml,
-                        $fileElements,
-                        $httpDownloads,
-                        $isSupportsDependency,
-                        XmdsDataConnectorListener::getDataConnectorDependency($libraryLocation, $row['dataSetId']),
-                    );
+                    // A missing script is left out, while a storage outage fails RequiredFiles.
+                    try {
+                        $dataConnectorDependency = XmdsDataConnectorListener::getDataConnectorDependency(
+                            $this->getPool(),
+                            fn () => $this->dataSetFactory->getScriptStorage(),
+                            $dataSet->dataSetId
+                        );
+                    } catch (NotFoundException $exception) {
+                        $this->getLog()->error('RequiredFiles: ' . $exception->getMessage());
+                        $dataConnectorDependency = null;
+                    }
+
+                    if ($dataConnectorDependency !== null) {
+                        $this->addDependency(
+                            $newRfIds,
+                            $requiredFilesXml,
+                            $fileElements,
+                            $httpDownloads,
+                            $isSupportsDependency,
+                            $dataConnectorDependency,
+                        );
+                    }
                 }
             }
         } catch (\Exception $e) {
@@ -665,7 +1119,8 @@ class Soap
                     `media`.mediaID AS id,
                     `media`.`MD5`,
                     `media`.FileSize,
-                    `media`.released
+                    `media`.released,
+                    `media`.storageEngine
                   FROM `media`
                     INNER JOIN `display_media`
                     ON `display_media`.mediaid = `media`.mediaId
@@ -676,7 +1131,8 @@ class Soap
                     `media`.mediaID AS id,
                     `media`.`MD5`,
                     `media`.FileSize,
-                    `media`.released
+                    `media`.released,
+                    `media`.storageEngine
                   FROM `media`
                     INNER JOIN `lkmediadisplaygroup`
                     ON lkmediadisplaygroup.mediaid = media.MediaID
@@ -691,7 +1147,8 @@ class Soap
                     `media`.mediaID AS id,
                     `media`.`MD5`,
                     `media`.FileSize,
-                    `media`.released
+                    `media`.released,
+                    `media`.storageEngine
                   FROM region
                     INNER JOIN playlist
                     ON playlist.regionId = region.regionId
@@ -710,7 +1167,8 @@ class Soap
                      `media`.mediaId AS id,
                      `media`.`MD5`,
                      `media`.FileSize,
-                     `media`.released
+                     `media`.released,
+                     `media`.storageEngine
                   FROM `media`
                  WHERE `media`.mediaID IN (
                     SELECT backgroundImageId
@@ -736,7 +1194,6 @@ class Soap
 
             // Keep a list of path names added to RF to prevent duplicates
             $pathsAdded = [];
-            $cdnUrl = $this->configService->getSetting('CDN_URL');
 
             foreach ($sth->fetchAll() as $row) {
                 $parsedRow = $this->getSanitizer($row);
@@ -746,6 +1203,7 @@ class Soap
                 $md5 = $row['MD5'];
                 $fileSize = $parsedRow->getInt('FileSize');
                 $released = $parsedRow->getInt('released');
+                $storageEngine = $row['storageEngine'] ?? null;
 
                 // Check we haven't added this before
                 if (in_array($path, $pathsAdded)) {
@@ -754,22 +1212,28 @@ class Soap
 
                 // Do we need to calculate a new MD5?
                 // If they are empty calculate them and save them back to the media.
-                if ($md5 == '' || $fileSize == 0) {
-                    $mediaPath = LibraryFile::resolve($libraryLocation, $path);
-                    $md5 = md5_file($mediaPath);
-                    $fileSize = filesize($mediaPath);
-
-                    // Update the media record with this information
-                    $mediaSth->execute(['md5' => $md5, 'size' => $fileSize, 'mediaid' => $id]);
-                }
+                [$md5, $fileSize] = $this->backfillMediaChecksum(
+                    $id,
+                    $path,
+                    $md5,
+                    $fileSize,
+                    $mediaSth,
+                    $storageEngine
+                );
 
                 // Add nonce
+                $isReleased = $released != 0 && $released != 2;
+                $link = $httpDownloads && $isReleased
+                    ? $playerFileLink->get($this->display, 'M', $id, $path, null, false, $storageEngine)
+                    : null;
                 $mediaNonce = $this->requiredFileFactory
-                    ->createForMedia($this->display->displayId, $id, $fileSize, $path, $released)
-                    ->save();
+                    ->createForMedia($this->display->displayId, $id, $fileSize, $path, $released);
+                $mediaNonce->isDirect = ($link[1] ?? false) ? 1 : 0;
+                $mediaNonce->setMd5($md5);
+                $mediaNonce->save();
 
                 // skip media which has released == 0 or 2
-                if ($released == 0 || $released == 2) {
+                if (!$isReleased) {
                     continue;
                 }
 
@@ -782,16 +1246,9 @@ class Soap
                 $file->setAttribute('size', $fileSize);
                 $file->setAttribute('md5', $md5);
 
-                if ($httpDownloads) {
+                if ($link !== null) {
                     // Serve a link instead (standard HTTP link)
-                    $file->setAttribute('path', LinkSigner::generateSignedLink(
-                        $this->display,
-                        $this->configService->getApiKeyDetails()['encryptionKey'],
-                        $cdnUrl,
-                        'M',
-                        $id,
-                        $path,
-                    ));
+                    $file->setAttribute('path', $link[0]);
                     $file->setAttribute('saveAs', $path);
                     $file->setAttribute('download', 'http');
                 } else {
@@ -816,8 +1273,6 @@ class Soap
         // Reset the paths added array to start again with layouts
         $pathsAdded = [];
 
-        $cdnUrl = $this->configService->getSetting('CDN_URL');
-
         // Go through each layout and see if we need to supply any resource nodes.
         foreach ($layouts as $layoutId) {
             try {
@@ -827,35 +1282,47 @@ class Soap
                 }
 
                 // Load this layout
-                $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->loadById($layoutId));
+                $layout = $this->layoutFactory->loadById($layoutId);
+                $buildFailed = false;
                 try {
                     $layout->loadPlaylists();
 
                     // Make sure its XLF is up-to-date
-                    $path = $layout->xlfToDisk(['notify' => false]);
-                } finally {
-                    $this->layoutFactory->concurrentRequestRelease($layout);
+                    $layout = $this->buildRequiredLayout($layout);
+                } catch (GeneralException $exception) {
+                    // A failed store leaves the last stored XLF in place, so it's still offered.
+                    $this->getLog()->error('Unable to build layoutId ' . $layoutId . ', offering its last stored XLF: '
+                        . $exception->getMessage());
+                    $buildFailed = true;
                 }
 
                 // If the status is *still* 4, then we skip this layout as it cannot build
-                if ($layout->status === Status::$STATUS_INVALID) {
+                $xlfDetails = $layout->getXlfDetails();
+                if ((!$buildFailed && $layout->status === Status::$STATUS_INVALID) || $xlfDetails === null) {
                     $this->getLog()->debug('Skipping layoutId ' . $layout->layoutId . ' which wont build');
                     continue;
                 }
 
                 // For layouts the MD5 column is the layout xml
-                $fileSize = filesize($path);
-                $md5 = md5_file($path);
-                $fileName = basename($path);
+                $fileSize = $xlfDetails['size'];
+                $md5 = $xlfDetails['md5'];
+                $fileName = Layout::getXlfKey($layoutId);
 
                 // Log
                 $this->getLog()->debug('MD5 for layoutid ' . $layoutId . ' is: [' . $md5 . ']');
 
+                // Permissive check for http layouts - always allow unless windows and <= 120
+                $supportsHttpLayouts = !($this->display->clientType == 'windows' && $this->display->clientCode <= 120);
+                $link = $httpDownloads && $supportsHttpLayouts
+                    ? $playerFileLink->get($this->display, 'L', $layoutId, $fileName)
+                    : null;
+
                 // Add nonce
                 $layoutNonce = $this->requiredFileFactory
-                    ->createForLayout($this->display->displayId, $layoutId, $fileSize, $fileName)
-                    ->save();
-                $newRfIds[] = $layoutNonce->rfId;
+                    ->createForLayout($this->display->displayId, $layoutId, $fileSize, $fileName);
+                $layoutNonce->isDirect = ($link[1] ?? false) ? 1 : 0;
+                $layoutNonce->setMd5($md5);
+                $layoutNonce->save();
 
                 // Add the Layout file element
                 $file = $requiredFilesXml->createElement('file');
@@ -869,19 +1336,9 @@ class Soap
                     $file->setAttribute('code', $layout->code);
                 }
 
-                // Permissive check for http layouts - always allow unless windows and <= 120
-                $supportsHttpLayouts = !($this->display->clientType == 'windows' && $this->display->clientCode <= 120);
-
-                if ($httpDownloads && $supportsHttpLayouts) {
+                if ($link !== null) {
                     // Serve a link instead (standard HTTP link)
-                    $file->setAttribute('path', LinkSigner::generateSignedLink(
-                        $this->display,
-                        $this->configService->getApiKeyDetails()['encryptionKey'],
-                        $cdnUrl,
-                        'L',
-                        $layoutId,
-                        $fileName,
-                    ));
+                    $file->setAttribute('path', $link[0]);
                     $file->setAttribute('saveAs', $fileName);
                     $file->setAttribute('download', 'http');
                 } else {
@@ -934,15 +1391,15 @@ class Soap
                             // We've added this widget already
                             $resourcesAdded[] = $widget->widgetId;
 
-                            // Get the widget modified date
-                            // we will use the latter of this vs the layout modified date as the updated attribute
-                            // on required files
-                            $widgetModifiedDt = DateFormatHelper::createFromTimestamp($widget->modifiedDt);
-
-                            // Updated date is the greatest of layout/widget modified date
-                            $updatedDt = ($layoutModifiedDt->greaterThan($widgetModifiedDt))
-                                ? $layoutModifiedDt
-                                : $widgetModifiedDt;
+                            // Updated is the later of the render's version, which covers every widget in a canvas,
+                            // and the layout's modified date.
+                            $updatedDt = DateFormatHelper::createFromTimestamp(WidgetHtmlRenderer::getRenderVersion(
+                                $region->type === 'canvas' ? $playlist->widgets : [$widget],
+                                $playlist->modifiedDt
+                            ));
+                            if ($layoutModifiedDt->greaterThan($updatedDt)) {
+                                $updatedDt = $layoutModifiedDt;
+                            }
 
                             // If this is a canvas region, then only send the data, unless we're the global
                             // widget
@@ -1105,14 +1562,19 @@ class Soap
                     }
                 }
 
-                // Append Layout
+                // Append Layout, keeping its required file only once it is in the list.
                 $fileElements->appendChild($file);
+                $newRfIds[] = $layoutNonce->rfId;
 
                 // Add to paths added
                 $pathsAdded[] = $layoutId;
             } catch (NotFoundException) {
                 $this->getLog()->error('Layout not found - ID: ' . $layoutId . ', skipping');
                 continue;
+            } catch (DownloadUrlUnavailableException $e) {
+                // Leaving the layout out would cache a list without it, so the player asks again instead.
+                $this->getLog()->error('Cannot link layout - ID: ' . $layoutId . ', e = ' . $e->getMessage());
+                return new \SoapFault('Receiver', 'Unable to get a list of files');
             } catch (GeneralException $e) {
                 $this->getLog()->error('Cannot generate layout - ID: ' . $layoutId
                     . ', skipping, e = ' . $e->getMessage());
@@ -1213,7 +1675,7 @@ class Soap
         $hardwareKey = $sanitizer->getString('hardwareKey');
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
+        if (!$this->isValidServerKey($serverKey)) {
             throw new \SoapFault(
                 'Sender',
                 'The Server key you entered does not match with the server key at this address'
@@ -1275,7 +1737,7 @@ class Soap
             // Dependencies
             // ------------
             $moduleDependents = [];
-            $dependencyListEvent = new XmdsDependencyListEvent($this->display);
+            $dependencyListEvent = new XmdsDependencyListEvent($this->display, false);
             $this->getDispatcher()->dispatch($dependencyListEvent, 'xmds.dependency.list');
 
             // Add each resolved dependency to our list of global dependents.
@@ -1347,9 +1809,7 @@ class Soap
                 $parsedRow = $this->getSanitizer($row);
                 $schedule = $this->scheduleFactory->createEmpty()->hydrate($row);
 
-                // Is this scheduled event a synchronised timezone?
-                // if it is, then we get our events with respect to the timezone of the display
-                $isSyncTimezone = ($schedule->syncTimezone == 1 && !empty($this->display->timeZone));
+                $isSyncTimezone = $schedule->syncTimezone == 1 && !empty($this->display->timeZone);
 
                 try {
                     if ($isSyncTimezone) {
@@ -1739,7 +2199,7 @@ class Soap
         $hardwareKey = $sanitizer->getString('hardwareKey');
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
+        if (!$this->isValidServerKey($serverKey)) {
             throw new \SoapFault(
                 'Sender',
                 'The Server key you entered does not match with the server key at this address'
@@ -1960,7 +2420,7 @@ class Soap
         $hardwareKey = $sanitizer->getString('hardwareKey');
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
+        if (!$this->isValidServerKey($serverKey)) {
             throw new \SoapFault(
                 'Sender',
                 'The Server key you entered does not match with the server key at this address'
@@ -2293,7 +2753,7 @@ class Soap
         $hardwareKey = $sanitizer->getString('hardwareKey');
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
+        if (!$this->isValidServerKey($serverKey)) {
             throw new \SoapFault(
                 'Sender',
                 'The Server key you entered does not match with the server key at this address'
@@ -2326,6 +2786,7 @@ class Soap
 
         $xpath = new \DOMXPath($document);
         $fileNodes = $xpath->query('//file');
+        $directDownloadBandwidth = new DirectDownloadBandwidth($this->bandwidthFactory, $this->display->displayId);
 
         foreach ($fileNodes as $node) {
             /* @var \DOMElement $node */
@@ -2377,8 +2838,7 @@ class Soap
 
                 // File complete?
                 $complete = $node->getAttribute('complete');
-                $requiredFile->complete = $complete;
-                $requiredFile->save();
+                $directDownloadBandwidth->setComplete($requiredFile, (int)$complete);
 
                 // If this item is a 0 then set not complete
                 if ($complete == 0) {
@@ -2405,6 +2865,9 @@ class Soap
         }
 
         $this->logBandwidth($this->display->displayId, Bandwidth::$MEDIAINVENTORY, strlen($inventory));
+
+        // Last, as it is saved at once while the claims wait for the request to commit.
+        $directDownloadBandwidth->save();
 
         return true;
     }
@@ -2447,7 +2910,7 @@ class Soap
         $mediaId = $sanitizer->getString('mediaId');
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
+        if (!$this->isValidServerKey($serverKey)) {
             throw new \SoapFault(
                 'Sender',
                 'The Server key you entered does not match with the server key at this address'
@@ -2568,9 +3031,8 @@ class Soap
                             }
 
                             $widgetData = $widgetDataProviderCache->decorateForPlayer(
-                                $this->configService,
+                                $this->getPlayerFileLink(),
                                 $this->display,
-                                $this->configService->getApiKeyDetails()['encryptionKey'],
                                 $dataProvider->getData(),
                                 $media,
                             );
@@ -2591,6 +3053,7 @@ class Soap
 
             // Decorate for the player
             $resource = $renderer->decorateForPlayer(
+                $this->getPlayerFileLink(),
                 $this->display,
                 $resource,
                 $media,
@@ -2937,7 +3400,7 @@ class Soap
     ): void {
         // Create a required file for this dependency
         $dependencyBasePath = basename($dependency->path);
-        $rfId = $this->requiredFileFactory
+        $requiredFile = $this->requiredFileFactory
             ->createForGetDependency(
                 $this->display->displayId,
                 $dependency->fileType,
@@ -2946,35 +3409,36 @@ class Soap
                 $dependencyBasePath,
                 $dependency->size,
                 $isSupportsDependency
-            )
-            ->save()->rfId;
+            );
 
         // Make sure we do not already have it.
-        if (in_array($rfId, $rfIds)) {
+        if ($requiredFile->rfId !== null && in_array($requiredFile->rfId, $rfIds)) {
             $this->getLog()->debug('addDependency: ' . $dependency->id . ' already added to XML');
             return;
         }
 
-        // Record this required file's ID as a new one.
-        $rfIds[] = $rfId;
-
-        // Add to RF XML
-        $file = $requiredFilesXml->createElement('file');
-
         // HTTP downloads?
         // 3) some dependencies don't support HTTP downloads because they aren't in the library
-        $httpFilePath = null;
-        if ($httpDownloads && $dependency->isAvailableOverHttp) {
-            $httpFilePath = LinkSigner::generateSignedLink(
+        $link = $httpDownloads && $dependency->isAvailableOverHttp
+            ? $this->getPlayerFileLink()->get(
                 $this->display,
-                $this->configService->getApiKeyDetails()['encryptionKey'],
-                $this->configService->getSetting('CDN_URL'),
                 RequiredFile::$TYPE_DEPENDENCY,
                 $dependency->id,
                 $dependencyBasePath,
                 $dependency->fileType,
-            );
+            )
+            : null;
+        $requiredFile->isDirect = ($link[1] ?? false) ? 1 : 0;
+        $requiredFile->setMd5($dependency->md5);
 
+        // Record this required file's ID as a new one.
+        $rfIds[] = $requiredFile->save()->rfId;
+
+        // Add to RF XML
+        $file = $requiredFilesXml->createElement('file');
+
+        $httpFilePath = $link[0] ?? null;
+        if ($httpFilePath !== null) {
             $file->setAttribute('download', 'http');
         } else {
             $file->setAttribute('download', 'xmds');
@@ -3169,6 +3633,103 @@ class Soap
         } else {
             $offset = $this->display->displayId % 20;
             return $collectionInterval + ($offset <= 10 ? $offset * -1 : $offset - 10);
+        }
+    }
+
+    /**
+     * Builds the layout's XLF, loading its playlists again if the build reloaded it after waiting on a lock.
+     * @throws GeneralException
+     */
+    protected function buildRequiredLayout(Layout $layout): Layout
+    {
+        $built = $this->layoutFactory->buildXlfLocked($layout, ['notify' => false]);
+        if ($built !== $layout) {
+            $built->load();
+            $built->loadPlaylists();
+        }
+        return $built;
+    }
+
+    /**
+     * Fill in a media row's missing MD5 or size from storage, downloading the file only when the MD5 is missing.
+     * @param int|string $id the mediaId
+     * @param string|null $path the media's storage path
+     * @param string|null $md5 the stored MD5, '' when missing
+     * @param int|null $fileSize the stored size, 0 or null when missing
+     * @param \PDOStatement $mediaSth the statement that saves the MD5 and size back to the media row
+     * @return array the MD5 and size, unchanged when storage cannot be read
+     */
+    protected function backfillMediaChecksum(
+        $id,
+        ?string $path,
+        ?string $md5,
+        ?int $fileSize,
+        $mediaSth,
+        ?string $storageEngine = null
+    ): array {
+        $fileSize = $fileSize ?? 0;
+
+        // An empty file's row is already complete, and a row with no stored file has nothing to read.
+        if (($md5 != '' && ($fileSize > 0 || $md5 === md5(''))) || empty($path)) {
+            return [$md5, $fileSize];
+        }
+
+        try {
+            $storage = $this->libraryStorageRegistry->get(LibraryAsset::MEDIA, $storageEngine);
+            if ($md5 != '') {
+                $fileSize = $storage->size($path);
+            } else {
+                $mediaTempCopyPath = $storage->downloadToTemp($path);
+                try {
+                    $md5 = md5_file($mediaTempCopyPath);
+                    $fileSize = filesize($mediaTempCopyPath);
+                } finally {
+                    $storage->releaseTemp($mediaTempCopyPath);
+                }
+            }
+
+            // Update the media record with this information
+            $mediaSth->execute(['md5' => $md5, 'size' => $fileSize, 'mediaid' => $id]);
+        } catch (\Xibo\Support\Exception\GeneralException $exception) {
+            // A failed read keeps the current values, which are still advertised.
+            $this->getLog()->error('doRequiredFiles: cannot backfill MD5/FileSize for '
+                . 'mediaId ' . $id . ', path ' . $path . '. ' . $exception->getMessage());
+        }
+
+        return [$md5, $fileSize];
+    }
+
+    /**
+     * Reads a dependency chunk from its storage, or from the library when none is set.
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    protected function readDependencyChunk(
+        XmdsDependencyRequestEvent $event,
+        string $libraryLocation,
+        int $offset,
+        int $length
+    ): string {
+        $storage = $event->getStorage();
+        if ($storage !== null) {
+            return $storage->readRange($event->getStorageKey(), $offset, $length)->getContents();
+        }
+
+        $path = $event->getRelativePath();
+        if (empty($path)) {
+            throw new NotFoundException(__('File not found'));
+        }
+
+        $f = fopen(LibraryFile::resolve($libraryLocation, $path), 'r');
+        if (!$f) {
+            throw new NotFoundException(__('Unable to get file pointer'));
+        }
+
+        try {
+            fseek($f, $offset);
+            return (string)fread($f, $length);
+        } finally {
+            fclose($f);
         }
     }
 }

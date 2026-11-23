@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Helper\Guzzle;
@@ -101,9 +103,10 @@ class SsrfProtectionMiddleware
         // Base flags: Always block Reserved ranges (e.g., 240.0.0.0/4)
         $flags = FILTER_FLAG_NO_RES_RANGE;
 
-        // If local networks are NOT allowed, add the private range block flag
+        // If local networks are NOT allowed, only globally routable addresses pass. As well as the private ranges
+        // this blocks the special-use ones PHP's private/reserved sets miss, e.g. CGNAT 100.64.0.0/10.
         if (!$allowLocalNetwork) {
-            $flags |= FILTER_FLAG_NO_PRIV_RANGE;
+            $flags |= FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_GLOBAL_RANGE;
         }
 
         if (!filter_var($ip, FILTER_VALIDATE_IP, $flags)) {
@@ -122,6 +125,11 @@ class SsrfProtectionMiddleware
 
             // ALWAYS Block Cloud Metadata (169.254.0.0/16)
             if (($ipLong & ip2long('255.255.0.0')) === ip2long('169.254.0.0')) {
+                return false;
+            }
+
+            // ALWAYS Block Alibaba Cloud Metadata (100.100.100.200), which sits in CGNAT space
+            if ($ipLong === ip2long('100.100.100.200')) {
                 return false;
             }
 

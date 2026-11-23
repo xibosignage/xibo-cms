@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 // =============================================================================
@@ -29,13 +31,21 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent, { type UserEvent } from '@testing-library/user-event';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
-import { MULTIPLE_SYNC_GROUPS, mockSyncGroup, SINGLE_SYNC_GROUP } from './fixtures/syncGroup';
+import {
+  MULTIPLE_SYNC_GROUPS,
+  mockSyncGroup,
+  mockUser,
+  SINGLE_SYNC_GROUP,
+} from './fixtures/syncGroup';
 import { renderSyncGroupsPage } from './helpers/renderSyncGroupsPage';
 import { mockFetchSyncGroups } from './mocks/syncGroupApi';
 
 import { deleteSyncGroup, fetchSyncGroups } from '@/services/syncGroupApi';
 import { testQueryClient } from '@/setupTests';
-import { waitForDialogToClose } from '@/testUtils/rtl';
+import { knownFailure } from '@/testUtils/knownFailure';
+import { buildCurrentUser, PERSONAS } from '@/testUtils/personas';
+import { selectAllRowsAndWait, waitForDialogToClose } from '@/testUtils/rtl';
+import type { User } from '@/types/user';
 
 // =============================================================================
 // Module mocks
@@ -296,4 +306,52 @@ describe('Sync Groups page - bulk delete', () => {
       expect(vi.mocked(fetchSyncGroups).mock.calls.length).toBeGreaterThan(initialFetchCount);
     });
   });
+});
+
+// =============================================================================
+// Tests — Bulk delete as a user who is not a super admin
+// =============================================================================
+
+// A display manager given the Sync Group view and edit features. Every other
+// test here runs as a super admin, who passes every feature check.
+const syncEditor = (features: Record<string, boolean> = {}): User =>
+  buildCurrentUser(PERSONAS.displayManager, {
+    settings: mockUser.settings,
+    features: { 'display.syncView': true, 'display.syncModify': true, ...features },
+  });
+
+describe('Sync Groups page - bulk delete as a user who is not a super admin', () => {
+  beforeEach(() => {
+    testQueryClient.clear();
+    vi.clearAllMocks();
+    mockFetchSyncGroups(MULTIPLE_SYNC_GROUPS);
+  });
+
+  test('a user who can edit sync groups gets Delete Selected', async () => {
+    const user = userEvent.setup();
+    renderSyncGroupsPage({ user: syncEditor() });
+
+    await selectAllRowsAndWait(user, 'Sync Group Alpha');
+
+    expect(screen.getByRole('button', { name: /^delete selected$/i })).toBeInTheDocument();
+  });
+
+  // xibo#4086 — open. Delete Selected has no feature check, so a
+  // user without the Sync Group edit feature is offered it, while the row
+  // Delete needs that feature. The server refuses each delete with 403
+  // "Feature not enabled", so nothing is lost, but the user is offered an
+  // action that can only fail.
+  knownFailure(
+    'without the Sync Group edit feature there is no Delete Selected',
+    async () => {
+      const user = userEvent.setup();
+      renderSyncGroupsPage({ user: syncEditor({ 'display.syncModify': false }) });
+
+      await selectAllRowsAndWait(user, 'Sync Group Alpha');
+      // Control: the rows themselves offer this user no Delete.
+      expect(screen.queryByRole('button', { name: /more actions/i })).not.toBeInTheDocument();
+    },
+    () =>
+      expect(screen.queryByRole('button', { name: /^delete selected$/i })).not.toBeInTheDocument(),
+  );
 });

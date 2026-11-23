@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { screen, waitFor } from '@testing-library/react';
@@ -73,12 +75,16 @@ describe('Status Dashboard - summary cards', () => {
 
   // Active Displays is online + offline. The two numbers are deliberately different so
   // that a version showing only "online" (7) or only "offline" (2) would fail.
-  test('the Active Displays card adds online and offline displays together', async () => {
-    mockStatusDashboard(buildStatusDashboardData({ displayStatus: JSON.stringify([7, 2]) }));
-    renderStatusDashboardPage();
+  test(
+    'the Active Displays card adds online and offline displays together',
+    { tags: ['smoke'] },
+    async () => {
+      mockStatusDashboard(buildStatusDashboardData({ displayStatus: JSON.stringify([7, 2]) }));
+      renderStatusDashboardPage();
 
-    await waitFor(() => expect(getStatCardValue('Active Displays')).toHaveTextContent('9'));
-  });
+      await waitFor(() => expect(getStatCardValue('Active Displays')).toHaveTextContent('9'));
+    },
+  );
 
   test('the Library Size card shows the size exactly as the server sent it', async () => {
     mockStatusDashboard(buildStatusDashboardData({ librarySize: '12.3 GiB' }));
@@ -122,16 +128,20 @@ describe('Status Dashboard - loading', () => {
     expect(getStatCardValue('Active Users')).toHaveTextContent(/^$/);
   });
 
-  test('once the data arrives, the loaders go and the values appear', async () => {
-    const resolve = mockStatusDashboardPending();
-    renderStatusDashboardPage();
-    await screen.findAllByText('Loading...');
+  test(
+    'once the data arrives, the loaders go and the values appear',
+    { tags: ['smoke'] },
+    async () => {
+      const resolve = mockStatusDashboardPending();
+      renderStatusDashboardPage();
+      await screen.findAllByText('Loading...');
 
-    resolve(buildStatusDashboardData({ displayStatus: JSON.stringify([3, 2]) }));
+      resolve(buildStatusDashboardData({ displayStatus: JSON.stringify([3, 2]) }));
 
-    await waitFor(() => expect(screen.queryByText('Loading...')).not.toBeInTheDocument());
-    expect(getStatCardValue('Active Displays')).toHaveTextContent('5');
-  });
+      await waitFor(() => expect(screen.queryByText('Loading...')).not.toBeInTheDocument());
+      expect(getStatCardValue('Active Displays')).toHaveTextContent('5');
+    },
+  );
 });
 
 describe('Status Dashboard - error handling', () => {

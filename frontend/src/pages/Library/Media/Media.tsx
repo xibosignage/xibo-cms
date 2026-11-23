@@ -1,29 +1,31 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { useQueryClient } from '@tanstack/react-query';
 import { Search, Folder, Plus, Upload, Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 
 import type { MediaActionsProps, ModalType } from './MediaConfig';
 import {
@@ -181,6 +183,27 @@ export default function Media() {
     handleRefresh,
   });
 
+  // A deep link (?upload=1) opens Add Media.
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    if (!isHydrated || searchParams.get('upload') !== '1') {
+      return;
+    }
+
+    if (canAddToFolder) {
+      setAddModalOpen(true);
+    }
+
+    // Drop only this param so refreshing the page does not reopen the modal.
+    setSearchParams(
+      (prev) => {
+        prev.delete('upload');
+        return prev;
+      },
+      { replace: true },
+    );
+  }, [isHydrated, searchParams, canAddToFolder, setAddModalOpen, setSearchParams]);
+
   const {
     getRootProps: getGlobalRootProps,
     getInputProps: getGlobalInputProps,
@@ -280,16 +303,15 @@ export default function Media() {
     openModal('delete');
   };
 
-  const handleDownload = async (row: Media) => {
-    setDownloadingMediaId(row.mediaId);
-    try {
-      await downloadMedia(row.mediaId, row.fileName);
-      notify.success(t('Download started!'));
-    } catch (error) {
-      console.error('Download failed', error);
-    } finally {
-      setDownloadingMediaId(null);
+  // The browser shows the download's progress; this only blocks repeat clicks for a moment.
+  const handleDownload = (row: Media) => {
+    if (downloadingMediaId === row.mediaId) {
+      return;
     }
+    setDownloadingMediaId(row.mediaId);
+    downloadMedia(row.mediaId, row.fileName || row.storedAs);
+    notify.success(t('Download started!'));
+    setTimeout(() => setDownloadingMediaId((id) => (id === row.mediaId ? null : id)), 2000);
   };
 
   const handlePreviewClick = (row: Media) => {
@@ -445,8 +467,7 @@ export default function Media() {
         if (allItems.length === 1) {
           const item = allItems[0];
           if (item) {
-            await downloadMedia(item.mediaId, item.fileName);
-            notify.success(t('Download started!'));
+            handleDownload(item);
           }
         } else {
           notify.info(

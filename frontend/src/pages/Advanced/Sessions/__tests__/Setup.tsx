@@ -1,3 +1,26 @@
+/*
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
+ *
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
+ */
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -5,8 +28,6 @@ import type { ReactElement } from 'react';
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { vi } from 'vitest';
-
-import type { Session } from '@/types/session';
 
 // --- Mocks ---
 
@@ -29,28 +50,8 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
 }));
 
 // --- Mock Data Generators ---
-export const createMockSession = (overrides?: Partial<Session>): Session => ({
-  userId: Math.floor(Math.random() * 1000),
-  userName: 'john_doe',
-  remoteAddress: '192.168.1.1',
-  userAgent: 'Chrome 120',
-  isExpired: false,
-  isCurrentSession: false,
-  lastAccessed: '2024-01-01T10:00:00Z',
-  expiresAt: '2024-01-02T10:00:00Z',
-  ...overrides,
-});
-
-export const mockSessionsList: Session[] = [
-  createMockSession({ userId: 1, userName: 'alice_admin', expiresAt: '2024-01-02T10:00:01Z' }),
-  createMockSession({
-    userId: 2,
-    userName: 'bob_user',
-    isExpired: true,
-    expiresAt: '2024-01-02T10:00:02Z',
-  }),
-  createMockSession({ userId: 3, userName: 'charlie_guest', expiresAt: '2024-01-02T10:00:03Z' }),
-];
+// Re-exported so the existing specs keep importing them from here.
+export { createMockSession, mockSessionsList } from './fixtures/session';
 
 // --- Render Wrapper ---
 export const createTestQueryClient = (): QueryClient => {

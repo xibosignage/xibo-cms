@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { screen, waitFor, fireEvent, within } from '@testing-library/react';
@@ -141,14 +143,11 @@ describe('DisplayProfile page - filters', () => {
 
     await user.type(screen.getByPlaceholderText('Search display profiles...'), 'Android');
 
-    await waitFor(
-      () => {
-        expect(fetchDisplayProfile).toHaveBeenCalledWith(
-          expect.objectContaining({ displayProfile: 'Android' }),
-        );
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchDisplayProfile).toHaveBeenCalledWith(
+        expect.objectContaining({ displayProfile: 'Android' }),
+      );
+    });
   });
 
   test('typing in the search box resets pagination to page 1', async () => {
@@ -158,14 +157,11 @@ describe('DisplayProfile page - filters', () => {
 
     await user.type(screen.getByPlaceholderText('Search display profiles...'), 'screen');
 
-    await waitFor(
-      () => {
-        expect(fetchDisplayProfile).toHaveBeenCalledWith(
-          expect.objectContaining({ start: 0, displayProfile: 'screen' }),
-        );
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchDisplayProfile).toHaveBeenCalledWith(
+        expect.objectContaining({ start: 0, displayProfile: 'screen' }),
+      );
+    });
   });
 
   test('entering a Name filter updates the query and resets to page 1', async () => {
@@ -177,14 +173,11 @@ describe('DisplayProfile page - filters', () => {
     const nameInput = await screen.findByRole('textbox', { name: /^name$/i });
     await user.type(nameInput, 'Alpha');
 
-    await waitFor(
-      () => {
-        expect(fetchDisplayProfile).toHaveBeenCalledWith(
-          expect.objectContaining({ start: 0, displayProfile: 'Alpha' }),
-        );
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchDisplayProfile).toHaveBeenCalledWith(
+        expect.objectContaining({ start: 0, displayProfile: 'Alpha' }),
+      );
+    });
   });
 
   test('selecting a Type filter updates the query and resets to page 1', async () => {
@@ -196,14 +189,11 @@ describe('DisplayProfile page - filters', () => {
     const typeSelect = await screen.findByRole('combobox', { name: /^type$/i });
     fireEvent.change(typeSelect, { target: { value: 'android' } });
 
-    await waitFor(
-      () => {
-        expect(fetchDisplayProfile).toHaveBeenCalledWith(
-          expect.objectContaining({ start: 0, type: 'android' }),
-        );
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchDisplayProfile).toHaveBeenCalledWith(
+        expect.objectContaining({ start: 0, type: 'android' }),
+      );
+    });
   });
 
   test('clicking Reset clears the Name filter input', async () => {
@@ -219,14 +209,11 @@ describe('DisplayProfile page - filters', () => {
 
     // Wait for the debounced value to reach the query before resetting, so the
     // input is actually synced to filterInputs when Reset fires.
-    await waitFor(
-      () => {
-        expect(fetchDisplayProfile).toHaveBeenCalledWith(
-          expect.objectContaining({ displayProfile: 'Alpha' }),
-        );
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchDisplayProfile).toHaveBeenCalledWith(
+        expect.objectContaining({ displayProfile: 'Alpha' }),
+      );
+    });
 
     await user.click(screen.getByRole('button', { name: /reset/i }));
 
@@ -243,14 +230,11 @@ describe('DisplayProfile page - filters', () => {
     fireEvent.change(typeSelect, { target: { value: 'android' } });
 
     // Wait for the selection to reach the query before resetting.
-    await waitFor(
-      () => {
-        expect(fetchDisplayProfile).toHaveBeenCalledWith(
-          expect.objectContaining({ type: 'android' }),
-        );
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchDisplayProfile).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'android' }),
+      );
+    });
 
     await user.click(screen.getByRole('button', { name: /reset/i }));
 

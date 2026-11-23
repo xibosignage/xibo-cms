@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import path from 'node:path';
@@ -75,7 +77,36 @@ export default defineConfig(({ mode }) => ({
     include: ['**/*.test.{js,jsx,ts,tsx}'],
     testTimeout: 15_000,
     hookTimeout: 15_000,
-    retry: process.env.CI ? 1 : 0,
+    // No retries anywhere, so a flaky test fails in CI instead of passing on its second try
+    retry: 0,
+    // Test tags. A tag missing from this list fails the run (strictTags), so a typo can't silently
+    // drop a test. Names are typed in src/types/vitest-tags.d.ts. Run with --tags-filter=<expr>.
+    tags: [
+      {
+        name: 'smoke',
+        description: "A page's critical path: it renders with data and its main action works",
+      },
+      {
+        name: 'quarantine',
+        description:
+          'Known flaky; npm run test:blocking leaves it out. Issue link and owner in a comment above',
+      },
+    ],
+    // Pre-bundle heavy deps (every date-fns locale) to cut per-file import time.
+    deps: {
+      optimizer: {
+        client: {
+          enabled: true,
+          include: [
+            'react-day-picker',
+            'react-day-picker/locale',
+            'react-day-picker/persian',
+            'date-fns',
+            'date-fns/locale',
+          ],
+        },
+      },
+    },
     alias: {
       'react-i18next': path.resolve(__dirname, '__mocks__/react-i18next.tsx'),
     },

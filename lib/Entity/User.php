@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 namespace Xibo\Entity;
 
@@ -497,6 +499,15 @@ class User implements \JsonSerializable, UserEntityInterface
     }
 
     /**
+     * Is this a reserved user (see UserFactory::setReservedUserIdsResolver)? Never in CE.
+     * @return bool
+     */
+    public function isReserved(): bool
+    {
+        return $this->userFactory !== null && $this->userFactory->isReserved((int)$this->userId);
+    }
+
+    /**
      * Get Option
      * @param string $option
      * @return UserOption
@@ -751,7 +762,8 @@ class User implements \JsonSerializable, UserEntityInterface
             throw new InvalidArgumentException(__('Please enter a valid email address or leave it empty.'), 'email');
 
         try {
-            $user = $this->userFactory->getByName($this->userName);
+            // A reserved user's name is taken too.
+            $user = $this->userFactory->getByName($this->userName, true);
 
             if ($this->userId == null || $this->userId != $user->userId)
                 throw new DuplicateEntityException(__('There is already a user with this name. Please choose another.'));
@@ -787,6 +799,19 @@ class User implements \JsonSerializable, UserEntityInterface
             'saveUserOptions' => true
         ], $options);
 
+        // A reserved user can't be changed, other than its preferences and whether it has seen the welcome wizard.
+        if ($this->userId != 0 && $this->userFactory->isReserved((int)$this->userId)) {
+            foreach (array_keys($this->originalValues) as $property) {
+                if ($property !== 'newUserWizard' && $this->hasPropertyChanged($property)) {
+                    throw new AccessDeniedException(__('This user cannot be changed.'));
+                }
+            }
+
+            if ($options['passwordUpdate']) {
+                throw new AccessDeniedException(__('This user cannot be changed.'));
+            }
+        }
+
         if ($options['validate']) {
             $this->validate();
         }
@@ -804,7 +829,13 @@ class User implements \JsonSerializable, UserEntityInterface
             || $this->hasPropertyChanged('password')
         ) {
             $this->update();
-            $this->audit($this->userId, 'User updated');
+
+            // The password isn't among the changed properties: say when it was set.
+            $changes = $this->getChangedProperties();
+            if ($this->hasPropertyChanged('password')) {
+                $changes['password'] = 'set';
+            }
+            $this->audit($this->userId, 'User updated', count($changes) > 0 ? $changes : null);
         }
 
         // Save user options
@@ -828,6 +859,11 @@ class User implements \JsonSerializable, UserEntityInterface
      */
     public function delete()
     {
+        // A reserved user can't be deleted.
+        if ($this->userFactory->isReserved((int)$this->userId)) {
+            throw new AccessDeniedException(__('This user cannot be deleted.'));
+        }
+
         $this->getLog()->debug(sprintf('Deleting %d', $this->userId));
 
         // We must ensure everything is loaded before we delete
@@ -853,7 +889,7 @@ class User implements \JsonSerializable, UserEntityInterface
 
         $this->getStore()->update('DELETE FROM `user` WHERE userId = :userId', ['userId' => $this->userId]);
 
-        $this->audit($this->userId, 'User deleted', false);
+        $this->audit($this->userId, 'User deleted', ['userName' => $this->userName]);
     }
 
     /**
@@ -1568,7 +1604,12 @@ class User implements \JsonSerializable, UserEntityInterface
             'twoFactorRecoveryCodes' => $this->twoFactorRecoveryCodes
         ];
 
-        $this->getStore()->update($sql, $params);
+        // Audited when it changed anything (the update counts changed rows only).
+        if ($this->getStore()->update($sql, $params) > 0) {
+            $this->getLog()->audit('User', $this->userId, 'Two factor authentication cleared', [
+                'userName' => $this->userName,
+            ]);
+        }
     }
 
     /**

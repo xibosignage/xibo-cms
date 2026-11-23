@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Factory;
@@ -33,6 +35,12 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class UserFactory extends BaseFactory
 {
+    /** @var callable|null Gives the reserved userIds (see setReservedUserIdsResolver), none when null */
+    private $reservedUserIdsResolver = null;
+
+    /** @var bool Whether query() includes reserved users: only for getById(), and getByName() when asked */
+    private bool $includeReserved = false;
+
     public function __construct(
         private readonly ConfigServiceInterface $configService,
         private readonly PermissionFactory      $permissionFactory,
@@ -68,10 +76,11 @@ class UserFactory extends BaseFactory
      */
     public function getById(int $userId, bool $disableUserCheck = true): User
     {
-        $users = $this->query(null, [
+        // Reserved users are found by id, as a signed-in user and as the owner of what they created.
+        $users = $this->withReserved(fn () => $this->query(null, [
             'disableUserCheck' => $disableUserCheck ? 1 : 0,
             'userId' => $userId
-        ]);
+        ]));
 
         if (count($users) <= 0) {
             throw new NotFoundException(__('User not found'));
@@ -100,18 +109,83 @@ class UserFactory extends BaseFactory
     /**
      * Get User by Name
      * @param string $userName
+     * @param bool $includeReserved Find a reserved user too (only to check a name is free)
      * @return User
      * @throws NotFoundException if the user cannot be found
      */
-    public function getByName(string $userName): User
+    public function getByName(string $userName, bool $includeReserved = false): User
     {
-        $users = $this->query(null, array('disableUserCheck' => 1, 'exactUserName' => $userName));
+        $filter = ['disableUserCheck' => 1, 'exactUserName' => $userName];
+        $users = $includeReserved
+            ? $this->withReserved(fn () => $this->query(null, $filter))
+            : $this->query(null, $filter);
 
         if (count($users) <= 0) {
             throw new NotFoundException(__('User not found'));
         }
 
         return $users[0];
+    }
+
+    /**
+     * Get the user a sign-in identifier points at: the username first, then an email only one user has.
+     * Emails are compared trimmed and case-insensitive.
+     * @param string $identifier
+     * @return User
+     * @throws NotFoundException if nothing matches, or the email is shared
+     */
+    public function getByLoginIdentifier(string $identifier): User
+    {
+        $identifier = trim($identifier);
+        if ($identifier === '') {
+            throw new NotFoundException(__('User not found'));
+        }
+
+        // One query finds username and email matches; a hit then loads the user by ID.
+        $rows = $this->getStore()->select('
+            SELECT `userId`, `userName` = :isUserName AS isUserName
+              FROM `user`
+             WHERE `userName` = :userName
+                OR LOWER(TRIM(`email`)) = LOWER(:email)
+        ', [
+            'isUserName' => $identifier,
+            'userName' => $identifier,
+            'email' => $identifier,
+        ]);
+
+        foreach ($rows as $row) {
+            if ((int)$row['isUserName'] === 1) {
+                return $this->getById((int)$row['userId']);
+            }
+        }
+
+        if (count($rows) === 1) {
+            return $this->getById((int)$rows[0]['userId']);
+        }
+
+        throw new NotFoundException(__('User not found'));
+    }
+
+    /**
+     * Does a user other than this one have this email? Compared trimmed and case-insensitive.
+     * @param string $email
+     * @param int|null $userId the user being saved, null for a new user
+     * @return bool
+     */
+    public function isEmailUsedByOtherUser(string $email, ?int $userId): bool
+    {
+        $rows = $this->getStore()->select('
+            SELECT `userId`
+              FROM `user`
+             WHERE LOWER(TRIM(`email`)) = LOWER(:email)
+               AND `userId` <> :userId
+             LIMIT 1
+        ', [
+            'email' => trim($email),
+            'userId' => $userId ?? 0,
+        ]);
+
+        return count($rows) > 0;
     }
 
     /**
@@ -355,6 +429,12 @@ class UserFactory extends BaseFactory
             $params['userGroupIdMembers'] = $parsedFilter->getInt('userGroupIdMembers');
         }
 
+        // Reserved users are left out of every list and lookup, other than by id.
+        $reservedUserIds = $this->includeReserved ? [] : $this->getReservedUserIds();
+        if (count($reservedUserIds) > 0) {
+            $body .= ' AND `user`.userId NOT IN (' . implode(',', $reservedUserIds) . ') ';
+        }
+
         // Sorting
         $allowedColumns = [
             'userId',
@@ -461,8 +541,122 @@ class UserFactory extends BaseFactory
             $params['currentUserId'] = $this->getUser()->userId;
         }
 
+        // Reserved users aren't counted.
+        $reservedUserIds = $this->getReservedUserIds();
+        if (count($reservedUserIds) > 0) {
+            $sql .= (str_contains($sql, 'WHERE') ? ' AND ' : ' WHERE ')
+                . '`user`.userId NOT IN (' . implode(',', $reservedUserIds) . ') ';
+        }
+
         // Run the query
         $results = $this->getStore()->select($sql, $params);
         return intval($results[0]['countOf'] ?? 0);
+    }
+
+    /**
+     * Reserves users, for an extension that needs an account nobody can sign in as or manage (CE reserves none).
+     * The resolver gives the reserved userIds. A reserved user is left out of every user list, lookup and count,
+     * except getById(), and the user and user group controllers refuse to change, delete, assign or sign it in.
+     * @param callable(): int[] $resolver
+     * @return $this
+     */
+    public function setReservedUserIdsResolver(callable $resolver): static
+    {
+        $this->reservedUserIdsResolver = $resolver;
+        return $this;
+    }
+
+    /**
+     * The reserved userIds, none unless an extension reserves some.
+     * @return int[]
+     */
+    public function getReservedUserIds(): array
+    {
+        if ($this->reservedUserIdsResolver === null) {
+            return [];
+        }
+
+        $userIds = [];
+        foreach (($this->reservedUserIdsResolver)() as $userId) {
+            if ((int)$userId > 0) {
+                $userIds[] = (int)$userId;
+            }
+        }
+
+        return $userIds;
+    }
+
+    /**
+     * Is this user reserved?
+     * @param int $userId
+     * @return bool
+     */
+    public function isReserved(int $userId): bool
+    {
+        return $userId > 0 && in_array($userId, $this->getReservedUserIds(), true);
+    }
+
+    /**
+     * Refuses a reserved user as if it didn't exist.
+     * @param int $userId
+     * @throws NotFoundException if the user is reserved
+     */
+    public function assertNotReserved(int $userId): void
+    {
+        if ($this->isReserved($userId)) {
+            throw new NotFoundException(__('User not found'));
+        }
+    }
+
+    /**
+     * Is this group a reserved user's own (user specific) group? Recognised by its link to the reserved user, or by
+     * its name (a user's own group is named after them, and nobody else can take a reserved user's name), so it stays
+     * protected even if the link has gone.
+     * @param int $groupId
+     * @return bool
+     */
+    public function isReservedUserGroup(int $groupId): bool
+    {
+        $reservedUserIds = $this->getReservedUserIds();
+        if (count($reservedUserIds) <= 0) {
+            return false;
+        }
+
+        $results = $this->getStore()->select('
+            SELECT COUNT(*) AS countOf
+              FROM `group`
+             WHERE `group`.groupId = :groupId
+               AND `group`.isUserSpecific = 1
+               AND (
+                   `group`.groupId IN (
+                       SELECT `lkusergroup`.groupId
+                         FROM `lkusergroup`
+                        WHERE `lkusergroup`.userId IN (' . implode(',', $reservedUserIds) . ')
+                   )
+                   OR `group`.`group` IN (
+                       SELECT `user`.userName
+                         FROM `user`
+                        WHERE `user`.userId IN (' . implode(',', $reservedUserIds) . ')
+                   )
+               )
+        ', ['groupId' => $groupId]);
+
+        return intval($results[0]['countOf'] ?? 0) > 0;
+    }
+
+    /**
+     * Runs a lookup that includes reserved users.
+     * @param callable $lookup
+     * @return mixed
+     */
+    private function withReserved(callable $lookup): mixed
+    {
+        $previous = $this->includeReserved;
+        $this->includeReserved = true;
+        try {
+            return $lookup();
+        } finally {
+            $this->includeReserved = $previous;
+        }
     }
 }

@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Dependencies;
@@ -130,7 +132,8 @@ class Factories
                     $c->get('pool'),
                     $c->get('dataSetColumnFactory'),
                     $c->get('permissionFactory'),
-                    $c->get('displayNotifyService')
+                    $c->get('displayNotifyService'),
+                    $c->get('libraryStorageRegistry')
                 );
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
@@ -207,7 +210,7 @@ class Factories
             },
             'fontFactory' => function (ContainerInterface $c) {
                 $repository = new \Xibo\Factory\FontFactory(
-                    $c->get('configService')
+                    $c->get('libraryStorageRegistry')
                 );
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
@@ -233,6 +236,8 @@ class Factories
                     $c->get('folderFactory'),
                     $c->get('fontFactory'),
                     $c->get('widgetDataFactory'),
+                    $c->get('libraryStorageService'),
+                    $c->get('libraryStorageRegistry'),
                 );
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
 
@@ -253,7 +258,9 @@ class Factories
                     $c->get('userFactory'),
                     $c->get('configService'),
                     $c->get('permissionFactory'),
-                    $c->get('playlistFactory')
+                    $c->get('playlistFactory'),
+                    $c->get('libraryStorageService'),
+                    $c->get('libraryStorageRegistry')
                 );
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
@@ -285,7 +292,7 @@ class Factories
             },
             'moduleFactory' => function (ContainerInterface $c) {
                 $repository = new \Xibo\Factory\ModuleFactory(
-                    $c->get('configService')->getSetting('LIBRARY_LOCATION') . 'widget',
+                    $c->get('libraryStorageRegistry'),
                     $c->get('pool'),
                     $c->get('view'),
                     $c->get('configService')
@@ -316,7 +323,8 @@ class Factories
                     $c->get('user'),
                     $c->get('userFactory'),
                     $c->get('userGroupFactory'),
-                    $c->get('displayGroupFactory')
+                    $c->get('displayGroupFactory'),
+                    $c->get('libraryStorageRegistry')
                 );
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
@@ -335,7 +343,8 @@ class Factories
                 $repository = new \Xibo\Factory\PlayerVersionFactory(
                     $c->get('user'),
                     $c->get('userFactory'),
-                    $c->get('configService')
+                    $c->get('configService'),
+                    $c->get('libraryStorageRegistry')
                 );
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
@@ -389,8 +398,8 @@ class Factories
                 $repository = new \Xibo\Factory\SavedReportFactory(
                     $c->get('user'),
                     $c->get('userFactory'),
-                    $c->get('configService'),
-                    $c->get('mediaFactory')
+                    $c->get('mediaFactory'),
+                    $c->get('libraryStorageRegistry')
                 );
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
@@ -514,6 +523,8 @@ class Factories
             'widgetMediaFactory' => function (ContainerInterface $c) {
                 $repository = new \Xibo\Factory\WidgetMediaFactory();
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                $repository->useLibraryStorageService($c->get('libraryStorageService'));
+                $repository->useLibraryStorageRegistry($c->get('libraryStorageRegistry'));
                 return $repository;
             },
             'widgetAudioFactory' => function (ContainerInterface $c) {

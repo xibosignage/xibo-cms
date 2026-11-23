@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 
@@ -38,8 +40,13 @@ use Xibo\Helper\Environment;
 use Xibo\Helper\NullSession;
 use Xibo\Helper\SendFile;
 use Xibo\Helper\Session;
+use Xibo\Middleware\Actions;
 use Xibo\Service\DisplayNotifyService;
+use Xibo\Service\LibraryAsset;
+use Xibo\Service\LibraryStorageServiceInterface;
 use Xibo\Service\MediaService;
+use Xibo\Storage\LibraryFileJournal;
+use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\ControllerNotImplemented;
@@ -54,6 +61,9 @@ use Xibo\Support\Sanitizer\SanitizerInterface;
  */
 class Notification extends Base
 {
+    /** Storage prefix for uploads waiting to be claimed by a notification save. */
+    private const STAGED_PREFIX = '.staged/';
+
     public function __construct(
         private readonly NotificationFactory $notificationFactory,
         private readonly UserNotificationFactory $userNotificationFactory,
@@ -61,6 +71,8 @@ class Notification extends Base
         private readonly UserGroupFactory $userGroupFactory,
         private readonly DisplayNotifyService $displayNotifyService,
         private readonly Session|NullSession $session,
+        private readonly LibraryStorageServiceInterface $attachmentStorageService,
+        private readonly StorageServiceInterface $store,
     ) {
     }
 
@@ -78,9 +90,11 @@ class Notification extends Base
     {
         $notification = $this->userNotificationFactory->getByNotificationId($id);
 
-        // Mark it as read
-        $notification->setRead(Carbon::now()->format('U'));
-        $notification->save();
+        // Mark it as read, unless someone else is making the request as this user
+        if (!$this->isOnBehalfOfUser($request)) {
+            $notification->setRead(Carbon::now()->format('U'));
+            $notification->save();
+        }
 
         return $response
             ->withStatus(200)
@@ -101,9 +115,11 @@ class Notification extends Base
     {
         $notification = $this->userNotificationFactory->getByNotificationId($id);
 
-        // Mark it as read
-        $notification->setRead(Carbon::now()->format('U'));
-        $notification->save();
+        // Mark it as read, unless someone else is making the request as this user
+        if (!$this->isOnBehalfOfUser($request)) {
+            $notification->setRead(Carbon::now()->format('U'));
+            $notification->save();
+        }
 
         return $response
             ->withStatus(200)
@@ -267,6 +283,11 @@ class Notification extends Base
      */
     public function markAsRead(Request $request, Response $response): Response|ResponseInterface
     {
+        // What this user has read is theirs: not changed by someone else making the request as them.
+        if ($this->isOnBehalfOfUser($request)) {
+            return $response->withStatus(204);
+        }
+
         $params = $this->getSanitizer($request->getParams());
         $notificationId = $params->getInt('notificationId');
         $readDt = Carbon::now()->format('U');
@@ -291,12 +312,28 @@ class Notification extends Base
      */
     public function getInterrupt(Request $request, Response $response): Response|ResponseInterface
     {
+        // An interrupt is for this user to see: not shown to someone else making the request as them.
+        if ($this->isOnBehalfOfUser($request)) {
+            return $response->withStatus(200)->withJson([]);
+        }
+
         $notifications = $this->userNotificationFactory->query(
             ['releaseDt ASC'],
             ['audienceId' => $this->getUser()->userId, 'isInterrupt' => 1, 'read' => 0]
         );
 
         return $response->withStatus(200)->withJson($notifications);
+    }
+
+    /**
+     * Is someone other than the signed-in user making this request as its user (an extension marks such a request
+     * with Actions::ON_BEHALF_OF_USER)? Never in CE.
+     * @param Request $request
+     * @return bool
+     */
+    private function isOnBehalfOfUser(Request $request): bool
+    {
+        return $request->getAttribute(Actions::ON_BEHALF_OF_USER) === true;
     }
 
     /**
@@ -360,10 +397,14 @@ class Notification extends Base
         // Make sure the library exists
         MediaService::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
 
+        // Without local files the save may reach another web server, which can't see this one's temp folder.
+        $isStagingInStorage = !$this->attachmentStorageService->hasLocalFiles();
         $options = [
             'userId' => $this->getUser()->userId,
             'controller' => $this,
-            'accept_file_types' => '/\.(jpg|jpeg|png|bmp|gif|zip|pdf)$/i'
+            'accept_file_types' => '/\.(jpg|jpeg|png|bmp|gif|zip|pdf)$/i',
+            'accept_chunks' => $this->attachmentStorageService->hasLocalFiles(),
+            'stage_attachment' => $isStagingInStorage ? $this->stageAttachment(...) : null,
         ];
 
         // Output handled by UploadHandler
@@ -372,7 +413,11 @@ class Notification extends Base
         $this->getLog()->debug('Hand off to Upload Handler with options: ' . json_encode($options));
 
         // Hand off to the Upload Handler provided by jquery-file-upload
-        new AttachmentUploadHandler($libraryFolder . 'temp/', $this->getLog()->getLoggerInterface(), $options);
+        new AttachmentUploadHandler(
+            AttachmentUploadHandler::getUserUploadDir($libraryFolder, (int)$this->getUser()->userId),
+            $this->getLog()->getLoggerInterface(),
+            $options
+        );
 
         // Explicitly set the Content-Type header to application/json
         $response = $response->withHeader('Content-Type', 'application/json');
@@ -558,7 +603,9 @@ class Notification extends Base
         $notification->userId = $this->getUser()->userId;
         $notification->nonusers = $sanitizedParams->getString('nonusers');
 
+        $clearedFilename = null;
         if ($sanitizedParams->getCheckbox('clearAttachment')) {
+            $clearedFilename = $notification->filename;
             $notification->filename = '';
             $notification->originalFileName = '';
         }
@@ -582,6 +629,9 @@ class Notification extends Base
         );
 
         $notification->save();
+
+        // The cleared attachment's file goes once the notification no longer references it.
+        $notification->deleteAttachmentFile($clearedFilename);
 
         $this->handleAttachmentUpload($notification, $sanitizedParams);
 
@@ -624,15 +674,6 @@ class Notification extends Base
 
         $notification->delete();
 
-        // Remove the attachment
-        if (!empty($notification->filename)) {
-            $attachmentLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'attachment/';
-
-            if (file_exists($attachmentLocation . $notification->filename)) {
-                unlink($attachmentLocation . $notification->filename);
-            }
-        }
-
         return $response->withStatus(204);
     }
 
@@ -649,16 +690,37 @@ class Notification extends Base
     {
         $notification = $this->userNotificationFactory->getByNotificationId($id);
 
-        $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'attachment/' . $notification->filename;
+        // An empty key would resolve to the asset folder.
+        if (empty($notification->filename)) {
+            throw new NotFoundException(__('This notification has no attachment'));
+        }
+
+        $sendFileMode = $this->getConfig()->getSetting('SENDFILE_MODE');
+        try {
+            $response = SendFile::download(
+                $response,
+                $this->attachmentStorageService,
+                $notification->filename,
+                'application/octet-stream',
+                SendFile::attachmentDisposition(basename($notification->filename)),
+                fn ($localPath) => SendFile::decorateResponse(
+                    $response,
+                    $sendFileMode,
+                    $localPath,
+                    null,
+                    true,
+                    '/download/' . LibraryAsset::getLocalFolder(LibraryAsset::ATTACHMENT)
+                )
+            );
+        } catch (InvalidArgumentException) {
+            // A key storage refuses, such as a legacy name containing '..', can't be served.
+            throw new NotFoundException(__('This notification has no attachment'));
+        }
 
         // Return the file with PHP
         $this->setNoOutput(true);
 
-        return $this->render($request, SendFile::decorateResponse(
-            $response,
-            $this->getConfig()->getSetting('SENDFILE_MODE'),
-            $fileName
-        ));
+        return $this->render($request, $response);
     }
 
     /**
@@ -764,10 +826,10 @@ class Notification extends Base
     }
 
     /**
-     * Move an uploaded attachment from temp into the attachment folder and persist the filename.
+     * Stores an uploaded attachment under the notification's name and persists the filename.
      * No-ops when no attachedFilename was submitted.
      *
-     * @throws ConfigurationException|InvalidArgumentException
+     * @throws GeneralException
      */
     private function handleAttachmentUpload(NotificationEntity $notification, SanitizerInterface $params): void
     {
@@ -780,32 +842,83 @@ class Notification extends Base
             return;
         }
 
-        $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
-        $saveName = $notification->notificationId . '_' . $attachedFilename;
-        $notification->filename = $saveName;
-        $notification->originalFileName = $attachedFilename;
-
-        $from = $libraryFolder . 'temp/' . $attachedFilename;
-        $to = $libraryFolder . 'attachment/' . $saveName;
-
-        $moved = rename($from, $to);
-
-        if (!$moved) {
-            $this->getLog()->info(
-                'Cannot move file: ' . $from . ' to ' . $to . ', will try and copy/delete instead.'
-            );
-
-            $moved = copy($from, $to);
-
-            if (!@unlink($from)) {
-                $this->getLog()->error('Cannot delete file: ' . $from . ' after copying to ' . $to);
+        $previousFilename = $notification->filename;
+        $stagedKey = null;
+        if (!$this->attachmentStorageService->hasLocalFiles()) {
+            // The upload was staged in storage by this user (see stageAttachment()).
+            $stagedKey = self::stagedKey((int)$this->getUser()->userId, $attachedFilename);
+            if (!$this->attachmentStorageService->exists($stagedKey)) {
+                throw new InvalidArgumentException(
+                    __('The attachment could not be found, please upload it again'),
+                    'attachedFilename'
+                );
             }
         }
 
-        if (!$moved) {
+        // Collapse '..' runs, which LibraryFile::resolve rejects.
+        $saveName = $notification->notificationId . '_' . preg_replace('/\.{2,}/', '.', $attachedFilename);
+
+        // Journalled so a later tidy removes the file if the save fails.
+        $journal = new LibraryFileJournal($this->store, $this->attachmentStorageService, LibraryAsset::ATTACHMENT);
+        try {
+            if ($stagedKey !== null) {
+                $journalId = $journal->recordUpload($saveName);
+                $this->attachmentStorageService->copy($stagedKey, $saveName);
+            } else {
+                $tempPath = AttachmentUploadHandler::getUserUploadDir(
+                    $this->getConfig()->getSetting('LIBRARY_LOCATION'),
+                    (int)$this->getUser()->userId
+                ) . $attachedFilename;
+                $journalId = $journal->storeLocalFile($tempPath, $saveName, clearAfterCommit: false);
+            }
+        } catch (GeneralException $exception) {
+            $this->getLog()->error('Cannot store attachment ' . $attachedFilename . ': ' . $exception->getMessage());
             throw new ConfigurationException(__('Problem moving uploaded file into the Attachment Folder'));
         }
 
+        $notification->filename = $saveName;
+        $notification->originalFileName = $attachedFilename;
         $notification->save();
+        $journal->clearUploadAfterCommit($journalId);
+
+        if ($stagedKey !== null) {
+            $this->store->afterCommit(function () use ($journal, $stagedKey) {
+                try {
+                    $this->attachmentStorageService->delete($stagedKey);
+                    $journal->clearPendingUploadsOf($stagedKey);
+                } catch (GeneralException $exception) {
+                    $this->getLog()->error('Cannot delete staged attachment ' . $stagedKey
+                        . ', a later tidy will: ' . $exception->getMessage());
+                }
+            });
+        }
+
+        // A replaced attachment with a different name would otherwise be left behind.
+        if ($previousFilename !== $saveName) {
+            $notification->deleteAttachmentFile($previousFilename);
+        }
+    }
+
+    /**
+     * Moves an uploaded attachment into storage under this user's staged key, replacing an earlier upload of that name.
+     * @throws GeneralException
+     */
+    private function stageAttachment(string $tempPath, string $name): void
+    {
+        $key = self::stagedKey((int)$this->getUser()->userId, $name);
+
+        // One record per key, kept until the save claims the file, so an earlier abandoned upload's record can't
+        // have the tidy remove this one.
+        $journal = new LibraryFileJournal($this->store, $this->attachmentStorageService, LibraryAsset::ATTACHMENT);
+        $journal->clearPendingUploadsOf($key);
+        $journal->storeLocalFile($tempPath, $key, clearAfterCommit: false);
+    }
+
+    /**
+     * Staged keys include the uploader's id, so a save can only claim its own user's uploads.
+     */
+    private static function stagedKey(int $userId, string $name): string
+    {
+        return self::STAGED_PREFIX . $userId . '_' . $name;
     }
 }

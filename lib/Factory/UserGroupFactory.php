@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 
@@ -36,6 +38,9 @@ class UserGroupFactory extends BaseFactory
 {
     /** @var array */
     private $features = null;
+
+    /** @var array<string, string|\Closure> custom feature titles, merged into $features when it is built */
+    private $customFeatures = [];
 
     /** @var array */
     private $homepages = null;
@@ -330,6 +335,27 @@ class UserGroupFactory extends BaseFactory
         if ($parsedFilter->getInt('isUserSpecific') !== -1) {
             $body .= ' AND isUserSpecific = :isUserSpecific ';
             $params['isUserSpecific'] = $parsedFilter->getInt('isUserSpecific', ['default' => 0]);
+        }
+
+        // A reserved user's own group is left out of every list, other than a lookup by id or exact name.
+        if ($parsedFilter->getInt('groupId') === null && $parsedFilter->getString('exactGroup') == null) {
+            $reservedUserIds = $this->getUserFactory()?->getReservedUserIds() ?? [];
+            if (count($reservedUserIds) > 0) {
+                $body .= ' AND `group`.groupId NOT IN (
+                    SELECT `reservedLink`.groupId
+                      FROM `lkusergroup` `reservedLink`
+                        INNER JOIN `group` `reservedGroup`
+                        ON `reservedGroup`.groupId = `reservedLink`.groupId
+                            AND `reservedGroup`.isUserSpecific = 1
+                     WHERE `reservedLink`.userId IN (' . implode(',', $reservedUserIds) . ')
+                ) ';
+                // Also by name, so it stays out even if its link has gone (see UserFactory::isReservedUserGroup).
+                $body .= ' AND NOT (`group`.isUserSpecific = 1 AND `group`.`group` IN (
+                    SELECT `reservedUser`.userName
+                      FROM `user` `reservedUser`
+                     WHERE `reservedUser`.userId IN (' . implode(',', $reservedUserIds) . ')
+                )) ';
+            }
         }
 
         // Always apply isEveryone=0 unless its been provided otherwise.
@@ -980,6 +1006,10 @@ class UserGroupFactory extends BaseFactory
                     'title' => __('Delete existing Fonts')
                 ]
             ];
+
+            foreach ($this->customFeatures as $feature => $title) {
+                $this->addCustomFeature($feature, $title);
+            }
         }
         return $this->features;
     }
@@ -1042,22 +1072,38 @@ class UserGroupFactory extends BaseFactory
     }
 
     /**
+     * Register a custom feature. Registration is deferred until the feature list is built, so this is safe to call
+     * before the locale is initialised (e.g. from a DI decorator) as long as the title is passed as a closure.
      * @param string $feature
-     * @param string $title
+     * @param string|\Closure $title the title, or a closure returning it (e.g. fn() => __('...'))
      * @return $this
      */
-    public function registerCustomFeature(string $feature, string $title): static
+    public function registerCustomFeature(string $feature, string|\Closure $title): static
     {
-        $this->getFeatures();
+        if ($this->features === null) {
+            if (!array_key_exists($feature, $this->customFeatures)) {
+                $this->customFeatures[$feature] = $title;
+            }
+        } else {
+            $this->addCustomFeature($feature, $title);
+        }
+        return $this;
+    }
 
+    /**
+     * @param string $feature
+     * @param string|\Closure $title
+     * @return void
+     */
+    private function addCustomFeature(string $feature, string|\Closure $title): void
+    {
         if (!array_key_exists($feature, $this->features)) {
             $this->features[$feature] = [
                 'feature' => $feature,
                 'group' => 'custom',
-                'title' => $title
+                'title' => $title instanceof \Closure ? $title() : $title
             ];
         }
-        return $this;
     }
 
     /**

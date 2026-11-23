@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { screen } from '@testing-library/react';
@@ -246,10 +248,12 @@ describe('ScheduleEventModal - Optional tab state after switching daypart back t
   // identical bug - but only the Repeats side has been fixed so far (the
   // Dayparting `onSelect` handler in ScheduleEventModal.tsx clears the
   // recurrence fields, not `draft.reminders`), so this half is still open.
-  // See bugs-found-merged/schedule-modal-stale-repeat-reminder-survives-daypart-switch-to-always.md.
+  // Report 282, open.
   // Kept as test.fails (not test.skip) so a real fix surfaces here immediately.
+  // https://github.com/xibosignage/xibo/issues/4054
   test.fails(
     'the Reminder tab body should not remain rendered once its tab button is hidden',
+    { retry: 0 },
     async () => {
       const user = userEvent.setup();
       await walkToOptionalWithStaleReminder(user);
@@ -260,11 +264,13 @@ describe('ScheduleEventModal - Optional tab state after switching daypart back t
 
   // A reminder configured while on the Custom daypart should not survive
   // switching back to Always - same data-integrity issue as the repeat, but
-  // still unfixed for reminders (see comment above). See
-  // bugs-found-merged/schedule-modal-stale-repeat-reminder-survives-daypart-switch-to-always.md.
+  // still unfixed for reminders (see comment above). Report 282, open: confirmed on a live CMS, where
+  // the Always event is saved with the reminder.
   // Kept as test.fails (not test.skip) so a real fix surfaces here immediately.
+  // https://github.com/xibosignage/xibo/issues/4054
   test.fails(
     'a reminder configured before switching back to Always must not be sent to createEvent',
+    { retry: 0 },
     async () => {
       const user = userEvent.setup();
       await walkToOptionalWithStaleReminder(user);

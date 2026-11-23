@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
@@ -142,19 +144,28 @@ describe('Playlist Dashboard - uploading', () => {
   });
 
   // Payload (rule 1.1): an empty spot is a new upload into this playlist, not a replacement.
-  test('uploading to an empty spot sends the file for this playlist and names no widget', async () => {
-    const user = userEvent.setup();
-    mockUploadOk();
-    await openLobby(user, spots([], 2));
-    const file = makeFile('photo.png');
+  test(
+    'uploading to an empty spot sends the file for this playlist and names no widget',
+    { tags: ['smoke'] },
+    async () => {
+      const user = userEvent.setup();
+      mockUploadOk();
+      await openLobby(user, spots([], 2));
+      const file = makeFile('photo.png');
 
-    await user.upload(getFileInput(getSpot(1)), file);
+      await user.upload(getFileInput(getSpot(1)), file);
 
-    await waitFor(() => expect(uploadSpotMedia).toHaveBeenCalledTimes(1));
-    expect(uploadParams()).toEqual(
-      expect.objectContaining({ file, playlistId: 1, widgetId: undefined, oldMediaId: undefined }),
-    );
-  });
+      await waitFor(() => expect(uploadSpotMedia).toHaveBeenCalledTimes(1));
+      expect(uploadParams()).toEqual(
+        expect.objectContaining({
+          file,
+          playlistId: 1,
+          widgetId: undefined,
+          oldMediaId: undefined,
+        }),
+      );
+    },
+  );
 
   // Three widgets, upload to spot 2: proves the spot index picks the right widget.
   test('uploading to a filled spot replaces that spot’s widget and media, not another’s', async () => {

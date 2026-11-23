@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 namespace Xibo\Service;
 
@@ -25,6 +27,8 @@ use Carbon\Carbon;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Helper\Environment;
 use Xibo\Helper\NatoAlphabet;
+use Xibo\Middleware\CASAuthentication;
+use Xibo\Middleware\SAMLAuthentication;
 use Xibo\Storage\StorageServiceInterface;
 
 /**
@@ -335,10 +339,9 @@ class ConfigService implements ConfigServiceInterface
     }
 
     /**
-     * Loads the theme.
-     * Branding config is read from library/brand/config.json; the web/theme/ folder is no longer required.
+     * Loads the theme, overlaying the brand's names and texts when a brand service is given.
      */
-    public function loadTheme($themeName = null): void
+    public function loadTheme(?BrandServiceInterface $brandService = null): void
     {
         $this->themeLoaded = true;
         $this->themeConfig = [
@@ -353,16 +356,16 @@ class ConfigService implements ConfigServiceInterface
             'themeFolder'    => '',
         ];
 
-        // Overlay brand config from library/brand/config.json.
         // All brand fields are overlaid here so callers only need getThemeConfig().
-        $brandConfig = $this->getBrandConfig();
-        if (!empty($brandConfig['productName'])) {
+        $brandConfig = $brandService?->getConfig() ?? [];
+        if (($brandConfig['productName'] ?? null) !== null) {
             $this->themeConfig['theme_title'] = $brandConfig['productName'];
         }
-        if (!empty($brandConfig['appName'])) {
+        if (($brandConfig['appName'] ?? null) !== null) {
             $this->themeConfig['app_name'] = $brandConfig['appName'];
         }
-        if (!empty($brandConfig['supportUrl'])) {
+        // An empty supportUrl removes the link.
+        if (($brandConfig['supportUrl'] ?? null) !== null) {
             $this->themeConfig['theme_url'] = $brandConfig['supportUrl'];
         }
         // Use !== null (not !empty) so WL can set cmsSourceUrl to "" to suppress the link.
@@ -376,59 +379,6 @@ class ConfigService implements ConfigServiceInterface
         if (($brandConfig['removeLicenceFromLogin'] ?? null) !== null) {
             $this->themeConfig['remove_licence_from_login'] = $brandConfig['removeLicenceFromLogin'];
         }
-    }
-
-    /**
-     * Read branding configuration from library/brand/config.json.
-     * Returns an empty array when the file is absent (Xibo defaults apply).
-     */
-    public function getBrandConfig(): array
-    {
-        $libraryLocation = $this->getSetting('LIBRARY_LOCATION', '');
-        if (empty($libraryLocation)) {
-            return [];
-        }
-        $configFile = rtrim($libraryLocation, '/') . '/brand/config.json';
-        if (!file_exists($configFile)) {
-            return [];
-        }
-        $raw = json_decode(file_get_contents($configFile), true) ?? [];
-
-        // Support both new key names (productName/appName/supportUrl) and the legacy
-        // PHP config keys (theme_title/app_name/theme_url) so existing WL config.json
-        // files produced with old key names keep working during the transition.
-        return [
-            'productName'            => $raw['productName']  ?? $raw['theme_title']    ?? null,
-            'appName'                => $raw['appName']      ?? $raw['app_name']       ?? null,
-            'supportUrl'             => $raw['supportUrl']   ?? $raw['theme_url']      ?? null,
-            'cmsSourceUrl'           => $raw['cmsSourceUrl'] ?? $raw['cms_source_url'] ?? null,
-            'aboutText'              => $raw['aboutText']    ?? null,
-            'removeLicenceFromLogin' => isset($raw['removeLicenceFromLogin'])
-                ? (bool)$raw['removeLicenceFromLogin']
-                : null,
-        ];
-    }
-
-    /**
-     * Resolve which file backs a brand asset, preferring the SVG variant and falling
-     * back to PNG for WL packages that ship a raster logo.
-     */
-    public function getBrandAssetFile(string $base): string
-    {
-        $brandDir = rtrim($this->getSetting('LIBRARY_LOCATION', ''), '/') . '/brand';
-        return file_exists($brandDir . '/' . $base . '.svg') ? $base . '.svg' : $base . '.png';
-    }
-
-    public function getBrandLogoDarkFile(): string
-    {
-        $brandDir = rtrim($this->getSetting('LIBRARY_LOCATION', ''), '/') . '/brand';
-        if (file_exists($brandDir . '/logo-dark.svg')) {
-            return 'logo-dark.svg';
-        }
-        if (file_exists($brandDir . '/logo-dark.png')) {
-            return 'logo-dark.png';
-        }
-        return $this->getBrandAssetFile('logo');
     }
 
     /**
@@ -685,6 +635,32 @@ class ConfigService implements ConfigServiceInterface
 
         return ($this->samlSettings['workflow']['slo'] ?? false) === true
             && !empty($this->samlSettings['idp']['singleLogoutService']['url'] ?? null);
+    }
+
+    /** @inheritDoc */
+    public function isSamlEnabled(): bool
+    {
+        return !empty($this->samlSettings) && $this->authentication instanceof SAMLAuthentication;
+    }
+
+    /** @inheritDoc */
+    public function isCasEnabled(): bool
+    {
+        return !empty($this->casSettings) && $this->authentication instanceof CASAuthentication;
+    }
+
+    /** @inheritDoc */
+    public function isSamlLoginPageShown(): bool
+    {
+        return $this->isSamlEnabled()
+            && filter_var($this->samlSettings['workflow']['showLoginPage'] ?? false, FILTER_VALIDATE_BOOLEAN);
+    }
+
+    /** @inheritDoc */
+    public function isCasLoginPageShown(): bool
+    {
+        return $this->isCasEnabled()
+            && filter_var($this->casSettings['showLoginPage'] ?? false, FILTER_VALIDATE_BOOLEAN);
     }
 
     /**
@@ -958,14 +934,6 @@ class ConfigService implements ConfigServiceInterface
             __('SimpleXML'),
             Environment::checkSimpleXml(),
             __('SimpleXML is used to parse RSS feeds and other XML data sources')
-        );
-
-        $this->testItem(
-            $rows,
-            __('GNUPG'),
-            Environment::checkGnu(),
-            __('checkGnu is used to verify the integrity of Player Software versions uploaded to the CMS'),
-            false
         );
 
         $this->envTested = true;

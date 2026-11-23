@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { screen, waitFor } from '@testing-library/react';
@@ -134,12 +136,9 @@ describe('Users page - search and filters', () => {
 
     await user.type(screen.getByPlaceholderText('Search user...'), 'jbloggs');
 
-    await waitFor(
-      () => {
-        expect(fetchUsers).toHaveBeenCalledWith(expect.objectContaining({ userName: 'jbloggs' }));
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchUsers).toHaveBeenCalledWith(expect.objectContaining({ userName: 'jbloggs' }));
+    });
   });
 
   test('typing in the search box resets to page 1', async () => {
@@ -149,14 +148,11 @@ describe('Users page - search and filters', () => {
 
     await user.type(screen.getByPlaceholderText('Search user...'), 'jbloggs');
 
-    await waitFor(
-      () => {
-        expect(fetchUsers).toHaveBeenCalledWith(
-          expect.objectContaining({ userName: 'jbloggs', start: 0 }),
-        );
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchUsers).toHaveBeenCalledWith(
+        expect.objectContaining({ userName: 'jbloggs', start: 0 }),
+      );
+    });
   });
 
   test('clearing the search restores the unfiltered list', async () => {
@@ -166,22 +162,16 @@ describe('Users page - search and filters', () => {
 
     const search = screen.getByPlaceholderText('Search user...');
     await user.type(search, 'jbloggs');
-    await waitFor(
-      () => {
-        expect(fetchUsers).toHaveBeenCalledWith(expect.objectContaining({ userName: 'jbloggs' }));
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchUsers).toHaveBeenCalledWith(expect.objectContaining({ userName: 'jbloggs' }));
+    });
 
     await user.clear(search);
-    await waitFor(
-      () => {
-        expect(fetchUsers).toHaveBeenCalledWith(
-          expect.not.objectContaining({ userName: expect.anything() }),
-        );
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchUsers).toHaveBeenCalledWith(
+        expect.not.objectContaining({ userName: expect.anything() }),
+      );
+    });
   });
 
   // The search box must start empty on a fresh page load — it should never
@@ -202,14 +192,11 @@ describe('Users page - search and filters', () => {
     const usernameInput = await screen.findByRole('textbox', { name: /^username$/i });
     await user.type(usernameInput, 'bloggs');
 
-    await waitFor(
-      () => {
-        expect(fetchUsers).toHaveBeenCalledWith(
-          expect.objectContaining({ userName: 'bloggs', start: 0 }),
-        );
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchUsers).toHaveBeenCalledWith(
+        expect.objectContaining({ userName: 'bloggs', start: 0 }),
+      );
+    });
   });
 
   test('selecting a User Type filter updates the query and resets to page 1', async () => {
@@ -221,14 +208,11 @@ describe('Users page - search and filters', () => {
     const userTypeSelect = await screen.findByRole('combobox', { name: /^user type$/i });
     await user.selectOptions(userTypeSelect, '1');
 
-    await waitFor(
-      () => {
-        expect(fetchUsers).toHaveBeenCalledWith(
-          expect.objectContaining({ userTypeId: '1', start: 0 }),
-        );
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchUsers).toHaveBeenCalledWith(
+        expect.objectContaining({ userTypeId: '1', start: 0 }),
+      );
+    });
   });
 
   test('selecting a Retired filter updates the query and resets to page 1', async () => {
@@ -240,14 +224,9 @@ describe('Users page - search and filters', () => {
     const retiredSelect = await screen.findByRole('combobox', { name: /^retired$/i });
     await user.selectOptions(retiredSelect, '1');
 
-    await waitFor(
-      () => {
-        expect(fetchUsers).toHaveBeenCalledWith(
-          expect.objectContaining({ retired: '1', start: 0 }),
-        );
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchUsers).toHaveBeenCalledWith(expect.objectContaining({ retired: '1', start: 0 }));
+    });
   });
 
   test('typing in the First Name filter updates the query and resets to page 1', async () => {
@@ -259,14 +238,11 @@ describe('Users page - search and filters', () => {
     const firstNameInput = await screen.findByPlaceholderText('First Name');
     await user.type(firstNameInput, 'Jane');
 
-    await waitFor(
-      () => {
-        expect(fetchUsers).toHaveBeenCalledWith(
-          expect.objectContaining({ firstName: 'Jane', start: 0 }),
-        );
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchUsers).toHaveBeenCalledWith(
+        expect.objectContaining({ firstName: 'Jane', start: 0 }),
+      );
+    });
   });
 
   test('typing in the Last Name filter updates the query and resets to page 1', async () => {
@@ -278,14 +254,11 @@ describe('Users page - search and filters', () => {
     const lastNameInput = await screen.findByPlaceholderText('Last Name');
     await user.type(lastNameInput, 'Bloggs');
 
-    await waitFor(
-      () => {
-        expect(fetchUsers).toHaveBeenCalledWith(
-          expect.objectContaining({ lastName: 'Bloggs', start: 0 }),
-        );
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchUsers).toHaveBeenCalledWith(
+        expect.objectContaining({ lastName: 'Bloggs', start: 0 }),
+      );
+    });
   });
 
   test('clicking Reset clears the filter inputs', async () => {
@@ -299,12 +272,9 @@ describe('Users page - search and filters', () => {
     })) as HTMLInputElement;
     await user.type(usernameInput, 'bloggs');
 
-    await waitFor(
-      () => {
-        expect(fetchUsers).toHaveBeenCalledWith(expect.objectContaining({ userName: 'bloggs' }));
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchUsers).toHaveBeenCalledWith(expect.objectContaining({ userName: 'bloggs' }));
+    });
 
     await user.click(screen.getByRole('button', { name: /reset/i }));
 

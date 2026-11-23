@@ -1,24 +1,27 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
+import { useQuery } from '@tanstack/react-query';
 import {
   BadgeCheck,
   Camera,
@@ -29,9 +32,15 @@ import {
   Wifi,
   XCircle,
 } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 
-import AddDisplayModal from './AddDisplayModal';
+import type { ModalType } from '../DisplaysConfig';
+
+import AddDisplayDock from './AddDisplay/AddDisplayDock';
+import AddDisplayModal from './AddDisplay/AddDisplayModal';
+import { usePendingConnectToast } from './AddDisplay/hooks/usePendingConnect';
 import AssignLayoutModal from './AssignLayoutModal';
 import AssignMediaModal from './AssignMediaModal';
 import CollectNowModal from './CollectNowModal';
@@ -45,19 +54,26 @@ import SetDefaultLayoutModal from './SetDefaultLayoutModal';
 import TransferCmsModal from './TransferCmsModal';
 import TriggerWebhookModal from './TriggerWebhookModal';
 
+import { notify } from '@/components/ui/Notification';
 import EditTagsMultipleModal from '@/components/ui/modals/EditTagsMultipleModal';
 import Modal from '@/components/ui/modals/Modal';
 import MoveModal from '@/components/ui/modals/MoveModal';
 import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
 import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
+import { useUserContext } from '@/context/UserContext';
+import { fetchLicenceUsage } from '@/services/displaysApi';
 import type { MoveCmsData } from '@/services/displaysApi';
 import type { Display, DisplayCommandTarget } from '@/types/display';
+import { hasFeature } from '@/utils/permissions';
 import { mergeEntityTags } from '@/utils/tags';
 
 interface DisplayModalsProps {
+  /** The user can add displays (displays.add). */
+  canAdd?: boolean;
   actions: {
     activeModal: string | null;
+    openModal: (name: ModalType) => void;
     closeModal: () => void;
     handleRefresh: () => Promise<unknown>;
     deleteError: string | null;
@@ -97,6 +113,12 @@ interface DisplayModalsProps {
     confirmBulkSetDefaultLayout: (items: Display[], layoutId: number) => void;
     confirmSendCommand: (items: DisplayCommandTarget[], commandId: number) => void;
     confirmBulkMoveCms: (items: Display[], data: MoveCmsData) => void;
+    /** Set when the customer arrived from a deep link, e.g. a scanned QR code. */
+    addDisplayPrefill?: { code: string; displayName: string } | null;
+    /** Clear the prefill when the Add Display flow ends. */
+    clearAddDisplayPrefill?: () => void;
+    /** Open the newly connected display straight from the Add Display success panel. */
+    manageNewDisplay?: (display: Display) => void;
   };
 }
 
@@ -111,17 +133,95 @@ function ActionError({ error }: { error: string | null }) {
   );
 }
 
-export function DisplayModals({ actions, selection, handlers }: DisplayModalsProps) {
+export function DisplayModals({
+  canAdd = false,
+  actions,
+  selection,
+  handlers,
+}: DisplayModalsProps) {
   const { t } = useTranslation();
 
   const isModalOpen = (name: string) => actions.activeModal === name;
   const display = selection.actionDisplay;
+  const { user } = useUserContext();
+  const canOpenBilling = hasFeature(user, 'billing.manage');
+
+  // Authorising takes a display licence, so check that one is free before the operator confirms.
+  const isAuthorising = isModalOpen('authorise') && display !== null && display.licensed !== 1;
+  const { data: licenceUsage } = useQuery({
+    queryKey: ['displays', 'licenceUsage'],
+    queryFn: fetchLicenceUsage,
+    enabled: isAuthorising,
+    staleTime: 0,
+  });
+  const licenceFull =
+    isAuthorising &&
+    licenceUsage !== undefined &&
+    licenceUsage.maxLicensed !== null &&
+    (licenceUsage.available ?? 0) === 0;
   const bulkItems = selection.bulkActionItems;
+
+  // The Add Display flow can be minimized to a dock while it waits for the Player.
+  const [isAddMinimized, setIsAddMinimized] = useState(false);
+  const [minimizedDisplayName, setMinimizedDisplayName] = useState('');
+
+  const addModalMounted = isModalOpen('add') || isAddMinimized;
+
+  // Opening Add Display while it is minimized (e.g. from the page header) brings the same form back.
+  const showAddDock = isAddMinimized && !isModalOpen('add');
+
+  const handleReopen = () => {
+    setIsAddMinimized(false);
+    actions.openModal('add');
+  };
+
+  // Background toast when the Player connects after the modal is closed. The pending code is kept
+  // per browser, so only check it for users who could have started it.
+  usePendingConnectToast(!addModalMounted && canAdd, handlers.manageNewDisplay, handleReopen);
+
+  const handleMinimize = (displayName: string) => {
+    setMinimizedDisplayName(displayName);
+    setIsAddMinimized(true);
+    actions.closeModal();
+    notify.info(
+      t('Waiting for {{name}} to connect. You will be notified when it does.', {
+        name: displayName || t('your display'),
+      }),
+    );
+  };
+
+  const handleMaximize = () => {
+    setIsAddMinimized(false);
+    actions.openModal('add');
+  };
+
+  const handleAddClose = () => {
+    setIsAddMinimized(false);
+    setMinimizedDisplayName('');
+    handlers.clearAddDisplayPrefill?.();
+    if (actions.activeModal === 'add') {
+      actions.closeModal();
+    }
+  };
 
   return (
     <>
-      {isModalOpen('add') && (
-        <AddDisplayModal onClose={actions.closeModal} onAdded={actions.handleRefresh} />
+      {showAddDock && (
+        <AddDisplayDock
+          displayName={minimizedDisplayName || t('New Display')}
+          onMaximize={handleMaximize}
+        />
+      )}
+      {addModalMounted && (
+        <AddDisplayModal
+          isOpen={isModalOpen('add')}
+          onClose={handleAddClose}
+          onAdded={actions.handleRefresh}
+          prefill={handlers.addDisplayPrefill}
+          onManage={handlers.manageNewDisplay}
+          onMinimize={handleMinimize}
+          onReopen={handleReopen}
+        />
       )}
 
       {isModalOpen('manage') && display && (
@@ -189,7 +289,7 @@ export function DisplayModals({ actions, selection, handlers }: DisplayModalsPro
                   ? t('Yes, Unauthorise')
                   : t('Yes, Authorise'),
               onClick: () => handlers.confirmAuthorise(display),
-              disabled: actions.isActionPending,
+              disabled: actions.isActionPending || licenceFull,
             },
           ]}
           size="md"
@@ -208,6 +308,19 @@ export function DisplayModals({ actions, selection, handlers }: DisplayModalsPro
                 ? t('Are you sure you want to de-authorise this Display?')
                 : t('Are you sure you want to authorise this Display?')}
             </p>
+            {licenceFull && licenceUsage && (
+              <p className="text-center text-sm text-gray-600">
+                {t('Every display licence is in use ({{max}}).', { max: licenceUsage.maxLicensed })}
+                {canOpenBilling && (
+                  <>
+                    {' '}
+                    <Link to="/administration/billing" className="underline">
+                      {t('Add more licences in Billing')}
+                    </Link>
+                  </>
+                )}
+              </p>
+            )}
             <ActionError error={actions.actionError} />
           </div>
         </Modal>

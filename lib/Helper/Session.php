@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 namespace Xibo\Helper;
 
@@ -313,6 +315,21 @@ class Session implements \SessionHandlerInterface
     }
 
     /**
+     * Sets this session's idle lifetime, in place of session.gc_maxlifetime, for the expiry this request writes.
+     *
+     * A session's expiry is stored on its row (written as now + this lifetime) and read() checks the row, so a
+     * different lifetime holds for as long as every request for the session sets it. Call it on each request,
+     * before the session is written. The garbage collection run by this request uses it too.
+     * @param int $seconds
+     */
+    public function setMaxLifetime(int $seconds): void
+    {
+        if ($seconds > 0) {
+            $this->maxLifetime = $seconds;
+        }
+    }
+
+    /**
      * Set this session to expired
      * @param $isExpired
      */
@@ -337,10 +354,29 @@ class Session implements \SessionHandlerInterface
      *
      * Call this only after all session mutations for the request are complete:
      * once the session is closed, further writes to $_SESSION are not persisted.
+     *
+     * @return bool false when the session could not be written (the handler's write failed)
      */
-    public function persist(): void
+    public function persist(): bool
     {
-        session_write_close();
+        return session_write_close();
+    }
+
+    /**
+     * Releases the session's row lock early, so a long request doesn't block the user's other requests.
+     *
+     * Call it before slow work, such as storing an upload, in a request that doesn't change the session. The lock
+     * shares the request's connection, so the request's work so far is committed first, running its after-commit work
+     * rather than losing it when the session closes the connections. Nothing is written to the session, so this
+     * request doesn't refresh its expiry; $_SESSION can still be read. With no active session (API, CLI) it does
+     * nothing.
+     */
+    public static function releaseLock(): void
+    {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            (new PdoStorageService())->commitIfNecessary();
+            session_abort();
+        }
     }
 
     /**
@@ -434,9 +470,8 @@ class Session implements \SessionHandlerInterface
      */
     private function commit(): void
     {
-        if ($this->getDb()->getConnection()->inTransaction()) {
-            $this->getDb()->getConnection()->commit();
-        }
+        // The connection is shared with the request, so its after-commit work runs too.
+        $this->getDb()->commitIfNecessary();
     }
 
     /**

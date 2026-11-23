@@ -1,3 +1,26 @@
+/*
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
+ *
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
+ */
+
 import { screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
@@ -60,6 +83,8 @@ const defaultTableState = {
 describe('Logs Page - Rendering', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // clearAllMocks keeps return values, so reset the user a test may have changed
+    vi.mocked(useUserContext).mockReturnValue({ user: { userTypeId: 2 } } as never);
     vi.mocked(useTableState).mockReturnValue(defaultTableState as never);
     vi.mocked(useLogsData).mockReturnValue(createMockLogsQuery() as never);
   });
@@ -83,17 +108,21 @@ describe('Logs Page - Rendering', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders the DataTable with log rows after Apply Filter is clicked', async () => {
-    const { user } = renderWithProviders(<Logs />);
+  it(
+    'renders the DataTable with log rows after Apply Filter is clicked',
+    { tags: ['smoke'] },
+    async () => {
+      const { user } = renderWithProviders(<Logs />);
 
-    await user.click(screen.getByRole('button', { name: /apply filter/i }));
+      await user.click(screen.getByRole('button', { name: /apply filter/i }));
 
-    await waitFor(() => {
-      expect(screen.getByText('Info log message')).toBeInTheDocument();
-    });
-    expect(screen.getByText('Error log message')).toBeInTheDocument();
-    expect(screen.getByText('Debug log message')).toBeInTheDocument();
-  });
+      await waitFor(() => {
+        expect(screen.getByText('Info log message')).toBeInTheDocument();
+      });
+      expect(screen.getByText('Error log message')).toBeInTheDocument();
+      expect(screen.getByText('Debug log message')).toBeInTheDocument();
+    },
+  );
 
   it('shows an error alert banner when the API call fails', async () => {
     vi.mocked(useLogsData).mockReturnValue(

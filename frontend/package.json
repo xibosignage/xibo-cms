@@ -15,7 +15,10 @@
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:ui": "vitest --ui",
-    "test:ci": "vitest run --coverage"
+    "test:ci": "vitest run --coverage",
+    "test:smoke": "tsx scripts/runTaggedTests.ts smoke",
+    "test:blocking": "vitest run --tags-filter=!quarantine",
+    "test:quarantine": "tsx scripts/runTaggedTests.ts quarantine"
   },
   "dependencies": {
     "@codemirror/lang-javascript": "^6.2.5",
@@ -92,8 +95,8 @@
     "@types/react-dom": "^19.1.7",
     "@types/testing-library__jest-dom": "^5.14.9",
     "@vitejs/plugin-react": "^5.1.2",
-    "@vitest/coverage-v8": "^4.0.18",
-    "@vitest/ui": "^4.0.18",
+    "@vitest/coverage-v8": "^4.1.12",
+    "@vitest/ui": "^4.1.12",
     "autoprefixer": "^10.4.22",
     "babel-plugin-react-compiler": "^1.0.0",
     "baseline-browser-mapping": "^2.9.19",
@@ -117,7 +120,7 @@
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.43.0",
     "vite": "^8.3.5",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.12"
   },
   "engines": {
     "node": ">=22.0.0"

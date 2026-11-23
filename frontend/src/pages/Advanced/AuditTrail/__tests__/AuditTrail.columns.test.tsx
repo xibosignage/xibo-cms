@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { render, screen } from '@testing-library/react';
@@ -90,8 +92,8 @@ describe('getAuditTrailColumns', () => {
     type CellFn = (ctx: { getValue: () => unknown }) => React.ReactNode;
     const cell = logDateCol.cell as CellFn;
 
-    // 1704067200 = 2024-01-01 00:00:00 UTC
-    render(<>{cell({ getValue: () => 1704067200 })}</>);
+    // 1718452800 = 2024-06-15 12:00:00 UTC, still 2024 in every timezone
+    render(<>{cell({ getValue: () => 1718452800 })}</>);
 
     // The formatted date should be non-empty; exact format is locale-dependent
     const dateEl = screen.getByText(/2024/);

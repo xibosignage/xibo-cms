@@ -21,6 +21,9 @@
 # along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+# shellcheck source=docker/lib.sh
+source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+
 if [ "$CMS_DEV_MODE" == "true" ]
 then
   # Print MySQL connection details
@@ -50,32 +53,7 @@ fi
 echo "MySQL started"
 sleep 1
 
-# Write a /root/.my.cnf file
-echo "Configuring MySQL cnf file"
-echo "[client]" > /root/.my.cnf
-echo "host = $MYSQL_HOST" >> /root/.my.cnf
-echo "port = $MYSQL_PORT" >> /root/.my.cnf
-echo "user = $MYSQL_USER" >> /root/.my.cnf
-echo "password = $MYSQL_PASSWORD" >> /root/.my.cnf
-
-if [ ! "$MYSQL_ATTR_SSL_CA" == "none" ]
-then
-  echo "ssl_ca = $MYSQL_ATTR_SSL_CA" >> /root/.my.cnf
-
-  if [ "$MYSQL_ATTR_SSL_VERIFY_SERVER_CERT" == "true" ]
-  then
-    echo "ssl_mode = VERIFY_IDENTITY" >> /root/.my.cnf
-  fi
-else
-  # No CA configured, so we can't verify the server's certificate - don't try to.
-  # Without this, the mysql CLI (MariaDB client 11.x, bundled since the debian:trixie-slim
-  # base image update) refuses to connect at all to MySQL's self-signed default cert, whereas
-  # older client versions connected (encrypted, just unverified) the same way this does.
-  echo "ssl_verify_server_cert = 0" >> /root/.my.cnf
-fi
-
-# Set permissions on the new cnf file.
-chmod 0600 /root/.my.cnf
+write_my_cnf
 
 # Check to see if we have a settings.php file in this container
 # if we don't, then we will need to create one here (it only contains the $_SERVER environment
@@ -113,99 +91,7 @@ chown -R www-data:www-data /var/www/cms/library/certs
 
 # Populate default brand assets (runs in both dev and prod mode).
 # Source is /brand/ — ADD docker/ / in the Dockerfile maps docker/ to the container root.
-#
-# Image assets (svg/png/ico) are safe to refresh automatically when a later CMS release
-# ships improved defaults: on each boot we compare the installed file's hash against a
-# sidecar recorded the last time *we* seeded/refreshed it. A match means nobody has
-# touched it since — the new default is copied over and the sidecar updated. A mismatching
-# sidecar means the file was hand-edited since, so it is left untouched forever. Sidecars
-# live outside the publicly-served /brand alias.
-mkdir -p /var/www/cms/library/brand/layouts
-STOCK_HASH_DIR=/var/www/cms/library/.brand-stock
-mkdir -p "$STOCK_HASH_DIR"
-
-# config.json is our existing WL signal (also used below to gate default layout seeding).
-# A missing sidecar normally means "never seeded by us" — ambiguous between "predates this
-# feature on a plain Xibo install" and "a WL file dropped in directly". config.json lets us
-# tell those apart: on a non-WL install we treat a missing sidecar as the former and bootstrap
-# it into stock-tracking; on a WL install we keep treating it as customised and leave it alone.
-brand_is_wl=false
-if [ -f /var/www/cms/library/brand/config.json ]; then
-  brand_is_wl=true
-fi
-
-# True if $target is absent, still matches its recorded stock hash, or has no sidecar at
-# all on a non-WL install (pre-dates this feature, safe to bootstrap into tracking).
-is_stock_or_absent() {
-  local target="$1" hash_file="$2"
-  [ ! -f "$target" ] && return 0
-  if [ -f "$hash_file" ]; then
-    [ "$(sha256sum "$target" | awk '{print $1}')" == "$(cat "$hash_file")" ]
-    return $?
-  fi
-  [ "$brand_is_wl" = false ]
-}
-
-# Refreshes $target from $source unless is_stock_or_absent says it's been customised,
-# in which case it's left alone and its sidecar is not touched.
-refresh_stock_file() {
-  local target="$1" source="$2" hash_file="$3"
-  is_stock_or_absent "$target" "$hash_file" || return 0
-  cp "$source" "$target"
-  sha256sum "$source" | awk '{print $1}' > "$hash_file"
-}
-
-# Same idea, but for the logo/logo-icon/logo-dark assets which have a WL-providable .png
-# alternative to our stock .svg — every downstream probe prefers .svg over .png when both
-# exist, so we must never seed/refresh our default .svg while a WL .png is present.
-refresh_stock_logo_asset() {
-  local base="$1" hash_file="$2"
-  local png="/var/www/cms/library/brand/$base.png"
-  if [ -f "$png" ]; then
-    return 0
-  fi
-  refresh_stock_file "/var/www/cms/library/brand/$base.svg" "/brand/$base.svg" "$hash_file"
-}
-
-# Snapshot customisation state before we write any stock defaults below, so the
-# logo-dark decision further down isn't affected by the logo refresh we're about to do.
-main_logo_customised=true
-if [ ! -f /var/www/cms/library/brand/logo.png ] \
-    && is_stock_or_absent /var/www/cms/library/brand/logo.svg "$STOCK_HASH_DIR/logo.sha256"; then
-  main_logo_customised=false
-fi
-
-refresh_stock_logo_asset logo "$STOCK_HASH_DIR/logo.sha256"
-refresh_stock_logo_asset logo-icon "$STOCK_HASH_DIR/logo-icon.sha256"
-
-# logo-dark has no WL-providable mechanism yet: only seed/refresh the stock dark variant
-# when the main logo itself is still stock, so a WL/manually-branded logo isn't silently
-# overridden by Xibo's stock dark logo on the login/upgrade/force-change-password screens.
-if [ "$main_logo_customised" = false ]; then
-  refresh_stock_logo_asset logo-dark "$STOCK_HASH_DIR/logo-dark.sha256"
-fi
-
-# Single-file brand images: safe to auto-refresh via the same stock-hash check.
-for f in favicon.ico 192x192.png 512x512.png; do
-  refresh_stock_file "/var/www/cms/library/brand/$f" "/brand/$f" "$STOCK_HASH_DIR/$f.sha256"
-done
-
-# theme.css is expected to stay untouched by default — it's empty out of the box and
-# primarily supplied by WL builds — so keep the simple seed-once-if-absent behaviour
-# rather than the stock-refresh treatment above.
-if [ ! -f /var/www/cms/library/brand/theme.css ]; then
-  cp /brand/theme.css /var/www/cms/library/brand/theme.css
-fi
-
-if [ ! -f "/var/www/cms/library/brand/config.json" ]; then
-  for f in default-layout.zip full-screen.zip l-shape-left.zip l-shape-right.zip; do
-    if [ ! -f "/var/www/cms/library/brand/layouts/$f" ]; then
-      cp "/brand/layouts/$f" "/var/www/cms/library/brand/layouts/$f"
-    fi
-  done
-fi
-chown -R www-data:www-data /var/www/cms/library/brand
-chown -R www-data:www-data "$STOCK_HASH_DIR"
+refresh_brand_files
 
 # Check if there's a database file to import
 if [ -f "/var/www/backup/import.sql" ] && [ "$CMS_DEV_MODE" == "false" ]
@@ -216,19 +102,10 @@ then
   mysql -D $MYSQL_DATABASE -e "SOURCE /var/www/backup/import.sql"
 
   echo "Configuring Database Settings"
-  # Set LIBRARY_LOCATION
-  mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='/var/www/cms/library/', \`userChange\`=0, \`userSee\`=0 WHERE \`setting\`='LIBRARY_LOCATION' LIMIT 1"
-  mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='Apache', \`userChange\`=0, \`userSee\`=0 WHERE \`setting\`='SENDFILE_MODE' LIMIT 1"
+  apply_import_settings
 
   # Set XMR public/private address
   mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='http://$XMR_HOST:8081', \`userChange\`=0, \`userSee\`=0 WHERE \`setting\`='XMR_ADDRESS' LIMIT 1"
-
-  # Configure Maintenance
-  echo "Setting up Maintenance"
-  mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='Protected' WHERE \`setting\`='MAINTENANCE_ENABLED' LIMIT 1"
-
-  MAINTENANCE_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16)
-  mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='$MAINTENANCE_KEY' WHERE \`setting\`='MAINTENANCE_KEY' LIMIT 1"
 
   # Configure Quick Chart
   echo "Setting up Quickchart"
@@ -278,49 +155,13 @@ then
   echo "New install"
 
   echo "Provisioning Database"
-
-  # Create the database if it doesn't exist
-  mysql -e "CREATE DATABASE IF NOT EXISTS $MYSQL_DATABASE;"
-
-  # Populate the database
-  php /var/www/cms/vendor/bin/phinx migrate -c "/var/www/cms/phinx.php"
-
-  CMS_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 8)
-
-  echo "Configuring Database Settings"
-  # Set LIBRARY_LOCATION
-  mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='/var/www/cms/library/', \`userChange\`=0, \`userSee\`=0 WHERE \`setting\`='LIBRARY_LOCATION' LIMIT 1"
-  mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='Apache', \`userChange\`=0, \`userSee\`=0 WHERE \`setting\`='SENDFILE_MODE' LIMIT 1"
-
-  # Set admin username/password
-  mysql -D $MYSQL_DATABASE -e "UPDATE \`user\` SET \`UserName\`='xibo_admin', \`UserPassword\`='5f4dcc3b5aa765d61d8327deb882cf99' WHERE \`UserID\` = 1 LIMIT 1"
-
-  # Set XMR public address
-  mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='tcp://cms.example.org:9505' WHERE \`setting\`='XMR_PUB_ADDRESS' LIMIT 1"
-
-  # Set CMS Key
-  mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='$CMS_KEY' WHERE \`setting\`='SERVER_KEY' LIMIT 1"
-
-  # Configure Maintenance
-  echo "Setting up Maintenance"
-
-  if [ "$CMS_DEV_MODE" == "false" ]
-  then
-    echo "Protected Maintenance"
-    mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='Protected' WHERE \`setting\`='MAINTENANCE_ENABLED' LIMIT 1"
-  fi
-
-  MAINTENANCE_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16)
-  mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='$MAINTENANCE_KEY' WHERE \`setting\`='MAINTENANCE_KEY' LIMIT 1"
+  provision_database 'tcp://cms.example.org:9505'
 fi
 
 if [ "$CMS_DEV_MODE" == "false" ]
 then
     # Import any ca-certificate files that might be needed to use a proxy etc
-    echo "Importing ca-certs"
-    cp -v /var/www/cms/ca-certs/*.pem /usr/local/share/ca-certificates
-    cp -v /var/www/cms/ca-certs/*.crt /usr/local/share/ca-certificates
-    /usr/sbin/update-ca-certificates
+    import_ca_certs
 
     # Configure XMR private API
     echo "Setting up XMR private API"
@@ -351,63 +192,15 @@ then
         echo "export CMS_USE_MEMCACHED=$CMS_USE_MEMCACHED" >> /var/www/maintenance.sh
         echo "export INSTALL_TYPE=$INSTALL_TYPE" >> /var/www/maintenance.sh
         echo "cd /var/www/cms && /usr/bin/php bin/xtr.php" >> /var/www/maintenance.sh
-        chmod 755 /var/www/maintenance.sh
+        # Readable only by root and the cron user (www-data), as it holds credentials.
+        chown root:www-data /var/www/maintenance.sh
+        chmod 750 /var/www/maintenance.sh
 
         echo "* * * * *  www-data   /var/www/maintenance.sh > /dev/null 2>&1 " > /etc/cron.d/cms_maintenance_cron
         echo "" >> /etc/cron.d/cms_maintenance_cron
     fi
 
-    # Configure MSMTP to send emails if required
-    # Config lives in /etc/msmtprc
-
-    # Split CMS_SMTP_SERVER in to CMS_SMTP_SEVER_HOST : PORT
-    host_port=($(echo $CMS_SMTP_SERVER | tr ":" "\n"))
-
-    /bin/sed -i "s/host .*$/host ${host_port[0]}/" /etc/msmtprc
-    /bin/sed -i "s/port .*$/port ${host_port[1]}/" /etc/msmtprc
-
-    if [ -z "$CMS_SMTP_USERNAME" ] || [ "$CMS_SMTP_USERNAME" == "none" ]
-    then
-      # Use no authentication
-      /bin/sed -i "s/^auth .*$/auth off/" /etc/msmtprc
-    else
-      if [ -z "$CMS_SMTP_OAUTH_CLIENT_ID" ] || [ "$CMS_SMTP_OAUTH_CLIENT_ID" == "none" ]
-      then
-        # Use Username/Password
-        /bin/sed -i "s/^auth .*$/auth on/" /etc/msmtprc
-        /bin/sed -i "s/^user .*$/user $CMS_SMTP_USERNAME/" /etc/msmtprc
-        /bin/sed -i "s/^password .*$/password $CMS_SMTP_PASSWORD/" /etc/msmtprc
-      else
-        # Use OAUTH credentials
-        /bin/sed -i "s/^auth .*$/auth oauthbearer/" /etc/msmtprc
-        /bin/sed -i "s/^user .*$/#user/" /etc/msmtprc
-        /bin/sed -i "s/^password .*$/passwordeval \"/usr/bin/oauth2.py --quiet --user=$CMS_SMTP_USERNAME --client_id=$CMS_SMTP_OAUTH_CLIENT_ID --client_secret=$CMS_SMTP_OAUTH_CLIENT_SECRET --refresh_token=$CMS_SMTP_OAUTH_CLIENT_REFRESH\"/" /etc/msmtprc
-      fi
-    fi
-
-    if [ "$CMS_SMTP_USE_TLS" == "YES" ]
-    then
-      /bin/sed -i "s/tls .*$/tls on/" /etc/msmtprc
-    else
-      /bin/sed -i "s/tls .*$/tls off/" /etc/msmtprc
-    fi
-
-    if [ "$CMS_SMTP_USE_STARTTLS" == "YES" ]
-    then
-      /bin/sed -i "s/tls_starttls .*$/tls_starttls on/" /etc/msmtprc
-    else
-      /bin/sed -i "s/tls_starttls .*$/tls_starttls off/" /etc/msmtprc
-    fi
-
-    /bin/sed -i "s/maildomain .*$/maildomain $CMS_SMTP_REWRITE_DOMAIN/" /etc/msmtprc
-    /bin/sed -i "s/domain .*$/domain $CMS_SMTP_HOSTNAME/" /etc/msmtprc
-
-    if [ "$CMS_SMTP_FROM" == "none" ]
-    then
-      /bin/sed -i "s/from .*$/from cms@$CMS_SMTP_REWRITE_DOMAIN/" /etc/msmtprc
-    else
-      /bin/sed -i "s/from .*$/from $CMS_SMTP_FROM/" /etc/msmtprc
-    fi
+    configure_msmtp
 
     mkdir -p /var/www/cms/library/temp
     chown www-data:www-data -R /var/www/cms/library
@@ -415,20 +208,8 @@ then
     chown www-data:www-data -R /var/www/cms/web/userscripts
     chown www-data:www-data -R /var/www/cms/ca-certs
 
-    # If we have a CMS ALIAS environment variable, then configure that in our Apache conf.
-    # this must not be done in DEV mode, as it modifies the .htaccess file, which might then be committed by accident
-    if [ ! "$CMS_ALIAS" == "none" ]
-    then
-        # Replace the web alias only — preserve the /chromeos and /brand aliases
-        echo "Setting up CMS alias"
-        /bin/sed -i \
-          "/Alias.*\/\(chromeos\|brand\)/! s|.*Alias.*$|Alias $CMS_ALIAS /var/www/cms/web|" \
-          /etc/apache2/sites-enabled/000-default.conf
-
-        echo "Settings up htaccess"
-        /bin/cp /tmp/.htaccess /var/www/cms/web/.htaccess
-        /bin/sed -i "s|REPLACE_ME|$CMS_ALIAS|" /var/www/cms/web/.htaccess
-    fi
+    # Not in DEV mode, as it modifies the .htaccess file, which might then be committed by accident.
+    configure_cms_alias
 
     if [ ! -e /var/www/cms/custom/settings-custom.php ]
     then
@@ -456,50 +237,8 @@ then
   mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='0', userChange=0 WHERE \`setting\`='PHONE_HOME' LIMIT 1"
 fi
 
-echo "Configure PHP"
-
-# Configure PHP
-sed -i "s/session.gc_maxlifetime = .*$/session.gc_maxlifetime = $CMS_PHP_SESSION_GC_MAXLIFETIME/" /etc/php/8.4/apache2/php.ini
-sed -i "s/post_max_size = .*$/post_max_size = $CMS_PHP_POST_MAX_SIZE/" /etc/php/8.4/apache2/php.ini
-sed -i "s/upload_max_filesize = .*$/upload_max_filesize = $CMS_PHP_UPLOAD_MAX_FILESIZE/" /etc/php/8.4/apache2/php.ini
-sed -i "s/max_execution_time = .*$/max_execution_time = $CMS_PHP_MAX_EXECUTION_TIME/" /etc/php/8.4/apache2/php.ini
-sed -i "s/memory_limit = .*$/memory_limit = $CMS_PHP_MEMORY_LIMIT/" /etc/php/8.4/apache2/php.ini
-sed -i "s/session.cookie_httponly =.*$/session.cookie_httponly = $CMS_PHP_COOKIE_HTTP_ONLY/" /etc/php/8.4/apache2/php.ini
-sed -i "s/session.cookie_samesite =.*$/session.cookie_samesite = $CMS_PHP_COOKIE_SAMESITE/" /etc/php/8.4/apache2/php.ini
-sed -i "s/;session.cookie_secure =.*$/session.cookie_secure = $CMS_PHP_COOKIE_SECURE/" /etc/php/8.4/apache2/php.ini
-sed -i "s/session.gc_maxlifetime = .*$/session.gc_maxlifetime = $CMS_PHP_SESSION_GC_MAXLIFETIME/" /etc/php/8.4/cli/php.ini
-sed -i "s/post_max_size = .*$/post_max_size = $CMS_PHP_POST_MAX_SIZE/" /etc/php/8.4/cli/php.ini
-sed -i "s/upload_max_filesize = .*$/upload_max_filesize = $CMS_PHP_UPLOAD_MAX_FILESIZE/" /etc/php/8.4/cli/php.ini
-sed -i "s/max_execution_time = .*$/max_execution_time = $CMS_PHP_CLI_MAX_EXECUTION_TIME/" /etc/php/8.4/cli/php.ini
-sed -i "s/memory_limit = .*$/memory_limit = $CMS_PHP_CLI_MEMORY_LIMIT/" /etc/php/8.4/cli/php.ini
-sed -i "s/session.cookie_httponly =.*$/session.cookie_httponly = $CMS_PHP_COOKIE_HTTP_ONLY/" /etc/php/8.4/cli/php.ini
-sed -i "s/session.cookie_samesite =.*$/session.cookie_samesite = $CMS_PHP_COOKIE_SAMESITE/" /etc/php/8.4/cli/php.ini
-sed -i "s/;session.cookie_secure =.*$/session.cookie_secure = $CMS_PHP_COOKIE_SECURE/" /etc/php/8.4/cli/php.ini
-
-echo "Configure Apache"
-
-# Configure Apache TimeOut
-sed -i "s/\bTimeout\b .*$/Timeout $CMS_APACHE_TIMEOUT/" /etc/apache2/apache2.conf
-
-# Configure Indexes
-if [ "$CMS_APACHE_OPTIONS_INDEXES" == "true" ]
-then
-  sed -i "s/\-Indexes/\+Indexes/" /etc/apache2/sites-enabled/000-default.conf
-fi
-
-# Configure Apache ServerTokens
-if [ "$CMS_APACHE_SERVER_TOKENS" == "Prod" ]
-then
-  sed -i "s/ServerTokens.*$/ServerTokens Prod/" /etc/apache2/sites-enabled/000-default.conf
-fi
-
-# Configure Apache logging
-if [ "$CMS_APACHE_LOG_REQUEST_TIME" == "true" ]
-then
-  sed -i '/combined/s/^/#/' /etc/apache2/sites-enabled/000-default.conf
-else
-  sed -i '/requesttime/s/^/#/' /etc/apache2/sites-enabled/000-default.conf
-fi
+configure_php
+configure_apache
 
 # Run CRON in Production mode
 if [ "$CMS_DEV_MODE" == "false" ]

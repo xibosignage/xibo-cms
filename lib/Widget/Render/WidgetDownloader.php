@@ -1,36 +1,44 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Widget\Render;
 
-use GuzzleHttp\Psr7\LimitStream;
-use GuzzleHttp\Psr7\Stream;
 use Intervention\Image\ImageManager;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Media;
+use Xibo\Helper\ByteRange;
+use Xibo\Helper\CacheableUrlWindow;
 use Xibo\Helper\HttpCacheProvider;
+use Xibo\Helper\LibraryFile;
+use Xibo\Helper\SendFile;
+use Xibo\Service\LibraryStorageServiceInterface;
+use Xibo\Storage\DownloadUrlUnavailableException;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
@@ -47,11 +55,13 @@ class WidgetDownloader
      * @param string $libraryLocation Library location
      * @param string $sendFileMode Send file mode
      * @param int $resizeLimit CMS resize limit
+     * @param LibraryStorageServiceInterface $libraryStorageService
      */
     public function __construct(
         private readonly string $libraryLocation,
         private readonly string $sendFileMode,
-        private readonly int $resizeLimit
+        private readonly int $resizeLimit,
+        private readonly LibraryStorageServiceInterface $libraryStorageService
     ) {
     }
 
@@ -72,37 +82,34 @@ class WidgetDownloader
      * @param \Slim\Http\Response $response
      * @param string|null $contentType An optional content type, if provided the attachment is ignored
      * @param string|null $attachment An optional attachment, defaults to the stored file name (storedAs)
+     * @param int|null $expiresAt when a redirect's URL expires, or null for the default
      * @return Response|ResponseInterface
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function download(
         Media $media,
         Request $request,
         Response $response,
         ?string $contentType = null,
-        ?string $attachment = null
+        ?string $attachment = null,
+        ?int $expiresAt = null
     ): Response|ResponseInterface {
         $this->logger->debug('widgetDownloader::download: Download for mediaId ' . $media->mediaId);
 
-        // The file path
-        $libraryPath = $this->libraryLocation . $media->storedAs;
+        $key = $media->storedAs;
 
-        $this->logger->debug('widgetDownloader::download: ' . $libraryPath . ', ' . $contentType);
+        $this->logger->debug('widgetDownloader::download: ' . $key . ', ' . $contentType);
 
-        if (!file_exists($libraryPath)) {
+        try {
+            $fileSize = $this->libraryStorageService->size($key);
+        } catch (NotFoundException) {
             $this->logger->error('widgetDownloader::download: Library file missing for mediaId '
-                . $media->mediaId . ' at ' . $libraryPath);
+                . $media->mediaId . ' at ' . $key);
             throw new NotFoundException(__('The requested media file could not be found in the library.'));
         }
 
         // Set some headers
         $headers = [];
-        $fileSize = filesize($libraryPath);
-        $headers['Content-Length'] = $fileSize;
-
-        // Issue some caching headers - these apply whether we're serving a real content type
-        // (e.g. streaming playback) or forcing an attachment download.
-        $response = HttpCacheProvider::withEtag($response, $media->md5);
-        $response = HttpCacheProvider::withExpires($response, '+1 week');
 
         // If we have been given a content type, then serve that to the browser.
         if ($contentType !== null) {
@@ -114,13 +121,33 @@ class WidgetDownloader
 
             $headers['Content-Type'] = 'application/octet-stream';
             $headers['Content-Transfer-Encoding'] = 'Binary';
-            $headers['Content-disposition'] = 'attachment; filename="' . $attachmentName . '"';
+            $headers['Content-disposition'] = SendFile::attachmentDisposition($attachmentName);
         }
 
-        // Output the file
+        $hasLocalFiles = $this->libraryStorageService->hasLocalFiles();
+        if (!$hasLocalFiles) {
+            // Storage serves the file, including Range requests, with this type and disposition.
+            $this->logger->debug('download: redirecting to library storage for mediaId ' . $media->mediaId);
+            return SendFile::redirectToStorage(
+                $response,
+                $this->libraryStorageService,
+                $key,
+                $headers['Content-Type'],
+                $headers['Content-disposition'] ?? 'inline',
+                $expiresAt
+            );
+        }
+
+        $headers['Content-Length'] = $fileSize;
+
+        // Issue some caching headers - these apply whether we're serving a real content type
+        // (e.g. streaming playback) or forcing an attachment download.
+        $response = HttpCacheProvider::withEtag($response, $media->md5);
+        $response = HttpCacheProvider::withExpires($response, '+1 week');
+
         if ($this->sendFileMode === 'Apache') {
             // Send via Apache X-Sendfile header?
-            $headers['X-Sendfile'] = $libraryPath;
+            $headers['X-Sendfile'] = $this->libraryLocation . $key;
         } else if ($this->sendFileMode === 'Nginx') {
             // Send via Nginx X-Accel-Redirect?
             $headers['X-Accel-Redirect'] = '/download/' . $media->storedAs;
@@ -128,35 +155,37 @@ class WidgetDownloader
 
         // Should we output the file via the application stack, or directly by reading the file.
         if ($this->sendFileMode == 'Off') {
-            // Return the file with PHP
-            $this->logger->debug('download: Returning Stream with response body, sendfile off.');
-
-            $stream = new Stream(fopen($libraryPath, 'r'));
-            $start = 0;
-            $end = $fileSize - 1;
+            $this->logger->debug('download: Returning Stream with response body, sendfile not used.');
 
             $headers['Accept-Ranges'] = 'bytes';
 
             $rangeHeader = $request->getHeaderLine('Range');
-            if ($rangeHeader !== '') {
+            $range = ByteRange::parse($rangeHeader, $fileSize);
+            if ($range === false) {
+                return $response
+                    ->withStatus(416)
+                    ->withHeader('Content-Range', 'bytes */' . $fileSize);
+            }
+
+            if ($range !== null) {
                 $this->logger->debug('download: Handling Range request, header: ' . $rangeHeader);
 
-                if (preg_match('/bytes=(\d+)-(\d*)/', $rangeHeader, $matches)) {
-                    $start = (int) $matches[1];
-                    $end = $matches[2] !== '' ? (int) $matches[2] : $end;
-                    if ($start > $end || $end >= $fileSize) {
-                        return $response
-                            ->withStatus(416)
-                            ->withHeader('Content-Range', 'bytes */' . $fileSize);
-                    }
-                }
+                [$start, $end] = $range;
                 $headers['Content-Range'] = 'bytes ' . $start . '-' . $end . '/' . $fileSize;
                 $headers['Content-Length'] = $end - $start + 1;
-                $response = $response
-                    ->withBody(new LimitStream($stream, $end - $start + 1, $start))
-                    ->withStatus(206);
+
+                try {
+                    // Only the requested bytes are read, incrementally.
+                    $body = $this->libraryStorageService->readRange($key, $start, $end - $start + 1);
+                } catch (GeneralException $exception) {
+                    $this->logger->error('download: problem reading Range for mediaId '
+                        . $media->mediaId . '. ' . $exception->getMessage());
+                    throw $exception;
+                }
+
+                $response = $response->withBody($body)->withStatus(206);
             } else {
-                $response = $response->withBody($stream);
+                $response = $response->withBody($this->libraryStorageService->readStream($key));
             }
         } else {
             $this->logger->debug('Using sendfile to return the file, only output headers.');
@@ -174,78 +203,69 @@ class WidgetDownloader
      * Download a thumbnail for the given media
      * @param \Xibo\Entity\Media $media
      * @param \Slim\Http\Response $response
+     * @param PoolInterface $lockPool a missing thumbnail is made under a lock from this pool
      * @param string|null $errorThumb
      * @return \Slim\Http\Response
      */
     public function thumbnail(
         Media $media,
         Response $response,
+        PoolInterface $lockPool,
         ?string $errorThumb = null
     ): Response {
-        // Our convention is to upload media covers in {mediaId}_{mediaType}cover.png
-        // and then thumbnails in tn_{mediaId}_{mediaType}cover.png
-        // unless we are an image module, which is its own image, and would then have a thumbnail in
-        // tn_{mediaId}_{mediaType}cover.png
-        // This single cached thumbnail is shared by the library table view (shown small) and the
-        // gallery view (shown larger) - sized for the gallery, downscaled by the browser for the table.
+        // One stored thumbnail serves the library table view (shown small) and the gallery view (shown larger).
         try {
-            $width = 320;
-            $height = 320;
-
-            if ($media->mediaType === 'image') {
-                $filePath = $this->libraryLocation . $media->storedAs;
-                $thumbnailFilePath = $this->libraryLocation . 'tn_' . $media->storedAs;
-            } else {
-                $filePath = $this->libraryLocation . $media->mediaId . '_'
-                    . $media->mediaType . 'cover.png';
-                $thumbnailFilePath = $this->libraryLocation . 'tn_' . $media->mediaId . '_'
-                    . $media->mediaType . 'cover.png';
-
-                // A video cover might not exist
-                if (!file_exists($filePath)) {
-                    throw new NotFoundException();
-                }
+            // Only an image is made on demand; others would need their whole file downloaded.
+            if ($media->thumbnailVersion === null && $media->mediaType === 'image') {
+                $this->fillThumbnail($media, $lockPool);
             }
 
-            // Does the thumbnail exist already?
-            $manager = ImageManager::gd();
-            $img = null;
-            $regenerate = true;
-            if (file_exists($thumbnailFilePath)) {
-                $img = $manager->read($thumbnailFilePath);
-                if ($img->width() === $width || $img->height() === $height) {
-                    // Correct cache
-                    $regenerate = false;
-                }
+            $key = $media->getThumbnailKey();
+            if ($key === null) {
+                throw new NotFoundException('No thumbnail stored for media ' . $media->mediaId);
+            }
+
+            // Media waiting to be copied keeps its thumbnail in the local library until it's moved.
+            $storage = $media->getLocalThumbnailStorage() ?? $this->libraryStorageService;
+            if (!$storage->hasLocalFiles()) {
+                return SendFile::redirectToStorage(
+                    $response,
+                    $storage,
+                    $key,
+                    $media->getThumbnailContentType(),
+                    'inline',
+                    null,
+                    CacheableUrlWindow::start(time()),
+                    CacheableUrlWindow::cacheControl()
+                );
+            }
+
+            try {
+                $stream = $storage->readStream($key);
+            } catch (NotFoundException) {
+                $this->logger->error('thumbnail: ' . $key . ' is missing, making it again.');
+                $this->fillThumbnail($media, $lockPool, $media->thumbnailVersion);
+                $key = $media->getThumbnailKey()
+                    ?? throw new NotFoundException('No thumbnail stored for media ' . $media->mediaId);
+                $stream = ($media->getLocalThumbnailStorage() ?? $this->libraryStorageService)->readStream($key);
+            }
+
+            $response = HttpCacheProvider::withEtag($response, $media->thumbnailVersion)
+                ->withHeader('Content-Type', $media->getThumbnailContentType())
+                ->withBody($stream);
+        } catch (DownloadUrlUnavailableException $exception) {
+            // Answered with a 503, so the browser tries again.
+            throw $exception;
+        } catch (NotFoundException $exception) {
+            // A video with no cover yet is expected, so not an error.
+            $this->logger->debug('thumbnail: no source. ' . $exception->getMessage());
+            if ($errorThumb !== null) {
+                $img = ImageManager::gd()->read($errorThumb);
+                $response->write($img->encode());
                 $response = $response->withHeader('Content-Type', $img->origin()->mediaType());
             }
-
-            if ($regenerate) {
-                // Check that our source image is not too large
-                $imageInfo = getimagesize($filePath);
-
-                // Make sure none of the sides are greater than allowed
-                if ($this->resizeLimit > 0
-                    && ($imageInfo[0] > $this->resizeLimit || $imageInfo[1] > $this->resizeLimit)
-                ) {
-                    throw new InvalidArgumentException(__('Image too large'));
-                }
-
-                // Get the full image and make a thumbnail
-                $img = $manager->read($filePath);
-                // Original resize() call used aspectRatio() only (no upsize() constraint), which in
-                // Intervention v2 allowed enlarging beyond the source size — scale() matches that.
-                $img->scale($width, $height);
-                $img->save($thumbnailFilePath);
-                $response = $response->withHeader('Content-Type', $img->origin()->mediaType());
-            }
-
-            // Output Etag
-            $response = HttpCacheProvider::withEtag($response, md5_file($thumbnailFilePath));
-
-            $response->write($img->encode());
-        } catch (\Exception) {
-            $this->logger->debug('thumbnail: exception raised.');
+        } catch (\Exception $exception) {
+            $this->logger->error('thumbnail: exception raised. ' . $exception->getMessage());
 
             if ($errorThumb !== null) {
                 $img = ImageManager::gd()->read($errorThumb);
@@ -257,6 +277,52 @@ class WidgetDownloader
         }
 
         return $response;
+    }
+
+    /**
+     * @throws GeneralException if it isn't made, including while another request is making it
+     */
+    private function fillThumbnail(Media $media, PoolInterface $lockPool, ?string $staleVersion = null): void
+    {
+        if (!$media->fillThumbnail($lockPool, $staleVersion)) {
+            throw new GeneralException('Thumbnail for media ' . $media->mediaId . ' is being made elsewhere.');
+        }
+    }
+
+    /**
+     * A local copy of $key for image previews, cached as tn_src_{key}_{modified time}.
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    private function getCachedPreviewSource(string $key): string
+    {
+        $prefix = Media::getPreviewSourceCachePrefix($key);
+        $cachePath = LibraryFile::resolve(
+            $this->libraryLocation,
+            $prefix . $this->libraryStorageService->lastModified($key)
+        );
+
+        if (file_exists($cachePath)) {
+            // Marks the copy as in use, as unused copies are removed after a week.
+            @touch($cachePath);
+            return $cachePath;
+        }
+
+        $tempCopyPath = $this->libraryStorageService->downloadToTemp($key);
+        try {
+            // Copied under a unique name first, so no request reads a half-written file.
+            $partPath = $cachePath . '.' . bin2hex(random_bytes(4)) . '.part';
+            if (!@copy($tempCopyPath, $partPath) || !@rename($partPath, $cachePath)) {
+                @unlink($partPath);
+                throw new GeneralException('Problem caching the preview source for: ' . $key);
+            }
+        } finally {
+            $this->libraryStorageService->releaseTemp($tempCopyPath);
+        }
+
+        // Earlier versions of the file.
+        Media::deleteCachedVersions($this->libraryLocation, $prefix, $cachePath);
+
+        return $cachePath;
     }
 
     /**
@@ -277,12 +343,22 @@ class WidgetDownloader
         // Image previews call for dynamically generated images as various sizes
         // for example a background image will stretch to the entire region
         // an image widget may be aspect, fit or scale
+        $tempCopyPath = null;
         try {
-            $filePath = $this->libraryLocation . $filePath;
+            $key = $filePath;
 
-            // Does it exist?
-            if (!file_exists($filePath)) {
-                throw new NotFoundException(__('File not found'));
+            if ($this->libraryStorageService->hasLocalFiles()) {
+                // Does it exist?
+                if (!$this->libraryStorageService->exists($key)) {
+                    throw new NotFoundException(__('File not found'));
+                }
+
+                // The library file itself.
+                $filePath = $this->libraryStorageService->downloadToTemp($key);
+                $tempCopyPath = $filePath;
+            } else {
+                // A cached local copy, as previews are requested at many sizes.
+                $filePath = $this->getCachedPreviewSource($key);
             }
 
             // Check that our source image is not too large
@@ -314,6 +390,10 @@ class WidgetDownloader
 
             // Does the thumbnail exist already?
             $img = ImageManager::gd()->read($filePath);
+            if ($tempCopyPath !== null) {
+                $this->libraryStorageService->releaseTemp($tempCopyPath);
+                $tempCopyPath = null;
+            }
 
             // Output a specific width/height
             if ($width > 0 && $height > 0) {
@@ -337,13 +417,22 @@ class WidgetDownloader
 
             $response = $response->withHeader('Content-Type', $img->origin()->mediaType());
         } catch (\Exception $e) {
+            if ($e instanceof NotFoundException) {
+                $this->logger->debug('imagePreview: not found. ' . $e->getMessage());
+            } else {
+                $this->logger->error('imagePreview: exception raised. ' . $e->getMessage());
+            }
+
             if ($errorThumb !== null) {
                 $img = ImageManager::gd()->read($errorThumb);
                 $response->write($img->encode());
                 $response = $response->withHeader('Content-Type', $img->origin()->mediaType());
             } else {
-                $this->logger->error('Cannot parse image: ' . $e->getMessage());
                 throw new InvalidArgumentException(__('Cannot parse image.'), 'storedAs');
+            }
+        } finally {
+            if ($tempCopyPath !== null) {
+                $this->libraryStorageService->releaseTemp($tempCopyPath);
             }
         }
 

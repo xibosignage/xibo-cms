@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { useQueryClient } from '@tanstack/react-query';
@@ -46,6 +48,7 @@ import QueryStatusBanner from '@/components/ui/QueryStatusBanner';
 import TabNav from '@/components/ui/TabNav';
 import type { TabNavItem } from '@/components/ui/TabNav';
 import { useUserContext } from '@/context/UserContext';
+import { isServiceShown, useServiceVisibility } from '@/hooks/useCmsVisibility';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { reloadAppLanguage } from '@/lib/i18n';
 import { updateSettings } from '@/services/settingsApi';
@@ -55,6 +58,10 @@ export default function Settings() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const adminTabs = useFilteredTabs('administration');
+  const getServiceVisibility = useServiceVisibility();
+  const settingsTabs = SETTINGS_TABS.filter((tab) =>
+    isServiceShown(getServiceVisibility, tab.service),
+  );
   const { updateUser } = useUserContext();
 
   const { data, isLoading, isError, isPaused, error: queryError } = useSettingsData();
@@ -66,12 +73,17 @@ export default function Settings() {
       : t('Failed to load settings')
     : '';
 
-  const [activeTab, setActiveTab] = useState('Configuration');
+  const [selectedTab, setSelectedTab] = useState('Configuration');
+  // Back to Configuration when the selected tab is hidden, e.g. once the licence has loaded.
+  const activeTab = settingsTabs.some((tab) => tab.labelKey === selectedTab)
+    ? selectedTab
+    : 'Configuration';
+  const activeTabHasOwnSave = SETTINGS_TABS.find((tab) => tab.labelKey === activeTab)?.hasOwnSave;
   const [isPending, startTransition] = useTransition();
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const handleTabClick = (tab: TabNavItem) => {
-    setActiveTab(tab.labelKey);
+    setSelectedTab(tab.labelKey);
   };
 
   const handleSave = () => {
@@ -118,6 +130,7 @@ export default function Settings() {
     },
     elevateLogUntil: data?.elevateLogUntil ?? null,
     phoneticKey: data?.phoneticKey ?? '',
+    hasLocalLibrary: data?.hasLocalLibrary ?? true,
   };
 
   return (
@@ -128,7 +141,7 @@ export default function Settings() {
         </div>
         <div className="flex-1 flex rounded-lg border border-gray-200 overflow-hidden">
           <div className="bg-white px-5 py-2 border-gray-200 flex min-w-35 flex-col">
-            {SETTINGS_TABS.map((tab) => (
+            {settingsTabs.map((tab) => (
               <button
                 type="button"
                 className={twMerge(
@@ -168,27 +181,29 @@ export default function Settings() {
                 {activeTab === 'Users' && <UsersTab {...tabProps} />}
               </div>
             )}
-            <div className="p-5 bg-white flex items-center justify-between border-t border-gray-100">
-              {saveError ? (
-                <div
-                  className="bg-red-50 border border-red-200 text-sm text-red-800 rounded-lg p-3 flex items-center gap-3"
-                  role="alert"
-                >
-                  <CircleX size={18} className="shrink-0" />
-                  <span className="font-semibold">{saveError}</span>
+            {!activeTabHasOwnSave && (
+              <div className="p-5 bg-white flex items-center justify-between border-t border-gray-100">
+                {saveError ? (
+                  <div
+                    className="bg-red-50 border border-red-200 text-sm text-red-800 rounded-lg p-3 flex items-center gap-3"
+                    role="alert"
+                  >
+                    <CircleX size={18} className="shrink-0" />
+                    <span className="font-semibold">{saveError}</span>
+                  </div>
+                ) : (
+                  <div />
+                )}
+                <div className="flex gap-x-3">
+                  <Button variant="secondary" onClick={resetForm} disabled={isPending}>
+                    {t('Cancel')}
+                  </Button>
+                  <Button variant="primary" onClick={handleSave} disabled={isPending || !isDirty}>
+                    {isPending ? t('Saving...') : t('Save')}
+                  </Button>
                 </div>
-              ) : (
-                <div />
-              )}
-              <div className="flex gap-x-3">
-                <Button variant="secondary" onClick={resetForm} disabled={isPending}>
-                  {t('Cancel')}
-                </Button>
-                <Button variant="primary" onClick={handleSave} disabled={isPending || !isDirty}>
-                  {isPending ? t('Saving...') : t('Save')}
-                </Button>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Helper\Guzzle;
@@ -47,7 +49,7 @@ class SafeClient
      * is at the default (false).
      *
      * The other SSRF defences still apply: scheme allow-list (http/https only),
-     * the always-block list (loopback 127/8, AWS metadata 169.254/16, current
+     * the always-block list (loopback 127/8, AWS metadata 169.254/16, Alibaba metadata 100.100.100.200, current
      * network 0.0.0.0/8, IPv6 loopback ::1, AWS IPv6 metadata fd00:ec2::254, and
      * IPv6 transition prefixes that can smuggle an arbitrary embedded IPv4 address —
      * deprecated IPv4-compatible ::/96, NAT64 64:ff9b::/96 and 64:ff9b:1::/48,

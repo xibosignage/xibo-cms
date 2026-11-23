@@ -1,41 +1,39 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 namespace Xibo\Entity;
 
 use Carbon\Carbon;
 use OpenApi\Attributes as OA;
-use Slim\Http\ServerRequest;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\Filesystem\Filesystem;
-use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Helper\DateFormatHelper;
-use Xibo\Helper\HttpsDetect;
 use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\LibraryAsset;
+use Xibo\Service\LibraryStorageRegistryInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\LibraryFileJournal;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\DuplicateEntityException;
-use Xibo\Support\Exception\GeneralException;
-use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class PlayerVersion
@@ -84,7 +82,7 @@ class PlayerVersion implements \JsonSerializable
         LogServiceInterface $log,
         EventDispatcherInterface $dispatcher,
         private readonly ConfigServiceInterface $config,
-        private readonly PlayerVersionFactory $playerVersionFactory,
+        private readonly LibraryStorageRegistryInterface $libraryStorageRegistry,
     ) {
         $this->setCommonDependencies($store, $log, $dispatcher);
     }
@@ -146,193 +144,13 @@ class PlayerVersion implements \JsonSerializable
             'versionId' => $this->versionId
         ]);
 
-        // Library location
-        $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
-
-        // delete file
-        if (file_exists($libraryLocation . 'playersoftware/' . $this->fileName)) {
-            unlink($libraryLocation  . 'playersoftware/' . $this->fileName);
-        }
-
-        if ($this->type === 'chromeOS') {
-            $chromeLocation = $libraryLocation . 'playersoftware/chromeos';
-
-            // If the "latest" symlink points at the version we're about to remove, take it down first -
-            // otherwise it's left dangling at a folder that no longer exists.
-            if (is_link($chromeLocation . '/latest')
-                && readlink($chromeLocation . '/latest') === $chromeLocation . '/' . $this->versionId
-            ) {
-                $this->unsetActive();
-            }
-
-            // delete unpacked file
-            if (is_dir($chromeLocation . '/' . $this->versionId)) {
-                (new Filesystem())->remove($chromeLocation . '/' . $this->versionId);
-            }
-        }
-    }
-
-    /**
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
-     */
-    public function unpack(string $libraryFolder, ServerRequest $request): static
-    {
-        // ChromeOS
-        // Unpack the `.chrome` file as a tar/gz, validate its signature, extract it into the library folder
-        if ($this->type === 'chromeOS') {
-            $this->getLog()->debug('add: handling chromeOS upload');
-
-            $fullFileName = $libraryFolder . 'playersoftware/' . $this->fileName;
-
-            // Check the signature of the file to make sure it comes from a verified source.
-            try {
-                $this->getLog()->debug('unpack: loading gnupg to verify the signature');
-
-                $gpg = new \gnupg();
-                $gpg->seterrormode(\gnupg::ERROR_EXCEPTION);
-                $info = $gpg->verify(
-                    file_get_contents($fullFileName),
-                    false,
-                );
-
-                if ($info === false
-                    || $info[0]['fingerprint'] !== '10415C506BE63E70BAF1D58BC1EF165A0F880F75'
-                    || $info[0]['status'] !== 0
-                    || $info[0]['summary'] !== 0
-                ) {
-                    $this->getLog()->error('unpack: unable to verify GPG. file = ' . $this->fileName);
-                    throw new GeneralException();
-                }
-
-                $this->getLog()->debug('unpack: signature verified');
-
-                // Signature verified, move the file, so we can decrypt it.
-                rename($fullFileName, $libraryFolder . 'playersoftware/' . $this->versionId . '.gpg');
-
-                $this->getLog()->debug('unpack: using the shell to decrypt the file');
-
-                // Go to the shell to decrypt it.
-                shell_exec('gpg --decrypt --output ' . $libraryFolder . 'playersoftware/' . $this->versionId
-                    . ' ' . $libraryFolder . 'playersoftware/' . $this->versionId . '.gpg');
-
-                // Was this successful?
-                if (!file_exists($libraryFolder . 'playersoftware/' . $this->versionId)) {
-                    throw new NotFoundException('Not found after decryption');
-                }
-
-                // Rename the GPG file back to its original name.
-                rename($libraryFolder . 'playersoftware/' . $this->versionId . '.gpg', $fullFileName);
-            } catch (\Exception $e) {
-                $this->getLog()->error('unpack: ' . $e->getMessage());
-                throw new InvalidArgumentException(__('Package file unsupported or invalid'));
-            }
-
-            $zip = new \ZipArchive();
-            if (!$zip->open($libraryFolder . 'playersoftware/' . $this->versionId)) {
-                throw new InvalidArgumentException(__('Unable to open ZIP'));
-            }
-
-            // Make sure the ZIP file contains a manifest.json file.
-            if ($zip->locateName('manifest.json') === false) {
-                throw new InvalidArgumentException(__('Software package does not contain a manifest'));
-            }
-
-            // Make a folder for this
-            $folder = $libraryFolder . 'playersoftware/chromeos/' . $this->versionId;
-            if (is_dir($folder)) {
-                unlink($folder);
-            }
-            mkdir($folder);
-
-            // Defense in depth against Zip-Slip: PHP's ZipArchive::extractTo() does not
-            // normalise entry names, so an archive containing `../foo` (or absolute paths,
-            // or backslash-separated paths interpreted on Windows) would write outside
-            // $folder. Reject any entry whose name contains traversal/absolute/backslash
-            // segments before extraction. This is a super-admin-only path today, but the
-            // hardening protects against shared-credential and later-regression scenarios.
-            for ($i = 0; $i < $zip->numFiles; $i++) {
-                $entryName = $zip->getNameIndex($i);
-                if ($entryName === false
-                    || str_contains($entryName, '..')
-                    || str_contains($entryName, '\\')
-                    || str_starts_with($entryName, '/')
-                ) {
-                    $zip->close();
-                    throw new InvalidArgumentException(
-                        sprintf(__('Software package contains an unsafe entry: %s'), $entryName ?: '(unknown)')
-                    );
-                }
-            }
-
-            // Extract to that folder
-            $zip->extractTo($folder);
-            $zip->close();
-
-            // Update manifest.json
-            $manifest = json_decode(file_get_contents($folder . '/manifest.json'), true);
-
-            $isXiboThemed = $this->config->getThemeConfig('app_name', 'Xibo') === 'Xibo';
-            if (!$isXiboThemed) {
-                $manifest['id'] = $this->config->getThemeConfig('theme_url');
-                $manifest['name'] = $this->config->getThemeConfig('theme_name');
-                $manifest['description'] = $this->config->getThemeConfig('theme_title');
-                $manifest['short_name'] = $this->config->getThemeConfig('app_name') . '-chromeos';
-            }
-
-            // Start URL if we're running in a sub-folder. Pass config so
-            // WHITELIST_HOSTS (if set) defeats Host-header injection into the
-            // manifest URL persisted to the player-software package.
-            $manifest['start_url'] = (new HttpsDetect($this->config))->getBaseUrl($request) . '/pwa';
-
-            // Update asset URLs
-            for ($i = 0; $i < count($manifest['icons']); $i++) {
-                if ($manifest['icons'][$i]['sizes'] == '512x512') {
-                    $manifest['icons'][$i]['src'] = '/brand/512x512.png';
-                } else {
-                    $manifest['icons'][$i]['src'] = '/brand/192x192.png';
-                }
-            }
-
-            file_put_contents($folder . '/manifest.json', json_encode($manifest));
-
-            // Unlink our decrypted file
-            unlink($libraryFolder . 'playersoftware/' . $this->versionId);
-        }
-
-        return $this;
-    }
-
-    public function setActive(): static
-    {
-        if ($this->type === 'chromeOS') {
-            $this->getLog()->debug('setActive: set this version to be the latest');
-
-            $chromeLocation = $this->config->getSetting('LIBRARY_LOCATION') . 'playersoftware/chromeos';
-            if (is_link($chromeLocation . '/latest')) {
-                unlink($chromeLocation . '/latest');
-            }
-            symlink($chromeLocation . '/' . $this->versionId, $chromeLocation . '/latest');
-        }
-
-        return $this;
-    }
-
-    /**
-     * The counterpart to setActive() - removes the "latest" symlink so that no version is served,
-     * rather than leaving it pointing at whichever version was last made active.
-     */
-    public function unsetActive(): static
-    {
-        if ($this->type === 'chromeOS') {
-            $this->getLog()->debug('unsetActive: no version is active for this type any more');
-
-            $chromeLocation = $this->config->getSetting('LIBRARY_LOCATION') . 'playersoftware/chromeos';
-            if (is_link($chromeLocation . '/latest')) {
-                unlink($chromeLocation . '/latest');
-            }
-        }
-
-        return $this;
+        LibraryFileJournal::deleteFileAfterCommit(
+            $this->getStore(),
+            $this->libraryStorageRegistry,
+            LibraryAsset::PLAYER_SOFTWARE,
+            (string)$this->fileName,
+            $this->getLog()->getLoggerInterface()
+        );
     }
 
     public function load(): void
@@ -443,8 +261,6 @@ class PlayerVersion implements \JsonSerializable
             $type = 'lg';
         } else if ($extension == 'wgt') {
             $type = 'sssp';
-        } else if ($extension == 'chrome') {
-            $type = 'chromeOS';
         }
 
         $this->version = $version;

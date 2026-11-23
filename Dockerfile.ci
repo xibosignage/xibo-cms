@@ -54,11 +54,30 @@ COPY locale /app/locale
 # Build
 RUN npm run build
 
+# Stage 3b
+# The signed capability matrix, verified and baked at build. The CMS runs on this copy unless it
+# fetches a newer one at runtime. A separate stage so the main image never needs sodium or
+# allow_url_fopen for it.
+FROM php:8.4-cli-alpine AS capability-matrix
+ARG CAPABILITY_MATRIX_URL=""
+ARG CAPABILITY_MATRIX=optional
+# Changes on every build, so a new matrix is never served from the layer cache (an ARG in scope
+# is part of the RUN cache key whether or not the command reads it).
+ARG CAPABILITY_MATRIX_CACHE_BUST=""
+COPY scripts/capability-matrix/ /build/
+RUN mkdir -p /out \
+    && CAPABILITY_MATRIX_URL="$CAPABILITY_MATRIX_URL" CAPABILITY_MATRIX="$CAPABILITY_MATRIX" \
+    php /build/bake.php /out
+
 # Stage 4
 # Build the CMS container
 FROM debian:trixie-slim
 MAINTAINER Xibo Signage <support@xibosignage.com>
 LABEL org.opencontainers.image.authors="support@xibosignage.com"
+
+# Pass a unique value (e.g. the CI run id) to force fresh apt layers rather than reusing the build cache.
+# Declared before the first RUN so every following RUN is invalidated when it changes.
+ARG APT_CACHE_BUST=static
 
 # Install apache, PHP, and supplimentary programs.
 RUN apt update && \
@@ -78,7 +97,6 @@ RUN LC_ALL=C.UTF-8 DEBIAN_FRONTEND=noninteractive apt update && apt upgrade -y &
     libapache2-mod-xsendfile \
     netcat-openbsd \
     iputils-ping \
-    gnupg \
     php8.4 \
     libapache2-mod-php8.4 \
     php8.4-gd \
@@ -99,7 +117,6 @@ RUN LC_ALL=C.UTF-8 DEBIAN_FRONTEND=noninteractive apt update && apt upgrade -y &
     php8.4-phar \
     php8.4-opcache \
     php8.4-mongodb \
-    php8.4-gnupg \
     tzdata \
     msmtp \
     openssl \
@@ -123,8 +140,7 @@ ADD docker/ /
 # Adjust file permissions as appropriate
 RUN chmod +x /entrypoint.sh /usr/local/bin/httpd-foreground /usr/local/bin/wait-for-command.sh \
     /etc/periodic/15min/cms-db-backup && \
-    chmod 777 /tmp && \
-    chown -R www-data:www-data /var/www/.gnupg
+    chmod 777 /tmp
 
 # Update the PHP.ini file
 RUN sed -i "s/error_reporting = .*$/error_reporting = E_ERROR | E_WARNING | E_PARSE/" /etc/php/8.4/apache2/php.ini && \
@@ -183,8 +199,7 @@ ENV CMS_DEV_MODE=true \
     MEMCACHED_PORT=11211 \
     CMS_USAGE_REPORT=false \
     XTR_ENABLED=true \
-    GIT_COMMIT=$GIT_COMMIT \
-    GNUPGHOME=/var/www/.gnupg
+    GIT_COMMIT=$GIT_COMMIT
 
 # Expose port 80
 EXPOSE 80
@@ -218,6 +233,9 @@ RUN mkdir /var/www/cms/openooh \
 
 # Help Links
 RUN curl -o help_links.yaml https://raw.githubusercontent.com/xibosignage/xibo-manual/develop/help_links.yaml || true
+
+# Capability matrix, verified in the capability-matrix stage (empty when none was fetched)
+COPY --from=capability-matrix /out/ /var/www/cms/capability-matrix/
 
 # Run entry
 CMD ["/entrypoint.sh"]

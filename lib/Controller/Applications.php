@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 namespace Xibo\Controller;
 
@@ -328,6 +330,11 @@ class Applications extends Base
         // left on the session-resident object, session_write_close() fatals trying to serialize it.
         $authRequest = clone $authRequest;
 
+        // A reserved user can't authorise an application to act as it.
+        if ($this->userFactory->isReserved((int)$this->getUser()->userId)) {
+            throw new AccessDeniedException(__('This account cannot authorise applications.'));
+        }
+
         $server = $this->buildAuthorizationServer();
 
         // get oauth User Entity and set the UserId to the current web userId
@@ -386,7 +393,16 @@ class Applications extends Base
             throw new InvalidArgumentException(__('Please enter Application name'), 'name');
         }
 
-        $application->userId = $this->getUser()->userId;
+        // A reserved user never owns an application, so it names the real user who will.
+        if ($this->userFactory->isReserved((int)$this->getUser()->userId)) {
+            $owner = $this->realOwner($sanitizedParams->getInt('userId'));
+        } else {
+            $owner = $this->getUser();
+        }
+        $application->userId = (int)$owner->userId;
+        // Named in the audit rows: who the application's client credentials run as.
+        $application->owner = (string)$owner->userName;
+
         $application->save();
 
         // Return
@@ -496,7 +512,11 @@ class Applications extends Base
                 );
             }
 
+            // Never to a reserved user.
+            $this->userFactory->assertNotReserved((int)$user->userId);
+
             $client->userId = $user->userId;
+            $client->owner = (string)$user->userName;
         }
 
         $client->save();
@@ -505,6 +525,30 @@ class Applications extends Base
         return $response
             ->withStatus(200)
             ->withJson($client);
+    }
+
+    /**
+     * The owner a reserved user names for an application it creates: an existing, current user it can see, never a
+     * reserved one.
+     * @param int|null $userId
+     * @return \Xibo\Entity\User
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    private function realOwner(?int $userId): \Xibo\Entity\User
+    {
+        if ($userId === null || $userId <= 0) {
+            throw new InvalidArgumentException(__('Please choose the user who will own this application.'), 'userId');
+        }
+
+        $this->userFactory->assertNotReserved($userId);
+        $owner = $this->userFactory->getById($userId);
+
+        if ((int)$owner->retired === 1 || !$this->getUser()->checkViewable($owner)) {
+            throw new InvalidArgumentException(__('You do not have permission to assign this user'), 'userId');
+        }
+
+        return $owner;
     }
 
     /**

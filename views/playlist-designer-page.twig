@@ -1,23 +1,25 @@
 {#
-/**
- * Copyright (C) 2026 Xibo Signage Ltd
+/*
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 #}
 
@@ -38,7 +40,8 @@
 
                     <div class="modal-header editor-modal-header">
                         <div class="modal-header--left"></div>
-                        <div>
+                        <div class="d-flex align-items-center">
+                            <span class="editor-modal-help-slot d-none"></span>
                             <button type="button" class="close editor-modal-close pl-2">
                                 <i class="fa fa-times"></i>
                             </button>
@@ -72,6 +75,19 @@
         <script type="text/javascript" nonce="{{ cspNonce }}">
             $(document).ready(function() {
                 pE.loadEditor();
+
+                // The host page shows its help menu button over this slot
+                if (window.parent !== window) {
+                    const $helpSlot = $('.editor-modal-help-slot').removeClass('d-none');
+                    const postHelpSlot = function() {
+                        const rect = $helpSlot[0].getBoundingClientRect();
+                        window.parent.postMessage(
+                            {type: 'xibo:editor-help-slot', top: rect.top, left: rect.left},
+                            window.location.origin
+                        );
+                    };
+                    new ResizeObserver(postHelpSlot).observe($('.editor-modal-header')[0]);
+                }
 
                 const _originalClose = pE.close.bind(pE);
                 pE.close = function() {

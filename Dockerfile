@@ -71,6 +71,21 @@ COPY locale /app/locale
 # Build
 RUN npm run build
 
+# Stage 3b
+# The signed capability matrix, verified and baked at build. The CMS runs on this copy unless it
+# fetches a newer one at runtime. A separate stage so the main image never needs sodium or
+# allow_url_fopen for it.
+FROM php:8.4-cli-alpine AS capability-matrix
+ARG CAPABILITY_MATRIX_URL=""
+ARG CAPABILITY_MATRIX=optional
+# Changes on every build, so a new matrix is never served from the layer cache (an ARG in scope
+# is part of the RUN cache key whether or not the command reads it).
+ARG CAPABILITY_MATRIX_CACHE_BUST=""
+COPY scripts/capability-matrix/ /build/
+RUN mkdir -p /out \
+    && CAPABILITY_MATRIX_URL="$CAPABILITY_MATRIX_URL" CAPABILITY_MATRIX="$CAPABILITY_MATRIX" \
+    php /build/bake.php /out
+
 # Stage 4
 # SBOM context
 # package.json/package-lock.json (root and frontend) are removed from the
@@ -109,7 +124,6 @@ RUN LC_ALL=C.UTF-8 DEBIAN_FRONTEND=noninteractive apt update && apt upgrade -y &
     libapache2-mod-xsendfile \
     netcat-openbsd \
     iputils-ping \
-    gnupg \
     php8.4 \
     libapache2-mod-php8.4 \
     php8.4-gd \
@@ -130,7 +144,6 @@ RUN LC_ALL=C.UTF-8 DEBIAN_FRONTEND=noninteractive apt update && apt upgrade -y &
     php8.4-phar \
     php8.4-opcache \
     php8.4-mongodb \
-    php8.4-gnupg \
     tzdata \
     msmtp \
     openssl \
@@ -219,8 +232,7 @@ ENV CMS_DEV_MODE=false \
     MEMCACHED_PORT=11211 \
     CMS_USAGE_REPORT=true \
     XTR_ENABLED=true \
-    GIT_COMMIT=$GIT_COMMIT \
-    GNUPGHOME=/var/www/.gnupg
+    GIT_COMMIT=$GIT_COMMIT
 
 # Expose port 80
 EXPOSE 80
@@ -250,8 +262,17 @@ RUN mkdir /var/www/cms/openooh \
 # Help Links
 RUN curl -o /var/www/cms/help-links.yaml https://raw.githubusercontent.com/xibosignage/xibo-manual/master/help-links.yaml || true
 
+# Capability matrix, verified in the capability-matrix stage (empty when none was fetched)
+COPY --from=capability-matrix /out/ /var/www/cms/capability-matrix/
+
 # Git commit fallback
 RUN echo $GIT_COMMIT > /var/www/cms/commit.sha
+
+# CMS version (calendar version, e.g. 2026.09.01), passed in by release builds.
+# Left unset for any other build, in which case no file is written and the CMS
+# falls back to Environment::$WEBSITE_VERSION_NAME.
+ARG CMS_VERSION
+RUN if [ -n "$CMS_VERSION" ]; then echo "$CMS_VERSION" > /var/www/cms/version; fi
 
 # Tidy up
 RUN rm /var/www/cms/composer.* && \
@@ -276,8 +297,7 @@ RUN mkdir -p /var/www/cms/library/temp &&  \
     /etc/periodic/15min/cms-db-backup && \
     mkdir -p /run/apache2 && \
     ln -sf /usr/bin/msmtp /usr/sbin/sendmail && \
-    chmod 777 /tmp && \
-    chown -R www-data:www-data /var/www/.gnupg
+    chmod 777 /tmp
 
 # Expose volume mount points
 VOLUME /var/www/cms/library

@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import {
@@ -34,6 +36,7 @@ import {
 import type { ComponentType } from 'react';
 
 import type { TabNavItem } from '@/components/ui/TabNav';
+import type { GetServiceVisibility } from '@/hooks/useCmsVisibility';
 import type { User } from '@/types/user';
 import { filterRoutesByUser } from '@/utils/permissions';
 
@@ -53,6 +56,8 @@ export interface AppRoute {
   externalURL?: string | undefined;
   subLinks?: AppRoute[];
   feature?: string;
+  /** A service this CMS may not offer (e.g. "billing"), see useServiceVisibility(). */
+  service?: string;
   validator?: (user: User) => boolean;
   hideFromMenu?: boolean;
 }
@@ -71,14 +76,20 @@ const canViewUsers = (user: User) => {
   return !!(hasFeature && isAdmin);
 };
 
-export const generateTabNavigation = (parentRoute: AppRoute, user: User | null): TabNavItem[] => {
+export const generateTabNavigation = (
+  parentRoute: AppRoute,
+  user: User | null,
+  getServiceVisibility: GetServiceVisibility,
+): TabNavItem[] => {
   if (!parentRoute.subLinks || !user) {
     return [];
   }
 
-  const authorizedSubLinks = filterRoutesByUser(parentRoute.subLinks, user).filter(
-    (route) => !route.hideFromMenu,
-  );
+  const authorizedSubLinks = filterRoutesByUser(
+    parentRoute.subLinks,
+    user,
+    getServiceVisibility,
+  ).filter((route) => !route.hideFromMenu);
 
   return authorizedSubLinks.map((subLink) => {
     const absolutePath = `/${parentRoute.path}/${subLink.path}`;
@@ -89,6 +100,41 @@ export const generateTabNavigation = (parentRoute: AppRoute, user: User | null):
       externalURL: subLink.externalURL,
     };
   });
+};
+
+// Opened from the user menu, not the sidebar. Each subLink is a tab in PreferencesLayout.
+// No `lazy` on the group: /preferences redirects to the first tab (see routes/index.tsx).
+export const PREFERENCES_ROUTE: AppRoute = {
+  path: 'preferences',
+  labelKey: 'Preferences',
+  hideFromMenu: true,
+  subLinks: [
+    {
+      path: 'profile',
+      labelKey: 'Profile',
+      feature: 'user.profile',
+      lazy: () =>
+        import('@/pages/Preferences/Profile/Profile').then((m) => ({
+          Component: m.default,
+        })),
+    },
+    {
+      path: 'customisation',
+      labelKey: 'Customisation',
+      lazy: () =>
+        import('@/pages/Preferences/Customisation/Customisation').then((m) => ({
+          Component: m.default,
+        })),
+    },
+    {
+      path: 'applications',
+      labelKey: 'My Applications',
+      lazy: () =>
+        import('@/pages/Preferences/Applications/Applications').then((m) => ({
+          Component: m.default,
+        })),
+    },
+  ],
 };
 
 export const APP_ROUTES: AppRoute[] = [
@@ -657,4 +703,5 @@ export const APP_ROUTES: AppRoute[] = [
     lazy: () => import('@/pages/Notification/Notification').then((m) => ({ Component: m.default })),
     feature: 'notification.centre',
   },
+  PREFERENCES_ROUTE,
 ];

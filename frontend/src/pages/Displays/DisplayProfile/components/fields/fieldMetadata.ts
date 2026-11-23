@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import type { TFunction } from 'i18next';
@@ -1029,14 +1031,6 @@ function chromeOsMeta(t: TFunction, common: FieldMetaMap): FieldMetaMap {
     xmrNetworkAddress: common.xmrNetworkAddress!,
     statsEnabled: common.statsEnabled!,
     aggregationLevel: common.aggregationLevel!,
-    playerVersionId: {
-      label: t('Player Version'),
-      tab: 'general',
-      helpText: t(
-        'Set the Player Version to install, making sure that the selected version is suitable for your device',
-      ),
-      inputType: 'player-version',
-    },
     // ChromeOS has no Network tab — surface Operating Hours on the General tab
     // so it remains accessible, same pattern as lgSsspMeta's dayPartId override.
     dayPartId: {
@@ -1234,30 +1228,37 @@ export function getFieldMetaForType(
 ): FieldMetaMap {
   const common = commonMeta(t);
 
-  let merged: FieldMetaMap;
+  // An unknown client type gets the common fields without the per-type filter.
+  let fields: FieldMetaMap = common;
   switch (clientType) {
     case 'android':
-      merged = mergeWithOwnOrder(common, androidMeta(t, common));
+      fields = excludeForType(mergeWithOwnOrder(common, androidMeta(t, common)), clientType);
       break;
     case 'hisense':
-      merged = mergeWithOwnOrder(mergeWithOwnOrder(common, androidMeta(t, common)), hisenseMeta(t));
+      fields = excludeForType(
+        mergeWithOwnOrder(mergeWithOwnOrder(common, androidMeta(t, common)), hisenseMeta(t)),
+        clientType,
+      );
       break;
     case 'windows':
-      merged = mergeWithOwnOrder(common, windowsMeta(t, common));
+      fields = excludeForType(mergeWithOwnOrder(common, windowsMeta(t, common)), clientType);
       break;
     case 'linux':
-      merged = mergeWithOwnOrder(common, linuxMeta(t, common));
+      fields = excludeForType(mergeWithOwnOrder(common, linuxMeta(t, common)), clientType);
       break;
     case 'lg':
     case 'sssp':
-      merged = mergeWithOwnOrder(common, lgSsspMeta(t, clientType, common));
+      fields = excludeForType(
+        mergeWithOwnOrder(common, lgSsspMeta(t, clientType, common)),
+        clientType,
+      );
       break;
     case 'chromeOS':
-      merged = mergeWithOwnOrder(common, chromeOsMeta(t, common));
+      fields = excludeForType(mergeWithOwnOrder(common, chromeOsMeta(t, common)), clientType);
       break;
     default:
-      return common;
+      break;
   }
 
-  return excludeForType(merged, clientType as DisplayProfileType);
+  return fields;
 }

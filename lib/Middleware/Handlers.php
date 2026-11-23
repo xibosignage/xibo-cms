@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Middleware;
@@ -33,6 +35,7 @@ use Slim\Http\ServerRequest as Request;
 use Xibo\Helper\Environment;
 use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\Translate;
+use Xibo\Service\BrandServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ExpiredException;
 use Xibo\Support\Exception\GeneralException;
@@ -123,7 +126,8 @@ class Handlers
             /** @var \Xibo\Service\ConfigService $configService */
             $configService = $container->get('configService');
             $configService->setDependencies($container->get('store'), $container->get('rootUri'));
-            $configService->loadTheme();
+            $brandService = $container->get('brandService');
+            $configService->loadTheme($brandService);
 
             // Do we need to issue STS?
             $response = HttpsDetect::decorateWithStsIfNecessary($configService, $request, $response);
@@ -167,8 +171,8 @@ class Handlers
                 'homeUrl' => $configService->rootUri(),
                 'aboutUrl' => $configService->rootUri() . 'about',
                 'loginUrl' => $configService->rootUri() . 'login',
-                'version' => Environment::$WEBSITE_VERSION_NAME,
-                'brandLogoFile' => $configService->getBrandLogoDarkFile(),
+                'version' => Environment::getVersion(),
+                'brand' => $brandService,
             ];
 
             // Handle 404's
@@ -347,10 +351,10 @@ class Handlers
         }
 
         $messageConfig = array_merge($configFlags, [
-            'logoUrl'     => '/brand/' . $configService->getBrandAssetFile('logo'),
-            'logoDarkUrl' => '/brand/' . $configService->getBrandLogoDarkFile(),
+            'logoUrl'     => $viewParams['brand']->getAssetUrl(BrandServiceInterface::SLOT_LOGO),
+            'logoDarkUrl' => $viewParams['brand']->getAssetUrl(BrandServiceInterface::SLOT_LOGO_DARK),
             'supportUrl'  => $configService->getThemeConfig('theme_url', 'https://xibosignage.com'),
-            'version'     => Environment::$WEBSITE_VERSION_NAME,
+            'version'     => Environment::getVersion(),
             'appName'     => $configService->getThemeConfig('app_name', 'Xibo'),
             'i18n'        => $i18n,
         ]);
@@ -429,9 +433,7 @@ class Handlers
     private static function rollbackAndCloseStore($container)
     {
         // If we are in a transaction, then we should rollback.
-        if ($container->get('store')->getConnection()->inTransaction()) {
-            $container->get('store')->getConnection()->rollBack();
-        }
+        $container->get('store')->rollBackIfNecessary();
         $container->get('store')->close();
     }
 

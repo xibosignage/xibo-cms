@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { screen } from '@testing-library/react';
@@ -30,6 +32,7 @@ import { mockFetchUserGroupById, mockFetchUserGroups } from './mocks/userGroupAp
 
 import { fetchHomepages } from '@/services/userApi';
 import { testQueryClient } from '@/setupTests';
+import { buildCurrentUser, PERSONAS } from '@/testUtils/personas';
 
 // =============================================================================
 // Module mocks
@@ -82,6 +85,20 @@ describe('Users page - modal wiring', () => {
     await user.click(await screen.findByRole('button', { name: /add user/i }));
 
     await screen.findByRole('dialog', { name: /add user/i });
+  });
+
+  test('?add=1 opens the Add User modal on load', async () => {
+    renderUsersPage(undefined, ['/administration/users?add=1']);
+
+    await screen.findByRole('dialog', { name: /add user/i });
+  });
+
+  test('?add=1 does nothing for a user who cannot add users', async () => {
+    const cannotAdd = buildCurrentUser(PERSONAS.user, { features: { 'users.add': false } });
+    renderUsersPage(cannotAdd, ['/administration/users?add=1']);
+
+    await screen.findByText(mockUser.userName);
+    expect(screen.queryByRole('dialog', { name: /add user/i })).not.toBeInTheDocument();
   });
 
   test('clicking the Edit quick action opens the Edit User modal for the correct user', async () => {

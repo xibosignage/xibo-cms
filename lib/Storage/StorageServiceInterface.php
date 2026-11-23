@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 
@@ -32,6 +34,9 @@ use Xibo\Support\Exception\DeadlockException;
  */
 interface StorageServiceInterface
 {
+    /** The connection whose writes commit straight away, outside any request transaction. */
+    public const ISOLATED_CONNECTION = 'isolated';
+
     /**
      * PDOConnect constructor.
      * @param LogService $logger
@@ -143,6 +148,42 @@ interface StorageServiceInterface
      * @param bool $close
      */
     public function commitIfNecessary($name = 'default', $close = false);
+
+    /**
+     * Roll back the open transaction, if there is one, and drop anything waiting for it to commit (afterCommit()).
+     * @param string $name
+     */
+    public function rollBackIfNecessary(string $name = 'default'): void;
+
+    /**
+     * Runs $callback after the current transaction commits (now if there is none), dropping it on rollback.
+     * @param callable $callback
+     * @param string $connection
+     */
+    public function afterCommit(callable $callback, string $connection = 'default'): void;
+
+    /**
+     * Runs $callback after the current transaction rolls back (including a connection closed with the
+     * transaction open), to undo work done outside the database. It is dropped when the transaction commits. When
+     * no transaction is open, one is started, so the writes that follow are undone with it.
+     * @param callable $callback
+     * @param string $connection
+     */
+    public function afterRollback(callable $callback, string $connection = 'default'): void;
+
+    /**
+     * Takes a named database lock for this connection, waiting up to $timeout seconds for another holder to let go,
+     * and keeps it until the current transaction commits or rolls back (a transaction is started when none is
+     * open). A second request taking the same lock waits until the first one's writes are committed. They are
+     * visible to it only when its transaction has read nothing before the lock, or runs READ COMMITTED: under
+     * REPEATABLE READ, a read made before the lock keeps showing the data from before the other commit.
+     * The lock is only for this database, also when several databases share the MySQL server.
+     * @param string $name
+     * @param int $timeout seconds
+     * @param string $connection
+     * @return bool false when the lock could not be taken in time
+     */
+    public function lockUntilCommit(string $name, int $timeout, string $connection = 'default'): bool;
 
     /**
      * Set the TimeZone for this connection

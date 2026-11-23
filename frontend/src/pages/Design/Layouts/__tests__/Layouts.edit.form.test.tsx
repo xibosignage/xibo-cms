@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { screen, fireEvent, waitFor } from '@testing-library/react';
@@ -84,7 +86,7 @@ describe('Layouts page - edit form fields', () => {
     renderLayoutsPage();
     await openEditModal();
 
-    const nameInput = screen.getByLabelText('Name');
+    const nameInput = screen.getByRole('textbox', { name: 'Name' });
     fireEvent.change(nameInput, { target: { value: 'Updated Layout' } });
 
     expect(nameInput).toHaveValue('Updated Layout');
@@ -98,7 +100,9 @@ describe('Layouts page - edit form fields', () => {
     renderLayoutsPage();
     await openEditModal();
 
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: '' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Name' }), {
+      target: { value: '' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     expect(await screen.findByText('Name is required')).toBeInTheDocument();
@@ -112,7 +116,7 @@ describe('Layouts page - edit form fields', () => {
     renderLayoutsPage();
     await openEditModal();
 
-    const descriptionInput = screen.getByLabelText('Description');
+    const descriptionInput = screen.getByRole('textbox', { name: 'Description' });
     fireEvent.change(descriptionInput, { target: { value: 'A new description' } });
 
     expect(descriptionInput).toHaveValue('A new description');
@@ -169,28 +173,32 @@ describe('Layouts page - edit form fields', () => {
   // ---------------------------------------------------------------------------
   // Clicking Save sends the form data to the API and closes the modal.
   // ---------------------------------------------------------------------------
-  test('Successful save calls updateLayout with correct payload and closes the modal', async () => {
-    vi.mocked(updateLayout).mockResolvedValueOnce(mockLayout);
+  test(
+    'Successful save calls updateLayout with correct payload and closes the modal',
+    { tags: ['smoke'] },
+    async () => {
+      vi.mocked(updateLayout).mockResolvedValueOnce(mockLayout);
 
-    renderLayoutsPage();
-    await openEditModal();
+      renderLayoutsPage();
+      await openEditModal();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
-    await waitFor(() => {
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    });
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      });
 
-    expect(updateLayout).toHaveBeenCalledWith(mockLayout.layoutId, {
-      name: mockLayout.layout,
-      description: null,
-      tags: '',
-      code: '',
-      retired: 0,
-      enableStat: 1,
-      folderId: mockLayout.folderId,
-    });
-  });
+      expect(updateLayout).toHaveBeenCalledWith(mockLayout.layoutId, {
+        name: mockLayout.layout,
+        description: null,
+        tags: '',
+        code: '',
+        retired: 0,
+        enableStat: 1,
+        folderId: mockLayout.folderId,
+      });
+    },
+  );
 
   // ---------------------------------------------------------------------------
   // Failed save - API error keeps the modal open so the user can retry.

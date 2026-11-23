@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import {
@@ -34,7 +36,7 @@ import {
   type VisibilityState,
 } from '@tanstack/react-table';
 import { Loader2, ChevronUp, ChevronDown, ChevronsUpDown, FileSearch2 } from 'lucide-react';
-import { type CSSProperties, useEffect, useState } from 'react';
+import { type CSSProperties, useEffect, useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
@@ -145,6 +147,7 @@ export function DataTable<TData, TValue>({
   meta,
 }: DataTableProps<TData, TValue>) {
   const { t } = useTranslation();
+  const tableId = useId();
 
   const [showLoading, setShowLoading] = useState(false);
 
@@ -311,6 +314,9 @@ export function DataTable<TData, TValue>({
       )}
 
       <div className="flex flex-col data-table-content bg-white overflow-hidden relative flex-1 min-h-0">
+        <span id={`${tableId}-sort-by`} hidden>
+          {t('Sort by')}
+        </span>
         {/* Loading Overlay */}
         {showLoading && (
           <div className="absolute inset-0 bg-white/60 z-50 flex items-center justify-center backdrop-blur-sm animate-in fade-in duration-300">
@@ -344,11 +350,20 @@ export function DataTable<TData, TValue>({
 
                     const headerContent = header.column.columnDef.header;
                     const titleText = typeof headerContent === 'string' ? headerContent : header.id;
+                    const labelId = `${tableId}-${header.id}-label`;
 
                     return (
                       <th
                         key={header.id}
                         scope="col"
+                        aria-labelledby={labelId}
+                        aria-sort={
+                          isSorted === 'asc'
+                            ? 'ascending'
+                            : isSorted === 'desc'
+                              ? 'descending'
+                              : undefined
+                        }
                         className={`relative ${NON_PRINTABLE_COLUMNS.includes(header.id) ? 'no-print' : ''}`}
                         style={{
                           ...getCommonPinningStyles(header.column),
@@ -363,17 +378,17 @@ export function DataTable<TData, TValue>({
                         <div className="px-3 py-2 h-8 flex uppercase bg-gray-50 border-b border-gray-200 text-sm items-center justify-between text-gray-500">
                           <div
                             className="text-sm font-semibold text-nowrap overflow-hidden w-full text-left"
+                            id={labelId}
                             title={titleText}
                           >
                             {flexRender(header.column.columnDef.header, header.getContext())}
                           </div>
 
                           {canSort && (
-                            <div
-                              className={twMerge(
-                                'flex justify-center items-center p-1 size-6',
-                                header.column.getCanSort() ? 'cursor-pointer select-none' : '',
-                              )}
+                            <button
+                              type="button"
+                              aria-labelledby={`${tableId}-sort-by ${labelId}`}
+                              className="flex shrink-0 justify-center items-center p-1 size-6 cursor-pointer"
                               onClick={header.column.getToggleSortingHandler()}
                             >
                               {isSorted === 'asc' ? (
@@ -383,7 +398,7 @@ export function DataTable<TData, TValue>({
                               ) : (
                                 <ChevronsUpDown className="size-4" />
                               )}
-                            </div>
+                            </button>
                           )}
                         </div>
 

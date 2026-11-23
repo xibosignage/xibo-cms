@@ -1,30 +1,31 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Xmds;
 
 use Xibo\Entity\Bandwidth;
 use Xibo\Event\XmdsWeatherRequestEvent;
-use Xibo\Helper\LinkSigner;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -96,7 +97,7 @@ class Soap7 extends Soap6
         $widgetId = $sanitizer->getInt('widgetId');
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
+        if (!$this->isValidServerKey($serverKey)) {
             throw new \SoapFault(
                 'Sender',
                 'The Server key you entered does not match with the server key at this address'
@@ -161,7 +162,6 @@ class Soap7 extends Soap6
                     $media = [];
                     $requiredFiles = [];
                     $mediaIds = $widgetDataProviderCache->getCachedMediaIds();
-                    $cdnUrl = $this->configService->getSetting('CDN_URL');
 
                     if (count($mediaIds) > 0) {
                         $this->getLog()->debug('Processing media links');
@@ -172,6 +172,7 @@ class Soap7 extends Soap6
                                    `media`.`fileSize`,
                                    `media`.`released`,
                                    `media`.`md5`,
+                                   `media`.`storageEngine`,
                                    `display_media`.`mediaId` AS displayMediaId
                               FROM `media`
                                 LEFT OUTER JOIN `display_media`
@@ -196,18 +197,35 @@ class Soap7 extends Soap6
                             // Output required file nodes for any media used in get data.
                             // these will appear in required files as well, and may already be downloaded.
                             $released = intval($row['released']);
-                            $this->requiredFileFactory
+                            $isReleased = $released != 0 && $released != 2;
+                            $link = $isReleased
+                                ? $this->getPlayerFileLink()->get(
+                                    $this->display,
+                                    'M',
+                                    intval($row['mediaId']),
+                                    $row['storedAs'],
+                                    null,
+                                    $this->display->isPwa(),
+                                    $row['storageEngine'],
+                                )
+                                : null;
+                            $requiredFile = $this->requiredFileFactory
                                 ->createForMedia(
                                     $this->display->displayId,
                                     $row['mediaId'],
                                     $row['fileSize'],
                                     $row['storedAs'],
                                     $released
-                                )
-                                ->save();
+                                );
+                            // RequiredFiles owns an existing row's link mode, which may differ (e.g. SOAP downloads).
+                            if ($requiredFile->rfId === null) {
+                                $requiredFile->isDirect = ($link[1] ?? false) ? 1 : 0;
+                            }
+                            $requiredFile->setMd5($row['md5']);
+                            $requiredFile->save();
 
                             // skip media which has released == 0 or 2
-                            if ($released == 0 || $released == 2) {
+                            if (!$isReleased) {
                                 continue;
                             }
 
@@ -217,16 +235,7 @@ class Soap7 extends Soap6
                                 'size' => intval($row['fileSize']),
                                 'md5' => $row['md5'],
                                 'saveAs' => $row['storedAs'],
-                                'path' => LinkSigner::generateSignedLink(
-                                    $this->display,
-                                    $this->configService->getApiKeyDetails()['encryptionKey'],
-                                    $cdnUrl,
-                                    'M',
-                                    intval($row['mediaId']),
-                                    $row['storedAs'],
-                                    null,
-                                    $this->display->isPwa(),
-                                ),
+                                'path' => $link[0],
                             ];
                         }
                     } else {
@@ -235,9 +244,8 @@ class Soap7 extends Soap6
 
                     $resource = json_encode([
                         'data' => $widgetDataProviderCache->decorateForPlayer(
-                            $this->configService,
+                            $this->getPlayerFileLink(),
                             $this->display,
-                            $this->configService->getApiKeyDetails()['encryptionKey'],
                             $dataProvider->getData(),
                             $media,
                         ),
@@ -295,7 +303,7 @@ class Soap7 extends Soap6
         $hardwareKey = $sanitizer->getString('hardwareKey');
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
+        if (!$this->isValidServerKey($serverKey)) {
             throw new \SoapFault(
                 'Sender',
                 'The Server key you entered does not match with the server key at this address'

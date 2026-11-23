@@ -1,0 +1,10 @@
+{
+    "keys": [
+        {
+            "key_id": "production-2026-k1",
+            "alg": "ed25519",
+            "public_key": "+dCZOdN4JCLZRUl8f3AIAe2Lyjb3YTbb+8hpXpR/0Qo=",
+            "not_before": "2026-11-17"
+        }
+    ]
+}

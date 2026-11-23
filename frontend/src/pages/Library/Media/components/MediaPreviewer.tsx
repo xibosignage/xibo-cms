@@ -1,26 +1,28 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { X, Loader2, Download, UserPlus2, Info, FolderInput } from 'lucide-react';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, type SyntheticEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { MediaInfoPanel } from './MediaInfoPanel';
@@ -29,6 +31,7 @@ import { useKeydown } from '@/hooks/useKeydown';
 import { useOwner } from '@/hooks/useOwner';
 import { fetchMediaBlob, getMediaStreamUrl } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
+import { recoverPlayback } from '@/utils/recoverPlayback';
 
 interface MediaPreviewerProps {
   mediaId: number | string | null;
@@ -67,6 +70,13 @@ export default function MediaPreviewer({
   const ownerId = mediaData?.ownerId ? Number(mediaData.ownerId) : null;
 
   const { owner, loading: isOwnerLoading } = useOwner({ ownerId });
+
+  // A streamed source's link expires, so playback that fails reloads it while the reloads keep loading.
+  const handlePlaybackError = (event: SyntheticEvent<HTMLMediaElement>) => {
+    if (!mediaId || !recoverPlayback(event.currentTarget, getMediaStreamUrl(mediaId))) {
+      setError(t('Failed to load media preview'));
+    }
+  };
 
   const revokeUrl = () => {
     if (activeUrlRef.current) {
@@ -239,7 +249,7 @@ export default function MediaPreviewer({
                   controls
                   className="max-h-full max-w-full shadow-md"
                   autoPlay
-                  onError={() => setError(t('Failed to load media preview'))}
+                  onError={handlePlaybackError}
                 />
               ) : resolvedType === 'image' ? (
                 <img
@@ -254,7 +264,7 @@ export default function MediaPreviewer({
                     controls
                     autoPlay
                     className="w-full"
-                    onError={() => setError(t('Failed to load media preview'))}
+                    onError={handlePlaybackError}
                   />
                 </div>
               ) : resolvedType === 'pdf' ? (

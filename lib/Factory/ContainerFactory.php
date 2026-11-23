@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Factory;
@@ -40,6 +42,8 @@ use Xibo\Service\ConfigService;
 use Xibo\Service\HelpService;
 use Xibo\Service\ImageProcessingService;
 use Xibo\Service\JwtService;
+use Xibo\Service\LibraryAsset;
+use Xibo\Service\LibraryStorageRegistry;
 use Xibo\Service\MediaService;
 use Xibo\Service\ModuleService;
 use Xibo\Storage\MySqlTimeSeriesStore;
@@ -204,6 +208,18 @@ class ContainerFactory
                 $pool->setNamespace($c->get('configService')->getCacheNamespace());
                 $c->get('configService')->setPool($pool);
                 return $pool;
+            },
+            'brandService' => function (ContainerInterface $c) {
+                return new \Xibo\Service\BrandService(
+                    (string)$c->get('configService')->getSetting('LIBRARY_LOCATION', '')
+                );
+            },
+            // Where each kind of library file is stored, replaceable by other backends.
+            'libraryStorageRegistry' => function (ContainerInterface $c) {
+                return new LibraryStorageRegistry($c->get('configService')->getSetting('LIBRARY_LOCATION'));
+            },
+            'libraryStorageService' => function (ContainerInterface $c) {
+                return $c->get('libraryStorageRegistry')->get(LibraryAsset::MEDIA);
             },
             'imageProcessingService' => function (ContainerInterface $c) {
                 $imageProcessingService = new ImageProcessingService();

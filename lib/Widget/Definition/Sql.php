@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Widget\Definition;
@@ -31,8 +33,8 @@ use Xibo\Support\Exception\InvalidArgumentException;
  * sources (clause-builder in DataSetDataProviderListener, raw filter on
  * DataSet entity, RSS feed clause-builder in DataSetRss). Every assembly
  * path converges at DataSet::getData(), which calls Sql::sanitizeFragment()
- * — the SINGLE point of sanitization. Per-callsite escaping is unnecessary
- * and would hide the choke-point pattern.
+ * — the SINGLE point of sanitization. The clause builders escape their values
+ * with escapeLiteral() so they produce valid SQL, not as a security defence.
  *
  * cleanup() is the low-level strip-only primitive (recursive keyword
  * removal, string-literal preservation, comment / hex / binary stripping).
@@ -101,6 +103,14 @@ class Sql
     }
 
     /**
+     * Escape a value for use inside a single-quoted SQL string literal (O'Brien becomes O''Brien).
+     */
+    public static function escapeLiteral(string $value): string
+    {
+        return str_replace(['\\', '\''], ['\\\\', '\'\''], $value);
+    }
+
+    /**
      * Throw-on-detection wrapper around cleanup(). Production callers SHOULD use
      * this rather than cleanup() directly — silently dropping disallowed keywords
      * masks the attack signal and produces broken SQL fragments downstream.
@@ -111,13 +121,21 @@ class Sql
      *                        offending parameter.
      * @return string The sanitized fragment (unchanged if no disallowed keywords
      *                were present).
-     * @throws InvalidArgumentException If the fragment contained any
-     *         DISALLOWED_KEYWORDS, hex/binary literals, or stripped comments.
+     * @throws InvalidArgumentException If the fragment contained an unclosed quote,
+     *         any DISALLOWED_KEYWORDS, hex/binary literals, stripped comments, or a
+     *         quoted name used as a function call.
      */
     public static function sanitizeFragment(string $sql, string $context): string
     {
         $count = 0;
-        $cleaned = self::cleanup($sql, $count);
+        $strayQuotes = 0;
+        $cleaned = self::cleanup($sql, $count, $strayQuotes);
+        if ($strayQuotes > 0) {
+            throw new InvalidArgumentException(
+                sprintf(__('%s has an unclosed quote'), ucfirst($context)),
+                $context
+            );
+        }
         if ($count > 0) {
             throw new InvalidArgumentException(
                 sprintf(__('%s contains disallowed keywords'), ucfirst($context)),
@@ -138,9 +156,10 @@ class Sql
      *
      * @param string $sql the SQL to clean
      * @param int $total the total number of replacements
+     * @param int $strayQuotes how many of those were quotes or backslashes outside a literal
      * @return string
      */
-    public static function cleanup(string $sql, int &$total = 0): string
+    public static function cleanup(string $sql, int &$total = 0, int &$strayQuotes = 0): string
     {
         // 1. EXTRACT AND PROTECT STRING LITERALS (Preserve user data)
         $strings = [];
@@ -158,16 +177,21 @@ class Sql
         // A quote, backslash or backtick left outside a literal means our boundaries may differ from MySQL's
         $sqlCleaned = preg_replace('/[\'"\\\\`]/', '', $sqlCleaned, -1, $strayCount);
         $total += $strayCount;
+        $strayQuotes += $strayCount;
 
         // 2. STRIP COMMENTS & ENCODINGS (Before keyword checks)
         $preCleanupPatterns = [
-            '/(?:\/\*.*?\*\/|--[\x00-\x20].*?(?:\n|$)|#[^\n]*?(?:\n|$))/s', // Standard & Executable Comments
+            '/(?:\/\*.*?\*\/|--(?:[\x00-\x20].*?)?(?:\n|$)|#[^\n]*?(?:\n|$))/s', // Standard & Executable Comments
             '/\/\*|\*\//',                                            // Unpaired comment markers
             '/\b0x[0-9a-fA-F]+\b/',                                   // Hex literals (e.g., 0x7e)
             '/\bb\'[01]+\'/i'                                         // Binary literals
         ];
         $sqlCleaned = preg_replace($preCleanupPatterns, '', $sqlCleaned, -1, $preCleanupCount);
         $total += $preCleanupCount;
+
+        // A protected literal followed by "(" is a call (`SLEEP`(1)), which would hide the name from the checks below
+        $sqlCleaned = preg_replace('/\{' . $nonce . '_\d+\}(?=\s*\()/', '', $sqlCleaned, -1, $callCount);
+        $total += $callCount;
 
         // 3. PREPARE KEYWORD PATTERNS
         $wordKeywords = [];

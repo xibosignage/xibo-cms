@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Storage;
@@ -39,6 +41,12 @@ class PdoStorageService implements StorageServiceInterface
     /** @var array Statistics */
     private static $stats = [];
 
+    /** @var array<string, callable[]> work waiting for each connection's transaction to commit */
+    private static $afterCommit = [];
+
+    /** @var array<string, callable[]> work undoing each connection's transaction, should it roll back */
+    private static $afterRollback = [];
+
     /** @var  string */
     private static $version;
 
@@ -48,6 +56,9 @@ class PdoStorageService implements StorageServiceInterface
      */
     private $log;
 
+    /** @var LogService|null the first logger any instance was given, for instances created without one */
+    private static $fallbackLog;
+
     /**
      * PDOConnect constructor.
      * @param LogService $logger
@@ -55,6 +66,13 @@ class PdoStorageService implements StorageServiceInterface
     public function __construct($logger = null)
     {
         $this->log = $logger;
+        self::$fallbackLog ??= $logger;
+    }
+
+    /** @return LogService|null */
+    private function logger()
+    {
+        return $this->log ?? self::$fallbackLog;
     }
 
     /** @inheritdoc */
@@ -68,10 +86,25 @@ class PdoStorageService implements StorageServiceInterface
     /** @inheritdoc */
     public function close($name = null)
     {
-        if ($name !== null && isset(self::$conn[$name])) {
-            self::$conn[$name] = null;
-            unset(self::$conn[$name]);
+        // Closing a connection rolls back its open transaction, so anything waiting for its commit is dropped,
+        // and its undo work runs: on the same connection once rolled back, before it is closed, so the work sees
+        // the rolled-back state and opens no connection of its own.
+        $names = $name !== null ? (isset(self::$conn[$name]) ? [$name] : []) : array_keys(self::$conn);
+        foreach ($names as $connection) {
+            $this->discardAfterCommit($connection);
+            $this->runCallbacks($this->rollBackForClose($connection), 'After-rollback');
+        }
+
+        if ($name !== null) {
+            if (isset(self::$conn[$name])) {
+                self::$conn[$name] = null;
+                unset(self::$conn[$name]);
+            }
         } else {
+            foreach (array_keys(self::$afterCommit) as $connection) {
+                $this->discardAfterCommit($connection);
+            }
+            self::$afterRollback = [];
             foreach (self::$conn as &$conn) {
                 $conn = null;
             }
@@ -406,7 +439,7 @@ class PdoStorageService implements StorageServiceInterface
 
             // Sleep a bit, give the DB time to breathe
             $queryHash = substr($sql, 0, 15) . '... [' . md5($sql . json_encode($params)) . ']';
-            $this->log->debug('Retrying query after a short nap, try: ' . (3 - $retries)
+            $this->logger()?->debug('Retrying query after a short nap, try: ' . (3 - $retries)
                 . '. Query Hash: ' . $queryHash);
 
             usleep(10000);
@@ -430,6 +463,147 @@ class PdoStorageService implements StorageServiceInterface
         if ($this->getConnection($name)->inTransaction()) {
             $this->incrementStat($name, 'commit');
             $this->getConnection($name)->commit();
+        }
+
+        // Committed, so nothing needs undoing.
+        unset(self::$afterRollback[$name]);
+
+        $this->runAfterCommit($name);
+    }
+
+    /** @inheritdoc */
+    public function rollBackIfNecessary(string $name = 'default'): void
+    {
+        $this->discardAfterCommit($name);
+        $undo = $this->takeAfterRollback($name);
+
+        if ($this->getConnection($name)->inTransaction()) {
+            $this->incrementStat($name, 'rollback');
+            $this->getConnection($name)->rollBack();
+        }
+
+        $this->runCallbacks($undo, 'After-rollback');
+    }
+
+    /** @inheritdoc */
+    public function lockUntilCommit(string $name, int $timeout, string $connection = 'default'): bool
+    {
+        // Lock names are shared by every database on the MySQL server, so the name includes this database's
+        // name. SHA1 keeps it under MySQL's 64-character limit.
+        $statement = $this->getConnection($connection)
+            ->prepare('SELECT GET_LOCK(SHA1(CONCAT(DATABASE(), \':\', :name)), :timeout) AS locked');
+        $statement->execute(['name' => $name, 'timeout' => $timeout]);
+        $row = $statement->fetch(\PDO::FETCH_ASSOC);
+        if ((int)($row['locked'] ?? 0) !== 1) {
+            return false;
+        }
+
+        $release = function () use ($name, $connection) {
+            $this->getConnection($connection)
+                ->prepare('SELECT RELEASE_LOCK(SHA1(CONCAT(DATABASE(), \':\', :name)))')
+                ->execute(['name' => $name]);
+        };
+
+        // afterRollback() starts the transaction when none is open, so afterCommit() waits for its commit rather
+        // than running at once. One of the two runs, so the lock is released once.
+        $this->afterRollback($release, $connection);
+        $this->afterCommit($release, $connection);
+
+        return true;
+    }
+
+    /** @inheritdoc */
+    public function afterRollback(callable $callback, string $connection = 'default'): void
+    {
+        // The writes that follow belong with the work to undo, so they start the transaction now.
+        if (!$this->getConnection($connection)->inTransaction()) {
+            $this->getConnection($connection)->beginTransaction();
+        }
+
+        self::$afterRollback[$connection][] = $callback;
+    }
+
+    /**
+     * Rolls back a connection's open transaction before it is closed, giving its undo work to run; nothing when no
+     * transaction is open.
+     * @return callable[]
+     */
+    private function rollBackForClose(string $name): array
+    {
+        $callbacks = $this->takeAfterRollback($name);
+        $connection = self::$conn[$name] ?? null;
+        if ($connection === null || !$connection->inTransaction()) {
+            return [];
+        }
+
+        $this->incrementStat($name, 'rollback');
+        $connection->rollBack();
+
+        return $callbacks;
+    }
+
+    /**
+     * @return callable[]
+     */
+    private function takeAfterRollback(string $name): array
+    {
+        $callbacks = self::$afterRollback[$name] ?? [];
+        unset(self::$afterRollback[$name]);
+
+        return $callbacks;
+    }
+
+    /** @inheritdoc */
+    public function afterCommit(callable $callback, string $connection = 'default'): void
+    {
+        if (!$this->getConnection($connection)->inTransaction()) {
+            $this->runCallback($callback);
+            return;
+        }
+
+        self::$afterCommit[$connection][] = $callback;
+    }
+
+    private function runAfterCommit(string $name): void
+    {
+        // Callbacks may queue more work, which runs at once, so the list is taken first.
+        $callbacks = self::$afterCommit[$name] ?? [];
+        unset(self::$afterCommit[$name]);
+
+        $this->runCallbacks($callbacks, 'After-commit');
+    }
+
+    /**
+     * @param callable[] $callbacks
+     */
+    private function runCallbacks(array $callbacks, string $kind): void
+    {
+        foreach ($callbacks as $callback) {
+            $this->runCallback($callback, $kind);
+        }
+    }
+
+    private function discardAfterCommit(string $name): void
+    {
+        if (!empty(self::$afterCommit[$name])) {
+            $this->logger()?->debug(sprintf(
+                'Discarding %d after-commit callback(s) for %s: the transaction did not commit',
+                count(self::$afterCommit[$name]),
+                $name
+            ));
+        }
+        unset(self::$afterCommit[$name]);
+    }
+
+    /**
+     * Runs a post-commit callback, logging rather than throwing a failure.
+     */
+    private function runCallback(callable $callback, string $kind = 'After-commit'): void
+    {
+        try {
+            $callback();
+        } catch (\Throwable $throwable) {
+            $this->logger()?->error($kind . ' callback failed: ' . $throwable->getMessage());
         }
     }
 

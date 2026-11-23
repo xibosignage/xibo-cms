@@ -1,28 +1,31 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import type { TFunction } from 'i18next';
 
 import { notify } from '@/components/ui/Notification';
 import type { AppRoute } from '@/config/appRoutes';
+import { isServiceShown, type GetServiceVisibility } from '@/hooks/useCmsVisibility';
 import { UserType, type User } from '@/types/user';
 
 export const hasFeature = (user: User | null, featureKey: string): boolean => {
@@ -86,7 +89,15 @@ export const filterByPermission = <T>(
   return permittedItems;
 };
 
-const isRouteAllowed = (route: AppRoute, user: User): boolean => {
+const isRouteAllowed = (
+  route: AppRoute,
+  user: User,
+  getServiceVisibility: GetServiceVisibility,
+): boolean => {
+  if (!isServiceShown(getServiceVisibility, route.service)) {
+    return false;
+  }
+
   if (route.feature && !hasFeature(user, route.feature)) {
     return false;
   }
@@ -98,16 +109,21 @@ const isRouteAllowed = (route: AppRoute, user: User): boolean => {
   return true;
 };
 
-export const filterRoutesByUser = (routes: AppRoute[], user: User): AppRoute[] => {
+/** getServiceVisibility comes from useServiceVisibility(), so routes this CMS doesn't offer are left out too. */
+export const filterRoutesByUser = (
+  routes: AppRoute[],
+  user: User,
+  getServiceVisibility: GetServiceVisibility,
+): AppRoute[] => {
   return routes.reduce((acc: AppRoute[], route) => {
     // Check if parent is allowed
-    if (!isRouteAllowed(route, user)) {
+    if (!isRouteAllowed(route, user, getServiceVisibility)) {
       return acc;
     }
 
     // If route has children, check them recursively
     if (route.subLinks && route.subLinks.length > 0) {
-      const visibleSubLinks = filterRoutesByUser(route.subLinks, user);
+      const visibleSubLinks = filterRoutesByUser(route.subLinks, user, getServiceVisibility);
 
       // If parent has sublinks, but user can't see any
       // hide the parent too

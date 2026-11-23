@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Controller;
@@ -31,12 +33,20 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\LibraryFile;
+use Xibo\Helper\SendFile;
 use Xibo\Service\DownloadService;
+use Xibo\Service\LibraryAsset;
 use Xibo\Service\MediaService;
 use Xibo\Service\MediaServiceInterface;
 use Xibo\Service\UploadService;
+use Xibo\Storage\LibraryFileJournal;
+use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
 class PlayerSoftware extends Base
@@ -47,6 +57,7 @@ class PlayerSoftware extends Base
         private readonly DisplayProfileFactory $displayProfileFactory,
         private readonly DisplayFactory $displayFactory,
         private readonly MediaServiceInterface $mediaService,
+        private readonly StorageServiceInterface $store,
     ) {
     }
 
@@ -236,13 +247,6 @@ class PlayerSoftware extends Base
                     $displayProfile->setSetting('versionMediaId', null);
                     $displayProfile->save();
                 }
-            } else if ($displayProfile->type === 'chromeOS') {
-                $currentVersionId = $displayProfile->getSetting('playerVersionId');
-
-                if ($currentVersionId === $version->versionId) {
-                    $displayProfile->setSetting('playerVersionId', null);
-                    $displayProfile->save();
-                }
             }
         }
 
@@ -342,6 +346,7 @@ class PlayerSoftware extends Base
 
         $options = [
             'accept_file_types' => '/\.' . implode('|', $validExt) . '$/i',
+            'accept_chunks' => $this->playerVersionFactory->getStorage()->hasLocalFiles(),
             'libraryLimit' => $libraryLimit,
             'libraryQuotaFull' => (
                 $libraryLimit > 0
@@ -371,6 +376,7 @@ class PlayerSoftware extends Base
 
             // SoC players have issues parsing fileNames with spaces in them
             $playerSoftware->fileName = preg_replace('/[^a-zA-Z0-9_.]+/', '-', $file->fileName);
+            LibraryFile::assertNoDoubleDot($playerSoftware->fileName);
             $playerSoftware->size = filesize($filePath);
             $playerSoftware->md5 = md5_file($filePath);
             $playerSoftware->decorateRecord();
@@ -389,9 +395,22 @@ class PlayerSoftware extends Base
                 );
             }
 
-            rename($filePath, $libraryFolder . 'playersoftware/' . $playerSoftware->fileName);
-
-            $playerSoftware->unpack($libraryFolder, $request);
+            // Journalled so a later tidy removes the file if the save fails.
+            $journal = new LibraryFileJournal(
+                $this->store,
+                $this->playerVersionFactory->getStorage(),
+                LibraryAsset::PLAYER_SOFTWARE
+            );
+            try {
+                $journal->storeLocalFile($filePath, $playerSoftware->fileName);
+            } catch (\Throwable $exception) {
+                if (!$exception instanceof GeneralException) {
+                    throw $exception;
+                }
+                $this->getLog()->error('Cannot store player software ' . $playerSoftware->fileName . ': '
+                    . $exception->getMessage());
+                throw new ConfigurationException(__('Problem moving uploaded file into the Library Folder'));
+            }
 
             $file->id = $playerSoftware->versionId;
             $file->md5 = $playerSoftware->md5;
@@ -439,25 +458,65 @@ class PlayerSoftware extends Base
             schema: new OA\Schema(type: 'string', format: 'binary')
         )
     )]
+    #[OA\Response(
+        response: 302,
+        description: 'Redirect to a time-limited URL for the file, when the library is not kept on the CMS',
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'The storage URL to download the file from.',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     public function download(Request $request, Response $response, int $id): Response|ResponseInterface
+    {
+        return $this->sendFile($response, $id, true);
+    }
+
+    /**
+     * Sends a player version's file, redirecting to storage without local files when $allowRedirect, else streaming.
+     * @throws GeneralException
+     */
+    private function sendFile(Response $response, int $id, bool $allowRedirect): Response|ResponseInterface
     {
         $playerVersion = $this->playerVersionFactory->getById($id);
 
         $this->getLog()->debug('Download request for player software versionId: ' . $id);
 
-        $library = $this->getConfig()->getSetting('LIBRARY_LOCATION');
-        $sendFileMode = $this->getConfig()->getSetting('SENDFILE_MODE');
-        $libraryPath = $library . 'playersoftware' . DIRECTORY_SEPARATOR . $playerVersion->fileName;
         $attachmentName = urlencode($playerVersion->fileName);
+        $storage = $this->playerVersionFactory->getStorage();
+        $sendLocalFile = function ($localPath) use ($response, $attachmentName, $playerVersion) {
+            $downLoadService = new DownloadService($localPath, $this->getConfig()->getSetting('SENDFILE_MODE'));
+            $downLoadService->useLogger($this->getLog()->getLoggerInterface());
 
-        $downLoadService = new DownloadService($libraryPath, $sendFileMode);
-        $downLoadService->useLogger($this->getLog()->getLoggerInterface());
+            return $downLoadService->returnFile(
+                $response,
+                $attachmentName,
+                '/download/playersoftware/' . $playerVersion->fileName
+            );
+        };
 
-        return $downLoadService->returnFile(
-            $response,
-            $attachmentName,
-            '/download/playersoftware/' . $playerVersion->fileName
-        );
+        try {
+            return $allowRedirect
+                ? SendFile::download(
+                    $response,
+                    $storage,
+                    $playerVersion->fileName,
+                    'application/octet-stream',
+                    SendFile::attachmentDisposition($playerVersion->fileName),
+                    $sendLocalFile
+                )
+                : SendFile::fromStorage(
+                    $storage,
+                    $playerVersion->fileName,
+                    fn ($stream, $size) => SendFile::decorateStreamResponse($response, $stream, $size, $attachmentName),
+                    $sendLocalFile
+                );
+        } catch (InvalidArgumentException) {
+            // A key storage refuses, such as a legacy name containing '..', can't be served.
+            throw new NotFoundException(__('Player software file not found'));
+        }
     }
 
     public function getSsspInstall(Request $request, Response $response): Response|ResponseInterface
@@ -485,7 +544,8 @@ class PlayerSoftware extends Base
         $versionId = $profile->getSetting('versionMediaId');
 
         if ($versionId !== null) {
-            $response = $this->download($request, $response, $versionId);
+            // SSSP displays are always sent the file, never redirected to storage.
+            $response = $this->sendFile($response, $versionId, false);
         } else {
             return $response->withStatus(404);
         }
@@ -544,7 +604,8 @@ class PlayerSoftware extends Base
         $versionId = $display->getSetting('versionMediaId', null, ['displayOverride' => true]);
 
         if ($versionId !== null) {
-            $response = $this->download($request, $response, $versionId);
+            // SSSP displays are always sent the file, never redirected to storage.
+            $response = $this->sendFile($response, $versionId, false);
         } else {
             return $response->withStatus(404);
         }
@@ -574,6 +635,6 @@ class PlayerSoftware extends Base
     /** @return string[] */
     private function getValidExtensions(): array
     {
-        return ['apk', 'ipk', 'wgt', 'chrome'];
+        return ['apk', 'ipk', 'wgt'];
     }
 }

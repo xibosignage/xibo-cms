@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
@@ -115,11 +117,13 @@ describe('Edit Media — modal lifecycle', () => {
     renderMediaPage();
     await openEditModal();
 
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'changed-name.png' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Name' }), {
+      target: { value: 'changed-name.png' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
     const dialog = await openEditModal();
-    expect(within(dialog).getByLabelText('Name')).toHaveValue(mockEditMedia.name);
+    expect(within(dialog).getByRole('textbox', { name: 'Name' })).toHaveValue(mockEditMedia.name);
   });
 
   // ---------------------------------------------------------------------------
@@ -175,7 +179,7 @@ describe('Edit Media — modal lifecycle', () => {
     renderMediaPage();
     const dialog = await openEditModal();
 
-    expect(within(dialog).getByLabelText('Name')).toHaveValue(mockEditMedia.name);
+    expect(within(dialog).getByRole('textbox', { name: 'Name' })).toHaveValue(mockEditMedia.name);
 
     // mockEditMedia.duration = 10 seconds, displayed as HH:MM:SS
     expect(within(dialog).getByPlaceholderText('00:00:00')).toHaveValue('00:00:10');
@@ -210,7 +214,7 @@ describe('Edit Media — save behaviour', () => {
   // Click Save and check that updateMedia was called with the media id and
   // the form values.
   // ---------------------------------------------------------------------------
-  test('Save button calls updateMedia with the correct payload', async () => {
+  test('Save button calls updateMedia with the correct payload', { tags: ['smoke'] }, async () => {
     renderMediaPage();
     await openEditModal();
 
@@ -306,32 +310,36 @@ describe('Edit Media — save behaviour', () => {
   // the data mock after the modal opens so the table re-render picks up the
   // new name once the save completes.
   // ---------------------------------------------------------------------------
-  test('Media list updates the edited item after a successful save', async () => {
-    const updatedMedia = { ...mockEditMedia, name: 'renamed.png' };
-    vi.mocked(updateMedia).mockResolvedValueOnce(updatedMedia);
+  test(
+    'Media list updates the edited item after a successful save',
+    { tags: ['smoke'] },
+    async () => {
+      const updatedMedia = { ...mockEditMedia, name: 'renamed.png' };
+      vi.mocked(updateMedia).mockResolvedValueOnce(updatedMedia);
 
-    // beforeEach provides original data so the initial table shows 'test-image.png'
-    renderMediaPage();
-    await openEditModal();
+      // beforeEach provides original data so the initial table shows 'test-image.png'
+      renderMediaPage();
+      await openEditModal();
 
-    // Switch the mock AFTER the modal is open so the post-save refetch
-    // returns the renamed version, keeping the table in sync
-    mockMediaData({
-      data: { rows: [updatedMedia], totalCount: 1 },
-      isFetching: false,
-      isError: false,
-      error: null,
-    });
+      // Switch the mock AFTER the modal is open so the post-save refetch
+      // returns the renamed version, keeping the table in sync
+      mockMediaData({
+        data: { rows: [updatedMedia], totalCount: 1 },
+        isFetching: false,
+        isError: false,
+        error: null,
+      });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
-    // Wait for the modal to close before asserting
-    await waitFor(() => {
-      expect(screen.queryByRole('dialog', { name: 'Edit Media' })).not.toBeInTheDocument();
-    });
+      // Wait for the modal to close before asserting
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog', { name: 'Edit Media' })).not.toBeInTheDocument();
+      });
 
-    expect(screen.getByText('renamed.png')).toBeInTheDocument();
-  });
+      expect(screen.getByText('renamed.png')).toBeInTheDocument();
+    },
+  );
 
   // ---------------------------------------------------------------------------
   // If the save fails, the modal should stay open so the user can fix the

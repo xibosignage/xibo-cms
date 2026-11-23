@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 
@@ -169,6 +171,84 @@ class DisplayFactory extends BaseFactory
     public function getBySyncGroupId(int $syncGroupId): array
     {
         return $this->query(null, ['syncGroupId' => $syncGroupId]);
+    }
+
+    /**
+     * Count of currently licensed displays.
+     */
+    public function countLicensed(): int
+    {
+        return intval($this->getStore()->select(
+            'SELECT COUNT(DisplayID) AS CountLicensed FROM `display` WHERE licensed = 1',
+            []
+        )[0]['CountLicensed'] ?? 0);
+    }
+
+    /**
+     * When more displays are authorised than the limit allows, un-authorises the least recently seen, of any client
+     * type, until the rest fit. Each display is un-authorised by saving it, so its licence slot is released. One
+     * that can't be saved stays authorised and the next one goes instead.
+     * @param int $maxDisplays the most displays that can be authorised
+     * @param string $auditMessage recorded in the audit log for each display un-authorised
+     * @param int|null $keepDisplayId a display never un-authorised here (the one making the request)
+     * @param int|null $maxUnauthorise the most displays un-authorised in this call, or null for no limit; the rest
+     *   wait for the next call
+     * @return Display[] the displays un-authorised
+     */
+    public function unauthoriseOverLimit(
+        int $maxDisplays,
+        string $auditMessage,
+        ?int $keepDisplayId = null,
+        ?int $maxUnauthorise = null
+    ): array {
+        // Every authorised display, least recently seen first (never seen first of all), in a fixed order.
+        $rows = $this->getStore()->select(
+            'SELECT displayId FROM `display` WHERE licensed = 1 ORDER BY lastAccessed, displayId',
+            []
+        );
+
+        $over = count($rows) - $maxDisplays;
+        if ($over <= 0) {
+            return [];
+        }
+
+        $difference = $maxUnauthorise === null ? $over : min($over, $maxUnauthorise);
+
+        $this->getLog()->alert(sprintf(
+            'Max %d authorised displays exceeded: %d authorised. Un-authorising %d displays.',
+            $maxDisplays,
+            count($rows),
+            $difference
+        ));
+
+        $unauthorised = [];
+        foreach ($rows as $row) {
+            if ($difference <= 0) {
+                break;
+            }
+
+            $displayId = (int)$row['displayId'];
+            if ($displayId === $keepDisplayId) {
+                continue;
+            }
+
+            try {
+                $display = $this->getById($displayId);
+                $display->licensed = 0;
+                $display->save(Display::$saveOptionsMinimum);
+            } catch (\Throwable $e) {
+                // Kept authorised; the next check tries again.
+                $this->getLog()->error('Cannot un-authorise displayId ' . $displayId . ' over the display limit: '
+                    . $e->getMessage());
+                continue;
+            }
+
+            $this->getLog()->audit('Display', $displayId, $auditMessage, ['display' => $display->display]);
+            $unauthorised[] = $display;
+            $difference--;
+        }
+
+        return $unauthorised;
     }
 
     /**

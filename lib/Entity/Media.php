@@ -1,35 +1,48 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 namespace Xibo\Entity;
 
 use Carbon\Carbon;
+use Intervention\Image\ImageManager;
 use Mimey\MimeTypes;
 use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
+use Stash\Interfaces\PoolInterface;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Helper\CacheableUrlWindow;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\Environment;
+use Xibo\Helper\LibraryFile;
+use Xibo\Helper\StashLock;
 use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\LibraryAsset;
+use Xibo\Service\LibraryStorageRegistryInterface;
+use Xibo\Service\LibraryStorageServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Storage\DownloadUrlUnavailableException;
+use Xibo\Storage\LibraryFileJournal;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\DuplicateEntityException;
@@ -46,6 +59,19 @@ class Media implements \JsonSerializable
 {
     use EntityTrait;
     use TagLinkTrait;
+
+    /** The longest side of a thumbnail, in pixels. */
+    public const THUMBNAIL_SIZE = 320;
+
+    /** The start of every cached image preview source's name, see getPreviewSourceCachePrefix(). */
+    public const PREVIEW_SOURCE_CACHE_PREFIX = 'tn_src_';
+
+    /** The lock held while a request makes a media item's thumbnail, followed by its mediaId. */
+    private const THUMBNAIL_LOCK_PREFIX = 'locks/media_thumbnail/';
+
+    /** Marks media whose thumbnail could not be made from its current file, so it is not retried for a day. */
+    private const THUMBNAIL_FAILED_PREFIX = 'media_thumbnail_failed/';
+    private const THUMBNAIL_FAILED_TTL = 86400;
 
     /**
      * @var int
@@ -214,12 +240,42 @@ class Media implements \JsonSerializable
     #[OA\Property(description: 'The height of the Media file')]
     public $height;
 
+    /**
+     * @var string|null
+     */
+    #[OA\Property(
+        description: 'The version of the stored thumbnail, or null when none is stored.'
+            . ' A video has one once it has a cover.'
+    )]
+    public $thumbnailVersion;
+
+    /**
+     * Where the file is while files are copied to new storage: 'local' until copied, else the configured store.
+     * @var string|null
+     */
+    public $storageEngine;
+
     // Private
     /** @var TagLink[] */
     private $unlinkTags = [];
     /** @var TagLink[] */
     private $linkTags = [];
     private $requestOptions = [];
+
+    /** The thumbnail version of the media this was cloned from, copied with its file. */
+    private ?string $clonedThumbnailVersion = null;
+
+    /** The storageEngine of the media this was cloned from, where its file is read from. */
+    private ?string $clonedStorageEngine = null;
+
+    /** Whether this save added the media, so its file is the first stored under its key. */
+    private bool $isNewMedia = false;
+
+    /** Whether this object stored a file under its key. */
+    private bool $fileStored = false;
+
+    /** Whether the last thumbnail failed for lack of memory, which another process may have. */
+    private bool $thumbnailNeededMoreMemory = false;
     private $datesToFormat = ['expires'];
     // New file revision
     public $isSaveRequired;
@@ -262,6 +318,11 @@ class Media implements \JsonSerializable
     private $permissionFactory;
 
     /**
+     * @var LibraryStorageServiceInterface
+     */
+    private $libraryStorageService;
+
+    /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
@@ -269,14 +330,23 @@ class Media implements \JsonSerializable
      * @param ConfigServiceInterface $config
      * @param MediaFactory $mediaFactory
      * @param PermissionFactory $permissionFactory
+     * @param LibraryStorageServiceInterface $libraryStorageService
      */
-    public function __construct($store, $log, $dispatcher, $config, $mediaFactory, $permissionFactory)
-    {
+    public function __construct(
+        $store,
+        $log,
+        $dispatcher,
+        $config,
+        $mediaFactory,
+        $permissionFactory,
+        $libraryStorageService
+    ) {
         $this->setCommonDependencies($store, $log, $dispatcher);
 
         $this->config = $config;
         $this->mediaFactory = $mediaFactory;
         $this->permissionFactory = $permissionFactory;
+        $this->libraryStorageService = $libraryStorageService;
     }
 
     public function __clone()
@@ -300,6 +370,18 @@ class Media implements \JsonSerializable
         $this->fileName = $this->storedAs;
         $this->storedAs = null;
         $this->cloned = true;
+
+        // A video's cover isn't copied, so neither is its thumbnail.
+        $this->clonedThumbnailVersion = $this->mediaType === 'image' ? $this->thumbnailVersion : null;
+        $this->thumbnailVersion = null;
+
+        // The copy is written to the configured store, wherever the source's file is.
+        $this->clonedStorageEngine = $this->storageEngine;
+        $this->storageEngine = null;
+
+        // Nothing is stored for the copy until save() copies the file.
+        $this->isNewMedia = false;
+        $this->fileStored = false;
     }
 
     /**
@@ -470,6 +552,7 @@ class Media implements \JsonSerializable
         // Add or edit
         if ($this->mediaId == null || $this->mediaId == 0) {
             $this->add();
+            $this->isNewMedia = true;
 
             // Always set force to true as we always want to save new files
             $this->isSaveRequired = true;
@@ -491,12 +574,7 @@ class Media implements \JsonSerializable
             $this->isSaveRequired = $this->isSaveRequired
                 || $this->valid == 0
                 || ($this->isRemote && $expires > 0 && $expires < Carbon::now()->format('U'))
-                || ($this->mediaType === 'module' && (
-                    // Save is required if the file doesn't exist, and also if it exists but isn't the size
-                    // we have recorded for it in the database
-                    !file_exists($this->downloadSink(false))
-                    || ($this->fileSize > 0 && filesize($this->downloadSink(false)) !== $this->fileSize)
-                ));
+                || ($this->mediaType === 'module' && $this->moduleFileNeedsResave());
 
             if ($options['audit']) {
                 $this->audit($this->mediaId, 'Updated', $this->getChangedProperties());
@@ -769,21 +847,32 @@ class Media implements \JsonSerializable
         if (empty($this->storedAs) && !$this->alwaysCopy) {
             // We could be a fresh file entirely, or we could be a clone
             if ($this->cloned) {
-                $this->getLog()->debug('Copying cloned file: ' . $libraryFolder . $this->fileName);
-                // Copy the file into the library
-                if (!@copy($libraryFolder . $this->fileName, $libraryFolder . $saveName)) {
+                $this->getLog()->debug('Copying cloned file: ' . $this->fileName);
+                // Copies the file in storage, as a clone already carries the source's file details.
+                $this->assertNewFileKeyFree($saveName);
+                try {
+                    $this->journalledWrite(
+                        $saveName,
+                        fn () => $this->copyFileFrom($this->clonedStorageEngine, $this->fileName, $saveName)
+                    );
+                } catch (GeneralException $exception) {
                     throw new ConfigurationException(__('Problem copying file in the Library Folder'));
+                }
+                $this->fileStored = true;
+                $this->storedAs = $saveName;
+                if ($this->clonedThumbnailVersion !== null) {
+                    $this->copyThumbnail($this->fileName, $saveName, $this->clonedThumbnailVersion);
                 }
             } else {
                 $this->getLog()->debug('Moving temporary file: ' . $libraryFolder . 'temp/' . $this->fileName);
                 // Move the file into the library
-                if (!$this->moveFile($libraryFolder . 'temp/' . $this->fileName, $libraryFolder . $saveName)) {
-                    throw new ConfigurationException(__('Problem moving uploaded file into the Library Folder'));
-                }
+                $this->assessAndStoreLocalFile(
+                    $libraryFolder . 'temp' . DIRECTORY_SEPARATOR . $this->fileName,
+                    $saveName,
+                    __('Problem moving uploaded file into the Library Folder')
+                );
+                $this->storedAs = $saveName;
             }
-
-            // Set the storedAs
-            $this->storedAs = $saveName;
         } else {
             // We have pre-defined where we want this to be stored
             if (empty($this->storedAs)) {
@@ -797,38 +886,30 @@ class Media implements \JsonSerializable
                 );
 
                 // Move the file into the library
-                if (!$this->moveFile($libraryFolder . 'temp/' . basename($this->name), $libraryFolder . $this->storedAs)
-                ) {
-                    throw new ConfigurationException(
-                        __('Problem moving downloaded file into the Library Folder')
-                    );
-                }
+                $this->assessAndStoreLocalFile(
+                    $libraryFolder . 'temp' . DIRECTORY_SEPARATOR . basename($this->name),
+                    $this->storedAs,
+                    __('Problem moving downloaded file into the Library Folder')
+                );
             } else {
                 $this->getLog()->debug('Copying specified file: ' . $this->fileName);
 
-                if (!@copy($this->fileName, $libraryFolder . $this->storedAs)) {
-                    $this->getLog()->error(
-                        sprintf(
-                            'Cannot copy %s to %s',
-                            $this->fileName,
-                            $libraryFolder . $this->storedAs
-                        )
+                // Finalize a copy, so the caller's file is left in place.
+                $copyPath = $this->copyToTemp($this->fileName, $libraryFolder);
+                try {
+                    $this->assessAndStoreLocalFile(
+                        $copyPath,
+                        $this->storedAs,
+                        __('This media has expired and cannot be replaced.')
                     );
-                    throw new ConfigurationException(__('This media has expired and cannot be replaced.'));
+                } finally {
+                    @unlink($copyPath);
                 }
             }
         }
 
-        // Work out the MD5
-        $this->md5 = md5_file($libraryFolder . $this->storedAs);
-        $this->fileSize = filesize($libraryFolder . $this->storedAs);
-
         // Set to valid
         $this->valid = 1;
-
-        // Resize image dimensions if threshold exceeds
-        // This also sets orientation
-        $this->assessDimensions();
 
         // Update the MD5 and storedAs to suit
         $this->getStore()->update('
@@ -857,11 +938,102 @@ class Media implements \JsonSerializable
         ]);
     }
 
-    private function assessDimensions(): void
+    /**
+     * Copy a local file into the library's temp folder
+     * @throws ConfigurationException
+     */
+    private function copyToTemp(string $sourcePath, string $libraryFolder): string
+    {
+        $copyPath = $libraryFolder . 'temp' . DIRECTORY_SEPARATOR . uniqid('copy_', true);
+        if (!@copy($sourcePath, $copyPath)) {
+            $this->getLog()->error(sprintf('Cannot copy %s to %s', $sourcePath, $copyPath));
+            throw new ConfigurationException(__('This media has expired and cannot be replaced.'));
+        }
+
+        return $copyPath;
+    }
+
+    /**
+     * Compute md5/fileSize/image-dimensions from a file
+     * @throws ConfigurationException
+     */
+    private function assessAndStoreLocalFile(
+        string $localSourcePath,
+        string $key,
+        string $failureMessage
+    ): void {
+        if (!file_exists($localSourcePath)) {
+            $this->getLog()->error('Cannot find local source file: ' . $localSourcePath);
+            throw new ConfigurationException($failureMessage);
+        }
+
+        $this->md5 = md5_file($localSourcePath);
+        $this->fileSize = filesize($localSourcePath);
+        $this->assessDimensions($localSourcePath);
+
+        // Made while the source is still a local file, as storing it removes it.
+        $thumbnailPath = $this->mediaType === 'image' ? $this->createThumbnailFile($localSourcePath, $key) : null;
+
+        try {
+            $this->assertNewFileKeyFree($key);
+
+            try {
+                $this->getJournal()->storeLocalFile($localSourcePath, $key);
+            } catch (GeneralException $exception) {
+                $this->getLog()->error(
+                    'Problem finalizing ' . $localSourcePath . ' to ' . $key . ': ' . $exception->getMessage()
+                );
+                throw new ConfigurationException($failureMessage);
+            }
+        } catch (GeneralException $exception) {
+            @unlink($localSourcePath);
+            if ($thumbnailPath !== null) {
+                @unlink($thumbnailPath);
+            }
+            throw $exception;
+        }
+        $this->fileStored = true;
+
+        if ($this->mediaType === 'image') {
+            $this->storeThumbnail($thumbnailPath, $key, $this->md5);
+        }
+    }
+
+    /**
+     * Refuses to overwrite a file already stored under a new media item's key, as it may belong to another CMS sharing
+     * the storage. A local library is this CMS's own, so a leftover file there is overwritten, as before.
+     * @throws ConfigurationException
+     */
+    private function assertNewFileKeyFree(string $key): void
+    {
+        if (!$this->isNewMedia || $this->mediaType === 'module' || $this->libraryStorageService->hasLocalFiles()) {
+            return;
+        }
+
+        try {
+            $exists = $this->libraryStorageService->exists($key);
+        } catch (GeneralException $exception) {
+            $this->getLog()->error('Cannot check library storage for ' . $key . ': ' . $exception->getMessage());
+            throw new ConfigurationException(__('Problem moving uploaded file into the Library Folder'));
+        }
+
+        if ($exists) {
+            $this->getLog()->critical('A library file already exists for new media ' . $this->mediaId . ' at '
+                . $key . '. Is another CMS using the same library storage, or was the database restored? '
+                . 'Refusing to overwrite it.');
+            throw new ConfigurationException(
+                __('A file for this media already exists in library storage. Please contact your administrator.')
+            );
+        }
+    }
+
+    /**
+     * @param string $filePath a real local path to the file (the local source, read before it's
+     *                         finalized into permanent storage - see assessAndStoreLocalFile())
+     */
+    private function assessDimensions(string $filePath): void
     {
         if ($this->mediaType === 'image' || ($this->mediaType === 'module' && $this->moduleSystemFile === 0)) {
-            $libraryFolder = $this->config->getSetting('LIBRARY_LOCATION');
-            $filePath = $libraryFolder . $this->storedAs;
             list($imgWidth, $imgHeight) = @getimagesize($filePath);
 
             $resizeThreshold = $this->config->getSetting('DEFAULT_RESIZE_THRESHOLD');
@@ -901,6 +1073,33 @@ class Media implements \JsonSerializable
     }
 
     /**
+     * The storage key of a video's cover image.
+     * @param int|string $mediaId
+     * @return string
+     */
+    public static function getVideoCoverKey($mediaId): string
+    {
+        return $mediaId . '_videocover.png';
+    }
+
+    /**
+     * The mediaId a video cover key (see getVideoCoverKey()) belongs to, or null if $key isn't a cover key.
+     */
+    public static function getMediaIdFromVideoCoverKey(string $key): ?int
+    {
+        return preg_match('/^(\d+)_videocover\.png$/', $key, $matches) ? (int)$matches[1] : null;
+    }
+
+    /**
+     * Whether $key is the video cover of a media id in $mediaIds (an array keyed by mediaId).
+     */
+    public static function isVideoCoverOf(string $key, array $mediaIds): bool
+    {
+        $mediaId = self::getMediaIdFromVideoCoverKey($key);
+        return $mediaId !== null && isset($mediaIds[$mediaId]);
+    }
+
+    /**
      * Release an image from image processing
      * @param $md5
      * @param $fileSize
@@ -922,6 +1121,410 @@ class Media implements \JsonSerializable
     }
 
     /**
+     * Store a new cover for this video from a local file (removed once stored), and the thumbnail made from it.
+     * @throws GeneralException
+     */
+    public function storeVideoCover(string $localPath): void
+    {
+        $key = self::getVideoCoverKey($this->mediaId);
+        $version = md5_file($localPath);
+
+        // A video has a cover exactly when it has a thumbnail, so a cover without one isn't stored.
+        $thumbnailPath = $this->createThumbnailFile($localPath, $key)
+            ?? throw new InvalidArgumentException(__('Invalid image data'), 'image');
+
+        try {
+            $this->getJournal()->storeLocalFile($localPath, $key);
+        } catch (GeneralException $exception) {
+            @unlink($thumbnailPath);
+            throw $exception;
+        }
+
+        $this->storeThumbnail($thumbnailPath, $key, $version);
+        if ($this->thumbnailVersion !== $version) {
+            throw new GeneralException('Problem storing the thumbnail of ' . $key);
+        }
+        $this->deleteLocalCopies($key, true);
+    }
+
+    /**
+     * The key the thumbnail is made from: the file of an image, the cover of a video.
+     */
+    public function getThumbnailSourceKey(): string
+    {
+        return self::getThumbnailSourceKeyFor($this->mediaType, $this->mediaId, $this->storedAs);
+    }
+
+    private static function getThumbnailSourceKeyFor(string $mediaType, $mediaId, ?string $storedAs): string
+    {
+        return $mediaType === 'video' ? self::getVideoCoverKey($mediaId) : (string)$storedAs;
+    }
+
+    /**
+     * The key of the stored thumbnail, or null if none is stored.
+     */
+    public function getThumbnailKey(): ?string
+    {
+        return $this->thumbnailVersion === null
+            ? null
+            : self::getThumbnailKeyFor($this->mediaType, $this->mediaId, $this->storedAs, $this->thumbnailVersion);
+    }
+
+    /**
+     * getThumbnailKey() for a media row.
+     */
+    public static function getThumbnailKeyFor(string $mediaType, $mediaId, ?string $storedAs, string $version): string
+    {
+        return self::getThumbnailKeyPrefix(self::getThumbnailSourceKeyFor($mediaType, $mediaId, $storedAs)) . $version;
+    }
+
+    public function getThumbnailContentType(): string
+    {
+        return self::getThumbnailContentTypeFor($this->getThumbnailSourceKey());
+    }
+
+    /**
+     * A thumbnail keeps its source's format when the source's extension names one, and is a PNG otherwise.
+     */
+    private static function getThumbnailContentTypeFor(string $sourceKey): string
+    {
+        return match (strtolower(pathinfo($sourceKey, PATHINFO_EXTENSION))) {
+            'jpg', 'jpeg' => 'image/jpeg',
+            'gif' => 'image/gif',
+            'webp' => 'image/webp',
+            default => 'image/png',
+        };
+    }
+
+    /**
+     * The local library, when this media waits to be copied and its thumbnail is still there; otherwise null,
+     * for the configured store.
+     * @throws GeneralException
+     */
+    public function getLocalThumbnailStorage(): ?LibraryStorageServiceInterface
+    {
+        $key = $this->getThumbnailKey();
+        if ($key === null || $this->storageEngine === null) {
+            return null;
+        }
+
+        $storage = $this->getStorageFor($this->storageEngine);
+        return $storage !== $this->libraryStorageService && $storage->exists($key) ? $storage : null;
+    }
+
+    /**
+     * A URL the browser can load the stored thumbnail from directly, the same for every request in a window so it is
+     * cached, or null to use the thumbnail route.
+     */
+    public function getThumbnailUrl(int $now): ?string
+    {
+        $key = $this->getThumbnailKey();
+        if ($key === null) {
+            return null;
+        }
+
+        try {
+            // A thumbnail still in the local library has no URL, so the thumbnail route sends it.
+            return ($this->getLocalThumbnailStorage() ?? $this->libraryStorageService)->getUserDownloadUrl(
+                $key,
+                $this->getThumbnailContentType(),
+                'inline',
+                CacheableUrlWindow::start($now),
+                CacheableUrlWindow::cacheControl()
+            );
+        } catch (DownloadUrlUnavailableException $exception) {
+            $this->getLog()->error('getThumbnailUrl: ' . $exception->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Makes and stores the thumbnail of media that has none, or whose stored $staleVersion is missing, under a lock
+     * so only one request makes it, adopting a thumbnail already stored under the current version.
+     * @return bool false if another request held the lock throughout, as that request is making it
+     * @throws NotFoundException if the source is gone
+     * @throws InvalidArgumentException if no thumbnail can be made from the source
+     * @throws GeneralException if the thumbnail can't be stored
+     */
+    public function fillThumbnail(PoolInterface $pool, ?string $staleVersion = null, int $tries = 5): bool
+    {
+        $failed = $pool->getItem(self::THUMBNAIL_FAILED_PREFIX . $this->mediaId . '/' . ($this->md5 ?: 'none'));
+        if ($failed->isHit()) {
+            throw new InvalidArgumentException((string)$failed->get());
+        }
+
+        $lock = new StashLock(
+            $pool,
+            self::THUMBNAIL_LOCK_PREFIX . $this->mediaId,
+            $this->getLog()->getLoggerInterface()
+        );
+        if (!$lock->acquire(60, 1000, $tries)) {
+            return false;
+        }
+
+        $release = fn () => $lock->release();
+        $this->thumbnailNeededMoreMemory = false;
+        try {
+            // Another request may have stored it while this one waited.
+            $this->thumbnailVersion = $this->getStore()->select(
+                'SELECT `thumbnailVersion` FROM `media` WHERE `mediaId` = :mediaId',
+                ['mediaId' => $this->mediaId]
+            )[0]['thumbnailVersion'] ?? null;
+
+            if ($this->thumbnailVersion === $staleVersion
+                && ($staleVersion === null || !$this->libraryStorageService->exists($this->getThumbnailKey()))
+            ) {
+                $this->makeThumbnailFromStorage($staleVersion !== null);
+            }
+        } catch (\Throwable $exception) {
+            $release();
+            if ($exception instanceof InvalidArgumentException && !$this->thumbnailNeededMoreMemory) {
+                $failed->set($exception->getMessage());
+                $failed->expiresAfter(self::THUMBNAIL_FAILED_TTL);
+                $pool->save($failed);
+            }
+            throw $exception;
+        }
+
+        // Released once the version is committed, so a waiting request reads it.
+        $this->getStore()->afterCommit($release);
+        return true;
+    }
+
+    /**
+     * Makes the thumbnail from the stored source and stores it, or adopts one already stored under its version.
+     * @throws GeneralException
+     */
+    private function makeThumbnailFromStorage(bool $isRemake): void
+    {
+        $sourceKey = $this->getThumbnailSourceKey();
+        $version = null;
+
+        if ($this->mediaType === 'image') {
+            $this->thumbnailNeededMoreMemory = !self::canDecode((int)$this->width, (int)$this->height);
+            if ($this->thumbnailNeededMoreMemory || $this->exceedsResizeLimit((int)$this->width, (int)$this->height)) {
+                throw new InvalidArgumentException(__('Image too large'));
+            }
+
+            $version = empty($this->md5) ? null : $this->md5;
+            $key = self::getThumbnailKeyPrefix($sourceKey) . $version;
+            if (!$isRemake && $version !== null && $this->libraryStorageService->exists($key)) {
+                $this->setThumbnailVersion($version);
+                return;
+            }
+        }
+
+        // An image is read from where its file is; a video's cover is always in the configured store.
+        $sourceStorage = $sourceKey === $this->storedAs
+            ? $this->getStorageFor($this->storageEngine)
+            : $this->libraryStorageService;
+        $sourcePath = $sourceStorage->downloadToTemp($sourceKey);
+        try {
+            $version ??= md5_file($sourcePath);
+            $thumbnailPath = $this->createThumbnailFile($sourcePath, $sourceKey);
+        } finally {
+            $sourceStorage->releaseTemp($sourcePath);
+        }
+
+        if ($thumbnailPath === null) {
+            $this->setThumbnailVersion(null);
+            throw new InvalidArgumentException(__('Invalid image data'));
+        }
+
+        $this->storeThumbnail($thumbnailPath, $sourceKey, $version);
+        if ($this->thumbnailVersion !== $version) {
+            throw new GeneralException('Thumbnail could not be made for media ' . $this->mediaId);
+        }
+    }
+
+    private function exceedsResizeLimit(int $width, int $height): bool
+    {
+        $resizeLimit = (int)$this->config->getSetting('DEFAULT_RESIZE_LIMIT');
+        return $resizeLimit > 0 && ($width > $resizeLimit || $height > $resizeLimit);
+    }
+
+    /**
+     * Whether GD, at about 5 bytes a pixel, can decode a $width x $height image in the memory left.
+     */
+    private static function canDecode(int $width, int $height): bool
+    {
+        $limit = Environment::getMemoryLimitBytes();
+        return $limit <= 0 || $width * $height * 5 < $limit - memory_get_usage(true);
+    }
+
+    /**
+     * A thumbnail of a local image in the library temp folder, or null if it can't be read or, for an image, is over
+     * the resize limit.
+     */
+    private function createThumbnailFile(string $sourcePath, string $sourceKey): ?string
+    {
+        $size = @getimagesize($sourcePath);
+        if ($size === false) {
+            $this->getLog()->debug('No thumbnail for media ' . $this->mediaId . ': not a readable image.');
+            return null;
+        }
+
+        // A cover has already been decoded by the request that uploaded it.
+        if ($this->mediaType === 'image' && $this->exceedsResizeLimit($size[0], $size[1])) {
+            $this->getLog()->debug('No thumbnail for media ' . $this->mediaId . ': over the resize limit.');
+            return null;
+        }
+
+        // Running out of memory can't be caught, and would fail the whole request.
+        if (!self::canDecode($size[0], $size[1])) {
+            $this->thumbnailNeededMoreMemory = true;
+            $this->getLog()->error('No thumbnail for media ' . $this->mediaId . ': too large to decode in the '
+                . 'memory available.');
+            return null;
+        }
+
+        $path = $this->config->getSetting('LIBRARY_LOCATION') . 'temp' . DIRECTORY_SEPARATOR
+            . uniqid('thumbnail_', true);
+        try {
+            // Upsizing is allowed, as before.
+            ImageManager::gd()
+                ->read($sourcePath)
+                ->scale(self::THUMBNAIL_SIZE, self::THUMBNAIL_SIZE)
+                ->encodeByMediaType(self::getThumbnailContentTypeFor($sourceKey))
+                ->save($path);
+        } catch (\Throwable $exception) {
+            $this->getLog()->error('Cannot make a thumbnail for media ' . $this->mediaId . ': '
+                . $exception->getMessage());
+            @unlink($path);
+            return null;
+        }
+
+        return $path;
+    }
+
+    /**
+     * Stores a thumbnail made from $sourceKey under $version and records it, or records that there is none when it
+     * wasn't made or can't be stored.
+     */
+    private function storeThumbnail(?string $thumbnailPath, string $sourceKey, string $version): void
+    {
+        if ($thumbnailPath === null) {
+            $this->setThumbnailVersion(null);
+            return;
+        }
+
+        $key = self::getThumbnailKeyPrefix($sourceKey) . $version;
+        $journal = $this->getJournal();
+        try {
+            $journalId = $journal->storeLocalFile($thumbnailPath, $key, false);
+        } catch (GeneralException $exception) {
+            $this->getLog()->error('Cannot store thumbnail ' . $key . ': ' . $exception->getMessage());
+            $this->setThumbnailVersion(null);
+            return;
+        }
+        $this->setThumbnailVersion($version);
+
+        // The upload record is cleared once the thumbnail version is saved.
+        $journal->clearUploadAfterCommit($journalId);
+    }
+
+    /**
+     * Copies the thumbnail of a cloned image, leaving the clone without one if it can't be copied.
+     */
+    private function copyThumbnail(string $sourceKey, string $destKey, string $version): void
+    {
+        $key = self::getThumbnailKeyPrefix($destKey) . $version;
+        $sourceThumbnail = self::getThumbnailKeyPrefix($sourceKey) . $version;
+        // A file waiting to be copied may still have its thumbnail in the local library.
+        $engine = $this->clonedStorageEngine === LibraryStorageRegistryInterface::LOCAL_ENGINE
+            && $this->getStorageFor($this->clonedStorageEngine)->exists($sourceThumbnail)
+                ? $this->clonedStorageEngine
+                : null;
+        try {
+            $this->journalledWrite($key, fn () => $this->copyFileFrom($engine, $sourceThumbnail, $key));
+        } catch (GeneralException $exception) {
+            $this->getLog()->error('Cannot copy thumbnail to ' . $key . ': ' . $exception->getMessage());
+            return;
+        }
+        $this->setThumbnailVersion($version);
+    }
+
+    /**
+     * Writes $key with $write, journalled so a file written for a transaction that then rolls back is removed by the
+     * next tidy.
+     * @throws GeneralException
+     */
+    private function journalledWrite(string $key, callable $write): void
+    {
+        $journal = $this->getJournal();
+        $journalId = $journal->recordUpload($key);
+        $write();
+        $journal->clearUploadAfterCommit($journalId);
+    }
+
+    /**
+     * Where a file recorded with $storageEngine is: the configured store unless it waits to be copied to it.
+     */
+    private function getStorageFor(?string $storageEngine): LibraryStorageServiceInterface
+    {
+        return $storageEngine === null
+            ? $this->libraryStorageService
+            : $this->mediaFactory->getStorageFor($storageEngine);
+    }
+
+    /**
+     * Copies $sourceKey from the store $storageEngine names to $destKey in the configured store.
+     * @throws GeneralException
+     */
+    private function copyFileFrom(?string $storageEngine, string $sourceKey, string $destKey): void
+    {
+        $source = $this->getStorageFor($storageEngine);
+        if ($source === $this->libraryStorageService) {
+            $this->libraryStorageService->copy($sourceKey, $destKey);
+            return;
+        }
+
+        $path = $source->downloadToTemp($sourceKey);
+        try {
+            $copy = $this->config->getSetting('LIBRARY_LOCATION') . 'temp/copy_' . bin2hex(random_bytes(8));
+            if (!copy($path, $copy)) {
+                throw new GeneralException('Problem copying file in the Library Folder: ' . $sourceKey);
+            }
+        } finally {
+            $source->releaseTemp($path);
+        }
+        $this->libraryStorageService->moveFromLocalPath($copy, $destKey);
+    }
+
+    /**
+     * The journal for this media's storage.
+     */
+    private function getJournal(): LibraryFileJournal
+    {
+        return new LibraryFileJournal($this->getStore(), $this->libraryStorageService, LibraryAsset::MEDIA);
+    }
+
+    /**
+     * Records the stored thumbnail's version, deleting the one it replaces once committed.
+     */
+    private function setThumbnailVersion(?string $version): void
+    {
+        if ($version === $this->thumbnailVersion) {
+            return;
+        }
+
+        $oldKey = $this->getThumbnailKey();
+        if ($oldKey !== null) {
+            (new LibraryFileJournal($this->getStore(), $this->libraryStorageService, LibraryAsset::MEDIA))
+                ->deleteAfterCommit($oldKey, $this->getLog()->getLoggerInterface());
+        }
+
+        $this->getStore()->update(
+            'UPDATE `media` SET `thumbnailVersion` = :thumbnailVersion WHERE `mediaId` = :mediaId',
+            [
+                'thumbnailVersion' => $version,
+                'mediaId' => $this->mediaId,
+            ]
+        );
+        $this->thumbnailVersion = $version;
+    }
+
+    /**
      * Delete a Library File
      */
     private function deleteFile()
@@ -932,53 +1535,103 @@ class Media implements \JsonSerializable
             return;
         }
 
-        // Library location
-        $libraryLocation = $this->config->getSetting("LIBRARY_LOCATION");
-
-        // 3 things to check for..
-        // the actual file, the thumbnail, the background
-        // video cover image and its thumbnail
-        if (file_exists($libraryLocation . $this->storedAs)) {
-            unlink($libraryLocation . $this->storedAs);
+        // A new media item that never stored a file owns nothing under its key, so nothing is deleted.
+        if ($this->isNewMedia && !$this->fileStored) {
+            $this->getLog()->debug('Deleting new media ' . $this->mediaId . ' that never stored a file.'
+                . ' Leaving whatever is stored under ' . $this->storedAs . ' alone.');
+            return;
         }
 
-        if (file_exists($libraryLocation . 'tn_' . $this->storedAs)) {
-            unlink($libraryLocation . 'tn_' . $this->storedAs);
+        // Deletes are journalled with the row and carried out after commit, so a failure is retried by the next tidy.
+        $storedAs = $this->storedAs;
+        $mediaId = $this->mediaId;
+        (new LibraryFileJournal(
+            $this->getStore(),
+            $this->getStorageFor($this->storageEngine),
+            LibraryAsset::MEDIA
+        ))->deleteAfterCommit($storedAs, $this->getLog()->getLoggerInterface());
+
+        $journal = new LibraryFileJournal($this->getStore(), $this->libraryStorageService, LibraryAsset::MEDIA);
+        $keys = [];
+        // A file waiting to be copied may already be in storage, uploaded but not yet recorded.
+        if ($this->storageEngine === LibraryStorageRegistryInterface::LOCAL_ENGINE) {
+            $keys[] = $storedAs;
+        }
+        if ($this->mediaType === 'video') {
+            $keys[] = self::getVideoCoverKey($mediaId);
+        }
+        if ($this->thumbnailVersion !== null) {
+            $keys[] = $this->getThumbnailKey();
+        }
+        foreach ($keys as $key) {
+            $journal->deleteAfterCommit($key, $this->getLog()->getLoggerInterface());
         }
 
-        if (file_exists($libraryLocation . 'tn_' . $this->mediaId . '_videocover.png')) {
-            unlink($libraryLocation . 'tn_' . $this->mediaId . '_videocover.png');
+        // Replicas may still hold thumbnails cached locally before they were stored.
+        $this->getStore()->afterCommit(function () use ($storedAs, $mediaId) {
+            $this->deleteLocalCopies($storedAs);
+            $this->deleteLocalCopies(self::getVideoCoverKey($mediaId));
+        });
+    }
+
+    /**
+     * The start of a library file's thumbnail keys, which end with their version (see getThumbnailKey()).
+     */
+    public static function getThumbnailKeyPrefix(string $key): string
+    {
+        return 'tn_' . $key . '_';
+    }
+
+    /**
+     * Locally cached copies of a library file kept as the source for image previews, when the library isn't on
+     * local disk, are named with this prefix plus a version of the file (see WidgetDownloader::imagePreview()).
+     */
+    public static function getPreviewSourceCachePrefix(string $key): string
+    {
+        return self::PREVIEW_SOURCE_CACHE_PREFIX . $key . '_';
+    }
+
+    /**
+     * Deletes cached versions under $prefix except $keepPath and files another request is still writing.
+     * @throws InvalidArgumentException if $prefix would resolve outside the library
+     */
+    public static function deleteCachedVersions(
+        string $libraryLocation,
+        string $prefix,
+        ?string $keepPath = null
+    ): void {
+        $prefixPath = LibraryFile::resolve($libraryLocation, $prefix);
+        $paths = glob(preg_replace('/([*?\[\]])/', '\\\\$1', $prefixPath) . '*') ?: [];
+        if (str_ends_with($prefixPath, '_') && str_starts_with($prefix, 'tn_')) {
+            // tn_{key}: the prefix without its trailing separator.
+            $paths[] = substr($prefixPath, 0, -1);
         }
 
-        if (file_exists($libraryLocation . $this->mediaId . '_videocover.png')) {
-            unlink($libraryLocation . $this->mediaId . '_videocover.png');
+        foreach ($paths as $path) {
+            if ($path === $keepPath
+                || (str_ends_with($path, '.part') && @filemtime($path) > time() - 3600)
+                || !is_file($path)
+            ) {
+                continue;
+            }
+            @unlink($path);
         }
     }
 
     /**
-     * Workaround for moving files across file systems
-     * @param $from
-     * @param $to
-     * @return bool
+     * Deletes the local copies of a library file's thumbnails and preview sources, or only its preview sources.
      */
-    private function moveFile($from, $to)
+    private function deleteLocalCopies(string $key, bool $isPreviewSourcesOnly = false): void
     {
-        // Try to move the file first
-        $moved = rename($from, $to);
-
-        if (!$moved) {
-            $this->getLog()->info('Cannot move file: ' . $from . ' to ' . $to . ', will try and copy/delete instead.');
-
-            // Copy
-            $moved = copy($from, $to);
-
-            // Delete
-            if (!@unlink($from)) {
-                $this->getLog()->error('Cannot delete file: ' . $from . ' after copying to ' . $to);
+        $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
+        try {
+            if (!$isPreviewSourcesOnly) {
+                self::deleteCachedVersions($libraryLocation, self::getThumbnailKeyPrefix($key));
             }
+            self::deleteCachedVersions($libraryLocation, self::getPreviewSourceCachePrefix($key));
+        } catch (InvalidArgumentException $exception) {
+            $this->getLog()->error('Problem resolving local copies of ' . $key . ': ' . $exception->getMessage());
         }
-
-        return $moved;
     }
 
     /**
@@ -988,6 +1641,23 @@ class Media implements \JsonSerializable
     public function downloadUrl()
     {
         return $this->fileName;
+    }
+
+    /**
+     * Whether a module file is missing or the wrong size, keeping it when storage can't be checked.
+     */
+    private function moduleFileNeedsResave(): bool
+    {
+        try {
+            $size = $this->libraryStorageService->size($this->storedAs);
+        } catch (NotFoundException) {
+            return true;
+        } catch (GeneralException $exception) {
+            $this->getLog()->error('Cannot check module file ' . $this->storedAs . ': ' . $exception->getMessage());
+            return false;
+        }
+
+        return $this->fileSize > 0 && $size !== (int)$this->fileSize;
     }
 
     /**

@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { screen, waitFor } from '@testing-library/react';
@@ -57,7 +59,6 @@ vi.mock('../hooks/usePlayerVersionsFilterOptions', () => ({
           { label: 'Android', value: 'android' },
           { label: 'webOS', value: 'lg' },
           { label: 'Tizen', value: 'sssp' },
-          { label: 'ChromeOS', value: 'chromeOS' },
         ],
       },
       {
@@ -158,14 +159,11 @@ describe('Player Versions page - filters', () => {
 
     await user.type(screen.getByPlaceholderText('Search player versions...'), 'Alpha');
 
-    await waitFor(
-      () => {
-        expect(fetchPlayerVersions).toHaveBeenCalledWith(
-          expect.objectContaining({ playerShowVersion: 'Alpha' }),
-        );
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchPlayerVersions).toHaveBeenCalledWith(
+        expect.objectContaining({ playerShowVersion: 'Alpha' }),
+      );
+    });
   });
 
   test('typing in the search box resets pagination to page 1', async () => {
@@ -175,14 +173,11 @@ describe('Player Versions page - filters', () => {
 
     await user.type(screen.getByPlaceholderText('Search player versions...'), 'screen');
 
-    await waitFor(
-      () => {
-        expect(fetchPlayerVersions).toHaveBeenCalledWith(
-          expect.objectContaining({ start: 0, playerShowVersion: 'screen' }),
-        );
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchPlayerVersions).toHaveBeenCalledWith(
+        expect.objectContaining({ start: 0, playerShowVersion: 'screen' }),
+      );
+    });
   });
 
   test('clearing the search box restores the full list', async () => {
@@ -217,14 +212,11 @@ describe('Player Versions page - filters', () => {
     const typeSelect = await screen.findByRole('combobox', { name: /^type$/i });
     await user.selectOptions(typeSelect, 'android');
 
-    await waitFor(
-      () => {
-        expect(fetchPlayerVersions).toHaveBeenCalledWith(
-          expect.objectContaining({ start: 0, playerType: 'android' }),
-        );
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchPlayerVersions).toHaveBeenCalledWith(
+        expect.objectContaining({ start: 0, playerType: 'android' }),
+      );
+    });
   });
 
   test('selecting a Version updates the query and resets to page 1', async () => {
@@ -236,14 +228,11 @@ describe('Player Versions page - filters', () => {
     const versionSelect = await screen.findByRole('combobox', { name: /^version$/i });
     await user.selectOptions(versionSelect, '4.0.0');
 
-    await waitFor(
-      () => {
-        expect(fetchPlayerVersions).toHaveBeenCalledWith(
-          expect.objectContaining({ start: 0, playerVersion: '4.0.0' }),
-        );
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchPlayerVersions).toHaveBeenCalledWith(
+        expect.objectContaining({ start: 0, playerVersion: '4.0.0' }),
+      );
+    });
   });
 
   test('entering a Code updates the query and resets to page 1', async () => {
@@ -255,14 +244,11 @@ describe('Player Versions page - filters', () => {
     const codeInput = await screen.findByPlaceholderText('Code');
     await user.type(codeInput, '400');
 
-    await waitFor(
-      () => {
-        expect(fetchPlayerVersions).toHaveBeenCalledWith(
-          expect.objectContaining({ start: 0, playerCode: 400 }),
-        );
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchPlayerVersions).toHaveBeenCalledWith(
+        expect.objectContaining({ start: 0, playerCode: 400 }),
+      );
+    });
   });
 
   test('clicking Reset clears all filter inputs', async () => {
@@ -274,14 +260,11 @@ describe('Player Versions page - filters', () => {
     const codeInput = (await screen.findByPlaceholderText('Code')) as HTMLInputElement;
     await user.type(codeInput, '400');
 
-    await waitFor(
-      () => {
-        expect(fetchPlayerVersions).toHaveBeenCalledWith(
-          expect.objectContaining({ playerCode: 400 }),
-        );
-      },
-      { timeout: 2000 },
-    );
+    await waitFor(() => {
+      expect(fetchPlayerVersions).toHaveBeenCalledWith(
+        expect.objectContaining({ playerCode: 400 }),
+      );
+    });
 
     await user.click(screen.getByRole('button', { name: /reset/i }));
 

@@ -1,27 +1,29 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { useDropzone } from 'react-dropzone';
-import { vi, beforeEach, test } from 'vitest';
+import { vi, afterEach, beforeEach, test } from 'vitest';
 
 import { FileUploader } from '../FileUploader';
 
@@ -121,6 +123,11 @@ describe('FileUploader component', () => {
     defaultDropzoneMock();
   });
 
+  // Restore real timers even when a fake-timer test fails mid-way
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   // ---------------------------------------------------------------------------
   // Disabled state
   // ---------------------------------------------------------------------------
@@ -218,8 +225,6 @@ describe('FileUploader component', () => {
     });
 
     expect(spies.updateFileData).toHaveBeenCalledWith('x', { name: 'renamed.png' });
-
-    vi.useRealTimers();
   });
 
   // While a file is uploading, the name field is read-only to prevent mid-transfer edits.
@@ -338,6 +343,29 @@ describe('FileUploader component', () => {
     expect(screen.getByText('75%')).toBeInTheDocument();
   });
 
+  // Once every byte has reached the CMS, it is still storing the file, so 100% would be misleading.
+  test('shows "Saving to storage…" once the file has been sent but the CMS has not replied', () => {
+    renderUploader([makeItem({ status: 'uploading', progress: 100 })]);
+
+    expect(screen.getByText('Saving to storage…')).toBeInTheDocument();
+    expect(screen.queryByText('100%')).not.toBeInTheDocument();
+  });
+
+  // A URL upload is downloaded by the CMS, so there is no browser progress to show.
+  test('shows "Saving to storage…" while a URL upload is in progress', () => {
+    renderUploader([makeItem({ type: 'url', file: undefined, status: 'uploading', progress: 0 })]);
+
+    expect(screen.getByText('Saving to storage…')).toBeInTheDocument();
+  });
+
+  test('shows a message when the video thumbnail could not be saved', () => {
+    renderUploader([makeItem({ status: 'completed', progress: 100, thumbnailFailed: true })]);
+
+    expect(
+      screen.getByText('The thumbnail could not be saved. Retake it to try again.'),
+    ).toBeInTheDocument();
+  });
+
   // ---------------------------------------------------------------------------
   test('queue summary does not show "All N items completed" when items are still uploading', () => {
     renderUploader([
@@ -358,5 +386,14 @@ describe('FileUploader component', () => {
 
     expect(screen.queryByText('All 2 items completed')).not.toBeInTheDocument();
     expect(screen.getByText('0 items completed, 2 items failed')).toBeInTheDocument();
+  });
+
+  test('queue summary counts a failed thumbnail as a failed item', () => {
+    renderUploader([
+      makeItem({ id: '1', status: 'completed', progress: 100, thumbnailFailed: true }),
+      makeItem({ id: '2', status: 'completed', progress: 100 }),
+    ]);
+
+    expect(screen.getByText('1 item completed, 1 item failed')).toBeInTheDocument();
   });
 });

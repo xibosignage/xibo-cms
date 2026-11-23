@@ -1,28 +1,31 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { useQueryClient } from '@tanstack/react-query';
 import { Search, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 
 import type { ModalType } from './DisplaysConfig';
 import {
@@ -176,6 +179,10 @@ export default function Displays() {
   const [activeModal, setActiveModal] = useState<ModalType | null>(null);
   const [itemsToDelete, setItemsToDelete] = useState<Display[]>([]);
   const [itemsToMove, setItemsToMove] = useState<Display[]>([]);
+  const [addDisplayPrefill, setAddDisplayPrefill] = useState<{
+    code: string;
+    displayName: string;
+  } | null>(null);
   const [bulkActionItems, setBulkActionItems] = useState<Display[]>([]);
   const [selectedDisplayId, setSelectedDisplayId] = useState<number | null>(null);
   const [actionDisplay, setActionDisplay] = useState<Display | null>(null);
@@ -184,6 +191,8 @@ export default function Displays() {
 
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
+
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const handleFolderChange = (folder: { id: number | null; text: string | '' }) => {
     setSelectedFolderId(folder.id);
@@ -286,6 +295,36 @@ export default function Displays() {
     setActionDisplay(display);
     setActionError(null);
     openModal(modal);
+  };
+
+  // A deep link opens Add Display: ?addCode= (e.g. a scanned QR code) with the code already
+  // filled in, or ?add=1 with nothing filled in. Users who can't add displays just land on the page.
+  useEffect(() => {
+    const code = searchParams.get('addCode');
+
+    if (!code && searchParams.get('add') !== '1') {
+      return;
+    }
+
+    if (canAdd) {
+      if (code) {
+        setAddDisplayPrefill({ code, displayName: searchParams.get('displayName') ?? '' });
+      }
+      openModal('add');
+    }
+
+    // Drop the params so refreshing the page does not reopen the modal.
+    setSearchParams({}, { replace: true });
+  }, []);
+
+  /**
+   * Open Manage Display for a display that has just connected.
+   */
+  const manageNewDisplay = (display: Display) => {
+    setAddDisplayPrefill(null);
+    setActionDisplay(display);
+    setActionError(null);
+    openModal('manage');
   };
 
   const handleDelete = (id: number) => {
@@ -612,8 +651,10 @@ export default function Displays() {
       />
 
       <DisplayModals
+        canAdd={canAdd}
         actions={{
           activeModal,
+          openModal,
           closeModal,
           handleRefresh,
           deleteError,
@@ -653,6 +694,9 @@ export default function Displays() {
           confirmBulkSetDefaultLayout,
           confirmSendCommand,
           confirmBulkMoveCms,
+          addDisplayPrefill,
+          clearAddDisplayPrefill: () => setAddDisplayPrefill(null),
+          manageNewDisplay,
         }}
       />
       {canViewFolders && <FolderActionModals folderActions={folderActions} />}

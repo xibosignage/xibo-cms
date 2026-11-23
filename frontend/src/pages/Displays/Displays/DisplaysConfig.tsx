@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import type { ColumnDef } from '@tanstack/react-table';
@@ -989,16 +991,24 @@ export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display
       header: t('Commercial Licence'),
       size: 160,
       cell: (info) => {
-        const value = info.getValue<number>();
+        const refusal = info.row.original.licenceRefusalDescription;
+        // A display the licensing server refused is not licensed, whatever its player last reported.
+        const value = refusal ? 0 : info.getValue<number>();
         return (
-          <StatusCell
-            label={getCommercialLicenceLabel(t, value)}
-            type={getCommercialLicenceStatus(value)}
-          />
+          <div className="flex flex-col items-start gap-1 min-w-0 w-full">
+            <StatusCell
+              label={getCommercialLicenceLabel(t, value)}
+              type={getCommercialLicenceStatus(value)}
+            />
+            {refusal && <TextCell truncate>{refusal}</TextCell>}
+          </div>
         );
       },
       meta: {
-        getExportValue: (row) => getCommercialLicenceLabel(t, row.commercialLicence),
+        getExportValue: (row) =>
+          row.licenceRefusalDescription
+            ? `${getCommercialLicenceLabel(t, 0)}: ${row.licenceRefusalDescription}`
+            : getCommercialLicenceLabel(t, row.commercialLicence),
       },
     },
     {

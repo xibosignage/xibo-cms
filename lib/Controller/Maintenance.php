@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 
@@ -25,9 +27,12 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Entity\Media;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Factory\MediaFactory;
+use Xibo\Service\LibraryStorageRegistryInterface;
 use Xibo\Service\MediaServiceInterface;
+use Xibo\Storage\LibraryFileJournal;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ControllerNotImplemented;
@@ -48,17 +53,26 @@ class Maintenance extends Base
     /** @var MediaServiceInterface */
     private $mediaService;
 
+    /** @var LibraryStorageRegistryInterface */
+    private $libraryStorageRegistry;
+
     /**
      * Set common dependencies.
      * @param StorageServiceInterface $store
      * @param MediaFactory $mediaFactory
      * @param MediaServiceInterface $mediaService
+     * @param LibraryStorageRegistryInterface $libraryStorageRegistry
      */
-    public function __construct($store, $mediaFactory, MediaServiceInterface $mediaService)
-    {
+    public function __construct(
+        $store,
+        $mediaFactory,
+        MediaServiceInterface $mediaService,
+        LibraryStorageRegistryInterface $libraryStorageRegistry
+    ) {
         $this->store = $store;
         $this->mediaFactory = $mediaFactory;
         $this->mediaService = $mediaService;
+        $this->libraryStorageRegistry = $libraryStorageRegistry;
     }
 
     /**
@@ -108,106 +122,24 @@ class Maintenance extends Base
         $library = $this->getConfig()->getSetting('LIBRARY_LOCATION');
         $this->getLog()->debug('Library Location: ' . $library);
 
+        // Pending journalled work, carried out before this request journals its own.
+        $journalled = LibraryFileJournal::processAllPending(
+            $this->store,
+            $this->libraryStorageRegistry,
+            $this->getLog()->getLoggerInterface()
+        );
+
         // Remove temporary files
         $this->mediaService->removeTempFiles();
 
-        $media = [];
-        $unusedMedia = [];
-        $unusedRevisions = [];
+        [$media, $unusedRevisions, $unusedMedia] = $this->mediaFactory->getTidyCandidates(
+            $tidyOldRevisions == 1,
+            $cleanUnusedFiles == 1,
+            $tidyGenericFiles == 1
+        );
 
-        // DataSets with library images
-        $dataSetSql = '
-            SELECT dataset.dataSetId, datasetcolumn.heading
-              FROM dataset
-                INNER JOIN datasetcolumn
-                ON datasetcolumn.DataSetID = dataset.DataSetID
-             WHERE DataTypeID = 5 AND DataSetColumnTypeID <> 2;
-        ';
-
-        $dataSets = $this->store->select($dataSetSql, []);
-
-        // Run a query to get an array containing all of the media in the library
-        // this must contain ALL media, so that we can delete files in the storage that aren;t in the table
-        $sql = '
-            SELECT media.mediaid, media.storedAs, media.type, media.isedited,
-                SUM(CASE WHEN IFNULL(lkwidgetmedia.widgetId, 0) = 0 THEN 0 ELSE 1 END) AS UsedInLayoutCount,
-                SUM(CASE WHEN IFNULL(lkmediadisplaygroup.mediaId, 0) = 0 THEN 0 ELSE 1 END) AS UsedInDisplayCount,
-                SUM(CASE WHEN IFNULL(layout.layoutId, 0) = 0 THEN 0 ELSE 1 END) AS UsedInBackgroundImageCount,
-                SUM(CASE WHEN IFNULL(menu_category.menuCategoryId, 0) = 0 THEN 0 ELSE 1 END) AS UsedInMenuBoardCategoryCount,
-                SUM(CASE WHEN IFNULL(menu_product.menuProductId, 0) = 0 THEN 0 ELSE 1 END) AS UsedInMenuBoardProductCount
-        ';
-
-        if (count($dataSets) > 0) {
-            $sql .= ' , SUM(CASE WHEN IFNULL(dataSetImages.mediaId, 0) = 0 THEN 0 ELSE 1 END) AS UsedInDataSetCount ';
-        } else {
-            $sql .= ' , 0 AS UsedInDataSetCount ';
-        }
-
-        $sql .= '
-              FROM `media`
-                LEFT OUTER JOIN `lkwidgetmedia`
-                ON lkwidgetmedia.mediaid = media.mediaid
-                LEFT OUTER JOIN `lkmediadisplaygroup`
-                ON lkmediadisplaygroup.mediaid = media.mediaid
-                LEFT OUTER JOIN `layout`
-                ON `layout`.backgroundImageId = `media`.mediaId
-                LEFT OUTER JOIN `menu_category`
-                ON `menu_category`.mediaId = `media`.mediaId
-                LEFT OUTER JOIN `menu_product`
-                ON `menu_product`.mediaId = `media`.mediaId
-         ';
-
-        if (count($dataSets) > 0) {
-
-            $sql .= ' LEFT OUTER JOIN (';
-
-            $first = true;
-            foreach ($dataSets as $dataSet) {
-            $sanitizedDataSet = $this->getSanitizer($dataSet);
-                if (!$first)
-                    $sql .= ' UNION ALL ';
-
-                $first = false;
-
-                $dataSetId = $sanitizedDataSet->getInt('dataSetId');
-                $heading = $sanitizedDataSet->getString('heading');
-
-                $sql .= ' SELECT `' . $heading . '` AS mediaId FROM `dataset_' . $dataSetId . '`';
-            }
-
-            $sql .= ') dataSetImages 
-                ON dataSetImages.mediaId = `media`.mediaId
-            ';
-        }
-
-        $sql .= '
-            GROUP BY media.mediaid, media.storedAs, media.type, media.isedited
-        ';
-
-        foreach ($this->store->select($sql, []) as $row) {
-            $media[$row['storedAs']] = $row;
-            $sanitizedRow = $this->getSanitizer($row);
-
-            $type = $sanitizedRow->getString('type');
-
-            // Ignore any module files or fonts
-            if ($type == 'module'
-                || $type == 'font'
-                || $type == 'playersoftware'
-                || ($type == 'genericfile' && $tidyGenericFiles != 1)
-            ) {
-                continue;
-            }
-
-            // Collect media revisions that aren't used
-            if ($tidyOldRevisions && $this->isSafeToDelete($row) && $row['isedited'] > 0) {
-                $unusedRevisions[$row['storedAs']] = $row;
-            }
-            // Collect any files that aren't used
-            else if ($cleanUnusedFiles && $this->isSafeToDelete($row)) {
-                $unusedMedia[$row['storedAs']] = $row;
-            }
-        }
+        // Video covers ({mediaId}_videocover.png) belong to their video, not to a storedAs.
+        $mediaIds = array_flip(array_map('intval', array_column($media, 'mediaid')));
 
         $i = 0;
 
@@ -230,6 +162,11 @@ class Maintenance extends Base
             // Ignore XLF files
             if (strstr($file, '.xlf'))
                 continue;
+
+            // Keep the cover of a video that still exists
+            if (Media::isVideoCoverOf($file, $mediaIds)) {
+                continue;
+            }
 
             $i++;
 
@@ -261,6 +198,8 @@ class Maintenance extends Base
 
         $this->getLog()->audit('Media', 0, 'Tidy library from settings complete', [
             'countDeleted' => $i,
+            'countJournalled' => $journalled['deleted'],
+            'countJournalFailed' => $journalled['failed'],
             'initiator' => $this->getUser()->userId
         ]);
 
@@ -268,21 +207,10 @@ class Maintenance extends Base
         $this->getState()->hydrate([
             'message' => __('Library Tidy Complete'),
             'data' => [
-                'tidied' => $i
+                'tidied' => $i + $journalled['deleted']
             ]
         ]);
 
         return $this->render($request, $response);
-    }
-
-    private function isSafeToDelete($row): bool
-    {
-        return ($row['UsedInLayoutCount'] <= 0
-            && $row['UsedInDisplayCount'] <= 0
-            && $row['UsedInBackgroundImageCount'] <= 0
-            && $row['UsedInDataSetCount'] <= 0
-            && $row['UsedInMenuBoardCategoryCount'] <= 0
-            && $row['UsedInMenuBoardProductCount'] <= 0
-        );
     }
 }

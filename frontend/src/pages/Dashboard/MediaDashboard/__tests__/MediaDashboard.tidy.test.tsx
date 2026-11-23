@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { screen, waitFor, within } from '@testing-library/react';
@@ -144,17 +146,21 @@ describe('Media Manager Dashboard - tidying the library', () => {
   });
 
   // Payload (rule 1.1). Both choices come from the same checkbox state, so both are tested.
-  test('confirming without generic files asks the server to keep them, once', async () => {
-    const user = userEvent.setup();
-    mockTidy(0);
-    renderMediaDashboardPage(tidyUser());
+  test(
+    'confirming without generic files asks the server to keep them, once',
+    { tags: ['smoke'] },
+    async () => {
+      const user = userEvent.setup();
+      mockTidy(0);
+      renderMediaDashboardPage(tidyUser());
 
-    const dialog = await openTidyDialog(user);
-    await user.click(getTidyConfirm(dialog));
+      const dialog = await openTidyDialog(user);
+      await user.click(getTidyConfirm(dialog));
 
-    await waitFor(() => expect(tidyLibrary).toHaveBeenCalledTimes(1));
-    expect(tidyLibrary).toHaveBeenCalledWith(false);
-  });
+      await waitFor(() => expect(tidyLibrary).toHaveBeenCalledTimes(1));
+      expect(tidyLibrary).toHaveBeenCalledWith(false);
+    },
+  );
 
   test('ticking Tidy Generic Files asks the server to remove them too', async () => {
     const user = userEvent.setup();

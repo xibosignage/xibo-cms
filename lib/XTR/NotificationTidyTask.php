@@ -1,14 +1,34 @@
 <?php
 /*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2016 Spring Signage Ltd
- * (NotificationTidyTask.php)
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
+ *
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 
 namespace Xibo\XTR;
 
 use Carbon\Carbon;
+use Xibo\Service\LibraryAsset;
+use Xibo\Service\LibraryStorageRegistryInterface;
+use Xibo\Storage\LibraryFileJournal;
 
 /**
  * Class NotificationTidyTask
@@ -18,10 +38,13 @@ class NotificationTidyTask implements TaskInterface
 {
     use TaskTrait;
 
+    /** @var LibraryStorageRegistryInterface */
+    private $libraryStorageRegistry;
+
     /** @inheritdoc */
     public function setFactories($container)
     {
-        // No factories required
+        $this->libraryStorageRegistry = $container->get('libraryStorageRegistry');
         return $this;
     }
 
@@ -51,6 +74,10 @@ class NotificationTidyTask implements TaskInterface
             'releaseDt' => Carbon::now()->subDays($maxAgeDays)->format('U')
         ];
 
+        // With readOnly, a notification goes once no recipient has it unread, including one with no recipients.
+        $hasNoUnreadRecipientFilter = ' AND `notificationId` NOT IN
+            (SELECT `notificationId` FROM `lknotificationuser` WHERE `read` = 0) ';
+
         // Delete all notifications older than now minus X days
         $sql = '
         DELETE FROM `lknotificationdg` 
@@ -58,7 +85,7 @@ class NotificationTidyTask implements TaskInterface
         ';
 
         if ($readOnly == 1) {
-            $sql .= ' AND `notificationId` IN (SELECT `notificationId` FROM `lknotificationuser` WHERE read <> 0) ';
+            $sql .= $hasNoUnreadRecipientFilter;
         }
 
         $this->store->update($sql, $params);
@@ -70,7 +97,7 @@ class NotificationTidyTask implements TaskInterface
         ';
 
         if ($readOnly == 1) {
-            $sql .= ' AND `notificationId` IN (SELECT `notificationId` FROM `lknotificationuser` WHERE read <> 0) ';
+            $sql .= $hasNoUnreadRecipientFilter;
         }
 
         $this->store->update($sql, $params);
@@ -87,30 +114,33 @@ class NotificationTidyTask implements TaskInterface
 
         $this->store->update($sql, $params);
 
-        // Remove the attached file
-        $sql = 'SELECT filename  FROM `notification` ' . $where;
+        // With readOnly, notifications still linked to a user are kept.
+        $hasNoRecipientFilter = ($readOnly == 1)
+            ? ' AND `notificationId` NOT IN (SELECT `notificationId` FROM `lknotificationuser`) '
+            : '';
 
+        // Collect the attached files before the rows go
+        $filenames = [];
+        $sql = 'SELECT filename FROM `notification` ' . $where . $hasNoRecipientFilter;
         foreach ($this->store->select($sql, $params) as $row) {
-            $filename = $row['filename'];
-
-            /*Delete the attachment*/
-            if (!empty($filename)) {
-                // Library location
-                $attachmentLocation = $this->config->getSetting('LIBRARY_LOCATION'). 'attachment/';
-                if (file_exists($attachmentLocation . $filename)) {
-                    unlink($attachmentLocation . $filename);
-                }
+            if (!empty($row['filename'])) {
+                $filenames[] = $row['filename'];
             }
         }
 
         // Delete from notification
-        $sql = 'DELETE FROM `notification` ' . $where;
+        $this->store->update('DELETE FROM `notification` ' . $where . $hasNoRecipientFilter, $params);
 
-        if ($readOnly == 1) {
-            $sql .= ' AND `notificationId` NOT IN (SELECT `notificationId` FROM `lknotificationuser`) ';
+        // Delete the attachments after commit so a failed run keeps them.
+        foreach ($filenames as $filename) {
+            LibraryFileJournal::deleteFileAfterCommit(
+                $this->store,
+                $this->libraryStorageRegistry,
+                LibraryAsset::ATTACHMENT,
+                $filename,
+                $this->log->getLoggerInterface()
+            );
         }
-
-        $this->store->update($sql, $params);
 
         $this->runMessage .= __('Done') . PHP_EOL . PHP_EOL;
     }

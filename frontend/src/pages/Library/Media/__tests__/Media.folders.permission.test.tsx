@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 // =============================================================================
@@ -233,9 +235,13 @@ describe('Media page – folder permissions', () => {
   describe('selection state after move', () => {
     // -------------------------------------------------------------------------
     // After moving files to another folder, the tick marks on those rows
-    // should disappear.
+    // should disappear. The grid re-renders after the move, so the checkbox
+    // is found again rather than reusing the element from before: the old
+    // one is detached from the page and keeps its last state. (This was a
+    // test.fails until 2026-10-20 for that reason; the move was already
+    // clearing the selection, confirmed on a live CMS.)
     // -------------------------------------------------------------------------
-    test.fails('row checkboxes are cleared after a successful move', async () => {
+    test('row checkboxes are cleared after a successful move', async () => {
       vi.mocked(fetchFolderTree).mockResolvedValue([mockArchiveFolder]);
       vi.mocked(selectFolder).mockResolvedValue({ success: true, data: undefined });
 
@@ -258,9 +264,13 @@ describe('Media page – folder permissions', () => {
       await waitFor(() => expect(modalMoveBtn).not.toBeDisabled());
       fireEvent.click(modalMoveBtn);
 
-      // The checkbox must be unticked once the move is done.
+      // Once the move is done, no row is ticked.
       await waitFor(() => {
-        expect(checkbox).not.toBeChecked();
+        expect(selectFolder).toHaveBeenCalledTimes(1);
+      });
+      await waitFor(() => {
+        const movedRow = screen.getByRole('row', { name: /sample\.jpg/ });
+        expect(within(movedRow).getByRole('checkbox', { name: /Select row/i })).not.toBeChecked();
       });
     });
   });

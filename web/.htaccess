@@ -32,16 +32,30 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_URI} ^/preview/.*$
 RewriteRule ^ preview/index.php [QSA,L]
 
-# pwa
-RewriteCond %{REQUEST_URI} ^/pwa/getResource.*$
-RewriteRule ^ pwa/index.php [QSA,L]
+# pwa: the ChromeOS player, extracted into web/pwa when the image is built,
+# beside the PHP entry point that serves its getResource and getData calls and
+# builds its manifest per request, with this CMS's branding and address
+RewriteRule ^pwa/(getResource|getData|manifest\.json)$ pwa/index.php [QSA,L]
 
-RewriteCond %{REQUEST_URI} ^/pwa/getData.*$
-RewriteRule ^ pwa/index.php [QSA,L]
+# /pwa/ is the player: DirectoryIndex would otherwise pick index.php
+RewriteRule ^pwa/$ pwa/index.html [L]
 
+# a missing file under /pwa is a 404, never the CMS shell below
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_URI} ^/pwa.*$
-RewriteRule ^pwa/(.*)$ chromeos/$1 [NC,L]
+RewriteRule ^pwa/ - [R=404,L]
+
+# pwa/sw.js: the browser checks it for a newer player once a minute and after
+# every widget it loads, with a conditional request that should be answered 304
+# while the player is unchanged. mod_deflate adds -gzip to the ETag, so
+# If-None-Match never matches and every check got the whole file (~98 KB); with
+# no ETag, Last-Modified is matched instead. no-cache keeps proxies from serving
+# a stored copy, so a new player is still found on the next check.
+<If "%{REQUEST_URI} =~ m#/pwa/sw\.js$#">
+    FileETag None
+    <IfModule mod_headers.c>
+        Header set Cache-Control "no-cache"
+    </IfModule>
+</If>
 
 # all others - i.e. web
 # The React SPA has no dedicated rewrite: unmatched routes fall through to index.php,

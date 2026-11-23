@@ -22,7 +22,6 @@ RUN LC_ALL=C.UTF-8 DEBIAN_FRONTEND=noninteractive apt update && apt upgrade -y &
     libapache2-mod-xsendfile \
     netcat-openbsd \
     iputils-ping \
-    gnupg \
     php8.4 \
     libapache2-mod-php8.4 \
     php8.4-gd \
@@ -43,7 +42,6 @@ RUN LC_ALL=C.UTF-8 DEBIAN_FRONTEND=noninteractive apt update && apt upgrade -y &
     php8.4-phar \
     php8.4-opcache \
     php8.4-mongodb \
-    php8.4-gnupg \
     tzdata \
     msmtp \
     openssl \
@@ -67,8 +65,7 @@ ADD docker/ /
 # Adjust file permissions as appropriate
 RUN chmod +x /entrypoint.sh /usr/local/bin/httpd-foreground /usr/local/bin/wait-for-command.sh \
     /etc/periodic/15min/cms-db-backup && \
-    chmod 777 /tmp && \
-    chown -R www-data:www-data /var/www/.gnupg
+    chmod 777 /tmp
 
 # Update the PHP.ini file
 RUN sed -i "s/error_reporting = .*$/error_reporting = E_ERROR | E_WARNING | E_PARSE/" /etc/php/8.4/apache2/php.ini && \
@@ -129,8 +126,7 @@ ENV CMS_DEV_MODE=true \
     MEMCACHED_PORT=11211 \
     CMS_USAGE_REPORT=true \
     XTR_ENABLED=false \
-    GIT_COMMIT=$GIT_COMMIT \
-    GNUPGHOME=/var/www/.gnupg
+    GIT_COMMIT=$GIT_COMMIT
 
 # Expose port 80
 EXPOSE 80

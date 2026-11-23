@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Factory;
@@ -29,7 +31,9 @@ use Xibo\Entity\Module;
 use Xibo\Entity\ModuleTemplate;
 use Xibo\Entity\Widget;
 use Xibo\Helper\GeoHelper;
+use Xibo\Helper\ModuleFolders;
 use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\LibraryStorageRegistryInterface;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Widget\DataType\DataTypeInterface;
 use Xibo\Widget\Definition\Asset;
@@ -68,13 +72,13 @@ class ModuleFactory extends BaseFactory
     /**
      * ModuleFactory constructor.
      *
-     * @param  string                 $cachePath
-     * @param  PoolInterface          $pool
-     * @param  Twig                   $twig
-     * @param  ConfigServiceInterface $config
+     * @param  LibraryStorageRegistryInterface $libraryStorageRegistry
+     * @param  PoolInterface                   $pool
+     * @param  Twig                            $twig
+     * @param  ConfigServiceInterface          $config
      */
     public function __construct(
-        private readonly string $cachePath,
+        private readonly LibraryStorageRegistryInterface $libraryStorageRegistry,
         private readonly PoolInterface $pool,
         private readonly Twig $twig,
         private readonly ConfigServiceInterface $config,
@@ -114,7 +118,14 @@ class ModuleFactory extends BaseFactory
      */
     public function createWidgetHtmlRenderer(): WidgetHtmlRenderer
     {
-        return (new WidgetHtmlRenderer($this->cachePath, $this->twig, $this->config, $this))
+        return (new WidgetHtmlRenderer(
+            $this->libraryStorageRegistry,
+            $this->getStore(),
+            $this->pool,
+            $this->twig,
+            $this->config,
+            $this
+        ))
             ->useLogger($this->getLog()->getLoggerInterface());
     }
 
@@ -549,10 +560,7 @@ class ModuleFactory extends BaseFactory
         }
 
         // get data types from xml
-        $files = array_merge(
-            glob(PROJECT_ROOT . '/modules/datatypes/*.xml'),
-            glob(PROJECT_ROOT . '/custom/modules/datatypes/*.xml')
-        );
+        $files = ModuleFolders::glob('datatypes/*.xml');
 
         foreach ($files as $file) {
             $xml = new \DOMDocument();
@@ -711,10 +719,7 @@ class ModuleFactory extends BaseFactory
 
             // Load in our file system modules.
             // we consider modules in the module folder, and also custom modules
-            $files = array_merge(
-                glob(PROJECT_ROOT . '/modules/*.xml'),
-                glob(PROJECT_ROOT . '/custom/modules/*.xml')
-            );
+            $files = ModuleFolders::glob('*.xml');
 
             foreach ($files as $file) {
                 // Create our module entity from this file
@@ -782,10 +787,7 @@ class ModuleFactory extends BaseFactory
     private function loadDataTypes(): array
     {
         if ($this->dataTypes === null) {
-            $files = array_merge(
-                glob(PROJECT_ROOT . '/modules/datatypes/*.xml'),
-                glob(PROJECT_ROOT . '/custom/modules/datatypes/*.xml')
-            );
+            $files = ModuleFolders::glob('datatypes/*.xml');
 
             foreach ($files as $file) {
                 $this->dataTypes[] = $this->createDataTypeFromXml($file);

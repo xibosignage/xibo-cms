@@ -1,28 +1,31 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Event;
 
 use Xibo\Entity\RequiredFile;
+use Xibo\Service\LibraryStorageServiceInterface;
 
 /**
  * Event raised when XMDS receives a request for a file.
@@ -38,6 +41,9 @@ class XmdsDependencyRequestEvent extends Event
      * @var string|null
      */
     private $realId;
+
+    private ?LibraryStorageServiceInterface $storage = null;
+    private ?string $storageKey = null;
 
     /**
      * @param RequiredFile $file
@@ -63,6 +69,26 @@ class XmdsDependencyRequestEvent extends Event
     public function getRelativePath(): ?string
     {
         return $this->path;
+    }
+
+    /**
+     * Sets the storage and key that readers use instead of the relative path.
+     */
+    public function setStorage(LibraryStorageServiceInterface $storage, string $key): XmdsDependencyRequestEvent
+    {
+        $this->storage = $storage;
+        $this->storageKey = $key;
+        return $this;
+    }
+
+    public function getStorage(): ?LibraryStorageServiceInterface
+    {
+        return $this->storage;
+    }
+
+    public function getStorageKey(): ?string
+    {
+        return $this->storageKey;
     }
 
     public function getFileType(): string

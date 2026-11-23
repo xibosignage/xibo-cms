@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import {
@@ -139,23 +141,35 @@ export default function TimeConnectedRow({ row }: TimeConnectedRowProps) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
 
-  const uptimePill =
-    row.uptimePercent <= 0
-      ? 'bg-gray-100 text-gray-500'
-      : row.uptimePercent >= 90
-        ? 'bg-green-50 text-green-700'
-        : row.uptimePercent >= 70
-          ? 'bg-yellow-50 text-yellow-700'
-          : 'bg-red-50 text-red-700';
+  const uptime = Number.isFinite(row.uptimePercent) ? Math.round(row.uptimePercent * 10) / 10 : 0;
+  const offline = Math.round((100 - uptime) * 10) / 10;
+
+  const [uptimePill, uptimeBand] =
+    uptime <= 0
+      ? ['bg-gray-100 text-gray-500', t('Offline')]
+      : uptime >= 90
+        ? ['bg-green-50 text-green-700', t('Good')]
+        : uptime >= 70
+          ? ['bg-yellow-50 text-yellow-700', t('Fair')]
+          : ['bg-red-50 text-red-700', t('Poor')];
 
   return (
     <div className="bg-white">
       <div
+        role="button"
+        tabIndex={0}
+        aria-expanded={expanded}
         className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer"
         onClick={() => setExpanded((prev) => !prev)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setExpanded((prev) => !prev);
+          }
+        }}
       >
         <div className="flex-none w-6 flex items-center justify-center">
-          {row.uptimePercent > 0 ? (
+          {uptime > 0 ? (
             <div className="w-2 h-2 bg-teal-500 rounded-full" />
           ) : (
             <div className="w-2 h-2 bg-gray-200 rounded-full" />
@@ -173,7 +187,8 @@ export default function TimeConnectedRow({ row }: TimeConnectedRowProps) {
               uptimePill,
             )}
           >
-            {row.uptimePercent.toFixed(1)}%
+            <span>{uptime.toFixed(1)}%</span>
+            <span className="sr-only"> {uptimeBand}</span>
           </span>
         </div>
 
@@ -197,7 +212,7 @@ export default function TimeConnectedRow({ row }: TimeConnectedRowProps) {
               </div>
               <span className="text-sm text-gray-500">
                 {t('Online')}:{' '}
-                <span className="font-semibold text-gray-900">{row.uptimePercent.toFixed(1)}%</span>
+                <span className="font-semibold text-gray-900">{uptime.toFixed(1)}%</span>
               </span>
             </div>
             <div className="inline-flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2">
@@ -206,9 +221,7 @@ export default function TimeConnectedRow({ row }: TimeConnectedRowProps) {
               </div>
               <span className="text-sm text-gray-500">
                 {t('Offline')}:{' '}
-                <span className="font-semibold text-gray-900">
-                  {row.offlinePercent.toFixed(1)}%
-                </span>
+                <span className="font-semibold text-gray-900">{offline.toFixed(1)}%</span>
               </span>
             </div>
           </div>

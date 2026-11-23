@@ -1,26 +1,29 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 
 import DisplayProfile from '../../DisplayProfile';
@@ -28,14 +31,20 @@ import { mockDisplayProfile, mockUser, queryKeys } from '../fixtures/displayProf
 
 import { UserProvider } from '@/context/UserContext';
 import { testQueryClient } from '@/setupTests';
+import { clickMenuAction } from '@/testUtils/rowActions';
+import type { User } from '@/types/user';
 
-export const renderDisplayProfilePage = ({ hydrated = true }: { hydrated?: boolean } = {}) => {
+// Pass { user } to render as someone other than the default super admin.
+export const renderDisplayProfilePage = ({
+  hydrated = true,
+  user = mockUser,
+}: { hydrated?: boolean; user?: User } = {}) => {
   if (hydrated) {
     testQueryClient.setQueryData(queryKeys.displayProfilePage, null);
   }
   return render(
     <QueryClientProvider client={testQueryClient}>
-      <UserProvider initialUser={mockUser}>
+      <UserProvider initialUser={user}>
         <MemoryRouter>
           <DisplayProfile />
         </MemoryRouter>
@@ -50,14 +59,6 @@ export const openEditModal = async () => {
   await screen.findByPlaceholderText('Enter name');
 };
 
-// Opens the per-row actions dropdown (the "More actions" button).
-export const openRowMenu = async () => {
-  await screen.findByText(mockDisplayProfile.name);
-  fireEvent.click(screen.getByRole('button', { name: /more actions/i }));
-};
-
 // Opens the row menu then clicks one of its items (Copy / Delete).
-export const clickRowMenuItem = async (name: RegExp) => {
-  await openRowMenu();
-  fireEvent.click(await screen.findByRole('button', { name }));
-};
+export const clickRowMenuItem = (name: RegExp) =>
+  clickMenuAction(userEvent.setup({ delay: null }), mockDisplayProfile.name, name);

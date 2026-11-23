@@ -1,11 +1,35 @@
+/*
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
+ *
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
+ */
+
 import { useState } from 'react';
 
-import { submitLogin } from '../api';
+import { fetchLoginMethods, submitLogin } from '../api';
 import { t } from '../i18n';
-import type { LoginResponse } from '../types';
+import type { LoginResponse, SignInProvider } from '../types';
 import { publicPath } from '../utils';
 
 import { ErrorBanner } from './ErrorBanner';
+import { SignInProviders } from './SignInProviders';
 import { SubmitButton } from './SubmitButton';
 
 function EyeIcon() {
@@ -51,10 +75,18 @@ function EyeOffIcon() {
 interface Props {
   onSuccess: (priorRoute: string, passwordChangeRequired?: boolean) => void;
   onTfa: (priorRoute: string) => void;
-  onForgot: () => void;
+  onForgot: (identifier: string) => void;
   passwordReminderEnabled: boolean;
   authCASEnabled: boolean;
+  priorRoute?: string;
+  signInProviders?: SignInProvider[];
+  // Set when a sign-in provider offers a sign-out link.
+  signInProviderLogoutUrl?: string | null;
   initialError?: string;
+}
+
+function isSignInProvider(method: SignInProvider | { type: 'password' }): method is SignInProvider {
+  return method.type !== 'password';
 }
 
 export function LoginForm({
@@ -63,14 +95,54 @@ export function LoginForm({
   onForgot,
   passwordReminderEnabled,
   authCASEnabled,
+  priorRoute = '',
+  signInProviders,
+  signInProviderLogoutUrl,
   initialError = '',
 }: Props) {
-  const [username, setUsername] = useState('');
+  const [step, setStep] = useState<'identifier' | 'password'>('identifier');
+  const [identifier, setIdentifier] = useState('');
+  const [userProviders, setUserProviders] = useState<SignInProvider[]>([]);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(initialError);
   const [loading, setLoading] = useState(false);
   const [rateLimited, setRateLimited] = useState(false);
+
+  async function handleNext(e: React.SyntheticEvent) {
+    e.preventDefault();
+    if (rateLimited) return;
+    if (identifier.trim() === '') {
+      setError(t('identifierRequired'));
+      return;
+    }
+
+    setError('');
+    setLoading(true);
+
+    try {
+      const res = await fetchLoginMethods(identifier, priorRoute);
+      if (res.status === 'rate_limited') {
+        setRateLimited(true);
+        setError(res.message ?? t('rateLimitError'));
+      } else {
+        setUserProviders((res.methods ?? []).filter(isSignInProvider));
+        setPassword('');
+        setShowPassword(false);
+        setStep('password');
+      }
+    } catch {
+      setError(t('unexpectedError'));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleChangeIdentifier() {
+    setError('');
+    setRateLimited(false);
+    setStep('identifier');
+  }
 
   async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
@@ -80,7 +152,7 @@ export function LoginForm({
     setLoading(true);
 
     try {
-      const res: LoginResponse = await submitLogin(username, password);
+      const res: LoginResponse = await submitLogin(identifier, password);
       if (res.status === 'ok') {
         onSuccess(res.priorRoute ?? '', res.isPasswordChangeRequired);
       } else if (res.status === '2fa_required') {
@@ -109,28 +181,65 @@ export function LoginForm({
     );
   }
 
+  if (step === 'identifier') {
+    return (
+      <form onSubmit={handleNext} noValidate>
+        <div className="login-field">
+          <label className="login-label" htmlFor="username">
+            {t('identifier')}
+          </label>
+          <input
+            id="username"
+            type="text"
+            name="username"
+            value={identifier}
+            onChange={(e) => {
+              setIdentifier(e.target.value);
+              setError('');
+              setRateLimited(false);
+            }}
+            placeholder={t('identifierPlaceholder')}
+            autoComplete="username"
+            autoFocus
+            required
+            className="login-input"
+          />
+        </div>
+
+        {error && <ErrorBanner message={error} />}
+
+        <SubmitButton label={t('nextButton')} loading={loading} disabled={rateLimited} />
+        <SignInProviders providers={signInProviders} logoutUrl={signInProviderLogoutUrl} />
+      </form>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} noValidate>
+      <input
+        type="text"
+        name="username"
+        value={identifier}
+        autoComplete="username"
+        readOnly
+        tabIndex={-1}
+        aria-hidden="true"
+        className="login-hidden-field"
+      />
+
       <div className="login-field">
-        <label className="login-label" htmlFor="username">
-          {t('username')}
-        </label>
-        <input
-          id="username"
-          type="text"
-          name="username"
-          value={username}
-          onChange={(e) => {
-            setUsername(e.target.value);
-            setError('');
-            setRateLimited(false);
-          }}
-          placeholder={t('usernamePlaceholder')}
-          autoComplete="username"
-          autoFocus
-          required
-          className="login-input"
-        />
+        <span className="login-label">{t('identifier')}</span>
+        <div className="login-identifier">
+          <span className="login-identifier-value">{identifier.trim()}</span>
+          <button
+            type="button"
+            onClick={handleChangeIdentifier}
+            aria-label={t('changeIdentifierLabel')}
+            className="login-link"
+          >
+            {t('changeIdentifier')}
+          </button>
+        </div>
       </div>
 
       <div className="login-field">
@@ -150,6 +259,7 @@ export function LoginForm({
             }}
             placeholder={t('passwordPlaceholder')}
             autoComplete="current-password"
+            autoFocus
             required
             className="login-input"
           />
@@ -168,13 +278,14 @@ export function LoginForm({
 
       {passwordReminderEnabled && (
         <p className="login-forgot">
-          <button type="button" onClick={onForgot} className="login-link">
+          <button type="button" onClick={() => onForgot(identifier)} className="login-link">
             {t('forgotPasswordLink')}
           </button>
         </p>
       )}
 
       <SubmitButton label={t('loginButton')} loading={loading} disabled={rateLimited} />
+      <SignInProviders providers={[...userProviders, ...(signInProviders ?? [])]} />
     </form>
   );
 }

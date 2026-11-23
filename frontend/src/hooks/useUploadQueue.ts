@@ -1,28 +1,30 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import axios, { AxiosError } from 'axios';
-import { useState, useEffect, useRef } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 
-import { uploadMedia, updateMedia, uploadMediaFromUrl } from '@/services/mediaApi';
+import { uploadMedia, updateMedia, uploadMediaFromUrl, uploadThumbnail } from '@/services/mediaApi';
 
 interface XiboApiErrorData {
   message?: string;
@@ -54,25 +56,48 @@ export interface UploadItem {
   enableStat?: string;
   retired?: number;
   thumbnailBlob?: Blob;
+  // The thumbnail the CMS last accepted for this item, so a retaken one is sent again.
+  savedThumbnailBlob?: Blob;
+  thumbnailFailed?: boolean;
 }
+
+/**
+ * Whether the CMS has all of the item's bytes and is storing it, which can take minutes. URL items
+ * are downloaded by the CMS, so they have no browser progress to show.
+ */
+export const isStoring = (item: UploadItem): boolean =>
+  item.status === 'uploading' && (item.type === 'url' || item.progress >= 100);
+
+// Whether the item needs the user's attention: its upload or its thumbnail failed.
+export const hasFailed = (item: UploadItem): boolean =>
+  item.status === 'error' || item.thumbnailFailed === true;
 
 interface UseUploadQueueReturn {
   queue: UploadItem[];
   addFiles: (files: File[], folderId?: number) => void;
   removeFile: (id: string) => void;
-  updateFileData: (id: string, data: { name?: string; tags?: string }) => void;
+  updateFileData: (
+    id: string,
+    data: { name?: string; tags?: string; thumbnailBlob?: Blob },
+  ) => void;
   hasPendingUploads: boolean;
   saveMetadata: () => Promise<void>;
   clearQueue: () => void;
+  clearFinished: () => void;
   addUrlToQueue: (url: string, folderId?: number) => void;
+  // Counts the Add Media dialog's openings; items finished before the latest are from earlier ones.
+  uploadSession: number;
+  startUploadSession: () => void;
 }
 
 export const useUploadQueue = (defaultFolderId: number = 1): UseUploadQueueReturn => {
   const [queue, setQueue] = useState<UploadItem[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [uploadSession, setUploadSession] = useState(0);
 
   const activeUploadId = useRef<string | null>(null);
+  const sendingThumbnails = useRef(new Set<string>());
 
   const hasPendingUploads = queue.some(
     (item) => item.status === 'pending' || item.status === 'uploading',
@@ -112,6 +137,8 @@ export const useUploadQueue = (defaultFolderId: number = 1): UseUploadQueueRetur
           tags: data.tags ?? item.tags,
           isDirty: true, // Marks item for sync if upload is done or in progress
           thumbnailBlob: data.thumbnailBlob !== undefined ? data.thumbnailBlob : item.thumbnailBlob,
+          // A retake gets a fresh attempt, so the earlier failure no longer applies.
+          ...(data.thumbnailBlob !== undefined && { thumbnailFailed: false }),
           ...(shouldRetry && { status: 'pending', error: undefined, progress: 0 }),
         };
       }),
@@ -163,6 +190,23 @@ export const useUploadQueue = (defaultFolderId: number = 1): UseUploadQueueRetur
     setIsUploading(false);
     activeUploadId.current = null;
   };
+
+  // Keeps failed items, and finished items whose details or thumbnail are unsent or failed, so they can be retried.
+  const clearFinished = useCallback(() => {
+    setQueue((prev) =>
+      prev.filter(
+        (item) =>
+          item.status !== 'completed' ||
+          item.isDirty ||
+          item.thumbnailFailed ||
+          (item.thumbnailBlob !== undefined && item.thumbnailBlob !== item.savedThumbnailBlob),
+      ),
+    );
+  }, []);
+
+  const startUploadSession = useCallback(() => {
+    setUploadSession((session) => session + 1);
+  }, []);
 
   const saveMetadata = async () => {
     return Promise.resolve();
@@ -235,6 +279,11 @@ export const useUploadQueue = (defaultFolderId: number = 1): UseUploadQueueRetur
               );
             },
           });
+
+          // A body that isn't JSON (for example a PHP warning printed before it) arrives as a string.
+          if (typeof response.data !== 'object' || response.data === null) {
+            throw new Error('The CMS returned an unexpected response. Check the CMS log.');
+          }
 
           const fileResult = response.data.files?.[0];
 
@@ -372,6 +421,44 @@ export const useUploadQueue = (defaultFolderId: number = 1): UseUploadQueueRetur
     void syncItem();
   }, [queue, isSyncing]);
 
+  // Sends a captured video thumbnail as soon as its media exists, independently of the upload dialog and of the
+  // name/tag sync, so closing the dialog early or a failed sync doesn't lose it.
+  useEffect(() => {
+    const pending = queue.filter(
+      (item) =>
+        item.mediaId &&
+        item.status !== 'uploading' &&
+        item.thumbnailBlob &&
+        item.thumbnailBlob !== item.savedThumbnailBlob &&
+        !sendingThumbnails.current.has(item.id),
+    );
+
+    pending.forEach((item) => {
+      const blob = item.thumbnailBlob!;
+      sendingThumbnails.current.add(item.id);
+
+      uploadThumbnail({ mediaId: item.mediaId!, image: blob })
+        .then(() => {
+          setQueue((prev) =>
+            prev.map((i) =>
+              i.id === item.id ? { ...i, savedThumbnailBlob: blob, thumbnailFailed: false } : i,
+            ),
+          );
+        })
+        .catch(() => {
+          // Remembered as handled, so a failure isn't retried in a loop; retaking the thumbnail sends it again.
+          setQueue((prev) =>
+            prev.map((i) =>
+              i.id === item.id ? { ...i, savedThumbnailBlob: blob, thumbnailFailed: true } : i,
+            ),
+          );
+        })
+        .finally(() => {
+          sendingThumbnails.current.delete(item.id);
+        });
+    });
+  }, [queue]);
+
   return {
     queue,
     addFiles,
@@ -380,6 +467,9 @@ export const useUploadQueue = (defaultFolderId: number = 1): UseUploadQueueRetur
     hasPendingUploads,
     saveMetadata,
     clearQueue,
+    clearFinished,
     addUrlToQueue,
+    uploadSession,
+    startUploadSession,
   };
 };

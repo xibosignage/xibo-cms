@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Factory;
@@ -37,7 +39,12 @@ use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
 use Xibo\Helper\Status;
 use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\LibraryAsset;
+use Xibo\Service\LibraryStorageRegistryInterface;
+use Xibo\Service\LibraryStorageServiceInterface;
 use Xibo\Service\MediaServiceInterface;
+use Xibo\Storage\LibraryFileJournal;
+use Xibo\Storage\LibraryKeyLookup;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\GeneralException;
@@ -147,6 +154,8 @@ class LayoutFactory extends BaseFactory
      * @param ActionFactory $actionFactory
      * @param FolderFactory $folderFactory
      * @param FontFactory $fontFactory
+     * @param LibraryStorageServiceInterface $libraryStorageService
+     * @param LibraryStorageRegistryInterface $libraryStorageRegistry
      */
     public function __construct(
         $user,
@@ -167,7 +176,9 @@ class LayoutFactory extends BaseFactory
         $actionFactory,
         $folderFactory,
         FontFactory $fontFactory,
-        private readonly WidgetDataFactory $widgetDataFactory
+        private readonly WidgetDataFactory $widgetDataFactory,
+        private readonly LibraryStorageServiceInterface $libraryStorageService,
+        private readonly LibraryStorageRegistryInterface $libraryStorageRegistry
     ) {
         $this->setAclDependencies($user, $userFactory);
         $this->config = $config;
@@ -186,6 +197,77 @@ class LayoutFactory extends BaseFactory
         $this->actionFactory = $actionFactory;
         $this->folderFactory = $folderFactory;
         $this->fontFactory = $fontFactory;
+    }
+
+    /**
+     * Where Layout thumbnails are stored, keyed by Layout::getThumbnailKey().
+     */
+    public function getThumbnailStorage(): LibraryStorageServiceInterface
+    {
+        return $this->libraryStorageRegistry->get(LibraryAsset::LAYOUT_THUMBNAIL);
+    }
+
+    /**
+     * Checks which Layouts have a thumbnail, listing the storage once when checking many.
+     * @param int $layoutCount how many Layouts will be checked
+     */
+    public function newThumbnailLookup(int $layoutCount = 1): LibraryKeyLookup
+    {
+        return new LibraryKeyLookup(
+            $this->getThumbnailStorage(),
+            $this->getLog(),
+            'Layout thumbnails',
+            $layoutCount
+        );
+    }
+
+    /**
+     * Whether a Layout has a thumbnail; a storage error counts as none.
+     */
+    public function hasThumbnail(Layout $layout, ?LibraryKeyLookup $thumbnails = null): bool
+    {
+        return ($thumbnails ?? $this->newThumbnailLookup())->has($layout->getThumbnailKey());
+    }
+
+    /**
+     * Moves a thumbnail into storage, journalled until commit, deleting the local file if that fails.
+     * @throws GeneralException
+     */
+    public function storeThumbnailFile(string $localPath, string $key): void
+    {
+        (new LibraryFileJournal($this->getStore(), $this->getThumbnailStorage(), LibraryAsset::LAYOUT_THUMBNAIL))
+            ->storeLocalFile($localPath, $key);
+    }
+
+    /**
+     * Deletes a layout's XLF from media storage after commit, logging storage errors.
+     */
+    public function deleteXlfFileAfterCommit(string $key): void
+    {
+        LibraryFileJournal::deleteFileAfterCommit(
+            $this->getStore(),
+            $this->libraryStorageRegistry,
+            LibraryAsset::MEDIA,
+            $key,
+            $this->getLog()->getLoggerInterface()
+        );
+    }
+
+    /**
+     * Deletes a thumbnail after commit, logging storage errors.
+     * @param bool $ignoreReferences delete even though a layout still refers to the key (see
+     *     LibraryFileJournal::deleteAfterCommit())
+     */
+    public function deleteThumbnailFileAfterCommit(string $key, bool $ignoreReferences = false): void
+    {
+        LibraryFileJournal::deleteFileAfterCommit(
+            $this->getStore(),
+            $this->libraryStorageRegistry,
+            LibraryAsset::LAYOUT_THUMBNAIL,
+            $key,
+            $this->getLog()->getLoggerInterface(),
+            $ignoreReferences
+        );
     }
 
     /**
@@ -210,7 +292,8 @@ class LayoutFactory extends BaseFactory
             $this->playlistFactory,
             $this->actionFactory,
             $this->folderFactory,
-            $this->fontFactory
+            $this->fontFactory,
+            $this->libraryStorageService
         );
     }
 
@@ -1571,20 +1654,22 @@ class LayoutFactory extends BaseFactory
                         throw new NotFoundException();
                     }
                     $this->getLog()->debug('Font already exists with name: ' . $intendedMediaName);
+                    @unlink($temporaryFileName);
                 } catch (NotFoundException) {
                     $this->getLog()->debug('Font does not exist in Library, add it ' . $fileName);
-                    // Add the Font
-                    $font = $this->fontFactory->createFontFromUpload(
-                        $temporaryFileName,
-                        $file['name'],
-                        $fileName,
-                        $this->getUser()->userName,
-                    );
-                    $font->save();
-                    $fontsAdded = true;
-
-                    // everything is fine, move the file from temp folder.
-                    rename($temporaryFileName, $libraryLocation . 'fonts/' . $font->fileName);
+                    try {
+                        $this->fontFactory->importFontFile(
+                            $temporaryFileName,
+                            $file['name'],
+                            $fileName,
+                            $this->getUser()->userName,
+                        );
+                        $fontsAdded = true;
+                    } catch (DuplicateEntityException $exception) {
+                        // As with a font of the same name, the Layout uses the font already in the library.
+                        $this->getLog()->warning('Layout import kept the existing font instead of ' . $fileName . ': '
+                            . $exception->getMessage());
+                    }
                 }
 
                 // Fonts do not create media records, so we have nothing left to do in the rest of this loop
@@ -2303,6 +2388,8 @@ class LayoutFactory extends BaseFactory
                         `campaign`.type,
                         `layout`.status,
                         `layout`.statusMessage,
+                        `layout`.xlfMd5,
+                        `layout`.xlfSize,
                         `layout`.enableStat,
                         `layout`.width,
                         `layout`.height,
@@ -2879,6 +2966,7 @@ class LayoutFactory extends BaseFactory
             $layout->modifiedDt = $parsedRow->getString('modifiedDt');
             $layout->displayOrder = $parsedRow->getInt('displayOrder');
             $layout->statusMessage = $parsedRow->getString('statusMessage');
+            $layout->setStoredXlfDetailsFromRow($row);
             $layout->enableStat = $parsedRow->getInt('enableStat');
             $layout->publishedStatusId = $parsedRow->getInt('publishedStatusId');
             $layout->publishedStatus = $parsedRow->getString('publishedStatus');
@@ -3305,6 +3393,61 @@ class LayoutFactory extends BaseFactory
     }
 
     /**
+     * Builds the XLF if needed, holding the build lock, which is released even when the build fails.
+     * @param array $options buildXlf() options
+     * @param bool $force take the lock and build even if no build looks needed, such as when only the in-memory
+     *                    layout says a build is needed
+     * @return Layout the layout built, reloaded if the lock had to be waited for
+     * @throws GeneralException
+     */
+    public function buildXlfLocked(Layout $layout, array $options = [], bool $force = false): Layout
+    {
+        // The lock is only taken when a build is needed, so only then is it released.
+        $isLocking = $force || $layout->isBuildRequired();
+        $locked = $this->concurrentRequestLock($layout, $force);
+
+        // A reloaded layout builds only if still needed, unless forced, as a reload loses in-memory changes.
+        if ($locked !== $layout && $force) {
+            $locked->forgetStoredXlf();
+        }
+        $layout = $locked;
+        try {
+            $layout->buildXlf($options);
+        } finally {
+            if ($isLocking) {
+                $this->concurrentRequestRelease($layout, true);
+            }
+        }
+        return $layout;
+    }
+
+    /**
+     * The layout's XLF, built first if needed, and built again if it's missing from storage.
+     * @param array $options buildXlf() options
+     * @throws GeneralException
+     */
+    public function getBuiltXlf(Layout $layout, array $options = []): string
+    {
+        $layout = $this->buildXlfLocked($layout, $options);
+        try {
+            return $layout->getXlf();
+        } catch (NotFoundException) {
+            return $this->rebuildMissingXlf($layout)->getXlf();
+        }
+    }
+
+    /**
+     * Builds again a layout whose stored XLF is missing, without notifying displays, as the bytes rarely change.
+     * @throws GeneralException
+     */
+    public function rebuildMissingXlf(Layout $layout): Layout
+    {
+        $this->getLog()->error('The stored XLF for layoutId ' . $layout->layoutId . ' is missing, building it again');
+        $layout->forgetStoredXlf();
+        return $this->buildXlfLocked($layout, ['notify' => false], true);
+    }
+
+    /**
      * Release a lock on concurrent requests
      */
     public function concurrentRequestRelease(Layout $layout, bool $force = false)
@@ -3617,8 +3760,12 @@ class LayoutFactory extends BaseFactory
         $draft->load();
 
         // We also build the XLF at this point, and if we have a problem we prevent publishing and raise as an
-        // error message
-        $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false]);
+        // error message. Forced, as publishing marks it for a build only in memory.
+        $draft = $this->buildXlfLocked(
+            $draft,
+            ['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false],
+            true
+        );
 
         // Return
         return $draft;

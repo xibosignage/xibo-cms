@@ -1,31 +1,31 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 use Monolog\Logger;
 use Nyholm\Psr7\ServerRequest;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\ContainerFactory;
-use Xibo\Helper\LibraryFile;
-use Xibo\Helper\LinkSigner;
 use Xibo\Support\Exception\NotFoundException;
 
 define('XIBO', true);
@@ -93,7 +93,7 @@ if ($instanceSuspended == 'yes' || $instanceSuspended == 'partial') {
 }
 
 // Load the theme
-$container->get('configService')->loadTheme();
+$container->get('configService')->loadTheme($container->get('brandService'));
 
 // Register Middleware Dispatchers
 // Handle additional Middleware
@@ -154,7 +154,13 @@ if (isset($_GET['file'])) {
         $signature = $_REQUEST['X-Amz-Signature'];
         $calculatedSignature = \Xibo\Helper\LinkSigner::getSignature(
             parse_url(\Xibo\Xmds\Wsdl::getRoot(), PHP_URL_HOST),
-            $_GET['file'],
+            \Xibo\Helper\LinkSigner::getXmdsResource(
+                $_GET['file'],
+                $_REQUEST['displayId'],
+                $_REQUEST['type'],
+                $_REQUEST['itemId'],
+                $_REQUEST['fileType'] ?? null,
+            ),
             $_REQUEST['X-Amz-Expires'],
             $encryptionKey,
             $_REQUEST['X-Amz-Date'],
@@ -200,124 +206,57 @@ if (isset($_GET['file'])) {
         }
 
         // Bandwidth
-        // Add the size to the bytes we have already requested.
-        $file->bytesRequested = $file->bytesRequested + $file->size;
-        $file->save(['useTransaction' => false]);
-
-        // Issue magic packet
-        $libraryLocation = $container->get('configService')->getSetting('LIBRARY_LOCATION');
-        $cdnUrl = $container->get('configService')->getSetting('CDN_URL');
-
-        // Resolve the library-relative path to an absolute filesystem path and verify
-        // it stays under the library root. Defended today by upstream sanitizers
-        // (BlueImpUploadHandler basename, FontFactory regex strip, #1491 asset-path
-        // prefix validation, integer IDs), but the boundary check here means a
-        // regression in any upstream defense fails loudly at the sink rather than
-        // silently traversing.
-        $resolvedFilePath = LibraryFile::resolve($libraryLocation, $file->path);
-
-        // Issue content type header
-        $isCss = false;
-        if ($file->type === 'L') {
-            // Layouts are always XML
-            header('Content-Type: text/xml');
-        } else if ($file->fileType === 'bundle' || \Illuminate\Support\Str::endsWith($file->path, '.js')) {
-            header('Content-Type: application/javascript');
-        } else if ($file->fileType === 'fontCss' || \Illuminate\Support\Str::endsWith($file->path, '.css')) {
-            $isCss = true;
-            header('Content-Type: text/css');
-        } else {
-            $contentType = mime_content_type($resolvedFilePath);
-            if ($contentType !== false) {
-                header('Content-Type: ' . $contentType);
-            }
+        // Add the size to the bytes we have already requested. With cloud storage the CMS streams, so a HEAD adds
+        // nothing and a Range request only its range.
+        $isStreamed = !$container->get('libraryStorageService')->hasLocalFiles();
+        if (!$isStreamed || ($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'HEAD') {
+            $range = !$isStreamed || isset($_SERVER['HTTP_IF_RANGE'])
+                ? null
+                : \Xibo\Helper\ByteRange::parse($_SERVER['HTTP_RANGE'] ?? '', (int)$file->size);
+            $file->bytesRequested = $file->bytesRequested
+                + match (true) {
+                    is_array($range) => $range[1] - $range[0] + 1,
+                    $range === false => 0,
+                    default => (int)$file->size,
+                };
+            $file->save(['useTransaction' => false]);
         }
 
-        // Are we a special request that needs modification before sending?
-        // For CSS, we look up the files to replace in required files using their stored path
-        if ($display->isPwa() && $isCss) {
-            $logger->debug('Rewriting CSS for PWA: ' . $file->path);
-
-            // Rewrite CSS for PWAs
-            $cssFile = file_get_contents($resolvedFilePath);
-
-            // Use callback to modify each match individually (to avoid substituting duplicates more than once)
-            $cssFile = preg_replace_callback('/url\(\'?(.*?)\'?\)/', function ($matches) use (
-                $requiredFileFactory,
-                $displayId,
-                $display,
-                $encryptionKey,
-                $cdnUrl,
-                $file,
-                $logger
-            ) {
-                // Process the match
-                $match = $matches[1];
-
-                // Look up the file to get the right ID/path.
-                try {
-                    $replacementFile = $requiredFileFactory->getByDisplayAndDependencyPath($displayId, $match);
-
-                    $url = LinkSigner::generateSignedLink(
-                        $display,
-                        $encryptionKey,
-                        $cdnUrl,
-                        'P',
-                        $replacementFile->realId,
-                        $replacementFile->path,
-                        $file->fileType === 'fontCss' ? 'font' : 'asset',
-                        true,
-                    );
-
-                    return 'url(\'' . $url . '\')';
-                } catch (Exception) {
-                    $logger->error('CSS has dependency which does not exist in Required Files: ' . $match);
-                    return $matches[0];
-                }
-            }, $cssFile);
-
-            $file->size = strlen($cssFile);
-
-            echo $cssFile;
-        } else {
-            $logger->info('HTTP GetFile request redirecting to ' . $resolvedFilePath);
-
-            // Normal send
-            if ($sendFileMode == 'Apache') {
-                // Send via Apache X-Sendfile header
-                header('X-Sendfile: ' . $resolvedFilePath);
-            } else if ($sendFileMode == 'Nginx') {
-                // Send via Nginx X-Accel-Redirect. $file->path has already been
-                // validated above (LibraryFile::resolve() raised on traversal/
-                // absolute components) so using it as the Nginx internal-redirect
-                // suffix is safe.
-                header('X-Accel-Redirect: /download/' . $file->path);
-            } else {
-                header('HTTP/1.0 404 Not Found');
-            }
-
-            // Also add to the overall bandwidth used by get file
-            $container->get('bandwidthFactory')->createAndSave(
-                \Xibo\Entity\Bandwidth::$GETFILE,
-                $file->displayId,
-                $file->size
-            );
-        }
+        // Send the file, decided by where it is kept and by the player.
+        new \Xibo\Xmds\HttpFileSender(
+            new \Xibo\Xmds\PhpHttpOutput(),
+            $container->get('libraryStorageService'),
+            $container->get('layoutFactory'),
+            $requiredFileFactory,
+            new \Xibo\Xmds\PlayerFileLink($container->get('configService'), $container->get('libraryStorageRegistry')),
+            $container->get('bandwidthFactory'),
+            $container->get('store'),
+            $logger->getLoggerInterface(),
+            (string)$sendFileMode,
+            (string)$container->get('configService')->getSetting('LIBRARY_LOCATION'),
+            $container->get('libraryStorageRegistry')
+        )->send($file, $display, $_SERVER);
     } catch (\Xibo\Support\Exception\NotFoundException|\Xibo\Support\Exception\ExpiredException $e) {
         $logger->notice('HTTP GetFile: request received but unable to find XMDS Nonce. Issuing 404. '
             . $e->getMessage());
 
         // 404
-        header('HTTP/1.0 404 Not Found');
+        if (!headers_sent()) {
+            header('HTTP/1.0 404 Not Found');
+        }
     } catch (\Xibo\Support\Exception\InstanceSuspendedException $e) {
         $logger->debug('HTTP GetFile: Bandwidth exceeded');
-        header('HTTP/1.0 403 Forbidden');
+        if (!headers_sent()) {
+            header('HTTP/1.0 403 Forbidden');
+        }
     } catch (\Exception $e) {
         $logger->error('HTTP GetFile: Unknown Error: ' . $e->getMessage());
         $logger->debug($e->getTraceAsString());
 
         // Issue a 500
-        header('HTTP/1.0 500 Internal Server Error');
+        if (!headers_sent()) {
+            header('HTTP/1.0 500 Internal Server Error');
+        }
     }
     exit;
 }
@@ -327,6 +266,13 @@ if (isset($_GET['cdn'])) {
     $logger = $container->get('logService');
 
     try {
+        // The CDN only links files the CMS holds locally, which some still are while files are being copied.
+        if (!$container->get('libraryStorageService')->hasLocalFiles()
+            && !$container->get('libraryStorageRegistry')->hasFilesToMove()
+        ) {
+            throw new NotFoundException('CDN not used');
+        }
+
         // We expect a PSK CONSTANT to be defined in our configuration
         if (!defined('CDN_PSK')) {
             throw new \Xibo\Support\Exception\ConfigurationException('Missing CDN config');
@@ -342,26 +288,19 @@ if (isset($_GET['cdn'])) {
 
         $container->get('logService')->info('CDN bandwidth request for ' . $file->path);
 
-        // Do we have a usage amount provided?
-        if (array_key_exists('HTTP_X_CDN_BW', $_SERVER) && is_numeric($_SERVER['HTTP_X_CDN_BW'])) {
-            $usedBandwidth = intval($_SERVER['HTTP_X_CDN_BW']);
-
-            // Don't allow this if we get bandwidth lower than 0
-            if ($usedBandwidth < 0) {
-                $usedBandwidth = $file->size;
-            }
-        }
+        // The usage reported in the request, or the file size if none is reported.
+        $usedBandwidth = \Xibo\Helper\CdnBandwidth::fromHeader($_SERVER['HTTP_X_CDN_BW'] ?? null, (int) $file->size);
 
         // Bandwidth
-        // Add the size to the bytes we have already requested.
-        $file->bytesRequested = $file->bytesRequested + $file->size;
+        // Add the usage to the bytes we have already requested.
+        $file->bytesRequested = $file->bytesRequested + $usedBandwidth;
         $file->save(['useTransaction' => false]);
 
         // Also add to the overall bandwidth used by get file
         $container->get('bandwidthFactory')->createAndSave(
             \Xibo\Entity\Bandwidth::$GETFILE,
             $file->displayId,
-            $file->size
+            $usedBandwidth
         );
     } catch (Exception $e) {
         $logger->error('Unknown Error: ' . $e->getMessage());
@@ -474,7 +413,10 @@ try {
         $container->get('dispatcher'),
         $container->get('campaignFactory'),
         $container->get('syncGroupFactory'),
-        $container->get('playerFaultFactory')
+        $container->get('playerFaultFactory'),
+        $container->get('libraryStorageService'),
+        $container->get('libraryStorageRegistry'),
+        $container->get('displayGroupFactory')
     );
 
     // Add manual raw post data parsing, as HTTP_RAW_POST_DATA is deprecated.
@@ -495,14 +437,14 @@ try {
         // Gate the commit on the response status so faults roll back as intended.
         if (http_response_code() >= 500) {
             try {
-                $container->get('store')->getConnection()->rollBack();
+                $container->get('store')->rollBackIfNecessary();
             } catch (\Throwable $t) {
                 // The transaction may already be gone (e.g. after a deadlock the server rolls back
                 // for us), in which case there is nothing to do here.
                 $container->get('logService')->debug('XMDS rollback no-op: ' . $t->getMessage());
             }
         } else {
-            $container->get('store')->getConnection()->commit();
+            $container->get('store')->commitIfNecessary();
         }
     }
 
@@ -511,9 +453,7 @@ try {
 } catch (Exception $e) {
     $container->get('logService')->error($e->getMessage());
 
-    if ($container->get('store')->getConnection()->inTransaction()) {
-        $container->get('store')->getConnection()->rollBack();
-    }
+    $container->get('store')->rollBackIfNecessary();
 
     header('HTTP/1.1 500 Internal Server Error');
     header('Content-Type: text/plain');

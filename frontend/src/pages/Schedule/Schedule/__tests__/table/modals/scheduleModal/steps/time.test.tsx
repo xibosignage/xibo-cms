@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { screen } from '@testing-library/react';
@@ -24,7 +26,13 @@ import userEvent, { type UserEvent } from '@testing-library/user-event';
 import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
-import { ALWAYS_AND_CUSTOM, mockDaypartRows, setupScheduleModalMocks } from '../../../../mocks/api';
+import { buildEvent } from '../../../../fixtures/event';
+import {
+  ALWAYS_AND_CUSTOM,
+  mockDaypartRows,
+  mockFetchEventById,
+  setupScheduleModalMocks,
+} from '../../../../mocks/api';
 import { renderScheduleModal } from '../helpers/renderScheduleModal';
 
 import { testQueryClient } from '@/setupTests';
@@ -71,8 +79,11 @@ vi.mock('@/services/syncGroupApi');
 vi.mock('@/services/datasetApi');
 vi.mock('@/services/scheduleCriteriaApi');
 
+// Renders the value it's given, so a test can see what a date field holds.
 vi.mock('@/components/ui/forms/DatePickerInput', () => ({
-  default: ({ label }: { label?: string }) => <input aria-label={label} readOnly />,
+  default: ({ label, value }: { label?: string; value?: string }) => (
+    <input aria-label={label} value={value ?? ''} readOnly />
+  ),
 }));
 vi.mock('@/components/ui/GeoScheduleMap', () => ({
   default: () => <div role="img" aria-label="Geo schedule map" />,
@@ -202,5 +213,61 @@ describe('ScheduleEventModal - Step 2 (Time)', () => {
 
     expect(screen.getByRole('spinbutton', { name: 'Share of Voice' })).toBeInTheDocument();
     expect(screen.getByText(/As a percentage/i)).toBeInTheDocument();
+  });
+});
+
+// =============================================================================
+// Leaving Always - xibosignage/xibo#3940
+// =============================================================================
+
+// The CMS stores an Always event as running from 0 to 2147483647, so editing
+// one loads an End Time of 19 January 2038. Before #3940, switching such an
+// event to another daypart kept that date, and the user was shown a
+// pre-filled end date they never chose.
+
+/** Open an existing event and go to the Time step. */
+const editOnTimeStep = async (user: UserEvent, event: ReturnType<typeof buildEvent>) => {
+  mockFetchEventById(event);
+  renderScheduleModal({ mode: 'edit', event });
+
+  await user.click(await screen.findByText('Time'));
+  await screen.findByRole('combobox', { name: 'Dayparting' });
+};
+
+describe('ScheduleEventModal - Time step, leaving Always', () => {
+  beforeEach(() => {
+    testQueryClient.clear();
+    vi.clearAllMocks();
+
+    setupScheduleModalMocks();
+    mockDaypartRows(ALWAYS_AND_CUSTOM);
+  });
+
+  test('switching an Always event to Custom leaves Start Time and End Time empty', async () => {
+    const user = userEvent.setup();
+    await editOnTimeStep(
+      user,
+      buildEvent({ campaignId: 42, dayPartId: 1, isAlways: 1, fromDt: 0, toDt: 2147483647 }),
+    );
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Dayparting' }), '2');
+
+    expect(screen.getByLabelText('Start Time')).toHaveValue('');
+    expect(screen.getByLabelText('End Time')).toHaveValue('');
+  });
+
+  // Only leaving Always clears the dates: a Custom event's own dates are real
+  // and must survive a change of daypart.
+  test('switching a Custom event to a named daypart keeps its Start Time', async () => {
+    const user = userEvent.setup();
+    const event = buildEvent({ campaignId: 42, dayPartId: 2, isCustom: 1 });
+    await editOnTimeStep(user, event);
+
+    const startTime = (screen.getByLabelText('Start Time') as HTMLInputElement).value;
+    expect(startTime).not.toBe('');
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Dayparting' }), '3');
+
+    expect(screen.getByLabelText('Start Time')).toHaveValue(startTime);
   });
 });

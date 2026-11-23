@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 namespace Xibo\Controller;
 
@@ -33,6 +35,8 @@ use Xibo\Helper\LogoutTrait;
 use Xibo\Helper\Random;
 use Xibo\Helper\SafeRedirect;
 use Xibo\Helper\Session;
+use Xibo\Helper\SsoSignInProviders;
+use Xibo\Service\BrandServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\ExpiredException;
@@ -52,6 +56,7 @@ class Login extends Base
         private readonly Session $session,
         private readonly UserFactory $userFactory,
         private readonly \Stash\Interfaces\PoolInterface $pool,
+        private readonly BrandServiceInterface $brandService,
     ) {
     }
 
@@ -94,6 +99,9 @@ class Login extends Base
                 try {
                     $user = $this->userFactory->getById($validated['userId']);
 
+                    // A reserved user never signs in here.
+                    $this->userFactory->assertNotReserved((int)$user->userId);
+
                     // Log in this user
                     $user->touch(true);
 
@@ -135,20 +143,26 @@ class Login extends Base
         }
 
         $passwordReminderEnabled = $this->isPasswordReminderEnabled();
-        $authCASEnabled = isset($this->getConfig()->casSettings);
-        $logoUrl = $this->getBrandLogoUrl();
+        // A CAS-only page (just the CAS button), unless CAS opts in to showing the full login page.
+        $authCASEnabled = $this->getConfig()->isCasEnabled() && !$this->getConfig()->isCasLoginPageShown();
+        $priorRoute = SafeRedirect::sanitizeRoute($sanitizedRequestBody->getString('priorRoute'));
+        $logoUrl = $this->brandService->getAssetUrl(BrandServiceInterface::SLOT_LOGO);
 
         // Build config blob for the React SPA shell
         $loginConfig = [
-            'priorRoute' => SafeRedirect::sanitizeRoute(
-                $sanitizedRequestBody->getString('priorRoute')
-            ),
+            'priorRoute' => $priorRoute,
             'loginError'              => $loginError,
             'logoUrl'                 => $logoUrl,
-            'logoDarkUrl'             => $this->getBrandLogoDarkUrl(),
+            'logoDarkUrl'             => $this->brandService->getAssetUrl(BrandServiceInterface::SLOT_LOGO_DARK),
             'passwordReminderEnabled' => $passwordReminderEnabled,
             'authCASEnabled'          => $authCASEnabled,
-            'version'                 => Environment::$WEBSITE_VERSION_NAME,
+            // SAML/CAS buttons, when they opt in to showing the login page.
+            'signInProviders'         => SsoSignInProviders::build(
+                $this->getConfig(),
+                RouteContext::fromRequest($request)->getRouteParser(),
+                $priorRoute
+            ),
+            'version'                 => Environment::getVersion(),
             'appName'                 => $this->getConfig()->getThemeConfig('app_name', 'Xibo'),
             'supportUrl'              => $this->getConfig()->getThemeConfig(
                 'theme_url',
@@ -164,9 +178,7 @@ class Login extends Base
             ),
             'i18n' => [
                 // Common
-                'username'             => __('Username'),
                 'password'             => __('Password'),
-                'usernamePlaceholder'  => __('Enter username'),
                 'passwordPlaceholder'  => __('Enter password'),
                 'showPassword'         => __('Show password'),
                 'hidePassword'         => __('Hide password'),
@@ -177,10 +189,17 @@ class Login extends Base
                 'rateLimitError'       => __('Too many attempts. Please wait before trying again.'),
                 // Login form
                 'loginPrompt'          => __('Please provide your credentials'),
+                'identifier'           => __('Username or email'),
+                'identifierPlaceholder' => __('Enter username or email'),
+                'nextButton'           => __('Next'),
+                'changeIdentifier'     => __('Change'),
+                'changeIdentifierLabel' => __('Change username or email'),
+                'identifierRequired'   => __('Please enter your username or email.'),
                 'forgotPasswordLink'   => __('Forgot Password?'),
                 'invalidCredentials'   => __('Username or password incorrect.'),
                 'casPrompt'            => __('Connect with the Central Authentication Server'),
                 'casLoginButton'       => __('CAS Login'),
+                'signInProvidersDivider' => __('or'),
                 // Two-factor
                 'tfaPrompt'            => __('Please provide your Two Factor Authorisation Code'),
                 'tfaRecoveryPrompt'    => __('Please provide your Two Factor Recovery Code'),
@@ -193,7 +212,9 @@ class Login extends Base
                 'tfaSwitchToCode'      => __('Use Two Factor Code instead?'),
                 'tfaInvalidCode'       => __('Authentication code incorrect.'),
                 // Forgot password
-                'forgotPrompt'         => __('Please provide your username and we will send a password reset link.'),
+                'forgotPrompt'         => __(
+                    'Please provide your username or email and we will send a password reset link.'
+                ),
                 'forgotSendButton'     => __('Send Reset'),
                 'forgotSentMessage'    =>
                     __('A reminder email will be sent to the associated email address if this user exists.'),
@@ -233,23 +254,41 @@ class Login extends Base
     {
         $parsedRequest = $this->getSanitizer($request->getParams());
         $priorRoute = $parsedRequest->getString('priorRoute');
+
+        // The username field takes a username or an email (the field name stays for API clients and password managers).
+        $identifier = $parsedRequest->getString('username') ?? '';
+        $password = $parsedRequest->getString('password') ?? '';
+
         try {
             // Per-IP rate limit: 5 failed login attempts per 15 minutes.
             // Checked before the user lookup so attackers cannot enumerate usernames freely.
             $this->enforceRateLimit($request, 'login', 5, 900);
+        } catch (AccessDeniedException) {
+            return $this->loginRateLimitedResponse($response);
+        }
 
-            // Get our username and password
-            $username = $parsedRequest->getString('username');
-            $password = $parsedRequest->getString('password');
+        // Per-identifier rate limit: 10 failed login attempts per 15 minutes, from any IP.
+        // Keyed on what was typed, so unknown and shared identifiers are limited the same way.
+        if ($this->isLoginThrottled($this->getIdentifierThrottleKey($identifier))) {
+            return $this->loginRateLimitedResponse($response);
+        }
 
-            $this->getLog()->debug('Login with username ' . $username);
+        $userId = null;
 
+        try {
             // Get our user
             try {
-                $user = $this->userFactory->getByName($username);
+                $user = $this->userFactory->getByLoginIdentifier($identifier);
+                $userId = $user->userId;
+
+                // Per-user rate limit, so other spellings that match the same user share one limit.
+                if ($this->isLoginThrottled($this->getUserThrottleKey($userId))) {
+                    return $this->loginRateLimitedResponse($response);
+                }
 
                 // Retired user
                 if ($user->retired === 1) {
+                    $this->checkDummyPassword($password);
                     throw new AccessDeniedException(
                         __('Sorry this account does not exist or does not have permission to access the web portal.')
                     );
@@ -258,8 +297,10 @@ class Login extends Base
                 // Check password
                 $user->checkPassword($password);
 
-                // Successful auth — drop the failure counter for this IP.
+                // Successful auth — drop the failure counters for this IP, identifier and user.
                 $this->resetRateLimit($request, 'login');
+                $this->pool->deleteItem($this->getIdentifierThrottleKey($identifier));
+                $this->pool->deleteItem($this->getUserThrottleKey($userId));
 
                 // check if 2FA is enabled
                 if ($user->twoFactorTypeId != 0) {
@@ -287,25 +328,105 @@ class Login extends Base
                     'isPasswordChangeRequired' => $user->isPasswordChangeRequired === 1,
                 ]);
             } catch (NotFoundException) {
+                $this->checkDummyPassword($password);
                 throw new AccessDeniedException(__('User not found'));
             }
         } catch (AccessDeniedException $e) {
-            $isRateLimited = str_contains($e->getMessage(), 'Too many attempts');
-            if (!$isRateLimited) {
-                $this->recordRateLimitHit($request, 'login', 900);
+            $this->recordRateLimitHit($request, 'login', 900);
+            $this->recordLoginThrottleHit($this->getIdentifierThrottleKey($identifier));
+            if ($userId !== null) {
+                $this->recordLoginThrottleHit($this->getUserThrottleKey($userId));
             }
             $this->getLog()->warning($e->getMessage());
 
-            return $response->withJson(
-                [
-                    'status' => $isRateLimited ? 'rate_limited' : 'error',
-                    'message' => __('Username or Password incorrect'),
-                ],
-                $isRateLimited ? 429 : 401
-            );
+            return $response->withJson(['status' => 'error', 'message' => __('Username or Password incorrect')], 401);
         } catch (ExpiredException) {
             return $response->withJson(['status' => 'error', 'message' => __('Session expired')], 401);
         }
+    }
+
+    /**
+     * Login step 2: the sign-in methods for a username or email.
+     * Unknown, retired and shared-email users get the same answer as a password-only user.
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface
+     */
+    public function methods(Request $request, Response $response): \Psr\Http\Message\ResponseInterface
+    {
+        $parsedRequest = $this->getSanitizer($request->getParams());
+        $priorRoute = SafeRedirect::sanitizeRoute($parsedRequest->getString('priorRoute'));
+
+        try {
+            $this->enforceRateLimit($request, 'login-methods', 60, 60);
+        } catch (AccessDeniedException $e) {
+            return $response->withJson(['status' => 'rate_limited', 'message' => $e->getMessage()], 429);
+        }
+        $this->recordRateLimitHit($request, 'login-methods', 60);
+
+        try {
+            $user = $this->userFactory->getByLoginIdentifier($parsedRequest->getString('identifier') ?? '');
+            if ($user->retired === 1) {
+                $user = null;
+            }
+        } catch (NotFoundException) {
+            $user = null;
+        }
+
+        $methods = [];
+
+        $methods[] = ['type' => 'password'];
+
+        return $response->withJson(['status' => 'ok', 'methods' => $methods]);
+    }
+
+    private function getIdentifierThrottleKey(string $identifier): string
+    {
+        return 'throttle/login-identifier/' . hash('sha256', strtolower(trim($identifier)));
+    }
+
+    private function getUserThrottleKey(int $userId): string
+    {
+        return 'throttle/login-user/' . $userId;
+    }
+
+    /**
+     * 10 failed logins per 15 minutes, from any IP.
+     */
+    private function isLoginThrottled(string $key): bool
+    {
+        $count = (int)($this->pool->getItem($key)->get() ?? 0);
+        if ($count >= 10) {
+            $this->getLog()->warning('Rate limit hit: ' . $key . ' count=' . $count);
+            return true;
+        }
+
+        return false;
+    }
+
+    private function recordLoginThrottleHit(string $key): void
+    {
+        $item = $this->pool->getItem($key);
+        $item->set((int)($item->get() ?? 0) + 1);
+        $item->expiresAfter(900);
+        $this->pool->save($item);
+    }
+
+    private function loginRateLimitedResponse(Response $response): \Psr\Http\Message\ResponseInterface
+    {
+        return $response->withJson(
+            ['status' => 'rate_limited', 'message' => __('Too many attempts. Please wait and try again.')],
+            429
+        );
+    }
+
+    /**
+     * Spend the same time as a real password check, so a missing user can't be told apart by timing.
+     * @param string $password
+     */
+    private function checkDummyPassword(string $password): void
+    {
+        password_verify($password, '$2y$12$pTzENcCzLqgtSdPKD5gdkOBLlWC/LllnFPIU01XXyEcXjlHRpY55W');
     }
 
     /**
@@ -344,16 +465,11 @@ class Login extends Base
         }
         $this->recordRateLimitHit($request, 'pwreset', 3600);
 
-        // Get our username
-        $username = $parsedRequest->getString('username');
-
-        // Log
-        $this->getLog()->info('Forgotten Password Request for ' . $username);
-
-        // Check to see if the provided username is valid, and if so, record a nonce and send them a link
+        // Check to see if the provided username or email is valid, and if so, record a nonce and send them a link
         try {
-            // Get our user
-            $user = $this->userFactory->getByName($username);
+            $user = $this->userFactory->getByLoginIdentifier($parsedRequest->getString('username') ?? '');
+
+            $this->getLog()->info('Forgotten Password Request for ' . $user->userName);
 
             // Does this user have an email address associated to their user record?
             if ($user->email == '') {
@@ -499,7 +615,7 @@ class Login extends Base
     {
         return $response->withJson([
             'data' => [
-                'version' => Environment::$WEBSITE_VERSION_NAME,
+                'version' => Environment::getVersion(),
             ],
         ]);
     }
@@ -510,17 +626,13 @@ class Login extends Base
      */
     public function aboutConfig(Request $request, Response $response): \Psr\Http\Message\ResponseInterface
     {
-        $rootUri = $this->getConfig()->rootUri();
-        $logoFile = $this->getConfig()->getBrandAssetFile('logo');
-        $iconFile = $this->getConfig()->getBrandAssetFile('logo-icon');
-
         $payload = [
-            'version'     => Environment::$WEBSITE_VERSION_NAME,
+            'version'     => Environment::getVersion(),
             'revision'    => Environment::getGitCommit(),
             'appName'     => $this->getConfig()->getThemeConfig('app_name', 'Xibo'),
             'productName' => $this->getConfig()->getThemeConfig('theme_title', 'Xibo Digital Signage'),
-            'logoUrl'     => $rootUri . 'brand/' . $logoFile,
-            'logoIconUrl' => $rootUri . 'brand/' . $iconFile,
+            'logoUrl'     => $this->aboutAssetUrl(BrandServiceInterface::SLOT_LOGO),
+            'logoIconUrl' => $this->aboutAssetUrl(BrandServiceInterface::SLOT_LOGO_ICON),
             'supportUrl'  => $this->getConfig()->getThemeConfig('theme_url', 'https://xibosignage.com'),
             'sourceUrl'   => $this->getConfig()->getThemeConfig(
                 'cms_source_url',
@@ -530,6 +642,15 @@ class Login extends Base
         ];
 
         return $response->withJson($payload);
+    }
+
+    /**
+     * A brand image's URL for the About modal, which links the brand folder under the root URI as before.
+     */
+    private function aboutAssetUrl(string $slot): string
+    {
+        $url = $this->brandService->getAssetUrl($slot);
+        return str_starts_with($url, '/brand/') ? $this->getConfig()->rootUri() . ltrim($url, '/') : $url;
     }
 
     /**
@@ -715,6 +836,13 @@ class Login extends Base
      */
     private function completeLoginFlow(User $user, Request $request): void
     {
+        // A reserved user never signs in here.
+        if ($this->userFactory->isReserved((int)$user->userId)) {
+            throw new AccessDeniedException(
+                __('Sorry this account does not exist or does not have permission to access the web portal.')
+            );
+        }
+
         $user->touch();
 
         $this->getLog()->info($user->userName . ' user logged in.');
@@ -735,23 +863,6 @@ class Login extends Base
         $this->getLog()->audit('User', $user->userId, 'Login Granted', [
                 'UserAgent' => $request->getHeader('User-Agent')
         ]);
-    }
-
-    private function getBrandLogoUrl(): string
-    {
-        // Brand assets are served by Apache at the domain-root /brand alias (preserved even on
-        // alias installs), so this is NOT rootUri-prefixed — matches the React BrandingContext.
-        return '/brand/' . $this->getConfig()->getBrandAssetFile('logo');
-    }
-
-    /**
-     * The dark-coloured logo, for display on light backgrounds (e.g. the login card).
-     * Falls back to the standard logo if a white-label package ships no dark variant.
-     */
-    private function getBrandLogoDarkUrl(): string
-    {
-        // Same /brand alias reasoning as getBrandLogoUrl() above — not rootUri-prefixed.
-        return '/brand/' . $this->getConfig()->getBrandLogoDarkFile();
     }
 
     private function isPasswordReminderEnabled(): bool

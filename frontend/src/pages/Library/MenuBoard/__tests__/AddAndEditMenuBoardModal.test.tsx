@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { screen, waitFor } from '@testing-library/react';
@@ -83,28 +85,32 @@ describe('AddAndEditMenuBoardModal', () => {
       expect(screen.getByLabelText(/^Description/, { exact: false })).toHaveValue('');
     });
 
-    it('calls createMenuBoard with name, description, and code on save', async () => {
-      const user = userEvent.setup();
-      mockCreateMenuBoard.mockResolvedValue(mockMenuBoard());
-      const { mockOnSave, mockOnClose } = renderAddModal();
+    it(
+      'calls createMenuBoard with name, description, and code on save',
+      { tags: ['smoke'] },
+      async () => {
+        const user = userEvent.setup();
+        mockCreateMenuBoard.mockResolvedValue(mockMenuBoard());
+        const { mockOnSave, mockOnClose } = renderAddModal();
 
-      await user.type(screen.getByLabelText('Name'), 'New Board');
-      await user.type(screen.getByLabelText('Code', { exact: false }), 'NB_01');
-      await user.type(screen.getByLabelText('Description', { exact: false }), 'A description');
-      await user.click(screen.getByRole('button', { name: 'Save' }));
+        await user.type(screen.getByLabelText('Name'), 'New Board');
+        await user.type(screen.getByLabelText('Code', { exact: false }), 'NB_01');
+        await user.type(screen.getByLabelText('Description', { exact: false }), 'A description');
+        await user.click(screen.getByRole('button', { name: 'Save' }));
 
-      await waitFor(() => {
-        expect(mockCreateMenuBoard).toHaveBeenCalledWith(
-          expect.objectContaining({
-            name: 'New Board',
-            code: 'NB_01',
-            description: 'A description',
-          }),
-        );
-        expect(mockOnSave).toHaveBeenCalled();
-        expect(mockOnClose).toHaveBeenCalled();
-      });
-    });
+        await waitFor(() => {
+          expect(mockCreateMenuBoard).toHaveBeenCalledWith(
+            expect.objectContaining({
+              name: 'New Board',
+              code: 'NB_01',
+              description: 'A description',
+            }),
+          );
+          expect(mockOnSave).toHaveBeenCalled();
+          expect(mockOnClose).toHaveBeenCalled();
+        });
+      },
+    );
 
     // Scenario 3 — empty name
     it('shows validation error when name is empty on save', async () => {

@@ -1,27 +1,31 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { afterEach, describe, expect, test } from 'vitest';
 
 import { formatCmsDate, formatCmsDateTime } from '../date';
+
+import { setTimezone } from '@/testUtils/timezone';
 
 /**
  * The server sends most grid dates (Layouts Modified, Events Created On, ...) as the CMS's own
@@ -35,7 +39,7 @@ const FORMAT = 'YYYY-MM-DD HH:mm';
 
 const originalTz = process.env.TZ;
 afterEach(() => {
-  process.env.TZ = originalTz;
+  setTimezone(originalTz);
 });
 
 /** Run the rest of the test as if the browser were in `zone`. */
@@ -70,28 +74,28 @@ describe('a zone-less server date shows the CMS wall-clock time in any browser t
     );
   });
 
-  test.fails('browser in Asia/Manila: shows 08:29, not 01:29', () => {
+  test.fails('browser in Asia/Manila: shows 08:29, not 01:29', { retry: 0 }, () => {
     browserIn('Asia/Manila');
     expect(formatCmsDateTime(SERVER_STRING, { format: FORMAT, timeZone: CMS_TZ })).toBe(
       '2026-10-08 08:29',
     );
   });
 
-  test.fails('browser in Pacific/Auckland: shows 08:29 on the same day', () => {
+  test.fails('browser in Pacific/Auckland: shows 08:29 on the same day', { retry: 0 }, () => {
     browserIn('Pacific/Auckland');
     expect(formatCmsDateTime(SERVER_STRING, { format: FORMAT, timeZone: CMS_TZ })).toBe(
       '2026-10-08 08:29',
     );
   });
 
-  test.fails('browser in America/Los_Angeles: shows 08:29, not a later time', () => {
+  test.fails('browser in America/Los_Angeles: shows 08:29, not a later time', { retry: 0 }, () => {
     browserIn('America/Los_Angeles');
     expect(formatCmsDateTime(SERVER_STRING, { format: FORMAT, timeZone: CMS_TZ })).toBe(
       '2026-10-08 08:29',
     );
   });
 
-  test.fails('date only, browser in Pacific/Auckland: shows the stored day', () => {
+  test.fails('date only, browser in Pacific/Auckland: shows the stored day', { retry: 0 }, () => {
     browserIn('Pacific/Auckland');
     expect(formatCmsDate(SERVER_STRING, { format: FORMAT, timeZone: CMS_TZ })).toBe('2026-10-08');
   });

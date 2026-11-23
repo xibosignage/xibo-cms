@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Report;
@@ -257,6 +259,10 @@ class SessionHistory implements ReportInterface
                 $rows[] = $auditRecord;
             }
 
+            // Rows an extension attributes to someone else say so, as in the audit log itself (nothing changes
+            // without one).
+            $this->auditLogFactory->decorate($rows);
+
             return new ReportResult(
                 $metadata,
                 $rows,
@@ -313,6 +319,7 @@ class SessionHistory implements ReportInterface
             $sql .= $this->buildOrderBy('debug', $sanitizedParams, $isJson);
 
             $rows = [];
+            $attributionRows = [];
             foreach ($this->store->select($sql, $params) as $row) {
                 $logRecord = $this->logFactory->createEmpty()->hydrate($row, ['htmlStringProperties' => ['message']]);
                 $logRecord->setUnmatchedProperty('userAgent', $row['userAgent']);
@@ -320,7 +327,10 @@ class SessionHistory implements ReportInterface
                 $logRecord->setUnmatchedProperty('userName', $row['userName']);
 
                 $rows[] = $logRecord;
+                $attributionRows[] = $row;
             }
+
+            $this->attribute($rows, $attributionRows, 'sessionHistoryId');
 
             return new ReportResult(
                 $metadata,
@@ -369,6 +379,7 @@ class SessionHistory implements ReportInterface
             $sql .= $this->buildOrderBy('sessions', $sanitizedParams, $isJson);
 
             $rows = [];
+            $attributionRows = [];
             foreach ($this->store->select($sql, $params) as $row) {
                 $sessionRecord = $this->logFactory->createEmpty()
                     ->hydrate($row, ['htmlStringProperties' => ['message']]);
@@ -383,13 +394,38 @@ class SessionHistory implements ReportInterface
                 $sessionRecord->setUnmatchedProperty('duration', $duration);
 
                 $rows[] = $sessionRecord;
+                $attributionRows[] = $row;
             }
+
+            $this->attribute($rows, $attributionRows, 'sessionId');
 
             return new ReportResult(
                 $metadata,
                 $rows,
                 count($rows),
             );
+        }
+    }
+
+    /**
+     * Attributes the debug log and session rows the way an extension attributes the audit log, when there is one:
+     * their userName becomes the one it gives, with its fields beside it (nothing changes without an extension).
+     * @param \Xibo\Entity\LogEntry[] $records
+     * @param array[] $rows the rows the records were made from, in the same order
+     * @param string $sessionHistoryIdColumn the rows' session history id
+     */
+    private function attribute(array $records, array $rows, string $sessionHistoryIdColumn): void
+    {
+        $attributions = $this->auditLogFactory->getAttributions(array_map(fn (array $row) => [
+            'sessionHistoryId' => isset($row[$sessionHistoryIdColumn]) ? (int)$row[$sessionHistoryIdColumn] : null,
+            'userId' => isset($row['userId']) ? (int)$row['userId'] : null,
+            'userName' => $row['userName'] ?? null,
+        ], $rows));
+
+        foreach ($attributions as $i => $fields) {
+            foreach ($fields as $name => $value) {
+                $records[$i]->setUnmatchedProperty($name, $value);
+            }
         }
     }
 

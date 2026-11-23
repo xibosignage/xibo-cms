@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -30,6 +32,8 @@ import { propsWith, t } from './helpers';
 const mockFetchEvent = vi.fn();
 const mockFetchMedia = vi.fn();
 const mockFetchLayouts = vi.fn();
+const mockFetchReportSchedules = vi.fn();
+const mockFetchSavedReports = vi.fn();
 
 vi.mock('@/services/eventApi', async (importOriginal) => ({
   ...(await importOriginal<object>()),
@@ -42,6 +46,14 @@ vi.mock('@/services/mediaApi', async (importOriginal) => ({
 vi.mock('@/services/layoutsApi', async (importOriginal) => ({
   ...(await importOriginal<object>()),
   fetchLayouts: (...args: unknown[]) => mockFetchLayouts(...args),
+}));
+vi.mock('@/services/reportScheduleApi', async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  fetchReportSchedules: (...args: unknown[]) => mockFetchReportSchedules(...args),
+}));
+vi.mock('@/services/savedReportApi', async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  fetchSavedReports: (...args: unknown[]) => mockFetchSavedReports(...args),
 }));
 
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
@@ -58,6 +70,18 @@ import {
   getMediaColumns,
 } from '@/pages/Library/Media/MediaConfig';
 import { useMediaData } from '@/pages/Library/Media/hooks/useMediaData';
+import {
+  INITIAL_FILTER_STATE as REPORT_SCHEDULE_INITIAL_FILTER_STATE,
+  getBaseFilterKeys as getReportScheduleFilterKeys,
+  getReportScheduleColumns,
+} from '@/pages/Reporting/ReportSchedules/ReportSchedulesConfig';
+import { useReportScheduleData } from '@/pages/Reporting/ReportSchedules/hooks/useReportScheduleData';
+import {
+  INITIAL_FILTER_STATE as SAVED_REPORT_INITIAL_FILTER_STATE,
+  getBaseFilterKeys as getSavedReportFilterKeys,
+  getSavedReportColumns,
+} from '@/pages/Reporting/SavedReports/SavedReportsConfig';
+import { useSavedReportData } from '@/pages/Reporting/SavedReports/hooks/useSavedReportData';
 import {
   INITIAL_FILTER_STATE as EVENT_INITIAL_FILTER_STATE,
   getBaseFilterKeys as getEventFilterKeys,
@@ -92,6 +116,8 @@ beforeEach(() => {
   mockFetchEvent.mockResolvedValue({ rows: [], totalCount: 0 });
   mockFetchMedia.mockResolvedValue({ rows: [], totalCount: 0 });
   mockFetchLayouts.mockResolvedValue({ rows: [], totalCount: 0 });
+  mockFetchReportSchedules.mockResolvedValue({ rows: [], totalCount: 0 });
+  mockFetchSavedReports.mockResolvedValue({ rows: [], totalCount: 0 });
 });
 
 const wrapper = () => {
@@ -161,6 +187,28 @@ const grids = {
         useLayoutData({ pagination: page, sorting, filter: '', folderId: null, advancedFilters }),
       ),
   } as Grid<typeof LAYOUT_INITIAL_FILTER_STATE>,
+  reportSchedules: {
+    name: 'Report Schedules',
+    factory: 'ReportScheduleFactory',
+    sortableIds: sortableColumnIds(getReportScheduleColumns(propsWith())),
+    filters: getReportScheduleFilterKeys(t),
+    initial: REPORT_SCHEDULE_INITIAL_FILTER_STATE,
+    request: (sorting, advancedFilters) =>
+      requestFrom(mockFetchReportSchedules, () =>
+        useReportScheduleData({ pagination: page, sorting, filter: '', advancedFilters }),
+      ),
+  } as Grid<typeof REPORT_SCHEDULE_INITIAL_FILTER_STATE>,
+  savedReports: {
+    name: 'Saved Reports',
+    factory: 'SavedReportFactory',
+    sortableIds: sortableColumnIds(getSavedReportColumns(propsWith())),
+    filters: getSavedReportFilterKeys(t),
+    initial: SAVED_REPORT_INITIAL_FILTER_STATE,
+    request: (sorting, advancedFilters) =>
+      requestFrom(mockFetchSavedReports, () =>
+        useSavedReportData({ pagination: page, sorting, filter: '', advancedFilters }),
+      ),
+  } as Grid<typeof SAVED_REPORT_INITIAL_FILTER_STATE>,
 };
 
 /** Sort keys known to be missing from the server allow-list; each has its own `knownFailure` below. */

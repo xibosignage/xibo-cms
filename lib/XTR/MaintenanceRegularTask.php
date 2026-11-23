@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 namespace Xibo\XTR;
 
@@ -27,6 +29,7 @@ use Xibo\Helper\Guzzle\SafeClient;
 use GuzzleHttp\Exception\GuzzleException;
 use Xibo\Controller\Display;
 use Xibo\Event\DisplayGroupLoadEvent;
+use Xibo\Event\DisplayLimitEvent;
 use Xibo\Event\MaintenanceRegularEvent;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -81,8 +84,6 @@ class MaintenanceRegularTask implements TaskInterface
     /** @var ModuleFactory */
     private $moduleFactory;
 
-    /** @var  \Xibo\Helper\SanitizerService */
-    private $sanitizerService;
     /**
      * @var ScheduleFactory
      */
@@ -104,7 +105,6 @@ class MaintenanceRegularTask implements TaskInterface
         $this->layoutFactory = $container->get('layoutFactory');
         $this->playlistFactory = $container->get('playlistFactory');
         $this->moduleFactory = $container->get('moduleFactory');
-        $this->sanitizerService = $container->get('sanitizerService');
         $this->scheduleFactory = $container->get('scheduleFactory');
         $this->displayNotifyService = $container->get('displayNotifyService');
         return $this;
@@ -187,54 +187,42 @@ class MaintenanceRegularTask implements TaskInterface
     }
 
     /**
-     * Licence Slot Validation
+     * Licence Slot Validation: when more displays are authorised than the limit allows, un-authorises the least
+     * recently seen, of any client type, until the rest fit. Every display takes a licence slot, whoever issues it.
+     * Pro also checks this when Windows and Linux displays connect, so it still applies with this task off.
      */
     private function licenceSlotValidation()
     {
-        $maxDisplays = $this->config->getSetting('MAX_LICENSED_DISPLAYS');
+        $event = new DisplayLimitEvent();
+        $this->getDispatcher()->dispatch($event, DisplayLimitEvent::$NAME);
+        $maxDisplays = $event->getLimit();
 
-        if ($maxDisplays > 0) {
-            $this->runMessage .= '## ' . __('Licence Slot Validation') . PHP_EOL;
+        // A limit of 0 would un-authorise every display, so it only blocks new authorisations.
+        if ($maxDisplays === 0 && $event->canUnauthorise()) {
+            $this->log->warning('The display limit is 0, so no displays are un-authorised.');
+            return;
+        }
 
-            // Get a list of all displays
-            try {
-                $dbh = $this->store->getConnection();
-                $sth = $dbh->prepare('SELECT displayId, display FROM `display` WHERE licensed = 1 ORDER BY lastAccessed');
-                $sth->execute();
+        // Displays over the limit are only un-authorised when a listener allows it.
+        if ($maxDisplays === null || !$event->canUnauthorise()) {
+            return;
+        }
 
-                $displays = $sth->fetchAll(\PDO::FETCH_ASSOC);
+        $this->runMessage .= '## ' . __('Licence Slot Validation') . PHP_EOL;
 
-                if (count($displays) > $maxDisplays) {
-                    // :(
-                    // We need to un-licence some displays
-                    $difference = count($displays) - $maxDisplays;
+        try {
+            $unauthorised = $this->displayFactory->unauthoriseOverLimit(
+                $maxDisplays,
+                'Regular Maintenance unauthorised display due to max number of slots exceeded.'
+            );
 
-                    $this->log->alert(sprintf('Max %d authorised displays exceeded, we need to un-authorise %d of %d displays', $maxDisplays, $difference, count($displays)));
-
-                    $update = $dbh->prepare('UPDATE `display` SET licensed = 0 WHERE displayId = :displayId');
-
-                    foreach ($displays as $display) {
-                        $sanitizedDisplay = $this->getSanitizer($display);
-
-                        // If we are down to 0 difference, then stop
-                        if ($difference == 0) {
-                            break;
-                        }
-
-                        $this->appendRunMessage(sprintf(__('Disabling %s'), $sanitizedDisplay->getString('display')));
-                        $update->execute(['displayId' => $display['displayId']]);
-
-                        $this->log->audit('Display', $display['displayId'], 'Regular Maintenance unauthorised display due to max number of slots exceeded.', ['display' => $display['display']]);
-
-                        $difference--;
-                    }
-                }
-
-                $this->runMessage .= ' - Done' . PHP_EOL . PHP_EOL;
+            foreach ($unauthorised as $display) {
+                $this->appendRunMessage(sprintf(__('Disabling %s'), $display->display));
             }
-            catch (\Exception $e) {
-                $this->log->error($e);
-            }
+
+            $this->runMessage .= ' - Done' . PHP_EOL . PHP_EOL;
+        } catch (\Exception $e) {
+            $this->log->error($e);
         }
     }
 
@@ -316,7 +304,7 @@ class MaintenanceRegularTask implements TaskInterface
             try {
                 $layout = $this->layoutFactory->concurrentRequestLock($layout);
                 try {
-                    $layout->xlfToDisk(['notify' => true]);
+                    $layout->buildXlf(['notify' => true]);
 
                     // Commit after each build
                     // https://github.com/xibosignage/xibo/issues/1593
@@ -584,7 +572,7 @@ class MaintenanceRegularTask implements TaskInterface
                             }
                             $draft->publishDraft();
                             $draft->load();
-                            $draft->xlfToDisk([
+                            $draft->buildXlf([
                                 'notify' => true,
                                 'exceptionOnError' => true,
                                 'exceptionOnEmptyRegion' => false

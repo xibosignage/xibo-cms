@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { describe, expect, test } from 'vitest';
@@ -50,6 +52,13 @@ describe('Report Schedules grid', () => {
     expect(textOf(columns, 'lastRunDt', schedule({ lastRunDt: 0 }))).toBe('');
     expect(textOf(columns, 'lastRunDt', schedule({ lastRunDt: EPOCH }))).toMatch(/^formatted:/);
   });
+
+  // No message and an empty message both mean "didn't fail", so both must show nothing.
+  test('the Failed Message column is empty when a schedule has no failure message', () => {
+    expect(textOf(columns, 'message', schedule({ message: null }))).toBe('');
+    expect(textOf(columns, 'message', schedule({ message: '' }))).toBe('');
+    expect(textOf(columns, 'message', schedule({ message: 'Timed out' }))).toBe('Timed out');
+  });
 });
 
 describe('Saved Reports grid', () => {
@@ -59,6 +68,15 @@ describe('Saved Reports grid', () => {
     expect(
       textOf(columns, 'generatedOn', { savedReportId: 1, reportName: 'r', generatedOn: EPOCH }),
     ).toMatch(/^formatted:/);
+  });
+
+  // 0 means the report was never generated, so the cell must be empty, not 1970.
+  test('the Generated On column is empty when there is no generation time', () => {
+    const columns = getSavedReportColumns(propsWith());
+
+    expect(
+      textOf(columns, 'generatedOn', { savedReportId: 1, reportName: 'r', generatedOn: 0 }),
+    ).toBe('');
   });
 });
 

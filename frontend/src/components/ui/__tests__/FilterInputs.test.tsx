@@ -1,26 +1,29 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, test, expect, vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { afterEach, describe, test, expect, vi } from 'vitest';
 
 import FilterInputs from '../FilterInputs';
 import type { FilterConfigItem } from '../FilterInputs';
@@ -44,6 +47,11 @@ const renderFilters = (props: RenderProps = {}) =>
   );
 
 describe('FilterInputs', () => {
+  // Restore real timers even when a fake-timer test fails mid-way
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   // When the user hasn't opened the filter bar yet, it is hidden from view.
   test('collapsed filter bar is invisible to screen readers', () => {
     const { container } = renderFilters({ isOpen: false });
@@ -120,6 +128,34 @@ describe('FilterInputs', () => {
     vi.runAllTimers();
 
     expect(onChange).toHaveBeenCalledWith('name', 'xibo');
-    vi.useRealTimers();
+  });
+
+  // Fixed in xibosignage/xibo#4107: the grid stayed filtered by the last valid pattern.
+  test('turning regex off sends text that was held back as an invalid pattern', async () => {
+    const user = userEvent.setup({ delay: null });
+    const onChange = vi.fn();
+    type RegexFilters = { name: string; useRegexForName: boolean };
+    render(
+      <FilterInputs<RegexFilters>
+        isOpen={true}
+        options={[
+          {
+            label: 'Name',
+            name: 'name',
+            type: 'text',
+            showRegex: true,
+            regexKey: 'useRegexForName',
+          },
+        ]}
+        values={{ name: '', useRegexForName: true }}
+        onChange={onChange}
+      />,
+    );
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), 'a(');
+    expect(onChange).not.toHaveBeenCalledWith('name', 'a(');
+
+    await user.click(screen.getByRole('button', { name: /use regex pattern matching/i }));
+
+    expect(onChange).toHaveBeenCalledWith('name', 'a(');
   });
 });

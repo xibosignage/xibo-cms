@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 namespace Xibo\Controller;
 
@@ -31,6 +33,7 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Interfaces\PoolInterface;
 use Stash\Item;
+use Xibo\Entity\Media;
 use Xibo\Entity\Region;
 use Xibo\Entity\Session;
 use Xibo\Entity\Task;
@@ -50,6 +53,7 @@ use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetDataFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\CacheableUrlWindow;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\LayoutDescription;
@@ -58,6 +62,7 @@ use Xibo\Helper\Profiler;
 use Xibo\Helper\SendFile;
 use Xibo\Helper\Status;
 use Xibo\Service\JwtServiceInterface;
+use Xibo\Service\LibraryStorageServiceInterface;
 use Xibo\Service\MediaService;
 use Xibo\Service\MediaServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -165,6 +170,7 @@ class Layout extends Base
         private readonly WidgetDataFactory $widgetDataFactory,
         PlaylistFactory $playlistFactory,
         private readonly JwtServiceInterface $jwtService,
+        private readonly LibraryStorageServiceInterface $libraryStorageService,
         private readonly TaskFactory $taskFactory,
     ) {
         $this->session = $session;
@@ -273,7 +279,6 @@ class Layout extends Base
                 '/preview/layout/preview/' . $layout->layoutId,
                 3600,
             )->toString(),
-            'brandLogoFile' => $this->getConfig()->getBrandAssetFile('logo'),
         ];
 
         // Call the render the template
@@ -861,7 +866,7 @@ class Layout extends Base
         }
 
         // Discard the current draft and replace it
-        $layout->discardDraft(false);
+        $this->discardDraftForReplacement($layout);
 
         // Is the source remote (undocumented as it should only be via WEB)
         $source = $sanitizedParams->getString('source');
@@ -940,8 +945,8 @@ class Layout extends Base
 
         // for remote source, we import the Layout and save the thumbnail to temporary file
         // after save we can move the image to correct library folder, as we have campaignId
-        if ($source === 'remote' && !empty($layout->getUnmatchedProperty('thumbnail'))) {
-            rename($layout->getUnmatchedProperty('thumbnail'), $template->getThumbnailUri());
+        if ($source === 'remote' && !empty($template->getUnmatchedProperty('thumbnail'))) {
+            $template->storeThumbnail($template->getUnmatchedProperty('thumbnail'));
         }
 
         // Return
@@ -1141,7 +1146,7 @@ class Layout extends Base
         }
 
         // Discard the current draft and replace it
-        $layout->discardDraft(false);
+        $this->discardDraftForReplacement($layout);
 
         // Blank
         $resolution = $this->resolutionFactory->getClosestMatchingResolution($layout->width, $layout->height);
@@ -1538,6 +1543,7 @@ class Layout extends Base
 
         // Get all layouts
         $layouts = $this->layoutFactory->query($layoutSortQuery, $layoutFilterQuery);
+        $thumbnails = $this->layoutFactory->newThumbnailLookup(count($layouts));
 
         foreach ($layouts as $layout) {
             $this->loadLayoutRegions($layout, $embed);
@@ -1554,7 +1560,7 @@ class Layout extends Base
             // Thumbnail
             $layout->setUnmatchedProperty('thumbnail', '');
 
-            if (file_exists($layout->getThumbnailUri())) {
+            if ($this->layoutFactory->hasThumbnail($layout, $thumbnails)) {
                 $layout->setUnmatchedProperty(
                     'thumbnail',
                     $this->urlFor($request, 'layout.download.thumbnail', ['id' => $layout->layoutId])
@@ -2086,15 +2092,7 @@ class Layout extends Base
             throw new AccessDeniedException();
         }
 
-        // Take out a lock
-        $layout = $this->layoutFactory->concurrentRequestLock($layout);
-        try {
-            $layout = $this->layoutFactory->decorateLockedProperties($layout);
-            $layout->xlfToDisk();
-        } finally {
-            // Release lock
-            $this->layoutFactory->concurrentRequestRelease($layout);
-        }
+        $layout = $this->layoutFactory->decorateLockedProperties($this->layoutFactory->buildXlfLocked($layout));
 
         $statusCode = $layout->status;
 
@@ -2219,6 +2217,7 @@ class Layout extends Base
             'widgetDataFactory' => $this->widgetDataFactory,
             'image_versions' => [],
             'accept_file_types' => '/\.zip$/i',
+            'accept_chunks' => $this->libraryStorageService->hasLocalFiles(),
             'libraryLimit' => $libraryLimit,
             'libraryQuotaFull' => ($libraryLimit > 0 && $this->mediaService->libraryUsage() > $libraryLimit),
             'mediaService' => $this->mediaService,
@@ -2273,7 +2272,8 @@ class Layout extends Base
         $downloader = new WidgetDownloader(
             $this->getConfig()->getSetting('LIBRARY_LOCATION'),
             $this->getConfig()->getSetting('SENDFILE_MODE'),
-            $this->getConfig()->getSetting('DEFAULT_RESIZE_LIMIT', 6000)
+            $this->getConfig()->getSetting('DEFAULT_RESIZE_LIMIT', 6000),
+            $this->mediaFactory->getStorageFor($media->storageEngine)
         );
         $downloader->useLogger($this->getLog()->getLoggerInterface());
         $response = $downloader->imagePreview(
@@ -2512,7 +2512,7 @@ class Layout extends Base
 
                 // We also build the XLF at this point, and if we have a problem we prevent publishing and raise as an
                 // error message
-                $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false]);
+                $draft->buildXlf(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false]);
 
                 // Return
                 $this->getState()->hydrate([
@@ -2707,15 +2707,8 @@ class Layout extends Base
             throw new AccessDeniedException();
         }
 
-        // Where would we save this to?
-        if ($layout->isChild()) {
-            // A draft
-            $saveTo = $libraryLocation . 'thumbs/' . $layout->campaignId . '_layout_thumb.png';
-        } else {
-            // Published
-            // we would usually expect this to be copied over when published.
-            $saveTo = $libraryLocation . 'thumbs/' . $layout->campaignId . '_campaign_thumb.png';
-        }
+        // Composed in temp, then stored under the draft's or the published Layout's key.
+        $tempThumbnailPath = $libraryLocation . 'temp/thumb_' . $layout->campaignId . '_' . uniqid() . '.png';
 
         // Load this Layout
         $layout->load();
@@ -2727,7 +2720,7 @@ class Layout extends Base
             if ($layout->backgroundImageId !== null && $layout->backgroundImageId !== 0) {
                 // Start from a background image
                 $media = $this->mediaFactory->getById($layout->backgroundImageId);
-                $image = $manager->read($libraryLocation . $media->storedAs);
+                $image = $this->readLibraryImage($manager, $media->storedAs, $media->storageEngine);
 
                 // Resize this image (without cropping it) to the size of this layout
                 $image->resize($layout->width, $layout->height);
@@ -2779,7 +2772,7 @@ class Layout extends Base
                         $widget = $widgets[0];
                         if ($widget->type === 'image') {
                             $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
-                            $cover = $manager->read($libraryLocation . $media->storedAs);
+                            $cover = $this->readLibraryImage($manager, $media->storedAs, $media->storageEngine);
                             $proportional = $widget->getOptionValue('scaleType', 'stretch') !== 'stretch';
                             $fit = $widget->getOptionValue('scaleType', 'stretch') === 'fit';
 
@@ -2796,11 +2789,12 @@ class Layout extends Base
                             }
                             $image->place($cover, 'top-left', $region->left, $region->top);
                         } else if ($widget->type === 'video'
-                            && file_exists($libraryLocation . $widget->getPrimaryMediaId() . '_videocover.png')
+                            && $this->mediaFactory->getById($widget->getPrimaryMediaId())->thumbnailVersion !== null
                         ) {
                             // Render the video cover
-                            $cover = $manager->read(
-                                $libraryLocation . $widget->getPrimaryMediaId() . '_videocover.png'
+                            $cover = $this->readLibraryImage(
+                                $manager,
+                                Media::getVideoCoverKey($widget->getPrimaryMediaId())
                             );
                             // No upsize() constraint originally, so upsizing is allowed - scale() matches.
                             $cover->scale($region->width, $region->height);
@@ -2856,12 +2850,51 @@ class Layout extends Base
             $image->scale(1080);
 
             // Save the file
-            $image->save($saveTo);
-
-            return $response->withStatus(204);
+            $image->save($tempThumbnailPath);
         } catch (\Exception $e) {
+            @unlink($tempThumbnailPath);
             $this->getLog()->error('Exception adding thumbnail to Layout. e = ' . $e->getMessage());
             throw new InvalidArgumentException(__('Incorrect image data'));
+        }
+
+        try {
+            $this->layoutFactory->storeThumbnailFile($tempThumbnailPath, $layout->getThumbnailKey());
+        } catch (GeneralException $exception) {
+            $this->getLog()->error('Unable to store thumbnail for layoutId ' . $layout->layoutId . ': '
+                . $exception->getMessage());
+            throw new GeneralException(__('Unable to save the thumbnail'));
+        }
+
+        return $response->withStatus(204);
+    }
+
+    /**
+     * Discards a replaced draft and deletes its thumbnail once the replacement commits. The new draft reuses the key,
+     * so the delete ignores that reference, but not a thumbnail the replacement stores itself; a rollback keeps it.
+     * @throws GeneralException
+     */
+    private function discardDraftForReplacement(\Xibo\Entity\Layout $draft): void
+    {
+        $thumbnailKey = $draft->getThumbnailKey();
+        $draft->discardDraft(false);
+        $this->layoutFactory->deleteThumbnailFileAfterCommit($thumbnailKey, true);
+    }
+
+    /**
+     * Decode a library image, releasing its temporary copy straight away (GD decodes the file eagerly).
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    private function readLibraryImage(
+        ImageManager $manager,
+        string $key,
+        ?string $storageEngine = null
+    ): \Intervention\Image\Interfaces\ImageInterface {
+        $storage = $this->mediaFactory->getStorageFor($storageEngine);
+        $tempCopyPath = $storage->downloadToTemp($key);
+        try {
+            return $manager->read($tempCopyPath);
+        } finally {
+            $storage->releaseTemp($tempCopyPath);
         }
     }
 
@@ -2882,25 +2915,41 @@ class Layout extends Base
             throw new AccessDeniedException();
         }
 
-        // Get thumbnail uri
-        $uri = $layout->getThumbnailUri();
-
-        if (!file_exists($uri)) {
-            throw new NotFoundException(__('Thumbnail not found for Layout'));
-        }
-
-        $response = $response
-            ->withHeader('Content-Length', filesize($uri))
-            ->withHeader('Content-Type', (new MimeTypes())->getMimeType('png'));
-
+        $storage = $this->layoutFactory->getThumbnailStorage();
+        $key = $layout->getThumbnailKey();
         $sendFileMode = $this->getConfig()->getSetting('SENDFILE_MODE');
-        if ($sendFileMode == 'Apache') {
-            $response = $response->withHeader('X-Sendfile', $uri);
-        } else if ($sendFileMode == 'Nginx') {
-            $response = $response->withHeader('X-Accel-Redirect', '/download/thumbs/' . basename($uri));
-        } else {
-            // Return the file with PHP
-            $response = $response->withBody(new Stream(fopen($uri, 'r')));
+
+        try {
+            // One URL per window lets browsers cache it, until the thumbnail is stored again.
+            $validFrom = CacheableUrlWindow::start(time());
+            if (!$storage->hasLocalFiles()) {
+                $validFrom = max($validFrom, $storage->lastModified($key));
+            }
+
+            $response = SendFile::download(
+                $response,
+                $storage,
+                $key,
+                'image/png',
+                'inline',
+                function ($localPath) use ($response, $sendFileMode) {
+                    $response = $response
+                        ->withHeader('Content-Type', (new MimeTypes())->getMimeType('png'))
+                        ->withHeader('Content-Length', filesize($localPath));
+
+                    if ($sendFileMode == 'Apache') {
+                        return $response->withHeader('X-Sendfile', $localPath);
+                    } else if ($sendFileMode == 'Nginx') {
+                        return $response->withHeader('X-Accel-Redirect', '/download/thumbs/' . basename($localPath));
+                    }
+
+                    return $response->withBody(new Stream(fopen($localPath, 'r')));
+                },
+                $validFrom,
+                CacheableUrlWindow::cacheControl()
+            );
+        } catch (NotFoundException) {
+            throw new NotFoundException(__('Thumbnail not found for Layout'));
         }
 
         $this->setNoOutput();

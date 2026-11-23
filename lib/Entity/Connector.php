@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Entity;
@@ -77,11 +79,46 @@ class Connector implements \JsonSerializable
     {
         if ($this->connectorId == null || $this->connectorId == 0) {
             $this->add();
-            $this->audit($this->connectorId, 'Added');
+            // Settings hold credentials (API keys): audit which there are, never their values.
+            $this->audit($this->connectorId, 'Added', array_merge(
+                $this->toArray(),
+                ['settings' => array_keys(is_array($this->settings) ? $this->settings : [])]
+            ));
         } else {
             $this->edit();
-            $this->audit($this->connectorId, 'Saved');
+            // Which settings changed, by name only: their values can be credentials.
+            $this->audit($this->connectorId, 'Saved', array_merge(
+                $this->getChangedProperties(),
+                ['settingsChanged' => $this->getChangedSettingNames()]
+            ));
         }
+    }
+
+    /**
+     * The names of the settings added, removed or changed since the connector was loaded.
+     * @return string[]
+     */
+    private function getChangedSettingNames(): array
+    {
+        // Loaded from the database as JSON (ConnectorFactory decodes it after hydrating).
+        $original = $this->getOriginalValue('settings');
+        if (is_string($original)) {
+            $original = json_decode($original, true);
+        }
+        $original = is_array($original) ? $original : [];
+        $current = is_array($this->settings) ? $this->settings : [];
+
+        $changed = [];
+        foreach (array_unique(array_merge(array_keys($original), array_keys($current))) as $name) {
+            if (!array_key_exists($name, $original)
+                || !array_key_exists($name, $current)
+                || json_encode($original[$name]) !== json_encode($current[$name])
+            ) {
+                $changed[] = (string)$name;
+            }
+        }
+
+        return $changed;
     }
 
     private function add(): void

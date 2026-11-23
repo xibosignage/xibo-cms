@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 // =============================================================================
@@ -123,7 +125,7 @@ describe('Playlists page - add playlist', () => {
     renderPlaylistsPage();
     await openAddModal();
 
-    expect(screen.getByLabelText('Name')).toHaveValue('');
+    expect(screen.getByRole('textbox', { name: 'Name' })).toHaveValue('');
   });
 
   // -------------------------------------------------------------------------
@@ -159,24 +161,30 @@ describe('Playlists page - add playlist', () => {
   // Happy path: entering a name and saving calls createPlaylist and closes
   // the modal.
   // -------------------------------------------------------------------------
-  test('successful add calls createPlaylist and closes the modal', async () => {
-    vi.mocked(createPlaylist).mockResolvedValueOnce(mockPlaylist);
+  test(
+    'successful add calls createPlaylist and closes the modal',
+    { tags: ['smoke'] },
+    async () => {
+      vi.mocked(createPlaylist).mockResolvedValueOnce(mockPlaylist);
 
-    renderPlaylistsPage();
-    await openAddModal();
+      renderPlaylistsPage();
+      await openAddModal();
 
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Brand New Playlist' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+      fireEvent.change(screen.getByRole('textbox', { name: 'Name' }), {
+        target: { value: 'Brand New Playlist' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
-    await waitFor(() => {
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    });
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      });
 
-    expect(createPlaylist).toHaveBeenCalledTimes(1);
-    expect(createPlaylist).toHaveBeenCalledWith(
-      expect.objectContaining({ name: 'Brand New Playlist' }),
-    );
-  });
+      expect(createPlaylist).toHaveBeenCalledTimes(1);
+      expect(createPlaylist).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'Brand New Playlist' }),
+      );
+    },
+  );
 
   // -------------------------------------------------------------------------
   // An API error keeps the modal open so the user can retry.
@@ -190,7 +198,9 @@ describe('Playlists page - add playlist', () => {
     renderPlaylistsPage();
     await openAddModal();
 
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Taken Name' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Name' }), {
+      target: { value: 'Taken Name' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     await waitFor(() => {

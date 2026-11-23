@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Widget\Render;
@@ -30,13 +32,12 @@ use Stash\Interfaces\PoolInterface;
 use Stash\Invalidation;
 use Stash\Item;
 use Xibo\Entity\Display;
-use Xibo\Helper\DateFormatHelper;
-use Xibo\Helper\LinkSigner;
 use Xibo\Helper\ObjectVars;
-use Xibo\Service\ConfigServiceInterface;
+use Xibo\Helper\StashLock;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Widget\Provider\DataProvider;
 use Xibo\Widget\Provider\DataProviderInterface;
+use Xibo\Xmds\PlayerFileLink;
 use Xibo\Xmds\Wsdl;
 
 /**
@@ -50,8 +51,11 @@ class WidgetDataProviderCache
     /** @var \Stash\Interfaces\PoolInterface */
     private $pool;
 
-    /** @var Item */
-    private $lock;
+    /** @var StashLock|null The lock this instance asked for */
+    private ?StashLock $lock = null;
+
+    /** @var bool Was the data being refreshed by another process when we asked for the lock without waiting */
+    private bool $isRefreshingElsewhere = false;
 
     /** @var Item */
     private $cache;
@@ -112,6 +116,7 @@ class WidgetDataProviderCache
      * @param string $cacheKey
      * @param Carbon|null $dataModifiedDt The date any associated data was modified.
      * @param bool $isLockIfMiss Should the cache be locked if it's a miss? Defaults to true.
+     * @param bool $isWaitForLock whether to wait for another process's lock, or skip it (see isRefreshingElsewhere())
      * @return bool
      * @throws \Xibo\Support\Exception\GeneralException
      */
@@ -120,6 +125,7 @@ class WidgetDataProviderCache
         string $cacheKey,
         ?Carbon $dataModifiedDt,
         bool $isLockIfMiss = true,
+        bool $isWaitForLock = true,
     ): bool {
         // Construct a key
         $this->key = '/widget/'
@@ -192,10 +198,28 @@ class WidgetDataProviderCache
         // If we do not have data/we're old/missed cache, and we have requested a lock, then we will be refreshing
         // the cache, so lock the record
         if ($isLockIfMiss && (!$hasData || $this->isMissOrOld)) {
-            $this->concurrentRequestLock();
+            $this->isRefreshingElsewhere = !$this->concurrentRequestLock(300, 2, $isWaitForLock ? 5 : 1);
         }
 
         return $hasData;
+    }
+
+    /**
+     * Whether another process is refreshing this data, in which case the caller serves what it has.
+     * @return bool
+     */
+    public function isRefreshingElsewhere(): bool
+    {
+        return $this->isRefreshingElsewhere;
+    }
+
+    /**
+     * Extend the lock while a long refresh (e.g. image downloads) is still in progress.
+     * @param int $ttl seconds
+     */
+    public function refreshLock(int $ttl = 300): void
+    {
+        $this->lock?->extend($ttl);
     }
 
     /**
@@ -465,24 +489,20 @@ class WidgetDataProviderCache
 
     /**
      * Decorate for a player
-     * @param \Xibo\Service\ConfigServiceInterface $configService
+     * @param \Xibo\Xmds\PlayerFileLink $playerFileLink
      * @param \Xibo\Entity\Display $display
-     * @param string $encryptionKey
      * @param array $data The data
      * @param array $storedAs A keyed array of module files this widget has access to
      * @return array
      * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function decorateForPlayer(
-        ConfigServiceInterface $configService,
+        PlayerFileLink $playerFileLink,
         Display $display,
-        string $encryptionKey,
         array $data,
         array $storedAs,
     ): array {
         $this->getLog()->debug('decorateForPlayer');
-
-        $cdnUrl = $configService->getSetting('CDN_URL');
 
         foreach ($data as $row => $item) {
             // Each data item can be an array or an object
@@ -490,9 +510,8 @@ class WidgetDataProviderCache
                 foreach ($item as $key => $value) {
                     if (is_string($value)) {
                         $data[$row][$key] = $this->decorateMediaForPlayer(
-                            $cdnUrl,
+                            $playerFileLink,
                             $display,
-                            $encryptionKey,
                             $storedAs,
                             $value,
                         );
@@ -502,9 +521,8 @@ class WidgetDataProviderCache
                 foreach (ObjectVars::getObjectVars($item) as $key => $value) {
                     if (is_string($value)) {
                         $item->{$key} = $this->decorateMediaForPlayer(
-                            $cdnUrl,
+                            $playerFileLink,
                             $display,
-                            $encryptionKey,
                             $storedAs,
                             $value
                         );
@@ -516,18 +534,16 @@ class WidgetDataProviderCache
     }
 
     /**
-     * @param string|null $cdnUrl
+     * @param \Xibo\Xmds\PlayerFileLink $playerFileLink
      * @param \Xibo\Entity\Display $display
-     * @param string $encryptionKey
      * @param array $storedAs
      * @param string|null $data
      * @return string|null
      * @throws \Xibo\Support\Exception\NotFoundException
      */
     private function decorateMediaForPlayer(
-        ?string $cdnUrl,
+        PlayerFileLink $playerFileLink,
         Display $display,
-        string $encryptionKey,
         array $storedAs,
         ?string $data,
     ): ?string {
@@ -543,16 +559,14 @@ class WidgetDataProviderCache
                 $value = explode('=', $match);
                 if (array_key_exists($value[1], $storedAs)) {
                     if ($display->isPwa()) {
-                        $url = LinkSigner::generateSignedLink(
+                        $url = $playerFileLink->get(
                             $display,
-                            $encryptionKey,
-                            $cdnUrl,
                             'M',
                             $value[1],
                             $storedAs[$value[1]],
                             null,
                             true,
-                        );
+                        )[0];
                     } else {
                         $url = $storedAs[$value[1]];
                     }
@@ -581,57 +595,26 @@ class WidgetDataProviderCache
      * @param int $ttl seconds
      * @param int $wait seconds
      * @param int $tries
+     * @return bool true if we hold the lock, false if it is still held elsewhere after $tries (only when $tries is 1)
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    private function concurrentRequestLock(int $ttl = 300, int $wait = 2, int $tries = 5)
+    private function concurrentRequestLock(int $ttl = 300, int $wait = 2, int $tries = 5): bool
     {
         if ($this->cache === null) {
             throw new GeneralException('No cache to lock');
         }
 
-        $this->lock = $this->pool->getItem('locks/concurrency/' . $this->cache->getKey());
-
-        // Set the invalidation method to simply return the value (not that we use it, but it gets us a miss on expiry)
-        // isMiss() returns false if the item is missing or expired, no exceptions.
-        $this->lock->setInvalidationMethod(Invalidation::NONE);
-
-        // Get the lock
-        // other requests will wait here until we're done, or we've timed out
-        $locked = $this->lock->get();
-
-        // Did we get a lock?
-        // if we're a miss, then we're not already locked
-        if ($this->lock->isMiss() || $locked === false) {
-            $this->getLog()->debug('Lock miss or false. Locking for ' . $ttl
-                . ' seconds. $locked is '. var_export($locked, true)
-                . ', key = ' . $this->cache->getKey());
-
-            // so lock now
-            $this->lock->set(true);
-            $this->lock->expiresAfter($ttl);
-            $this->lock->save();
-        } else {
-            // We are a hit - we must be locked
-            $this->getLog()->debug('LOCK hit for ' . $this->cache->getKey() . ' expires '
-                . $this->lock->getExpiration()->format(DateFormatHelper::getSystemFormat())
-                . ', created ' . $this->lock->getCreation()->format(DateFormatHelper::getSystemFormat()));
-
-            // Try again?
-            $tries--;
-
-            if ($tries <= 0) {
-                // We've waited long enough
-                throw new GeneralException('Concurrent record locked, time out.');
-            } else {
-                $this->getLog()->debug('Unable to get a lock, trying again. Remaining retries: ' . $tries);
-
-                // Hang about waiting for the lock to be released.
-                sleep($wait);
-
-                // Recursive request (we've decremented the number of tries)
-                $this->concurrentRequestLock($ttl, $wait, $tries);
-            }
+        $this->lock = new StashLock($this->pool, 'locks/concurrency/' . $this->cache->getKey(), $this->getLog());
+        if ($this->lock->acquire($ttl, $wait * 1000, $tries)) {
+            return true;
         }
+
+        if ($tries <= 1) {
+            return false;
+        }
+
+        // We've waited long enough
+        throw new GeneralException('Concurrent record locked, time out.');
     }
 
     /**
@@ -639,15 +622,8 @@ class WidgetDataProviderCache
      */
     private function concurrentRequestRelease()
     {
-        if ($this->lock !== null) {
-            $this->getLog()->debug('Releasing lock ' . $this->lock->getKey());
-
-            // Release lock
-            $this->lock->set(false);
-            $this->lock->expiresAfter(10); // Expire straight away (but give time to save)
-
-            $this->pool->save($this->lock);
-        }
+        $this->lock?->release();
+        $this->lock = null;
     }
 
     // </editor-fold>

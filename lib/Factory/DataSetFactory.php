@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 namespace Xibo\Factory;
@@ -32,6 +34,10 @@ use Xibo\Helper\Environment;
 use Xibo\Helper\Guzzle\SafeClient;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DisplayNotifyServiceInterface;
+use Xibo\Service\LibraryAsset;
+use Xibo\Service\LibraryStorageRegistryInterface;
+use Xibo\Service\LibraryStorageServiceInterface;
+use Xibo\Storage\LibraryFileJournal;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Support\Sanitizer\RespectSanitizer;
@@ -66,15 +72,48 @@ class DataSetFactory extends BaseFactory
      * @param DataSetColumnFactory $dataSetColumnFactory
      * @param PermissionFactory $permissionFactory
      * @param DisplayNotifyServiceInterface $displayNotifyService
+     * @param LibraryStorageRegistryInterface $libraryStorageRegistry
      */
-    public function __construct($user, $userFactory, $config, $pool, $dataSetColumnFactory, $permissionFactory, $displayNotifyService)
-    {
+    public function __construct(
+        $user,
+        $userFactory,
+        $config,
+        $pool,
+        $dataSetColumnFactory,
+        $permissionFactory,
+        $displayNotifyService,
+        private readonly LibraryStorageRegistryInterface $libraryStorageRegistry
+    ) {
         $this->setAclDependencies($user, $userFactory);
         $this->config = $config;
         $this->pool = $pool;
         $this->dataSetColumnFactory = $dataSetColumnFactory;
         $this->permissionFactory = $permissionFactory;
         $this->displayNotifyService = $displayNotifyService;
+    }
+
+    /**
+     * Where real-time DataSet scripts are stored, keyed by dataSet_{id}.js.
+     */
+    public function getScriptStorage(): LibraryStorageServiceInterface
+    {
+        return $this->libraryStorageRegistry->get(LibraryAsset::DATA_CONNECTOR);
+    }
+
+    /**
+     * Deletes a script and its legacy .md5 file after commit, logging rather than throwing a storage error.
+     */
+    public function deleteScriptAfterCommit(string $scriptKey): void
+    {
+        foreach ([$scriptKey, $scriptKey . '.md5'] as $key) {
+            LibraryFileJournal::deleteFileAfterCommit(
+                $this->getStore(),
+                $this->libraryStorageRegistry,
+                LibraryAsset::DATA_CONNECTOR,
+                $key,
+                $this->getLog()->getLoggerInterface()
+            );
+        }
     }
 
     /**

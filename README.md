@@ -36,211 +36,141 @@ If not, see <http://www.gnu.org/licenses/>.
 
 # Installation
 
-Xibo can be deployed on our Cloud or self-hosted. Instructions for doing so can be found in our
-[documentation](https://docs.xibosignage.com/cms-installation).
+Xibo can be deployed on our [Cloud](https://xibosignage.com/pricing) or self-hosted. Docker is the only supported way
+to self-host the CMS. Installations without Docker are community-supported only, see
+[MANUAL_INSTALL.md](MANUAL_INSTALL.md) for some basic pointers.
 
-We do not recommend installing directly on the operating system. Installations without Docker are community-supported
-only and are not covered by the official administration manual, for some basic pointers
-see [MANUAL_INSTALL.md](MANUAL_INSTALL.md).
+## Prerequisites
+
+- A Linux, Windows or macOS host with at least 2GB of RAM.
+- [Docker Engine](https://docs.docker.com/engine/install/) (or Docker Desktop) with the Docker Compose plugin v2.20 or later. Check
+  it is installed by running `docker compose version`.
+
+## Install
+
+1. Download the `xibo-docker-<version>.tar.gz` (or `.zip`) bundle from the latest
+   [release](https://github.com/xibosignage/xibo-cms/releases/latest) and extract it into the folder you want to run
+   the CMS from. The bundle contains `docker-compose.yml` with the CMS image pinned to that release, `.env.template`
+   and a short `INSTALL.md`.
+
+   You can use `docker-compose.yml` from this repository instead. It always tracks the latest stable release
+   (`ghcr.io/xibosignage/xibo-cms:stable`), so each `docker compose pull` can upgrade you without warning. We recommend
+   the release bundle.
+
+2. Copy `.env.template` to `.env` and edit it. At a minimum set:
+   - `MYSQL_PASSWORD`: a random password of around 16 letters and digits, no special characters.
+   - The `CMS_SMTP_*` settings, so that the CMS can send email.
+
+3. From the same folder, start the CMS:
+
+   ```shell
+   docker compose up -d
+   ```
+
+   The first start can take a few minutes while the database is created.
+
+4. Open `http://localhost` (or your server's address) and log in with:
+
+   U: `xibo_admin`
+   P: `password`
+
+   Change this password straight away.
+
+### Custom ports
+
+The web interface listens on port 80 and XMR (push messaging for Players) on port 9505. If either port is already in
+use on the host, set `CMS_WEB_PORT` and/or `CMS_XMR_PORT` in `.env` (for example `CMS_WEB_PORT=8080`) and run
+`docker compose up -d` again.
+
+### Remote MySQL
+
+By default the CMS runs its own MySQL container, which is the `local-db` profile enabled by `COMPOSE_PROFILES=local-db`
+in `.env`. To use your own MySQL server instead:
+
+1. Create an empty database, and a user with all privileges on it.
+2. In `.env`, delete the `COMPOSE_PROFILES=local-db` line.
+3. In `.env`, set `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_DATABASE`, `MYSQL_USER` and `MYSQL_PASSWORD`.
+4. To connect over TLS, also set `MYSQL_ATTR_SSL_CA` (and `MYSQL_ATTR_SSL_VERIFY_SERVER_CERT`).
+
+### Where your data lives
+
+Everything the CMS stores is kept in the `shared` folder next to `docker-compose.yml`. Back this folder up, and keep it
+(and `.env`) when you upgrade.
+
+- `shared/db`: the database (when using the bundled MySQL container).
+- `shared/backup`: automated daily database backups.
+- `shared/cms/library`: the media library.
+- `shared/cms/custom`: custom modules and `settings-custom.php`.
+- `shared/cms/web/userscripts`: your own PHP or resources to host on the same web server, served at
+  `http://localhost/userscripts/`.
+- `shared/cms/ca-certs`: additional CA certificates to trust.
+
+## Upgrading
+
+1. Download the bundle for the new release and extract it over the top of your existing installation. This replaces
+   `docker-compose.yml` and `.env.template`; it does not touch `.env` or `shared`.
+2. Compare `.env.template` with your `.env` and copy in any new settings you want to use. Do not change
+   `MYSQL_PASSWORD`.
+3. Pull the new images and recreate the containers:
+
+   ```shell
+   docker compose pull
+   docker compose up -d
+   ```
+
+The CMS takes a database backup and then upgrades the database automatically. It is unavailable for a few minutes
+while this happens.
+
+## Migrating from xibo-docker
+
+Older installations used the separate `xibo-docker` repository and its release archive. That repository has been
+retired, and its files have been replaced by the `docker-compose.yml` and `.env.template` here. Your `shared` folder
+and its data carry over.
+
+Before you start, check that your current installation is on xibo-docker 4.5.x or later, which already runs MySQL 8.4.
+The new `docker-compose.yml` uses MySQL 8.4, which can't upgrade a database last run by MySQL 5.7 directly. If you're on
+an older release, upgrade it with the xibo-docker archive for 4.5.x first, then come back to this guide.
+
+To migrate:
+
+1. In your existing installation folder, stop the CMS **before** extracting the new files. If you started it with a
+   custom file, add the same `-f` option (for example `docker compose -f cms_custom-ports.yml down`):
+
+   ```shell
+   docker compose down
+   ```
+
+   If you've already extracted the new files, stop the old containers by project name instead. That's the folder
+   name in lower case, for example `docker compose -p xibo-docker down`. Run `docker ps` to check.
+
+2. Download the bundle for the release you're upgrading to and extract it into the same folder. Keep `shared` and
+   `config.env`.
+3. Rename `config.env` to `.env`.
+4. Edit `.env`:
+   - If you used the bundled MySQL server (`docker-compose.yml` or `cms_custom-ports.yml`), add the line
+     `COMPOSE_PROFILES=local-db`.
+   - If you used `cms_remote-mysql.yml`, don't add it. Your `MYSQL_*` settings carry over unchanged.
+   - If you used `cms_custom-ports.yml`, set `CMS_WEB_PORT` and `CMS_XMR_PORT` to the host ports from that file.
+5. Delete the old `cms_custom-ports.yml`, `cms_custom-ports.yml.template`, `cms_remote-mysql.yml` and
+   `config.env.template*` files. Any other changes you made to the old compose files need to be made again in the new
+   `docker-compose.yml`.
+6. Start the CMS:
+
+   ```shell
+   docker compose up -d
+   ```
+
+## Running without Docker Compose
+
+If you have your own Docker environment you can run the containers without Docker Compose. You are then responsible
+for pulling the images, starting them with equivalent configuration and installing Xibo. Use `docker-compose.yml` as
+a reference.
 
 
 # Developing
 
-**Please only install a Development environment if you intend to fork Xibo and make code changes. Installing from the
-repository is not suitable for a production installation.**
-
-Xibo uses Docker to ensure a repeatable development environment which is easy to get up and running. The very same
-Docker containers are used in our recommended end user installation to promote consistency from development to
-deployment.
-
-To these ends this repository includes a `docker-compose.yml` file to spin up a model development environment.
-
-
-## Prerequisites
-
-The development Docker containers do not automatically build vendor files for PHP or JS, this is left as a developer 
-responsibility. Therefore you will need the following tools:
-
- - Git
- - [Composer](http://getcomposer.org)
- - NodeJS version 12
- - npm
- - Docker
-
-
-## Fork and clone the repository
-
-Fork the repository on GitHub.
-
-Create a folder in your development workspace and clone the repository. If you intend to make changes and submit
-pull requests please Fork us first and create a new branch.
-
-```shell
-git clone git@github.com:<your_id>/xibo-cms.git xibo-cms
-```
-
-### Branches
-
-We maintain the following branches. To contribute to Xibo please use the `develop` branch as your base.
-
-#### Current
-
-- develop: Bug fixes for 4.5.x
-- master: Currently 4.5
-
-#### Archive
-- release44: Archive of 4.4
-- release43: Archive of 4.3
-- release42: Archive of 4.2
-- release33: Archive of 3.3
-- release23: Archive of 2.3
-- release18: Archive of 1.8
-- release17: Archive of 1.7
-- release1.6.4: Archive of 1.6
-
-## Install dependencies
-
-Change into your new folder
-
-```sh
-cd xibo-cms
-```
-
-We recommend installing the dependencies via Docker, so that you are guarenteed consistent dependencies across 
-different development machines.
-
-### PHP dependencies
-
-```shell
-docker run --interactive --tty --volume $PWD:/app --volume ~/.composer:/tmp composer install
-```
-
-This command also mounts the Composer `/tmp` folder into your home directory so that you can take advantage of
-Composer caching.
-
-### Website dependencies (webpack)
-
-If you have installed node locally:
-
-```shell
-npm install webpack -g
-npm install
-npm run build
-```
-
-Alternatively you can use a Docker container:
-
-```shell
-docker run -it --volume $PWD:/app --volume ~/.npm:/root/.npm -w /app node:22 sh -c "npm install webpack -g; npm install; npm run build;"
-```
-
-### Mapped Volumes
-
-The development version of Xibo expects the code base to be mapped into the container such that changes on the host
-are reflected in the container.
-
-However, the container itself creates some files, such as the twig cache and library uploads. These locations will need
-to be created and the container given access to them.
-
-The easiest way to do this is to make the `cache` and `library` folders and `chmod 777` them. Obviously this is not
-suitable for production, but you shouldn't be using these files for production (we have containers for that).
-
-### API Keys
-The API requires a pub/private RSA keypair and an encryption key to be provided. The docker entrypoint will create 
-these in `/library/certs`.
-
-You can override the generated keys paths and encryption key by providing an alternative in `settings-custom.php`.
-For example: 
-
-```php
-$apiKeyPaths = [
-    'publicKeyPath' => '/var/www/cms/custom/public.key',
-    'privateKeyPath' => '/var/www/cms/custom/private.key',
-    'encryptionKey' => ''
-];
-```
-
-### OpenOOH specification
-Xibo can present the OpenOOH venue classifications in the display edit form. For this functionality to work in 
-development, it is necessary 
-to [download the latest file](https://raw.githubusercontent.com/openooh/venue-taxonomy/main/specification.json) and 
-place it in here: `openooh/specification.json`
-
-The production/CI containers add this file during the build process so that it is already available in the Docker
-image.
-
-
-## Bring up the Containers
-
-Use Docker Compose to bring up the containers.
-
-```sh
-docker-compose up --build -d
-```
-
-## Login
-After the containers have come up you should be able to login with the details:
-
-U: `xibo_admin`
-P: `password`
-
-
-## Translations
-To parse the translations:
-
-React:
-```shell
-cd frontend
-npx i18next-cli extract
-```
-
-Then:
-```shell
-docker-compose exec web sh -c "cd /var/www/cms; rm -R ./cache"
-docker-compose exec web sh -c "cd /var/www/cms; php bin/locale.php"
-```
-
-```shell
-find ./locale ./cache ./lib ./web  -iname "*.php" -print0 | xargs -0 xgettext --from-code=UTF-8 -k_e -k_x -k__ -o locale/default.pot
-```
-
-To import translations:
-
-```shell
-bzr pull lp:~dangarner/xibo/neujmin-translations
-```
-
-Convert to `mo` format:
-
-```shell
-for i in *.po; do msgfmt "$i" -o $(echo $i | sed s/po/mo/); done
-```
-
-Move the resulting `mo` files into your `locale` folder.
-
-The React language packs (`frontend/public/locale/langs/*.json`) are generated from the
-`locale/*.mo` files and are **not** committed, they are build artifacts. `npm run dev` and
-`npm run build` regenerate them automatically, so you normally don't need to do anything. To
-regenerate them manually (e.g. after adding new `mo` files):
-
-```shell
-cd frontend
-npm run i18n:convert
-```
-
-Note: this is also run during the build process.
-
-## Swagger API Docs
-To generate a `swagger.json` file, with the dev containers running:
-
-```shell
-docker-compose exec web sh -c "cd /var/www/cms; vendor/bin/openapi lib -o web/swagger.json"
-```
-
-## Application Structure
-
-To find out more about the application code and how everything fits together, please refer to 
-the [developer docs](https://xibosignage.com/docs/developer/extend).
+**The development environment is not suitable for a production installation.** If you intend to fork Xibo and make
+code changes, see [DEVELOPING.md](DEVELOPING.md) for how to set up a development environment.
 
 
 # Contributing

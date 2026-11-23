@@ -1,6 +1,6 @@
 # Manual Installation
 
-> **Docker is the only officially supported installation method for Xibo.**
+> **Docker is the only officially supported installation method for Xibo.** See the [installation instructions in the README](README.md#installation).
 > The following instructions cover self-hosted, manual installations that do not use Docker. Installations without Docker are community-supported only and are not covered by the official administration manual.
 
 ---
@@ -62,6 +62,10 @@ chmod 755 /var/lib/xibo/library
 # Application cache (inside repo, outside web root)
 mkdir cache
 chmod 755 cache
+
+# Brand images (logos, favicon, app icons), served at /brand/ (step 8)
+mkdir -p /var/lib/xibo/library/brand
+cp -rn docker/brand/. /var/lib/xibo/library/brand/
 ```
 
 ## 3. Create the MySQL database
@@ -164,6 +168,15 @@ A `.htaccess` file is included in `web/`. Ensure `AllowOverride All` is set:
         AllowOverride All
         Require all granted
     </Directory>
+
+    # Brand images, including the ChromeOS player's app icons
+    Alias /brand /var/lib/xibo/library/brand
+    <Directory /var/lib/xibo/library/brand>
+        php_admin_value engine Off
+        Options -Indexes -FollowSymLinks -MultiViews
+        AllowOverride None
+        Require all granted
+    </Directory>
 </VirtualHost>
 ```
 
@@ -178,6 +191,24 @@ server {
 
     location / {
         try_files $uri $uri/ /index.php$is_args$args;
+    }
+
+    # The ChromeOS player: static files in web/pwa, beside the PHP entry
+    # point that answers its getResource and getData calls and builds its
+    # manifest (with this CMS's branding and address)
+    location ~ ^/pwa/(getResource|getData|manifest\.json)$ {
+        rewrite ^ /pwa/index.php last;
+    }
+
+    location /pwa/ {
+        index index.html;
+        try_files $uri $uri/ =404;
+    }
+
+    # Brand images. The ChromeOS player's manifest points its app icons here, and
+    # Chrome won't install the player without them.
+    location ^~ /brand/ {
+        alias /var/lib/xibo/library/brand/;
     }
 
     location ~ \.php$ {

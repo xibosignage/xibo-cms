@@ -1,22 +1,24 @@
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 import { useEffect, useState } from 'react';
@@ -28,8 +30,11 @@ import { SidebarItem } from '../ui/sidebar/SidebarItem';
 import { SidebarPopup } from '../ui/sidebar/SidebarPopup';
 import { SidebarSubLinks } from '../ui/sidebar/SidebarSublinks';
 
+import SidebarFooter from './SidebarFooter';
+
 import { APP_ROUTES } from '@/config/appRoutes';
 import { useUserContext } from '@/context/UserContext';
+import { useServiceVisibility } from '@/hooks/useCmsVisibility';
 import { useSidebarOpenMenus } from '@/hooks/useSidebarPreferences';
 import { filterRoutesByUser } from '@/utils/permissions';
 import { isRouteActive } from '@/utils/sidebar';
@@ -40,13 +45,19 @@ const SIDEBAR_TRANSITION_MS = 300;
 interface SidebarMenuProps {
   isCollapsed: boolean;
   closeMobileDrawer?: () => void;
+  isMobileDrawer?: boolean;
 }
 
-export default function SidebarMenu({ isCollapsed, closeMobileDrawer }: SidebarMenuProps) {
+export default function SidebarMenu({
+  isCollapsed,
+  closeMobileDrawer,
+  isMobileDrawer = false,
+}: SidebarMenuProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
   const location = useLocation();
   const [openMenus, setOpenMenus] = useSidebarOpenMenus();
+  const getServiceVisibility = useServiceVisibility();
 
   // Hides text labels, logo, chevrons, and sublinks.
   // On collapse: hides immediately. On expand: delays until container finishes animating.
@@ -63,7 +74,7 @@ export default function SidebarMenu({ isCollapsed, closeMobileDrawer }: SidebarM
 
   const visibleRoutes = !user
     ? []
-    : filterRoutesByUser(APP_ROUTES, user)
+    : filterRoutesByUser(APP_ROUTES, user, getServiceVisibility)
         .filter((route) => !route.hideFromMenu)
         .map((route) => ({
           ...route,
@@ -115,8 +126,8 @@ export default function SidebarMenu({ isCollapsed, closeMobileDrawer }: SidebarM
   };
 
   return (
-    <div className={`flex flex-col h-full py-5`}>
-      <div className="flex-none mb-5 px-5">
+    <div className={`flex flex-col h-full py-4`}>
+      <div className="flex-none mb-2 px-5 pb-4 border-b border-(--sidebar-overlay-strong)">
         <SidebarHeader
           isCollapsed={isCollapsed}
           contentHidden={contentHidden}
@@ -153,6 +164,7 @@ export default function SidebarMenu({ isCollapsed, closeMobileDrawer }: SidebarM
           );
         })}
       </div>
+      {!isMobileDrawer && <SidebarFooter isCollapsed={isCollapsed} contentHidden={contentHidden} />}
     </div>
   );
 }

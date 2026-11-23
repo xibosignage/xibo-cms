@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 
@@ -32,6 +34,9 @@ use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Environment;
 use Xibo\Helper\Guzzle\SafeClient;
 use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\LibraryAsset;
+use Xibo\Service\LibraryStorageRegistryInterface;
+use Xibo\Service\LibraryStorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -64,20 +69,50 @@ class MediaFactory extends BaseFactory
     private $playlistFactory;
 
     /**
+     * @var LibraryStorageServiceInterface
+     */
+    private $libraryStorageService;
+
+    /**
      * Construct a factory
      * @param User $user
      * @param UserFactory $userFactory
      * @param ConfigServiceInterface $config
      * @param PermissionFactory $permissionFactory
      * @param PlaylistFactory $playlistFactory
+     * @param LibraryStorageServiceInterface $libraryStorageService
      */
-    public function __construct($user, $userFactory, $config, $permissionFactory, $playlistFactory)
-    {
+    public function __construct(
+        $user,
+        $userFactory,
+        $config,
+        $permissionFactory,
+        $playlistFactory,
+        $libraryStorageService,
+        private readonly LibraryStorageRegistryInterface $libraryStorageRegistry
+    ) {
         $this->setAclDependencies($user, $userFactory);
 
         $this->config = $config;
         $this->permissionFactory = $permissionFactory;
         $this->playlistFactory = $playlistFactory;
+        $this->libraryStorageService = $libraryStorageService;
+    }
+
+    /**
+     * Where library media is stored.
+     */
+    public function getStorage(): LibraryStorageServiceInterface
+    {
+        return $this->libraryStorageService;
+    }
+
+    /**
+     * Where a media item's file is read and deleted, from its storageEngine.
+     */
+    public function getStorageFor(?string $storageEngine): LibraryStorageServiceInterface
+    {
+        return $this->libraryStorageRegistry->get(LibraryAsset::MEDIA, $storageEngine);
     }
 
     /**
@@ -92,7 +127,8 @@ class MediaFactory extends BaseFactory
             $this->getDispatcher(),
             $this->config,
             $this,
-            $this->permissionFactory
+            $this->permissionFactory,
+            $this->libraryStorageService
         );
     }
 
@@ -246,11 +282,13 @@ class MediaFactory extends BaseFactory
      * @param callable|null $success success callable
      * @param callable|null $failure failure callable
      * @param callable|null $rejected rejected callable
+     * @param callable|null $beforeStore called with the media and its downloaded local file, before it is stored
      */
     public function processDownloads(
         ?callable $success = null,
         ?callable $failure = null,
-        ?callable $rejected = null
+        ?callable $rejected = null,
+        ?callable $beforeStore = null
     ): void {
         if (count($this->remoteDownloadQueue) > 0) {
             $this->getLog()->debug('Processing Queue of ' . count($this->remoteDownloadQueue) . ' downloads.');
@@ -310,11 +348,14 @@ class MediaFactory extends BaseFactory
 
             $pool = new Pool($client, $downloads(), [
                 'concurrency' => 5,
-                'fulfilled' => function ($response, $index) use ($log, $queue, $success, $failure) {
+                'fulfilled' => function ($response, $index) use ($log, $queue, $success, $failure, $beforeStore) {
                     $item = $queue[$index];
 
                     // File is downloaded, call save to move it appropriately
                     try {
+                        if ($beforeStore !== null) {
+                            $beforeStore($item, $item->downloadSink());
+                        }
                         $item->saveFile();
 
                         // If a success callback has been provided, call it
@@ -593,6 +634,8 @@ class MediaFactory extends BaseFactory
                `media`.orientation,
                `media`.width,
                `media`.height,
+               `media`.thumbnailVersion,
+               `media`.storageEngine,
                `user`.UserName AS owner,
                `user`.email AS userEmail,
                `folder`.folderName,
@@ -763,6 +806,12 @@ class MediaFactory extends BaseFactory
 
         if ($sanitizedFilter->getInt('imageProcessing') !== null) {
             $body .= 'AND ( media.type = \'image\' OR (media.type = \'module\' AND media.moduleSystemFile = 0) ) ';
+        }
+
+        // Background processing waits until a file still in the local library has been moved.
+        if ($sanitizedFilter->getInt('excludeWaitingForMove') === 1) {
+            $body .= 'AND (media.storageEngine IS NULL OR media.storageEngine <> :localStorageEngine) ';
+            $params['localStorageEngine'] = LibraryStorageRegistryInterface::LOCAL_ENGINE;
         }
 
         if ($sanitizedFilter->getString('storedAs') != '') {
@@ -1058,5 +1107,90 @@ class MediaFactory extends BaseFactory
         }
 
         return $entries;
+    }
+
+    /**
+     * All media keyed by storedAs, with the unused media and old revisions a library tidy may delete.
+     * @return array{0: array, 1: array, 2: array} [$media, $unusedRevisions, $unusedMedia], each keyed by storedAs
+     */
+    public function getTidyCandidates(bool $tidyOldRevisions, bool $cleanUnusedFiles, bool $tidyGenericFiles): array
+    {
+        $media = [];
+        $unusedMedia = [];
+        $unusedRevisions = [];
+
+        // Every DataSet image column is included, with its heading quoted, so no media it uses looks unused.
+        $dataSetImages = [];
+        foreach ($this->getStore()->select('
+            SELECT dataset.dataSetId, datasetcolumn.heading
+              FROM dataset
+                INNER JOIN datasetcolumn
+                ON datasetcolumn.DataSetID = dataset.DataSetID
+             WHERE DataTypeID = 5 AND DataSetColumnTypeID <> 2
+        ', []) as $row) {
+            $dataSetImages[] = ' SELECT `' . str_replace('`', '``', (string)$row['heading']) . '` AS mediaId'
+                . ' FROM `dataset_' . (int)$row['dataSetId'] . '`';
+        }
+
+        // This must return ALL media, so that files which aren't in the table can be found.
+        $sql = '
+            SELECT media.mediaid, media.storedAs, media.type, media.isedited,
+                SUM(CASE WHEN IFNULL(lkwidgetmedia.widgetId, 0) = 0 THEN 0 ELSE 1 END) AS UsedInLayoutCount,
+                SUM(CASE WHEN IFNULL(lkmediadisplaygroup.mediaId, 0) = 0 THEN 0 ELSE 1 END) AS UsedInDisplayCount,
+                SUM(CASE WHEN IFNULL(layout.layoutId, 0) = 0 THEN 0 ELSE 1 END) AS UsedInBackgroundImageCount,
+                SUM(CASE WHEN IFNULL(menu_category.menuCategoryId, 0) = 0 THEN 0 ELSE 1 END)
+                    AS UsedInMenuBoardCategoryCount,
+                SUM(CASE WHEN IFNULL(menu_product.menuProductId, 0) = 0 THEN 0 ELSE 1 END)
+                    AS UsedInMenuBoardProductCount,
+        ' . (count($dataSetImages) > 0
+                ? ' SUM(CASE WHEN IFNULL(dataSetImages.mediaId, 0) = 0 THEN 0 ELSE 1 END) AS UsedInDataSetCount '
+                : ' 0 AS UsedInDataSetCount ') . '
+              FROM `media`
+                LEFT OUTER JOIN `lkwidgetmedia`
+                ON lkwidgetmedia.mediaid = media.mediaid
+                LEFT OUTER JOIN `lkmediadisplaygroup`
+                ON lkmediadisplaygroup.mediaid = media.mediaid
+                LEFT OUTER JOIN `layout`
+                ON `layout`.backgroundImageId = `media`.mediaId
+                LEFT OUTER JOIN `menu_category`
+                ON `menu_category`.mediaId = `media`.mediaId
+                LEFT OUTER JOIN `menu_product`
+                ON `menu_product`.mediaId = `media`.mediaId
+        ';
+
+        if (count($dataSetImages) > 0) {
+            $sql .= ' LEFT OUTER JOIN (' . implode(' UNION ALL ', $dataSetImages) . ') dataSetImages
+                ON dataSetImages.mediaId = `media`.mediaId ';
+        }
+
+        $sql .= ' GROUP BY media.mediaid, media.storedAs, media.type, media.isedited ';
+
+        foreach ($this->getStore()->select($sql, []) as $row) {
+            $media[$row['storedAs']] = $row;
+            $type = (string)($row['type'] ?? '');
+
+            if ($type == 'module'
+                || $type == 'font'
+                || $type == 'playersoftware'
+                || ($type == 'genericfile' && !$tidyGenericFiles)
+            ) {
+                continue;
+            }
+
+            $isUnused = $row['UsedInLayoutCount'] <= 0
+                && $row['UsedInDisplayCount'] <= 0
+                && $row['UsedInBackgroundImageCount'] <= 0
+                && $row['UsedInDataSetCount'] <= 0
+                && $row['UsedInMenuBoardCategoryCount'] <= 0
+                && $row['UsedInMenuBoardProductCount'] <= 0;
+
+            if ($tidyOldRevisions && $isUnused && $row['isedited'] > 0) {
+                $unusedRevisions[$row['storedAs']] = $row;
+            } else if ($cleanUnusedFiles && $isUnused) {
+                $unusedMedia[$row['storedAs']] = $row;
+            }
+        }
+
+        return [$media, $unusedRevisions, $unusedMedia];
     }
 }

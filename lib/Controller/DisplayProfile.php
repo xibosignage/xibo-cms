@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 namespace Xibo\Controller;
 
@@ -29,7 +31,6 @@ use Stash\Interfaces\PoolInterface;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayProfileFactory;
-use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
@@ -49,7 +50,6 @@ class DisplayProfile extends Base
         private readonly PoolInterface $pool,
         private readonly DisplayProfileFactory $displayProfileFactory,
         private readonly CommandFactory $commandFactory,
-        private readonly PlayerVersionFactory $playerVersionFactory,
         private readonly DayPartFactory $dayPartFactory,
     ) {
     }
@@ -345,9 +345,6 @@ class DisplayProfile extends Base
         $displayProfile->name = $parsedParams->getString('name');
         $displayProfile->isDefault = $parsedParams->getCheckbox('isDefault');
 
-        // Track changes to versionMediaId
-        $originalPlayerVersionId = $displayProfile->getSetting('playerVersionId');
-
         // Different fields for each client type
         $this->editConfigFields($displayProfile, $parsedParams);
 
@@ -364,38 +361,6 @@ class DisplayProfile extends Base
                     $displayProfile->assignCommand($command);
                 } else {
                     $displayProfile->unassignCommand($command);
-                }
-            }
-        }
-
-        if ($displayProfile->type === 'chromeOS') {
-            $newPlayerVersionId = $displayProfile->getSetting('playerVersionId');
-
-            // Does this edit change who is responsible for the shared "latest" symlink (this
-            // profile becoming/ceasing to be the default), or what the responsible (default)
-            // profile's version now is? Only one profile can be default per type at a time
-            // (enforced in validate()), so whichever of those two things changed here is authoritative.
-            if ($displayProfile->hasPropertyChanged('isDefault')
-                || ($displayProfile->isDefault && $originalPlayerVersionId !== $newPlayerVersionId)
-            ) {
-                if (!$displayProfile->isDefault) {
-                    // No longer the default - nothing is authoritative for chromeOS right now.
-                    $this->getLog()->debug('edit: no longer the default chromeOS profile, clearing symlink');
-                    $this->clearActiveChromeOsVersion();
-                } elseif ($newPlayerVersionId === null) {
-                    // Cleared - stop serving whichever version was previously made active.
-                    $this->getLog()->debug('edit: clearing symlink to the latest chromeOS version');
-                    $this->clearActiveChromeOsVersion();
-                } else {
-                    $this->getLog()->debug('edit: updating symlink to the latest chromeOS version');
-
-                    // Update a symlink to the new player version.
-                    try {
-                        $version = $this->playerVersionFactory->getById($newPlayerVersionId);
-                        $version->setActive();
-                    } catch (NotFoundException) {
-                        $this->getLog()->error('edit: Player version does not exist');
-                    }
                 }
             }
         }
@@ -556,17 +521,6 @@ class DisplayProfile extends Base
     public function getDisplayProfileTypes(Response $response): Response
     {
         return $response->withJson($this->displayProfileFactory->getAvailableTypes());
-    }
-
-    /**
-     * Stop serving any chromeOS player version - used when there is no longer a default chromeOS
-     * profile with a version configured to be authoritative for the shared "latest" symlink.
-     */
-    private function clearActiveChromeOsVersion(): void
-    {
-        $version = $this->playerVersionFactory->createEmpty();
-        $version->type = 'chromeOS';
-        $version->unsetActive();
     }
 
     /**

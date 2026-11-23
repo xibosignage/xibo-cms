@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 
 
@@ -50,6 +52,12 @@ class RequiredFile implements \JsonSerializable
     public $released = 1;
     public $fileType;
 
+    /** @var int 1 when the player was given a direct download link, so its first completion is counted */
+    public $isDirect = 0;
+
+    /** @var string|null The md5 of the version last handed out, so a new version is counted again */
+    public $md5;
+
     /** @var string The realId of a dependency which we will use to resolve it */
     public $realId;
 
@@ -72,11 +80,44 @@ class RequiredFile implements \JsonSerializable
     {
         if ($this->rfId == null) {
             $this->add();
-        } else if ($this->hasPropertyChanged('bytesRequested') || $this->hasPropertyChanged('complete')) {
+        } else if ($this->hasPropertyChanged('bytesRequested')
+            || $this->hasPropertyChanged('complete')
+            || $this->hasPropertyChanged('isDirect')
+            || $this->hasPropertyChanged('size')
+            || $this->hasPropertyChanged('md5')
+        ) {
             $this->edit($options);
         }
 
         return $this;
+    }
+
+    /**
+     * Records the version handed out; a different one marks the file incomplete, so its download is counted again.
+     */
+    public function setMd5(?string $md5): void
+    {
+        if (empty($md5) || $md5 === $this->md5) {
+            return;
+        }
+
+        if (!empty($this->md5)) {
+            $this->complete = 0;
+        }
+        $this->md5 = $md5;
+    }
+
+    /**
+     * Marks the file complete atomically; true only for the request that changed it, so overlapping ones count once.
+     * Not retried on deadlock: MySQL rolls back the earlier claims too, so the request faults and the player resends.
+     */
+    public function claimComplete(): bool
+    {
+        $this->complete = 1;
+
+        return $this->store->update('
+            UPDATE `requiredfile` SET `complete` = 1 WHERE `rfId` = :rfId AND `complete` = 0
+        ', ['rfId' => $this->rfId]) > 0;
     }
 
     /**
@@ -85,8 +126,10 @@ class RequiredFile implements \JsonSerializable
     private function add()
     {
         $this->rfId = $this->store->insert('
-            INSERT INTO `requiredfile` (`displayId`, `type`, `itemId`, `bytesRequested`, `complete`, `size`, `path`, `released`, `fileType`, `realId`)
-              VALUES (:displayId, :type, :itemId, :bytesRequested, :complete, :size, :path, :released, :fileType, :realId)
+            INSERT INTO `requiredfile` (`displayId`, `type`, `itemId`, `bytesRequested`, `complete`, `size`, `path`,
+                `released`, `fileType`, `realId`, `isDirect`, `md5`)
+              VALUES (:displayId, :type, :itemId, :bytesRequested, :complete, :size, :path,
+                :released, :fileType, :realId, :isDirect, :md5)
         ', [
             'displayId' => $this->displayId,
             'type' => $this->type,
@@ -98,6 +141,8 @@ class RequiredFile implements \JsonSerializable
             'released' => $this->released,
             'fileType' => $this->fileType,
             'realId' => $this->realId,
+            'isDirect' => (int)$this->isDirect,
+            'md5' => $this->md5,
         ]);
     }
 
@@ -113,12 +158,17 @@ class RequiredFile implements \JsonSerializable
 
         try {
             $this->store->updateWithDeadlockLoop('
-            UPDATE `requiredfile` SET complete = :complete, bytesRequested = :bytesRequested
+            UPDATE `requiredfile`
+               SET complete = :complete, bytesRequested = :bytesRequested, isDirect = :isDirect, size = :size,
+                   md5 = :md5
              WHERE rfId = :rfId
         ', [
                 'rfId' => $this->rfId,
                 'bytesRequested' => $this->bytesRequested,
-                'complete' => $this->complete
+                'complete' => $this->complete,
+                'isDirect' => (int)$this->isDirect,
+                'size' => $this->size,
+                'md5' => $this->md5,
             ], $options['connection'], $options['useTransaction']);
         } catch (DeadlockException $deadlockException) {
             $this->getLog()->error('Failed to update bytes requested on ' . $this->rfId . ' due to deadlock');

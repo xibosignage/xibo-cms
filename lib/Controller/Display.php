@@ -1,23 +1,25 @@
 <?php
 /*
- * Copyright (C) 2026 Xibo Signage Ltd
+ * Xibo Digital Signage
+ * Copyright (C) 2006-2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * This file is part of Xibo.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * This program is also available under a commercial licence from
+ * Xibo Signage Ltd. See https://xibosignage.com/terms
  */
 namespace Xibo\Controller;
 
@@ -25,7 +27,6 @@ use Carbon\Carbon;
 use GeoJson\Feature\Feature;
 use GeoJson\Feature\FeatureCollection;
 use GeoJson\Geometry\Point;
-use Intervention\Image\ImageManager;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Respect\Validation\Validator as v;
@@ -34,6 +35,7 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Event\DisplayGroupLoadEvent;
+use Xibo\Event\DisplayListDecorateEvent;
 use Xibo\Event\FolderTouchEvent;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayEventFactory;
@@ -41,6 +43,7 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Factory\DisplayTypeFactory;
+use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\PlayerVersionFactory;
@@ -53,8 +56,13 @@ use Xibo\Helper\Environment;
 use Xibo\Helper\Guzzle\SafeClient;
 use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\Random;
+use Xibo\Helper\SendFile;
 use Xibo\Helper\WakeOnLan;
+use Xibo\Service\LibraryAsset;
+use Xibo\Service\LibraryStorageRegistryInterface;
+use Xibo\Service\LibraryStorageServiceInterface;
 use Xibo\Service\PlayerActionServiceInterface;
+use Xibo\Storage\LibraryKeyLookup;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
@@ -73,7 +81,9 @@ use Xibo\XMR\ScreenShotAction;
  */
 class Display extends Base
 {
+    use BuildDisplayClaimTrait;
     use DisplayProfileConfigFields;
+    use NotifyPendingConnectTrait;
 
     public function __construct(
         private readonly StorageServiceInterface $store,
@@ -90,8 +100,29 @@ class Display extends Base
         private readonly NotificationFactory $notificationFactory,
         private readonly UserGroupFactory $userGroupFactory,
         private readonly PlayerVersionFactory $playerVersionFactory,
-        private readonly DayPartFactory $dayPartFactory
+        private readonly DayPartFactory $dayPartFactory,
+        private readonly LibraryStorageRegistryInterface $libraryStorageRegistry,
+        private readonly FolderFactory $folderFactory
     ) {
+    }
+
+    private function getScreenShotStorage(): LibraryStorageServiceInterface
+    {
+        return $this->libraryStorageRegistry->get(LibraryAsset::SCREENSHOT);
+    }
+
+    /**
+     * Checks which displays have a screenshot, listing the storage once when checking many.
+     * @param int $displayCount how many displays will be checked
+     */
+    private function newScreenShotLookup(int $displayCount): LibraryKeyLookup
+    {
+        return new LibraryKeyLookup(
+            $this->getScreenShotStorage(),
+            $this->getLog(),
+            'display screenshots',
+            $displayCount
+        );
     }
 
     #[OA\Get(
@@ -673,9 +704,11 @@ class Display extends Base
         // validate displays so we get a realistic view of the table
         $this->validateDisplays($displays);
 
+        $screenshotLookup = $this->newScreenShotLookup(count($displays));
         foreach ($displays as $display) {
-            $this->decorateDisplayProperties($parsedQueryParams, $display, $request);
+            $this->decorateDisplayProperties($parsedQueryParams, $display, $request, $screenshotLookup);
         }
+        $this->getDispatcher()->dispatch(new DisplayListDecorateEvent($displays), DisplayListDecorateEvent::$NAME);
 
         return $response
             ->withStatus(200)
@@ -715,7 +748,8 @@ class Display extends Base
         $params = $this->getSanitizer($request->getQueryParams());
         $display = $this->displayFactory->getById($id, false, false);
 
-        $this->decorateDisplayProperties($params, $display, $request);
+        $this->decorateDisplayProperties($params, $display, $request, $this->newScreenShotLookup(1));
+        $this->getDispatcher()->dispatch(new DisplayListDecorateEvent([$display]), DisplayListDecorateEvent::$NAME);
 
         return $response
             ->withStatus(200)
@@ -750,6 +784,7 @@ class Display extends Base
             $displayProfiles[$displayProfile->displayProfileId] = $displayProfile->name;
         }
 
+        $screenshotLookup = $this->newScreenShotLookup(count($displays));
         foreach ($displays as $display) {
             // use try and catch here to cover scenario when there is no default display profile set for any of the existing display types.
             $displayProfileName = '';
@@ -781,10 +816,7 @@ class Display extends Base
                 'lastAccessed' => $display->lastAccessed,
             ];
 
-            if (file_exists(
-                $this->getConfig()->getSetting('LIBRARY_LOCATION') .
-                'screenshots/' . $display->displayId . '_screenshot.jpg'
-            )) {
+            if ($screenshotLookup->has(\Xibo\Entity\Display::getScreenShotKey($display->displayId))) {
                 $properties['thumbnail'] = $this->urlFor(
                     $request,
                     'display.screenShot',
@@ -1354,6 +1386,38 @@ class Display extends Base
         }
     }
 
+    #[OA\Get(
+        path: '/display/screenshot/{displayId}',
+        operationId: 'displayScreenshot',
+        description: 'The latest screen shot the display sent, stamped with the time it was taken.',
+        summary: 'Get Screen Shot',
+        tags: ['display']
+    )]
+    #[OA\Parameter(
+        name: 'displayId',
+        description: 'The Display ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation, in the image format the display sent',
+        content: new OA\MediaType(mediaType: 'image/*', schema: new OA\Schema(type: 'string', format: 'binary'))
+    )]
+    #[OA\Response(
+        response: 302,
+        description: 'Redirect to a time-limited URL for the screen shot, when screen shots are not kept on the CMS',
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'The URL to download the screen shot from.',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
+    #[OA\Response(response: 404, description: 'The display has no screen shot')]
+    #[OA\Response(response: 503, description: 'The screen shot storage could not be read')]
     /**
      * Output a screen shot
      * @param Request $request
@@ -1373,46 +1437,39 @@ class Display extends Base
             throw new AccessDeniedException();
         }
 
+        // Stored with its capture time already drawn on it.
+        $storage = $this->getScreenShotStorage();
+        $key = \Xibo\Entity\Display::getScreenShotKey($display->displayId);
+        try {
+            if (!$storage->hasLocalFiles()) {
+                // A link to a missing object would show a missing-file error page.
+                if (!$storage->exists($key)) {
+                    return $response->withStatus(404);
+                }
+                return SendFile::redirectToStorage($response, $storage, $key, 'image/jpeg', 'inline');
+            }
+
+            $stream = $storage->readStream($key);
+            try {
+                $screenShotContents = $stream->getContents();
+            } finally {
+                $stream->close();
+            }
+        } catch (NotFoundException) {
+            return $response->withStatus(404);
+        } catch (GeneralException $exception) {
+            $this->getLog()->error('Unable to read screenshot for displayId ' . $display->displayId
+                . ': ' . $exception->getMessage());
+            return $response->withStatus(503);
+        }
+
         // The request will output its own content, disable framework
         $this->setNoOutput(true);
 
-        // Output an image if present, otherwise not found image.
-        $file = 'screenshots/' . $id . '_screenshot.jpg';
-
-        // File upload directory.. get this from the settings object
-        $library = $this->getConfig()->getSetting('LIBRARY_LOCATION');
-        $fileName = $library . $file;
-
-        if (!file_exists($fileName)) {
-            $fileName = $this->getConfig()->uri('forms/filenotfound.gif');
-        }
-
-        $img = ImageManager::gd()->read($fileName);
-
-        $date = $display->getCurrentScreenShotTime($this->pool);
-
-        if ($date != '') {
-            $img
-                ->drawRectangle(0, 0, function ($draw) {
-                    $draw->size(110, 15);
-                    $draw->background('#ffffff');
-                })
-                ->text($date, 10, 10, function ($font) {
-                });
-        }
-
-        // Cache headers
-        header('Cache-Control: no-store, no-cache, must-revalidate');
-        header('Pragma: no-cache');
-        header('Expires: 0');
-
-        // Disable any buffering to prevent OOM errors.
-        while (ob_get_level() > 0) {
-            ob_end_clean();
-        }
-
-        $response->write($img->encode());
-        $response = $response->withHeader('Content-Type', $img->origin()->mediaType());
+        $response->write($screenShotContents);
+        $response = $response
+            ->withHeader('Content-Type', 'image/jpeg')
+            ->withHeader('Cache-Control', 'no-store');
         return $this->render($request, $response);
     }
 
@@ -1795,11 +1852,20 @@ class Display extends Base
         // Pass config so WHITELIST_HOSTS (if set) defeats Host-header injection
         // into the cmsAddress posted to the external auth service.
         $cmsAddress = (new HttpsDetect($this->getConfig()))->getBaseUrl($request);
+        $displayCmsAddress = $cmsAddress;
+
         $cmsKey = $this->getConfig()->getSetting('SERVER_KEY');
 
         if ($user_code == '') {
             throw new InvalidArgumentException(__('Code cannot be empty'), 'code');
         }
+
+        // Settings chosen on the Add Display form cannot be applied yet, because the display does
+        // not exist until the Player registers. They are cached against the activation code, and
+        // the code rides along with the CMS key so that RegisterDisplay can recognise the Player
+        // this submission belongs to and apply them (see Soap5::RegisterDisplay). The Player
+        // strips the code from the key before storing it.
+        $claim = $this->buildDisplayClaim($sanitizedParams);
 
         $guzzle = SafeClient::getSafeClient();
 
@@ -1813,13 +1879,26 @@ class Display extends Base
                 $this->getConfig()->getGuzzleProxy([
                     'form_params' => [
                         'user_code' => $user_code,
-                        'cmsAddress' => $cmsAddress,
-                        'cmsKey' => $cmsKey,
+                        'cmsAddress' => $displayCmsAddress,
+                        'cmsKey' => $cmsKey . '||' . $user_code,
                     ]
                 ])
             );
 
             $data = json_decode($guzzleRequest->getBody(), true);
+
+            // Always cached, even when the operator chose no settings: the claim is what ties the
+            // registration back to this user, for ownership and the audit trail.
+            $claim['notificationId'] = $this->notifyPendingConnect(
+                $user_code,
+                Carbon::now()->addDay(),
+                $cmsAddress . '/displays/all-displays?addCode=' . urlencode($user_code)
+            );
+
+            $cache = $this->pool->getItem(\Xibo\Entity\Display::getAddViaCodeCacheKey($user_code));
+            $cache->set($claim);
+            $cache->expiresAfter(new \DateInterval('P1D'));
+            $this->pool->save($cache);
 
             $this->getState()->hydrate([
                 'message' => $data['message']
@@ -2145,6 +2224,7 @@ class Display extends Base
      * @param SanitizerInterface $parsedQueryParams
      * @param \Xibo\Entity\Display $display
      * @param Request $request
+     * @param LibraryKeyLookup $screenshotLookup
      * @return void
      * @throws InvalidArgumentException
      * @throws NotFoundException
@@ -2153,6 +2233,7 @@ class Display extends Base
         SanitizerInterface $parsedQueryParams,
         \Xibo\Entity\Display $display,
         Request $request,
+        LibraryKeyLookup $screenshotLookup
     ): void {
         // Get all Display Profiles
         $displayProfiles = [];
@@ -2256,8 +2337,7 @@ class Display extends Base
         // Thumbnail
         $display->setUnmatchedProperty('thumbnail', '');
         // If we aren't logged in, and we are showThumbnail == 2, then show a circle
-        if (file_exists($this->getConfig()->getSetting('LIBRARY_LOCATION') . 'screenshots/'
-            . $display->displayId . '_screenshot.jpg')) {
+        if ($screenshotLookup->has(\Xibo\Entity\Display::getScreenShotKey($display->displayId))) {
             $display->setUnmatchedProperty(
                 'thumbnail',
                 $this->urlFor($request, 'display.screenShot', [
