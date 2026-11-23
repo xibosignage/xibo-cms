@@ -27,8 +27,7 @@ declare(strict_types=1);
 namespace Xibo\CapabilityMatrix;
 
 /**
- * Verifies a signed capability matrix published by Artemis against a list of trusted keys
- * (Artemis docs/plans/capability_matrix/artifact-signing.md).
+ * Verifies a signed capability matrix published by the Xibo APIs against a list of trusted keys.
  *
  * Has no dependencies beyond PHP's built-in sodium, so it runs in the image's capability-matrix
  * build stage without the CMS's vendor tree. Every failure throws \UnexpectedValueException.
@@ -109,7 +108,7 @@ class Verifier
             }
         }
 
-        // Checked after the signature: the same key signs every artifact type Artemis publishes.
+        // Checked after the signature: the same key signs every artifact type the Xibo APIs publish.
         if (($document['artifact'] ?? null) !== self::ARTIFACT) {
             throw new \UnexpectedValueException('the document is not a capability matrix');
         }

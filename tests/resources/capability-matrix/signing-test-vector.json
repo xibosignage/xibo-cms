@@ -1,5 +1,5 @@
 {
-    "about": "TEST-ONLY signing vector for an Artemis artifact, here a capability matrix (artifact-signing.md). The key is derived from a published seed: never trust it outside tests. Check that your verifier: (1) decodes `served`, removes `signature`, re-encodes canonically and gets exactly `signable`; (2) verifies `signature.value` over `signable` with `public_key`; (3) rejects the artifact when any byte of `signable` changes; (4) gets `served_sha256` from the exact `served` bytes.",
+    "about": "TEST-ONLY signing vector for a Xibo APIs artifact, here a capability matrix. The key is derived from a published seed: never trust it outside tests. Check that your verifier: (1) decodes `served`, removes `signature`, re-encodes canonically and gets exactly `signable`; (2) verifies `signature.value` over `signable` with `public_key`; (3) rejects the artifact when any byte of `signable` changes; (4) gets `served_sha256` from the exact `served` bytes.",
     "seed_hex": "2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a",
     "key_id": "test-vector",
     "alg": "ed25519",

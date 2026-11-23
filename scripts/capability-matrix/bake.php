@@ -23,13 +23,12 @@
  */
 
 /**
- * Fetches the current signed capability matrix from Artemis, verifies it against the trusted
- * keys, and writes it to the output directory for the CMS image (Player Capability Matrix PRD 7;
- * Artemis docs/plans/capability_matrix/artifact-signing.md).
+ * Fetches the current signed capability matrix from the Xibo APIs, verifies it against the trusted
+ * keys, and writes it to the output directory for the CMS image.
  *
  * Usage: php bake.php <output directory>
  *
- * Env: CAPABILITY_MATRIX_URL (base URL of the Artemis publication host; empty skips),
+ * Env: CAPABILITY_MATRIX_URL (base URL of the Xibo APIs publication host; empty skips),
  *      CAPABILITY_MATRIX (required | optional). Optional tolerates "nothing to fetch yet"
  *      (no URL, no release, host unreachable); a matrix that fails verification always fails
  *      the build.

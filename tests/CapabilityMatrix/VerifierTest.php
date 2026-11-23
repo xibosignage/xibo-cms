@@ -28,7 +28,7 @@ use PHPUnit\Framework\TestCase;
 use Xibo\CapabilityMatrix\Verifier;
 
 /**
- * Checks the build-time capability matrix verifier against Artemis's published signing test vector
+ * Checks the build-time capability matrix verifier against the Xibo APIs' published signing test vector
  * (tests/resources/capability-matrix/signing-test-vector.json). The vector's key is test-only and
  * must never be added to scripts/capability-matrix/trusted-keys.json.
  */
@@ -171,7 +171,7 @@ class VerifierTest extends TestCase
     {
         return [
             'matrix_version' => 7,
-            'artifact_url' => 'https://artemis.invalid/v1/matrix/7',
+            'artifact_url' => 'https://api.example.invalid/v1/matrix/7',
             'artifact_sha256' => hash('sha256', $served),
         ];
     }
