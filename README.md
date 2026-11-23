@@ -174,8 +174,8 @@ code changes, see [DEVELOPING.md](DEVELOPING.md) for how to set up a development
 
 
 # Contributing
-We would be delighted to accept contributions to the project - please refer to
-[CONTRIBUTING.md](https://github.com/xibosignage/xibo/blob/master/CONTRIBUTING.md) for further information.
+This repository is a mirror of our development repository, so we can't accept pull requests here. Please report bugs
+and suggestions on the [Xibo Community Forum](https://community.xibo.org.uk/c/dev).
 
 # Sponsorship
 We've built commercial products and services on top of our open source project. If you want to support our work the
