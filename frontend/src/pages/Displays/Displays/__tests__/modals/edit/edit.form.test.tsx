@@ -148,28 +148,24 @@ describe('Display - edit form fields', () => {
   // When the user saves valid data, updateDisplay should be called with the
   // correct payload and onClose should be called once the save succeeds.
   // ---------------------------------------------------------------------------
-  test(
-    'Successful save calls updateDisplay with correct payload and calls onClose',
-    { tags: ['smoke'] },
-    async () => {
-      const user = userEvent.setup();
-      const onClose = vi.fn();
-      await renderEditModal({ onClose });
+  test('Successful save calls updateDisplay with correct payload and calls onClose', async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    await renderEditModal({ onClose });
 
-      await user.click(screen.getByRole('button', { name: 'Save' }));
+    await user.click(screen.getByRole('button', { name: 'Save' }));
 
-      await waitFor(() => {
-        expect(updateDisplay).toHaveBeenCalledWith(
-          mockDisplay.displayId,
-          expect.objectContaining({
-            display: mockDisplay.display,
-            licensed: mockDisplay.licensed,
-          }),
-        );
-        expect(onClose).toHaveBeenCalledTimes(1);
-      });
-    },
-  );
+    await waitFor(() => {
+      expect(updateDisplay).toHaveBeenCalledWith(
+        mockDisplay.displayId,
+        expect.objectContaining({
+          display: mockDisplay.display,
+          licensed: mockDisplay.licensed,
+        }),
+      );
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+  });
 
   // ---------------------------------------------------------------------------
   // Clicking Cancel should call onClose immediately without touching the server.

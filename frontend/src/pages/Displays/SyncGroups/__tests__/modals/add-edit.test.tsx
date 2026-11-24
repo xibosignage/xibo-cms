@@ -192,7 +192,7 @@ describe('AddAndEditSyncGroupModal', () => {
     // A valid submit calls createSyncGroup with the entered values and the
     // default port/delay values from DEFAULT_DRAFT.
     // -------------------------------------------------------------------------
-    test('a successful save sends the correct data to the API', { tags: ['smoke'] }, async () => {
+    test('a successful save sends the correct data to the API', async () => {
       const user = userEvent.setup();
       vi.mocked(createSyncGroup).mockResolvedValue(mockSyncGroup);
       renderAddEditModal({ mode: 'add' });

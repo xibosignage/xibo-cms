@@ -208,31 +208,27 @@ describe('DisplayGroup - edit form fields', () => {
   // When the user clicks Save with valid data, the group should be updated
   // on the server with the correct values, and the modal should close afterwards.
   // ---------------------------------------------------------------------------
-  test(
-    'Successful save calls updateDisplayGroup with correct payload and calls onClose',
-    { tags: ['smoke'] },
-    async () => {
-      const user = userEvent.setup();
-      const onClose = vi.fn();
-      await renderEditModal({ onClose });
+  test('Successful save calls updateDisplayGroup with correct payload and calls onClose', async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    await renderEditModal({ onClose });
 
-      await user.click(screen.getByRole('button', { name: 'Save' }));
+    await user.click(screen.getByRole('button', { name: 'Save' }));
 
-      // Check the API call and the modal closing together so we know the full
-      // save flow finished before we draw any conclusions.
-      await waitFor(() => {
-        expect(updateDisplayGroup).toHaveBeenCalledWith(
-          mockDisplayGroup.displayGroupId,
-          expect.objectContaining({
-            displayGroup: mockDisplayGroup.displayGroup,
-            description: mockDisplayGroup.description,
-            isDynamic: 0,
-          }),
-        );
-        expect(onClose).toHaveBeenCalledTimes(1);
-      });
-    },
-  );
+    // Check the API call and the modal closing together so we know the full
+    // save flow finished before we draw any conclusions.
+    await waitFor(() => {
+      expect(updateDisplayGroup).toHaveBeenCalledWith(
+        mockDisplayGroup.displayGroupId,
+        expect.objectContaining({
+          displayGroup: mockDisplayGroup.displayGroup,
+          description: mockDisplayGroup.description,
+          isDynamic: 0,
+        }),
+      );
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+  });
 
   // ---------------------------------------------------------------------------
   // Clicking Cancel should close the modal without touching the server.

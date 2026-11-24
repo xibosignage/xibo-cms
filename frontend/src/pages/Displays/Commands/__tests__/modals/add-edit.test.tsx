@@ -164,7 +164,7 @@ describe('AddEditCommandModal', () => {
       expect(createCommand).not.toHaveBeenCalled();
     });
 
-    test('a successful save sends the correct data to the API', { tags: ['smoke'] }, async () => {
+    test('a successful save sends the correct data to the API', async () => {
       const user = userEvent.setup();
       vi.mocked(createCommand).mockResolvedValue(buildCommand());
       renderAddEditCommandModal({ mode: 'add' });

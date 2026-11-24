@@ -75,23 +75,19 @@ describe('DisplayProfile page - copy wiring', () => {
     ).toBeInTheDocument();
   });
 
-  test(
-    'confirming a copy calls copyDisplayProfile with the profile ID and new name',
-    { tags: ['smoke'] },
-    async () => {
-      renderDisplayProfilePage();
+  test('confirming a copy calls copyDisplayProfile with the profile ID and new name', async () => {
+    renderDisplayProfilePage();
 
-      await clickRowMenuItem(/^copy$/i);
-      fireEvent.click(await screen.findByRole('button', { name: /stub-confirm/i }));
+    await clickRowMenuItem(/^copy$/i);
+    fireEvent.click(await screen.findByRole('button', { name: /stub-confirm/i }));
 
-      await waitFor(() => {
-        expect(copyDisplayProfile).toHaveBeenCalledWith(
-          mockDisplayProfile.displayProfileId,
-          'Copied Name',
-        );
-      });
-    },
-  );
+    await waitFor(() => {
+      expect(copyDisplayProfile).toHaveBeenCalledWith(
+        mockDisplayProfile.displayProfileId,
+        'Copied Name',
+      );
+    });
+  });
 
   test('only the Copy modal opens (not Add, Edit, or Delete)', async () => {
     renderDisplayProfilePage();

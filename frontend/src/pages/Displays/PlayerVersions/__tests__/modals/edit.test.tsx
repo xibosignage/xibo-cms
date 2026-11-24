@@ -130,7 +130,7 @@ describe('EditPlayerVersionModal', () => {
     );
   });
 
-  test('a successful save sends the updated values to the API', { tags: ['smoke'] }, async () => {
+  test('a successful save sends the updated values to the API', async () => {
     const user = userEvent.setup();
     vi.mocked(updatePlayerVersion).mockResolvedValue(existing);
     renderEditPlayerVersionModal({ data: existing });
