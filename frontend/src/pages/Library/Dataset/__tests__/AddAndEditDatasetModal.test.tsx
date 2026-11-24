@@ -123,7 +123,7 @@ describe('AddAndEditDatasetModal', () => {
       });
     });
 
-    it('calls createDataset with correct name on valid submit', { tags: ['smoke'] }, async () => {
+    it('calls createDataset with correct name on valid submit', async () => {
       const user = userEvent.setup();
       await renderAddModal();
 

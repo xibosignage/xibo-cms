@@ -262,36 +262,32 @@ describe('AddCampaignModal', () => {
   // ---------------------------------------------------------------------------
   // API calls — happy path (list campaign)
   // ---------------------------------------------------------------------------
-  test(
-    'successful list campaign creation calls createCampaign with correct payload',
-    { tags: ['smoke'] },
-    async () => {
-      vi.mocked(createCampaign).mockResolvedValueOnce({ campaignId: 1 } as Campaign);
-      const onSuccess = vi.fn();
-      const onClose = vi.fn();
-      renderModal({ onSuccess, onClose });
+  test('successful list campaign creation calls createCampaign with correct payload', async () => {
+    vi.mocked(createCampaign).mockResolvedValueOnce({ campaignId: 1 } as Campaign);
+    const onSuccess = vi.fn();
+    const onClose = vi.fn();
+    renderModal({ onSuccess, onClose });
 
-      fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'New List Campaign' } });
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'New List Campaign' } });
 
-      await act(async () => {
-        fireEvent.click(screen.getByRole('button', { name: 'Save' }));
-      });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    });
 
-      await waitFor(() => {
-        expect(createCampaign).toHaveBeenCalledWith(
-          expect.objectContaining({
-            name: 'New List Campaign',
-            type: 'list',
-            cyclePlaybackEnabled: false,
-            listPlayOrder: 'round',
-          }),
-        );
-      });
+    await waitFor(() => {
+      expect(createCampaign).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'New List Campaign',
+          type: 'list',
+          cyclePlaybackEnabled: false,
+          listPlayOrder: 'round',
+        }),
+      );
+    });
 
-      expect(onSuccess).toHaveBeenCalledTimes(1);
-      expect(onClose).toHaveBeenCalledTimes(1);
-    },
-  );
+    expect(onSuccess).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
 
   test('list campaign with cycle playback enabled calls createCampaign with playCount', async () => {
     vi.mocked(createCampaign).mockResolvedValueOnce({ campaignId: 2 } as Campaign);

@@ -85,32 +85,28 @@ describe('AddAndEditMenuBoardModal', () => {
       expect(screen.getByLabelText(/^Description/, { exact: false })).toHaveValue('');
     });
 
-    it(
-      'calls createMenuBoard with name, description, and code on save',
-      { tags: ['smoke'] },
-      async () => {
-        const user = userEvent.setup();
-        mockCreateMenuBoard.mockResolvedValue(mockMenuBoard());
-        const { mockOnSave, mockOnClose } = renderAddModal();
+    it('calls createMenuBoard with name, description, and code on save', async () => {
+      const user = userEvent.setup();
+      mockCreateMenuBoard.mockResolvedValue(mockMenuBoard());
+      const { mockOnSave, mockOnClose } = renderAddModal();
 
-        await user.type(screen.getByLabelText('Name'), 'New Board');
-        await user.type(screen.getByLabelText('Code', { exact: false }), 'NB_01');
-        await user.type(screen.getByLabelText('Description', { exact: false }), 'A description');
-        await user.click(screen.getByRole('button', { name: 'Save' }));
+      await user.type(screen.getByLabelText('Name'), 'New Board');
+      await user.type(screen.getByLabelText('Code', { exact: false }), 'NB_01');
+      await user.type(screen.getByLabelText('Description', { exact: false }), 'A description');
+      await user.click(screen.getByRole('button', { name: 'Save' }));
 
-        await waitFor(() => {
-          expect(mockCreateMenuBoard).toHaveBeenCalledWith(
-            expect.objectContaining({
-              name: 'New Board',
-              code: 'NB_01',
-              description: 'A description',
-            }),
-          );
-          expect(mockOnSave).toHaveBeenCalled();
-          expect(mockOnClose).toHaveBeenCalled();
-        });
-      },
-    );
+      await waitFor(() => {
+        expect(mockCreateMenuBoard).toHaveBeenCalledWith(
+          expect.objectContaining({
+            name: 'New Board',
+            code: 'NB_01',
+            description: 'A description',
+          }),
+        );
+        expect(mockOnSave).toHaveBeenCalled();
+        expect(mockOnClose).toHaveBeenCalled();
+      });
+    });
 
     // Scenario 3 — empty name
     it('shows validation error when name is empty on save', async () => {

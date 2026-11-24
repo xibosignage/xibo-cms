@@ -96,7 +96,7 @@ describe('Datasets: Move needs folder access', () => {
     expect(screen.queryByRole('button', { name: /^move$/i })).not.toBeInTheDocument();
   });
 
-  test('a user with folder access gets Move in the row menu', { tags: ['smoke'] }, async () => {
+  test('a user with folder access gets Move in the row menu', async () => {
     const user = userEvent.setup();
     renderWithProviders(<Datasets />, { user: withFolders });
 

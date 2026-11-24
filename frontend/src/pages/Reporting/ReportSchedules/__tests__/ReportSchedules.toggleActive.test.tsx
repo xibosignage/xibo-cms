@@ -129,22 +129,18 @@ describe('Report Schedules page - pause and resume', () => {
     expect(screen.getByRole('button', { name: 'Yes, Pause' })).toBeEnabled();
   });
 
-  test(
-    'confirming pause sends the change for that schedule and confirms success',
-    { tags: ['smoke'] },
-    async () => {
-      const user = userEvent.setup({ delay: null });
-      renderReportSchedulesPage();
-      const dialog = await openViaQuickAction(user, mockReportSchedule.name, /^pause$/i);
-      expect(dialog).toHaveTextContent(PAUSE_HEADING);
+  test('confirming pause sends the change for that schedule and confirms success', async () => {
+    const user = userEvent.setup({ delay: null });
+    renderReportSchedulesPage();
+    const dialog = await openViaQuickAction(user, mockReportSchedule.name, /^pause$/i);
+    expect(dialog).toHaveTextContent(PAUSE_HEADING);
 
-      await user.click(screen.getByRole('button', { name: 'Yes, Pause' }));
+    await user.click(screen.getByRole('button', { name: 'Yes, Pause' }));
 
-      await waitForDialogToClose(PAUSE_HEADING);
-      expect(toggleActiveReportSchedule).toHaveBeenCalledWith(mockReportSchedule.reportScheduleId);
-      expect(notify.success).toHaveBeenCalledWith('Schedule paused successfully');
-    },
-  );
+    await waitForDialogToClose(PAUSE_HEADING);
+    expect(toggleActiveReportSchedule).toHaveBeenCalledWith(mockReportSchedule.reportScheduleId);
+    expect(notify.success).toHaveBeenCalledWith('Schedule paused successfully');
+  });
 
   // Wording comes from the state before the toggle.
   test('confirming resume confirms with the resumed wording', async () => {

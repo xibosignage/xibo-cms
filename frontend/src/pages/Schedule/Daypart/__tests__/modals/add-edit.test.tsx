@@ -153,37 +153,33 @@ describe('AddAndEditDaypartModal - add mode', () => {
     expect(screen.getByRole('textbox', { name: /^name$/i })).toBeInTheDocument();
   });
 
-  test(
-    'a successful save sends the entered values to createDaypart and closes',
-    { tags: ['smoke'] },
-    async () => {
-      const user = userEvent.setup();
-      vi.mocked(createDaypart).mockResolvedValue(mockDaypart);
-      const { onClose } = renderAddEditModal({ type: 'add' });
+  test('a successful save sends the entered values to createDaypart and closes', async () => {
+    const user = userEvent.setup();
+    vi.mocked(createDaypart).mockResolvedValue(mockDaypart);
+    const { onClose } = renderAddEditModal({ type: 'add' });
 
-      await user.type(screen.getByRole('textbox', { name: /^name$/i }), 'Morning Slot');
-      await user.type(screen.getByRole('textbox', { name: /start time/i }), '09:00:00');
-      await user.type(screen.getByRole('textbox', { name: /end time/i }), '17:00:00');
-      await user.click(screen.getByRole('button', { name: /^save$/i }));
+    await user.type(screen.getByRole('textbox', { name: /^name$/i }), 'Morning Slot');
+    await user.type(screen.getByRole('textbox', { name: /start time/i }), '09:00:00');
+    await user.type(screen.getByRole('textbox', { name: /end time/i }), '17:00:00');
+    await user.click(screen.getByRole('button', { name: /^save$/i }));
 
-      await waitFor(() => {
-        expect(createDaypart).toHaveBeenCalledWith(
-          expect.objectContaining({
-            name: 'Morning Slot',
-            startTime: '09:00:00',
-            endTime: '17:00:00',
-            isRetired: 0,
-            exceptionDays: [],
-            exceptionStartTimes: [],
-            exceptionEndTimes: [],
-          }),
-        );
-      });
-      await waitFor(() => {
-        expect(onClose).toHaveBeenCalled();
-      });
-    },
-  );
+    await waitFor(() => {
+      expect(createDaypart).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Morning Slot',
+          startTime: '09:00:00',
+          endTime: '17:00:00',
+          isRetired: 0,
+          exceptionDays: [],
+          exceptionStartTimes: [],
+          exceptionEndTimes: [],
+        }),
+      );
+    });
+    await waitFor(() => {
+      expect(onClose).toHaveBeenCalled();
+    });
+  });
 
   test('clicking Cancel closes the modal without saving', async () => {
     const user = userEvent.setup();
