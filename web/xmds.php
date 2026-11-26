@@ -194,6 +194,14 @@ if (isset($_GET['file'])) {
             throw new NotFoundException(__('Display unauthorised'));
         }
 
+        // Stop here while content is blocked, for example while the CMS licence is not active
+        $contentEvent = new \Xibo\Event\XmdsContentRequestEvent();
+        $container->get('dispatcher')->dispatch($contentEvent, \Xibo\Event\XmdsContentRequestEvent::$NAME);
+        if (!$contentEvent->isAllowed()) {
+            $logger->notice('HTTP GetFile: Content updates are not available');
+            throw new \Xibo\Support\Exception\InstanceSuspendedException('Content updates are not available');
+        }
+
         // Check the display specific limit next.
         $usage = 0;
         if ($container->get('bandwidthFactory')->isBandwidthExceeded(
@@ -245,7 +253,7 @@ if (isset($_GET['file'])) {
             header('HTTP/1.0 404 Not Found');
         }
     } catch (\Xibo\Support\Exception\InstanceSuspendedException $e) {
-        $logger->debug('HTTP GetFile: Bandwidth exceeded');
+        $logger->debug('HTTP GetFile: ' . $e->getMessage());
         if (!headers_sent()) {
             header('HTTP/1.0 403 Forbidden');
         }

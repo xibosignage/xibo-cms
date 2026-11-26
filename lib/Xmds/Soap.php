@@ -36,6 +36,7 @@ use Xibo\Entity\Region;
 use Xibo\Entity\RequiredFile;
 use Xibo\Entity\Schedule;
 use Xibo\Event\DataConnectorScriptRequestEvent;
+use Xibo\Event\XmdsContentRequestEvent;
 use Xibo\Event\XmdsDependencyListEvent;
 use Xibo\Event\XmdsDependencyRequestEvent;
 use Xibo\Factory\BandwidthFactory;
@@ -782,6 +783,11 @@ class Soap
         // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
         if (!$this->checkBandwidth($this->display->displayId)) {
             throw new \SoapFault('Receiver', 'Bandwidth Limit exceeded');
+        }
+
+        // Stop here while content is blocked, for example while the CMS licence is not active
+        if (!$this->isContentAllowed()) {
+            throw new \SoapFault('Receiver', 'Content updates are not available');
         }
 
         // Check the cache
@@ -1690,6 +1696,11 @@ class Soap
         // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
         if (!$this->checkBandwidth($this->display->displayId)) {
             throw new \SoapFault('Receiver', 'Bandwidth Limit exceeded');
+        }
+
+        // Stop here while content is blocked, for example while the CMS licence is not active
+        if (!$this->isContentAllowed()) {
+            throw new \SoapFault('Receiver', 'Content updates are not available');
         }
 
         // Check the cache
@@ -2927,6 +2938,11 @@ class Soap
             throw new \SoapFault('Receiver', 'Bandwidth Limit exceeded');
         }
 
+        // Stop here while content is blocked, for example while the CMS licence is not active
+        if (!$this->isContentAllowed()) {
+            throw new \SoapFault('Receiver', 'Content updates are not available');
+        }
+
         // The MediaId is actually the widgetId
         try {
             $requiredFile = $this->requiredFileFactory->getByDisplayAndWidget(
@@ -3255,6 +3271,19 @@ class Soap
         }
 
         return filter_var($remoteAddr, FILTER_VALIDATE_IP) !== false ? $remoteAddr : '';
+    }
+
+    /**
+     * Whether the display may get content. A listener can block it, for example while the CMS licence is not
+     * active. A blocked request gets a SOAP fault, like an exceeded bandwidth limit, so the display keeps playing
+     * what it already has.
+     */
+    protected function isContentAllowed(): bool
+    {
+        $event = new XmdsContentRequestEvent();
+        $this->getDispatcher()->dispatch($event, XmdsContentRequestEvent::$NAME);
+
+        return $event->isAllowed();
     }
 
     /**

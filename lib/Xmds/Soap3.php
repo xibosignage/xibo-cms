@@ -171,6 +171,11 @@ class Soap3 extends Soap
             throw new \SoapFault('Receiver', 'Bandwidth Limit exceeded');
         }
 
+        // Stop here while content is blocked, for example while the CMS licence is not active
+        if (!$this->isContentAllowed()) {
+            throw new \SoapFault('Receiver', 'Content updates are not available');
+        }
+
         $this->getLog()->debug(
             '[IN] Params: ['. $hardwareKey .'] ['. $filePath . '] 
             ['. $fileType.'] ['.$chunkOffset.'] ['.$chunkSize.']'

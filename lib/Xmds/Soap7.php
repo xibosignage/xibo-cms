@@ -114,6 +114,11 @@ class Soap7 extends Soap6
             throw new \SoapFault('Receiver', 'Bandwidth Limit exceeded');
         }
 
+        // Stop here while content is blocked, for example while the CMS licence is not active
+        if (!$this->isContentAllowed()) {
+            throw new \SoapFault('Receiver', 'Content updates are not available');
+        }
+
         // The MediaId is actually the widgetId
         try {
             $requiredFile = $this->requiredFileFactory->getByDisplayAndWidget(
@@ -313,6 +318,11 @@ class Soap7 extends Soap6
         // Auth this request...
         if (!$this->authDisplay($hardwareKey)) {
             throw new \SoapFault('Receiver', 'This Display is not authorised.');
+        }
+
+        // Stop here while content is blocked, for example while the CMS licence is not active
+        if (!$this->isContentAllowed()) {
+            throw new \SoapFault('Receiver', 'Content updates are not available');
         }
 
         $latitude = $this->display->latitude;
