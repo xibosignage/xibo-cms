@@ -457,7 +457,7 @@ trait ModuleXmlTrait
 
         $assets = [];
         foreach ($assetNodes as $node) {
-            if ($node->nodeType === XML_ELEMENT_NODE) {
+            if ($node->nodeType === XML_ELEMENT_NODE && $node->nodeName === 'asset') {
                 /** @var \DOMElement $node */
                 $assetId = $node->getAttribute('id');
 

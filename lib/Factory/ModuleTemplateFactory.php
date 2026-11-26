@@ -402,6 +402,24 @@ class ModuleTemplateFactory extends BaseFactory
     }
 
     /**
+     * Whether an XML document declares assets under any tag case or namespace prefix
+     *
+     * @param  DOMDocument $xml
+     * @return bool
+     */
+    public static function declaresAssets(DOMDocument $xml): bool
+    {
+        foreach ($xml->getElementsByTagName('*') as $element) {
+            $name = strtolower($element->localName ?? '');
+            if ($name === 'asset' || $name === 'assets') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Create a user template from an XML string
      *
      * @param  string $xmlString

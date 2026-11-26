@@ -426,7 +426,7 @@ class Developer extends Base
 
             // User-imported templates are not permitted to declare <asset> nodes — assets are a
             // mechanism for shipped/custom modules to reference files on disk, not a content surface.
-            if ($xml->getElementsByTagName('asset')->length > 0) {
+            if (ModuleTemplateFactory::declaresAssets($xml)) {
                 throw new InvalidArgumentException(
                     __('Imported templates may not declare <asset> nodes'),
                     'xml'
