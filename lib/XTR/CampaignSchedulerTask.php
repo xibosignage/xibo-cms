@@ -312,8 +312,9 @@ class CampaignSchedulerTask implements TaskInterface
                 }
 
                 $campaignsScheduled++;
-            } catch (\Exception $exception) {
-                $this->log->error('campaignSchedulerTask: ' . $exception->getMessage());
+            } catch (\Throwable $exception) {
+                $this->log->error('campaignSchedulerTask: campaign ' . $campaign->campaign
+                    . ' (id ' . $campaign->campaignId . ') failed: ' . $exception->getMessage());
                 $this->appendRunMessage($campaign->campaign . ' failed');
             }
         }
