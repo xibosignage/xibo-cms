@@ -33,10 +33,10 @@ use Xibo\Service\LibraryStorageServiceInterface;
 
 /**
  * Makes the download link a player is given for a file: direct when the CMS has no local files, else to the CMS,
- * which a PWA, Tizen or webOS player always uses.
+ * which a PWA always uses, and a Tizen or webOS player before v420.
  *
- * Links to the CMS are on $baseUrl when given, except for a PWA, Tizen, webOS or Linux player before v400, which keep
- * their own address.
+ * Links to the CMS are on $baseUrl when given, except for a PWA, a Tizen or webOS player before v420, or a Linux
+ * player before v400, which keep their own address.
  */
 class PlayerFileLink
 {
@@ -121,9 +121,9 @@ class PlayerFileLink
     {
         // A PWA caches each file under its xmds.php link, which is how its renderer and widgets ask for it.
         // A Linux player before v400 isn't known to follow a link to another host.
-        // Tizen (sssp) can't play files from storage links
+        // Tizen (sssp) and webOS (lg) before v420 can't play files from storage links.
         return $display->isPwa()
-            || in_array($display->clientType, ['sssp', 'lg'], true)
+            || (in_array($display->clientType, ['sssp', 'lg'], true) && (int)$display->clientCode < 420)
             || ($display->clientType === 'linux' && (int)$display->clientCode < 400);
     }
 

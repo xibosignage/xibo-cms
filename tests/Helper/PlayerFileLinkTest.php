@@ -255,18 +255,24 @@ class PlayerFileLinkTest extends TestCase
     /**
      * @dataProvider storedFileProvider
      */
-    public function testATizenOrWebOsPlayerGetsEveryStoredFileFromTheCms(
+    public function testATizenOrWebOsPlayerBeforeV420GetsEveryStoredFileFromTheCms(
         string $type,
         string $saveAs,
         ?string $fileType
     ) {
         foreach (['sssp', 'lg'] as $clientType) {
             [$url, $isDirect] = $this->link(true, '', false, 'https://acme.displays.cloud')
-                ->get($this->display($clientType, 420), $type, 1, $saveAs, $fileType);
+                ->get($this->display($clientType, 419), $type, 1, $saveAs, $fileType);
 
             $this->assertStringContainsString('/xmds.php?file=' . $saveAs, $url, $clientType);
             $this->assertStringNotContainsString('acme.displays.cloud', $url, $clientType);
             $this->assertFalse($isDirect, $clientType);
+
+            [$url, $isDirect] = $this->link(true, '', false, 'https://acme.displays.cloud')
+                ->get($this->display($clientType, 420), $type, 1, $saveAs, $fileType);
+
+            $this->assertStringStartsWith('https://storage.example.com/', $url, $clientType);
+            $this->assertTrue($isDirect, $clientType . ' v420 and later are linked directly');
         }
     }
 
